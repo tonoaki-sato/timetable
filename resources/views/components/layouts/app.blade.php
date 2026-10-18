@@ -39,10 +39,28 @@
                             <span>本部ダッシュボード</span>
                         </a>
 
+                        <a href="{{ route('timetable.index') }}"
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('timetable.index') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                            <span>⏱️</span>
+                            <span>全体マトリクス</span>
+                        </a>
+
+                        <a href="{{ route('timetables.index') }}"
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                            <span>📋</span>
+                            <span>運行日・タスク管理</span>
+                        </a>
+
                         <a href="{{ route('annual-schedules.index') }}"
                             class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('annual-schedules.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
                             <span>📅</span>
                             <span>年間スケジュール</span>
+                        </a>
+
+                        <a href="{{ route('staff.index') }}"
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('staff.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                            <span>👷</span>
+                            <span>スタッフ</span>
                         </a>
 
                         <a href="{{ route('users.index') }}"
@@ -105,14 +123,26 @@
         </div>
 
         <!-- モバイル用ナビゲーションタブバー -->
-        <div class="md:hidden border-t border-slate-800 bg-slate-900/95 px-4 py-2 flex items-center justify-around text-xs">
+        <div class="md:hidden border-t border-slate-800 bg-slate-900/95 px-3 py-2 flex items-center justify-around text-xs">
             <a href="{{ route('dashboard') }}" class="flex flex-col items-center py-1 {{ request()->routeIs('dashboard') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
                 <span>📊</span>
-                <span class="text-[10px] mt-0.5">ダッシュボード</span>
+                <span class="text-[10px] mt-0.5">本部</span>
+            </a>
+            <a href="{{ route('timetable.index') }}" class="flex flex-col items-center py-1 {{ request()->routeIs('timetable.index') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
+                <span>⏱️</span>
+                <span class="text-[10px] mt-0.5">マトリクス</span>
+            </a>
+            <a href="{{ route('timetables.index') }}" class="flex flex-col items-center py-1 {{ request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
+                <span>📋</span>
+                <span class="text-[10px] mt-0.5">運行日</span>
             </a>
             <a href="{{ route('annual-schedules.index') }}" class="flex flex-col items-center py-1 {{ request()->routeIs('annual-schedules.*') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
                 <span>📅</span>
                 <span class="text-[10px] mt-0.5">年間予定</span>
+            </a>
+            <a href="{{ route('staff.index') }}" class="flex flex-col items-center py-1 {{ request()->routeIs('staff.*') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
+                <span>👷</span>
+                <span class="text-[10px] mt-0.5">スタッフ</span>
             </a>
             <a href="{{ route('users.index') }}" class="flex flex-col items-center py-1 {{ request()->routeIs('users.*') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
                 <span>👥</span>
