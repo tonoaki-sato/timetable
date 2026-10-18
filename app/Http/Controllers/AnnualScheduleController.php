@@ -5,12 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAnnualScheduleRequest;
 use App\Http\Requests\UpdateAnnualScheduleRequest;
 use App\Models\AnnualSchedule;
+use App\Services\AnnualScheduleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AnnualScheduleController extends Controller
 {
+    public function __construct(
+        protected AnnualScheduleService $scheduleService
+    ) {}
+
     /**
      * 年間スケジュール一覧・絞り込み画面の表示
      */
@@ -18,65 +23,14 @@ class AnnualScheduleController extends Controller
     {
         $this->authorize('viewAny', AnnualSchedule::class);
 
-        $selectedYear = (int) $request->input('year', 2026);
+        $viewData = $this->scheduleService->getIndexViewData(
+            year: (int) $request->input('year', 2026),
+            category: $request->input('category'),
+            status: $request->input('status'),
+            search: $request->input('search')
+        );
 
-        // 登録されている対象年度一覧（タブ切り替え用）
-        $availableYears = AnnualSchedule::query()
-            ->select('target_year')
-            ->distinct()
-            ->orderBy('target_year', 'desc')
-            ->pluck('target_year')
-            ->all();
-
-        if (empty($availableYears)) {
-            $availableYears = [2026];
-        } elseif (! in_array(2026, $availableYears, true)) {
-            $availableYears[] = 2026;
-            rsort($availableYears);
-        }
-
-        $query = AnnualSchedule::with('creator');
-
-        if ($selectedYear) {
-            $query->where('target_year', $selectedYear);
-        }
-
-        // カテゴリ絞り込み
-        if ($category = $request->input('category')) {
-            $query->where('category', $category);
-        }
-
-        // ステータス絞り込み
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
-        }
-
-        // フリーワード検索
-        if ($search = $request->input('search')) {
-            $query->search($search);
-        }
-
-        // 年度内ステータス別集計（サマリー表示用）
-        $yearSummary = [
-            'total' => AnnualSchedule::where('target_year', $selectedYear)->count(),
-            'planned' => AnnualSchedule::where('target_year', $selectedYear)->where('status', 'planned')->count(),
-            'in_progress' => AnnualSchedule::where('target_year', $selectedYear)->where('status', 'in_progress')->count(),
-            'completed' => AnnualSchedule::where('target_year', $selectedYear)->where('status', 'completed')->count(),
-        ];
-
-        $schedules = $query->orderBy('start_date', 'asc')
-            ->orderBy('id', 'asc')
-            ->paginate(15)
-            ->withQueryString();
-
-        return view('annual_schedules.index', [
-            'schedules' => $schedules,
-            'selectedYear' => $selectedYear,
-            'availableYears' => $availableYears,
-            'yearSummary' => $yearSummary,
-            'categories' => AnnualSchedule::CATEGORIES,
-            'statuses' => AnnualSchedule::STATUSES,
-        ]);
+        return view('annual_schedules.index', $viewData);
     }
 
     /**
@@ -99,10 +53,10 @@ class AnnualScheduleController extends Controller
     {
         $this->authorize('create', AnnualSchedule::class);
 
-        $data = $request->validated();
-        $data['created_by'] = $request->user()?->id;
-
-        $schedule = AnnualSchedule::create($data);
+        $schedule = $this->scheduleService->createSchedule(
+            $request->validated(),
+            $request->user()
+        );
 
         return redirect()->route('annual-schedules.index', ['year' => $schedule->target_year])
             ->with('success', "年間スケジュール「{$schedule->title}」を登録しました。");
@@ -143,7 +97,7 @@ class AnnualScheduleController extends Controller
     {
         $this->authorize('update', $annualSchedule);
 
-        $annualSchedule->update($request->validated());
+        $this->scheduleService->updateSchedule($annualSchedule, $request->validated());
 
         return redirect()->route('annual-schedules.show', $annualSchedule)
             ->with('success', "年間スケジュール「{$annualSchedule->title}」を更新しました。");
@@ -159,7 +113,7 @@ class AnnualScheduleController extends Controller
         $title = $annualSchedule->title;
         $year = $annualSchedule->target_year;
 
-        $annualSchedule->delete();
+        $this->scheduleService->deleteSchedule($annualSchedule);
 
         return redirect()->route('annual-schedules.index', ['year' => $year])
             ->with('success', "年間スケジュール「{$title}」を削除しました。");
