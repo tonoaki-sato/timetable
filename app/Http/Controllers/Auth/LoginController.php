@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,7 +39,7 @@ class LoginController extends Controller
 
             // 最終ログイン日時の更新 (U-101 連携)
             $user = Auth::user();
-            if ($user) {
+            if ($user instanceof User) {
                 $user->last_login_at = now();
                 $user->save();
             }
