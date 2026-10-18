@@ -34,5 +34,8 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ]
         );
+
+        // 3. 年間スケジュール初期データ
+        $this->call(AnnualScheduleSeeder::class);
     }
 }

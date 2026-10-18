@@ -39,6 +39,12 @@
                             <span>本部ダッシュボード</span>
                         </a>
 
+                        <a href="{{ route('annual-schedules.index') }}"
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('annual-schedules.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                            <span>📅</span>
+                            <span>年間スケジュール</span>
+                        </a>
+
                         <a href="{{ route('users.index') }}"
                             class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('users.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
                             <span>👥</span>
@@ -103,6 +109,10 @@
             <a href="{{ route('dashboard') }}" class="flex flex-col items-center py-1 {{ request()->routeIs('dashboard') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
                 <span>📊</span>
                 <span class="text-[10px] mt-0.5">ダッシュボード</span>
+            </a>
+            <a href="{{ route('annual-schedules.index') }}" class="flex flex-col items-center py-1 {{ request()->routeIs('annual-schedules.*') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
+                <span>📅</span>
+                <span class="text-[10px] mt-0.5">年間予定</span>
             </a>
             <a href="{{ route('users.index') }}" class="flex flex-col items-center py-1 {{ request()->routeIs('users.*') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
                 <span>👥</span>

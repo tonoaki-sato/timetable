@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnnualScheduleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
@@ -27,6 +28,9 @@ Route::middleware('auth')->group(function () {
 
     // ユーザー管理リソースルート
     Route::resource('users', UserController::class);
+
+    // 年間スケジュール管理リソースルート
+    Route::resource('annual-schedules', AnnualScheduleController::class);
 
     // 自身のプロフィールへのショートカット
     Route::get('/profile', function () {
