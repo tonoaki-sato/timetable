@@ -16,7 +16,7 @@ class DashboardController extends Controller
     public function index(Request $request): View
     {
         $now = Carbon::now('Asia/Tokyo');
-        $nowDatetime = $now->translatedFormat('n月j日 (D) H:i');
+        $nowDatetime = $now->translatedFormat('n月j日 (D) H:i:s');
 
         // アクティブな運行タイムテーブルを取得
         $activeTimetable = Timetable::with(['tasks.assignments.staff'])

@@ -22,8 +22,15 @@
 
         <div class="flex flex-wrap items-center gap-3">
             <div class="bg-slate-800/80 backdrop-blur px-4 py-2 rounded-xl border border-slate-700/80 text-right">
-                <div class="text-[11px] text-slate-400 font-mono">現在日時</div>
-                <div class="text-lg font-bold font-mono text-white">{{ $nowDatetime ?? '10月17日 (土) 10:25' }}</div>
+                <div class="flex items-center justify-end space-x-1.5 text-[11px] text-slate-400 font-mono">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>現在日時</span>
+                </div>
+                <div id="realtime-clock"
+                     data-server-time="{{ now('Asia/Tokyo')->valueOf() }}"
+                     class="text-lg font-bold font-mono text-white tracking-wide">
+                    {{ $nowDatetime ?? now('Asia/Tokyo')->translatedFormat('n月j日 (D) H:i:s') }}
+                </div>
             </div>
             <a href="{{ route('timetable.index') }}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5">
                 <span>📅 タイムテーブル全体マトリクスへ</span>
@@ -232,4 +239,32 @@
     </div>
 
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const clockElement = document.getElementById('realtime-clock');
+        if (!clockElement || window.__realtimeClockInitialized) return;
+        window.__realtimeClockInitialized = true;
+
+        const serverTimeMs = parseInt(clockElement.dataset.serverTime, 10);
+        const clientTimeMs = Date.now();
+        const timeOffset = isNaN(serverTimeMs) ? 0 : (serverTimeMs - clientTimeMs);
+        const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+
+        function updateClock() {
+            const now = new Date(Date.now() + timeOffset);
+            const month = now.getMonth() + 1;
+            const date = now.getDate();
+            const day = dayNames[now.getDay()];
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            clockElement.textContent = `${month}月${date}日 (${day}) ${hours}:${minutes}:${seconds}`;
+        }
+
+        updateClock();
+        setInterval(updateClock, 1000);
+    });
+</script>
 </x-layouts.app>
