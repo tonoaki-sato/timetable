@@ -67,17 +67,27 @@
         </a>
 
         <!-- 道路交通規制 -->
-        <div class="bg-white p-5 rounded-xl border border-red-200 shadow-xs flex items-center justify-between relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-2 h-full bg-red-500"></div>
-            <div>
-                <p class="text-xs font-medium text-red-600 font-bold">🚨 道路交通規制中</p>
-                <h3 class="text-xl font-bold text-slate-900 mt-1">車両通行止め</h3>
-                <span class="text-[11px] text-slate-500 font-mono">10:00 〜 17:30 (解除まで7h)</span>
+        <a href="{{ $trafficRegulationContext?->actionUrl ?? route('timetable.index') }}"
+            class="bg-white p-5 rounded-xl border {{ $trafficRegulationContext?->status?->borderClasses() ?? 'border-red-200' }} shadow-xs flex items-center justify-between relative overflow-hidden hover:shadow-sm transition group">
+            <div class="absolute top-0 right-0 w-2 h-full {{ $trafficRegulationContext?->status?->accentBarClasses() ?? 'bg-red-500' }}"></div>
+            <div class="min-w-0 pr-2">
+                <p class="text-xs {{ $trafficRegulationContext?->status?->badgeClasses() ?? 'text-red-600 font-bold' }} flex items-center space-x-1.5">
+                    @if($trafficRegulationContext?->isAlertActive)
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                    @endif
+                    <span>{{ $trafficRegulationContext?->badgeText ?? '🚨 道路交通規制中' }}</span>
+                </p>
+                <h3 class="text-xl font-bold text-slate-900 mt-1 truncate group-hover:text-indigo-600 transition">
+                    {{ $trafficRegulationContext?->headline ?? '車両通行止め' }}
+                </h3>
+                <span class="text-[11px] text-slate-500 font-mono line-clamp-1 mt-0.5">
+                    {{ $trafficRegulationContext?->subStatus ?? '10:00 〜 18:00' }}
+                </span>
             </div>
-            <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-2xl">
-                ⛔
+            <div class="w-12 h-12 {{ $trafficRegulationContext?->isRoadClosed ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-600' }} rounded-xl flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition">
+                {{ $trafficRegulationContext?->status?->icon() ?? '⛔' }}
             </div>
-        </div>
+        </a>
 
         <!-- 人員アサイン充足率 -->
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
