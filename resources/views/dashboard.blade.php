@@ -41,16 +41,30 @@
     <!-- 2. 主要KPIステータスカード群 (4カラム) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- フェーズ -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
-            <div>
-                <p class="text-xs font-medium text-slate-500">運行フェーズ</p>
-                <h3 class="text-xl font-bold text-slate-900 mt-1">1日目 (Day 1)</h3>
-                <span class="text-[11px] text-emerald-600 font-medium">午前セッション進行中</span>
+        <a href="{{ $phaseContext?->actionUrl ?? route('annual-schedules.index') }}"
+            class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between hover:border-indigo-300 hover:shadow-sm transition group">
+            <div class="min-w-0 pr-2">
+                <div class="flex items-center space-x-1.5">
+                    <p class="text-xs font-medium text-slate-500">
+                        {{ $phaseContext?->isMainEventDay ? '運行フェーズ' : '準備フェーズ' }}
+                    </p>
+                    @if($phaseContext && !$phaseContext->isMainEventDay && $phaseContext->pendingTaskCount > 0)
+                    <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono font-medium">
+                        残{{ $phaseContext->pendingTaskCount }}件
+                    </span>
+                    @endif
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mt-1 truncate group-hover:text-indigo-600 transition">
+                    {{ $phaseContext?->displayName ?? 'フェーズ4【実施段階】' }}
+                </h3>
+                <span class="text-[11px] {{ $phaseContext?->isMainEventDay ? 'text-emerald-600' : 'text-indigo-600' }} font-medium line-clamp-1 mt-0.5">
+                    {{ $phaseContext?->subStatus ?? '午前セッション進行中' }}
+                </span>
             </div>
-            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-2xl">
-                🏮
+            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition">
+                {{ $phaseContext?->isMainEventDay ? '🏮' : ($phaseContext?->phase?->icon() ?? '📋') }}
             </div>
-        </div>
+        </a>
 
         <!-- 道路交通規制 -->
         <div class="bg-white p-5 rounded-xl border border-red-200 shadow-xs flex items-center justify-between relative overflow-hidden">

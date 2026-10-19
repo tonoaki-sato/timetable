@@ -4,12 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Timetable;
 use App\Models\TimetableTask;
+use App\Services\PhaseService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        protected PhaseService $phaseService
+    ) {}
+
     /**
      * 本部運行総合ダッシュボードの表示
      */
@@ -17,6 +22,7 @@ class DashboardController extends Controller
     {
         $now = Carbon::now('Asia/Tokyo');
         $nowDatetime = $now->translatedFormat('n月j日 (D) H:i:s');
+        $phaseContext = $this->phaseService->getCurrentContext($now);
 
         // アクティブな運行タイムテーブルを取得
         $activeTimetable = Timetable::with(['tasks.assignments.staff'])
@@ -149,6 +155,7 @@ class DashboardController extends Controller
         ];
 
         return view('dashboard', [
+            'phaseContext' => $phaseContext,
             'activeTimetable' => $activeTimetable,
             'nowDatetime' => $nowDatetime,
             'requiredPeopleCount' => $requiredPeopleCount,

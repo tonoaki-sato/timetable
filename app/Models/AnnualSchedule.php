@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AnnualPhase;
 use Database\Factories\AnnualScheduleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -139,5 +140,38 @@ class AnnualSchedule extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * 所属フェーズの取得アクセサ
+     */
+    public function getPhaseAttribute(): ?AnnualPhase
+    {
+        if ($this->start_date === null) {
+            return null;
+        }
+
+        return AnnualPhase::fromMonth((int) $this->start_date->month);
+    }
+
+    /**
+     * フェーズによる絞り込みスコープ
+     */
+    public function scopePhase(Builder $query, AnnualPhase|string|null $phase): Builder
+    {
+        if ($phase === null) {
+            return $query;
+        }
+
+        $phaseEnum = is_string($phase) ? AnnualPhase::tryFrom($phase) : $phase;
+        if ($phaseEnum === null) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $q) use ($phaseEnum) {
+            foreach ($phaseEnum->months() as $month) {
+                $q->orWhereMonth('start_date', $month);
+            }
+        });
     }
 }
