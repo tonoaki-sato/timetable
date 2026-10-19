@@ -1,0 +1,38 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+
+class UserSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // 1. システム管理者アカウント (admin@example.com / password)
+        User::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => '実行委員長（システム管理者）',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'is_active' => true,
+            ]
+        );
+
+        // 2. 本部オペレーターアカウント (operator@example.com / password)
+        User::updateOrCreate(
+            ['email' => 'operator@example.com'],
+            [
+                'name' => '本部オペレーター',
+                'password' => Hash::make('password'),
+                'role' => 'operator',
+                'is_active' => true,
+            ]
+        );
+    }
+}
