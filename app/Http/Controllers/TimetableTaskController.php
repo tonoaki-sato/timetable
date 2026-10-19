@@ -6,6 +6,7 @@ use App\Http\Requests\AssignStaffRequest;
 use App\Http\Requests\StoreTimetableTaskRequest;
 use App\Http\Requests\UpdateAttendanceRequest;
 use App\Http\Requests\UpdateTimetableTaskRequest;
+use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
@@ -39,8 +40,28 @@ class TimetableTaskController extends Controller
         $timetableId = $request->integer('timetable_id');
         $timetable = Timetable::findOrFail($timetableId);
 
+        $timetableLanes = $timetable->lanes()->with('leadStaff')->get();
+        if ($timetableLanes->isEmpty()) {
+            $timetable->createDefaultLanes();
+            $timetableLanes = $timetable->lanes()->with('leadStaff')->get();
+        }
+
+        $selectedLaneId = $request->integer('lane_id') ?: null;
+        $selectedLane = $selectedLaneId ? $timetableLanes->firstWhere('id', $selectedLaneId) : null;
+
+        $suggestedStartTime = '08:00';
+        if ($selectedLane) {
+            $latestTask = $selectedLane->tasks()->latest('end_time')->first();
+            if ($latestTask) {
+                $suggestedStartTime = substr($latestTask->end_time, 0, 5);
+            }
+        }
+
         return view('timetable_tasks.create', [
             'timetable' => $timetable,
+            'timetableLanes' => $timetableLanes,
+            'selectedLane' => $selectedLane,
+            'suggestedStartTime' => $suggestedStartTime,
             'lanes' => TimetableTask::LANES,
             'statuses' => TimetableTask::STATUSES,
         ]);
@@ -53,7 +74,23 @@ class TimetableTaskController extends Controller
     {
         $this->authorize('create', TimetableTask::class);
 
-        $task = $this->taskService->createTask($request->validated());
+        $data = $request->validated();
+        $autoAssignLead = $request->boolean('auto_assign_lead');
+
+        $task = $this->taskService->createTask($data);
+
+        // 主担当スタッフの自動アサイン（班リーダー）
+        if ($autoAssignLead && $task->lane_id) {
+            $lane = Lane::find($task->lane_id);
+            if ($lane && $lane->lead_staff_id) {
+                $task->assignments()->firstOrCreate([
+                    'staff_id' => $lane->lead_staff_id,
+                ], [
+                    'role_description' => '班リーダー',
+                    'attendance_status' => 'present',
+                ]);
+            }
+        }
 
         return redirect()->route('timetables.show', $task->timetable_id)
             ->with('success', "作業タスク「{$task->title}」を登録しました。");
@@ -83,8 +120,11 @@ class TimetableTaskController extends Controller
     {
         $this->authorize('update', $task);
 
+        $timetableLanes = $task->timetable->lanes()->with('leadStaff')->get();
+
         return view('timetable_tasks.edit', [
             'task' => $task,
+            'timetableLanes' => $timetableLanes,
             'lanes' => TimetableTask::LANES,
             'statuses' => TimetableTask::STATUSES,
         ]);

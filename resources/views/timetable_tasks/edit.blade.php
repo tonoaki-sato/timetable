@@ -56,16 +56,27 @@
             <!-- 担当班 & 場所 -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="lane" class="block text-xs font-bold text-slate-700 mb-1">
+                    <label for="lane_id" class="block text-xs font-bold text-slate-700 mb-1">
                         担当班（レーン） <span class="text-red-500">*</span>
                     </label>
-                    <select id="lane" name="lane" required
+                    <select id="lane_id" name="lane_id" required
                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        @foreach($lanes as $key => $label)
-                        <option value="{{ $key }}" {{ old('lane', $task->lane) === $key ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                        @endforeach
+                        @if(isset($timetableLanes) && $timetableLanes->isNotEmpty())
+                            @foreach($timetableLanes as $l)
+                            <option value="{{ $l->id }}" {{ (old('lane_id', $task->lane_id) == $l->id || old('lane', $task->lane) == $l->name) ? 'selected' : '' }}>
+                                {{ $l->icon ?: '📋' }} {{ $l->name }}
+                                @if($l->leadStaff)
+                                    (主担当: {{ $l->leadStaff->name }})
+                                @endif
+                            </option>
+                            @endforeach
+                        @else
+                            @foreach($lanes as $key => $label)
+                            <option value="" {{ old('lane', $task->lane) === $key ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                            @endforeach
+                        @endif
                     </select>
                 </div>
 

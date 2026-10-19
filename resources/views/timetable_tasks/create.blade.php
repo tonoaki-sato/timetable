@@ -49,29 +49,75 @@
             </div>
 
             <!-- 担当班 & 場所 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="lane" class="block text-xs font-bold text-slate-700 mb-1">
-                        担当班（レーン） <span class="text-red-500">*</span>
-                    </label>
-                    <select id="lane" name="lane" required
-                        class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        @foreach($lanes as $key => $label)
-                        <option value="{{ $key }}" {{ old('lane') === $key ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                        @endforeach
-                    </select>
+            <div class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="lane_id" class="block text-xs font-bold text-slate-700 mb-1">
+                            担当班（レーン） <span class="text-red-500">*</span>
+                        </label>
+                        <select id="lane_id" name="lane_id" required
+                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            @if(isset($timetableLanes) && $timetableLanes->isNotEmpty())
+                                @foreach($timetableLanes as $l)
+                                <option value="{{ $l->id }}"
+                                    data-lead-name="{{ $l->leadStaff?->name }}"
+                                    data-lead-aff="{{ $l->leadStaff?->affiliation }}"
+                                    {{ (old('lane_id', $selectedLane?->id) == $l->id || old('lane') == $l->name) ? 'selected' : '' }}>
+                                    {{ $l->icon ?: '📋' }} {{ $l->name }}
+                                    @if($l->leadStaff)
+                                        (主担当: {{ $l->leadStaff->name }})
+                                    @endif
+                                </option>
+                                @endforeach
+                            @else
+                                @foreach($lanes as $key => $label)
+                                <option value="" {{ old('lane') === $key ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="location" class="block text-xs font-bold text-slate-700 mb-1">
+                            実施場所・持ち場
+                        </label>
+                        <input type="text" id="location" name="location" value="{{ old('location') }}"
+                            placeholder="例: 第1ゲート前交差点、西口救護テント"
+                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
                 </div>
 
-                <div>
-                    <label for="location" class="block text-xs font-bold text-slate-700 mb-1">
-                        実施場所・持ち場
+                <!-- 主担当スタッフの自動アサイン案内 -->
+                @php
+                    $initialLeadStaff = $selectedLane?->leadStaff;
+                @endphp
+                @if($initialLeadStaff)
+                <div class="p-3 bg-indigo-50/70 border border-indigo-200/80 rounded-xl flex items-center justify-between text-xs text-indigo-900">
+                    <div class="flex items-center space-x-2">
+                        <span>👤</span>
+                        <span>
+                            レーン主担当: <strong>{{ $initialLeadStaff->name }}</strong>
+                            @if($initialLeadStaff->affiliation)
+                            <span class="text-indigo-600 text-[11px]">({{ $initialLeadStaff->affiliation }})</span>
+                            @endif
+                        </span>
+                    </div>
+                    <label class="inline-flex items-center space-x-2 cursor-pointer font-bold text-indigo-700 hover:text-indigo-900">
+                        <input type="checkbox" name="auto_assign_lead" value="1" {{ old('auto_assign_lead', '1') ? 'checked' : '' }}
+                            class="w-4 h-4 text-indigo-600 rounded border-indigo-300 focus:ring-indigo-500">
+                        <span>主担当を班リーダーとして自動アサインする</span>
                     </label>
-                    <input type="text" id="location" name="location" value="{{ old('location') }}"
-                        placeholder="例: 第1ゲート前交差点、西口救護テント"
-                        class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
+                @elseif($selectedLane)
+                <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 flex items-center justify-between">
+                    <span>👤 このレーンには現在主担当が設定されていません。</span>
+                    <a href="{{ route('timetables.lanes.index', $timetable) }}" class="text-indigo-600 hover:underline font-bold text-[11px]">
+                        主担当を設定する →
+                    </a>
+                </div>
+                @endif
             </div>
 
             <!-- 時間帯（開始〜終了） -->
@@ -80,7 +126,7 @@
                     <label for="start_time" class="block text-xs font-bold text-slate-700 mb-1">
                         作業開始時刻 <span class="text-red-500">*</span>
                     </label>
-                    <input type="time" id="start_time" name="start_time" value="{{ old('start_time', '08:00') }}" required
+                    <input type="time" id="start_time" name="start_time" value="{{ old('start_time', $suggestedStartTime ?? '08:00') }}" required
                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
                 </div>
 

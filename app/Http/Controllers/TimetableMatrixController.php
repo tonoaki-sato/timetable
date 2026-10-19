@@ -29,14 +29,20 @@ class TimetableMatrixController extends Controller
         }
 
         $tasksByLane = [];
-        $lanes = TimetableTask::LANES;
+        $dynamicLanes = collect();
         $totalRequired = 0;
         $totalAssigned = 0;
         $satisfiedTasksCount = 0;
         $tasksCount = 0;
 
         if ($selectedTimetable !== null) {
-            $tasks = TimetableTask::with(['assignments.staff'])
+            $dynamicLanes = $selectedTimetable->lanes()->with('leadStaff')->get();
+            if ($dynamicLanes->isEmpty()) {
+                $selectedTimetable->createDefaultLanes();
+                $dynamicLanes = $selectedTimetable->lanes()->with('leadStaff')->get();
+            }
+
+            $tasks = TimetableTask::with(['assignments.staff', 'laneRelation'])
                 ->where('timetable_id', $selectedTimetable->id)
                 ->orderBy('start_time')
                 ->get();
@@ -46,8 +52,20 @@ class TimetableMatrixController extends Controller
             $totalRequired = $tasks->sum('required_people_count');
             $totalAssigned = $tasks->sum(fn (TimetableTask $t) => $t->assigned_count);
 
-            foreach (array_keys($lanes) as $laneName) {
-                $tasksByLane[$laneName] = $tasks->where('lane', $laneName)->values();
+            foreach ($dynamicLanes as $lane) {
+                $tasksByLane[$lane->id] = $tasks->filter(function (TimetableTask $t) use ($lane) {
+                    if ($t->lane_id === $lane->id) {
+                        return true;
+                    }
+                    if ($t->lane === $lane->name) {
+                        return true;
+                    }
+
+                    // 旧名称（〜班）との互換マッチング
+                    return $t->lane === ($lane->name.'班')
+                        || ($lane->name === '巡回' && $t->lane === '誘導・警備班')
+                        || ($lane->name === '本陣' && in_array($t->lane, ['救護班', '本部連絡班'], true));
+                })->values();
             }
         }
 
@@ -71,7 +89,8 @@ class TimetableMatrixController extends Controller
         return view('timetables.matrix', [
             'timetables' => $timetables,
             'selectedTimetable' => $selectedTimetable,
-            'lanes' => $lanes,
+            'lanes' => $dynamicLanes,
+            'dynamicLanes' => $dynamicLanes,
             'tasksByLane' => $tasksByLane,
             'timeSlots' => $timeSlots,
             'startHour' => $startHour,

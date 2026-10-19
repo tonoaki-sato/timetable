@@ -50,7 +50,10 @@ class TimetableService
     {
         $data['created_by'] = $creator?->id;
 
-        return $this->timetableRepository->create($data);
+        $timetable = $this->timetableRepository->create($data);
+        $timetable->createDefaultLanes();
+
+        return $timetable;
     }
 
     /**

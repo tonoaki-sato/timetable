@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'timetable_id',
+    'lane_id',
     'title',
     'content',
     'lane',
@@ -32,11 +33,53 @@ class TimetableTask extends Model
     use HasFactory;
 
     /**
-     * 担当班（レーン）の定義一覧
+     * モデルイベントの登録
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (TimetableTask $task) {
+            if ($task->lane_id) {
+                if (empty($task->lane)) {
+                    $lane = Lane::find($task->lane_id);
+                    if ($lane) {
+                        $task->lane = $lane->name;
+                    }
+                }
+            } elseif ($task->timetable_id && $task->lane) {
+                $mappedName = match ($task->lane) {
+                    'カラーコーン班' => 'カラーコーン',
+                    '給水設備班' => '給水設備',
+                    '衛生班' => '衛生',
+                    '誘導・警備班' => '巡回',
+                    '救護班', '本部連絡班' => '本陣',
+                    default => $task->lane,
+                };
+                $lane = Lane::where('timetable_id', $task->timetable_id)
+                    ->where('name', $mappedName)
+                    ->first();
+                if ($lane) {
+                    $task->lane_id = $lane->id;
+                }
+            }
+        });
+    }
+
+    /**
+     * 担当班（レーン）の定義一覧（デフォルト10レーン＋旧互換名称）
      *
      * @var array<string, string>
      */
     public const array LANES = [
+        'カラーコーン' => 'カラーコーン',
+        '給水設備' => '給水設備',
+        '衛生' => '衛生',
+        '巡回' => '巡回',
+        'キッズ村' => 'キッズ村',
+        'ちょうちん' => 'ちょうちん',
+        'ござ市' => 'ござ市',
+        '本陣' => '本陣',
+        '道路清掃' => '道路清掃',
+        'ステカン' => 'ステカン',
         'カラーコーン班' => 'カラーコーン班',
         '給水設備班' => '給水設備班',
         '衛生班' => '衛生班',
@@ -78,6 +121,14 @@ class TimetableTask extends Model
     public function timetable(): BelongsTo
     {
         return $this->belongsTo(Timetable::class);
+    }
+
+    /**
+     * 紐づく担当班（レーン）とのリレーション
+     */
+    public function laneRelation(): BelongsTo
+    {
+        return $this->belongsTo(Lane::class, 'lane_id');
     }
 
     /**

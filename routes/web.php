@@ -3,6 +3,7 @@
 use App\Http\Controllers\AnnualScheduleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LaneController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TimetableMatrixController;
@@ -41,6 +42,13 @@ Route::middleware('auth')->group(function () {
 
     // タイムテーブル基本運行日リソースルート
     Route::resource('timetables', TimetableController::class);
+
+    // 担当班（レーン）管理
+    Route::get('timetables/{timetable}/lanes', [LaneController::class, 'index'])->name('timetables.lanes.index');
+    Route::post('timetables/{timetable}/lanes', [LaneController::class, 'store'])->name('timetables.lanes.store');
+    Route::put('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'update'])->name('timetables.lanes.update');
+    Route::patch('timetables/{timetable}/lanes/{lane}/lead-staff', [LaneController::class, 'updateLeadStaff'])->name('timetables.lanes.update-lead');
+    Route::delete('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'destroy'])->name('timetables.lanes.destroy');
 
     // 作業タスクリソースルート
     Route::resource('timetable-tasks', TimetableTaskController::class)->parameters(['timetable-tasks' => 'task']);

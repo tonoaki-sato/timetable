@@ -934,11 +934,51 @@ class TimetableSeeder extends Seeder
      */
     private function seedTasks(Timetable $timetable, array $tasksData, Collection $staffMap): void
     {
+        // 1. デフォルト10レーンを生成
+        $timetable->createDefaultLanes();
+        $lanes = $timetable->lanes()->get()->keyBy('name');
+
+        // 2. 主担当スタッフの紐付け（後付け機能の動作確認・初期データ）
+        $leadMappings = [
+            'カラーコーン' => '佐藤 秀樹',
+            '給水設備' => '宮永 健一',
+            '衛生' => '有江 浩二',
+            '巡回' => '高橋 亮太',
+            'ござ市' => '漆原 拓也',
+            '本陣' => 'ヨーコ・サトウ',
+            '道路清掃' => '加藤 恵子',
+            'ステカン' => '鈴木 裕介',
+        ];
+
+        foreach ($leadMappings as $laneName => $staffName) {
+            if (isset($lanes[$laneName]) && isset($staffMap[$staffName])) {
+                $lanes[$laneName]->update([
+                    'lead_staff_id' => $staffMap[$staffName]->id,
+                ]);
+            }
+        }
+
+        // 3. タスクの登録と lane_id 紐付け
         foreach ($tasksData as $taskData) {
             $assignedStaffNames = $taskData['staff'] ?? [];
             unset($taskData['staff']);
 
             $taskData['timetable_id'] = $timetable->id;
+
+            // 旧班名から新レーン名へのマッピング
+            $mappedLaneName = match ($taskData['lane']) {
+                'カラーコーン班' => 'カラーコーン',
+                '給水設備班' => '給水設備',
+                '衛生班' => '衛生',
+                '誘導・警備班' => '巡回',
+                '救護班' => '本陣',
+                '本部連絡班' => '本陣',
+                default => $taskData['lane'],
+            };
+
+            if (isset($lanes[$mappedLaneName])) {
+                $taskData['lane_id'] = $lanes[$mappedLaneName]->id;
+            }
 
             $task = TimetableTask::updateOrCreate(
                 [

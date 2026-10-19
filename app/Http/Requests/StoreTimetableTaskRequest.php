@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Lane;
 use App\Models\TimetableTask;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,11 +22,21 @@ class StoreTimetableTaskRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        $this->merge([
+        $mergeData = [
             'is_at_least' => $this->boolean('is_at_least'),
             'is_critical' => $this->boolean('is_critical'),
             'requires_review' => $this->boolean('requires_review'),
-        ]);
+            'auto_assign_lead' => $this->boolean('auto_assign_lead'),
+        ];
+
+        if ($this->filled('lane_id') && ! $this->filled('lane')) {
+            $lane = Lane::find($this->input('lane_id'));
+            if ($lane) {
+                $mergeData['lane'] = $lane->name;
+            }
+        }
+
+        $this->merge($mergeData);
     }
 
     /**
@@ -37,9 +48,10 @@ class StoreTimetableTaskRequest extends FormRequest
     {
         return [
             'timetable_id' => ['required', 'integer', 'exists:timetables,id'],
+            'lane_id' => ['nullable', 'integer', 'exists:lanes,id'],
             'title' => ['required', 'string', 'max:255'],
             'content' => ['nullable', 'string', 'max:5000'],
-            'lane' => ['required', 'string', 'in:'.implode(',', array_keys(TimetableTask::LANES))],
+            'lane' => ['required_without:lane_id', 'nullable', 'string', 'max:100'],
             'location' => ['nullable', 'string', 'max:255'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
@@ -47,6 +59,7 @@ class StoreTimetableTaskRequest extends FormRequest
             'is_at_least' => ['required', 'boolean'],
             'is_critical' => ['required', 'boolean'],
             'requires_review' => ['required', 'boolean'],
+            'auto_assign_lead' => ['nullable', 'boolean'],
             'status' => ['required', 'string', 'in:'.implode(',', array_keys(TimetableTask::STATUSES))],
         ];
     }

@@ -48,11 +48,48 @@ class Timetable extends Model
     }
 
     /**
+     * target_date のミューテタ（DB保存時に Y-m-d 形式を担保）
+     */
+    public function setTargetDateAttribute(mixed $value): void
+    {
+        $this->attributes['target_date'] = $value instanceof \DateTimeInterface
+            ? $value->format('Y-m-d')
+            : (is_string($value) ? substr($value, 0, 10) : $value);
+    }
+
+    /**
      * 紐づく作業タスク一覧とのリレーション
      */
     public function tasks(): HasMany
     {
         return $this->hasMany(TimetableTask::class)->orderBy('start_time', 'asc');
+    }
+
+    /**
+     * 紐づく担当班（レーン）一覧とのリレーション
+     */
+    public function lanes(): HasMany
+    {
+        return $this->hasMany(Lane::class)->orderBy('display_order', 'asc');
+    }
+
+    /**
+     * デフォルト10レーンを一括生成
+     */
+    public function createDefaultLanes(): void
+    {
+        foreach (Lane::DEFAULT_LANES as $laneData) {
+            $this->lanes()->firstOrCreate(
+                ['name' => $laneData['name']],
+                [
+                    'icon' => $laneData['icon'],
+                    'color' => $laneData['color'],
+                    'description' => $laneData['description'],
+                    'display_order' => $laneData['display_order'],
+                    'lead_staff_id' => null,
+                ]
+            );
+        }
     }
 
     /**

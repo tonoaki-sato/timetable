@@ -10,6 +10,12 @@
         </a>
 
         <div class="flex items-center space-x-2">
+            <a href="{{ route('timetables.lanes.index', $timetable) }}"
+                class="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                <span>🏷️</span>
+                <span>担当班（レーン）管理</span>
+            </a>
+
             @can('create', App\Models\TimetableTask::class)
             <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
                 class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1">
@@ -141,18 +147,33 @@
                         <!-- 担当班 -->
                         <td class="px-4 py-3 whitespace-nowrap">
                             @php
-                                $laneColor = match($task->lane) {
-                                    'カラーコーン班' => 'bg-amber-50 text-amber-800 border-amber-200',
-                                    '給水設備班' => 'bg-sky-50 text-sky-800 border-sky-200',
-                                    '衛生班' => 'bg-emerald-50 text-emerald-800 border-emerald-200',
-                                    '誘導・警備班' => 'bg-purple-50 text-purple-800 border-purple-200',
-                                    '救護班' => 'bg-rose-50 text-rose-800 border-rose-200',
+                                $laneRel = $task->laneRelation;
+                                $badgeClass = $laneRel ? $laneRel->color_classes['badge'] : match($task->lane) {
+                                    'カラーコーン', 'カラーコーン班' => 'bg-amber-100 text-amber-800 border-amber-300',
+                                    '給水設備', '給水設備班' => 'bg-sky-100 text-sky-800 border-sky-300',
+                                    '衛生', '衛生班' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                                    '巡回', '誘導・警備班' => 'bg-purple-100 text-purple-800 border-purple-300',
+                                    'キッズ村' => 'bg-pink-100 text-pink-800 border-pink-300',
+                                    'ちょうちん' => 'bg-rose-100 text-rose-800 border-rose-300',
+                                    'ござ市' => 'bg-orange-100 text-orange-800 border-orange-300',
+                                    '本陣', '本部連絡班' => 'bg-indigo-100 text-indigo-800 border-indigo-300',
+                                    '道路清掃' => 'bg-teal-100 text-teal-800 border-teal-300',
+                                    'ステカン' => 'bg-yellow-100 text-yellow-800 border-yellow-300',
                                     default => 'bg-slate-100 text-slate-800 border-slate-200',
                                 };
+                                $laneIcon = $laneRel ? ($laneRel->icon ?: '📋') : '📋';
                             @endphp
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border {{ $laneColor }}">
-                                {{ $task->lane }}
-                            </span>
+                            <div class="space-y-0.5">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border {{ $badgeClass }}">
+                                    <span class="mr-1">{{ $laneIcon }}</span>
+                                    <span>{{ $task->lane }}</span>
+                                </span>
+                                @if($laneRel && $laneRel->leadStaff)
+                                <div class="text-[9px] text-slate-500 font-medium">
+                                    👤 {{ $laneRel->leadStaff->name }}
+                                </div>
+                                @endif
+                            </div>
                         </td>
 
                         <!-- 作業名・作業内容 -->

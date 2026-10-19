@@ -64,9 +64,15 @@
         <!-- リンク操作 -->
         @if($selectedTimetable)
         <div class="flex items-center space-x-2">
+            <a href="{{ route('timetables.lanes.index', $selectedTimetable) }}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                <span>🏷️</span>
+                <span>担当班（レーン）管理</span>
+            </a>
+
             @can('create', App\Models\TimetableTask::class)
             <a href="{{ route('timetable-tasks.create', ['timetable_id' => $selectedTimetable->id]) }}"
-                class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1">
                 <span>➕</span>
                 <span>タスク追加</span>
             </a>
@@ -96,36 +102,53 @@
 
     <!-- 3. マトリクス表示（レーン別 時系列カード表示） -->
     <div class="space-y-6">
-        @foreach($lanes as $laneKey => $laneLabel)
+        @foreach($lanes as $lane)
         @php
-            $laneTasks = $tasksByLane[$laneKey] ?? collect();
-            $laneColorClasses = match($laneKey) {
-                'カラーコーン班' => ['border' => 'border-amber-300', 'badge' => 'bg-amber-100 text-amber-800 border-amber-300', 'icon' => '🔺'],
-                '給水設備班' => ['border' => 'border-sky-300', 'badge' => 'bg-sky-100 text-sky-800 border-sky-300', 'icon' => '🚰'],
-                '衛生班' => ['border' => 'border-emerald-300', 'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300', 'icon' => '🧹'],
-                '誘導・警備班' => ['border' => 'border-purple-300', 'badge' => 'bg-purple-100 text-purple-800 border-purple-300', 'icon' => '🚨'],
-                '救護班' => ['border' => 'border-rose-300', 'badge' => 'bg-rose-100 text-rose-800 border-rose-300', 'icon' => '🏥'],
-                default => ['border' => 'border-slate-300', 'badge' => 'bg-slate-100 text-slate-800 border-slate-300', 'icon' => '📋'],
-            };
+            $laneId = is_object($lane) ? $lane->id : $lane;
+            $laneTasks = $tasksByLane[$laneId] ?? collect();
+            $classes = is_object($lane) ? $lane->color_classes : ['badge' => 'bg-slate-100 text-slate-800 border-slate-300', 'border' => 'border-slate-300'];
+            $laneName = is_object($lane) ? $lane->name : $lane;
+            $laneIcon = is_object($lane) ? ($lane->icon ?: '📋') : '📋';
+            $leadStaff = is_object($lane) ? $lane->leadStaff : null;
         @endphp
 
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <!-- レーンヘッダー -->
-            <div class="p-4 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
-                <div class="flex items-center space-x-2.5">
-                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border shadow-2xs {{ $laneColorClasses['badge'] }}">
-                        <span class="mr-1.5">{{ $laneColorClasses['icon'] }}</span>
-                        <span>{{ $laneLabel }}</span>
+            <div class="p-4 bg-slate-50/80 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border shadow-2xs {{ $classes['badge'] }}">
+                        <span class="mr-1.5">{{ $laneIcon }}</span>
+                        <span>{{ $laneName }}</span>
                     </span>
+
+                    <!-- 主担当（現場リーダー）バッジ表示 -->
+                    @if($leadStaff)
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs bg-white text-slate-700 border border-slate-200 shadow-2xs font-medium">
+                        <span class="mr-1">👤 主担当:</span>
+                        <strong class="text-slate-900 font-bold">{{ $leadStaff->name }}</strong>
+                        @if($leadStaff->affiliation)
+                        <span class="text-slate-400 text-[10px] ml-1">({{ $leadStaff->affiliation }})</span>
+                        @endif
+                    </span>
+                    @else
+                    <a href="{{ route('timetables.lanes.index', $selectedTimetable) }}"
+                        class="inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition font-medium">
+                        <span class="mr-1">👤 主担当:</span>
+                        <span>未設定</span>
+                        <span class="ml-1 text-[10px] underline">設定する →</span>
+                    </a>
+                    @endif
+
                     <span class="text-xs text-slate-500 font-medium">
                         全 <strong class="text-slate-800 font-mono">{{ $laneTasks->count() }}</strong> 件のタスク
                     </span>
                 </div>
 
                 @can('create', App\Models\TimetableTask::class)
-                <a href="{{ route('timetable-tasks.create', ['timetable_id' => $selectedTimetable->id, 'lane' => $laneKey]) }}"
-                    class="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition">
-                    + この班にタスクを追加
+                <a href="{{ route('timetable-tasks.create', ['timetable_id' => $selectedTimetable->id, 'lane_id' => is_object($lane) ? $lane->id : null, 'lane' => $laneName]) }}"
+                    class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition shrink-0">
+                    <span>➕</span>
+                    <span>このレーンにタスクを追加</span>
                 </a>
                 @endcan
             </div>
@@ -148,6 +171,9 @@
                                 </span>
 
                                 <div class="flex items-center space-x-1">
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                        {{ $task->lane }}
+                                    </span>
                                     @if($task->is_critical)
                                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
                                         🚨 最優先

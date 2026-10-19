@@ -42,6 +42,14 @@ class Staff extends Model
     }
 
     /**
+     * 主担当（現場リーダー）を務めるレーン一覧とのリレーション
+     */
+    public function ledLanes(): HasMany
+    {
+        return $this->hasMany(Lane::class, 'lead_staff_id');
+    }
+
+    /**
      * 割り当てられたタスク一覧との多対多リレーション
      */
     public function tasks(): BelongsToMany
