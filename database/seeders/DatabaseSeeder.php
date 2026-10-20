@@ -14,13 +14,13 @@ class DatabaseSeeder extends Seeder
         // 1. ユーザー初期データ
         $this->call(UserSeeder::class);
 
-        // 2. 年間スケジュール初期データ
+        // 3. 年間スケジュール初期データ
         $this->call(AnnualScheduleSeeder::class);
 
-        // 3. スタッフ（現場ボランティア）初期データ
+        // 4. スタッフ（現場ボランティア）初期データ
         $this->call(StaffSeeder::class);
 
-        // 4. タイムテーブル＆タスク初期データ
+        // 5. タイムテーブル＆タスク初期データ
         $this->call(TimetableSeeder::class);
     }
 }

@@ -34,8 +34,8 @@ enum AnnualPhase: string
         return match ($this) {
             self::Preparation => [1, 2],
             self::Planning => [3, 4, 5],
-            self::Arrangement => [6, 7, 8],
-            self::Execution => [9, 10],
+            self::Arrangement => [6, 7, 8, 9],
+            self::Execution => [10],
             self::Followup => [11, 12],
         };
     }
