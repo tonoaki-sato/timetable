@@ -78,7 +78,6 @@
                         <!-- ユーザーアバター / 権限バッジ -->
                         <div class="text-right hidden sm:block shrink-0">
                             <div class="text-xs font-bold text-white flex items-center justify-end space-x-1.5 whitespace-nowrap">
-                                <span class="whitespace-nowrap max-w-[120px] lg:max-w-none truncate">{{ Auth::user()->name }}</span>
                                 @if(Auth::user()->isAdmin())
                                 <span class="bg-purple-900/80 text-purple-200 border border-purple-500/40 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0">
                                     管理者
@@ -89,7 +88,6 @@
                                 </span>
                                 @endif
                             </div>
-                            <div class="text-[10px] text-slate-400 font-mono hidden xl:block whitespace-nowrap">{{ Auth::user()->email }}</div>
                         </div>
 
                         <!-- プロフィールショートカット -->
