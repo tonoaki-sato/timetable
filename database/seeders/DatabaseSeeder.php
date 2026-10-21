@@ -22,5 +22,8 @@ class DatabaseSeeder extends Seeder
 
         // 4. タイムテーブル＆タスク初期データ
         $this->call(TimetableSeeder::class);
+
+        // 5. 会議・打ち合わせ初期データ
+        $this->call(MeetingSeeder::class);
     }
 }

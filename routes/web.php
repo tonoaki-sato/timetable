@@ -4,6 +4,7 @@ use App\Http\Controllers\AnnualScheduleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaneController;
+use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TimetableMatrixController;
@@ -36,6 +37,9 @@ Route::middleware('auth')->group(function () {
 
     // 年間スケジュール管理リソースルート
     Route::resource('annual-schedules', AnnualScheduleController::class);
+
+    // 会議・打ち合わせ専用スケジュール管理リソースルート
+    Route::resource('meetings', MeetingController::class);
 
     // 現場スタッフ（ボランティア）管理リソースルート
     Route::resource('staff', StaffController::class);

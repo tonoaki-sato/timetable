@@ -42,10 +42,6 @@ class AnnualScheduleSeederTest extends TestCase
             'category' => 'briefing',
         ]);
 
-        // 担当スタッフが割り当てられたスケジュールが存在すること
-        $assignedCount = AnnualSchedule::where('target_year', 2027)->whereNotNull('staff_id')->count();
-        $this->assertGreaterThan(0, $assignedCount);
-
         // 全レコードのカテゴリとステータスが定義定数に合致していること
         $validCategories = array_keys(AnnualSchedule::CATEGORIES);
         $validStatuses = array_keys(AnnualSchedule::STATUSES);

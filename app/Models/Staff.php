@@ -58,6 +58,14 @@ class Staff extends Model
     }
 
     /**
+     * 主催する会議・打ち合わせ一覧とのリレーション
+     */
+    public function meetings(): HasMany
+    {
+        return $this->hasMany(Meeting::class, 'host_staff_id');
+    }
+
+    /**
      * 割り当てられたタスク一覧との多対多リレーション
      */
     public function tasks(): BelongsToMany
