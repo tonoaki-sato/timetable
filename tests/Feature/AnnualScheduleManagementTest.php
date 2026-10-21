@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AnnualSchedule;
+use App\Models\Staff;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -170,5 +171,149 @@ class AnnualScheduleManagementTest extends TestCase
         $this->assertDatabaseMissing('annual_schedules', [
             'id' => $schedule->id,
         ]);
+    }
+
+    /**
+     * 担当スタッフを指定して新規登録できること
+     */
+    public function test_can_create_annual_schedule_with_assignee(): void
+    {
+        $this->actingAs($this->user);
+
+        $staff = Staff::factory()->create([
+            'name' => '漆原 拓也',
+            'affiliation' => 'まつり運行本部',
+        ]);
+
+        $response = $this->post(route('annual-schedules.store'), [
+            'target_year' => 2026,
+            'title' => 'ござ市出店者事前説明会',
+            'category' => 'briefing',
+            'start_date' => '2026-07-20',
+            'status' => 'planned',
+            'staff_id' => $staff->id,
+        ]);
+
+        $response->assertRedirect(route('annual-schedules.index', ['year' => 2026]));
+        $this->assertDatabaseHas('annual_schedules', [
+            'title' => 'ござ市出店者事前説明会',
+            'staff_id' => $staff->id,
+        ]);
+    }
+
+    /**
+     * 担当スタッフを変更・解除できること
+     */
+    public function test_can_update_annual_schedule_assignee(): void
+    {
+        $this->actingAs($this->user);
+
+        $staff1 = Staff::factory()->create(['name' => '担当者A']);
+        $staff2 = Staff::factory()->create(['name' => '担当者B']);
+
+        $schedule = AnnualSchedule::factory()->create([
+            'staff_id' => $staff1->id,
+        ]);
+
+        // 担当者をstaff2に変更
+        $this->put(route('annual-schedules.update', $schedule), [
+            'target_year' => $schedule->target_year,
+            'title' => $schedule->title,
+            'category' => $schedule->category,
+            'start_date' => $schedule->start_date->format('Y-m-d'),
+            'status' => $schedule->status,
+            'staff_id' => $staff2->id,
+        ]);
+
+        $schedule->refresh();
+        $this->assertSame($staff2->id, $schedule->staff_id);
+
+        // 担当者を未指定（null）に解除
+        $this->put(route('annual-schedules.update', $schedule), [
+            'target_year' => $schedule->target_year,
+            'title' => $schedule->title,
+            'category' => $schedule->category,
+            'start_date' => $schedule->start_date->format('Y-m-d'),
+            'status' => $schedule->status,
+            'staff_id' => null,
+        ]);
+
+        $schedule->refresh();
+        $this->assertNull($schedule->staff_id);
+    }
+
+    /**
+     * 担当スタッフによる一覧絞り込みができること
+     */
+    public function test_filter_by_assignee(): void
+    {
+        $this->actingAs($this->user);
+
+        $staffA = Staff::factory()->create(['name' => '漆原 拓也']);
+        $staffB = Staff::factory()->create(['name' => '有江 浩二']);
+
+        AnnualSchedule::factory()->create([
+            'target_year' => 2026,
+            'title' => '漆原担当タスク',
+            'staff_id' => $staffA->id,
+        ]);
+
+        AnnualSchedule::factory()->create([
+            'target_year' => 2026,
+            'title' => '有江担当タスク',
+            'staff_id' => $staffB->id,
+        ]);
+
+        $response = $this->get(route('annual-schedules.index', [
+            'year' => 2026,
+            'staff_id' => $staffA->id,
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('漆原担当タスク');
+        $response->assertDontSee('有江担当タスク');
+    }
+
+    /**
+     * 担当スタッフ名でのキーワード検索ができること
+     */
+    public function test_search_by_assignee_name(): void
+    {
+        $this->actingAs($this->user);
+
+        $staff = Staff::factory()->create([
+            'name' => '宮永 健一',
+            'kana' => 'ミヤナガ ケンイチ',
+        ]);
+
+        AnnualSchedule::factory()->create([
+            'target_year' => 2026,
+            'title' => '設備定期点検',
+            'staff_id' => $staff->id,
+        ]);
+
+        $response = $this->get(route('annual-schedules.index', [
+            'year' => 2026,
+            'search' => '宮永',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('設備定期点検');
+    }
+
+    /**
+     * 担当スタッフが削除された時に staff_id が null になること
+     */
+    public function test_assignee_null_on_delete(): void
+    {
+        $staff = Staff::factory()->create();
+        $schedule = AnnualSchedule::factory()->create([
+            'staff_id' => $staff->id,
+        ]);
+
+        $staff->delete();
+
+        $schedule->refresh();
+        $this->assertNull($schedule->staff_id);
     }
 }

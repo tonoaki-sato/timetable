@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'location',
     'status',
     'description',
+    'staff_id',
     'created_by',
 ])]
 class AnnualSchedule extends Model
@@ -36,6 +37,7 @@ class AnnualSchedule extends Model
         'permit' => '申請・協議',
         'briefing' => '募集・説明会',
         'operation' => '運行・設営',
+        'ceremony' => '神事・式典',
         'other' => 'その他',
     ];
 
@@ -60,9 +62,18 @@ class AnnualSchedule extends Model
     {
         return [
             'target_year' => 'integer',
+            'staff_id' => 'integer',
             'start_date' => 'date',
             'end_date' => 'date',
         ];
+    }
+
+    /**
+     * 担当スタッフとのリレーション
+     */
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(Staff::class, 'staff_id');
     }
 
     /**
@@ -126,7 +137,19 @@ class AnnualSchedule extends Model
     }
 
     /**
-     * キーワード検索スコープ（タイトル・場所・詳細）
+     * 担当スタッフによるスコープ
+     */
+    public function scopeAssignee(Builder $query, ?int $staffId): Builder
+    {
+        if ($staffId) {
+            return $query->where('staff_id', $staffId);
+        }
+
+        return $query;
+    }
+
+    /**
+     * キーワード検索スコープ（タイトル・場所・詳細・担当者名）
      */
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
@@ -134,7 +157,11 @@ class AnnualSchedule extends Model
             return $query->where(function (Builder $q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                     ->orWhere('location', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('assignee', function (Builder $sq) use ($search) {
+                        $sq->where('name', 'like', "%{$search}%")
+                            ->orWhere('kana', 'like', "%{$search}%");
+                    });
             });
         }
 

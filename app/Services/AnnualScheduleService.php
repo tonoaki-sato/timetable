@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Models\AnnualSchedule;
+use App\Models\Staff;
 use App\Models\User;
 use App\Repositories\Contracts\AnnualScheduleRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 class AnnualScheduleService
 {
@@ -22,18 +24,21 @@ class AnnualScheduleService
      *     availableYears: array<int, int>,
      *     yearSummary: array{total: int, planned: int, in_progress: int, completed: int},
      *     categories: array<string, string>,
-     *     statuses: array<string, string>
+     *     statuses: array<string, string>,
+     *     staffs: Collection<int, Staff>
      * }
      */
     public function getIndexViewData(
         int $year,
         ?string $category = null,
         ?string $status = null,
-        ?string $search = null
+        ?string $search = null,
+        ?int $staffId = null
     ): array {
         $availableYears = $this->scheduleRepository->getAvailableYears();
-        $schedules = $this->scheduleRepository->paginateFiltered($year, $category, $status, $search);
+        $schedules = $this->scheduleRepository->paginateFiltered($year, $category, $status, $search, $staffId);
         $yearSummary = $this->scheduleRepository->getYearStatusSummary($year);
+        $staffs = Staff::active()->orderBy('kana')->get();
 
         return [
             'schedules' => $schedules,
@@ -42,6 +47,7 @@ class AnnualScheduleService
             'yearSummary' => $yearSummary,
             'categories' => AnnualSchedule::CATEGORIES,
             'statuses' => AnnualSchedule::STATUSES,
+            'staffs' => $staffs,
         ];
     }
 

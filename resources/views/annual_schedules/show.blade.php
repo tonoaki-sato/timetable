@@ -78,7 +78,7 @@
 
         <!-- カードボディ -->
         <div class="p-6 sm:p-8 space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <!-- 実施日程 -->
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <span class="text-[11px] font-bold text-slate-500 block mb-1">📅 実施日程</span>
@@ -97,6 +97,21 @@
                     <div class="text-sm font-bold text-slate-900">
                         {{ $schedule->location ?? '未指定' }}
                     </div>
+                </div>
+
+                <!-- 担当者 -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <span class="text-[11px] font-bold text-slate-500 block mb-1">👤 担当者</span>
+                    @if($schedule->assignee)
+                    <div class="text-sm font-bold text-slate-900">
+                        {{ $schedule->assignee->name }}
+                    </div>
+                    @if($schedule->assignee->affiliation)
+                    <span class="text-[11px] text-slate-500 block mt-0.5">{{ $schedule->assignee->affiliation }}</span>
+                    @endif
+                    @else
+                    <div class="text-sm text-slate-400">未指定</div>
+                    @endif
                 </div>
             </div>
 

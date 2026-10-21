@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\AnnualSchedule;
+use App\Models\Staff;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -37,8 +38,19 @@ class AnnualScheduleFactory extends Factory
             'location' => fake()->randomElement(['市民会館 大ホール', 'まつり運行本部', '市役所第2会議室', 'メイン通り特設会場']),
             'status' => 'planned',
             'description' => fake()->realText(80),
+            'staff_id' => null,
             'created_by' => User::factory(),
         ];
+    }
+
+    /**
+     * 担当スタッフの指定
+     */
+    public function assignedTo(?Staff $staff): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'staff_id' => $staff?->id,
+        ]);
     }
 
     /**

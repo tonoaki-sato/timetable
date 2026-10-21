@@ -16,9 +16,10 @@ class AnnualScheduleRepository implements AnnualScheduleRepositoryInterface
         ?string $category = null,
         ?string $status = null,
         ?string $search = null,
+        ?int $staffId = null,
         int $perPage = 15
     ): LengthAwarePaginator {
-        $query = AnnualSchedule::with('creator');
+        $query = AnnualSchedule::with(['creator', 'assignee']);
 
         if ($year) {
             $query->where('target_year', $year);
@@ -30,6 +31,10 @@ class AnnualScheduleRepository implements AnnualScheduleRepositoryInterface
 
         if ($status) {
             $query->where('status', $status);
+        }
+
+        if ($staffId) {
+            $query->where('staff_id', $staffId);
         }
 
         if ($search) {

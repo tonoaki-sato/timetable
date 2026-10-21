@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\AnnualSchedule;
+use App\Models\Staff;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -16,6 +17,23 @@ class AnnualScheduleSeeder extends Seeder
         $admin = User::where('role', 'admin')->first() ?? User::factory()->create(['role' => 'admin']);
 
         $schedules = [
+            // =========================================================================
+            // 2026年度（第34回 保土ケ谷宿場まつり 年間スケジュール）
+            // =========================================================================
+
+            // --- 11月：フェーズ5【フォローアップ】 ---
+            [
+                'target_year' => 2026,
+                'title' => '総会／反省会・慰労会（打ち上げ）',
+                'category' => 'permit',
+                'start_date' => '2026-11-21',
+                'end_date' => null,
+                'location' => '保土ケ谷区役所 地域振興課',
+                'status' => 'planned',
+                'description' => '各部門の反省・総括報告、次年度への申し送り事項まとめ、各スタッフで洗濯・乾燥した陣羽織の回収・点検。',
+                'created_by' => $admin->id,
+            ],
+
             // =========================================================================
             // 2027年度（第35回 保土ケ谷宿場まつり 年間スケジュール）
             // =========================================================================

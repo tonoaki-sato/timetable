@@ -50,6 +50,14 @@ class Staff extends Model
     }
 
     /**
+     * 担当する年間スケジュール一覧とのリレーション
+     */
+    public function annualSchedules(): HasMany
+    {
+        return $this->hasMany(AnnualSchedule::class, 'staff_id');
+    }
+
+    /**
      * 割り当てられたタスク一覧との多対多リレーション
      */
     public function tasks(): BelongsToMany

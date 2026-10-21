@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAnnualScheduleRequest;
 use App\Http\Requests\UpdateAnnualScheduleRequest;
 use App\Models\AnnualSchedule;
+use App\Models\Staff;
 use App\Services\AnnualScheduleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,7 +28,8 @@ class AnnualScheduleController extends Controller
             year: (int) $request->input('year', 2026),
             category: $request->input('category'),
             status: $request->input('status'),
-            search: $request->input('search')
+            search: $request->input('search'),
+            staffId: $request->filled('staff_id') ? (int) $request->input('staff_id') : null
         );
 
         return view('annual_schedules.index', $viewData);
@@ -43,6 +45,7 @@ class AnnualScheduleController extends Controller
         return view('annual_schedules.create', [
             'categories' => AnnualSchedule::CATEGORIES,
             'statuses' => AnnualSchedule::STATUSES,
+            'staffs' => Staff::active()->orderBy('kana')->get(),
         ]);
     }
 
@@ -69,7 +72,7 @@ class AnnualScheduleController extends Controller
     {
         $this->authorize('view', $annualSchedule);
 
-        $annualSchedule->load('creator');
+        $annualSchedule->load(['creator', 'assignee']);
 
         return view('annual_schedules.show', [
             'schedule' => $annualSchedule,
@@ -87,6 +90,7 @@ class AnnualScheduleController extends Controller
             'schedule' => $annualSchedule,
             'categories' => AnnualSchedule::CATEGORIES,
             'statuses' => AnnualSchedule::STATUSES,
+            'staffs' => Staff::active()->orderBy('kana')->get(),
         ]);
     }
 

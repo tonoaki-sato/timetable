@@ -7,11 +7,14 @@ use App\Models\User;
 use App\Repositories\Contracts\AnnualScheduleRepositoryInterface;
 use App\Services\AnnualScheduleService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
 
 class AnnualScheduleServiceTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * getIndexViewData がリポジトリのメソッドを呼び出し、整形した画面データを返すこと
      */
@@ -26,7 +29,7 @@ class AnnualScheduleServiceTest extends TestCase
 
         $mockRepo->shouldReceive('paginateFiltered')
             ->once()
-            ->with(2026, 'committee', 'planned', '検索語')
+            ->with(2026, 'committee', 'planned', '検索語', null)
             ->andReturn($mockPaginator);
 
         $mockRepo->shouldReceive('getYearStatusSummary')
@@ -44,6 +47,7 @@ class AnnualScheduleServiceTest extends TestCase
         $this->assertSame(5, $result['yearSummary']['total']);
         $this->assertArrayHasKey('committee', $result['categories']);
         $this->assertArrayHasKey('planned', $result['statuses']);
+        $this->assertArrayHasKey('staffs', $result);
     }
 
     /**

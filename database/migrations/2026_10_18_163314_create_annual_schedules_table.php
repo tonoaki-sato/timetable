@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('location')->nullable()->comment('場所');
             $table->string('status', 30)->default('planned')->index()->comment('ステータス');
             $table->text('description')->nullable()->comment('説明');
+            $table->foreignId('staff_id')->nullable()->constrained('staff')->nullOnDelete()->comment('担当者');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->comment('作成者');
             $table->dateTime('created_at')->nullable()->comment('作成日時');
             $table->dateTime('updated_at')->nullable()->comment('更新日時');

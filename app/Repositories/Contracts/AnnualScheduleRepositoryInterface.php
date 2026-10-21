@@ -15,6 +15,7 @@ interface AnnualScheduleRepositoryInterface
         ?string $category = null,
         ?string $status = null,
         ?string $search = null,
+        ?int $staffId = null,
         int $perPage = 15
     ): LengthAwarePaginator;
 

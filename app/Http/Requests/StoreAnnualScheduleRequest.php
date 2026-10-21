@@ -32,6 +32,7 @@ class StoreAnnualScheduleRequest extends FormRequest
             'location' => ['nullable', 'string', 'max:255'],
             'status' => ['required', 'string', 'in:'.implode(',', array_keys(AnnualSchedule::STATUSES))],
             'description' => ['nullable', 'string', 'max:5000'],
+            'staff_id' => ['nullable', 'integer', 'exists:staff,id'],
         ];
     }
 
@@ -51,6 +52,7 @@ class StoreAnnualScheduleRequest extends FormRequest
             'location' => '実施場所',
             'status' => 'ステータス',
             'description' => '詳細・特記事項',
+            'staff_id' => '担当者',
         ];
     }
 }

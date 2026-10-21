@@ -57,14 +57,14 @@
 
     <!-- 4. 検索・絞り込みフォーム -->
     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-        <form method="GET" action="{{ route('annual-schedules.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <form method="GET" action="{{ route('annual-schedules.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <input type="hidden" name="year" value="{{ $selectedYear }}">
 
             <!-- キーワード -->
             <div>
                 <label for="search" class="block text-[11px] font-bold text-slate-600 mb-1">フリーワード</label>
                 <input type="text" id="search" name="search" value="{{ request('search') }}"
-                    placeholder="予定名・場所・詳細"
+                    placeholder="予定名・場所・担当者等"
                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
@@ -94,9 +94,22 @@
                 </select>
             </div>
 
+            <!-- 担当者 -->
+            <div>
+                <label for="staff_id" class="block text-[11px] font-bold text-slate-600 mb-1">担当者</label>
+                <select id="staff_id" name="staff_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">すべての担当者</option>
+                    @foreach($staffs as $staff)
+                    <option value="{{ $staff->id }}" {{ (string) request('staff_id') === (string) $staff->id ? 'selected' : '' }}>
+                        {{ $staff->name }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+
             <!-- 検索 & リセットボタン -->
             <div class="flex items-end space-x-2">
-                <button type="submit" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition">
+                <button type="submit" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition cursor-pointer">
                     🔍 絞り込み
                 </button>
                 <a href="{{ route('annual-schedules.index', ['year' => $selectedYear]) }}"
@@ -118,7 +131,7 @@
                         <th class="px-4 py-3 font-bold">スケジュール・行事名</th>
                         <th class="px-4 py-3 font-bold">場所</th>
                         <th class="px-4 py-3 font-bold">ステータス</th>
-                        <th class="px-4 py-3 font-bold">登録者</th>
+                        <th class="px-4 py-3 font-bold">担当者</th>
                         <th class="px-4 py-3 font-bold text-right">操作</th>
                     </tr>
                 </thead>
@@ -181,9 +194,15 @@
                             </span>
                         </td>
 
-                        <!-- 登録者 -->
-                        <td class="px-4 py-3 text-slate-500 text-[11px] whitespace-nowrap">
-                            {{ $schedule->creator?->name ?? 'システム' }}
+                        <!-- 担当者 -->
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            @if($schedule->assignee)
+                            <span class="inline-flex items-center font-bold text-slate-800" title="{{ $schedule->assignee->affiliation }}">
+                                👤 {{ $schedule->assignee->name }}
+                            </span>
+                            @else
+                            <span class="text-slate-400 text-[11px]">-</span>
+                            @endif
                         </td>
 
                         <!-- 操作 -->
