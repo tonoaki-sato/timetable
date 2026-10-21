@@ -36,7 +36,6 @@ class AnnualSchedule extends Model
         'permit' => '申請・協議',
         'briefing' => '募集・説明会',
         'operation' => '運行・設営',
-        'ceremony' => '式典・神事',
         'other' => 'その他',
     ];
 
