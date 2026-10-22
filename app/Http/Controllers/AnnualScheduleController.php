@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use DateTimeImmutable;
 
 class AnnualScheduleController extends Controller
 {
@@ -25,23 +26,36 @@ class AnnualScheduleController extends Controller
     {
         $this->authorize('viewAny', AnnualSchedule::class);
 
+        // 現在日時を取得
+        $now = new DateTimeImmutable();
+
+        // GETパラメータから表示モード、年、月を取得
         $viewMode = $request->input('view', 'calendar');
-        $year = (int) $request->input('year', 2026);
-        $month = (int) $request->input('month', 11);
+        $year = (int) $request->input('year', $now->format('Y'));
+        $month = (int) $request->input('month', $now->format('n'));
+
+        // GETパラメータからカテゴリとステータスを取得
         $category = $request->input('category');
         $status = $request->input('status');
+
+        // GETパラメータから検索キーワードと担当者IDを取得
         $search = $request->input('search');
         $staffId = $request->filled('staff_id') ? (int) $request->input('staff_id') : null;
 
+        // 一覧表示用のデータを取得
         $listViewData = $this->scheduleService->getIndexViewData($year, $category, $status, $search, $staffId);
+
+        // カレンダー表示用のデータを取得
         $calendarViewData = $this->scheduleService->getCalendarViewData($year, $month, $category, $status, $search, $staffId);
 
+        // ビューに渡すデータをマージ
         $viewData = array_merge($listViewData, $calendarViewData, [
             'viewMode' => $viewMode,
             'selectedYear' => $year,
             'selectedMonth' => $month,
         ]);
 
+        // ビューを表示
         return view('annual_schedules.index', $viewData);
     }
 
