@@ -36,9 +36,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class);
 
     // 年間スケジュール管理リソースルート
+    Route::patch('annual-schedules/{annual_schedule}/reschedule', [AnnualScheduleController::class, 'reschedule'])->name('annual-schedules.reschedule');
     Route::resource('annual-schedules', AnnualScheduleController::class);
 
     // 会議・打ち合わせ専用スケジュール管理リソースルート
+    Route::patch('meetings/{meeting}/reschedule', [MeetingController::class, 'reschedule'])->name('meetings.reschedule');
     Route::resource('meetings', MeetingController::class);
 
     // 現場スタッフ（ボランティア）管理リソースルート

@@ -29,9 +29,9 @@ class MeetingService
     public function getIndexViewData(
         string $tab = 'upcoming',
         ?string $search = null,
-        ?int $hostStaffId = null
+        ?int $staffId = null
     ): array {
-        $meetings = $this->meetingRepository->paginateFiltered($tab, $search, $hostStaffId);
+        $meetings = $this->meetingRepository->paginateFiltered($tab, $search, $staffId);
         $upcomingCount = $this->meetingRepository->getUpcomingCount();
         $pastCount = $this->meetingRepository->getPastCount();
         $staffs = Staff::active()->orderBy('kana')->get();
@@ -73,5 +73,13 @@ class MeetingService
     public function deleteMeeting(Meeting $meeting): bool
     {
         return $this->meetingRepository->delete($meeting);
+    }
+
+    /**
+     * 会議のリスケジュール（開催日移動）処理
+     */
+    public function rescheduleMeeting(Meeting $meeting, string $meetingDate): bool
+    {
+        return $this->meetingRepository->update($meeting, ['meeting_date' => $meetingDate]);
     }
 }

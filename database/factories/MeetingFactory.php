@@ -35,11 +35,29 @@ class MeetingFactory extends Factory
             'start_time' => '18:00',
             'end_time' => '20:00',
             'location' => fake()->randomElement(['コミュニティルーム', '市民会館 2F 会議室', 'まつり運行本部', 'オンライン (Zoom)']),
-            'host_staff_id' => Staff::factory(),
+            'staff_id' => Staff::factory(),
             'description' => fake()->realText(100),
             'notice_note' => '出欠のご連絡は前日17時までにお願いいたします。',
             'created_by' => User::factory(),
         ];
+    }
+
+    /**
+     * 担当（主催）スタッフの指定（AnnualScheduleFactoryと同一仕様）
+     */
+    public function assignedTo(?Staff $staff): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'staff_id' => $staff?->id,
+        ]);
+    }
+
+    /**
+     * 主催スタッフの指定
+     */
+    public function hostedBy(?Staff $staff): static
+    {
+        return $this->assignedTo($staff);
     }
 
     /**

@@ -49,7 +49,6 @@
                         'permit' => 'bg-amber-50 text-amber-700 border-amber-200',
                         'briefing' => 'bg-sky-50 text-sky-700 border-sky-200',
                         'operation' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                        'ceremony' => 'bg-rose-50 text-rose-700 border-rose-200',
                         default => 'bg-slate-100 text-slate-700 border-slate-200',
                     };
 

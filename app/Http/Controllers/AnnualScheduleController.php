@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateAnnualScheduleRequest;
 use App\Models\AnnualSchedule;
 use App\Models\Staff;
 use App\Services\AnnualScheduleService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,19 +19,28 @@ class AnnualScheduleController extends Controller
     ) {}
 
     /**
-     * 年間スケジュール一覧・絞り込み画面の表示
+     * 年間スケジュール一覧・カレンダー画面の表示
      */
     public function index(Request $request): View
     {
         $this->authorize('viewAny', AnnualSchedule::class);
 
-        $viewData = $this->scheduleService->getIndexViewData(
-            year: (int) $request->input('year', 2026),
-            category: $request->input('category'),
-            status: $request->input('status'),
-            search: $request->input('search'),
-            staffId: $request->filled('staff_id') ? (int) $request->input('staff_id') : null
-        );
+        $viewMode = $request->input('view', 'calendar');
+        $year = (int) $request->input('year', 2026);
+        $month = (int) $request->input('month', 11);
+        $category = $request->input('category');
+        $status = $request->input('status');
+        $search = $request->input('search');
+        $staffId = $request->filled('staff_id') ? (int) $request->input('staff_id') : null;
+
+        $listViewData = $this->scheduleService->getIndexViewData($year, $category, $status, $search, $staffId);
+        $calendarViewData = $this->scheduleService->getCalendarViewData($year, $month, $category, $status, $search, $staffId);
+
+        $viewData = array_merge($listViewData, $calendarViewData, [
+            'viewMode' => $viewMode,
+            'selectedYear' => $year,
+            'selectedMonth' => $month,
+        ]);
 
         return view('annual_schedules.index', $viewData);
     }
@@ -52,7 +62,7 @@ class AnnualScheduleController extends Controller
     /**
      * 年間スケジュール新規登録処理
      */
-    public function store(StoreAnnualScheduleRequest $request): RedirectResponse
+    public function store(StoreAnnualScheduleRequest $request): RedirectResponse|JsonResponse
     {
         $this->authorize('create', AnnualSchedule::class);
 
@@ -61,8 +71,42 @@ class AnnualScheduleController extends Controller
             $request->user()
         );
 
-        return redirect()->route('annual-schedules.index', ['year' => $schedule->target_year])
-            ->with('success', "年間スケジュール「{$schedule->title}」を登録しました。");
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "年間スケジュール「{$schedule->title}」を登録しました。",
+                'schedule' => $schedule->load('assignee'),
+            ], 201);
+        }
+
+        return redirect()->route('annual-schedules.index', [
+            'year' => $schedule->target_year,
+        ])->with('success', "年間スケジュール「{$schedule->title}」を登録しました。");
+    }
+
+    /**
+     * 年間スケジュールのリスケジュール処理（ドラッグ移動）
+     */
+    public function reschedule(Request $request, AnnualSchedule $annualSchedule): JsonResponse
+    {
+        $this->authorize('update', $annualSchedule);
+
+        $validated = $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date' => ['nullable', 'date'],
+        ]);
+
+        $this->scheduleService->rescheduleSchedule(
+            $annualSchedule,
+            $validated['start_date'],
+            $validated['end_date'] ?? null
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => "「{$annualSchedule->title}」の日程を変更しました。",
+            'schedule' => $annualSchedule->fresh(['assignee']),
+        ]);
     }
 
     /**

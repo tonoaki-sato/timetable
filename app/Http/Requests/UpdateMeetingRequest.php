@@ -33,7 +33,7 @@ class UpdateMeetingRequest extends FormRequest
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['nullable', 'date_format:H:i', 'after:start_time'],
             'location' => ['required', 'string', 'max:255'],
-            'host_staff_id' => ['required', 'integer', 'exists:staff,id'],
+            'staff_id' => ['nullable', 'integer', 'exists:staff,id'],
             'description' => ['nullable', 'string', 'max:5000'],
             'notice_note' => ['nullable', 'string', 'max:1000'],
         ];
@@ -52,7 +52,7 @@ class UpdateMeetingRequest extends FormRequest
             'start_time' => '開始時刻',
             'end_time' => '終了時刻',
             'location' => '開催場所',
-            'host_staff_id' => '主催者',
+            'staff_id' => '主催者',
             'description' => '内容・議題',
             'notice_note' => 'LINE告知用特記メモ',
         ];

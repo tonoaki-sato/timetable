@@ -13,13 +13,21 @@
             </p>
         </div>
 
-        @can('create', App\Models\Meeting::class)
-        <a href="{{ route('meetings.create') }}"
-            class="inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition space-x-1.5 shrink-0 cursor-pointer">
-            <span>➕</span>
-            <span>新しい会議・打合せを登録</span>
-        </a>
-        @endcan
+        <div class="flex items-center space-x-2 shrink-0">
+            <a href="{{ route('annual-schedules.index', ['view' => 'calendar', 'category' => 'committee']) }}"
+                class="inline-flex items-center justify-center px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition space-x-1.5 shadow-xs">
+                <span>📅</span>
+                <span>カレンダーで確認</span>
+            </a>
+
+            @can('create', App\Models\Meeting::class)
+            <a href="{{ route('meetings.create') }}"
+                class="inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition space-x-1.5 cursor-pointer">
+                <span>➕</span>
+                <span>新しい会議を登録</span>
+            </a>
+            @endcan
+        </div>
     </div>
 
     <!-- 2. タブ切り替え（開催予定 / 過去の記録） -->
@@ -56,11 +64,11 @@
 
             <!-- 主催者 -->
             <div>
-                <label for="host_staff_id" class="block text-[11px] font-bold text-slate-600 mb-1">主催者（スタッフ）</label>
-                <select id="host_staff_id" name="host_staff_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <label for="staff_id" class="block text-[11px] font-bold text-slate-600 mb-1">主催者（スタッフ）</label>
+                <select id="staff_id" name="staff_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">すべての主催者</option>
                     @foreach($staffs as $staff)
-                    <option value="{{ $staff->id }}" {{ (string) request('host_staff_id') === (string) $staff->id ? 'selected' : '' }}>
+                    <option value="{{ $staff->id }}" {{ (string) request('staff_id') === (string) $staff->id ? 'selected' : '' }}>
                         {{ $staff->name }} @if($staff->affiliation)({{ $staff->affiliation }})@endif
                     </option>
                     @endforeach
@@ -144,9 +152,13 @@
 
                         <span class="inline-flex items-center space-x-1">
                             <span>👤 主催:</span>
-                            <span class="font-bold text-slate-800">{{ $meeting->host?->name ?? '未指定' }}</span>
-                            @if($meeting->host?->affiliation)
+                            @if($meeting->host)
+                            <span class="font-bold text-slate-800">{{ $meeting->host->name }}</span>
+                            @if($meeting->host->affiliation)
                             <span class="text-slate-400 text-[11px]">({{ $meeting->host->affiliation }})</span>
+                            @endif
+                            @else
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">主催者未定（後から設定可）</span>
                             @endif
                         </span>
                     </div>
@@ -164,7 +176,8 @@
             <div class="flex items-center space-x-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 justify-end">
                 <!-- LINEテキストクイックコピーボタン -->
                 <button type="button"
-                    onclick="copyMeetingLineText(this, {{ json_encode($meeting->line_share_text) }})"
+                    data-line-text="{{ $meeting->line_share_text }}"
+                    onclick="copyMeetingLineText(this, this.dataset.lineText)"
                     title="全体LINE用の告知テキストをクリップボードにコピー"
                     class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
                     <span>📋</span>

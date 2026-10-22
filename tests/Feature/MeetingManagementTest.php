@@ -41,13 +41,13 @@ class MeetingManagementTest extends TestCase
         $upcomingMeeting = Meeting::factory()->create([
             'title' => '未来の定例幹事会',
             'meeting_date' => now()->addDays(5)->format('Y-m-d'),
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
         ]);
 
         $pastMeeting = Meeting::factory()->create([
             'title' => '過去の反省会',
             'meeting_date' => now()->subDays(5)->format('Y-m-d'),
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
         ]);
 
         $response = $this->get(route('meetings.index'));
@@ -66,13 +66,13 @@ class MeetingManagementTest extends TestCase
         $upcomingMeeting = Meeting::factory()->create([
             'title' => '未来の定例幹事会',
             'meeting_date' => now()->addDays(5)->format('Y-m-d'),
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
         ]);
 
         $pastMeeting = Meeting::factory()->create([
             'title' => '過去の反省会',
             'meeting_date' => now()->subDays(5)->format('Y-m-d'),
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
         ]);
 
         $response = $this->get(route('meetings.index', ['tab' => 'past']));
@@ -82,7 +82,7 @@ class MeetingManagementTest extends TestCase
     }
 
     /**
-     * 主催スタッフによる絞り込みができること
+     * 主催スタッフによる絞り込みができること（staff_id）
      */
     public function test_filter_by_host_staff(): void
     {
@@ -93,16 +93,17 @@ class MeetingManagementTest extends TestCase
         $meeting1 = Meeting::factory()->create([
             'title' => '漆原さん主催会議',
             'meeting_date' => now()->addDays(3)->format('Y-m-d'),
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
         ]);
 
         $meeting2 = Meeting::factory()->create([
             'title' => '佐藤さん主催会議',
             'meeting_date' => now()->addDays(4)->format('Y-m-d'),
-            'host_staff_id' => $otherStaff->id,
+            'staff_id' => $otherStaff->id,
         ]);
 
-        $response = $this->get(route('meetings.index', ['host_staff_id' => $this->staff->id]));
+        // staff_id パラメータによる絞り込み
+        $response = $this->get(route('meetings.index', ['staff_id' => $this->staff->id]));
         $response->assertStatus(200);
         $response->assertSee('漆原さん主催会議');
         $response->assertDontSee('佐藤さん主催会議');
@@ -119,14 +120,14 @@ class MeetingManagementTest extends TestCase
             'title' => 'カラーコーン搬入会議',
             'location' => '第1倉庫',
             'meeting_date' => now()->addDays(2)->format('Y-m-d'),
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
         ]);
 
         Meeting::factory()->create([
             'title' => '給水設備点検会議',
             'location' => '給水所',
             'meeting_date' => now()->addDays(2)->format('Y-m-d'),
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
         ]);
 
         $response = $this->get(route('meetings.index', ['search' => 'カラーコーン']));
@@ -148,7 +149,7 @@ class MeetingManagementTest extends TestCase
             'start_time' => '18:00',
             'end_time' => '19:30',
             'location' => 'コミュニティルーム',
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
             'description' => '車両通行規制と迂回路の事前確認',
             'notice_note' => '出欠は前日までにお願いします。',
         ]);
@@ -162,7 +163,7 @@ class MeetingManagementTest extends TestCase
         $this->assertDatabaseHas('meetings', [
             'title' => '第1回 警備・動線協議会',
             'location' => 'コミュニティルーム',
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
             'created_by' => $this->user->id,
         ]);
     }
@@ -174,9 +175,10 @@ class MeetingManagementTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        // 必須項目未入力
+        // 必須項目未入力（staff_idは任意なので含まれない）
         $response = $this->post(route('meetings.store'), []);
-        $response->assertSessionHasErrors(['title', 'meeting_date', 'start_time', 'location', 'host_staff_id']);
+        $response->assertSessionHasErrors(['title', 'meeting_date', 'start_time', 'location']);
+        $response->assertSessionDoesntHaveErrors(['staff_id']);
 
         // 終了時刻が開始時刻より前
         $invalidTimeResponse = $this->post(route('meetings.store'), [
@@ -185,9 +187,103 @@ class MeetingManagementTest extends TestCase
             'start_time' => '18:00',
             'end_time' => '17:00',
             'location' => '場所',
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
         ]);
         $invalidTimeResponse->assertSessionHasErrors('end_time');
+    }
+
+    /**
+     * 主催者未定のままでも会議を新規登録でき、後から主催者を設定できること
+     */
+    public function test_can_create_meeting_without_host_staff_and_assign_later(): void
+    {
+        $this->actingAs($this->user);
+
+        // 主催者未指定（staff_id = null）で登録
+        $response = $this->post(route('meetings.store'), [
+            'title' => '主催者未定の臨時打ち合わせ',
+            'meeting_date' => '2027-04-10',
+            'start_time' => '19:00',
+            'location' => 'コミュニティルーム',
+            'staff_id' => null,
+            'description' => '後から担当者を割り当てる',
+        ]);
+
+        $meeting = Meeting::where('title', '主催者未定の臨時打ち合わせ')->first();
+        $this->assertNotNull($meeting);
+        $this->assertNull($meeting->staff_id);
+
+        $response->assertRedirect(route('meetings.show', $meeting));
+
+        // 一覧画面で未設定表示がされること
+        $indexResponse = $this->get(route('meetings.index'));
+        $indexResponse->assertStatus(200);
+        $indexResponse->assertSee('主催者未定');
+
+        // 後から主催者を設定（更新）
+        $updateResponse = $this->put(route('meetings.update', $meeting), [
+            'title' => '主催者未定の臨時打ち合わせ',
+            'meeting_date' => '2027-04-10',
+            'start_time' => '19:00',
+            'location' => 'コミュニティルーム',
+            'staff_id' => $this->staff->id,
+            'description' => '漆原さんを主催者に任命',
+        ]);
+
+        $updateResponse->assertRedirect(route('meetings.show', $meeting));
+        $meeting->refresh();
+        $this->assertSame($this->staff->id, $meeting->staff_id);
+    }
+
+    /**
+     * 主催者未設定時のLINE共有文面で適切にフォールバックされること
+     */
+    public function test_line_text_when_host_staff_is_unassigned(): void
+    {
+        $meeting = Meeting::factory()->create([
+            'title' => '企画検討会（主催未定）',
+            'meeting_date' => '2027-05-01',
+            'start_time' => '15:00',
+            'location' => '詰所',
+            'staff_id' => null,
+        ]);
+
+        $shareText = $meeting->line_share_text;
+        $this->assertStringContainsString('👤 主催：未定（後から設定）', $shareText);
+
+        $remindText = $meeting->line_remind_text;
+        $this->assertStringContainsString('👤 主催：未定（後から設定）', $remindText);
+    }
+
+    /**
+     * 主催スタッフが削除された時に staff_id が null になること（AnnualScheduleと同一仕様）
+     */
+    public function test_assignee_null_on_delete(): void
+    {
+        $staff = Staff::factory()->create();
+        $meeting = Meeting::factory()->create([
+            'staff_id' => $staff->id,
+        ]);
+
+        $staff->delete();
+
+        $meeting->refresh();
+        $this->assertNull($meeting->staff_id);
+    }
+
+    /**
+     * hostおよびassigneeリレーションが正しく動作すること
+     */
+    public function test_host_and_assignee_relationships(): void
+    {
+        $meeting = Meeting::factory()->create([
+            'staff_id' => $this->staff->id,
+        ]);
+
+        $this->assertSame($this->staff->id, $meeting->host?->id);
+        $this->assertSame($this->staff->id, $meeting->assignee?->id);
+        $this->assertSame($this->staff->id, $meeting->staff?->id);
+        $this->assertSame($this->staff->id, $meeting->staff_id);
     }
 
     /**
@@ -203,7 +299,7 @@ class MeetingManagementTest extends TestCase
             'start_time' => '19:00',
             'end_time' => '20:30',
             'location' => '市民会館2F',
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
             'description' => 'タイムテーブルの最終すり合わせ',
             'notice_note' => '返信期日は2/8まで。',
         ]);
@@ -226,7 +322,7 @@ class MeetingManagementTest extends TestCase
 
         $meeting = Meeting::factory()->create([
             'title' => '更新前タイトル',
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
         ]);
 
         $newStaff = Staff::factory()->create(['name' => '新主催者']);
@@ -237,7 +333,7 @@ class MeetingManagementTest extends TestCase
             'start_time' => '10:00',
             'end_time' => '11:30',
             'location' => '新会場',
-            'host_staff_id' => $newStaff->id,
+            'staff_id' => $newStaff->id,
             'description' => '新アジェンダ',
         ]);
 
@@ -247,7 +343,7 @@ class MeetingManagementTest extends TestCase
         $meeting->refresh();
         $this->assertSame('更新後タイトル', $meeting->title);
         $this->assertSame('新会場', $meeting->location);
-        $this->assertSame($newStaff->id, $meeting->host_staff_id);
+        $this->assertSame($newStaff->id, $meeting->staff_id);
     }
 
     /**
@@ -259,7 +355,7 @@ class MeetingManagementTest extends TestCase
 
         $meeting = Meeting::factory()->create([
             'title' => '削除対象会議',
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
         ]);
 
         $response = $this->delete(route('meetings.destroy', $meeting));
@@ -282,7 +378,7 @@ class MeetingManagementTest extends TestCase
             'start_time' => '18:00',
             'end_time' => '20:00',
             'location' => 'コミュニティルーム',
-            'host_staff_id' => $this->staff->id,
+            'staff_id' => $this->staff->id,
             'description' => '年間スケジュールの策定',
             'notice_note' => '出欠は1/8までにお願いします。',
         ]);

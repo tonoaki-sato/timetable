@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Models\AnnualSchedule;
+use App\Models\Meeting;
 use App\Models\Staff;
 use App\Models\User;
 use App\Repositories\Contracts\AnnualScheduleRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
 
 class AnnualScheduleService
 {
@@ -79,5 +81,233 @@ class AnnualScheduleService
     public function deleteSchedule(AnnualSchedule $schedule): bool
     {
         return $this->scheduleRepository->delete($schedule);
+    }
+
+    /**
+     * カレンダー表示に必要なデータ一式の取得・組み立て
+     *
+     * @return array<string, mixed>
+     */
+    public function getCalendarViewData(
+        int $year,
+        int $month,
+        ?string $category = null,
+        ?string $status = null,
+        ?string $search = null,
+        ?int $staffId = null
+    ): array {
+        $firstDay = Carbon::createFromDate($year, $month, 1);
+        $daysInMonth = $firstDay->daysInMonth;
+        $startDayOfWeek = $firstDay->dayOfWeek; // 0=Sun, 1=Mon, ..., 6=Sat
+
+        // グリッド開始日（日曜始まり）
+        $gridStart = $firstDay->copy()->subDays($startDayOfWeek);
+        $totalCells = (int) (ceil(($startDayOfWeek + $daysInMonth) / 7) * 7);
+
+        // 指定月の年間スケジュール取得
+        $schedules = $this->scheduleRepository->getForMonth($year, $month, $category, $status, $staffId, $search);
+
+        // 指定月の会議スケジュール取得
+        $meetingQuery = Meeting::with(['host', 'creator'])
+            ->whereYear('meeting_date', $year)
+            ->whereMonth('meeting_date', $month);
+
+        if ($search) {
+            $meetingQuery->search($search);
+        }
+        if ($staffId) {
+            $meetingQuery->host($staffId);
+        }
+        $meetings = $meetingQuery->orderBy('meeting_date')->orderBy('start_time')->get();
+
+        // 日付ごとのイベント辞書を組み立て
+        $weeks = [];
+        $currentCellDate = $gridStart->copy();
+        $todayStr = now()->toDateString();
+
+        for ($i = 0; $i < $totalCells; $i++) {
+            $dateStr = $currentCellDate->toDateString();
+            $dayOfWeek = $currentCellDate->dayOfWeek;
+            $isCurrentMonth = (int) $currentCellDate->month === $month;
+            $isToday = $dateStr === $todayStr;
+
+            $dayEvents = [];
+
+            // 1. 会議イベントをマッピング
+            foreach ($meetings as $meeting) {
+                if ($meeting->meeting_date?->toDateString() === $dateStr) {
+                    $dayEvents[] = [
+                        'id' => $meeting->id,
+                        'source' => 'meeting',
+                        'title' => $meeting->title,
+                        'category' => 'committee',
+                        'category_label' => '会議・打合せ',
+                        'icon' => '🤝',
+                        'badge_class' => 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100',
+                        'time' => $meeting->formatted_time_range,
+                        'start_time' => substr($meeting->start_time ?? '', 0, 5),
+                        'end_time' => $meeting->end_time ? substr($meeting->end_time, 0, 5) : null,
+                        'location' => $meeting->location,
+                        'staff_id' => $meeting->staff_id,
+                        'staff_name' => $meeting->host?->name,
+                        'has_unassigned_host' => $meeting->staff_id === null,
+                        'is_period' => false,
+                        'date' => $dateStr,
+                        'start_date' => $dateStr,
+                        'end_date' => null,
+                        'status' => $meeting->is_upcoming ? 'planned' : 'completed',
+                        'status_label' => $meeting->is_upcoming ? '予定' : '終了',
+                        'description' => $meeting->description,
+                        'notice_note' => $meeting->notice_note,
+                        'line_share_text' => $meeting->line_share_text,
+                        'show_url' => route('meetings.show', $meeting),
+                        'edit_url' => route('meetings.edit', $meeting),
+                        'reschedule_url' => route('meetings.reschedule', $meeting),
+                    ];
+                }
+            }
+
+            // 2. 年間スケジュールイベントをマッピング
+            foreach ($schedules as $schedule) {
+                $startStr = $schedule->start_date?->toDateString();
+                $endStr = $schedule->end_date?->toDateString() ?? $startStr;
+
+                if ($startStr && $dateStr >= $startStr && $dateStr <= $endStr) {
+                    $isPeriod = $schedule->end_date && $startStr !== $endStr;
+                    $isPeriodStart = $isPeriod && $startStr === $dateStr;
+
+                    $meta = match ($schedule->category) {
+                        'committee' => ['icon' => '🤝', 'label' => '会議・打合せ', 'class' => 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'],
+                        'permit' => ['icon' => '📑', 'label' => '申請・協議', 'class' => 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'],
+                        'briefing' => ['icon' => '📢', 'label' => '募集・説明会', 'class' => 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100'],
+                        'operation' => ['icon' => '🎪', 'label' => '運行・設営', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'],
+                        default => ['icon' => '📌', 'label' => 'その他', 'class' => 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'],
+                    };
+
+                    $dayEvents[] = [
+                        'id' => $schedule->id,
+                        'source' => 'annual_schedule',
+                        'title' => $schedule->title,
+                        'category' => $schedule->category,
+                        'category_label' => $meta['label'],
+                        'icon' => $meta['icon'],
+                        'badge_class' => $meta['class'],
+                        'time' => null,
+                        'location' => $schedule->location,
+                        'staff_id' => $schedule->staff_id,
+                        'staff_name' => $schedule->assignee?->name,
+                        'has_unassigned_host' => $schedule->staff_id === null,
+                        'is_period' => $isPeriod,
+                        'is_period_start' => $isPeriodStart,
+                        'date' => $dateStr,
+                        'start_date' => $startStr,
+                        'end_date' => $endStr,
+                        'status' => $schedule->status,
+                        'status_label' => $schedule->status_label,
+                        'description' => $schedule->description,
+                        'notice_note' => null,
+                        'line_share_text' => null,
+                        'show_url' => route('annual-schedules.show', $schedule),
+                        'edit_url' => route('annual-schedules.edit', $schedule),
+                        'reschedule_url' => route('annual-schedules.reschedule', $schedule),
+                    ];
+                }
+            }
+
+            $weekIndex = (int) floor($i / 7);
+            $weeks[$weekIndex][] = [
+                'date' => $dateStr,
+                'day' => (int) $currentCellDate->day,
+                'isCurrentMonth' => $isCurrentMonth,
+                'isToday' => $isToday,
+                'dayOfWeek' => $dayOfWeek,
+                'events' => $dayEvents,
+            ];
+
+            $currentCellDate->addDay();
+        }
+
+        $prevCarbon = $firstDay->copy()->subMonth();
+        $nextCarbon = $firstDay->copy()->addMonth();
+
+        $paletteCategories = [
+            'committee' => [
+                'key' => 'committee',
+                'name' => '会議・打合せ',
+                'icon' => '🤝',
+                'color' => 'indigo',
+                'bg' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                'description' => '幹事会・部会打ち合わせ等',
+            ],
+            'permit' => [
+                'key' => 'permit',
+                'name' => '申請・協議',
+                'icon' => '📑',
+                'color' => 'amber',
+                'bg' => 'bg-amber-50 text-amber-700 border-amber-200',
+                'description' => '道路使用許可・消防届出等',
+            ],
+            'briefing' => [
+                'key' => 'briefing',
+                'name' => '募集・説明会',
+                'icon' => '📢',
+                'color' => 'sky',
+                'bg' => 'bg-sky-50 text-sky-700 border-sky-200',
+                'description' => '出店公募・ボランティア募集等',
+            ],
+            'operation' => [
+                'key' => 'operation',
+                'name' => '運行・設営',
+                'icon' => '🎪',
+                'color' => 'emerald',
+                'bg' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                'description' => '資機材搬入・会場設営等',
+            ],
+            'other' => [
+                'key' => 'other',
+                'name' => 'その他',
+                'icon' => '📌',
+                'color' => 'slate',
+                'bg' => 'bg-slate-100 text-slate-700 border-slate-200',
+                'description' => '事務連絡・資機材棚卸し等',
+            ],
+        ];
+
+        return [
+            'calendarWeeks' => $weeks,
+            'currentYear' => $year,
+            'currentMonth' => $month,
+            'prevYear' => $prevCarbon->year,
+            'prevMonth' => $prevCarbon->month,
+            'nextYear' => $nextCarbon->year,
+            'nextMonth' => $nextCarbon->month,
+            'paletteCategories' => $paletteCategories,
+            'availableYears' => $this->scheduleRepository->getAvailableYears(),
+            'yearSummary' => $this->scheduleRepository->getYearStatusSummary($year),
+            'categories' => AnnualSchedule::CATEGORIES,
+            'statuses' => AnnualSchedule::STATUSES,
+            'staffs' => Staff::active()->orderBy('kana')->get(),
+        ];
+    }
+
+    /**
+     * 年間スケジュールのリスケジュール処理
+     */
+    public function rescheduleSchedule(AnnualSchedule $schedule, string $startDate, ?string $endDate = null): bool
+    {
+        $data = ['start_date' => $startDate];
+
+        if ($endDate) {
+            $data['end_date'] = $endDate;
+        } elseif ($schedule->end_date && $schedule->start_date) {
+            // 既存の期間幅を維持してシフト
+            $durationDays = $schedule->start_date->diffInDays($schedule->end_date);
+            $newStart = Carbon::parse($startDate);
+            $data['end_date'] = $newStart->copy()->addDays($durationDays)->toDateString();
+        }
+
+        $data['target_year'] = (int) Carbon::parse($startDate)->year;
+
+        return $this->scheduleRepository->update($schedule, $data);
     }
 }

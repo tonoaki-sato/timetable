@@ -14,7 +14,7 @@ class MeetingRepository implements MeetingRepositoryInterface
     public function paginateFiltered(
         string $tab = 'upcoming',
         ?string $search = null,
-        ?int $hostStaffId = null,
+        ?int $staffId = null,
         int $perPage = 15
     ): LengthAwarePaginator {
         $query = Meeting::with(['host', 'creator']);
@@ -25,8 +25,8 @@ class MeetingRepository implements MeetingRepositoryInterface
             $query->upcoming();
         }
 
-        if ($hostStaffId) {
-            $query->host($hostStaffId);
+        if ($staffId) {
+            $query->host($staffId);
         }
 
         if ($search) {

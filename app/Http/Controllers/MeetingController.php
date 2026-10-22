@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateMeetingRequest;
 use App\Models\Meeting;
 use App\Models\Staff;
 use App\Services\MeetingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -26,9 +27,9 @@ class MeetingController extends Controller
 
         $tab = $request->input('tab', 'upcoming') === 'past' ? 'past' : 'upcoming';
         $search = $request->input('search');
-        $hostStaffId = $request->filled('host_staff_id') ? (int) $request->input('host_staff_id') : null;
+        $staffId = $request->filled('staff_id') ? (int) $request->input('staff_id') : null;
 
-        $viewData = $this->meetingService->getIndexViewData($tab, $search, $hostStaffId);
+        $viewData = $this->meetingService->getIndexViewData($tab, $search, $staffId);
 
         return view('meetings.index', $viewData);
     }
@@ -48,7 +49,7 @@ class MeetingController extends Controller
     /**
      * 会議新規登録処理
      */
-    public function store(StoreMeetingRequest $request): RedirectResponse
+    public function store(StoreMeetingRequest $request): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Meeting::class);
 
@@ -57,8 +58,36 @@ class MeetingController extends Controller
             $request->user()
         );
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "会議「{$meeting->title}」を登録しました。",
+                'meeting' => $meeting->load('host'),
+            ], 201);
+        }
+
         return redirect()->route('meetings.show', $meeting)
             ->with('success', "会議「{$meeting->title}」を登録しました。LINE共有テキストを確認できます。");
+    }
+
+    /**
+     * 会議のリスケジュール処理（開催日ドラッグ移動）
+     */
+    public function reschedule(Request $request, Meeting $meeting): JsonResponse
+    {
+        $this->authorize('update', $meeting);
+
+        $validated = $request->validate([
+            'meeting_date' => ['required', 'date'],
+        ]);
+
+        $this->meetingService->rescheduleMeeting($meeting, $validated['meeting_date']);
+
+        return response()->json([
+            'success' => true,
+            'message' => "会議「{$meeting->title}」の開催日を変更しました。",
+            'meeting' => $meeting->fresh(['host']),
+        ]);
     }
 
     /**

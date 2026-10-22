@@ -13,7 +13,7 @@ interface MeetingRepositoryInterface
     public function paginateFiltered(
         string $tab = 'upcoming',
         ?string $search = null,
-        ?int $hostStaffId = null,
+        ?int $staffId = null,
         int $perPage = 15
     ): LengthAwarePaginator;
 

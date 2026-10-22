@@ -89,14 +89,27 @@
                 </div>
 
                 <!-- 主催者 -->
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span class="text-[11px] font-bold text-slate-500 block mb-1">👤 主催者（スタッフ）</span>
-                    <div class="text-sm font-bold text-slate-900">
-                        {{ $meeting->host?->name ?? '未指定' }}
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <span class="text-[11px] font-bold text-slate-500 block mb-1">👤 主催者（スタッフ）</span>
+                        @if($meeting->host)
+                        <div class="text-sm font-bold text-slate-900">
+                            {{ $meeting->host->name }}
+                        </div>
+                        @if($meeting->host->affiliation)
+                        <span class="text-[11px] text-slate-500 block mt-0.5">{{ $meeting->host->affiliation }}</span>
+                        @endif
+                        @else
+                        <div class="inline-flex items-center space-x-1.5 mt-0.5">
+                            <span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">未設定（後から設定可）</span>
+                        </div>
+                        @can('update', $meeting)
+                        <a href="{{ route('meetings.edit', $meeting) }}" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold block mt-1">
+                            ✏️ 主催者を設定する
+                        </a>
+                        @endcan
+                        @endif
                     </div>
-                    @if($meeting->host?->affiliation)
-                    <span class="text-[11px] text-slate-500 block mt-0.5">{{ $meeting->host->affiliation }}</span>
-                    @endif
                 </div>
             </div>
 

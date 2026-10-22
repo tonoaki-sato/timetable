@@ -93,14 +93,14 @@
                     </div>
 
                     <div>
-                        <label for="host_staff_id" class="block text-xs font-bold text-slate-700 mb-1">
-                            主催者（スタッフ） <span class="text-red-500">*</span>
+                        <label for="staff_id" class="block text-xs font-bold text-slate-700 mb-1">
+                            主催者（スタッフ） <span class="text-slate-400 font-normal">（任意・後から設定可能）</span>
                         </label>
-                        <select id="host_staff_id" name="host_staff_id" required
+                        <select id="staff_id" name="staff_id"
                             class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="">主催者を選択してください</option>
+                            <option value="">未定（後から設定する）</option>
                             @foreach($staffs as $staff)
-                            <option value="{{ $staff->id }}" {{ old('host_staff_id') == $staff->id ? 'selected' : '' }} data-name="{{ $staff->name }}">
+                            <option value="{{ $staff->id }}" {{ (string) old('staff_id') === (string) $staff->id ? 'selected' : '' }} data-name="{{ $staff->name }}">
                                 {{ $staff->name }} @if($staff->affiliation)({{ $staff->affiliation }})@endif
                             </option>
                             @endforeach
@@ -174,9 +174,9 @@ function updateLinePreview() {
     const endTime = document.getElementById('end_time').value;
     const location = document.getElementById('location').value || '（開催場所）';
     
-    const hostSelect = document.getElementById('host_staff_id');
-    const selectedOption = hostSelect.options[hostSelect.selectedIndex];
-    const hostName = selectedOption && selectedOption.dataset.name ? selectedOption.dataset.name : '（未指定）';
+    const hostSelect = document.getElementById('staff_id');
+    const selectedOption = hostSelect ? hostSelect.options[hostSelect.selectedIndex] : null;
+    const hostName = selectedOption && selectedOption.dataset.name ? selectedOption.dataset.name : '未定（後から設定）';
     
     const desc = document.getElementById('description').value;
     const note = document.getElementById('notice_note').value;
@@ -218,7 +218,7 @@ function updateLinePreview() {
     document.getElementById('linePreviewBox').textContent = lines.join('\n');
 }
 
-['title', 'meeting_date', 'start_time', 'end_time', 'location', 'host_staff_id', 'description', 'notice_note'].forEach(function(id) {
+['title', 'meeting_date', 'start_time', 'end_time', 'location', 'staff_id', 'description', 'notice_note'].forEach(function(id) {
     const el = document.getElementById(id);
     if (el) {
         el.addEventListener('input', updateLinePreview);

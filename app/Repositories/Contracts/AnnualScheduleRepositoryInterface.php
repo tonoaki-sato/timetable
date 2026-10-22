@@ -4,6 +4,7 @@ namespace App\Repositories\Contracts;
 
 use App\Models\AnnualSchedule;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 interface AnnualScheduleRepositoryInterface
 {
@@ -18,6 +19,20 @@ interface AnnualScheduleRepositoryInterface
         ?int $staffId = null,
         int $perPage = 15
     ): LengthAwarePaginator;
+
+    /**
+     * 指定月のスケジュール一覧の取得
+     *
+     * @return Collection<int, AnnualSchedule>
+     */
+    public function getForMonth(
+        int $year,
+        int $month,
+        ?string $category = null,
+        ?string $status = null,
+        ?int $staffId = null,
+        ?string $search = null
+    ): Collection;
 
     /**
      * 登録済み対象年度一覧の取得

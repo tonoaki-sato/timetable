@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Models\AnnualSchedule;
 use App\Repositories\Contracts\AnnualScheduleRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 class AnnualScheduleRepository implements AnnualScheduleRepositoryInterface
 {
@@ -45,6 +46,56 @@ class AnnualScheduleRepository implements AnnualScheduleRepositoryInterface
             ->orderBy('id', 'asc')
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    /**
+     * 指定月のスケジュール一覧の取得（単日および期間重複）
+     *
+     * @return Collection<int, AnnualSchedule>
+     */
+    public function getForMonth(
+        int $year,
+        int $month,
+        ?string $category = null,
+        ?string $status = null,
+        ?int $staffId = null,
+        ?string $search = null
+    ): Collection {
+        $startOfMonth = sprintf('%04d-%02d-01', $year, $month);
+        $endOfMonth = date('Y-m-t', strtotime($startOfMonth));
+
+        $query = AnnualSchedule::with(['creator', 'assignee'])
+            ->year($year)
+            ->where(function ($q) use ($startOfMonth, $endOfMonth) {
+                $q->where(function ($sub) use ($startOfMonth, $endOfMonth) {
+                    $sub->whereNull('end_date')
+                        ->whereBetween('start_date', [$startOfMonth, $endOfMonth]);
+                })->orWhere(function ($sub) use ($startOfMonth, $endOfMonth) {
+                    $sub->whereNotNull('end_date')
+                        ->where('start_date', '<=', $endOfMonth)
+                        ->where('end_date', '>=', $startOfMonth);
+                });
+            });
+
+        if ($category) {
+            $query->where('category', $category);
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($staffId) {
+            $query->where('staff_id', $staffId);
+        }
+
+        if ($search) {
+            $query->search($search);
+        }
+
+        return $query->orderBy('start_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
     }
 
     /**

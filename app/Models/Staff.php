@@ -62,7 +62,7 @@ class Staff extends Model
      */
     public function meetings(): HasMany
     {
-        return $this->hasMany(Meeting::class, 'host_staff_id');
+        return $this->hasMany(Meeting::class, 'staff_id');
     }
 
     /**

@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'start_time',
     'end_time',
     'location',
-    'host_staff_id',
+    'staff_id',
     'description',
     'notice_note',
     'created_by',
@@ -34,7 +34,7 @@ class Meeting extends Model
     {
         return [
             'meeting_date' => 'date',
-            'host_staff_id' => 'integer',
+            'staff_id' => 'integer',
             'created_by' => 'integer',
         ];
     }
@@ -44,8 +44,25 @@ class Meeting extends Model
      */
     public function host(): BelongsTo
     {
-        return $this->belongsTo(Staff::class, 'host_staff_id');
+        return $this->belongsTo(Staff::class, 'staff_id');
     }
+
+    /**
+     * 担当スタッフとのリレーション（AnnualScheduleと同一仕様）
+     */
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(Staff::class, 'staff_id');
+    }
+
+    /**
+     * 担当スタッフとのリレーション
+     */
+    public function staff(): BelongsTo
+    {
+        return $this->belongsTo(Staff::class, 'staff_id');
+    }
+
 
     /**
      * 登録ユーザーとのリレーション
@@ -81,7 +98,7 @@ class Meeting extends Model
 
         $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
         $weekday = $weekdayNames[$this->meeting_date->dayOfWeek] ?? '';
-        $dateStr = $this->meeting_date->format('Y年n月j日')."({$weekday})";
+        $dateStr = $this->meeting_date->format('Y年n月j日') . "({$weekday})";
 
         return "{$dateStr} {$this->formatted_time_range}";
     }
@@ -92,7 +109,7 @@ class Meeting extends Model
     public function getLineShareTextAttribute(): string
     {
         $datetime = $this->formatted_datetime;
-        $hostName = $this->host?->name ?? '未指定';
+        $hostName = $this->host?->name ?? '未定（後から設定）';
         $location = $this->location;
         $title = $this->title;
 
@@ -129,7 +146,7 @@ class Meeting extends Model
     public function getLineRemindTextAttribute(): string
     {
         $datetime = $this->formatted_datetime;
-        $hostName = $this->host?->name ?? '未指定';
+        $hostName = $this->host?->name ?? '未定（後から設定）';
         $location = $this->location;
         $title = $this->title;
 
@@ -193,12 +210,20 @@ class Meeting extends Model
     }
 
     /**
-     * 主催者によるスコープ
+     * 主催者（担当スタッフ）によるスコープ
      */
-    public function scopeHost(Builder $query, ?int $hostStaffId): Builder
+    public function scopeHost(Builder $query, ?int $staffId): Builder
     {
-        if ($hostStaffId) {
-            return $query->where('host_staff_id', $hostStaffId);
+        return $this->scopeAssignee($query, $staffId);
+    }
+
+    /**
+     * 担当スタッフによるスコープ（AnnualScheduleと同一仕様）
+     */
+    public function scopeAssignee(Builder $query, ?int $staffId): Builder
+    {
+        if ($staffId) {
+            return $query->where('staff_id', $staffId);
         }
 
         return $query;
