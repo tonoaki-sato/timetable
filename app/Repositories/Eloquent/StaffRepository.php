@@ -66,4 +66,37 @@ class StaffRepository implements StaffRepositoryInterface
     {
         return (bool) $staff->delete();
     }
+
+    /**
+     * アクセストークンによるスタッフ取得
+     */
+    public function findByAccessToken(string $token): ?Staff
+    {
+        return Staff::where('access_token', $token)
+            ->where('is_active', true)
+            ->first();
+    }
+
+    /**
+     * LINEユーザーIDによるスタッフ取得
+     */
+    public function findByLineUserId(string $lineUserId): ?Staff
+    {
+        return Staff::where('line_user_id', $lineUserId)
+            ->where('is_active', true)
+            ->first();
+    }
+
+    /**
+     * 氏名・フリガナによるスタッフ検索（照合用）
+     *
+     * @return Collection<int, Staff>
+     */
+    public function findByNameAndKana(string $name, string $kana): Collection
+    {
+        return Staff::where('name', $name)
+            ->where('kana', $kana)
+            ->where('is_active', true)
+            ->get();
+    }
 }

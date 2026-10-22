@@ -106,4 +106,17 @@ class StaffController extends Controller
         return redirect()->route('staff.index')
             ->with('success', "スタッフ「{$name}」を削除しました。");
     }
+
+    /**
+     * スタッフのアクセストークン再生成処理
+     */
+    public function regenerateToken(Staff $staff): RedirectResponse
+    {
+        $this->authorize('update', $staff);
+
+        $this->staffService->regenerateAccessToken($staff);
+
+        return redirect()->route('staff.show', $staff)
+            ->with('success', "スタッフ「{$staff->name}」の個別マイタイムテーブルURLを再発行しました。（古いURLは無効化されました）");
+    }
 }

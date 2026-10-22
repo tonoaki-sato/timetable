@@ -10,13 +10,22 @@
             </p>
         </div>
 
-        @can('create', App\Models\Staff::class)
-        <a href="{{ route('staff.create') }}"
-            class="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
-            <span>➕</span>
-            <span>新規スタッフ登録</span>
-        </a>
-        @endcan
+        <div class="flex items-center space-x-2">
+            <!-- LINE募集案内文コピーボタン -->
+            <button type="button" id="copyInviteBtn" data-join-url="{{ route('staff.join') }}"
+                class="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                <span>💬</span>
+                <span>LINE募集案内文コピー</span>
+            </button>
+
+            @can('create', App\Models\Staff::class)
+            <a href="{{ route('staff.create') }}"
+                class="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                <span>➕</span>
+                <span>新規スタッフ登録</span>
+            </a>
+            @endcan
+        </div>
     </div>
 
     <!-- 検索・絞り込みフォーム -->
@@ -26,7 +35,7 @@
             <div>
                 <label for="search" class="block text-[11px] font-bold text-slate-600 mb-1">フリーワード</label>
                 <input type="text" id="search" name="search" value="{{ request('search') }}"
-                    placeholder="氏名・フリガナ・所属団体"
+                    placeholder="氏名・フリガナ・所属・LINE名"
                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
@@ -62,7 +71,9 @@
                         <th class="px-4 py-3 font-bold">ID</th>
                         <th class="px-4 py-3 font-bold">氏名</th>
                         <th class="px-4 py-3 font-bold">フリガナ</th>
+                        <th class="px-4 py-3 font-bold">LINE表示名</th>
                         <th class="px-4 py-3 font-bold">所属団体・地域会等</th>
+                        <th class="px-4 py-3 font-bold">登録経路</th>
                         <th class="px-4 py-3 font-bold">稼働状態</th>
                         <th class="px-4 py-3 font-bold">割当タスク数</th>
                         <th class="px-4 py-3 font-bold text-right">操作</th>
@@ -78,7 +89,32 @@
                             </a>
                         </td>
                         <td class="px-4 py-3 text-slate-500 font-mono text-[11px]">{{ $staff->kana ?? '-' }}</td>
+                        <td class="px-4 py-3">
+                            @if($staff->line_display_name)
+                            <div class="flex items-center space-x-1.5">
+                                @if($staff->line_picture_url)
+                                <img src="{{ $staff->line_picture_url }}" class="w-5 h-5 rounded-full object-cover border border-slate-200" alt="">
+                                @endif
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-[#06C755]/10 text-[#05963f] border border-[#06C755]/20">
+                                    {{ $staff->line_display_name }}
+                                </span>
+                            </div>
+                            @else
+                            <span class="text-slate-400 text-[11px]">未連携</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-slate-700">{{ $staff->affiliation ?? '未設定' }}</td>
+                        <td class="px-4 py-3">
+                            @if($staff->registered_via === 'self')
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                LINEセルフ
+                            </span>
+                            @else
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                本部登録
+                            </span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3">
                             @if($staff->is_active)
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -94,6 +130,14 @@
                             {{ $staff->assignments_count ?? 0 }} <span class="text-[10px] text-slate-400">件</span>
                         </td>
                         <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
+                            <!-- QR表示ボタン -->
+                            <button type="button"
+                                    class="open-qr-btn px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[11px] font-bold transition cursor-pointer"
+                                    data-staff-name="{{ $staff->name }}"
+                                    data-staff-url="{{ $staff->my_shift_url }}">
+                                📱 QR
+                            </button>
+
                             <a href="{{ route('staff.show', $staff) }}"
                                 class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium transition">
                                 詳細
@@ -121,7 +165,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-12 text-center text-slate-400">
+                        <td colspan="9" class="px-4 py-12 text-center text-slate-400">
                             <span class="text-3xl block mb-2">👷</span>
                             登録されているスタッフは見つかりませんでした。
                         </td>
@@ -138,5 +182,49 @@
         @endif
     </div>
 
+    <!-- 個別QRコード表示モーダル -->
+    <div id="qrModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div id="qrModalBackdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white p-6 text-center shadow-2xl transition-all sm:w-full sm:max-w-sm border border-slate-200">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
+                        <span>📱</span>
+                        <span>マイタイムテーブル用 QRコード</span>
+                    </h3>
+                    <button type="button" id="qrModalCloseBtn" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">✕</button>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-xs text-slate-500 mb-1">対象スタッフ:</p>
+                    <p id="qrModalStaffName" class="text-base font-bold text-slate-900"></p>
+                </div>
+
+                <!-- QRコード画像 -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 inline-block mb-4">
+                    <img id="qrModalImage" src="" alt="QR Code" class="w-48 h-48 mx-auto">
+                </div>
+
+                <p class="text-[11px] text-slate-500 mb-3">
+                    スタッフ本人のスマホカメラで読み取ると、即座にマイタイムテーブルが開きます。
+                </p>
+
+                <!-- URLコピー -->
+                <div class="space-y-2">
+                    <input type="text" id="qrModalStaffUrl" readonly class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600 text-center">
+                    <button type="button" id="qrModalCopyBtn"
+                            class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
+                        <span>📋</span>
+                        <span>URLをコピー</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<!-- 外部JS（CSP準拠） -->
+<script src="{{ asset('js/staff-management.js') }}" defer></script>
 </x-layouts.app>
+

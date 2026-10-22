@@ -38,4 +38,21 @@ interface StaffRepositoryInterface
      * スタッフ削除
      */
     public function delete(Staff $staff): bool;
+
+    /**
+     * アクセストークンによるスタッフ取得
+     */
+    public function findByAccessToken(string $token): ?Staff;
+
+    /**
+     * LINEユーザーIDによるスタッフ取得
+     */
+    public function findByLineUserId(string $lineUserId): ?Staff;
+
+    /**
+     * 氏名・フリガナによるスタッフ検索（照合用）
+     *
+     * @return Collection<int, Staff>
+     */
+    public function findByNameAndKana(string $name, string $kana): Collection;
 }

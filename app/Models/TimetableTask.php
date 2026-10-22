@@ -198,7 +198,7 @@ class TimetableTask extends Model
     /**
      * 担当班によるスコープ
      */
-    public function scopeLane(Builder $query, ?string $lane): Builder
+    public function scopeLane(Builder $query, ?string $lane = null): Builder
     {
         if ($lane) {
             return $query->where('lane', $lane);

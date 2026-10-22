@@ -9,17 +9,37 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'name',
     'kana',
     'affiliation',
     'is_active',
+    'access_token',
+    'line_user_id',
+    'line_display_name',
+    'line_picture_url',
+    'registered_via',
+    'last_accessed_at',
+    'checked_in_at',
 ])]
 class Staff extends Model
 {
     /** @use HasFactory<StaffFactory> */
     use HasFactory;
+
+    /**
+     * モデルの起動処理
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Staff $staff) {
+            if (empty($staff->access_token)) {
+                $staff->access_token = Str::random(32);
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -30,7 +50,33 @@ class Staff extends Model
     {
         return [
             'is_active' => 'boolean',
+            'last_accessed_at' => 'datetime',
+            'checked_in_at' => 'datetime',
         ];
+    }
+
+    /**
+     * 専用マイシフトURLの取得
+     */
+    public function getMyShiftUrlAttribute(): string
+    {
+        return route('staff.myshift', ['token' => $this->access_token]);
+    }
+
+    /**
+     * LINEグループでの呼び名（LINE表示名があればそれを優先、なければ本名）
+     */
+    public function getMentionNameAttribute(): string
+    {
+        return $this->line_display_name ?: $this->name;
+    }
+
+    /**
+     * 当日チェックイン済みかどうか
+     */
+    public function getIsCheckedInAttribute(): bool
+    {
+        return $this->checked_in_at !== null;
     }
 
     /**
@@ -92,7 +138,8 @@ class Staff extends Model
             return $query->where(function (Builder $q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('kana', 'like', "%{$search}%")
-                    ->orWhere('affiliation', 'like', "%{$search}%");
+                    ->orWhere('affiliation', 'like', "%{$search}%")
+                    ->orWhere('line_display_name', 'like', "%{$search}%");
             });
         }
 

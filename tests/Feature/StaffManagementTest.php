@@ -135,4 +135,50 @@ class StaffManagementTest extends TestCase
         $response->assertRedirect(route('staff.index'));
         $this->assertDatabaseMissing('staff', ['id' => $staff->id]);
     }
+
+    /**
+     * スタッフ一覧にLINE情報・登録経路が表示されること
+     */
+    public function test_admin_staff_index_displays_line_info_and_registered_via(): void
+    {
+        $this->actingAs($this->operator);
+
+        $lineStaff = Staff::factory()->selfRegistered()->withLine('やまちゃん')->create([
+            'name' => '山田 太郎',
+        ]);
+
+        $response = $this->get(route('staff.index'));
+        $response->assertStatus(200);
+        $response->assertSee('山田 太郎');
+        $response->assertSee('やまちゃん');
+        $response->assertSee('LINEセルフ');
+    }
+
+    /**
+     * 本部管理者がスタッフのアクセストークンを再生成できること
+     */
+    public function test_admin_can_regenerate_staff_access_token(): void
+    {
+        $this->actingAs($this->operator);
+
+        $staff = Staff::factory()->create([
+            'access_token' => 'old-token-1234567890123456789012',
+        ]);
+
+        $response = $this->post(route('staff.regenerate-token', $staff));
+        $response->assertRedirect(route('staff.show', $staff));
+
+        $staff->refresh();
+        $this->assertNotSame('old-token-1234567890123456789012', $staff->access_token);
+        $this->assertSame(32, strlen($staff->access_token));
+    }
+
+    /**
+     * 未認証ユーザーはトークン再生成を実行できないこと
+     */
+    public function test_guest_cannot_regenerate_token(): void
+    {
+        $staff = Staff::factory()->create();
+        $this->post(route('staff.regenerate-token', $staff))->assertRedirect(route('login'));
+    }
 }

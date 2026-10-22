@@ -59,7 +59,7 @@
         </div>
 
         <div class="p-6 sm:p-8 space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <!-- 所属団体 -->
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <span class="text-[11px] font-bold text-slate-500 block mb-1">🏢 所属団体・地域会等</span>
@@ -68,12 +68,70 @@
                     </div>
                 </div>
 
-                <!-- 割当タスク数 -->
+                <!-- LINEアカウント情報 -->
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span class="text-[11px] font-bold text-slate-500 block mb-1">📋 割当タスク数</span>
-                    <div class="text-sm font-bold text-slate-900 font-mono">
-                        {{ $staff->assignments->count() }} <span class="text-xs font-normal text-slate-500">件</span>
+                    <span class="text-[11px] font-bold text-slate-500 block mb-1">💬 LINE連携</span>
+                    <div class="flex items-center space-x-2">
+                        @if($staff->line_picture_url)
+                        <img src="{{ $staff->line_picture_url }}" class="w-6 h-6 rounded-full object-cover border border-slate-200" alt="">
+                        @endif
+                        <span class="text-sm font-bold text-slate-900">
+                            {{ $staff->line_display_name ?: '未連携' }}
+                        </span>
                     </div>
+                    <span class="text-[10px] text-slate-400 mt-0.5 block">
+                        登録経路: {{ $staff->registered_via === 'self' ? 'LINEセルフ登録' : '本部登録' }}
+                    </span>
+                </div>
+
+                <!-- 割当タスク数 & 受付状況 -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <span class="text-[11px] font-bold text-slate-500 block mb-1">📋 タスク & 当日受付</span>
+                    <div class="text-sm font-bold text-slate-900">
+                        {{ $staff->assignments->count() }} 件
+                        @if($staff->is_checked_in)
+                        <span class="ml-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            受付済 ({{ $staff->checked_in_at->format('H:i') }})
+                        </span>
+                        @else
+                        <span class="ml-2 text-xs font-normal text-slate-400">未受付</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- 専用マイタイムテーブルURL & QR -->
+            <div class="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h4 class="text-xs font-bold text-indigo-900 flex items-center space-x-1.5">
+                            <span>📱</span>
+                            <span>本人専用 マイタイムテーブル確認URL</span>
+                        </h4>
+                        <p class="text-[11px] text-indigo-700/80 mt-0.5">
+                            パスワード不要でスタッフ本人がスマホから直接確認できる個別URLです。
+                        </p>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <form action="{{ route('staff.regenerate-token', $staff) }}" method="POST"
+                              onsubmit="return confirm('アクセストークンを再生成しますか？\n（古いURLは無効化されます）');">
+                            @csrf
+                            <button type="submit" class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 rounded text-[11px] font-medium transition cursor-pointer">
+                                🔄 URL再発行
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <input type="text" readonly value="{{ $staff->my_shift_url }}"
+                           class="flex-1 px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-mono text-slate-700">
+                    <a href="{{ $staff->my_shift_url }}" target="_blank" rel="noopener noreferrer"
+                       class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                        <span>開く</span>
+                        <span>↗</span>
+                    </a>
                 </div>
             </div>
 

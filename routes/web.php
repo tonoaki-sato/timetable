@@ -6,6 +6,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\StaffJoinController;
+use App\Http\Controllers\StaffShiftController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TimetableMatrixController;
 use App\Http\Controllers\TimetableTaskController;
@@ -18,7 +20,20 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// 2. 認証ルート (未ログイン時のみアクセス可)
+// 2. スタッフセルフ登録ルート (未ログインでアクセス可)
+Route::get('/join', [StaffJoinController::class, 'create'])->name('staff.join');
+Route::post('/join', [StaffJoinController::class, 'store'])->name('staff.join.store');
+Route::get('/join/completed', [StaffJoinController::class, 'completed'])->name('staff.join.completed');
+
+// 3. 現場マイタイムテーブル閲覧 & チェックインルート (トークン認証)
+Route::get('/my/shift/{token}', [StaffShiftController::class, 'show'])->name('staff.myshift');
+Route::post('/my/shift/{token}/checkin', [StaffShiftController::class, 'checkIn'])->name('staff.myshift.checkin');
+
+// 4. URL紛失時のスタッフ照合ルート
+Route::get('/my/find', [StaffShiftController::class, 'showFindForm'])->name('staff.myshift.find');
+Route::post('/my/find', [StaffShiftController::class, 'find'])->name('staff.myshift.find.post');
+
+// 5. 認証ルート (未ログイン時のみアクセス可)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
@@ -44,6 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('meetings', MeetingController::class);
 
     // 現場スタッフ（ボランティア）管理リソースルート
+    Route::post('staff/{staff}/regenerate-token', [StaffController::class, 'regenerateToken'])->name('staff.regenerate-token');
     Route::resource('staff', StaffController::class);
 
     // タイムテーブル基本運行日リソースルート
