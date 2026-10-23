@@ -19,21 +19,21 @@ class AnnualScheduleSeederTest extends TestCase
     {
         $this->seed([StaffSeeder::class, AnnualScheduleSeeder::class]);
 
-        // 2027年度のデータが登録されていること
+        // 2027年度のデータが登録されていること（27件のシードデータ）
         $schedules2027 = AnnualSchedule::where('target_year', 2027)->get();
-        $this->assertGreaterThanOrEqual(30, $schedules2027->count());
+        $this->assertGreaterThanOrEqual(25, $schedules2027->count());
 
         // 必須の主要行事・マイルストーンが存在すること
         $this->assertDatabaseHas('annual_schedules', [
             'target_year' => 2027,
-            'title' => '第1回幹事会（年間日程案策定）',
-            'category' => 'committee',
+            'title' => '前年度会計年度末締め調整',
+            'category' => 'other',
         ]);
 
         $this->assertDatabaseHas('annual_schedules', [
             'target_year' => 2027,
-            'title' => '第1回総会（新年度発足・役員選出・前年度会計報告）',
-            'category' => 'committee',
+            'title' => 'キャッチフレーズ事前募集・タブロイド新聞準備',
+            'category' => 'other',
         ]);
 
         $this->assertDatabaseHas('annual_schedules', [

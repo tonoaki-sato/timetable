@@ -14,7 +14,7 @@
         </div>
 
         <div class="flex items-center space-x-2 shrink-0">
-            <a href="{{ route('annual-schedules.index', ['view' => 'calendar', 'category' => 'committee']) }}"
+            <a href="{{ route('calendar.index', ['category' => 'committee']) }}"
                 class="inline-flex items-center justify-center px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition space-x-1.5 shadow-xs">
                 <span>📅</span>
                 <span>カレンダーで確認</span>

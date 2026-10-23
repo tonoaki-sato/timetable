@@ -20,7 +20,7 @@ class AnnualScheduleController extends Controller
     ) {}
 
     /**
-     * 年間スケジュール一覧・カレンダー画面の表示
+     * 年間スケジュール一覧画面の表示
      */
     public function index(Request $request): View
     {
@@ -29,10 +29,8 @@ class AnnualScheduleController extends Controller
         // 現在日時を取得
         $now = new DateTimeImmutable;
 
-        // GETパラメータから表示モード、年、月を取得
-        $viewMode = $request->input('view', 'calendar');
+        // GETパラメータから年を取得
         $year = (int) $request->input('year', $now->format('Y'));
-        $month = (int) $request->input('month', $now->format('n'));
 
         // GETパラメータからカテゴリとステータスを取得
         $category = $request->input('category');
@@ -45,18 +43,8 @@ class AnnualScheduleController extends Controller
         // 一覧表示用のデータを取得
         $listViewData = $this->scheduleService->getIndexViewData($year, $category, $status, $search, $staffId);
 
-        // カレンダー表示用のデータを取得
-        $calendarViewData = $this->scheduleService->getCalendarViewData($year, $month, $category, $status, $search, $staffId);
-
-        // ビューに渡すデータをマージ
-        $viewData = array_merge($listViewData, $calendarViewData, [
-            'viewMode' => $viewMode,
-            'selectedYear' => $year,
-            'selectedMonth' => $month,
-        ]);
-
         // ビューを表示
-        return view('annual_schedules.index', $viewData);
+        return view('annual_schedules.index', $listViewData);
     }
 
     /**

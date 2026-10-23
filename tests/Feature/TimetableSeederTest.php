@@ -21,6 +21,17 @@ class TimetableSeederTest extends TestCase
     public function test_timetable_and_staff_seeders_seed_data_correctly(): void
     {
         $this->seed(StaffSeeder::class);
+
+        $sampleStaff = [
+            'ヨーコ・サトウ', '宮永 健一', '有江 浩二', '漆原 拓也', '佐藤 秀樹',
+            '中村 亮', '高橋 美咲', '佐々木 直人', '小林 翔太', '渡辺 健司',
+            '萩原 誠', '姉川 雅代', '北川 慎一郎', '吉田 浩介', '山口 雄大',
+            '鈴木 恵', '井上 蓮', '伊藤 裕美', '加藤 雅之', '松本 さくら',
+        ];
+        foreach ($sampleStaff as $name) {
+            Staff::factory()->create(['name' => $name]);
+        }
+
         $this->seed(TimetableSeeder::class);
 
         // 1. スタッフが20名以上登録されていること

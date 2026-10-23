@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\AnnualSchedule;
-use App\Models\Meeting;
 use App\Models\Staff;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -319,9 +318,9 @@ class AnnualScheduleManagementTest extends TestCase
     }
 
     /**
-     * カレンダー表示で予定と会議が表示され、D&Dパレットは非表示であり、神事・式典が含まれないこと
+     * 年間スケジュール一覧画面に総合カレンダーへのリンクが表示され、工程タスクが一覧表示されること
      */
-    public function test_calendar_view_displays_events(): void
+    public function test_annual_schedule_index_displays_calendar_link_and_tasks(): void
     {
         $this->actingAs($this->user);
 
@@ -332,32 +331,14 @@ class AnnualScheduleManagementTest extends TestCase
             'start_date' => '2026-04-15',
         ]);
 
-        $meeting = Meeting::factory()->create([
-            'title' => '第1回幹事会（4月）',
-            'meeting_date' => '2026-04-20',
-            'start_time' => '18:00',
-            'staff_id' => null,
-        ]);
-
         $response = $this->get(route('annual-schedules.index', [
-            'view' => 'calendar',
             'year' => 2026,
-            'month' => 4,
         ]));
 
         $response->assertStatus(200);
-        $response->assertDontSee('ドラッグ＆ドロップ パレット');
-        $response->assertSee('会議・打合せ');
-        $response->assertSee('申請・協議');
-        $response->assertSee('募集・説明会');
-        $response->assertSee('運行・設営');
-        $response->assertSee('その他');
-        // 神事・式典が含まれないこと
-        $response->assertDontSee('神事・式典');
-
-        // カレンダー上に予定と会議が表示されること
+        $response->assertSee('総合カレンダーを見る');
+        $response->assertSee(route('calendar.index', ['year' => 2026]));
         $response->assertSee('警察署協議（4月）');
-        $response->assertSee('第1回幹事会（4月）');
-        $response->assertSee('主催未定');
+        $response->assertSee('工程・タスク一覧');
     }
 }

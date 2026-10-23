@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AnnualScheduleController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\MeetingController;
@@ -46,6 +47,9 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->midd
 Route::middleware('auth')->group(function () {
     // 本部ダッシュボード
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // 総合イベントカレンダー
+    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
 
     // ユーザー管理リソースルート
     Route::resource('users', UserController::class);

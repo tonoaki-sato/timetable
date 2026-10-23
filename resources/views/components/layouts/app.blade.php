@@ -40,9 +40,15 @@
                             <span><span class="hidden xl:inline">本部</span>ダッシュボード</span>
                         </a>
 
+                        <a href="{{ route('calendar.index') }}"
+                            class="px-2 py-1.5 lg:px-2.5 xl:px-3 rounded-lg text-xs font-bold transition flex items-center space-x-1 lg:space-x-1.5 whitespace-nowrap shrink-0 {{ request()->routeIs('calendar.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                            <span>📅</span>
+                            <span>カレンダー</span>
+                        </a>
+
                         <a href="{{ route('annual-schedules.index') }}"
                             class="px-2 py-1.5 lg:px-2.5 xl:px-3 rounded-lg text-xs font-bold transition flex items-center space-x-1 lg:space-x-1.5 whitespace-nowrap shrink-0 {{ request()->routeIs('annual-schedules.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
-                            <span>📅</span>
+                            <span>📋</span>
                             <span>年間<span class="hidden xl:inline">スケジュール</span><span class="xl:hidden">予定</span></span>
                         </a>
 
@@ -127,8 +133,12 @@
                 <span>📊</span>
                 <span class="text-[10px] mt-0.5 whitespace-nowrap">本部</span>
             </a>
-            <a href="{{ route('annual-schedules.index') }}" class="flex flex-col items-center py-1 px-1 whitespace-nowrap {{ request()->routeIs('annual-schedules.*') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
+            <a href="{{ route('calendar.index') }}" class="flex flex-col items-center py-1 px-1 whitespace-nowrap {{ request()->routeIs('calendar.*') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
                 <span>📅</span>
+                <span class="text-[10px] mt-0.5 whitespace-nowrap">カレンダー</span>
+            </a>
+            <a href="{{ route('annual-schedules.index') }}" class="flex flex-col items-center py-1 px-1 whitespace-nowrap {{ request()->routeIs('annual-schedules.*') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">
+                <span>📋</span>
                 <span class="text-[10px] mt-0.5 whitespace-nowrap">年間</span>
             </a>
             <a href="{{ route('meetings.index') }}" class="flex flex-col items-center py-1 px-1 whitespace-nowrap {{ request()->routeIs('meetings.*') ? 'text-indigo-400 font-bold' : 'text-slate-400' }}">

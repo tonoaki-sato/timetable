@@ -175,10 +175,10 @@ class MeetingManagementTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        // 必須項目未入力（staff_idは任意なので含まれない）
+        // 必須項目未入力（staff_id, locationは任意なので含まれない）
         $response = $this->post(route('meetings.store'), []);
-        $response->assertSessionHasErrors(['title', 'meeting_date', 'start_time', 'location']);
-        $response->assertSessionDoesntHaveErrors(['staff_id']);
+        $response->assertSessionHasErrors(['title', 'meeting_date', 'start_time']);
+        $response->assertSessionDoesntHaveErrors(['staff_id', 'location']);
 
         // 終了時刻が開始時刻より前
         $invalidTimeResponse = $this->post(route('meetings.store'), [
