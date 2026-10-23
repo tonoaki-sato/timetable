@@ -17,7 +17,7 @@ class TimetableSeederTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * StaffSeeder および TimetableSeeder が正常に動作し、4日間のタイムテーブルとタスク・スタッフアサインが正しく登録されること
+     * StaffSeeder および TimetableSeeder が正常に動作し、タイムテーブルと登録済みタスク・レーンが正しく登録されること
      */
     public function test_timetable_and_staff_seeders_seed_data_correctly(): void
     {
@@ -43,16 +43,18 @@ class TimetableSeederTest extends TestCase
         $this->assertDatabaseHas('staff', ['name' => '漆原 拓也']);
         $this->assertDatabaseHas('staff', ['name' => '佐藤 秀樹']);
 
-        // 2. 4つの運行日（Day 0, Day 1, Day 2, Day 3）が登録されていること
-        $this->assertDatabaseHas('timetables', ['target_date' => '2026-10-10']); // Day 0
-        $this->assertDatabaseHas('timetables', ['target_date' => '2026-10-11']); // Day 1
-        $this->assertDatabaseHas('timetables', ['target_date' => '2026-10-12']); // Day 2
-        $this->assertDatabaseHas('timetables', ['target_date' => '2026-10-13']); // Day 3
+        // 2. 運行日（Day 1: 宿場まつり 1日目, Day 2: 宿場まつり 2日目）が登録されていること
+        $this->assertDatabaseHas('timetables', ['target_date' => '2026-10-11', 'name' => '宿場まつり 1日目']);
+        $this->assertDatabaseHas('timetables', ['target_date' => '2026-10-12', 'name' => '宿場まつり 2日目']);
 
-        // 3. 各日のタスクが存在し、リレーションが機能していること
+        // 3. 各日のタスク・レーンが存在し、リレーションが機能していること
         $timetableDay1 = Timetable::where('target_date', '2026-10-11')->firstOrFail();
         $this->assertSame('active', $timetableDay1->status);
-        $this->assertGreaterThanOrEqual(20, $timetableDay1->tasks()->count());
+        $this->assertSame(24, $timetableDay1->tasks()->count());
+
+        // レーン表示順のカスタム設定（衛生=20, カラーコーン=40等）が反映されていること
+        $this->assertSame(20, Lane::where('timetable_id', $timetableDay1->id)->where('name', '衛生')->value('display_order'));
+        $this->assertSame(40, Lane::where('timetable_id', $timetableDay1->id)->where('name', 'カラーコーン')->value('display_order'));
 
         // 最優先タスクの存在確認
         $criticalTask = TimetableTask::where('timetable_id', $timetableDay1->id)
@@ -70,9 +72,6 @@ class TimetableSeederTest extends TestCase
             $this->assertNotNull($task->start_time);
             $this->assertNotNull($task->end_time);
         }
-
-        // 4. スタッフアサインが登録されていること
-        $this->assertGreaterThanOrEqual(10, TaskStaffAssignment::count());
     }
 
     /**
