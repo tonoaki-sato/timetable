@@ -12,6 +12,7 @@ export default defineConfig({
                 'resources/js/timetable-matrix.js',
                 'resources/js/calendar.js',
                 'resources/js/meetings.js',
+                'resources/js/lanes.js',
             ],
             refresh: true,
             fonts: [

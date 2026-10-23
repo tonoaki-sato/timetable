@@ -87,6 +87,10 @@ class LaneManagementTest extends TestCase
         $response->assertSee('担当班（レーン）管理');
         $response->assertSee('カラーコーン');
         $response->assertSee('ステカン');
+        $response->assertSee('lanes-container');
+        $response->assertSee('⋮⋮');
+        $response->assertSee('主要班');
+        $response->assertSee('delete-migration-modal');
     }
 
     /**
@@ -194,7 +198,6 @@ class LaneManagementTest extends TestCase
         TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
             'lane_id' => $lane->id,
-            'lane' => $lane->name,
             'title' => '規制コーン本設置',
         ]);
 
@@ -266,5 +269,154 @@ class LaneManagementTest extends TestCase
         $this->assertNotNull($assignment);
         $this->assertSame('班リーダー', $assignment->role_description);
         $this->assertSame('present', $assignment->attendance_status);
+    }
+
+    /**
+     * 9. デフォルトレーン生成時に主要班（コアレーン）フラグが正しく設定されること
+     */
+    public function test_default_ten_lanes_have_core_flags(): void
+    {
+        $this->timetable->createDefaultLanes();
+
+        $coreLaneNames = ['カラーコーン', '給水設備', '衛生', '巡回', 'ステカン'];
+        foreach ($coreLaneNames as $name) {
+            $lane = $this->timetable->lanes()->where('name', $name)->firstOrFail();
+            $this->assertTrue($lane->is_core, "Lane {$name} should be core");
+        }
+
+        $nonCoreLaneNames = ['キッズ村', 'ちょうちん', 'ござ市', '本陣', '道路清掃'];
+        foreach ($nonCoreLaneNames as $name) {
+            $lane = $this->timetable->lanes()->where('name', $name)->firstOrFail();
+            $this->assertFalse($lane->is_core, "Lane {$name} should not be core");
+        }
+    }
+
+    /**
+     * 10. ドラッグ＆ドロップでレーン表示順を一括更新できること
+     */
+    public function test_can_reorder_lanes(): void
+    {
+        $this->timetable->createDefaultLanes();
+        $lanes = $this->timetable->lanes()->ordered()->get();
+
+        // 逆順の ID 配列を用意
+        $reversedIds = $lanes->pluck('id')->reverse()->values()->all();
+
+        $response = $this->actingAs($this->adminUser)
+            ->postJson(route('timetables.lanes.reorder', $this->timetable), [
+                'lane_ids' => $reversedIds,
+            ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+
+        // DB 上で display_order が更新されていること
+        $reorderedLanes = $this->timetable->lanes()->ordered()->get();
+        $this->assertSame($reversedIds, $reorderedLanes->pluck('id')->all());
+        $this->assertSame(10, $reorderedLanes->first()->display_order);
+        $this->assertSame(100, $reorderedLanes->last()->display_order);
+    }
+
+    /**
+     * 11. 他の日程からレーン構成を一括コピーできること
+     */
+    public function test_can_copy_lanes_from_another_timetable(): void
+    {
+        // コピー元の日程を作成
+        $sourceTimetable = Timetable::factory()->create([
+            'name' => '設営準備日',
+            'target_date' => '2027-10-16',
+        ]);
+        $sourceTimetable->createDefaultLanes();
+
+        // コピー元にカスタムレーンを追加
+        $customLane = $sourceTimetable->lanes()->create([
+            'name' => '特別警備班',
+            'icon' => '🛡️',
+            'color' => 'indigo',
+            'is_core' => true,
+            'is_active' => true,
+            'display_order' => 120,
+            'description' => '深夜の資材監視',
+        ]);
+
+        // コピー実行
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('timetables.lanes.copy-from', $this->timetable), [
+                'source_timetable_id' => $sourceTimetable->id,
+            ]);
+
+        $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
+        $response->assertSessionHas('success');
+
+        // コピー先日程に「特別警備班」が作成されたこと
+        $this->assertDatabaseHas('lanes', [
+            'timetable_id' => $this->timetable->id,
+            'name' => '特別警備班',
+            'icon' => '🛡️',
+            'color' => 'indigo',
+            'is_core' => true,
+        ]);
+    }
+
+    /**
+     * 12. タスクが存在するレーンを別レーンにタスク移管して安全に削除できること
+     */
+    public function test_can_delete_lane_with_task_migration(): void
+    {
+        $this->timetable->createDefaultLanes();
+        $sourceLane = $this->timetable->lanes()->where('name', 'ステカン')->firstOrFail();
+        $targetLane = $this->timetable->lanes()->where('name', '道路清掃')->firstOrFail();
+
+        // ステカンにタスクを作成
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $sourceLane->id,
+            'title' => 'ステカン撤去作業',
+        ]);
+
+        $this->assertSame($sourceLane->id, $task->lane_id);
+
+        // 移管先を指定して削除
+        $response = $this->actingAs($this->adminUser)
+            ->delete(route('timetables.lanes.destroy', [$this->timetable, $sourceLane]), [
+                'migrate_to_lane_id' => $targetLane->id,
+            ]);
+
+        $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
+        $response->assertSessionHas('success');
+
+        // ソースレーンは削除されていること
+        $this->assertDatabaseMissing('lanes', ['id' => $sourceLane->id]);
+
+        // タスクはターゲットレーンに引き継がれていること
+        $task->refresh();
+        $this->assertSame($targetLane->id, $task->lane_id);
+    }
+
+    /**
+     * 13. タスクが存在するレーンをタスクごと一括強制削除できること
+     */
+    public function test_can_delete_lane_with_cascade_tasks(): void
+    {
+        $this->timetable->createDefaultLanes();
+        $lane = $this->timetable->lanes()->where('name', 'キッズ村')->firstOrFail();
+
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $lane->id,
+            'title' => 'キッズコーナー風船配布',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->delete(route('timetables.lanes.destroy', [$this->timetable, $lane]), [
+                'cascade_delete_tasks' => '1',
+            ]);
+
+        $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('lanes', ['id' => $lane->id]);
+        $this->assertDatabaseMissing('timetable_tasks', ['id' => $task->id]);
     }
 }

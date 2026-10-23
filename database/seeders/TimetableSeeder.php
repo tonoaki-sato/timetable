@@ -200,7 +200,7 @@ class TimetableSeeder extends Seeder
                 'description' => '',
                 'start_time' => '07:00:00',
                 'end_time' => '20:00:00',
-                'status' => 'completed',
+                'status' => 'active',
                 'created_by' => $admin->id,
             ]
         );
@@ -957,19 +957,30 @@ class TimetableSeeder extends Seeder
             $taskData['timetable_id'] = $timetable->id;
 
             // 旧班名から新レーン名へのマッピング
-            $mappedLaneName = match ($taskData['lane']) {
+            $mappedLaneName = match ($taskData['lane'] ?? '') {
                 'カラーコーン班' => 'カラーコーン',
                 '給水設備班' => '給水設備',
                 '衛生班' => '衛生',
                 '誘導・警備班' => '巡回',
                 '救護班' => '本陣',
                 '本部連絡班' => '本陣',
-                default => $taskData['lane'],
+                default => $taskData['lane'] ?? '',
             };
 
             if (isset($lanes[$mappedLaneName])) {
                 $taskData['lane_id'] = $lanes[$mappedLaneName]->id;
+            } elseif ($mappedLaneName !== '') {
+                $newLane = $timetable->lanes()->create([
+                    'name' => $mappedLaneName,
+                    'color' => 'slate',
+                    'icon' => '📋',
+                    'display_order' => 110,
+                ]);
+                $lanes[$mappedLaneName] = $newLane;
+                $taskData['lane_id'] = $newLane->id;
             }
+
+            unset($taskData['lane']);
 
             $task = TimetableTask::updateOrCreate(
                 [

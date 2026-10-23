@@ -62,7 +62,7 @@ class TimetableTaskController extends Controller
             'timetableLanes' => $timetableLanes,
             'selectedLane' => $selectedLane,
             'suggestedStartTime' => $suggestedStartTime,
-            'lanes' => TimetableTask::LANES,
+            'lanes' => $timetableLanes->pluck('name', 'name')->all(),
             'statuses' => TimetableTask::STATUSES,
         ]);
     }
@@ -125,7 +125,7 @@ class TimetableTaskController extends Controller
         return view('timetable_tasks.edit', [
             'task' => $task,
             'timetableLanes' => $timetableLanes,
-            'lanes' => TimetableTask::LANES,
+            'lanes' => $timetableLanes->pluck('name', 'name')->all(),
             'statuses' => TimetableTask::STATUSES,
         ]);
     }

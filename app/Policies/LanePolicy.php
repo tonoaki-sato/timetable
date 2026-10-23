@@ -34,7 +34,7 @@ class LanePolicy
     /**
      * レーン更新権限（主担当設定含む）
      */
-    public function update(User $user, Lane $lane): bool
+    public function update(User $user, ?Lane $lane = null): bool
     {
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }

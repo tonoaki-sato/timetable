@@ -20,7 +20,15 @@
             </p>
         </div>
 
-        <div class="flex items-center space-x-2">
+        <div class="flex flex-wrap items-center gap-2">
+            @if(isset($otherTimetables) && $otherTimetables->isNotEmpty())
+            <button type="button" id="open-copy-modal-btn"
+                class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                <span>📥</span>
+                <span>他日程からコピー</span>
+            </button>
+            @endif
+
             <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
                 class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center space-x-1">
                 <span>⏱️</span>
@@ -113,9 +121,9 @@
                     <!-- 表示順 -->
                     <div>
                         <label for="new_display_order" class="block text-xs font-bold text-slate-700 mb-1">
-                            表示順 <span class="text-red-500">*</span>
+                            表示順
                         </label>
-                        <input type="number" id="new_display_order" name="display_order" value="{{ old('display_order', ($lanes->max('display_order') ?? 0) + 10) }}" required min="0" max="9999"
+                        <input type="number" id="new_display_order" name="display_order" value="{{ old('display_order', ($lanes->max('display_order') ?? 0) + 10) }}" min="0" max="9999"
                             class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                 </div>
@@ -149,6 +157,21 @@
                     </div>
                 </div>
 
+                <!-- 主要班・有効化フラグ -->
+                <div class="flex flex-wrap items-center gap-6 pt-2 border-t border-slate-200">
+                    <label class="flex items-center space-x-2 cursor-pointer select-none">
+                        <input type="checkbox" name="is_core" value="1" {{ old('is_core') ? 'checked' : '' }}
+                            class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                        <span class="text-xs font-bold text-slate-700">⭐ 主要班（マトリクス固定表示・強調）</span>
+                    </label>
+
+                    <label class="flex items-center space-x-2 cursor-pointer select-none">
+                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', '1') === '1' ? 'checked' : '' }}
+                            class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                        <span class="text-xs font-bold text-slate-700">👁️ 有効（マトリクス・帳票に表示）</span>
+                    </label>
+                </div>
+
                 <div class="flex justify-end pt-2">
                     <button type="submit"
                         class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
@@ -159,7 +182,7 @@
         </div>
     </details>
 
-    <!-- 2. 登録済みレーン一覧 -->
+    <!-- 2. 登録済みレーン一覧（ドラッグ＆ドロップ対応） -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
@@ -171,50 +194,75 @@
                     </span>
                 </h2>
                 <p class="text-xs text-slate-500 mt-0.5">
-                    主担当（現場リーダー）はドロップダウンから直接クイック変更・解除できます。
+                    左端のハンドル（⋮⋮）をドラッグ＆ドロップすると並び順を即時変更できます。
                 </p>
             </div>
         </div>
 
-        <div class="divide-y divide-slate-100">
+        <div id="lanes-container"
+            data-reorder-url="{{ route('timetables.lanes.reorder', $timetable) }}"
+            class="divide-y divide-slate-100">
             @forelse($lanes as $lane)
             @php
                 $classes = $lane->color_classes;
             @endphp
-            <div class="p-4 sm:p-5 hover:bg-slate-50/50 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <!-- 左側: レーン情報 -->
-                <div class="space-y-1.5 flex-1 min-w-0">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span class="font-mono text-[10px] text-slate-400 font-bold px-1.5 py-0.5 bg-slate-100 rounded">
-                            #{{ $lane->display_order }}
-                        </span>
-
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border {{ $classes['badge'] }}">
-                            <span class="mr-1.5">{{ $lane->icon ?: '📋' }}</span>
-                            <span>{{ $lane->name }}</span>
-                        </span>
-
-                        <!-- タスク件数バッジ -->
-                        <span class="text-[11px] text-slate-500 font-mono">
-                            タスク: <strong class="text-slate-800">{{ $lane->tasks->count() }}</strong> 件
-                        </span>
-
-                        <!-- クイックタスク追加導線 -->
-                        <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id, 'lane_id' => $lane->id]) }}"
-                            class="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold ml-1 transition">
-                            ＋ タスク追加
-                        </a>
+            <div data-lane-id="{{ $lane->id }}" draggable="true"
+                class="p-4 sm:p-5 hover:bg-slate-50/70 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4 cursor-default">
+                <!-- 左側: ハンドル + レーン情報 -->
+                <div class="flex items-center space-x-3 flex-1 min-w-0">
+                    <!-- ドラッグハンドル -->
+                    <div class="cursor-grab active:cursor-grabbing text-slate-400 hover:text-indigo-600 px-1 py-2 select-none" title="ドラッグして並び替え">
+                        <span class="text-base font-bold">⋮⋮</span>
                     </div>
 
-                    @if($lane->description)
-                    <p class="text-xs text-slate-600 line-clamp-1">
-                        {{ $lane->description }}
-                    </p>
-                    @endif
+                    <div class="space-y-1.5 flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="order-badge font-mono text-[10px] text-slate-400 font-bold px-1.5 py-0.5 bg-slate-100 rounded">
+                                #{{ $lane->display_order }}
+                            </span>
+
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border {{ $classes['badge'] }}">
+                                <span class="mr-1.5">{{ $lane->icon ?: '📋' }}</span>
+                                <span>{{ $lane->name }}</span>
+                            </span>
+
+                            <!-- 主要班バッジ -->
+                            @if($lane->is_core)
+                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold flex items-center space-x-0.5">
+                                <span>⭐</span>
+                                <span>主要班</span>
+                            </span>
+                            @endif
+
+                            <!-- 非表示バッジ -->
+                            @if(!$lane->is_active)
+                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 font-bold">
+                                🔒 非表示中
+                            </span>
+                            @endif
+
+                            <!-- タスク件数バッジ -->
+                            <span class="text-[11px] text-slate-500 font-mono">
+                                タスク: <strong class="text-slate-800">{{ $lane->tasks->count() }}</strong> 件
+                            </span>
+
+                            <!-- クイックタスク追加導線 -->
+                            <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id, 'lane_id' => $lane->id]) }}"
+                                class="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold ml-1 transition">
+                                ＋ タスク追加
+                            </a>
+                        </div>
+
+                        @if($lane->description)
+                        <p class="text-xs text-slate-600 line-clamp-1">
+                            {{ $lane->description }}
+                        </p>
+                        @endif
+                    </div>
                 </div>
 
                 <!-- 中央: 主担当（リーダー）設定フォーム -->
-                <div class="flex items-center gap-2 shrink-0 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                <div class="flex items-center gap-2 shrink-0 bg-slate-50 p-2 rounded-xl border border-slate-200/80">
                     <form action="{{ route('timetables.lanes.update-lead', [$timetable, $lane]) }}" method="POST" class="flex items-center gap-2">
                         @csrf
                         @method('PATCH')
@@ -243,7 +291,7 @@
                     @endif
                 </div>
 
-                <!-- 右側: 詳細編集・削除モーダル/ボタン -->
+                <!-- 右側: 詳細編集・削除ボタン -->
                 <div class="flex items-center space-x-2 shrink-0">
                     <!-- 編集アコーディオン開閉ボタン -->
                     <button type="button" data-toggle-target="#edit-lane-{{ $lane->id }}"
@@ -251,12 +299,16 @@
                         ✏️ 編集
                     </button>
 
-                    <!-- 削除ボタン（タスクが存在する場合は無効化・警告） -->
+                    <!-- 削除ボタン（タスクがある場合は移行モーダルを開く） -->
                     @if($lane->tasks->count() > 0)
-                    <button type="button" disabled
-                        title="タスクが登録されているため削除できません"
-                        class="px-3 py-1.5 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-xs font-bold cursor-not-allowed">
-                        🗑️ 削除
+                    <button type="button"
+                        data-action="open-delete-modal"
+                        data-lane-id="{{ $lane->id }}"
+                        data-lane-name="{{ $lane->name }}"
+                        data-task-count="{{ $lane->tasks->count() }}"
+                        data-delete-url="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}"
+                        class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer">
+                        🗑️ 削除...
                     </button>
                     @else
                     <form action="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}" method="POST" class="inline"
@@ -333,6 +385,21 @@
                         </div>
                     </div>
 
+                    <!-- 主要班・有効化フラグ -->
+                    <div class="flex flex-wrap items-center gap-6 pt-2">
+                        <label class="flex items-center space-x-2 cursor-pointer select-none">
+                            <input type="checkbox" name="is_core" value="1" {{ old('is_core', $lane->is_core) ? 'checked' : '' }}
+                                class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                            <span class="text-xs font-bold text-slate-700">⭐ 主要班（マトリクス固定表示・強調）</span>
+                        </label>
+
+                        <label class="flex items-center space-x-2 cursor-pointer select-none">
+                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $lane->is_active) ? 'checked' : '' }}
+                                class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                            <span class="text-xs font-bold text-slate-700">👁️ 有効（マトリクス・帳票に表示）</span>
+                        </label>
+                    </div>
+
                     <div class="flex items-center justify-end space-x-2 pt-2">
                         <button type="button" data-close-target="#edit-lane-{{ $lane->id }}"
                             class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition">
@@ -354,4 +421,114 @@
     </div>
 
 </div>
+
+<!-- 3. 他日程からレーン構成コピー用モーダル -->
+@if(isset($otherTimetables) && $otherTimetables->isNotEmpty())
+<div id="copy-lane-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+                <span>📥</span>
+                <span>他の運行日からレーン構成をコピー</span>
+            </h3>
+            <button type="button" data-close-modal class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+        </div>
+
+        <form action="{{ route('timetables.lanes.copy-from', $timetable) }}" method="POST" class="p-5 space-y-4">
+            @csrf
+            <div>
+                <label for="source_timetable_id" class="block text-xs font-bold text-slate-700 mb-1">
+                    コピー元の運行日を選択 <span class="text-rose-600">*</span>
+                </label>
+                <select id="source_timetable_id" name="source_timetable_id" required
+                    class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">-- 運行日を選択してください --</option>
+                    @foreach($otherTimetables as $ot)
+                    <option value="{{ $ot->id }}">
+                        {{ $ot->name }}（{{ $ot->target_date?->format('Y/m/d') }}）- {{ $ot->lanes()->count() }} レーン
+                    </option>
+                    @endforeach
+                </select>
+                <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                    ※ コピー元のレーン名・テーマカラー・アイコン・主要班設定・表示順を取り込みます。<br>
+                    ※ 既に同名のレーンが存在する場合は設定が上書き更新され、存在しないレーンは新規作成されます。既存タスクはそのまま保持されます。
+                </p>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+                <button type="button" data-close-modal
+                    class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
+                    キャンセル
+                </button>
+                <button type="submit"
+                    class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                    コピーを実行する
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
+<!-- 4. タスク移行削除モーダル -->
+<div id="delete-migration-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="text-base font-bold text-rose-900 flex items-center space-x-2">
+                <span>⚠️</span>
+                <span>担当班の削除とタスク引き継ぎ</span>
+            </h3>
+            <button type="button" data-close-modal class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+        </div>
+
+        <form id="delete-migration-form" action="" method="POST" class="p-5 space-y-4">
+            @csrf
+            @method('DELETE')
+
+            <p class="text-xs text-slate-700 leading-relaxed">
+                担当班「<strong id="modal-delete-lane-name" class="text-slate-900"></strong>」には、現在
+                <strong id="modal-delete-task-count" class="text-rose-600 font-mono">0</strong> 件の作業タスクが登録されています。
+            </p>
+
+            <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-xl space-y-3">
+                <div>
+                    <label for="modal-migrate-target-select" class="block text-xs font-bold text-amber-900 mb-1">
+                        タスクの引き継ぎ先レーンを選択（推奨）
+                    </label>
+                    <select id="modal-migrate-target-select" name="migrate_to_lane_id"
+                        class="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        <option value="">-- 引き継ぎ先レーンを選択 --</option>
+                        @foreach($lanes as $otherLane)
+                        <option value="{{ $otherLane->id }}">
+                            {{ $otherLane->icon ?: '📋' }} {{ $otherLane->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <p class="text-[10px] text-amber-800 mt-1">※ 全タスクが選択したレーンに付け替えられた後、当該レーンが安全に削除されます。</p>
+                </div>
+
+                <div class="pt-2 border-t border-amber-200/80">
+                    <label class="flex items-center space-x-2 cursor-pointer select-none">
+                        <input type="checkbox" name="cascade_delete_tasks" value="1"
+                            class="w-4 h-4 text-rose-600 rounded border-amber-400 focus:ring-rose-500">
+                        <span class="text-xs font-bold text-rose-800">引き継がず、タスクも含めてすべて削除する</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+                <button type="button" data-close-modal
+                    class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
+                    キャンセル
+                </button>
+                <button type="submit"
+                    class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                    削除を実行する
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@vite(['resources/js/lanes.js'])
 </x-layouts.app>

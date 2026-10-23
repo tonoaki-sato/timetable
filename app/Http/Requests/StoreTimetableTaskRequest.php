@@ -29,10 +29,16 @@ class StoreTimetableTaskRequest extends FormRequest
             'auto_assign_lead' => $this->boolean('auto_assign_lead'),
         ];
 
-        if ($this->filled('lane_id') && ! $this->filled('lane')) {
-            $lane = Lane::find($this->input('lane_id'));
+        if (! $this->filled('lane_id') && $this->filled('lane')) {
+            $timetableId = $this->input('timetable_id');
+            $laneName = (string) $this->input('lane');
+            $cleanName = str_replace('班', '', $laneName);
+            $lane = Lane::where('timetable_id', $timetableId)
+                ->where(function ($q) use ($laneName, $cleanName) {
+                    $q->where('name', $laneName)->orWhere('name', $cleanName);
+                })->first();
             if ($lane) {
-                $mergeData['lane'] = $lane->name;
+                $mergeData['lane_id'] = $lane->id;
             }
         }
 
@@ -48,10 +54,10 @@ class StoreTimetableTaskRequest extends FormRequest
     {
         return [
             'timetable_id' => ['required', 'integer', 'exists:timetables,id'],
-            'lane_id' => ['nullable', 'integer', 'exists:lanes,id'],
+            'lane_id' => ['required', 'integer', 'exists:lanes,id'],
             'title' => ['required', 'string', 'max:255'],
             'content' => ['nullable', 'string', 'max:5000'],
-            'lane' => ['required_without:lane_id', 'nullable', 'string', 'max:100'],
+            'lane' => ['nullable', 'string', 'max:100'],
             'location' => ['nullable', 'string', 'max:255'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],

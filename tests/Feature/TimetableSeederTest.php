@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
@@ -59,8 +60,8 @@ class TimetableSeederTest extends TestCase
             ->first();
         $this->assertNotNull($criticalTask);
 
-        // レーンおよびステータスが定数に合致していること
-        $validLanes = array_keys(TimetableTask::LANES);
+        // レーンおよびステータスが定義に合致していること
+        $validLanes = collect(Lane::DEFAULT_LANES)->pluck('name')->toArray();
         $validStatuses = array_keys(TimetableTask::STATUSES);
 
         foreach (TimetableTask::all() as $task) {

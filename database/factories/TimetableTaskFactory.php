@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Lane;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -20,6 +21,9 @@ class TimetableTaskFactory extends Factory
     {
         return [
             'timetable_id' => Timetable::factory(),
+            'lane_id' => fn (array $attributes) => Lane::factory()->create([
+                'timetable_id' => $attributes['timetable_id'],
+            ])->id,
             'title' => fake()->randomElement([
                 '通行止め出入り口・支道接続点 最優先コーン設置',
                 '一般・センシティブ箇所本設置（ガスト前・金子クリーニング前）',
@@ -29,7 +33,6 @@ class TimetableTaskFactory extends Factory
                 '交差点交通誘導・歩行者安全確保',
             ]),
             'content' => '現場責任者の指示に従い、配置完了後に本部へ無線連絡すること。',
-            'lane' => fake()->randomElement(array_keys(TimetableTask::LANES)),
             'location' => fake()->randomElement(['出入り口・支道接続点', 'ガスト前', '中央交差点', '全ゴミステーション']),
             'start_time' => '10:00:00',
             'end_time' => '10:45:00',

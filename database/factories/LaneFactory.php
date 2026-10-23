@@ -24,6 +24,8 @@ class LaneFactory extends Factory
             'color' => fake()->randomElement(array_keys(Lane::COLOR_OPTIONS)),
             'icon' => fake()->randomElement(['🔺', '🚰', '🚻', '🚨', '🎈', '🏮', '🧺', '🏛️', '🧹', '🪧']),
             'lead_staff_id' => null, // デフォルトは後付け可能な未設定
+            'is_core' => false,
+            'is_active' => true,
             'description' => fake()->sentence(),
             'display_order' => fake()->numberBetween(10, 100),
         ];

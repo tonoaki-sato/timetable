@@ -59,7 +59,6 @@ class TimetableMatrixTest extends TestCase
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
             'lane_id' => $lane->id,
-            'lane' => 'カラーコーン',
             'title' => '中央通りコーン設置',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',

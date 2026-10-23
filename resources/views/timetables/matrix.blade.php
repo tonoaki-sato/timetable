@@ -161,7 +161,7 @@
                 @foreach($lanes as $lane)
                 @php
                     $leadName = $lane->leadStaff ? (explode(' ', $lane->leadStaff->name)[0] ?? $lane->leadStaff->name) : '';
-                    $isCoreLane = in_array($lane->name, ['衛生', 'カラーコーン', '給水設備', '巡回', 'ポスター/ステカン', 'ステカン', 'ポスター'], true);
+                    $isCoreLane = (bool) $lane->is_core;
                 @endphp
                 <button type="button"
                     id="chip-lane-{{ $lane->id }}"
@@ -475,14 +475,13 @@
                     </select>
                 </div>
 
-                <!-- 表示順 -->
-                <div>
-                    <label for="modal_lane_order" class="block text-xs font-bold text-slate-700 mb-1">
-                        表示順（小さいほど左に配置） <span class="text-rose-600">*</span>
+                <!-- 主要班フラグ -->
+                <div class="flex items-center space-x-2 pt-1">
+                    <input type="checkbox" id="modal_lane_is_core" name="is_core" value="1"
+                        class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                    <label for="modal_lane_is_core" class="text-xs font-bold text-slate-700 cursor-pointer">
+                        ⭐ 主要班（コアレーン）として左側に優先表示・強調する
                     </label>
-                    <input type="number" id="modal_lane_order" name="display_order"
-                        value="{{ ($lanes->max('display_order') ?? 0) + 10 }}" required min="0" max="9999"
-                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
                 <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">

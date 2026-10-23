@@ -41,14 +41,16 @@ class TimetableMatrixController extends Controller
         if ($selectedTimetable !== null) {
             $lanes = $selectedTimetable->lanes()
                 ->with('leadStaff')
-                ->orderBy('display_order')
+                ->active()
+                ->ordered()
                 ->get();
 
             if ($lanes->isEmpty()) {
                 $selectedTimetable->createDefaultLanes();
                 $lanes = $selectedTimetable->lanes()
                     ->with('leadStaff')
-                    ->orderBy('display_order')
+                    ->active()
+                    ->ordered()
                     ->get();
             }
 
@@ -64,17 +66,7 @@ class TimetableMatrixController extends Controller
 
             foreach ($lanes as $lane) {
                 $tasksByLane[$lane->id] = $tasks->filter(function (TimetableTask $t) use ($lane) {
-                    if ($t->lane_id === $lane->id) {
-                        return true;
-                    }
-                    if ($t->lane === $lane->name) {
-                        return true;
-                    }
-
-                    // 旧名称（〜班）との互換マッチング
-                    return $t->lane === ($lane->name.'班')
-                        || ($lane->name === '巡回' && $t->lane === '誘導・警備班')
-                        || ($lane->name === '本陣' && in_array($t->lane, ['救護班', '本部連絡班'], true));
+                    return $t->lane_id === $lane->id;
                 })->values();
             }
         }

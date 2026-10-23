@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('timetable_tasks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
+            $table->foreignId('lane_id')->constrained('lanes')->restrictOnDelete();
             $table->string('title');
             $table->text('content')->nullable(); // 作業内容
-            $table->string('lane', 100)->index(); // 担当班・レーン
             $table->string('location')->nullable();
             $table->time('start_time');
             $table->time('end_time');
@@ -32,6 +32,7 @@ return new class extends Migration
             $table->dateTime('updated_at')->nullable();
 
             $table->index(['timetable_id', 'start_time']);
+            $table->index(['lane_id']);
         });
     }
 

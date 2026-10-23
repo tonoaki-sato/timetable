@@ -36,15 +36,18 @@ class StoreLaneRequest extends FormRequest
                 'max:100',
                 Rule::unique('lanes')->where('timetable_id', $timetableId),
             ],
+            'code' => ['nullable', 'string', 'max:50'],
             'color' => [
                 'required',
                 'string',
                 Rule::in(array_keys(Lane::COLOR_OPTIONS)),
             ],
-            'icon' => ['nullable', 'string', 'max:30'],
+            'icon' => ['nullable', 'string', 'max:50'],
             'lead_staff_id' => ['nullable', 'integer', 'exists:staff,id'],
+            'is_core' => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'display_order' => ['required', 'integer', 'min:0', 'max:9999'],
+            'display_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
         ];
     }
 
