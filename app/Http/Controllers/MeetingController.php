@@ -71,26 +71,6 @@ class MeetingController extends Controller
     }
 
     /**
-     * 会議のリスケジュール処理（開催日ドラッグ移動）
-     */
-    public function reschedule(Request $request, Meeting $meeting): JsonResponse
-    {
-        $this->authorize('update', $meeting);
-
-        $validated = $request->validate([
-            'meeting_date' => ['required', 'date'],
-        ]);
-
-        $this->meetingService->rescheduleMeeting($meeting, $validated['meeting_date']);
-
-        return response()->json([
-            'success' => true,
-            'message' => "会議「{$meeting->title}」の開催日を変更しました。",
-            'meeting' => $meeting->fresh(['host']),
-        ]);
-    }
-
-    /**
      * 会議詳細画面の表示（LINE共有テキストプレビュー）
      */
     public function show(Meeting $meeting): View

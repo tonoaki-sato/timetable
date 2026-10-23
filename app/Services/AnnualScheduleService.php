@@ -162,7 +162,6 @@ class AnnualScheduleService
                         'line_share_text' => $meeting->line_share_text,
                         'show_url' => route('meetings.show', $meeting),
                         'edit_url' => route('meetings.edit', $meeting),
-                        'reschedule_url' => route('meetings.reschedule', $meeting),
                     ];
                 }
             }
@@ -209,7 +208,6 @@ class AnnualScheduleService
                         'line_share_text' => null,
                         'show_url' => route('annual-schedules.show', $schedule),
                         'edit_url' => route('annual-schedules.edit', $schedule),
-                        'reschedule_url' => route('annual-schedules.reschedule', $schedule),
                     ];
                 }
             }
@@ -230,46 +228,31 @@ class AnnualScheduleService
         $prevCarbon = $firstDay->copy()->subMonth();
         $nextCarbon = $firstDay->copy()->addMonth();
 
-        $paletteCategories = [
+        $categoryOptions = [
             'committee' => [
                 'key' => 'committee',
                 'name' => '会議・打合せ',
                 'icon' => '🤝',
-                'color' => 'indigo',
-                'bg' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                'description' => '幹事会・部会打ち合わせ等',
             ],
             'permit' => [
                 'key' => 'permit',
                 'name' => '申請・協議',
                 'icon' => '📑',
-                'color' => 'amber',
-                'bg' => 'bg-amber-50 text-amber-700 border-amber-200',
-                'description' => '道路使用許可・消防届出等',
             ],
             'briefing' => [
                 'key' => 'briefing',
                 'name' => '募集・説明会',
                 'icon' => '📢',
-                'color' => 'sky',
-                'bg' => 'bg-sky-50 text-sky-700 border-sky-200',
-                'description' => '出店公募・ボランティア募集等',
             ],
             'operation' => [
                 'key' => 'operation',
                 'name' => '運行・設営',
                 'icon' => '🎪',
-                'color' => 'emerald',
-                'bg' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                'description' => '資機材搬入・会場設営等',
             ],
             'other' => [
                 'key' => 'other',
                 'name' => 'その他',
                 'icon' => '📌',
-                'color' => 'slate',
-                'bg' => 'bg-slate-100 text-slate-700 border-slate-200',
-                'description' => '事務連絡・資機材棚卸し等',
             ],
         ];
 
@@ -281,33 +264,12 @@ class AnnualScheduleService
             'prevMonth' => $prevCarbon->month,
             'nextYear' => $nextCarbon->year,
             'nextMonth' => $nextCarbon->month,
-            'paletteCategories' => $paletteCategories,
+            'categoryOptions' => $categoryOptions,
             'availableYears' => $this->scheduleRepository->getAvailableYears(),
             'yearSummary' => $this->scheduleRepository->getYearStatusSummary($year),
             'categories' => AnnualSchedule::CATEGORIES,
             'statuses' => AnnualSchedule::STATUSES,
             'staffs' => Staff::active()->orderBy('kana')->get(),
         ];
-    }
-
-    /**
-     * 年間スケジュールのリスケジュール処理
-     */
-    public function rescheduleSchedule(AnnualSchedule $schedule, string $startDate, ?string $endDate = null): bool
-    {
-        $data = ['start_date' => $startDate];
-
-        if ($endDate) {
-            $data['end_date'] = $endDate;
-        } elseif ($schedule->end_date && $schedule->start_date) {
-            // 既存の期間幅を維持してシフト
-            $durationDays = $schedule->start_date->diffInDays($schedule->end_date);
-            $newStart = Carbon::parse($startDate);
-            $data['end_date'] = $newStart->copy()->addDays($durationDays)->toDateString();
-        }
-
-        $data['target_year'] = (int) Carbon::parse($startDate)->year;
-
-        return $this->scheduleRepository->update($schedule, $data);
     }
 }

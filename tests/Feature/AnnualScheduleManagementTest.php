@@ -319,9 +319,9 @@ class AnnualScheduleManagementTest extends TestCase
     }
 
     /**
-     * カレンダー表示で5種パレットが表示され、神事・式典が含まれないこと
+     * カレンダー表示で予定と会議が表示され、D&Dパレットは非表示であり、神事・式典が含まれないこと
      */
-    public function test_calendar_view_displays_palette_and_events(): void
+    public function test_calendar_view_displays_events(): void
     {
         $this->actingAs($this->user);
 
@@ -346,7 +346,7 @@ class AnnualScheduleManagementTest extends TestCase
         ]));
 
         $response->assertStatus(200);
-        $response->assertSee('ドラッグ＆ドロップ パレット');
+        $response->assertDontSee('ドラッグ＆ドロップ パレット');
         $response->assertSee('会議・打合せ');
         $response->assertSee('申請・協議');
         $response->assertSee('募集・説明会');
@@ -359,59 +359,5 @@ class AnnualScheduleManagementTest extends TestCase
         $response->assertSee('警察署協議（4月）');
         $response->assertSee('第1回幹事会（4月）');
         $response->assertSee('主催未定');
-    }
-
-    /**
-     * 年間スケジュールのリスケジュール（日付移動）APIが動作すること
-     */
-    public function test_can_reschedule_annual_schedule(): void
-    {
-        $this->actingAs($this->user);
-
-        $schedule = AnnualSchedule::factory()->create([
-            'target_year' => 2026,
-            'title' => '機材搬入手配',
-            'start_date' => '2026-04-10',
-            'end_date' => '2026-04-12',
-        ]);
-
-        $response = $this->patchJson(route('annual-schedules.reschedule', $schedule), [
-            'start_date' => '2026-04-18',
-        ]);
-
-        $response->assertStatus(200);
-        $response->assertJson([
-            'success' => true,
-        ]);
-
-        $schedule->refresh();
-        $this->assertSame('2026-04-18', $schedule->start_date->format('Y-m-d'));
-        // 2日間の期間幅が維持されること
-        $this->assertSame('2026-04-20', $schedule->end_date->format('Y-m-d'));
-    }
-
-    /**
-     * 会議のリスケジュール（開催日移動）APIが動作すること
-     */
-    public function test_can_reschedule_meeting(): void
-    {
-        $this->actingAs($this->user);
-
-        $meeting = Meeting::factory()->create([
-            'title' => '臨時幹事会',
-            'meeting_date' => '2026-04-10',
-        ]);
-
-        $response = $this->patchJson(route('meetings.reschedule', $meeting), [
-            'meeting_date' => '2026-04-22',
-        ]);
-
-        $response->assertStatus(200);
-        $response->assertJson([
-            'success' => true,
-        ]);
-
-        $meeting->refresh();
-        $this->assertSame('2026-04-22', $meeting->meeting_date->format('Y-m-d'));
     }
 }

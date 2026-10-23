@@ -74,12 +74,4 @@ class MeetingService
     {
         return $this->meetingRepository->delete($meeting);
     }
-
-    /**
-     * 会議のリスケジュール（開催日移動）処理
-     */
-    public function rescheduleMeeting(Meeting $meeting, string $meetingDate): bool
-    {
-        return $this->meetingRepository->update($meeting, ['meeting_date' => $meetingDate]);
-    }
 }

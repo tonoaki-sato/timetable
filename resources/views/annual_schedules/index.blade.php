@@ -135,44 +135,7 @@
     <!-- カレンダービュー (Calendar View)           -->
     <!-- ========================================== -->
 
-    <!-- 4. ドラッグ＆ドロップ パレット（5種アイコン） -->
-    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 sm:p-5 rounded-2xl shadow-md text-white border border-slate-800">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-            <div class="flex items-center space-x-2">
-                <span class="text-lg">✨</span>
-                <span class="text-xs sm:text-sm font-bold tracking-wide">ドラッグ＆ドロップ パレット</span>
-                <span class="bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 text-[10px] px-2 py-0.5 rounded font-mono">D&D対応</span>
-            </div>
-            <p class="text-[11px] text-slate-300">
-                💡 下のアイコンをカレンダーのマス目へドラッグ＆ドロップして、即座に詳細・日程を入力できます
-            </p>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-            @foreach($paletteCategories as $palette)
-            <div draggable="true"
-                data-category="{{ $palette['key'] }}"
-                data-name="{{ $palette['name'] }}"
-                data-icon="{{ $palette['icon'] }}"
-                class="draggable-palette-item group cursor-grab active:cursor-grabbing select-none bg-slate-800/90 hover:bg-slate-800 border border-slate-700 hover:border-indigo-400 p-2.5 rounded-xl transition transform hover:-translate-y-0.5 shadow-xs flex items-center space-x-2.5">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-lg {{ $palette['bg'] }} shrink-0 shadow-inner">
-                    {{ $palette['icon'] }}
-                </div>
-                <div class="min-w-0 flex-1">
-                    <div class="text-xs font-bold text-white group-hover:text-indigo-300 transition truncate">
-                        {{ $palette['name'] }}
-                    </div>
-                    <div class="text-[10px] text-slate-400 truncate">
-                        {{ $palette['description'] }}
-                    </div>
-                </div>
-                <span class="text-slate-500 text-xs opacity-50 group-hover:opacity-100">⠿</span>
-            </div>
-            @endforeach
-        </div>
-    </div>
-
-    <!-- 5. 月ナビゲーション & カレンダーヘッダー -->
+    <!-- 4. 月ナビゲーション & カレンダーヘッダー -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/60">
             <!-- 月送りナビゲーション -->
@@ -250,13 +213,11 @@
                     <!-- 予定ピル一覧 -->
                     <div class="space-y-1.5 flex-1 overflow-y-auto max-h-[110px] pr-0.5">
                         @foreach($day['events'] as $event)
-                        <div draggable="true"
-                            data-event-id="{{ $event['id'] }}"
+                        <div data-event-id="{{ $event['id'] }}"
                             data-event-source="{{ $event['source'] }}"
-                            data-reschedule-url="{{ $event['reschedule_url'] }}"
                             data-event-json="{{ json_encode($event) }}"
-                            class="event-pill cursor-grab active:cursor-grabbing p-1.5 rounded-lg border text-[11px] transition shadow-xs hover:shadow-sm select-none leading-tight {{ $event['badge_class'] }}"
-                            title="クリックで詳細表示、ドラッグで別の日付へ移動">
+                            class="event-pill cursor-pointer p-1.5 rounded-lg border text-[11px] transition shadow-xs hover:shadow-sm select-none leading-tight {{ $event['badge_class'] }}"
+                            title="クリックで詳細表示">
                             
                             <div class="flex items-center space-x-1 font-bold truncate">
                                 <span>{{ $event['icon'] }}</span>
@@ -283,10 +244,6 @@
                         @endforeach
                     </div>
 
-                    <!-- ドロッププレースホルダー表示枠 -->
-                    <div class="drop-hint hidden absolute inset-1 bg-indigo-50/80 border-2 border-dashed border-indigo-400 rounded-lg pointer-events-none flex items-center justify-center text-xs font-bold text-indigo-700">
-                        ここに配置
-                    </div>
                 </div>
                 @endforeach
             @endforeach
@@ -461,7 +418,7 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1.5">予定の種別（カテゴリ） <span class="text-red-500">*</span></label>
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                        @foreach($paletteCategories as $palette)
+                        @foreach($categoryOptions as $palette)
                         <label class="cursor-pointer">
                             <input type="radio" name="category" value="{{ $palette['key'] }}" class="peer sr-only" onchange="handleCategoryChange(this.value)">
                             <div class="peer-checked:ring-2 peer-checked:ring-indigo-600 peer-checked:bg-indigo-50 border border-slate-200 rounded-xl p-2 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
@@ -705,102 +662,10 @@
 (function() {
     'use strict';
 
-    let draggedItem = null;
     let currentDetailEvent = null;
 
     // CSRF トークン取得
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    // 1. パレットアイコンのドラッグ設定
-    const paletteItems = document.querySelectorAll('.draggable-palette-item');
-    paletteItems.forEach(item => {
-        item.addEventListener('dragstart', function(e) {
-            draggedItem = {
-                type: 'palette',
-                category: this.dataset.category,
-                name: this.dataset.name,
-                icon: this.dataset.icon,
-            };
-            e.dataTransfer.effectAllowed = 'copy';
-            e.dataTransfer.setData('text/plain', JSON.stringify(draggedItem));
-            this.classList.add('opacity-50');
-        });
-
-        item.addEventListener('dragend', function() {
-            this.classList.remove('opacity-50');
-            draggedItem = null;
-        });
-    });
-
-    // 2. カレンダーセル（ドロップゾーン）のイベントリスナー
-    const calendarCells = document.querySelectorAll('.calendar-cell');
-    calendarCells.forEach(cell => {
-        cell.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            this.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50/40');
-            const hint = this.querySelector('.drop-hint');
-            if (hint) hint.classList.remove('hidden');
-        });
-
-        cell.addEventListener('dragleave', function(e) {
-            if (!this.contains(e.relatedTarget)) {
-                this.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50/40');
-                const hint = this.querySelector('.drop-hint');
-                if (hint) hint.classList.add('hidden');
-            }
-        });
-
-        cell.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50/40');
-            const hint = this.querySelector('.drop-hint');
-            if (hint) hint.classList.add('hidden');
-
-            const targetDate = this.dataset.date;
-            if (!targetDate) return;
-
-            let data = null;
-            try {
-                data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
-            } catch (err) {
-                data = draggedItem;
-            }
-
-            if (!data) return;
-
-            // パレットからの新規ドロップ
-            if (data.type === 'palette') {
-                openNewEventModal(targetDate, data.category);
-            } 
-            // 既存イベントピルのリスケジュール移動
-            else if (data.type === 'event_pill' && data.rescheduleUrl) {
-                rescheduleEvent(data.rescheduleUrl, targetDate, data.source);
-            }
-        });
-    });
-
-    // 3. 既存イベントピルのドラッグ設定
-    const eventPills = document.querySelectorAll('.event-pill');
-    eventPills.forEach(pill => {
-        pill.addEventListener('dragstart', function(e) {
-            e.stopPropagation();
-            draggedItem = {
-                type: 'event_pill',
-                eventId: this.dataset.eventId,
-                source: this.dataset.eventSource,
-                rescheduleUrl: this.dataset.rescheduleUrl,
-            };
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', JSON.stringify(draggedItem));
-            this.classList.add('opacity-40');
-        });
-
-        pill.addEventListener('dragend', function() {
-            this.classList.remove('opacity-40');
-            draggedItem = null;
-        });
-    });
 
     // クリックイベントリスナー（イベント詳細 & セルからの新規追加）
     document.addEventListener('click', function(e) {
@@ -821,38 +686,6 @@
             return;
         }
     });
-
-    // 4. リスケジュール非同期通信処理
-    function rescheduleEvent(url, newDate, source) {
-        showToast('🔄 日程を更新中...', '⏳');
-
-        const payload = source === 'meeting' 
-            ? { meeting_date: newDate } 
-            : { start_date: newDate };
-
-        fetch(url, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('通信エラーが発生しました');
-            return response.json();
-        })
-        .then(data => {
-            showToast(data.message || '日程を変更しました！', '✔');
-            setTimeout(() => {
-                window.location.reload();
-            }, 600);
-        })
-        .catch(err => {
-            alert('日程の変更に失敗しました。画面を再読み込みしてください。');
-        });
-    }
 
     // 5. グローバルモーダルハンドラー
     window.openNewEventModal = function(date = null, category = 'committee') {

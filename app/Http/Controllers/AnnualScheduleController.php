@@ -7,11 +7,11 @@ use App\Http\Requests\UpdateAnnualScheduleRequest;
 use App\Models\AnnualSchedule;
 use App\Models\Staff;
 use App\Services\AnnualScheduleService;
+use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use DateTimeImmutable;
 
 class AnnualScheduleController extends Controller
 {
@@ -27,7 +27,7 @@ class AnnualScheduleController extends Controller
         $this->authorize('viewAny', AnnualSchedule::class);
 
         // 現在日時を取得
-        $now = new DateTimeImmutable();
+        $now = new DateTimeImmutable;
 
         // GETパラメータから表示モード、年、月を取得
         $viewMode = $request->input('view', 'calendar');
@@ -96,31 +96,6 @@ class AnnualScheduleController extends Controller
         return redirect()->route('annual-schedules.index', [
             'year' => $schedule->target_year,
         ])->with('success', "年間スケジュール「{$schedule->title}」を登録しました。");
-    }
-
-    /**
-     * 年間スケジュールのリスケジュール処理（ドラッグ移動）
-     */
-    public function reschedule(Request $request, AnnualSchedule $annualSchedule): JsonResponse
-    {
-        $this->authorize('update', $annualSchedule);
-
-        $validated = $request->validate([
-            'start_date' => ['required', 'date'],
-            'end_date' => ['nullable', 'date'],
-        ]);
-
-        $this->scheduleService->rescheduleSchedule(
-            $annualSchedule,
-            $validated['start_date'],
-            $validated['end_date'] ?? null
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => "「{$annualSchedule->title}」の日程を変更しました。",
-            'schedule' => $annualSchedule->fresh(['assignee']),
-        ]);
     }
 
     /**
