@@ -202,7 +202,7 @@
     </div>
 
     <!-- 4. タイムテーブル帳票グリッド（PDFレイアウト完全再現） -->
-    <div id="timetable-grid-container" class="relative bg-white rounded-xl border-2 border-slate-800 shadow-sm overflow-x-auto max-h-[calc(100vh-210px)] print:max-h-none print:overflow-visible print:border print:border-black">
+    <div id="timetable-grid-container" class="relative bg-white rounded-xl border-2 border-slate-800 shadow-sm overflow-x-auto print:overflow-visible print:border print:border-black">
         <table class="w-full border-collapse text-left border-spacing-0 select-text font-sans">
             <!-- テーブルヘッダー（Sticky Top ＆ 左4列 Sticky Left） -->
             <thead class="sticky top-0 z-30 bg-slate-100 print:static">
