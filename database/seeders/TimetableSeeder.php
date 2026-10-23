@@ -26,8 +26,8 @@ class TimetableSeeder extends Seeder
         $timetableDay0 = Timetable::updateOrCreate(
             ['target_date' => '2026-10-10'],
             [
-                'name' => '前日準備 (Day 0) 会場設営・資機材地上展開',
-                'description' => '09:00足踏み式給水設備受領立ち合い、13:00前日全体ミーティング、番所地下からのカラーコーン地上展開・近隣3箇所駐車場への分散移動、ゴミ箱組立て・名札設置、センシティブ箇所現地事前レビュー。',
+                'name' => '前日準備',
+                'description' => '',
                 'start_time' => '09:00:00',
                 'end_time' => '18:30:00',
                 'status' => 'completed',
@@ -196,11 +196,11 @@ class TimetableSeeder extends Seeder
         $timetableDay1 = Timetable::updateOrCreate(
             ['target_date' => '2026-10-11'],
             [
-                'name' => '1日目 (Day 1) 本祭運行・ござ市・パレード',
-                'description' => '06:00実施判断、07:00本陣集合、10:00〜18:00車両通行止め（直後に出入り口・支道接続点最優先コーン設置、ござ市給水設備5台・ゴミ箱36個本設置）、11:00〜17:00本番運行、17:30〜仮撤去・夜間保管、19:00ゴミ回収車積み込み、19:30当日打ち上げ。',
-                'start_time' => '06:00:00',
+                'name' => '宿場まつり 1日目',
+                'description' => '',
+                'start_time' => '07:00:00',
                 'end_time' => '20:00:00',
-                'status' => 'active',
+                'status' => 'completed',
                 'created_by' => $admin->id,
             ]
         );
@@ -591,11 +591,11 @@ class TimetableSeeder extends Seeder
         $timetableDay2 = Timetable::updateOrCreate(
             ['target_date' => '2026-10-12'],
             [
-                'name' => '2日目 (Day 2) 例大祭神輿渡御・完全撤収',
-                'description' => '06:00実施判断、08:00本陣集合、10:00〜18:00通行止め・再配置、11:00〜17:00本番運行・神輿渡御誘導、17:00〜完全撤収・ポスター捨て看外し・案内札分別保管・番所地下完全格納、19:00ゴミ回収・ブルーシート最終廃棄、19:30当日打ち上げ（吉祥楼）。',
-                'start_time' => '06:00:00',
-                'end_time' => '20:30:00',
-                'status' => 'draft',
+                'name' => '宿場まつり 2日目',
+                'description' => '',
+                'start_time' => '08:00:00',
+                'end_time' => '20:00:00',
+                'status' => 'completed',
                 'created_by' => $admin->id,
             ]
         );
@@ -881,11 +881,11 @@ class TimetableSeeder extends Seeder
         $timetableDay3 = Timetable::updateOrCreate(
             ['target_date' => '2026-10-13'],
             [
-                'name' => '翌日機材回収 (Day 3) 業者引き渡し・駐車場復帰',
-                'description' => '09:00イベント会社（OverCom等）による足踏み式給水設備の回収立ち合い・受領引き渡し、11:00近隣貸し切り駐車場（北川駐車場ほか）の原状復帰確認・最終引き渡し。',
+                'name' => '翌日機材回収',
+                'description' => '',
                 'start_time' => '09:00:00',
                 'end_time' => '12:00:00',
-                'status' => 'draft',
+                'status' => 'completed',
                 'created_by' => $admin->id,
             ]
         );
@@ -939,16 +939,7 @@ class TimetableSeeder extends Seeder
         $lanes = $timetable->lanes()->get()->keyBy('name');
 
         // 2. 主担当スタッフの紐付け（後付け機能の動作確認・初期データ）
-        $leadMappings = [
-            'カラーコーン' => '佐藤 秀樹',
-            '給水設備' => '宮永 健一',
-            '衛生' => '有江 浩二',
-            '巡回' => '高橋 亮太',
-            'ござ市' => '漆原 拓也',
-            '本陣' => 'ヨーコ・サトウ',
-            '道路清掃' => '加藤 恵子',
-            'ステカン' => '鈴木 裕介',
-        ];
+        $leadMappings = [];
 
         foreach ($leadMappings as $laneName => $staffName) {
             if (isset($lanes[$laneName]) && isset($staffMap[$staffName])) {
@@ -998,7 +989,7 @@ class TimetableSeeder extends Seeder
                         ],
                         [
                             'attendance_status' => $task->status === 'completed' ? 'completed' : 'assigned',
-                            'role_description' => $task->lane.'担当',
+                            'role_description' => $task->lane . '担当',
                         ]
                     );
                 }
