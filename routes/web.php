@@ -13,6 +13,7 @@ use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TimetableMatrixController;
 use App\Http\Controllers\TimetableTaskController;
 use App\Http\Controllers\UserController;
+use App\Models\Timetable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -68,6 +69,17 @@ Route::middleware('auth')->group(function () {
     Route::resource('timetables', TimetableController::class);
 
     // 担当班（レーン）管理
+    Route::get('/lanes', function () {
+        $timetable = Timetable::where('status', 'active')->first()
+            ?? Timetable::orderBy('target_date')->first();
+
+        if (! $timetable) {
+            return redirect()->route('timetables.index')
+                ->with('info', '担当班を編成する前に、運行日を登録してください。');
+        }
+
+        return redirect()->route('timetables.lanes.index', $timetable);
+    })->name('lanes.index');
     Route::get('timetables/{timetable}/lanes', [LaneController::class, 'index'])->name('timetables.lanes.index');
     Route::post('timetables/{timetable}/lanes', [LaneController::class, 'store'])->name('timetables.lanes.store');
     Route::put('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'update'])->name('timetables.lanes.update');

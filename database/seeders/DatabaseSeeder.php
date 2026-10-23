@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
         $this->call(AnnualScheduleSeeder::class);
 
         // 4. タイムテーブル＆タスク初期データ
-        //$this->call(TimetableSeeder::class);
+        // $this->call(TimetableSeeder::class);
 
         // 5. 会議・打ち合わせ初期データ
         $this->call(MeetingSeeder::class);

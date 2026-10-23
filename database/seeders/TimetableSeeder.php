@@ -989,7 +989,7 @@ class TimetableSeeder extends Seeder
                         ],
                         [
                             'attendance_status' => $task->status === 'completed' ? 'completed' : 'assigned',
-                            'role_description' => $task->lane . '担当',
+                            'role_description' => $task->lane.'担当',
                         ]
                     );
                 }

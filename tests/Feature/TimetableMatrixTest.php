@@ -204,4 +204,61 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('本部運行総合ダッシュボード');
         $response->assertSee('重要ゲート封鎖');
     }
+
+    /**
+     * まつり運行メニューが案A（目的別2セクション構造）で正常に描画されること
+     */
+    public function test_navigation_displays_redesigned_operation_menu_sections(): void
+    {
+        $this->actingAs($this->operator);
+
+        $response = $this->get(route('dashboard'));
+        $response->assertStatus(200);
+
+        // まつり運行グループ
+        $response->assertSee('まつり運行');
+
+        // セクション1: 当日の進行・確認
+        $response->assertSee('当日の進行・確認');
+        $response->assertSee('当日タイムテーブル');
+        $response->assertSee('進行表');
+
+        // セクション2: 事前の計画・編成
+        $response->assertSee('事前の計画・編成');
+        $response->assertSee('運行日程・タスク管理');
+        $response->assertSee('担当班（レーン）編成');
+        $response->assertSee('交通規制・通行止め');
+
+        // 各ルートへのリンクが含まれていること
+        $response->assertSee(route('timetable.index'));
+        $response->assertSee(route('timetables.index'));
+        $response->assertSee(route('lanes.index'));
+    }
+
+    /**
+     * /lanes ショートカットがアクティブ運行日へ正常にリダイレクトすること
+     */
+    public function test_lanes_shortcut_redirects_to_active_or_first_timetable_lanes(): void
+    {
+        $this->actingAs($this->operator);
+
+        // 運行日が存在する場合
+        $timetable = Timetable::factory()->create([
+            'status' => 'active',
+        ]);
+
+        $response = $this->get(route('lanes.index'));
+        $response->assertRedirect(route('timetables.lanes.index', $timetable));
+    }
+
+    /**
+     * 運行日が0件の場合、/lanes は運行日管理へリダイレクトすること
+     */
+    public function test_lanes_shortcut_redirects_to_timetables_index_when_no_timetables(): void
+    {
+        $this->actingAs($this->operator);
+
+        $response = $this->get(route('lanes.index'));
+        $response->assertRedirect(route('timetables.index'));
+    }
 }
