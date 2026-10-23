@@ -56,7 +56,7 @@
             </div>
 
             <!-- 印刷・PDF保存ボタン -->
-            <button type="button" onclick="window.print()"
+            <button type="button" data-action="print"
                 class="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
                 <span>🖨️</span>
                 <span>A4横 印刷 / PDF保存</span>
@@ -86,7 +86,7 @@
         @if($selectedTimetable)
         <div class="flex flex-wrap items-center gap-2">
             @can('create', App\Models\Lane::class)
-            <button type="button" onclick="openLaneModal()"
+            <button type="button" data-action="open-lane-modal"
                 class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
                 <span>➕</span>
                 <span>担当班を追加</span>
@@ -138,17 +138,17 @@
             </span>
 
             <!-- プリセットボタン -->
-            <button type="button" onclick="filterLanesPreset('all')"
+            <button type="button" data-lane-preset="all"
                 id="btn-preset-all"
                 class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white border border-indigo-600 shadow-2xs transition">
                 全表示 ({{ $lanes->count() }})
             </button>
-            <button type="button" onclick="filterLanesPreset('core')"
+            <button type="button" data-lane-preset="core"
                 id="btn-preset-core"
                 class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 transition">
                 主要5班（PDF準拠）
             </button>
-            <button type="button" onclick="filterLanesPreset('mine')"
+            <button type="button" data-lane-preset="mine"
                 id="btn-preset-mine"
                 class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 transition">
                 マイ担当班
@@ -164,7 +164,6 @@
                     $isCoreLane = in_array($lane->name, ['衛生', 'カラーコーン', '給水設備', '巡回', 'ポスター/ステカン', 'ステカン', 'ポスター'], true);
                 @endphp
                 <button type="button"
-                    onclick="toggleLaneColumn(this.dataset.laneId)"
                     id="chip-lane-{{ $lane->id }}"
                     data-lane-id="{{ $lane->id }}"
                     data-lane-name="{{ $lane->name }}"
@@ -187,12 +186,12 @@
                 全 {{ $lanes->count() }} 班表示中
             </span>
             <div class="inline-flex rounded-lg border border-slate-300 bg-white p-0.5">
-                <button type="button" onclick="scrollGrid(-250)"
+                <button type="button" data-scroll-grid="-250"
                     title="左へスクロール"
                     class="px-2 py-1 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-xs font-bold transition">
                     ◀ 前の班
                 </button>
-                <button type="button" onclick="scrollGrid(250)"
+                <button type="button" data-scroll-grid="250"
                     title="右へスクロール"
                     class="px-2 py-1 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-xs font-bold transition">
                     次の班 ▶
@@ -264,7 +263,7 @@
                     <!-- 6. ➕ クイックレーン追加ボタン列 -->
                     <th scope="col" class="print:hidden border-b-2 border-slate-800 bg-slate-50 p-2 text-center w-[60px] min-w-[60px]">
                         @can('create', App\Models\Lane::class)
-                        <button type="button" onclick="openLaneModal()"
+                        <button type="button" data-action="open-lane-modal"
                             title="新しい担当班を追加"
                             class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded text-xs font-bold transition cursor-pointer">
                             ➕
@@ -417,7 +416,7 @@
                     <span class="text-lg">🏷️</span>
                     <h3 class="font-bold text-sm">新規担当班（レーン）を追加</h3>
                 </div>
-                <button type="button" onclick="closeLaneModal()"
+                <button type="button" data-action="close-lane-modal"
                     class="text-slate-400 hover:text-white text-lg font-bold transition">
                     ✕
                 </button>
@@ -487,7 +486,7 @@
                 </div>
 
                 <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
-                    <button type="button" onclick="closeLaneModal()"
+                    <button type="button" data-action="close-lane-modal"
                         class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
                         キャンセル
                     </button>
@@ -504,139 +503,6 @@
 
 </div>
 
-<!-- スクリプト: レーン絞り込み・左右スクロール・モーダル操作（Vanilla JS） -->
-<script>
-    // モーダル開閉
-    function openLaneModal() {
-        document.getElementById('laneModal')?.classList.remove('hidden');
-    }
-    function closeLaneModal() {
-        document.getElementById('laneModal')?.classList.add('hidden');
-    }
-
-    // テーブル横スクロール操作
-    function scrollGrid(amount) {
-        const container = document.getElementById('timetable-grid-container');
-        if (container) {
-            container.scrollBy({ left: amount, behavior: 'smooth' });
-        }
-    }
-
-    // レーン表示/非表示トグル
-    function toggleLaneColumn(laneId) {
-        const chip = document.getElementById('chip-lane-' + laneId);
-        const elements = document.querySelectorAll('.lane-col-' + laneId);
-        if (!chip || elements.length === 0) return;
-
-        const isCurrentlyVisible = !elements[0].classList.contains('hidden');
-
-        if (isCurrentlyVisible) {
-            // 非表示にする
-            elements.forEach(el => el.classList.add('hidden'));
-            chip.classList.add('opacity-40', 'bg-slate-100');
-            chip.classList.remove('border-indigo-400');
-            const check = chip.querySelector('span:first-child');
-            if (check) check.textContent = '✕';
-        } else {
-            // 表示する
-            elements.forEach(el => el.classList.remove('hidden'));
-            chip.classList.remove('opacity-40', 'bg-slate-100');
-            chip.classList.add('border-indigo-400');
-            const check = chip.querySelector('span:first-child');
-            if (check) check.textContent = '✔';
-        }
-
-        updateVisibleCount();
-        resetPresetButtons();
-    }
-
-    // プリセットフィルター適用
-    function filterLanesPreset(preset) {
-        const chips = document.querySelectorAll('.lane-chip');
-        const currentUserId = {{ auth()->id() ?? 'null' }};
-
-        chips.forEach(chip => {
-            const laneId = chip.getAttribute('data-lane-id');
-            const isCore = chip.getAttribute('data-is-core') === '1';
-            const leadId = chip.getAttribute('data-lead-id');
-            const elements = document.querySelectorAll('.lane-col-' + laneId);
-
-            let shouldShow = false;
-
-            if (preset === 'all') {
-                shouldShow = true;
-            } else if (preset === 'core') {
-                shouldShow = isCore;
-            } else if (preset === 'mine') {
-                shouldShow = leadId !== '';
-            }
-
-            if (shouldShow) {
-                elements.forEach(el => el.classList.remove('hidden'));
-                chip.classList.remove('opacity-40', 'bg-slate-100');
-                const check = chip.querySelector('span:first-child');
-                if (check) check.textContent = '✔';
-            } else {
-                elements.forEach(el => el.classList.add('hidden'));
-                chip.classList.add('opacity-40', 'bg-slate-100');
-                const check = chip.querySelector('span:first-child');
-                if (check) check.textContent = '✕';
-            }
-        });
-
-        // プリセットボタンスタイル更新
-        document.querySelectorAll('[id^="btn-preset-"]').forEach(btn => {
-            btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
-            btn.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
-        });
-        const activeBtn = document.getElementById('btn-preset-' + preset);
-        if (activeBtn) {
-            activeBtn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
-            activeBtn.classList.remove('bg-white', 'text-slate-700', 'border-slate-300');
-        }
-
-        updateVisibleCount();
-    }
-
-    function resetPresetButtons() {
-        document.querySelectorAll('[id^="btn-preset-"]').forEach(btn => {
-            btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
-            btn.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
-        });
-    }
-
-    function updateVisibleCount() {
-        const total = document.querySelectorAll('.lane-chip').length;
-        const hidden = document.querySelectorAll('.lane-chip.opacity-40').length;
-        const visible = total - hidden;
-        const indicator = document.getElementById('lane-count-indicator');
-        if (indicator) {
-            indicator.textContent = `全 ${total} 班中 ${visible} 班表示中`;
-        }
-    }
-</script>
-
-<style>
-/* 印刷用スタイル（A4横 Landscape） */
-@media print {
-    @page {
-        size: landscape;
-        margin: 6mm;
-    }
-    body {
-        background: #ffffff !important;
-        color: #000000 !important;
-        font-size: 10px !important;
-    }
-    table {
-        border-collapse: collapse !important;
-        width: 100% !important;
-    }
-    th, td {
-        border: 1px solid #000000 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-}
-</style>
+@vite(['resources/js/timetable-matrix.js'])
 </x-layouts.app>
+

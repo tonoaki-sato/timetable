@@ -7,3 +7,26 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* タイムテーブル印刷用スタイル（A4横 Landscape） */
+@media print {
+    @page {
+        size: landscape;
+        margin: 6mm;
+    }
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 10px !important;
+    }
+    table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+    th, td {
+        border: 1px solid #000000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+

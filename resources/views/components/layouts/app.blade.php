@@ -210,7 +210,7 @@
                         <form action="{{ route('logout') }}" method="POST" class="inline shrink-0">
                             @csrf
                             <button type="submit"
-                                onclick="return confirm('ログアウトしますか？');"
+                                data-confirm="ログアウトしますか？"
                                 class="px-2.5 py-1.5 lg:px-3 lg:py-1.5 bg-slate-800 hover:bg-red-600 hover:text-white text-slate-300 text-xs font-medium rounded-lg border border-slate-700 hover:border-red-600 transition flex items-center space-x-1 shadow-xs cursor-pointer whitespace-nowrap shrink-0">
                                 <span>🚪</span>
                                 <span class="hidden lg:inline whitespace-nowrap">ログアウト</span>
@@ -241,7 +241,7 @@
                 <span class="text-base">👷</span>
                 <span class="text-[10px] mt-0.5">スタッフ</span>
             </a>
-            <button type="button" onclick="toggleMobileMenu()" class="flex flex-col items-center py-1 px-2 whitespace-nowrap text-slate-400 hover:text-white cursor-pointer">
+            <button type="button" data-toggle="mobile-menu" class="flex flex-col items-center py-1 px-2 whitespace-nowrap text-slate-400 hover:text-white cursor-pointer">
                 <span class="text-base">☰</span>
                 <span class="text-[10px] mt-0.5">メニュー</span>
             </button>
@@ -249,14 +249,14 @@
 
         <!-- モバイル用メニューモーダル -->
         <div id="mobileMenuModal" class="hidden md:hidden fixed inset-0 z-50">
-            <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity" onclick="toggleMobileMenu()"></div>
+            <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity" data-toggle="mobile-menu"></div>
             <div class="fixed inset-x-0 bottom-0 bg-slate-900 border-t border-slate-800 rounded-t-3xl p-5 z-10 max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                     <span class="text-sm font-bold text-white flex items-center space-x-2">
                         <span>🏮</span>
                         <span>すべてのメニュー</span>
                     </span>
-                    <button type="button" onclick="toggleMobileMenu()" class="text-slate-400 hover:text-white text-lg p-1 cursor-pointer">✕</button>
+                    <button type="button" data-toggle="mobile-menu" class="text-slate-400 hover:text-white text-lg p-1 cursor-pointer">✕</button>
                 </div>
 
                 <div class="space-y-3">
@@ -351,7 +351,7 @@
                         </a>
                         <form action="{{ route('logout') }}" method="POST" class="col-span-2 p-0">
                             @csrf
-                            <button type="submit" onclick="return confirm('ログアウトしますか？');" class="w-full p-2.5 bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 rounded-xl flex items-center justify-center space-x-2 text-red-200 cursor-pointer">
+                            <button type="submit" data-confirm="ログアウトしますか？" class="w-full p-2.5 bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 rounded-xl flex items-center justify-center space-x-2 text-red-200 cursor-pointer">
                                 <span>🚪</span>
                                 <span class="font-bold">ログアウト</span>
                             </button>
@@ -403,59 +403,6 @@
             <p>© 2026 まつり実行委員会 運行本部総合システム</p>
         </div>
     </footer>
-
-    <!-- ナビゲーションメニュー対話スクリプト -->
-    <script>
-    (function() {
-        'use strict';
-
-        // 1. デスクトップ用ドロップダウン制御
-        const dropdowns = document.querySelectorAll('.nav-dropdown');
-
-        dropdowns.forEach(dropdown => {
-            const trigger = dropdown.querySelector('.dropdown-trigger');
-            const menu = dropdown.querySelector('.dropdown-menu');
-
-            if (!trigger || !menu) return;
-
-            trigger.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const isCurrentlyOpen = !menu.classList.contains('hidden');
-
-                // 他のすべてのドロップダウンを閉じる
-                document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
-
-                if (!isCurrentlyOpen) {
-                    menu.classList.remove('hidden');
-                }
-            });
-        });
-
-        // 2. 外側クリックでドロップダウンを閉じる
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.nav-dropdown')) {
-                document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
-            }
-        });
-
-        // 3. Escキーで閉じる
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
-                const mobileMenu = document.getElementById('mobileMenuModal');
-                if (mobileMenu) mobileMenu.classList.add('hidden');
-            }
-        });
-
-        // 4. モバイル用メニューモーダル開閉
-        window.toggleMobileMenu = function() {
-            const modal = document.getElementById('mobileMenuModal');
-            if (modal) {
-                modal.classList.toggle('hidden');
-            }
-        };
-    })();
-    </script>
 
 </body>
 

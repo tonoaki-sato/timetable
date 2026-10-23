@@ -21,7 +21,7 @@
 
             @can('delete', $meeting)
             <form action="{{ route('meetings.destroy', $meeting) }}" method="POST" class="inline"
-                onsubmit="return confirm('会議「{{ $meeting->title }}」を削除しますか？\nこの操作は取り消せません。');">
+                data-confirm="会議「{{ $meeting->title }}」を削除しますか？&#10;この操作は取り消せません。">
                 @csrf
                 @method('DELETE')
                 <button type="submit"
@@ -162,11 +162,11 @@
 
             <!-- タブ切り替え（開催案内 / 前日リマインド） -->
             <div class="inline-flex p-1 bg-slate-800 rounded-xl border border-slate-700 shrink-0">
-                <button type="button" onclick="switchLineTab('share')" id="tabBtnShare"
+                <button type="button" data-meeting-tab="share" id="tabBtnShare"
                     class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-xs cursor-pointer">
                     📢 開催案内文
                 </button>
-                <button type="button" onclick="switchLineTab('remind')" id="tabBtnRemind"
+                <button type="button" data-meeting-tab="remind" id="tabBtnRemind"
                     class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer">
                     ⏰ 前日リマインド文
                 </button>
@@ -200,7 +200,7 @@
                     </a>
 
                     <!-- クリップボードコピーボタン -->
-                    <button type="button" onclick="copyCurrentLineText(this)"
+                    <button type="button" data-action="copy-current-line"
                         id="copyLineBtn"
                         class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5 cursor-pointer">
                         <span>📋</span>
@@ -213,49 +213,5 @@
 
 </div>
 
-<!-- スクリプト: タブ切り替え & クリップボードコピー -->
-<script>
-const shareText = document.getElementById('shareTextTemplate').textContent;
-const remindText = document.getElementById('remindTextTemplate').textContent;
-let currentMode = 'share';
-
-function switchLineTab(mode) {
-    currentMode = mode;
-    const textBox = document.getElementById('lineTextBox');
-    const tabShare = document.getElementById('tabBtnShare');
-    const tabRemind = document.getElementById('tabBtnRemind');
-    const lineAppBtn = document.getElementById('lineAppBtn');
-
-    if (mode === 'share') {
-        textBox.textContent = shareText;
-        tabShare.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-xs cursor-pointer';
-        tabRemind.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer';
-        lineAppBtn.href = 'https://line.me/R/msg/text/?' + encodeURIComponent(shareText);
-    } else {
-        textBox.textContent = remindText;
-        tabRemind.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-xs cursor-pointer';
-        tabShare.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer';
-        lineAppBtn.href = 'https://line.me/R/msg/text/?' + encodeURIComponent(remindText);
-    }
-}
-
-function copyCurrentLineText(button) {
-    const text = currentMode === 'share' ? shareText : remindText;
-    navigator.clipboard.writeText(text).then(function() {
-        const label = document.getElementById('copyBtnLabel');
-        const originalText = label.textContent;
-        label.textContent = 'コピーしました！';
-        button.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
-        button.classList.add('bg-white', 'text-slate-900');
-
-        setTimeout(function() {
-            label.textContent = originalText;
-            button.classList.remove('bg-white', 'text-slate-900');
-            button.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
-        }, 2000);
-    }).catch(function(err) {
-        alert('クリップボードへのコピーに失敗しました。');
-    });
-}
-</script>
+@vite(['resources/js/meetings.js'])
 </x-layouts.app>

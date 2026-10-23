@@ -220,7 +220,7 @@
                         @method('PATCH')
                         <div class="flex items-center space-x-1.5">
                             <span class="text-xs text-slate-500 font-bold">👤 主担当:</span>
-                            <select name="lead_staff_id" onchange="this.form.submit()"
+                            <select name="lead_staff_id" data-auto-submit
                                 class="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
                                 <option value="" {{ !$lane->lead_staff_id ? 'selected' : '' }}>-- 未設定 --</option>
                                 @foreach($activeStaff as $st)
@@ -246,7 +246,7 @@
                 <!-- 右側: 詳細編集・削除モーダル/ボタン -->
                 <div class="flex items-center space-x-2 shrink-0">
                     <!-- 編集アコーディオン開閉ボタン -->
-                    <button type="button" onclick="document.getElementById('edit-lane-{{ $lane->id }}').classList.toggle('hidden')"
+                    <button type="button" data-toggle-target="#edit-lane-{{ $lane->id }}"
                         class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition">
                         ✏️ 編集
                     </button>
@@ -260,7 +260,7 @@
                     </button>
                     @else
                     <form action="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}" method="POST" class="inline"
-                        onsubmit="return confirm('レーン「{{ $lane->name }}」を削除しますか？');">
+                        data-confirm="レーン「{{ $lane->name }}」を削除しますか？">
                         @csrf
                         @method('DELETE')
                         <button type="submit"
@@ -334,7 +334,7 @@
                     </div>
 
                     <div class="flex items-center justify-end space-x-2 pt-2">
-                        <button type="button" onclick="document.getElementById('edit-lane-{{ $lane->id }}').classList.add('hidden')"
+                        <button type="button" data-close-target="#edit-lane-{{ $lane->id }}"
                             class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition">
                             キャンセル
                         </button>

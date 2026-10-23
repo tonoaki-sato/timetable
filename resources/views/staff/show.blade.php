@@ -20,7 +20,7 @@
 
             @can('delete', $staff)
             <form action="{{ route('staff.destroy', $staff) }}" method="POST" class="inline"
-                onsubmit="return confirm('スタッフ「{{ $staff->name }}」を削除しますか？\n（関連するタスクのアサインも解除されます）');">
+                data-confirm="スタッフ「{{ $staff->name }}」を削除しますか？&#10;（関連するタスクのアサインも解除されます）">
                 @csrf
                 @method('DELETE')
                 <button type="submit"
@@ -115,7 +115,7 @@
 
                     <div class="flex items-center space-x-2">
                         <form action="{{ route('staff.regenerate-token', $staff) }}" method="POST"
-                              onsubmit="return confirm('アクセストークンを再生成しますか？\n（古いURLは無効化されます）');">
+                              data-confirm="アクセストークンを再生成しますか？&#10;（古いURLは無効化されます）">
                             @csrf
                             <button type="submit" class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 rounded text-[11px] font-medium transition cursor-pointer">
                                 🔄 URL再発行

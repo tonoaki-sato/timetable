@@ -24,7 +24,7 @@
             </a>
 
             @can('create', App\Models\AnnualSchedule::class)
-            <button type="button" onclick="openNewEventModal()"
+            <button type="button" data-action="open-new-event-modal"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
                 <span>➕</span>
                 <span>新規予定を登録</span>
@@ -219,8 +219,12 @@
 <!-- ========================================== -->
 <!-- 6. 新規予定登録モーダル (New Event Modal)   -->
 <!-- ========================================== -->
-<div id="newEventModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="closeNewEventModal()"></div>
+<div id="newEventModal"
+    data-meetings-store-url="{{ route('meetings.store') }}"
+    data-annual-schedules-store-url="{{ route('annual-schedules.store') }}"
+    data-default-date="{{ $currentYear }}-{{ sprintf('%02d', $currentMonth) }}-01"
+    class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" data-action="close-new-event-modal"></div>
     
     <div class="flex min-h-full items-center justify-center p-4">
         <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-10 transition transform">
@@ -230,7 +234,7 @@
                     <span id="modalCategoryIcon" class="text-xl">🤝</span>
                     <h2 class="text-base font-bold" id="modalTitle">新しい予定・会議の登録</h2>
                 </div>
-                <button type="button" onclick="closeNewEventModal()" class="text-slate-400 hover:text-white transition text-lg cursor-pointer">✕</button>
+                <button type="button" data-action="close-new-event-modal" class="text-slate-400 hover:text-white transition text-lg cursor-pointer">✕</button>
             </div>
 
             <!-- フォーム本体 -->
@@ -244,7 +248,7 @@
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
                         @foreach($categoryOptions as $palette)
                         <label class="cursor-pointer">
-                            <input type="radio" name="category" value="{{ $palette['key'] }}" class="peer sr-only" onchange="handleCategoryChange(this.value)">
+                            <input type="radio" name="category" value="{{ $palette['key'] }}" class="peer sr-only">
                             <div class="peer-checked:ring-2 peer-checked:ring-indigo-600 peer-checked:bg-indigo-50 border border-slate-200 rounded-xl p-2 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
                                 <span class="block text-base mb-0.5">{{ $palette['icon'] }}</span>
                                 <span class="text-[11px]">{{ $palette['name'] }}</span>
@@ -267,11 +271,11 @@
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-slate-700">📅 日付・期間の設定</span>
                         <div class="inline-flex bg-slate-200/80 p-0.5 rounded-lg text-xs font-bold" id="modeSwitchContainer">
-                            <button type="button" id="btnModeSingle" onclick="switchDateMode('single')"
+                            <button type="button" id="btnModeSingle" data-date-mode="single"
                                 class="px-2.5 py-1 rounded-md text-[11px] bg-white text-indigo-700 shadow-xs cursor-pointer">
                                 単日
                             </button>
-                            <button type="button" id="btnModePeriod" onclick="switchDateMode('period')"
+                            <button type="button" id="btnModePeriod" data-date-mode="period"
                                 class="px-2.5 py-1 rounded-md text-[11px] text-slate-600 hover:text-slate-900 cursor-pointer">
                                 期間指定
                             </button>
@@ -364,7 +368,7 @@
 
                 <!-- モーダルフッター操作 -->
                 <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                    <button type="button" onclick="closeNewEventModal()"
+                    <button type="button" data-action="close-new-event-modal"
                         class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
                         キャンセル
                     </button>
@@ -382,7 +386,7 @@
 <!-- 7. 予定詳細 & クイック編集モーダル         -->
 <!-- ========================================== -->
 <div id="eventDetailModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="closeEventDetailModal()"></div>
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" data-action="close-event-detail-modal"></div>
 
     <div class="flex min-h-full items-center justify-center p-4">
         <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-10">
@@ -392,7 +396,7 @@
                     <span id="detailIcon" class="text-xl">📅</span>
                     <span id="detailCategoryLabel" class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-600/80">予定</span>
                 </div>
-                <button type="button" onclick="closeEventDetailModal()" class="text-slate-400 hover:text-white transition text-lg cursor-pointer">✕</button>
+                <button type="button" data-action="close-event-detail-modal" class="text-slate-400 hover:text-white transition text-lg cursor-pointer">✕</button>
             </div>
 
             <!-- コンテンツ -->
@@ -419,7 +423,7 @@
                                 <option value="{{ $staff->id }}">{{ $staff->name }} ({{ $staff->affiliation }})</option>
                                 @endforeach
                             </select>
-                            <button type="button" onclick="saveQuickAssignHost()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer">
+                            <button type="button" data-action="save-quick-assign-host" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer">
                                 決定
                             </button>
                         </div>
@@ -441,7 +445,7 @@
                             <span>💬</span>
                             <span>全体LINE告知用テキスト</span>
                         </span>
-                        <button type="button" id="copyLineTextBtn" onclick="copyDetailLineText()"
+                        <button type="button" id="copyLineTextBtn" data-action="copy-detail-line-text"
                             class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer">
                             <span>📋</span>
                             <span>文面をコピー</span>
@@ -460,7 +464,7 @@
                         <a id="detailEditLink" href="#" class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition">
                             ✏️ 編集する
                         </a>
-                        <button type="button" onclick="closeEventDetailModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition cursor-pointer">
+                        <button type="button" data-action="close-event-detail-modal" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition cursor-pointer">
                             閉じる
                         </button>
                     </div>
@@ -478,261 +482,5 @@
     <span id="toastMessage">完了しました</span>
 </div>
 
-<!-- ========================================== -->
-<!-- 9. インタラクティブ Vanilla JS スクリプト   -->
-<!-- ========================================== -->
-<script>
-(function() {
-    'use strict';
-
-    let currentDetailEvent = null;
-
-    // CSRF トークン取得
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    // クリックイベントリスナー（イベント詳細 & セルからの新規追加）
-    document.addEventListener('click', function(e) {
-        const pill = e.target.closest('.event-pill');
-        if (pill && pill.dataset.eventJson) {
-            try {
-                const eventData = JSON.parse(pill.dataset.eventJson);
-                openEventDetailModal(eventData);
-            } catch (err) {
-                console.error('Failed to parse event JSON', err);
-            }
-            return;
-        }
-
-        const addBtn = e.target.closest('.add-event-cell-btn');
-        if (addBtn && addBtn.dataset.date) {
-            openNewEventModal(addBtn.dataset.date);
-            return;
-        }
-    });
-
-    // グローバルモーダルハンドラー: 新規予定登録
-    window.openNewEventModal = function(date = null, category = 'committee') {
-        const modal = document.getElementById('newEventModal');
-        const form = document.getElementById('newEventForm');
-        form.reset();
-
-        const defaultDate = date || '{{ $currentYear }}-{{ sprintf("%02d", $currentMonth) }}-01';
-        document.getElementById('eventDate').value = defaultDate;
-        document.getElementById('eventStartDate').value = defaultDate;
-        document.getElementById('eventEndDate').value = defaultDate;
-
-        // カテゴリラジオ選択
-        const categoryRadio = form.querySelector(`input[name="category"][value="${category}"]`);
-        if (categoryRadio) {
-            categoryRadio.checked = true;
-            handleCategoryChange(category);
-        }
-
-        modal.classList.remove('hidden');
-    };
-
-    window.closeNewEventModal = function() {
-        document.getElementById('newEventModal').classList.add('hidden');
-    };
-
-    // 日程モード切り替え（単日 vs 期間）
-    window.switchDateMode = function(mode) {
-        const singleBox = document.getElementById('singleDateFields');
-        const periodBox = document.getElementById('periodDateFields');
-        const btnSingle = document.getElementById('btnModeSingle');
-        const btnPeriod = document.getElementById('btnModePeriod');
-
-        if (mode === 'period') {
-            singleBox.classList.add('hidden');
-            periodBox.classList.remove('hidden');
-            document.getElementById('eventDate').removeAttribute('required');
-            document.getElementById('eventStartDate').setAttribute('required', 'required');
-            document.getElementById('eventEndDate').setAttribute('required', 'required');
-
-            btnPeriod.classList.add('bg-white', 'text-indigo-700', 'shadow-xs');
-            btnPeriod.classList.remove('text-slate-600');
-            btnSingle.classList.remove('bg-white', 'text-indigo-700', 'shadow-xs');
-            btnSingle.classList.add('text-slate-600');
-        } else {
-            singleBox.classList.remove('hidden');
-            periodBox.classList.add('hidden');
-            document.getElementById('eventDate').setAttribute('required', 'required');
-            document.getElementById('eventStartDate').removeAttribute('required');
-            document.getElementById('eventEndDate').removeAttribute('required');
-
-            btnSingle.classList.add('bg-white', 'text-indigo-700', 'shadow-xs');
-            btnSingle.classList.remove('text-slate-600');
-            btnPeriod.classList.remove('bg-white', 'text-indigo-700', 'shadow-xs');
-            btnPeriod.classList.add('text-slate-600');
-        }
-    };
-
-    // カテゴリ変更時のフォーム動的切り替え（会議 vs 年間スケジュール）
-    window.handleCategoryChange = function(category) {
-        const form = document.getElementById('newEventForm');
-        const noticeContainer = document.getElementById('noticeNoteContainer');
-        const timeFields = document.getElementById('timeFields');
-        const hostLabel = document.getElementById('hostFieldLabel');
-        const modalIcon = document.getElementById('modalCategoryIcon');
-
-        const icons = {
-            'committee': '🤝',
-            'permit': '📑',
-            'briefing': '📢',
-            'operation': '🎪',
-            'other': '📌'
-        };
-        modalIcon.textContent = icons[category] || '📅';
-
-        if (category === 'committee') {
-            // 会議登録モード
-            form.action = "{{ route('meetings.store') }}";
-            noticeContainer.classList.remove('hidden');
-            timeFields.classList.remove('hidden');
-            switchDateMode('single');
-            document.getElementById('modeSwitchContainer').classList.add('hidden');
-            document.getElementById('statusFieldContainer').classList.add('hidden');
-            hostLabel.innerHTML = '主催者（スタッフ） <span class="text-slate-400 font-normal">（任意・未定可）</span>';
-            document.getElementById('eventStaffId').name = 'staff_id';
-            document.getElementById('eventDate').name = 'meeting_date';
-        } else {
-            // 年間スケジュール登録モード
-            form.action = "{{ route('annual-schedules.store') }}";
-            noticeContainer.classList.add('hidden');
-            hostLabel.innerHTML = '担当スタッフ <span class="text-slate-400 font-normal">（任意・未定可）</span>';
-            document.getElementById('eventStaffId').name = 'staff_id';
-            document.getElementById('eventDate').name = 'start_date';
-            document.getElementById('modeSwitchContainer').classList.remove('hidden');
-            document.getElementById('statusFieldContainer').classList.remove('hidden');
-        }
-    };
-
-    // グローバルモーダルハンドラー: 詳細表示
-    window.openEventDetailModal = function(event) {
-        currentDetailEvent = event;
-        const modal = document.getElementById('eventDetailModal');
-
-        document.getElementById('detailIcon').textContent = event.icon || '📅';
-        document.getElementById('detailCategoryLabel').textContent = event.category_label || '予定';
-        document.getElementById('detailTitle').textContent = event.title;
-
-        let datetimeStr = event.start_date;
-        if (event.is_period && event.end_date) {
-            datetimeStr += ` 〜 ${event.end_date} (期間)`;
-        } else if (event.time) {
-            datetimeStr += ` ${event.time}`;
-        }
-        document.getElementById('detailDatetime').textContent = `📅 ${datetimeStr}`;
-        document.getElementById('detailLocation').textContent = event.location ? `📍 ${event.location}` : '';
-
-        // 主催者 / 担当者表示
-        const staffEl = document.getElementById('detailAssignedStaff');
-        const quickAssignContainer = document.getElementById('quickAssignHostContainer');
-        if (event.has_unassigned_host) {
-            staffEl.innerHTML = '<span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">主催者・担当者 未定（後から設定可）</span>';
-            quickAssignContainer.classList.remove('hidden');
-        } else {
-            staffEl.innerHTML = `<span class="text-slate-900 font-bold">👤 ${event.staff_name || '未設定'}</span>`;
-            quickAssignContainer.classList.add('hidden');
-        }
-
-        // 詳細説明
-        document.getElementById('detailDescription').textContent = event.description || '詳細内容の登録はありません。';
-
-        // LINE共有テキスト（会議のみ）
-        const lineSection = document.getElementById('detailLineShareContainer');
-        if (event.source === 'meeting' && event.line_share_text) {
-            lineSection.classList.remove('hidden');
-            document.getElementById('detailLineText').textContent = event.line_share_text;
-        } else {
-            lineSection.classList.add('hidden');
-        }
-
-        document.getElementById('detailShowLink').href = event.show_url || '#';
-        document.getElementById('detailEditLink').href = event.edit_url || '#';
-
-        modal.classList.remove('hidden');
-    };
-
-    window.closeEventDetailModal = function() {
-        document.getElementById('eventDetailModal').classList.add('hidden');
-        currentDetailEvent = null;
-    };
-
-    // 主催者のクイック割り当て保存
-    window.saveQuickAssignHost = function() {
-        if (!currentDetailEvent) return;
-        const select = document.getElementById('quickAssignStaffSelect');
-        const staffId = select.value;
-        if (!staffId) {
-            alert('設定するスタッフを選択してください。');
-            return;
-        }
-
-        const isMeeting = currentDetailEvent.source === 'meeting';
-        const url = isMeeting ? currentDetailEvent.edit_url.replace('/edit', '') : currentDetailEvent.edit_url.replace('/edit', '');
-
-        showToast('主催者を更新中...', '⏳');
-
-        const payload = isMeeting
-            ? { _method: 'PUT', staff_id: staffId, title: currentDetailEvent.title, meeting_date: currentDetailEvent.start_date, start_time: currentDetailEvent.start_time, location: currentDetailEvent.location }
-            : { _method: 'PUT', staff_id: staffId, title: currentDetailEvent.title, start_date: currentDetailEvent.start_date, category: currentDetailEvent.category, status: currentDetailEvent.status };
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => {
-            showToast('主催者を設定しました！', '✔');
-            setTimeout(() => {
-                window.location.reload();
-            }, 600);
-        })
-        .catch(() => {
-            window.location.reload();
-        });
-    };
-
-    // LINE文面コピー
-    window.copyDetailLineText = function() {
-        if (!currentDetailEvent || !currentDetailEvent.line_share_text) return;
-        navigator.clipboard.writeText(currentDetailEvent.line_share_text).then(() => {
-            const btn = document.getElementById('copyLineTextBtn');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<span>✔</span><span>コピー完了!</span>';
-            btn.classList.replace('bg-emerald-600', 'bg-emerald-800');
-            setTimeout(() => {
-                btn.innerHTML = originalHtml;
-                btn.classList.replace('bg-emerald-800', 'bg-emerald-600');
-            }, 2000);
-            showToast('LINE告知文をクリップボードにコピーしました！', '📋');
-        });
-    };
-
-    // トースト表示
-    function showToast(message, icon = '✔') {
-        const toast = document.getElementById('toastNotification');
-        document.getElementById('toastMessage').textContent = message;
-        document.getElementById('toastIcon').textContent = icon;
-        toast.classList.remove('hidden', 'translate-y-2');
-        setTimeout(() => {
-            toast.classList.add('hidden', 'translate-y-2');
-        }, 3000);
-    }
-
-    // Escキーでモーダルを閉じる
-    window.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeNewEventModal();
-            closeEventDetailModal();
-        }
-    });
-
-})();
-</script>
+@vite(['resources/js/calendar.js'])
 </x-layouts.app>

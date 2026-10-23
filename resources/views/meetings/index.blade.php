@@ -176,8 +176,8 @@
             <div class="flex items-center space-x-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 justify-end">
                 <!-- LINEテキストクイックコピーボタン -->
                 <button type="button"
+                    data-action="copy-meeting-line"
                     data-line-text="{{ $meeting->line_share_text }}"
-                    onclick="copyMeetingLineText(this, this.dataset.lineText)"
                     title="全体LINE用の告知テキストをクリップボードにコピー"
                     class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
                     <span>📋</span>
@@ -225,20 +225,5 @@
 
 </div>
 
-<!-- クリップボードコピー用スクリプト -->
-<script>
-function copyMeetingLineText(button, text) {
-    navigator.clipboard.writeText(text).then(function() {
-        const originalHtml = button.innerHTML;
-        button.innerHTML = '<span>✔</span><span class="text-emerald-800">コピー完了!</span>';
-        button.classList.add('bg-emerald-200');
-        setTimeout(function() {
-            button.innerHTML = originalHtml;
-            button.classList.remove('bg-emerald-200');
-        }, 2000);
-    }).catch(function(err) {
-        alert('クリップボードへのコピーに失敗しました。手動でコピーしてください。');
-    });
-}
-</script>
+@vite(['resources/js/meetings.js'])
 </x-layouts.app>

@@ -34,7 +34,7 @@
 
             @can('delete', $timetable)
             <form action="{{ route('timetables.destroy', $timetable) }}" method="POST" class="inline"
-                onsubmit="return confirm('タイムテーブル「{{ $timetable->name }}」を削除しますか？\n（関連するすべての作業タスクも削除されます）');">
+                data-confirm="タイムテーブル「{{ $timetable->name }}」を削除しますか？&#10;（関連するすべての作業タスクも削除されます）">
                 @csrf
                 @method('DELETE')
                 <button type="submit"
@@ -254,7 +254,7 @@
 
                             @can('delete', $task)
                             <form action="{{ route('timetable-tasks.destroy', $task) }}" method="POST" class="inline"
-                                onsubmit="return confirm('作業タスク「{{ $task->title }}」を削除しますか？');">
+                                data-confirm="作業タスク「{{ $task->title }}」を削除しますか？">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"

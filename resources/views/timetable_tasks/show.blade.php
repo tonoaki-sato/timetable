@@ -20,7 +20,7 @@
 
             @can('delete', $task)
             <form action="{{ route('timetable-tasks.destroy', $task) }}" method="POST" class="inline"
-                onsubmit="return confirm('作業タスク「{{ $task->title }}」を削除しますか？');">
+                data-confirm="作業タスク「{{ $task->title }}」を削除しますか？">
                 @csrf
                 @method('DELETE')
                 <button type="submit"
@@ -206,7 +206,7 @@
                                 method="POST" class="inline-flex items-center space-x-1">
                                 @csrf
                                 @method('PATCH')
-                                <select name="attendance_status" onchange="this.form.submit()"
+                                <select name="attendance_status" data-auto-submit
                                     class="text-xs px-2 py-1 rounded border border-slate-300 bg-white font-medium focus:ring-1 focus:ring-indigo-500 cursor-pointer">
                                     @foreach($attendanceStatuses as $statusCode => $statusLabel)
                                     <option value="{{ $statusCode }}" {{ $assignment->attendance_status === $statusCode ? 'selected' : '' }}>
@@ -227,7 +227,7 @@
                             @can('update', $task)
                             <form action="{{ route('timetable-tasks.remove-staff', ['task' => $task, 'staff' => $assignment->staff_id]) }}"
                                 method="POST" class="inline"
-                                onsubmit="return confirm('スタッフ「{{ $assignment->staff?->name }}」の割り当てを解除しますか？');">
+                                data-confirm="スタッフ「{{ $assignment->staff?->name }}」の割り当てを解除しますか？">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"

@@ -152,7 +152,7 @@
 
                             @can('delete', $staff)
                             <form action="{{ route('staff.destroy', $staff) }}" method="POST" class="inline"
-                                onsubmit="return confirm('スタッフ「{{ $staff->name }}」を削除しますか？\n（関連するタスクのアサインも解除されます）');">
+                                data-confirm="スタッフ「{{ $staff->name }}」を削除しますか？&#10;（関連するタスクのアサインも解除されます）">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"

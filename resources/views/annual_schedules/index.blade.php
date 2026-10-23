@@ -251,7 +251,7 @@
 
                             @can('delete', $schedule)
                             <form action="{{ route('annual-schedules.destroy', $schedule) }}" method="POST" class="inline"
-                                onsubmit="return confirm('年間スケジュール「{{ $schedule->title }}」を削除しますか？');">
+                                data-confirm="年間スケジュール「{{ $schedule->title }}」を削除しますか？">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"

@@ -128,7 +128,7 @@
                             @endcan
 
                             @can('delete', $user)
-                            <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline-block" onsubmit="return confirm('ユーザー「{{ $user->name }}」を削除しますか？');">
+                            <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline-block" data-confirm="ユーザー「{{ $user->name }}」を削除しますか？">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded text-[11px] font-bold transition">
