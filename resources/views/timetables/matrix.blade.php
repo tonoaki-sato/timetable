@@ -164,7 +164,7 @@
                     $isCoreLane = in_array($lane->name, ['衛生', 'カラーコーン', '給水設備', '巡回', 'ポスター/ステカン', 'ステカン', 'ポスター'], true);
                 @endphp
                 <button type="button"
-                    onclick="toggleLaneColumn({{ $lane->id }})"
+                    onclick="toggleLaneColumn(this.dataset.laneId)"
                     id="chip-lane-{{ $lane->id }}"
                     data-lane-id="{{ $lane->id }}"
                     data-lane-name="{{ $lane->name }}"
