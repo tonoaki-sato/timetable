@@ -28,7 +28,7 @@ class StoreMeetingRequest extends FormRequest
             'meeting_date' => ['required', 'date'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['nullable', 'date_format:H:i', 'after:start_time'],
-            'location' => ['required', 'string', 'max:255'],
+            'location' => ['nullable', 'string', 'max:255'],
             'staff_id' => ['nullable', 'integer', 'exists:staff,id'],
             'description' => ['nullable', 'string', 'max:5000'],
             'notice_note' => ['nullable', 'string', 'max:1000'],

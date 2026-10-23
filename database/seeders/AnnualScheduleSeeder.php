@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\AnnualSchedule;
-use App\Models\Staff;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -18,86 +17,14 @@ class AnnualScheduleSeeder extends Seeder
 
         $schedules = [
             // =========================================================================
-            // 2026年度（第34回 保土ケ谷宿場まつり 年間スケジュール）
-            // =========================================================================
-
-            // --- 11月：フェーズ5【フォローアップ】 ---
-            [
-                'target_year' => 2026,
-                'title' => '総会／反省会・慰労会（打ち上げ）',
-                'category' => 'permit',
-                'start_date' => '2026-11-21',
-                'end_date' => null,
-                'location' => '保土ケ谷区役所 地域振興課',
-                'status' => 'planned',
-                'description' => '各部門の反省・総括報告、次年度への申し送り事項まとめ、各スタッフで洗濯・乾燥した陣羽織の回収・点検。',
-                'created_by' => $admin->id,
-            ],
-
-            // =========================================================================
             // 2027年度（第35回 保土ケ谷宿場まつり 年間スケジュール）
             // =========================================================================
 
             // --- 1月：フェーズ1【設立準備】 ---
-            [
-                'target_year' => 2027,
-                'title' => '第1回幹事会（年間日程案策定）',
-                'category' => 'committee',
-                'start_date' => '2027-01-02',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '年間会議日程案（幹事会・総会・各部会）の策定、前年度運営課題の整理および申し送り事項の確認。決算取り決め。',
-                'created_by' => $admin->id,
-            ],
 
             // --- 2月：フェーズ1～2【設立準備～計画段階】 ---
-            [
-                'target_year' => 2027,
-                'title' => '第2回幹事会（総会議案・役職選出案協議）',
-                'category' => 'committee',
-                'start_date' => '2027-02-06',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '第1回総会に向けた議案整理、新年度役職（正副委員長・議長・書記・会計・顧問）選出案および各部門担当の仮決め協議。',
-                'created_by' => $admin->id,
-            ],
-            [
-                'target_year' => 2027,
-                'title' => '第1回総会（新年度発足・役員選出・前年度会計報告）',
-                'category' => 'committee',
-                'start_date' => '2027-02-27',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '前年度実行委員会の解散宣言および新年度発足宣言。新幹事・役職の選出と承認、前年度会計報告の承認、部門担当の仮決めと業務内容周知。',
-                'created_by' => $admin->id,
-            ],
 
             // --- 3月：フェーズ2【計画段階】 ---
-            [
-                'target_year' => 2027,
-                'title' => '第3回幹事会（部門担当本決め調整）',
-                'category' => 'committee',
-                'start_date' => '2027-03-06',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '各部門（ござ市、イベント、キッズ村、衛生、企画、記録、警備、広報等）の担当本決めに向けた調整、第2回総会議案の整理。',
-                'created_by' => $admin->id,
-            ],
-            [
-                'target_year' => 2027,
-                'title' => '第2回総会（部門担当本決め・開催日程通達）',
-                'category' => 'committee',
-                'start_date' => '2027-03-27',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '各部門担当責任者の正式決定、今年度まつり開催日程（10月第2日曜・翌月曜祝日）の通達と共有。',
-                'created_by' => $admin->id,
-            ],
             [
                 'target_year' => 2027,
                 'title' => '前年度会計年度末締め調整',
@@ -113,17 +40,6 @@ class AnnualScheduleSeeder extends Seeder
             // --- 4月：フェーズ2【計画段階】 ---
             [
                 'target_year' => 2027,
-                'title' => '第4回幹事会（キャッチフレーズ・新聞チラシ準備）',
-                'category' => 'committee',
-                'start_date' => '2027-04-03',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => 'キャッチフレーズ事前募集状況の集約、タブロイド新聞および広告募集チラシの構成案検討。',
-                'created_by' => $admin->id,
-            ],
-            [
-                'target_year' => 2027,
                 'title' => 'キャッチフレーズ事前募集・タブロイド新聞準備',
                 'category' => 'other',
                 'start_date' => '2027-04-10',
@@ -133,30 +49,8 @@ class AnnualScheduleSeeder extends Seeder
                 'description' => 'Googleフォーム等を活用したキャッチフレーズの事前募集と投票実施、タブロイド新聞・広告募集チラシの版下準備。',
                 'created_by' => $admin->id,
             ],
-            [
-                'target_year' => 2027,
-                'title' => '第3回総会（キャッチフレーズ決定・ポスター制作依頼）',
-                'category' => 'committee',
-                'start_date' => '2027-04-24',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '投票結果に基づく今年度キャッチフレーズの決定、確定キャッチフレーズを反映したポスター・チラシ制作依頼の承認。',
-                'created_by' => $admin->id,
-            ],
 
             // --- 5月：フェーズ2～3【計画段階～準備段階】 ---
-            [
-                'target_year' => 2027,
-                'title' => '第5回幹事会（企画内容検討・新聞広告担当割当）',
-                'category' => 'committee',
-                'start_date' => '2027-05-01',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '各イベント・企画内容の検討、新聞広告募集の目標枠数設定および担当割り振り案の策定。',
-                'created_by' => $admin->id,
-            ],
             [
                 'target_year' => 2027,
                 'title' => '宿場まつり新聞 広告・協賛金募集開始',
@@ -179,30 +73,8 @@ class AnnualScheduleSeeder extends Seeder
                 'description' => '運行ガイドライン・安全マニュアルの改訂作業、必要に応じた警察署・区役所・消防署への早期事前相談の実施。',
                 'created_by' => $admin->id,
             ],
-            [
-                'target_year' => 2027,
-                'title' => '第4回総会（企画周知・新聞広告募集割当）',
-                'category' => 'committee',
-                'start_date' => '2027-05-29',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '各イベント・企画内容の全体周知、宿場まつり新聞広告募集の説明および各部会・幹事への営業担当割り振り。',
-                'created_by' => $admin->id,
-            ],
 
             // --- 6月：フェーズ3【準備段階】 ---
-            [
-                'target_year' => 2027,
-                'title' => '第6回幹事会（資機材抽出・企画予算確認）',
-                'category' => 'committee',
-                'start_date' => '2027-06-05',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '各部門の必要資機材の洗い出し、企画詳細の精査、中間予算配分の確認。',
-                'created_by' => $admin->id,
-            ],
             [
                 'target_year' => 2027,
                 'title' => '行政補助金申請・後援名義申請手続き',
@@ -225,30 +97,8 @@ class AnnualScheduleSeeder extends Seeder
                 'description' => '公式ポスター原案の最終確認と印刷会社への入稿（6月下旬納品）、レクリエーション賠償責任保険の見積・プラン検討。',
                 'created_by' => $admin->id,
             ],
-            [
-                'target_year' => 2027,
-                'title' => '第5回総会（資機材抽出・予算承認）',
-                'category' => 'committee',
-                'start_date' => '2027-06-26',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '抽出された必要資機材のリスト確認、各企画の実施詳細および中間予算の全体承認。',
-                'created_by' => $admin->id,
-            ],
 
             // --- 7月：フェーズ3【準備段階】 ---
-            [
-                'target_year' => 2027,
-                'title' => '第7回幹事会（資機材概算確認・地域連携協議）',
-                'category' => 'committee',
-                'start_date' => '2027-07-03',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => 'レンタル機材・購入備品の概算費用確認、地域自治会長等の来賓招待および連携方針の協議。',
-                'created_by' => $admin->id,
-            ],
             [
                 'target_year' => 2027,
                 'title' => 'ござ市出店者公募開始（街路灯パンフ掲示）',
@@ -284,17 +134,6 @@ class AnnualScheduleSeeder extends Seeder
             ],
             [
                 'target_year' => 2027,
-                'title' => '第6回総会（資機材概算・自治会招待確認）',
-                'category' => 'committee',
-                'start_date' => '2027-07-31',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '必要資機材の概算見積確認、地域自治会長等の招待リスト確定、新聞広告募集の締切直前進捗共有。',
-                'created_by' => $admin->id,
-            ],
-            [
-                'target_year' => 2027,
                 'title' => '新聞広告申込締切・臨時駐車場貸切申込',
                 'category' => 'permit',
                 'start_date' => '2027-07-31',
@@ -315,17 +154,6 @@ class AnnualScheduleSeeder extends Seeder
                 'location' => '横浜市経済局 / 保土ケ谷区役所',
                 'status' => 'planned',
                 'description' => '横浜市「商店街にぎわい促進事業補助金」の交付決定通知を受領、助成額および対象経費の確認。',
-                'created_by' => $admin->id,
-            ],
-            [
-                'target_year' => 2027,
-                'title' => '第8回幹事会（資機材最終決定・新聞原稿確認）',
-                'category' => 'committee',
-                'start_date' => '2027-08-07',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '各部門進捗確認、レンタル機材（給水・テント等）および自前資材の最終決定、宿場まつり新聞掲載原稿・協賛名一覧の確認。',
                 'created_by' => $admin->id,
             ],
             [
@@ -361,17 +189,6 @@ class AnnualScheduleSeeder extends Seeder
                 'description' => '保土ケ谷区長、保土ケ谷警察署長、保土ケ谷消防署長への表敬訪問と開催概要説明・協力要請挨拶。',
                 'created_by' => $admin->id,
             ],
-            [
-                'target_year' => 2027,
-                'title' => '第7回総会（各部門進捗確認・資機材最終決定）',
-                'category' => 'committee',
-                'start_date' => '2027-08-28',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '各部門の準備進捗確認、必要資機材の最終手配リスト決定、ボランティア応募状況の共有。',
-                'created_by' => $admin->id,
-            ],
 
             // --- 9月：フェーズ4【実施段階】 ---
             [
@@ -398,17 +215,6 @@ class AnnualScheduleSeeder extends Seeder
             ],
             [
                 'target_year' => 2027,
-                'title' => '第9回幹事会［最終］（ポスティング・捨て看設置・ポスター張り替え）',
-                'category' => 'committee',
-                'start_date' => '2027-09-04',
-                'end_date' => null,
-                'location' => 'コミュニティルーム / 会場通り一帯',
-                'status' => 'planned',
-                'description' => '各部門の最終確認、通行止め予告チラシのポスティング（1回目）、道路沿い捨て看板の設置、告知ポスターの張り替え作業。',
-                'created_by' => $admin->id,
-            ],
-            [
-                'target_year' => 2027,
                 'title' => '直前準備予備日（資材袋詰め・名札作成）',
                 'category' => 'operation',
                 'start_date' => '2027-09-17',
@@ -427,17 +233,6 @@ class AnnualScheduleSeeder extends Seeder
                 'location' => '実行委員会事務局',
                 'status' => 'planned',
                 'description' => 'ござ市出店者への小間位置決定連絡・出店許可証の送付、出店者用代替駐車場の割り当て・案内完了。',
-                'created_by' => $admin->id,
-            ],
-            [
-                'target_year' => 2027,
-                'title' => '第8回総会［最終］（陣羽織準備・新聞駅前配布）',
-                'category' => 'committee',
-                'start_date' => '2027-09-25',
-                'end_date' => null,
-                'location' => 'コミュニティルーム / 保土ケ谷駅前',
-                'status' => 'planned',
-                'description' => '各部門最終確認、スタッフ用陣羽織の仕分け準備、夕刻の保土ケ谷駅前での宿場まつり新聞街頭配布。',
                 'created_by' => $admin->id,
             ],
 
@@ -530,17 +325,6 @@ class AnnualScheduleSeeder extends Seeder
                 'location' => '保土ケ谷区役所 地域振興課',
                 'status' => 'planned',
                 'description' => '保土ケ谷区「商店街活性化イベント助成事業」実績報告書および収支報告書の提出（11/10頃締切）。',
-                'created_by' => $admin->id,
-            ],
-            [
-                'target_year' => 2027,
-                'title' => '総会／反省会・慰労会（打ち上げ）',
-                'category' => 'committee',
-                'start_date' => '2027-11-27',
-                'end_date' => null,
-                'location' => 'コミュニティルーム',
-                'status' => 'planned',
-                'description' => '各部門の反省・総括報告、次年度への申し送り事項まとめ、各スタッフで洗濯・乾燥した陣羽織の回収・点検。',
                 'created_by' => $admin->id,
             ],
             [
