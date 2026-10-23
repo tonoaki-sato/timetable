@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
@@ -35,7 +36,7 @@ class TimetableMatrixTest extends TestCase
     }
 
     /**
-     * 全体マトリクス画面が正常に表示されること
+     * タイムテーブル画面（PDF帳票グリッド形式）が正常に表示されること
      */
     public function test_matrix_displays_selected_timetable_and_lanes(): void
     {
@@ -44,13 +45,24 @@ class TimetableMatrixTest extends TestCase
         $timetable = Timetable::factory()->create([
             'name' => '1日目 本祭運行',
             'target_date' => '2026-10-17',
+            'start_time' => '07:00:00',
+            'end_time' => '19:30:00',
             'status' => 'active',
+        ]);
+
+        $lane = Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => 'カラーコーン',
+            'display_order' => 10,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane' => 'カラーコーン班',
+            'lane_id' => $lane->id,
+            'lane' => 'カラーコーン',
             'title' => '中央通りコーン設置',
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
             'required_people_count' => 2,
             'is_at_least' => true,
         ]);
@@ -63,11 +75,72 @@ class TimetableMatrixTest extends TestCase
 
         $response = $this->get(route('timetable.index'));
         $response->assertStatus(200);
-        $response->assertSee('運行タイムテーブル全体マトリクス');
+        $response->assertSee('タイムテーブル（当日進行表）');
         $response->assertSee('1日目 本祭運行');
-        $response->assertSee('カラーコーン班');
+        $response->assertSee('カラーコーン');
         $response->assertSee('中央通りコーン設置');
+        $response->assertSee('【2名以上】');
         $response->assertSee('現場 健太');
+        // 30分刻みスロットと道路・まつり判定
+        $response->assertSee('07:00');
+        $response->assertSee('10:00');
+        $response->assertSee('通行止め');
+        $response->assertSee('開催中');
+    }
+
+    /**
+     * タスク未登録でも運行日作成時点で開始〜終了時刻の30分刻みスケルトンが即座に表示されること
+     */
+    public function test_matrix_renders_skeleton_grid_immediately_when_no_tasks_exist(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '新規作成運行日',
+            'target_date' => '2026-10-20',
+            'start_time' => '08:00:00',
+            'end_time' => '12:00:00',
+            'status' => 'active',
+        ]);
+
+        // タスクは0件
+        $response = $this->get(route('timetable.index', ['timetable_id' => $timetable->id]));
+        $response->assertStatus(200);
+        $response->assertSee('新規作成運行日');
+        // スロットが08:00〜12:00で即時生成されていること
+        $response->assertSee('08:00');
+        $response->assertSee('08:30');
+        $response->assertSee('11:30');
+        $response->assertSee('12:00');
+        // 空枠ハイフンが表示されていること
+        $response->assertSee('-');
+    }
+
+    /**
+     * 随時追加された新しい担当班（レーン）がグリッドに動的に反映されること
+     */
+    public function test_matrix_supports_dynamically_added_lanes(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '随時追加テスト運行日',
+            'start_time' => '09:00:00',
+            'end_time' => '15:00:00',
+            'status' => 'active',
+        ]);
+
+        // 新規レーンを随時追加
+        $newLane = Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => 'ドローン空撮班',
+            'display_order' => 999,
+        ]);
+
+        $response = $this->get(route('timetable.index', ['timetable_id' => $timetable->id]));
+        $response->assertStatus(200);
+        $response->assertSee('ドローン空撮班');
+        $response->assertSee('全表示');
     }
 
     /**

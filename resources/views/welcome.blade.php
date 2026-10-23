@@ -68,7 +68,7 @@
                         📊 本部運行ダッシュボードを開く
                     </a>
                     <a href="{{ route('timetable.index') }}" class="w-full sm:w-auto px-6 py-3.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-sm font-bold border border-slate-600 transition">
-                        📅 タイムテーブル全体マトリクス
+                        ⏱️ タイムテーブル（当日進行表）
                     </a>
                     @else
                     <a href="{{ route('login') }}" class="w-full sm:w-auto px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-lg transition">
@@ -88,9 +88,9 @@
                 <!-- タイムテーブル -->
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
                     <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-2xl mb-4">
-                        📅
+                        ⏱️
                     </div>
-                    <h3 class="font-bold text-base text-slate-900 mb-2">全体マトリクス＆Now Bar</h3>
+                    <h3 class="font-bold text-base text-slate-900 mb-2">タイムテーブル（当日進行表）</h3>
                     <p class="text-xs text-slate-600 leading-relaxed">
                         時間スロット×担当レーンの俯瞰グリッドで運行状況を即座に把握。交通規制（通行止め）やござ市開催ステータスと完全連動。
                     </p>

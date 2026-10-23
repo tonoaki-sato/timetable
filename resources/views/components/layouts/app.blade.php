@@ -106,8 +106,8 @@
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('timetable.index') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">⏱️</span>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold">全体マトリクス</div>
-                                            <p class="text-[10px] {{ request()->routeIs('timetable.index') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">時間帯×レーンの全体進行状況表</p>
+                                            <div class="text-xs font-bold">タイムテーブル</div>
+                                            <p class="text-[10px] {{ request()->routeIs('timetable.index') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">時間帯×レーンの当日進行表（帳票グリッド）</p>
                                         </div>
                                     </a>
                                 </div>
@@ -201,7 +201,7 @@
             </a>
             <a href="{{ route('timetable.index') }}" class="flex flex-col items-center py-1 px-2 whitespace-nowrap {{ request()->routeIs('timetable.index') ? 'text-indigo-400 font-bold' : 'text-slate-400 hover:text-white' }}">
                 <span class="text-base">⏱️</span>
-                <span class="text-[10px] mt-0.5">マトリクス</span>
+                <span class="text-[10px] mt-0.5">タイムテーブル</span>
             </a>
             <a href="{{ route('staff.index') }}" class="flex flex-col items-center py-1 px-2 whitespace-nowrap {{ request()->routeIs('staff.*') ? 'text-indigo-400 font-bold' : 'text-slate-400 hover:text-white' }}">
                 <span class="text-base">👷</span>

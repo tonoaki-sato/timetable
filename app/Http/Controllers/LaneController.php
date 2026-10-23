@@ -38,8 +38,14 @@ class LaneController extends Controller
     {
         $lane = $timetable->lanes()->create($request->validated());
 
+        if ($request->input('redirect_to') === 'matrix') {
+            return redirect()->route('timetable.index', ['timetable_id' => $timetable->id])
+                ->with('success', "新しい担当班（レーン）「{$lane->name}」を追加しました。");
+        }
+
         return redirect()->route('timetables.lanes.index', $timetable)
             ->with('success', "担当班（レーン）「{$lane->name}」を追加しました。");
+
     }
 
     /**

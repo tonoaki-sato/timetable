@@ -33,7 +33,7 @@
                 </div>
             </div>
             <a href="{{ route('timetable.index') }}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5">
-                <span>📅 タイムテーブル全体マトリクスへ</span>
+                <span>⏱️ タイムテーブル（当日進行表）へ</span>
             </a>
         </div>
     </div>

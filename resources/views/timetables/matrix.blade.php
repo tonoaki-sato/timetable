@@ -1,87 +1,116 @@
-<x-layouts.app title="運行タイムテーブル全体マトリクス">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<x-layouts.app title="タイムテーブル（当日進行表）">
+<div class="max-w-[1700px] mx-auto px-2 sm:px-4 lg:px-6 py-4 space-y-4">
 
-    <!-- 1. ヘッダー & 運行日セレクター -->
-    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-lg border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <!-- 印刷用ヘッダー（印刷時のみ表示） -->
+    <div class="hidden print:block text-center pb-2 border-b-2 border-black mb-2">
+        <h1 class="text-xl font-bold tracking-tight text-black">
+            {{ $selectedTimetable?->name ?? 'タイムテーブル（当日進行表）' }}
+            @if($selectedTimetable?->target_date)
+            <span class="text-base font-normal ml-2">({{ $selectedTimetable->target_date->format('Y年m月d日') }})</span>
+            @endif
+        </h1>
+        <div class="flex justify-between text-xs text-slate-700 mt-1">
+            <span>運行時間: {{ substr($selectedTimetable?->start_time ?? '07:00', 0, 5) }} 〜 {{ substr($selectedTimetable?->end_time ?? '19:30', 0, 5) }}</span>
+            <span>出力日時: {{ now()->format('Y/m/d H:i') }}</span>
+        </div>
+    </div>
+
+    <!-- 1. ヘッダー & 運行日セレクター & クイックアクション（画面表示用） -->
+    <div class="print:hidden bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-5 text-white shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <div class="flex items-center space-x-2 mb-2">
-                <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-                    ⏱️ 本部運行司令マトリクス
+            <div class="flex items-center space-x-2 mb-1.5">
+                <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                    ⏱️ タイムテーブル（当日進行表）
                 </span>
                 <span class="text-xs text-slate-300">
                     現在時刻: <strong class="font-mono text-emerald-400">{{ $nowTime }}</strong>
                 </span>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
-                運行タイムテーブル全体マトリクス
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight">
+                {{ $selectedTimetable?->name ?? '運行タイムテーブル' }}
             </h1>
             <p class="text-xs text-slate-300 mt-1 max-w-2xl">
-                全担当班（レーン）の時系列作業動態と現場スタッフのアテンド充足状況を一元的に俯瞰します。
+                各担当班（レーン）の時系列作業動態・道路規制・まつり運行を30分刻みで横断俯瞰します。
             </p>
         </div>
 
-        <!-- KPIサマリー -->
-        <div class="flex flex-wrap items-center gap-3 shrink-0">
-            <div class="bg-slate-800/80 backdrop-blur px-4 py-2.5 rounded-xl border border-slate-700 text-center min-w-[110px]">
+        <!-- KPIサマリー & クイックアクションボタン -->
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-700 text-center min-w-[90px]">
                 <div class="text-[10px] text-slate-400 font-bold uppercase">全タスク</div>
-                <div class="text-xl font-bold font-mono text-white">{{ $tasksCount }} <span class="text-xs font-normal text-slate-400">件</span></div>
+                <div class="text-lg font-bold font-mono text-white">{{ $tasksCount }} <span class="text-[10px] font-normal text-slate-400">件</span></div>
             </div>
 
-            <div class="bg-slate-800/80 backdrop-blur px-4 py-2.5 rounded-xl border border-slate-700 text-center min-w-[130px]">
-                <div class="text-[10px] text-slate-400 font-bold uppercase">人員充足タスク</div>
-                <div class="text-xl font-bold font-mono {{ $satisfiedTasksCount === $tasksCount && $tasksCount > 0 ? 'text-emerald-400' : 'text-amber-400' }}">
+            <div class="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-700 text-center min-w-[110px]">
+                <div class="text-[10px] text-slate-400 font-bold uppercase">人員充足</div>
+                <div class="text-lg font-bold font-mono {{ $satisfiedTasksCount === $tasksCount && $tasksCount > 0 ? 'text-emerald-400' : 'text-amber-400' }}">
                     {{ $satisfiedTasksCount }} / {{ $tasksCount }}
                 </div>
             </div>
 
-            <div class="bg-slate-800/80 backdrop-blur px-4 py-2.5 rounded-xl border border-slate-700 text-center min-w-[130px]">
+            <div class="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-700 text-center min-w-[110px]">
                 <div class="text-[10px] text-slate-400 font-bold uppercase">人員配置総数</div>
-                <div class="text-xl font-bold font-mono {{ $totalAssigned >= $totalRequired && $totalRequired > 0 ? 'text-emerald-400' : 'text-indigo-300' }}">
-                    {{ $totalAssigned }} / {{ $totalRequired }} <span class="text-xs font-normal text-slate-400">名</span>
+                <div class="text-lg font-bold font-mono {{ $totalAssigned >= $totalRequired && $totalRequired > 0 ? 'text-emerald-400' : 'text-indigo-300' }}">
+                    {{ $totalAssigned }} / {{ $totalRequired }} <span class="text-[10px] font-normal text-slate-400">名</span>
                 </div>
             </div>
+
+            <!-- 印刷・PDF保存ボタン -->
+            <button type="button" onclick="window.print()"
+                class="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
+                <span>🖨️</span>
+                <span>A4横 印刷 / PDF保存</span>
+            </button>
         </div>
     </div>
 
-    <!-- 2. 運行日タブ選択 ＆ クイック操作 -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
+    <!-- 2. 運行日タブ & 操作ツールバー -->
+    <div class="print:hidden flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 pb-3">
         <!-- 運行日タブ -->
         <div class="flex flex-wrap items-center gap-2">
             @forelse($timetables as $tt)
             <a href="{{ route('timetable.index', ['timetable_id' => $tt->id]) }}"
-                class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ $selectedTimetable?->id === $tt->id ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-600/30' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}">
+                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ $selectedTimetable?->id === $tt->id ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-600/30' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}">
                 <span>📅 {{ $tt->target_date?->format('m/d') }}</span>
                 <span>{{ $tt->name }}</span>
                 @if($tt->status === 'active')
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="現在運行中"></span>
                 @endif
             </a>
             @empty
-            <span class="text-xs text-slate-400">運行日がまだ登録されていません</span>
+            <span class="text-xs text-slate-400">運行日が登録されていません</span>
             @endforelse
         </div>
 
-        <!-- リンク操作 -->
+        <!-- アクションリンク群 -->
         @if($selectedTimetable)
-        <div class="flex items-center space-x-2">
-            <a href="{{ route('timetables.lanes.index', $selectedTimetable) }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
-                <span>🏷️</span>
-                <span>担当班（レーン）管理</span>
-            </a>
+        <div class="flex flex-wrap items-center gap-2">
+            @can('create', App\Models\Lane::class)
+            <button type="button" onclick="openLaneModal()"
+                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                <span>➕</span>
+                <span>担当班を追加</span>
+            </button>
+            @endcan
 
             @can('create', App\Models\TimetableTask::class)
             <a href="{{ route('timetable-tasks.create', ['timetable_id' => $selectedTimetable->id]) }}"
-                class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1">
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1">
                 <span>➕</span>
                 <span>タスク追加</span>
             </a>
             @endcan
 
+            <a href="{{ route('timetables.lanes.index', $selectedTimetable) }}"
+                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                <span>🏷️</span>
+                <span>担当班管理</span>
+            </a>
+
             <a href="{{ route('timetables.show', $selectedTimetable) }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
                 <span>📋</span>
-                <span>運行日詳細一覧</span>
+                <span>一覧詳細</span>
             </a>
         </div>
         @endif
@@ -100,161 +129,514 @@
     </div>
     @else
 
-    <!-- 3. マトリクス表示（レーン別 時系列カード表示） -->
-    <div class="space-y-6">
-        @foreach($lanes as $lane)
-        @php
-            $laneId = is_object($lane) ? $lane->id : $lane;
-            $laneTasks = $tasksByLane[$laneId] ?? collect();
-            $classes = is_object($lane) ? $lane->color_classes : ['badge' => 'bg-slate-100 text-slate-800 border-slate-300', 'border' => 'border-slate-300'];
-            $laneName = is_object($lane) ? $lane->name : $lane;
-            $laneIcon = is_object($lane) ? ($lane->icon ?: '📋') : '📋';
-            $leadStaff = is_object($lane) ? $lane->leadStaff : null;
-        @endphp
+    <!-- 3. 担当班（レーン）随時追加対応: 絞り込みフィルターバー & 横スクロールナビゲーション -->
+    <div class="print:hidden bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+        <!-- プリセット切り替え & 班チップ -->
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-slate-700 flex items-center mr-1">
+                <span>🔍 表示班:</span>
+            </span>
 
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <!-- レーンヘッダー -->
-            <div class="p-4 bg-slate-50/80 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border shadow-2xs {{ $classes['badge'] }}">
-                        <span class="mr-1.5">{{ $laneIcon }}</span>
-                        <span>{{ $laneName }}</span>
-                    </span>
+            <!-- プリセットボタン -->
+            <button type="button" onclick="filterLanesPreset('all')"
+                id="btn-preset-all"
+                class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white border border-indigo-600 shadow-2xs transition">
+                全表示 ({{ $lanes->count() }})
+            </button>
+            <button type="button" onclick="filterLanesPreset('core')"
+                id="btn-preset-core"
+                class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 transition">
+                主要5班（PDF準拠）
+            </button>
+            <button type="button" onclick="filterLanesPreset('mine')"
+                id="btn-preset-mine"
+                class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 transition">
+                マイ担当班
+            </button>
 
-                    <!-- 主担当（現場リーダー）バッジ表示 -->
-                    @if($leadStaff)
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs bg-white text-slate-700 border border-slate-200 shadow-2xs font-medium">
-                        <span class="mr-1">👤 主担当:</span>
-                        <strong class="text-slate-900 font-bold">{{ $leadStaff->name }}</strong>
-                        @if($leadStaff->affiliation)
-                        <span class="text-slate-400 text-[10px] ml-1">({{ $leadStaff->affiliation }})</span>
-                        @endif
-                    </span>
-                    @else
-                    <a href="{{ route('timetables.lanes.index', $selectedTimetable) }}"
-                        class="inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition font-medium">
-                        <span class="mr-1">👤 主担当:</span>
-                        <span>未設定</span>
-                        <span class="ml-1 text-[10px] underline">設定する →</span>
-                    </a>
+            <span class="h-4 w-px bg-slate-300 mx-1"></span>
+
+            <!-- 各班のチップ（ON/OFF トグル） -->
+            <div class="flex flex-wrap items-center gap-1.5" id="lane-filter-chips">
+                @foreach($lanes as $lane)
+                @php
+                    $leadName = $lane->leadStaff ? (explode(' ', $lane->leadStaff->name)[0] ?? $lane->leadStaff->name) : '';
+                    $isCoreLane = in_array($lane->name, ['衛生', 'カラーコーン', '給水設備', '巡回', 'ポスター/ステカン', 'ステカン', 'ポスター'], true);
+                @endphp
+                <button type="button"
+                    onclick="toggleLaneColumn({{ $lane->id }})"
+                    id="chip-lane-{{ $lane->id }}"
+                    data-lane-id="{{ $lane->id }}"
+                    data-lane-name="{{ $lane->name }}"
+                    data-is-core="{{ $isCoreLane ? '1' : '0' }}"
+                    data-lead-id="{{ $lane->lead_staff_id ?? '' }}"
+                    class="lane-chip inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border transition bg-white text-slate-800 border-slate-300 hover:border-indigo-400">
+                    <span class="mr-1 text-[10px] text-emerald-600 font-bold">✔</span>
+                    <span>{{ $lane->name }}</span>
+                    @if($leadName)
+                    <span class="text-slate-400 text-[10px] ml-0.5">({{ $leadName }})</span>
+                    @endif
+                </button>
+                @endforeach
+            </div>
+        </div>
+
+        <!-- 横スクロール補助ナビ -->
+        <div class="flex items-center space-x-2 shrink-0">
+            <span class="text-xs text-slate-500 font-mono" id="lane-count-indicator">
+                全 {{ $lanes->count() }} 班表示中
+            </span>
+            <div class="inline-flex rounded-lg border border-slate-300 bg-white p-0.5">
+                <button type="button" onclick="scrollGrid(-250)"
+                    title="左へスクロール"
+                    class="px-2 py-1 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-xs font-bold transition">
+                    ◀ 前の班
+                </button>
+                <button type="button" onclick="scrollGrid(250)"
+                    title="右へスクロール"
+                    class="px-2 py-1 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-xs font-bold transition">
+                    次の班 ▶
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. タイムテーブル帳票グリッド（PDFレイアウト完全再現） -->
+    <div id="timetable-grid-container" class="relative bg-white rounded-xl border-2 border-slate-800 shadow-sm overflow-x-auto max-h-[calc(100vh-210px)] print:max-h-none print:overflow-visible print:border print:border-black">
+        <table class="w-full border-collapse text-left border-spacing-0 select-text font-sans">
+            <!-- テーブルヘッダー（Sticky Top ＆ 左4列 Sticky Left） -->
+            <thead class="sticky top-0 z-30 bg-slate-100 print:static">
+                <tr class="border-b-2 border-slate-800 text-slate-900 text-xs">
+                    <!-- 1. 日付列（最左端固定） -->
+                    <th scope="col"
+                        class="sticky left-0 z-40 bg-slate-200 border-r border-b-2 border-slate-800 p-2 text-center font-bold w-[65px] min-w-[65px] print:static print:w-[50px] print:border-black">
+                        日付
+                    </th>
+
+                    <!-- 2. 時間列（固定） -->
+                    <th scope="col"
+                        class="sticky left-[65px] z-40 bg-slate-200 border-r border-b-2 border-slate-800 p-2 text-center font-bold w-[65px] min-w-[65px] print:static print:w-[55px] print:border-black">
+                        時間
+                    </th>
+
+                    <!-- 3. 道路列（固定） -->
+                    <th scope="col"
+                        class="sticky left-[130px] z-40 bg-slate-200 border-r border-b-2 border-slate-800 p-2 text-center font-bold w-[75px] min-w-[75px] print:static print:w-[65px] print:border-black">
+                        道路
+                    </th>
+
+                    <!-- 4. まつり列（固定・右側に濃い境界線） -->
+                    <th scope="col"
+                        class="sticky left-[205px] z-40 bg-slate-200 border-r-2 border-b-2 border-slate-800 p-2 text-center font-bold w-[75px] min-w-[75px] print:static print:w-[65px] print:border-r-2 print:border-black shadow-xs">
+                        まつり
+                    </th>
+
+                    <!-- 5. 各担当班（レーン）列ヘッダー -->
+                    @foreach($lanes as $lane)
+                    @php
+                        $leadStaff = $lane->leadStaff;
+                        $leadName = $leadStaff ? (explode(' ', $leadStaff->name)[0] ?? $leadStaff->name) : '';
+                    @endphp
+                    <th scope="col"
+                        data-lane-id="{{ $lane->id }}"
+                        class="lane-col-{{ $lane->id }} border-r border-b-2 border-slate-800 bg-slate-100 p-2 font-bold min-w-[190px] w-[210px] print:min-w-[140px] print:w-auto print:border-black">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-1 truncate">
+                                <span>{{ $lane->icon ?: '📋' }}</span>
+                                <span class="text-xs text-slate-900 font-bold truncate">
+                                    {{ $lane->name }}
+                                    @if($leadName)
+                                    <span class="text-indigo-800 font-semibold font-sans">（{{ $leadName }}さん）</span>
+                                    @endif
+                                </span>
+                            </div>
+                            @can('update', $lane)
+                            <a href="{{ route('timetables.lanes.index', $selectedTimetable) }}"
+                                title="レーン設定"
+                                class="print:hidden text-[11px] text-slate-400 hover:text-indigo-600 transition">
+                                ⚙️
+                            </a>
+                            @endcan
+                        </div>
+                    </th>
+                    @endforeach
+
+                    <!-- 6. ➕ クイックレーン追加ボタン列 -->
+                    <th scope="col" class="print:hidden border-b-2 border-slate-800 bg-slate-50 p-2 text-center w-[60px] min-w-[60px]">
+                        @can('create', App\Models\Lane::class)
+                        <button type="button" onclick="openLaneModal()"
+                            title="新しい担当班を追加"
+                            class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded text-xs font-bold transition cursor-pointer">
+                            ➕
+                        </button>
+                        @endcan
+                    </th>
+                </tr>
+            </thead>
+
+            <!-- テーブル本体（30分刻みスロット行） -->
+            <tbody class="divide-y divide-slate-300 print:divide-black">
+                @foreach($timeSlots as $sIdx => $slot)
+                <tr class="border-b border-slate-400 hover:bg-slate-50/60 transition-colors print:border-black">
+                    <!-- 1. 日付セル（全スロット数分、初回のみ縦結合） -->
+                    @if($loop->first)
+                    <td rowspan="{{ count($timeSlots) }}"
+                        class="sticky left-0 z-20 bg-slate-100 border-r border-slate-800 p-2 text-center font-bold text-xs text-slate-800 align-middle print:static print:border-black">
+                        <div class="[writing-mode:vertical-rl] tracking-widest mx-auto font-bold text-sm">
+                            {{ $selectedTimetable->target_date?->format('m/d') }} {{ $selectedTimetable->name }}
+                        </div>
+                    </td>
                     @endif
 
-                    <span class="text-xs text-slate-500 font-medium">
-                        全 <strong class="text-slate-800 font-mono">{{ $laneTasks->count() }}</strong> 件のタスク
-                    </span>
-                </div>
+                    <!-- 2. 時間セル（30分刻み） -->
+                    <td class="sticky left-[65px] z-20 bg-slate-50 border-r border-slate-700 p-2 text-center font-mono font-bold text-xs text-slate-900 print:static print:border-black">
+                        {{ $slot['time'] }}
+                    </td>
 
-                @can('create', App\Models\TimetableTask::class)
-                <a href="{{ route('timetable-tasks.create', ['timetable_id' => $selectedTimetable->id, 'lane_id' => is_object($lane) ? $lane->id : null, 'lane' => $laneName]) }}"
-                    class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition shrink-0">
-                    <span>➕</span>
-                    <span>このレーンにタスクを追加</span>
-                </a>
-                @endcan
-            </div>
+                    <!-- 3. 道路列（車両通行止め） -->
+                    <td class="sticky left-[130px] z-20 border-r border-slate-700 p-1 text-center text-xs print:static print:border-black {{ $slot['road']['status'] === 'closed' ? 'bg-rose-100 text-rose-800 font-bold print:bg-rose-50' : 'bg-white text-slate-400 font-mono' }}">
+                        {{ $slot['road']['label'] }}
+                    </td>
 
-            <!-- レーン内のタスクカード群（時系列順） -->
-            <div class="p-4">
-                @if($laneTasks->isEmpty())
-                <div class="py-6 text-center text-xs text-slate-400">
-                    この班の作業タスクはまだ登録されていません。
-                </div>
-                @else
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach($laneTasks as $task)
-                    <div class="relative bg-white p-4 rounded-xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition group flex flex-col justify-between space-y-3">
-                        <div class="space-y-2">
-                            <!-- 時間帯 & 最優先バッジ -->
-                            <div class="flex items-center justify-between">
-                                <span class="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-md">
-                                    ⏱️ {{ substr($task->start_time, 0, 5) }} 〜 {{ substr($task->end_time, 0, 5) }}
-                                </span>
+                    <!-- 4. まつり列（開催中・右側に太線） -->
+                    <td class="sticky left-[205px] z-20 border-r-2 border-slate-800 p-1 text-center text-xs print:static print:border-r-2 print:border-black {{ $slot['festival']['status'] === 'active' ? 'bg-emerald-100 text-emerald-800 font-bold print:bg-emerald-50' : 'bg-white text-slate-400 font-mono' }}">
+                        {{ $slot['festival']['label'] }}
+                    </td>
 
-                                <div class="flex items-center space-x-1">
-                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                        {{ $task->lane }}
-                                    </span>
-                                    @if($task->is_critical)
-                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
-                                        🚨 最優先
-                                    </span>
+                    <!-- 5. 各担当班（レーン）のセル -->
+                    @foreach($lanes as $lane)
+                    @php
+                        $cell = $grid[$sIdx][$lane->id] ?? ['type' => 'empty', 'rowspan' => 1];
+                    @endphp
+
+                    @if($cell['type'] === 'task')
+                    @php
+                        $task = $cell['task'];
+                        $reqCount = $task->required_people_count;
+                        $isAtLeast = $task->is_at_least;
+                        $peopleLabel = $reqCount ? ($isAtLeast ? "【{$reqCount}名以上】" : "【{$reqCount}名】") : '';
+                    @endphp
+                    <td rowspan="{{ $cell['rowspan'] }}"
+                        data-lane-id="{{ $lane->id }}"
+                        class="lane-col-{{ $lane->id }} border-r border-slate-700 p-2 align-top bg-white hover:bg-indigo-50/50 transition border-b border-b-slate-700 print:border-black print:p-1.5">
+                        <div class="space-y-1.5 h-full flex flex-col justify-between">
+                            <div>
+                                <!-- 作業タイトル ＋ 人員規模 -->
+                                <div class="font-bold text-xs text-slate-900 leading-snug">
+                                    <a href="{{ route('timetable-tasks.show', $task) }}"
+                                        class="hover:text-indigo-600 transition hover:underline">
+                                        {{ $task->title }}
+                                    </a>
+                                    @if($peopleLabel)
+                                    <span class="font-bold text-indigo-700 ml-1">{{ $peopleLabel }}</span>
                                     @endif
-                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                        {{ $task->status_label }}
-                                    </span>
                                 </div>
-                            </div>
 
-                            <!-- タスク名 -->
-                            <h4 class="font-bold text-sm text-slate-900 group-hover:text-indigo-600 transition leading-snug">
-                                <a href="{{ route('timetable-tasks.show', $task) }}" class="focus:outline-none">
-                                    {{ $task->title }}
-                                </a>
-                            </h4>
+                                <!-- 作業指示概要・サブ作業箇条書き -->
+                                @if($task->content)
+                                <div class="text-[11px] text-slate-700 leading-tight mt-1 whitespace-pre-line border-l-2 border-slate-300 pl-1.5 py-0.5 print:text-[10px]">
+                                    {{ $task->content }}
+                                </div>
+                                @endif
 
-                            <!-- 場所 -->
-                            @if($task->location)
-                            <div class="text-[11px] text-slate-500 flex items-center space-x-1">
-                                <span>📍</span>
-                                <span>{{ $task->location }}</span>
-                            </div>
-                            @endif
-
-                            <!-- 作業指示概要 -->
-                            @if($task->content)
-                            <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                {{ $task->content }}
-                            </p>
-                            @endif
-                        </div>
-
-                        <!-- フッター: 人員充足インジケーター & アサインスタッフ -->
-                        <div class="pt-3 border-t border-slate-100 space-y-2">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[11px] text-slate-500 font-medium">人員充足状況:</span>
-                                @if($task->is_satisfied)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                    ✔ {{ $task->assigned_count }} / {{ $task->required_people_label }} (充足)
-                                </span>
-                                @else
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
-                                    ⚠️ {{ $task->assigned_count }} / {{ $task->required_people_label }} (不足 {{ $task->shortage_count }})
-                                </span>
+                                <!-- 場所情報 -->
+                                @if($task->location)
+                                <div class="text-[10px] text-slate-500 mt-1 flex items-center space-x-1">
+                                    <span>📍</span>
+                                    <span>{{ $task->location }}</span>
+                                </div>
                                 @endif
                             </div>
 
-                            <!-- アサインされたスタッフたち -->
-                            <div class="flex flex-wrap items-center gap-1">
-                                @forelse($task->assignments as $assignment)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700 border border-slate-200 font-medium"
-                                    title="{{ $assignment->staff?->name }} ({{ $assignment->attendance_status_label }})">
-                                    {{ $assignment->staff?->name }}
+                            <!-- 下部: 人員充足インジケーター & アサインスタッフ（画面表示用） -->
+                            <div class="pt-1 border-t border-slate-100 flex flex-wrap items-center justify-between gap-1 print:hidden">
+                                @if($task->is_satisfied)
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    ✔ 充足 ({{ $task->assigned_count }})
                                 </span>
-                                @empty
-                                <span class="text-[10px] text-slate-400">スタッフ未配置</span>
-                                @endforelse
-                            </div>
+                                @else
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                                    ⚠️ 不足 {{ $task->shortage_count }}名
+                                </span>
+                                @endif
 
-                            <!-- 詳細・アサイン操作リンク -->
-                            <div class="pt-1 text-right">
                                 <a href="{{ route('timetable-tasks.show', $task) }}"
-                                    class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition inline-flex items-center space-x-1">
-                                    <span>👥 人員アサイン・出欠管理</span>
-                                    <span>→</span>
+                                    class="text-[10px] text-indigo-600 font-bold hover:underline">
+                                    詳細 →
                                 </a>
                             </div>
-                        </div>
 
-                    </div>
+                            <!-- 印刷時のアサインスタッフ簡潔表示 -->
+                            @if($task->assignments->isNotEmpty())
+                            <div class="hidden print:block text-[9px] text-slate-600 border-t border-dotted border-slate-300 pt-0.5">
+                                スタッフ: {{ $task->assignments->map(fn($a) => $a->staff?->name)->filter()->implode(', ') }}
+                            </div>
+                            @endif
+                        </div>
+                    </td>
+
+                    @elseif($cell['type'] === 'empty')
+                    <!-- 空きスロット（PDF準拠: ハイフン表示 & ホバーでタスク作成リンク） -->
+                    <td data-lane-id="{{ $lane->id }}"
+                        class="lane-col-{{ $lane->id }} border-r border-slate-700 p-2 text-center align-middle bg-white hover:bg-slate-50 transition border-b border-b-slate-400 group print:border-black">
+                        <div class="relative flex items-center justify-center">
+                            <span class="text-slate-400 font-mono text-xs group-hover:opacity-30 transition">
+                                -
+                            </span>
+                            @can('create', App\Models\TimetableTask::class)
+                            <a href="{{ route('timetable-tasks.create', ['timetable_id' => $selectedTimetable->id, 'lane_id' => $lane->id, 'start_time' => $slot['time']]) }}"
+                                title="{{ $lane->name }}の{{ $slot['time'] }}にタスクを追加"
+                                class="print:hidden absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-bold text-indigo-600 bg-indigo-50/80 rounded transition">
+                                ➕
+                            </a>
+                            @endcan
+                        </div>
+                    </td>
+
+                    @elseif($cell['type'] === 'skip')
+                    <!-- rowspanで上位セルに結合されているためセルを描画しない -->
+                    @endif
                     @endforeach
+
+                    <!-- 6. ➕ 末尾列の空枠 -->
+                    <td class="print:hidden border-b border-slate-400 p-1 text-center text-slate-300">
+                        &nbsp;
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 5. 担当班（レーン）クイック追加モーダル（Vanilla JS） -->
+    <div id="laneModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-150">
+            <!-- モーダルヘッダー -->
+            <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span class="text-lg">🏷️</span>
+                    <h3 class="font-bold text-sm">新規担当班（レーン）を追加</h3>
                 </div>
-                @endif
+                <button type="button" onclick="closeLaneModal()"
+                    class="text-slate-400 hover:text-white text-lg font-bold transition">
+                    ✕
+                </button>
             </div>
+
+            <!-- フォーム -->
+            <form action="{{ route('timetables.lanes.store', $selectedTimetable) }}" method="POST" class="p-5 space-y-4">
+                @csrf
+                <input type="hidden" name="redirect_to" value="matrix">
+
+                <!-- レーン名 -->
+                <div>
+                    <label for="modal_lane_name" class="block text-xs font-bold text-slate-700 mb-1">
+                        担当班名（レーン名） <span class="text-rose-600">*</span>
+                    </label>
+                    <input type="text" id="modal_lane_name" name="name" required
+                        placeholder="例: 会場放送班、美化清掃班、救護班"
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- テーマカラー -->
+                    <div>
+                        <label for="modal_lane_color" class="block text-xs font-bold text-slate-700 mb-1">
+                            カラー <span class="text-rose-600">*</span>
+                        </label>
+                        <select id="modal_lane_color" name="color" required
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            @foreach($colorOptions as $val => $lbl)
+                            <option value="{{ $val }}" {{ $val === 'indigo' ? 'selected' : '' }}>{{ $lbl }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- アイコン -->
+                    <div>
+                        <label for="modal_lane_icon" class="block text-xs font-bold text-slate-700 mb-1">
+                            アイコン
+                        </label>
+                        <input type="text" id="modal_lane_icon" name="icon" value="📋"
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <!-- 主担当スタッフ（現場リーダー） -->
+                <div>
+                    <label for="modal_lane_lead" class="block text-xs font-bold text-slate-700 mb-1">
+                        主担当スタッフ（後から設定・変更可能）
+                    </label>
+                    <select id="modal_lane_lead" name="lead_staff_id"
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">-- 未設定（後で割り当てる） --</option>
+                        @foreach($activeStaff as $st)
+                        <option value="{{ $st->id }}">{{ $st->name }} {{ $st->affiliation ? "({$st->affiliation})" : '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- 表示順 -->
+                <div>
+                    <label for="modal_lane_order" class="block text-xs font-bold text-slate-700 mb-1">
+                        表示順（小さいほど左に配置） <span class="text-rose-600">*</span>
+                    </label>
+                    <input type="number" id="modal_lane_order" name="display_order"
+                        value="{{ ($lanes->max('display_order') ?? 0) + 10 }}" required min="0" max="9999"
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeLaneModal()"
+                        class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
+                        キャンセル
+                    </button>
+                    <button type="submit"
+                        class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                        担当班を追加して反映
+                    </button>
+                </div>
+            </form>
         </div>
-        @endforeach
     </div>
 
     @endif
 
 </div>
+
+<!-- スクリプト: レーン絞り込み・左右スクロール・モーダル操作（Vanilla JS） -->
+<script>
+    // モーダル開閉
+    function openLaneModal() {
+        document.getElementById('laneModal')?.classList.remove('hidden');
+    }
+    function closeLaneModal() {
+        document.getElementById('laneModal')?.classList.add('hidden');
+    }
+
+    // テーブル横スクロール操作
+    function scrollGrid(amount) {
+        const container = document.getElementById('timetable-grid-container');
+        if (container) {
+            container.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+    }
+
+    // レーン表示/非表示トグル
+    function toggleLaneColumn(laneId) {
+        const chip = document.getElementById('chip-lane-' + laneId);
+        const elements = document.querySelectorAll('.lane-col-' + laneId);
+        if (!chip || elements.length === 0) return;
+
+        const isCurrentlyVisible = !elements[0].classList.contains('hidden');
+
+        if (isCurrentlyVisible) {
+            // 非表示にする
+            elements.forEach(el => el.classList.add('hidden'));
+            chip.classList.add('opacity-40', 'bg-slate-100');
+            chip.classList.remove('border-indigo-400');
+            const check = chip.querySelector('span:first-child');
+            if (check) check.textContent = '✕';
+        } else {
+            // 表示する
+            elements.forEach(el => el.classList.remove('hidden'));
+            chip.classList.remove('opacity-40', 'bg-slate-100');
+            chip.classList.add('border-indigo-400');
+            const check = chip.querySelector('span:first-child');
+            if (check) check.textContent = '✔';
+        }
+
+        updateVisibleCount();
+        resetPresetButtons();
+    }
+
+    // プリセットフィルター適用
+    function filterLanesPreset(preset) {
+        const chips = document.querySelectorAll('.lane-chip');
+        const currentUserId = {{ auth()->id() ?? 'null' }};
+
+        chips.forEach(chip => {
+            const laneId = chip.getAttribute('data-lane-id');
+            const isCore = chip.getAttribute('data-is-core') === '1';
+            const leadId = chip.getAttribute('data-lead-id');
+            const elements = document.querySelectorAll('.lane-col-' + laneId);
+
+            let shouldShow = false;
+
+            if (preset === 'all') {
+                shouldShow = true;
+            } else if (preset === 'core') {
+                shouldShow = isCore;
+            } else if (preset === 'mine') {
+                shouldShow = leadId !== '';
+            }
+
+            if (shouldShow) {
+                elements.forEach(el => el.classList.remove('hidden'));
+                chip.classList.remove('opacity-40', 'bg-slate-100');
+                const check = chip.querySelector('span:first-child');
+                if (check) check.textContent = '✔';
+            } else {
+                elements.forEach(el => el.classList.add('hidden'));
+                chip.classList.add('opacity-40', 'bg-slate-100');
+                const check = chip.querySelector('span:first-child');
+                if (check) check.textContent = '✕';
+            }
+        });
+
+        // プリセットボタンスタイル更新
+        document.querySelectorAll('[id^="btn-preset-"]').forEach(btn => {
+            btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
+            btn.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
+        });
+        const activeBtn = document.getElementById('btn-preset-' + preset);
+        if (activeBtn) {
+            activeBtn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
+            activeBtn.classList.remove('bg-white', 'text-slate-700', 'border-slate-300');
+        }
+
+        updateVisibleCount();
+    }
+
+    function resetPresetButtons() {
+        document.querySelectorAll('[id^="btn-preset-"]').forEach(btn => {
+            btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
+            btn.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
+        });
+    }
+
+    function updateVisibleCount() {
+        const total = document.querySelectorAll('.lane-chip').length;
+        const hidden = document.querySelectorAll('.lane-chip.opacity-40').length;
+        const visible = total - hidden;
+        const indicator = document.getElementById('lane-count-indicator');
+        if (indicator) {
+            indicator.textContent = `全 ${total} 班中 ${visible} 班表示中`;
+        }
+    }
+</script>
+
+<style>
+/* 印刷用スタイル（A4横 Landscape） */
+@media print {
+    @page {
+        size: landscape;
+        margin: 6mm;
+    }
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 10px !important;
+    }
+    table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+    th, td {
+        border: 1px solid #000000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+</style>
 </x-layouts.app>

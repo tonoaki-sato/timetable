@@ -63,7 +63,6 @@ class Meeting extends Model
         return $this->belongsTo(Staff::class, 'staff_id');
     }
 
-
     /**
      * 登録ユーザーとのリレーション
      */
@@ -98,7 +97,7 @@ class Meeting extends Model
 
         $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
         $weekday = $weekdayNames[$this->meeting_date->dayOfWeek] ?? '';
-        $dateStr = $this->meeting_date->format('Y年n月j日') . "({$weekday})";
+        $dateStr = $this->meeting_date->format('Y年n月j日')."({$weekday})";
 
         return "{$dateStr} {$this->formatted_time_range}";
     }
