@@ -56,6 +56,12 @@ class TimetableSeederTest extends TestCase
         $this->assertSame(20, Lane::where('timetable_id', $timetableDay1->id)->where('name', '衛生')->value('display_order'));
         $this->assertSame(40, Lane::where('timetable_id', $timetableDay1->id)->where('name', 'カラーコーン')->value('display_order'));
 
+        // 主担当スタッフの設定（衛生=27: 有エ 喜一郎, カラーコーン=35: Jouko Karvonen, 道路清掃=null 等）が反映されていること
+        $this->assertSame(27, Lane::where('timetable_id', $timetableDay1->id)->where('name', '衛生')->value('lead_staff_id'));
+        $this->assertSame(35, Lane::where('timetable_id', $timetableDay1->id)->where('name', 'カラーコーン')->value('lead_staff_id'));
+        $this->assertSame(1, Lane::where('timetable_id', $timetableDay1->id)->where('name', '巡回')->value('lead_staff_id'));
+        $this->assertNull(Lane::where('timetable_id', $timetableDay1->id)->where('name', '道路清掃')->value('lead_staff_id'));
+
         // 最優先タスクの存在確認
         $criticalTask = TimetableTask::where('timetable_id', $timetableDay1->id)
             ->where('is_critical', true)
