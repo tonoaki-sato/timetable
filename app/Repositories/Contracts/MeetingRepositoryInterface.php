@@ -4,9 +4,17 @@ namespace App\Repositories\Contracts;
 
 use App\Models\Meeting;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 interface MeetingRepositoryInterface
 {
+    /**
+     * 直近の開催予定会議を取得
+     *
+     * @return Collection<int, Meeting>
+     */
+    public function getUpcomingMeetings(int $limit = 3): Collection;
+
     /**
      * 条件付き会議一覧の取得（開催予定または過去）
      */

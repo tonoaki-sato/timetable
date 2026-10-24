@@ -46,6 +46,16 @@ class MeetingService
     }
 
     /**
+     * 直近の開催予定会議を取得
+     *
+     * @return Collection<int, Meeting>
+     */
+    public function getUpcomingMeetings(int $limit = 3): Collection
+    {
+        return $this->meetingRepository->getUpcomingMeetings($limit);
+    }
+
+    /**
      * 新規会議の作成処理（登録者Userの紐付け含む）
      *
      * @param  array<string, mixed>  $data

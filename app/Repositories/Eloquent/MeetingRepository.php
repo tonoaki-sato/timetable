@@ -5,9 +5,23 @@ namespace App\Repositories\Eloquent;
 use App\Models\Meeting;
 use App\Repositories\Contracts\MeetingRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 class MeetingRepository implements MeetingRepositoryInterface
 {
+    /**
+     * 直近の開催予定会議を取得
+     *
+     * @return Collection<int, Meeting>
+     */
+    public function getUpcomingMeetings(int $limit = 3): Collection
+    {
+        return Meeting::with(['host'])
+            ->upcoming()
+            ->take($limit)
+            ->get();
+    }
+
     /**
      * 条件付き会議一覧の取得
      */

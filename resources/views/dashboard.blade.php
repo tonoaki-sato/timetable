@@ -181,8 +181,11 @@
 
         </div>
 
-        <!-- 右側1カラム: アラート監視 & 現場要請 -->
+        <!-- 右側1カラム: 会議日程 & アラート監視 & 現場要請 -->
         <div class="space-y-6">
+
+            <!-- 直近の会議・打合せ (最大3件) -->
+            <x-dashboard.upcoming-meetings-card :limit="3" />
 
             <!-- 1. 駐車場利用時間制約監視 (F-405) -->
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
