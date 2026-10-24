@@ -17,6 +17,31 @@ use Illuminate\View\View;
 class LaneController extends Controller
 {
     /**
+     * 担当班管理の対象運行計画選択画面の表示
+     */
+    public function select(): View|RedirectResponse
+    {
+        $this->authorize('viewAny', Lane::class);
+
+        $timetables = Timetable::with(['lanes.leadStaff'])
+            ->orderBy('target_date', 'asc')
+            ->get();
+
+        if ($timetables->isEmpty()) {
+            return redirect()->route('timetables.index')
+                ->with('info', '担当班を編成する前に、運行日を登録してください。');
+        }
+
+        if ($timetables->count() === 1) {
+            return redirect()->route('timetables.lanes.index', $timetables->first());
+        }
+
+        return view('lanes.select', [
+            'timetables' => $timetables,
+        ]);
+    }
+
+    /**
      * レーン一覧・管理画面の表示
      */
     public function index(Timetable $timetable): View
@@ -25,15 +50,15 @@ class LaneController extends Controller
 
         $lanes = $timetable->lanes()->with(['leadStaff', 'tasks'])->ordered()->get();
         $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
-        $otherTimetables = Timetable::where('id', '!=', $timetable->id)
-            ->orderBy('target_date', 'asc')
-            ->get();
+        $allTimetables = Timetable::orderBy('target_date', 'asc')->get();
+        $otherTimetables = $allTimetables->where('id', '!=', $timetable->id)->values();
 
         return view('lanes.index', [
             'timetable' => $timetable,
             'lanes' => $lanes,
             'activeStaff' => $activeStaff,
             'colorOptions' => Lane::COLOR_OPTIONS,
+            'allTimetables' => $allTimetables,
             'otherTimetables' => $otherTimetables,
         ]);
     }

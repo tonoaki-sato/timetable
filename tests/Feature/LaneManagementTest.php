@@ -419,4 +419,78 @@ class LaneManagementTest extends TestCase
         $this->assertDatabaseMissing('lanes', ['id' => $lane->id]);
         $this->assertDatabaseMissing('timetable_tasks', ['id' => $task->id]);
     }
+
+    /**
+     * 14. 運行計画が複数ある場合、/lanes で選択ハブ画面が表示されること
+     */
+    public function test_lanes_index_shows_timetable_selection_hub_when_multiple_timetables_exist(): void
+    {
+        $secondTimetable = Timetable::factory()->create([
+            'name' => '本祭2日目',
+            'target_date' => '2027-10-18',
+        ]);
+        $this->timetable->createDefaultLanes();
+        $secondTimetable->createDefaultLanes();
+
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('lanes.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('担当班（レーン）管理');
+        $response->assertSee('班編成や現場リーダー設定を行う運行計画（日程）を選択してください。');
+        $response->assertSee($this->timetable->name);
+        $response->assertSee($secondTimetable->name);
+        $response->assertSee(route('timetables.lanes.index', $this->timetable));
+        $response->assertSee(route('timetables.lanes.index', $secondTimetable));
+    }
+
+    /**
+     * 15. 運行計画が1件のみの場合、/lanes からその日程へ自動リダイレクトされること
+     */
+    public function test_lanes_index_redirects_directly_when_only_one_timetable_exists(): void
+    {
+        // setUpで $this->timetable の1件のみ作成されている
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('lanes.index'));
+
+        $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
+    }
+
+    /**
+     * 16. 運行計画が0件の場合、/lanes から運行日管理へ案内付きでリダイレクトされること
+     */
+    public function test_lanes_index_redirects_to_timetables_index_when_no_timetables_exist(): void
+    {
+        $this->timetable->delete();
+
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('lanes.index'));
+
+        $response->assertRedirect(route('timetables.index'));
+        $response->assertSessionHas('info', '担当班を編成する前に、運行日を登録してください。');
+    }
+
+    /**
+     * 17. 個別日程のレーン一覧画面で運行計画クイック切り替えタブが表示されること
+     */
+    public function test_lane_index_displays_timetable_quick_switch_tabs(): void
+    {
+        $secondTimetable = Timetable::factory()->create([
+            'name' => '本祭2日目',
+            'target_date' => '2027-10-18',
+        ]);
+        $this->timetable->createDefaultLanes();
+        $secondTimetable->createDefaultLanes();
+
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('timetables.lanes.index', $this->timetable));
+
+        $response->assertStatus(200);
+        $response->assertSee('運行計画:');
+        $response->assertSee($this->timetable->name);
+        $response->assertSee($secondTimetable->name);
+        $response->assertSee(route('timetables.lanes.index', $secondTimetable));
+        $response->assertSee('日程選択へ戻る');
+        $response->assertSee(route('lanes.index'));
+    }
 }

@@ -5,11 +5,12 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="flex items-center space-x-2 text-xs text-slate-500 mb-1">
-                <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition">
-                    📅 {{ $timetable->name }}
+                <a href="{{ route('lanes.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                    <span>🏷️</span>
+                    <span>担当班（レーン）管理</span>
                 </a>
                 <span>/</span>
-                <span>担当班（レーン）管理</span>
+                <span class="text-slate-700 font-bold">📅 {{ $timetable->name }}</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 flex items-center space-x-2">
                 <span>🏷️</span>
@@ -41,6 +42,34 @@
             </a>
         </div>
     </div>
+
+    <!-- 運行計画クイック切り替えタブ -->
+    @if(isset($allTimetables) && $allTimetables->count() > 1)
+    <div class="bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs flex flex-wrap items-center gap-1.5">
+        <span class="text-xs font-bold text-slate-500 mr-1.5 flex items-center space-x-1">
+            <span>📅</span>
+            <span>運行計画:</span>
+        </span>
+        @foreach($allTimetables as $tt)
+            @php
+                $isCurrent = $tt->id === $timetable->id;
+            @endphp
+            <a href="{{ route('timetables.lanes.index', $tt) }}"
+                class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition {{ $isCurrent ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200' }}">
+                <span>{{ $tt->target_date ? $tt->target_date->format('m/d') . ' ' : '' }}{{ $tt->name }}</span>
+                @if($tt->status === 'active')
+                    <span class="w-1.5 h-1.5 rounded-full {{ $isCurrent ? 'bg-emerald-300' : 'bg-emerald-500' }} animate-pulse"></span>
+                @endif
+                <span class="text-[10px] {{ $isCurrent ? 'text-indigo-200' : 'text-slate-400' }} font-mono">({{ $tt->lanes->count() }}班)</span>
+            </a>
+        @endforeach
+        <a href="{{ route('lanes.index') }}"
+            class="ml-auto inline-flex items-center space-x-1 text-xs font-bold text-slate-500 hover:text-indigo-600 transition px-2 py-1">
+            <span>日程選択へ戻る</span>
+            <span>→</span>
+        </a>
+    </div>
+    @endif
 
     <!-- アラートメッセージ -->
     @if(session('success'))

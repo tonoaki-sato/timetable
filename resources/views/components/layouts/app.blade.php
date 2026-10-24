@@ -153,8 +153,8 @@
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('lanes.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🏷️</span>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold">担当班・リーダー編成</div>
-                                            <p class="text-[10px] {{ request()->routeIs('lanes.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">衛生・コーン等の班編成と現場リーダー設定</p>
+                                            <div class="text-xs font-bold">担当班（レーン）管理</div>
+                                            <p class="text-[10px] {{ request()->routeIs('lanes.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">各日の班編成と現場リーダー設定</p>
                                         </div>
                                     </a>
                                     @php
@@ -367,8 +367,8 @@
                             <a href="{{ route('lanes.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('lanes.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">🏷️</span>
                                 <div class="min-w-0">
-                                    <span class="font-bold block truncate">担当班（レーン）</span>
-                                    <span class="text-[10px] text-slate-400 block truncate">リーダー設定</span>
+                                    <span class="font-bold block truncate">担当班（レーン）管理</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">班編成・リーダー設定</span>
                                 </div>
                             </a>
                             <a href="{{ route('calendar.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('calendar.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
