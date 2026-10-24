@@ -74,6 +74,7 @@ class StaffManagementTest extends TestCase
             'name' => '新規 太郎',
             'kana' => 'シンキ タロウ',
             'affiliation' => '一般公募',
+            'line_display_name' => 'しんき@実行委員',
             'is_active' => '1',
         ]);
 
@@ -82,6 +83,7 @@ class StaffManagementTest extends TestCase
             'name' => '新規 太郎',
             'kana' => 'シンキ タロウ',
             'affiliation' => '一般公募',
+            'line_display_name' => 'しんき@実行委員',
             'is_active' => true,
         ]);
     }
@@ -110,6 +112,7 @@ class StaffManagementTest extends TestCase
             'name' => '更新後 次郎',
             'kana' => 'コウシンゴ ジロウ',
             'affiliation' => '北町青年団',
+            'line_display_name' => 'こうしんご',
             'is_active' => '1',
         ]);
 
@@ -118,6 +121,7 @@ class StaffManagementTest extends TestCase
             'id' => $staff->id,
             'name' => '更新後 次郎',
             'affiliation' => '北町青年団',
+            'line_display_name' => 'こうしんご',
         ]);
     }
 

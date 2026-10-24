@@ -16,6 +16,12 @@
                 <span>担当班（レーン）管理</span>
             </a>
 
+            <a href="{{ route('timetables.print-assignments', $timetable) }}" target="_blank"
+                class="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                <span>🖨️</span>
+                <span>人員配置表印刷</span>
+            </a>
+
             @can('create', App\Models\TimetableTask::class)
             <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
                 class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1">

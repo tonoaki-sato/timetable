@@ -7,10 +7,13 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\StaffCsvController;
 use App\Http\Controllers\StaffJoinController;
+use App\Http\Controllers\StaffPrintController;
 use App\Http\Controllers\StaffShiftController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TimetableMatrixController;
+use App\Http\Controllers\TimetablePrintController;
 use App\Http\Controllers\TimetableTaskController;
 use App\Http\Controllers\UserController;
 use App\Models\Timetable;
@@ -27,9 +30,11 @@ Route::get('/join', [StaffJoinController::class, 'create'])->name('staff.join');
 Route::post('/join', [StaffJoinController::class, 'store'])->name('staff.join.store');
 Route::get('/join/completed', [StaffJoinController::class, 'completed'])->name('staff.join.completed');
 
-// 3. 現場マイタイムテーブル閲覧 & チェックインルート (トークン認証)
+// 3. 現場マイタイムテーブル閲覧 & チェックイン & 動態操作ルート (トークン認証)
 Route::get('/my/shift/{token}', [StaffShiftController::class, 'show'])->name('staff.myshift');
 Route::post('/my/shift/{token}/checkin', [StaffShiftController::class, 'checkIn'])->name('staff.myshift.checkin');
+Route::post('/my/shift/{token}/line-bind', [StaffShiftController::class, 'bindLine'])->name('staff.myshift.line-bind');
+Route::post('/my/shift/{token}/assignments/{assignment}/status', [StaffShiftController::class, 'updateAssignmentStatus'])->name('staff.myshift.assignment-status');
 
 // 4. URL紛失時のスタッフ照合ルート
 Route::get('/my/find', [StaffShiftController::class, 'showFindForm'])->name('staff.myshift.find');
@@ -61,11 +66,16 @@ Route::middleware('auth')->group(function () {
     // 会議・打ち合わせ専用スケジュール管理リソースルート
     Route::resource('meetings', MeetingController::class);
 
-    // 現場スタッフ（ボランティア）管理リソースルート
+    // 現場スタッフ（ボランティア）管理・印刷・CSVルート
+    Route::get('staff/export-csv', [StaffCsvController::class, 'export'])->name('staff.export-csv');
+    Route::post('staff/import-csv', [StaffCsvController::class, 'import'])->name('staff.import-csv');
+    Route::get('staff/print-cards', [StaffPrintController::class, 'printCards'])->name('staff.print-cards');
+    Route::get('staff/{staff}/print-card', [StaffPrintController::class, 'printSingleCard'])->name('staff.print-card');
     Route::post('staff/{staff}/regenerate-token', [StaffController::class, 'regenerateToken'])->name('staff.regenerate-token');
     Route::resource('staff', StaffController::class);
 
-    // タイムテーブル基本運行日リソースルート
+    // タイムテーブル基本運行日リソースルート & 帳票印刷
+    Route::get('timetables/{timetable}/print-assignments', [TimetablePrintController::class, 'printAssignments'])->name('timetables.print-assignments');
     Route::resource('timetables', TimetableController::class);
 
     // 担当班（レーン）管理

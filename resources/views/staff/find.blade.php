@@ -42,19 +42,26 @@
                        class="p-4 block bg-white hover:bg-slate-50 transition flex items-center justify-between">
                         <div>
                             <div class="font-bold text-sm text-slate-800">{{ $candidate->name }}</div>
-                            <div class="text-xs text-slate-500">
+                            <div class="text-xs text-slate-500 space-y-0.5 mt-1">
+                                @if($candidate->affiliation)
+                                    <div>🏢 所属: <strong class="text-slate-700">{{ $candidate->affiliation }}</strong></div>
+                                @endif
                                 @if($candidate->line_display_name)
-                                    LINE: {{ $candidate->line_display_name }}
-                                @elseif($candidate->affiliation)
-                                    所属: {{ $candidate->affiliation }}
-                                @else
-                                    登録日: {{ $candidate->created_at?->format('n月j日') }}
+                                    <div class="text-emerald-700 font-medium">💬 LINE: {{ $candidate->line_display_name }}</div>
+                                @endif
+                                @if(! $candidate->affiliation && ! $candidate->line_display_name)
+                                    <div>登録日: {{ $candidate->created_at?->format('n月j日') }}</div>
                                 @endif
                             </div>
                         </div>
                         <span class="text-indigo-600 text-xs font-bold">選択 →</span>
                     </a>
                     @endforeach
+                </div>
+                <div class="text-center pt-2">
+                    <a href="{{ route('staff.myshift.find') }}" class="text-xs text-slate-500 hover:text-slate-800 underline font-medium">
+                        ← 戻って条件を変更する
+                    </a>
                 </div>
             </div>
             @else
@@ -76,6 +83,15 @@
                     </label>
                     <input type="text" id="kana" name="kana" value="{{ old('kana') }}" required inputmode="katakana"
                            placeholder="例）ヤマダ タロウ"
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-base text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                </div>
+
+                <div>
+                    <label for="affiliation" class="block text-xs font-bold text-slate-700 mb-1.5">
+                        ご所属・団体名（任意）
+                    </label>
+                    <input type="text" id="affiliation" name="affiliation" value="{{ old('affiliation') }}"
+                           placeholder="例）青葉大学、中央商店街"
                            class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-base text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
                 </div>
 

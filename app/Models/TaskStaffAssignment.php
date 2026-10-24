@@ -28,6 +28,7 @@ class TaskStaffAssignment extends Model
     public const array ATTENDANCE_STATUSES = [
         'assigned' => '配置済',
         'checked_in' => '現場着・受付済',
+        'in_progress' => '着手中',
         'completed' => '完了',
         'absent' => '欠席・キャンセル',
     ];

@@ -78,7 +78,11 @@
                     {{ $task->assigned_count }} / {{ $task->required_people_label }}
                 </div>
                 <div class="mt-2">
-                    @if($task->is_satisfied)
+                    @if($task->assigned_count > $task->required_people_count)
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-400/30">
+                        ℹ 余剰: +{{ $task->assigned_count - $task->required_people_count }}名
+                    </span>
+                    @elseif($task->is_satisfied)
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                         ✔ 充足完了
                     </span>
@@ -126,9 +130,42 @@
             @endcan
         </div>
 
-        <!-- スタッフ新規割り当てフォーム -->
+        <!-- スタッフ新規割り当てフォーム & 重複警告バナー -->
         @can('update', $task)
-        <div class="p-5 bg-slate-50 border-b border-slate-200">
+        <div class="p-5 bg-slate-50 border-b border-slate-200 space-y-4">
+            @if(session('conflict_warning'))
+            <div class="p-4 bg-amber-50 border-2 border-amber-300 rounded-xl space-y-3 shadow-sm animate-pulse">
+                <div class="flex items-start space-x-3">
+                    <span class="text-2xl">⚠️</span>
+                    <div class="flex-1">
+                        <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider">同一時間帯のアサイン重複警告</h4>
+                        <p class="text-xs text-amber-800 font-medium mt-1">
+                            {{ session('conflict_warning') }}
+                        </p>
+                        <p class="text-[11px] text-amber-700 mt-1">
+                            業務上必要な場合、重複を承認してそのまま強制配置することができます。
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end space-x-3 pt-2 border-t border-amber-200">
+                    <a href="{{ route('timetable-tasks.show', $task) }}"
+                        class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition">
+                        キャンセル
+                    </a>
+                    <form action="{{ route('timetable-tasks.assign', $task) }}" method="POST" class="inline">
+                        @csrf
+                        <input type="hidden" name="staff_id" value="{{ session('conflict_staff_id') }}">
+                        <input type="hidden" name="role_description" value="{{ session('conflict_role_description') }}">
+                        <input type="hidden" name="force" value="1">
+                        <button type="submit"
+                            class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow transition cursor-pointer">
+                            ⚠️ 重複を承認して配置する
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @endif
+
             <form action="{{ route('timetable-tasks.assign', $task) }}" method="POST" class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
                 @csrf
                 <div class="flex-1">
@@ -139,8 +176,16 @@
                         class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <option value="">-- スタッフを選択してください --</option>
                         @foreach($activeStaff as $staff)
-                        <option value="{{ $staff->id }}">
-                            {{ $staff->name }} ({{ $staff->kana }}) - {{ $staff->affiliation ?: '所属なし' }}
+                        @php
+                            $ovTask = $conflictsMap[$staff->id] ?? null;
+                        @endphp
+                        <option value="{{ $staff->id }}" {{ old('staff_id') == $staff->id ? 'selected' : '' }}
+                            class="{{ $ovTask ? 'text-amber-800 bg-amber-50 font-bold' : '' }}">
+                            @if($ovTask)
+                                ⚠️ [重複中: {{ $ovTask->title }}] {{ $staff->name }} ({{ $staff->kana }}) - {{ $staff->affiliation ?: '所属なし' }}
+                            @else
+                                {{ $staff->name }} ({{ $staff->kana }}) - {{ $staff->affiliation ?: '所属なし' }}
+                            @endif
                         </option>
                         @endforeach
                     </select>
@@ -151,6 +196,7 @@
                         担当役割（任意）
                     </label>
                     <input type="text" id="role_description" name="role_description"
+                        value="{{ old('role_description') }}"
                         placeholder="例: チーフ、カラーコーン運搬、案内"
                         class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>

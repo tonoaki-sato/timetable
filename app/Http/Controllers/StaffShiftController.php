@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Services\StaffService;
 use Illuminate\Http\JsonResponse;
@@ -77,6 +78,7 @@ class StaffShiftController extends Controller
             'assignments' => $assignments,
             'currentTask' => $currentTask,
             'nextTask' => $nextTask,
+            'liffId' => config('services.line.liff_id', ''),
         ]);
     }
 
@@ -105,6 +107,86 @@ class StaffShiftController extends Controller
     }
 
     /**
+     * マイシフト画面からのLINEアカウントワンタップ紐付け
+     */
+    public function bindLine(Request $request, string $token): JsonResponse|RedirectResponse
+    {
+        $staff = $this->staffService->getStaffByToken($token);
+
+        if (! $staff || ! $staff->is_active) {
+            abort(404, '指定されたスタッフが見つかりません。');
+        }
+
+        $validated = $request->validate([
+            'line_user_id' => ['required', 'string', 'max:64'],
+            'line_display_name' => ['nullable', 'string', 'max:100'],
+            'line_picture_url' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $success = $this->staffService->bindLineProfile($staff, $validated);
+
+        if (! $success) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'このLINEアカウントは既に別のスタッフ情報に紐づけられています。',
+                    'errors' => [
+                        'line_user_id' => ['このLINEアカウントは既に別のスタッフ情報に紐づけられています。'],
+                    ],
+                ], 422);
+            }
+
+            return back()->withErrors(['line_user_id' => 'このLINEアカウントは既に別のスタッフ情報に紐づけられています。']);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'staff' => [
+                    'line_display_name' => $staff->fresh()->line_display_name,
+                ],
+                'line_display_name' => $staff->fresh()->line_display_name,
+            ]);
+        }
+
+        return redirect()->route('staff.myshift', ['token' => $token])
+            ->with('success', 'LINEアカウントとの連携が完了しました！');
+    }
+
+    /**
+     * 現場スタッフによる自身のタスク進捗更新（着手・完了報告）
+     */
+    public function updateAssignmentStatus(Request $request, string $token, TaskStaffAssignment $assignment): JsonResponse|RedirectResponse
+    {
+        $staff = $this->staffService->getStaffByToken($token);
+
+        if (! $staff || ! $staff->is_active) {
+            abort(404, '指定されたスタッフが見つかりません。');
+        }
+
+        if ($assignment->staff_id !== $staff->id) {
+            abort(403, 'ご自身の担当タスクのみ進捗を報告できます。');
+        }
+
+        $request->validate([
+            'status' => ['required', 'string', 'in:assigned,checked_in,in_progress,completed,absent'],
+        ]);
+
+        $status = $request->string('status')->toString();
+        $this->staffService->updateStaffAssignmentStatus($staff, $assignment->id, $status);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'status' => $status,
+                'status_label' => TaskStaffAssignment::ATTENDANCE_STATUSES[$status] ?? $status,
+            ]);
+        }
+
+        return redirect()->route('staff.myshift', ['token' => $token])
+            ->with('success', '作業進捗状況を更新しました。');
+    }
+
+    /**
      * URL紛失時の照合画面表示
      */
     public function showFindForm(): View
@@ -113,22 +195,32 @@ class StaffShiftController extends Controller
     }
 
     /**
-     * 氏名・フリガナによる照合処理
+     * 氏名・フリガナによる照合処理（所属による絞り込み対応）
      */
     public function find(Request $request): View|RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string'],
             'kana' => ['required', 'string'],
+            'affiliation' => ['nullable', 'string', 'max:100'],
         ], [
             'name.required' => 'お名前を入力してください。',
             'kana.required' => 'フリガナを入力してください。',
         ]);
 
-        $matched = $this->staffService->findByNameAndKana(
-            trim($request->input('name')),
-            trim($request->input('kana'))
-        );
+        $name = trim($request->input('name'));
+        $kana = trim($request->input('kana'));
+        $affiliation = trim($request->input('affiliation', ''));
+
+        $query = Staff::where('name', $name)
+            ->where('kana', $kana)
+            ->where('is_active', true);
+
+        if ($affiliation !== '') {
+            $query->where('affiliation', 'like', "%{$affiliation}%");
+        }
+
+        $matched = $query->get();
 
         if ($matched->isEmpty()) {
             return back()->withInput()->withErrors([
@@ -143,7 +235,7 @@ class StaffShiftController extends Controller
             return redirect()->route('staff.myshift', ['token' => $staff->access_token]);
         }
 
-        // 同姓同名が複数ある場合は選択肢を提示
+        // 同姓同名が複数ある場合は候補リストを提示
         return view('staff.find', [
             'candidates' => $matched,
         ]);

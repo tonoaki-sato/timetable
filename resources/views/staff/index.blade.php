@@ -10,17 +10,44 @@
             </p>
         </div>
 
-        <div class="flex items-center space-x-2">
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- 名札一括印刷 -->
+            <a href="{{ route('staff.print-cards') }}" target="_blank"
+                class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition">
+                <span>🖨️</span>
+                <span>名札カード一括印刷</span>
+            </a>
+
+            <!-- CSVエクスポート -->
+            <a href="{{ route('staff.export-csv') }}"
+                class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition">
+                <span>📥</span>
+                <span>CSV出力</span>
+            </a>
+
+            <!-- CSVインポートボタン & 隠しフォーム -->
+            @can('create', App\Models\Staff::class)
+            <form action="{{ route('staff.import-csv') }}" method="POST" enctype="multipart/form-data" class="inline" id="csvImportForm">
+                @csrf
+                <input type="file" name="file" id="csvFileInput" accept=".csv,text/csv" class="hidden" onchange="document.getElementById('csvImportForm').submit()">
+                <button type="button" onclick="document.getElementById('csvFileInput').click()"
+                    class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition cursor-pointer">
+                    <span>📤</span>
+                    <span>CSV取込</span>
+                </button>
+            </form>
+            @endcan
+
             <!-- LINE募集案内文コピーボタン -->
             <button type="button" id="copyInviteBtn" data-join-url="{{ route('staff.join') }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
                 <span>💬</span>
-                <span>LINE募集案内文コピー</span>
+                <span>LINE募集文コピー</span>
             </button>
 
             @can('create', App\Models\Staff::class)
             <a href="{{ route('staff.create') }}"
-                class="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
                 <span>➕</span>
                 <span>新規スタッフ登録</span>
             </a>

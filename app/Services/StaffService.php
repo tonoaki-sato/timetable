@@ -74,7 +74,7 @@ class StaffService
     }
 
     /**
-     * スタッフ本人によるセルフ登録
+     * スタッフ本人によるセルフ登録（既存台帳との自動照合・バインド対応）
      *
      * @param  array<string, mixed>  $data
      */
@@ -85,6 +85,44 @@ class StaffService
             $lineDisplayName = $data['manual_line_display_name'];
         }
 
+        // 1. LINE User IDによる既存照合
+        $existingStaff = null;
+        if (! empty($data['line_user_id'])) {
+            $existingStaff = $this->staffRepository->findByLineUserId($data['line_user_id']);
+        }
+
+        // 2. 氏名・フリガナによる既存台帳照合（本部先行登録スタッフとの結合）
+        if (! $existingStaff && ! empty($data['name']) && ! empty($data['kana'])) {
+            $matched = $this->staffRepository->findByNameAndKana($data['name'], $data['kana']);
+            if ($matched->count() === 1) {
+                $existingStaff = $matched->first();
+            }
+        }
+
+        // 3. 既存スタッフが存在する場合はLINE情報を統合バインド
+        if ($existingStaff) {
+            $updateData = [
+                'last_accessed_at' => now(),
+            ];
+
+            if (! empty($data['line_user_id']) && empty($existingStaff->line_user_id)) {
+                $updateData['line_user_id'] = $data['line_user_id'];
+            }
+
+            if (! empty($lineDisplayName)) {
+                $updateData['line_display_name'] = $lineDisplayName;
+            }
+
+            if (! empty($data['line_picture_url'])) {
+                $updateData['line_picture_url'] = $data['line_picture_url'];
+            }
+
+            $this->staffRepository->update($existingStaff, $updateData);
+
+            return $existingStaff->fresh();
+        }
+
+        // 4. 既存に該当しない場合は新規作成
         $attributes = [
             'name' => $data['name'],
             'kana' => $data['kana'],
@@ -96,6 +134,35 @@ class StaffService
         ];
 
         return $this->staffRepository->create($attributes);
+    }
+
+    /**
+     * マイシフト画面等からのLINEアカウント直接バインド
+     *
+     * @param  array{line_user_id: string, line_display_name?: ?string, line_picture_url?: ?string}  $data
+     */
+    public function bindLineProfile(Staff $staff, array $data): bool
+    {
+        // 既に他のスタッフに同一のLINE User IDが割り当てられていないか確認
+        $other = $this->staffRepository->findByLineUserId($data['line_user_id']);
+        if ($other && $other->id !== $staff->id) {
+            return false;
+        }
+
+        $updateData = [
+            'line_user_id' => $data['line_user_id'],
+            'last_accessed_at' => now(),
+        ];
+
+        if (! empty($data['line_display_name'])) {
+            $updateData['line_display_name'] = $data['line_display_name'];
+        }
+
+        if (! empty($data['line_picture_url'])) {
+            $updateData['line_picture_url'] = $data['line_picture_url'];
+        }
+
+        return $this->staffRepository->update($staff, $updateData);
     }
 
     /**
@@ -123,17 +190,45 @@ class StaffService
     }
 
     /**
-     * 当日現場到着チェックイン
+     * 当日現場到着チェックイン（打刻および当日第1タスク出欠連動）
      */
     public function checkInStaff(Staff $staff): bool
     {
         if ($staff->checked_in_at === null) {
-            return $this->staffRepository->update($staff, [
+            $this->staffRepository->update($staff, [
                 'checked_in_at' => now(),
             ]);
         }
 
+        // 当日運行日のタスクの中で最も早いタスクの出欠を checked_in に連動更新
+        $todayDate = now()->format('Y-m-d');
+        $firstAssignment = $staff->assignments()
+            ->whereHas('task.timetable', function ($q) use ($todayDate) {
+                $q->whereDate('target_date', $todayDate);
+            })
+            ->join('timetable_tasks', 'task_staff_assignments.timetable_task_id', '=', 'timetable_tasks.id')
+            ->orderBy('timetable_tasks.start_time', 'asc')
+            ->select('task_staff_assignments.*')
+            ->first();
+
+        if ($firstAssignment && $firstAssignment->attendance_status === 'assigned') {
+            $firstAssignment->update(['attendance_status' => 'checked_in']);
+        }
+
         return true;
+    }
+
+    /**
+     * 現場スタッフによる自身のタスク進捗更新（着手・完了報告）
+     */
+    public function updateStaffAssignmentStatus(Staff $staff, int $assignmentId, string $status): bool
+    {
+        $assignment = $staff->assignments()->find($assignmentId);
+        if (! $assignment) {
+            return false;
+        }
+
+        return $assignment->update(['attendance_status' => $status]);
     }
 
     /**

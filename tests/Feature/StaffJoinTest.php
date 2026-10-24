@@ -140,4 +140,37 @@ class StaffJoinTest extends TestCase
         $response->assertSee('私のタイムテーブルを見る');
         $response->assertSee($staff->access_token);
     }
+
+    /**
+     * 本部先行登録されたスタッフが後から/joinで登録した際、新規作成されず自動バインドされること (UC-104 / UC-106)
+     */
+    public function test_pre_registered_staff_is_automatically_bound_when_registering_via_join(): void
+    {
+        $existingStaff = Staff::factory()->create([
+            'name' => '鈴木 一郎',
+            'kana' => 'スズキ イチロウ',
+            'registered_via' => 'admin',
+            'line_user_id' => null,
+            'line_display_name' => null,
+        ]);
+
+        $initialCount = Staff::count();
+
+        $response = $this->post(route('staff.join.store'), [
+            'name' => '鈴木 一郎',
+            'kana' => 'スズキ イチロウ',
+            'line_user_id' => 'U99998888777766665555444433332222',
+            'line_display_name' => 'いちろう@鈴木組',
+            'line_picture_url' => 'https://example.com/ichirou.jpg',
+        ]);
+
+        $response->assertRedirect(route('staff.join.completed'));
+        $this->assertEquals($initialCount, Staff::count(), '新規レコードが作成されず既存レコードが再利用されること');
+
+        $existingStaff->refresh();
+        $this->assertSame('U99998888777766665555444433332222', $existingStaff->line_user_id);
+        $this->assertSame('いちろう@鈴木組', $existingStaff->line_display_name);
+        $this->assertSame('https://example.com/ichirou.jpg', $existingStaff->line_picture_url);
+        $this->assertNotNull($existingStaff->last_accessed_at);
+    }
 }

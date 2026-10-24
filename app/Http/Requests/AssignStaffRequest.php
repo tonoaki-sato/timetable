@@ -30,6 +30,7 @@ class AssignStaffRequest extends FormRequest
         return [
             'staff_id' => ['required', 'integer', 'exists:staff,id'],
             'role_description' => ['nullable', 'string', 'max:255'],
+            'force' => ['nullable', 'boolean'],
         ];
     }
 

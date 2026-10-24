@@ -11,7 +11,9 @@ use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
+use App\Services\ConflictDetectionService;
 use App\Services\TimetableTaskService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -19,7 +21,8 @@ use Illuminate\View\View;
 class TimetableTaskController extends Controller
 {
     public function __construct(
-        protected TimetableTaskService $taskService
+        protected TimetableTaskService $taskService,
+        protected ConflictDetectionService $conflictService
     ) {}
 
     /**
@@ -105,10 +108,12 @@ class TimetableTaskController extends Controller
 
         $detailedTask = $this->taskService->getTaskDetails($task->id) ?? $task;
         $activeStaff = $this->taskService->getActiveStaff();
+        $conflictsMap = $this->conflictService->getConflictsMapForStaffList($detailedTask, $activeStaff);
 
         return view('timetable_tasks.show', [
             'task' => $detailedTask,
             'activeStaff' => $activeStaff,
+            'conflictsMap' => $conflictsMap,
             'attendanceStatuses' => TaskStaffAssignment::ATTENDANCE_STATUSES,
         ]);
     }
@@ -160,19 +165,61 @@ class TimetableTaskController extends Controller
     }
 
     /**
-     * スタッフのタスク割り当て処理
+     * スタッフのタスク割り当て処理（重複検知および強制承認対応）
      */
-    public function assignStaff(AssignStaffRequest $request, TimetableTask $task): RedirectResponse
+    public function assignStaff(AssignStaffRequest $request, TimetableTask $task): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $task);
 
-        $this->taskService->assignStaff(
-            $task,
-            (int) $request->validated('staff_id'),
-            $request->validated('role_description')
-        );
+        $staffId = (int) $request->validated('staff_id');
+        $roleDescription = $request->validated('role_description');
+        $isForced = $request->boolean('force');
 
-        return back()->with('success', 'スタッフをタスクに割り当てました。');
+        // 同一時間帯の重複アサインを検知
+        $conflictingTask = $this->conflictService->checkConflict($task, $staffId);
+
+        if ($conflictingTask && ! $isForced) {
+            $conflictingLane = $conflictingTask->lane ?: '担当班未設定';
+            $startTime = substr($conflictingTask->start_time, 0, 5);
+            $endTime = substr($conflictingTask->end_time, 0, 5);
+            $warningMessage = "該当スタッフは同時刻（{$startTime}〜{$endTime}）の別タスク「{$conflictingTask->title}」（{$conflictingLane}）に既にアサインされています。";
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'has_conflict' => true,
+                    'message' => $warningMessage,
+                    'conflicting_task' => [
+                        'id' => $conflictingTask->id,
+                        'title' => $conflictingTask->title,
+                        'lane' => $conflictingLane,
+                        'start_time' => $startTime,
+                        'end_time' => $endTime,
+                    ],
+                ], 409);
+            }
+
+            return back()->with([
+                'conflict_warning' => $warningMessage,
+                'conflict_staff_id' => $staffId,
+                'conflict_role_description' => $roleDescription,
+                'conflict_task_title' => $conflictingTask->title,
+            ])->withInput();
+        }
+
+        $this->taskService->assignStaff($task, $staffId, $roleDescription);
+
+        $message = $conflictingTask
+            ? 'スタッフをタスクに割り当てました（重複を承認）。'
+            : 'スタッフをタスクに割り当てました。';
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+            ]);
+        }
+
+        return back()->with('success', $message);
     }
 
     /**
