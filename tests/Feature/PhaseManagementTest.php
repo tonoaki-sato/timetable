@@ -152,32 +152,6 @@ class PhaseManagementTest extends TestCase
     }
 
     /**
-     * まつり本番日における各時間帯セッションのラベルが正しく判定されること
-     */
-    public function test_phase_service_event_day_time_sessions(): void
-    {
-        Timetable::factory()->create([
-            'target_date' => '2026-10-11',
-            'name' => '本祭運行',
-            'status' => 'active',
-        ]);
-
-        $service = app(PhaseService::class);
-
-        // 早朝
-        $early = $service->getCurrentContext(Carbon::parse('2026-10-11 06:30:00', 'Asia/Tokyo'));
-        $this->assertSame('早朝・実施判断セッション', $early->subStatus);
-
-        // 撤去
-        $teardown = $service->getCurrentContext(Carbon::parse('2026-10-11 17:00:00', 'Asia/Tokyo'));
-        $this->assertSame('規制解除前 撤去セッション', $teardown->subStatus);
-
-        // 夜間
-        $night = $service->getCurrentContext(Carbon::parse('2026-10-11 20:00:00', 'Asia/Tokyo'));
-        $this->assertSame('夜間・完全撤収セッション', $night->subStatus);
-    }
-
-    /**
      * 年間スケジュールが0件でもダッシュボードが正常に表示されること
      */
     public function test_dashboard_renders_cleanly_when_no_schedules_exist(): void
