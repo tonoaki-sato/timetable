@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'start_time',
     'end_time',
     'status',
+    'road_periods',
+    'festival_periods',
     'created_by',
 ])]
 class Timetable extends Model
@@ -44,7 +46,103 @@ class Timetable extends Model
     {
         return [
             'target_date' => 'date',
+            'road_periods' => 'array',
+            'festival_periods' => 'array',
         ];
+    }
+
+    /**
+     * 指定時刻における道路状況を取得
+     *
+     * @return array{status: string, label: string}
+     */
+    public function getRoadStatusAt(string $timeStr): array
+    {
+        if (empty($this->road_periods)) {
+            return ['status' => 'open', 'label' => '-'];
+        }
+
+        foreach ($this->road_periods as $period) {
+            $start = substr($period['start_time'] ?? '', 0, 5);
+            $end = substr($period['end_time'] ?? '', 0, 5);
+
+            if ($start && $end && $timeStr >= $start && $timeStr < $end) {
+                return [
+                    'status' => $period['status'] ?? 'closed',
+                    'label' => $period['label'] ?? '通行止め',
+                ];
+            }
+        }
+
+        return ['status' => 'open', 'label' => '-'];
+    }
+
+    /**
+     * 指定時刻におけるまつり状況を取得
+     *
+     * @return array{status: string, label: string}
+     */
+    public function getFestivalStatusAt(string $timeStr): array
+    {
+        if (empty($this->festival_periods)) {
+            return ['status' => 'inactive', 'label' => '-'];
+        }
+
+        foreach ($this->festival_periods as $period) {
+            $start = substr($period['start_time'] ?? '', 0, 5);
+            $end = substr($period['end_time'] ?? '', 0, 5);
+
+            if ($start && $end && $timeStr >= $start && $timeStr < $end) {
+                return [
+                    'status' => $period['status'] ?? 'active',
+                    'label' => $period['label'] ?? '開催中',
+                ];
+            }
+        }
+
+        return ['status' => 'inactive', 'label' => '-'];
+    }
+
+    /**
+     * 車両通行止めが設定されているか判定
+     */
+    public function hasRoadClosure(): bool
+    {
+        if (empty($this->road_periods)) {
+            return false;
+        }
+
+        foreach ($this->road_periods as $period) {
+            if (($period['status'] ?? 'closed') === 'closed') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 道路通行止めの代表的な時間帯を取得
+     *
+     * @return array{start: string, end: string, label: string}|null
+     */
+    public function getPrimaryRoadClosureRange(): ?array
+    {
+        if (empty($this->road_periods)) {
+            return null;
+        }
+
+        foreach ($this->road_periods as $period) {
+            if (($period['status'] ?? 'closed') === 'closed') {
+                return [
+                    'start' => substr($period['start_time'] ?? '', 0, 5),
+                    'end' => substr($period['end_time'] ?? '', 0, 5),
+                    'label' => $period['label'] ?? '通行止め',
+                ];
+            }
+        }
+
+        return null;
     }
 
     /**

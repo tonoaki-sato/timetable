@@ -33,14 +33,14 @@ class TrafficRegulationService
         // 1. 本日開催の運行タイムテーブル（本番日判定）
         $timetable = Timetable::whereDate('target_date', $todayStr)->first();
 
-        if ($timetable === null) {
+        if ($timetable === null || ! $timetable->hasRoadClosure()) {
             $status = TrafficRegulationStatus::Inactive;
 
             return new TrafficRegulationContext(
                 status: $status,
                 badgeText: $status->badgeLabel(),
                 headline: $status->headline(),
-                subStatus: '一般車両通行中',
+                subStatus: '一般車両通行中（本日の車両規制はありません）',
                 isRoadClosed: false,
                 isAlertActive: false,
                 actionUrl: $actionUrl

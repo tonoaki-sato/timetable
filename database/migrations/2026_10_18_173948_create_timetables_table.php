@@ -12,18 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('timetables', function (Blueprint $table) {
-            $table->id();
-            $table->date('target_date')->unique();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->string('status', 30)->default('draft');
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-
-            // 2038年問題対策として DATETIME 型を採用
-            $table->dateTime('created_at')->nullable();
-            $table->dateTime('updated_at')->nullable();
+            $table->id()->comment('ID');
+            $table->date('target_date')->unique()->comment('対象日');
+            $table->string('name')->comment('タイムテーブル名');
+            $table->text('description')->nullable()->comment('説明');
+            $table->time('start_time')->comment('開始時間');
+            $table->time('end_time')->comment('終了時間');
+            $table->json('road_periods')->nullable()->comment('道路規制時間帯[]');
+            $table->json('festival_periods')->nullable()->comment('お祭り時間帯[]');
+            $table->string('status', 30)->default('draft')->comment('ステータス');
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->comment('作成者');
+            $table->dateTime('created_at')->nullable()->comment('作成日時');
+            $table->dateTime('updated_at')->nullable()->comment('更新日時');
         });
     }
 

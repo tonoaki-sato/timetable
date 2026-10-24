@@ -94,7 +94,8 @@
                 <textarea id="description" name="description" rows="3"
                     placeholder="交通規制の時間帯や各班の全体連絡事項など"
                     class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed">{{ old('description') }}</textarea>
-            </div>
+            <!-- 運行状況・時間帯指定（道路・まつり） -->
+            @include('timetables._periods_form', ['timetable' => null])
 
             <!-- ボタンエリア -->
             <div class="pt-4 border-t border-slate-200 flex items-center justify-end space-x-3">

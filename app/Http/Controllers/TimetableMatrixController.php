@@ -140,23 +140,19 @@ class TimetableMatrixController extends Controller
         while ($current->lte($end) && $count < 48) {
             $timeStr = $current->format('H:i');
 
-            // 道路規制判定（10:00 〜 17:30 まで「通行止め」）
-            $isRoadClosed = ($timeStr >= '10:00' && $timeStr <= '17:30');
+            $roadData = $timetable !== null
+                ? $timetable->getRoadStatusAt($timeStr)
+                : ['status' => 'open', 'label' => '-'];
 
-            // まつり開催中判定（11:00 〜 16:30 まで「開催中」）
-            $isFestivalActive = ($timeStr >= '11:00' && $timeStr <= '16:30');
+            $festivalData = $timetable !== null
+                ? $timetable->getFestivalStatusAt($timeStr)
+                : ['status' => 'inactive', 'label' => '-'];
 
             $slots[] = [
                 'time' => $timeStr,
                 'label' => $timeStr,
-                'road' => [
-                    'status' => $isRoadClosed ? 'closed' : 'open',
-                    'label' => $isRoadClosed ? '通行止め' : '-',
-                ],
-                'festival' => [
-                    'status' => $isFestivalActive ? 'active' : 'inactive',
-                    'label' => $isFestivalActive ? '開催中' : '-',
-                ],
+                'road' => $roadData,
+                'festival' => $festivalData,
             ];
 
             $current->addMinutes(30);

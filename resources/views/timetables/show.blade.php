@@ -74,6 +74,21 @@
                     <span class="px-2.5 py-0.5 rounded text-xs font-medium border {{ $statusBadge }}">
                         {{ $timetable->status_label }}
                     </span>
+
+                    @if(!empty($timetable->road_periods))
+                        @foreach($timetable->road_periods as $rp)
+                        <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30">
+                            🚧 {{ substr($rp['start_time'] ?? '', 0, 5) }}〜{{ substr($rp['end_time'] ?? '', 0, 5) }} {{ $rp['label'] ?? '通行止め' }}
+                        </span>
+                        @endforeach
+                    @endif
+                    @if(!empty($timetable->festival_periods))
+                        @foreach($timetable->festival_periods as $fp)
+                        <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                            🏮 {{ substr($fp['start_time'] ?? '', 0, 5) }}〜{{ substr($fp['end_time'] ?? '', 0, 5) }} {{ $fp['label'] ?? '開催中' }}
+                        </span>
+                        @endforeach
+                    @endif
                 </div>
 
                 <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
