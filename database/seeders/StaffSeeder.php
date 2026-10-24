@@ -49,6 +49,7 @@ class StaffSeeder extends Seeder
             ['id' => 34, 'name' => '山本 歩実', 'kana' => 'ヤマモト アユミ'],
             ['id' => 35, 'name' => 'Jouko Karvonen', 'kana' => 'ヨウコ カルヴォネン'],
             ['id' => 36, 'name' => '加藤 千晴', 'kana' => 'カトウ チハル'],
+            ['id' => 37, 'name' => '森 和成', 'kana' => 'モリ カズナリ'],
         ];
 
         foreach ($staffMembers as $data) {
