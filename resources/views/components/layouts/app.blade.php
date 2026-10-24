@@ -13,7 +13,7 @@
 <body class="min-h-full flex flex-col font-sans antialiased bg-slate-100/70">
 
     <!-- 本部ナビゲーションヘッダー -->
-    <header class="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-30 shadow-md">
+    <header class="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50 shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
 
