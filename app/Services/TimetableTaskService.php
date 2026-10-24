@@ -59,6 +59,17 @@ class TimetableTaskService
     }
 
     /**
+     * 複数スタッフをタスクに一括割り当て
+     *
+     * @param  array<int, int>  $staffIds
+     * @return Collection<int, TaskStaffAssignment>
+     */
+    public function bulkAssignStaff(TimetableTask $task, array $staffIds, ?string $roleDescription = null): Collection
+    {
+        return $this->taskRepository->bulkAssignStaff($task, $staffIds, $roleDescription);
+    }
+
+    /**
      * スタッフのタスク割り当て解除
      */
     public function removeStaff(TimetableTask $task, int $staffId): bool

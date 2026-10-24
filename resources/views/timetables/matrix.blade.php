@@ -38,6 +38,13 @@
         <!-- 右側: コンパクトなアクションボタン（A4横印刷のみ） -->
         @if($selectedTimetable)
         <div class="flex items-center gap-2 shrink-0">
+            <!-- スタッフタイムラインボタン -->
+            <a href="{{ route('timetables.staff-timeline', $selectedTimetable) }}"
+                class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-400/30 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs">
+                <span>👥</span>
+                <span>スタッフタイムライン</span>
+            </a>
+
             <!-- A4横 印刷 / PDF保存ボタン -->
             <button type="button" data-action="print"
                 class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5 cursor-pointer">
@@ -139,8 +146,7 @@
 
         <!-- リアルタイム現在時刻 赤ボーダーライン -->
         <div id="matrix-current-time-line"
-            class="hidden absolute left-0 right-0 pointer-events-none z-25 print:hidden transition-[top] duration-1000 ease-linear"
-            style="top: 0px;">
+            class="hidden absolute left-0 right-0 pointer-events-none z-25 print:hidden transition-[top] duration-1000 ease-linear top-0">
             <!-- 左端の現在時刻ピルバッジ -->
             <div class="absolute left-1 sm:left-2 -top-3 flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-rose-600 text-white font-mono text-[10px] font-bold shadow-md ring-1 ring-white">
                 <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
@@ -307,11 +313,34 @@
                                 </span>
                                 @endif
 
-                                <a href="{{ route('timetable-tasks.show', $task) }}"
-                                    class="text-[10px] text-indigo-600 font-bold hover:underline">
-                                    詳細 →
-                                </a>
+                                <div class="flex items-center space-x-1.5">
+                                    @can('update', $task)
+                                    <button type="button" data-action="open-quick-assign" data-task-id="{{ $task->id }}"
+                                        title="スタッフをクイック配置"
+                                        class="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded text-[10px] font-bold transition cursor-pointer">
+                                        👥 配置
+                                    </button>
+                                    @endcan
+                                    <a href="{{ route('timetable-tasks.show', $task) }}"
+                                        class="text-[10px] text-slate-500 hover:text-indigo-600 font-bold hover:underline">
+                                        詳細 →
+                                    </a>
+                                </div>
                             </div>
+
+                            <!-- 画面表示用アサインスタッフチップ -->
+                            @if($task->assignments->isNotEmpty())
+                            <div class="flex flex-wrap gap-1 mt-1 print:hidden">
+                                @foreach($task->assignments->take(3) as $assignment)
+                                <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] bg-slate-100 text-slate-700 border border-slate-200 truncate max-w-[80px]" title="{{ $assignment->staff?->name }} ({{ $assignment->role_description ?: '担当' }})">
+                                    {{ $assignment->staff?->name }}
+                                </span>
+                                @endforeach
+                                @if($task->assignments->count() > 3)
+                                <span class="text-[9px] text-slate-400 font-mono self-center">+{{ $task->assignments->count() - 3 }}</span>
+                                @endif
+                            </div>
+                            @endif
 
                             <!-- 印刷時のアサインスタッフ簡潔表示 -->
                             @if($task->assignments->isNotEmpty())
@@ -447,6 +476,45 @@
     </div>
 
     @endif
+
+    <!-- 7. クイックアサイン スライドオーバーモーダル (CSP完全準拠・バニラJS駆動) -->
+    <div id="quickAssignModal"
+        class="hidden fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-xs flex justify-end">
+        <div class="bg-white w-full max-w-xl h-full shadow-2xl flex flex-col border-l border-slate-200">
+
+            <!-- モーダルヘッダー -->
+            <div class="p-4 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
+                <div class="min-w-0 pr-3">
+                    <div class="flex items-center space-x-2 text-xs text-indigo-300 mb-1">
+                        <span id="quickAssignTaskTime" class="font-mono font-bold"></span>
+                        <span id="quickAssignTaskLane" class="px-2 py-0.5 rounded bg-indigo-500/20 border border-indigo-400/30 text-[10px] font-bold"></span>
+                    </div>
+                    <h3 id="quickAssignTaskTitle" class="text-base font-bold truncate text-white">作業タスク詳細</h3>
+                </div>
+                <button type="button" data-action="close-quick-assign"
+                    class="text-slate-400 hover:text-white text-2xl font-bold leading-none cursor-pointer shrink-0">
+                    &times;
+                </button>
+            </div>
+
+            <!-- モーダル本体（動的レンダリング） -->
+            <div id="quickAssignModalBody" class="flex-1 overflow-y-auto p-4 space-y-4">
+            </div>
+
+            <!-- モーダルフッター -->
+            <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs">
+                <a id="quickAssignDetailLink" href="#" target="_blank"
+                    class="text-indigo-600 hover:underline font-bold flex items-center space-x-1">
+                    <span>タスク詳細ページを開く</span>
+                    <span>↗</span>
+                </a>
+                <button type="button" data-action="reload-matrix"
+                    class="px-4 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg font-bold transition cursor-pointer">
+                    閉じて画面を更新
+                </button>
+            </div>
+        </div>
+    </div>
 
 </div>
 

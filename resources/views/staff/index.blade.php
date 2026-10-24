@@ -29,8 +29,8 @@
             @can('create', App\Models\Staff::class)
             <form action="{{ route('staff.import-csv') }}" method="POST" enctype="multipart/form-data" class="inline" id="csvImportForm">
                 @csrf
-                <input type="file" name="file" id="csvFileInput" accept=".csv,text/csv" class="hidden" onchange="document.getElementById('csvImportForm').submit()">
-                <button type="button" onclick="document.getElementById('csvFileInput').click()"
+                <input type="file" name="file" id="csvFileInput" accept=".csv,text/csv" class="hidden">
+                <button type="button" id="csvImportBtn"
                     class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition cursor-pointer">
                     <span>📤</span>
                     <span>CSV取込</span>

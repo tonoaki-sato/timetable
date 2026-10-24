@@ -13,6 +13,9 @@ export default defineConfig({
                 'resources/js/calendar.js',
                 'resources/js/meetings.js',
                 'resources/js/lanes.js',
+                'resources/js/staff-timeline.js',
+                'resources/js/timetable-task-show.js',
+                'resources/js/timetable-show.js',
             ],
             refresh: true,
             fonts: [

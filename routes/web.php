@@ -11,6 +11,7 @@ use App\Http\Controllers\StaffCsvController;
 use App\Http\Controllers\StaffJoinController;
 use App\Http\Controllers\StaffPrintController;
 use App\Http\Controllers\StaffShiftController;
+use App\Http\Controllers\StaffTimelineController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TimetableMatrixController;
 use App\Http\Controllers\TimetablePrintController;
@@ -75,6 +76,8 @@ Route::middleware('auth')->group(function () {
 
     // タイムテーブル基本運行日リソースルート & 帳票印刷
     Route::get('timetables/{timetable}/print-assignments', [TimetablePrintController::class, 'printAssignments'])->name('timetables.print-assignments');
+    Route::get('timetables/{timetable}/staff-timeline', [StaffTimelineController::class, 'index'])->name('timetables.staff-timeline');
+    Route::post('timetables/{timetable}/copy-assignments-from', [TimetableController::class, 'copyAssignmentsFrom'])->name('timetables.copy-assignments-from');
     Route::resource('timetables', TimetableController::class);
 
     // 担当班（レーン）管理
@@ -91,7 +94,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('timetable-tasks', TimetableTaskController::class)->parameters(['timetable-tasks' => 'task']);
 
     // スタッフアサイン・出欠管理
+    Route::get('timetable-tasks/{task}/assign-modal-data', [TimetableTaskController::class, 'getAssignModalData'])->name('timetable-tasks.assign-modal-data');
     Route::post('timetable-tasks/{task}/assign', [TimetableTaskController::class, 'assignStaff'])->name('timetable-tasks.assign');
+    Route::post('timetable-tasks/{task}/assign-bulk', [TimetableTaskController::class, 'bulkAssignStaff'])->name('timetable-tasks.assign-bulk');
+    Route::post('timetable-tasks/{task}/assign-lane-pool', [TimetableTaskController::class, 'assignLanePool'])->name('timetable-tasks.assign-lane-pool');
+    Route::post('timetable-tasks/{task}/swap-staff', [TimetableTaskController::class, 'swapStaff'])->name('timetable-tasks.swap-staff');
     Route::delete('timetable-tasks/{task}/staff/{staff}', [TimetableTaskController::class, 'removeStaff'])->name('timetable-tasks.remove-staff');
     Route::patch('timetable-tasks/{task}/assignments/{assignment}', [TimetableTaskController::class, 'updateAttendance'])->name('timetable-tasks.update-attendance');
 

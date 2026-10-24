@@ -12,7 +12,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->is_active;
+        return (bool) $user->is_active;
     }
 
     /**

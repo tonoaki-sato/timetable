@@ -45,6 +45,14 @@ interface TimetableTaskRepositoryInterface
     public function assignStaff(TimetableTask $task, int $staffId, ?string $roleDescription = null): TaskStaffAssignment;
 
     /**
+     * 複数スタッフをタスクへ一括アサイン
+     *
+     * @param  array<int, int>  $staffIds
+     * @return Collection<int, TaskStaffAssignment>
+     */
+    public function bulkAssignStaff(TimetableTask $task, array $staffIds, ?string $roleDescription = null): Collection;
+
+    /**
      * スタッフのアサイン解除
      */
     public function removeStaff(TimetableTask $task, int $staffId): bool;

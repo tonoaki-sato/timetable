@@ -1,0 +1,248 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    background-color: #f8fafc;
+    color: #0f172a;
+    padding: 16px;
+    font-size: 11px;
+}
+
+/* 画面用コントロールバー */
+.no-print {
+    max-width: 1000px;
+    margin: 0 auto 16px auto;
+    background: #ffffff;
+    padding: 12px 18px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.page-title {
+    font-size: 15px;
+    margin-top: 3px;
+    font-weight: bold;
+}
+.btn-print {
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.btn-print:hover {
+    background-color: #0369a1;
+}
+.btn-back {
+    color: #64748b;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* A4横向き印刷シート */
+.sheet {
+    max-width: 280mm;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 10mm;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+.header-title-area h1 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.5px;
+}
+.header-meta {
+    font-size: 11px;
+    color: #475569;
+    margin-top: 2px;
+}
+.header-stats {
+    text-align: right;
+    font-size: 11px;
+    color: #475569;
+}
+.stat-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    margin-left: 4px;
+}
+
+/* レーン区分 */
+.lane-section {
+    margin-bottom: 14px;
+    page-break-inside: avoid;
+}
+.lane-header {
+    background-color: #f1f5f9;
+    padding: 4px 10px;
+    font-weight: bold;
+    font-size: 12px;
+    color: #1e293b;
+    border-left: 4px solid #0284c7;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.lane-lead {
+    font-size: 10.5px;
+    color: #475569;
+}
+
+/* 配置テーブル */
+.assignment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 6px;
+}
+.assignment-table th,
+.assignment-table td {
+    border: 1px solid #cbd5e1;
+    padding: 5px 8px;
+    text-align: left;
+    vertical-align: middle;
+}
+.assignment-table th {
+    background-color: #f8fafc;
+    font-weight: 700;
+    font-size: 10.5px;
+    color: #334155;
+}
+.col-time {
+    width: 90px;
+    white-space: nowrap;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 10.5px;
+}
+.col-task {
+    width: 220px;
+}
+.col-count {
+    width: 80px;
+    text-align: center !important;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 11px;
+}
+.col-staff {
+    min-width: 250px;
+}
+.col-notes {
+    width: 140px;
+    font-size: 10px;
+    color: #64748b;
+}
+
+.staff-chip {
+    display: inline-flex;
+    align-items: center;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin: 1.5px 3px 1.5px 0;
+    font-size: 10px;
+    white-space: nowrap;
+}
+.staff-chip .check-box {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1px solid #64748b;
+    margin-right: 4px;
+    border-radius: 2px;
+}
+
+.text-satisfied {
+    color: #059669;
+}
+.text-shortage {
+    color: #d97706;
+}
+
+.task-title {
+    color: #0f172a;
+}
+.badge-critical {
+    color: #e11d48;
+    font-weight: bold;
+    font-size: 9px;
+    margin-left: 2px;
+}
+.task-location {
+    font-size: 9px;
+    color: #64748b;
+    margin-top: 1px;
+}
+.role-label {
+    color: #64748b;
+    font-size: 9px;
+}
+.unassigned-warning {
+    color: #d97706;
+    font-style: italic;
+    font-size: 9.5px;
+}
+.empty-cell {
+    text-align: center;
+    color: #94a3b8;
+    padding: 10px;
+}
+.empty-notice {
+    text-align: center;
+    padding: 40px;
+    color: #94a3b8;
+}
+
+/* 印刷専用設定 */
+@media print {
+    body {
+        background-color: #ffffff;
+        padding: 0;
+    }
+    .no-print {
+        display: none !important;
+    }
+    .sheet {
+        max-width: 100%;
+        box-shadow: none;
+        padding: 0;
+    }
+    .lane-section {
+        page-break-inside: avoid;
+    }
+    tr {
+        page-break-inside: avoid;
+    }
+    @page {
+        size: A4 landscape;
+        margin: 8mm;
+    }
+}

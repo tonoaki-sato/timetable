@@ -6,6 +6,7 @@ use App\Models\TaskStaffAssignment;
 use App\Models\TimetableTask;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class TimetableTaskRepository implements TimetableTaskRepositoryInterface
 {
@@ -73,6 +74,35 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
                 'attendance_status' => 'assigned',
             ]
         );
+    }
+
+    /**
+     * 複数スタッフをタスクへ一括アサイン
+     *
+     * @param  array<int, int>  $staffIds
+     * @return Collection<int, TaskStaffAssignment>
+     */
+    public function bulkAssignStaff(TimetableTask $task, array $staffIds, ?string $roleDescription = null): Collection
+    {
+        return DB::transaction(function () use ($task, $staffIds, $roleDescription) {
+            $assignments = new Collection;
+
+            foreach ($staffIds as $staffId) {
+                $assignment = TaskStaffAssignment::updateOrCreate(
+                    [
+                        'timetable_task_id' => $task->id,
+                        'staff_id' => (int) $staffId,
+                    ],
+                    [
+                        'role_description' => $roleDescription,
+                        'attendance_status' => 'assigned',
+                    ]
+                );
+                $assignments->push($assignment);
+            }
+
+            return $assignments;
+        });
     }
 
     /**

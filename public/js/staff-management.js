@@ -36,6 +36,21 @@
             });
         }
 
+        // CSV取込
+        const csvImportBtn = document.getElementById('csvImportBtn');
+        const csvFileInput = document.getElementById('csvFileInput');
+        const csvImportForm = document.getElementById('csvImportForm');
+        if (csvImportBtn && csvFileInput && csvImportForm) {
+            csvImportBtn.addEventListener('click', function () {
+                csvFileInput.click();
+            });
+            csvFileInput.addEventListener('change', function () {
+                if (csvFileInput.files.length > 0) {
+                    csvImportForm.submit();
+                }
+            });
+        }
+
         // 2. スタッフ個別QRコードモーダル
         const qrModal = document.getElementById('qrModal');
         const qrModalCloseBtn = document.getElementById('qrModalCloseBtn');

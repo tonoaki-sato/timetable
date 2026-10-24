@@ -24,14 +24,15 @@ class ContentSecurityPolicy
 
         $cspPolicy = implode('; ', [
             "default-src 'self'",
-            "script-src 'self' https://static.line-scdn.net",
+            "script-src 'self' https://static.line-scdn.net https://*.line-scdn.net 'sha256-tlsXfg8h5KkfyREFcD0sSChT6TIEk9yUVIIOsB6wuDE='",
             "style-src 'self' https://fonts.bunny.net",
             "font-src 'self' https://fonts.bunny.net data:",
             "img-src 'self' data: https:",
-            "connect-src 'self' https://api.line.me",
+            "connect-src 'self' https://api.line.me https://*.line.me https://access.line.me",
+            "frame-src 'self' https://access.line.me https://*.line.me https://line.me",
             "object-src 'none'",
             "base-uri 'self'",
-            "frame-ancestors 'none'",
+            "frame-ancestors 'self' https://*.line.me https://line.me",
         ]);
 
         $response->headers->set('Content-Security-Policy', $cspPolicy);
