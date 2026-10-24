@@ -75,7 +75,10 @@ class TimetableManagementTest extends TestCase
         $filterResponse = $this->get(route('timetables.index', ['status' => 'active']));
         $filterResponse->assertStatus(200);
         $filterResponse->assertSee('1日目 本祭運行');
-        $filterResponse->assertDontSee('前日 設営運行');
+        $filterResponse->assertDontSee(route('timetables.show', $timetableB));
+        $filterResponse->assertViewHas('timetables', function ($timetables) use ($timetableA, $timetableB) {
+            return $timetables->contains($timetableA) && ! $timetables->contains($timetableB);
+        });
     }
 
     /**

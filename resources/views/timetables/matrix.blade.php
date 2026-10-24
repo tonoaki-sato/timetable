@@ -1,10 +1,10 @@
-<x-layouts.app title="タイムテーブル（当日進行表）">
+<x-layouts.app title="タイムテーブル">
 <div class="max-w-[1700px] mx-auto px-2 sm:px-4 lg:px-6 py-4 space-y-4">
 
     <!-- 印刷用ヘッダー（印刷時のみ表示） -->
     <div class="hidden print:block text-center pb-2 border-b-2 border-black mb-2">
         <h1 class="text-xl font-bold tracking-tight text-black">
-            {{ $selectedTimetable?->name ?? 'タイムテーブル（当日進行表）' }}
+            {{ $selectedTimetable?->name ?? 'タイムテーブル' }}
             @if($selectedTimetable?->target_date)
             <span class="text-base font-normal ml-2">({{ $selectedTimetable->target_date->format('Y年m月d日') }})</span>
             @endif
@@ -15,12 +15,12 @@
         </div>
     </div>
 
-    <!-- 1. ヘッダー & 運行日セレクター & クイックアクション（画面表示用） -->
-    <div class="print:hidden bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-5 text-white shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <!-- 1. ヘッダー（タイトル ＆ アクションを1行に集約） -->
+    <div class="print:hidden bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-4 sm:p-5 text-white shadow-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <div class="flex items-center space-x-2 mb-1.5">
+            <div class="flex items-center space-x-2 mb-1">
                 <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-                    ⏱️ タイムテーブル（当日進行表）
+                    ⏱️ タイムテーブル
                 </span>
                 <span class="text-xs text-slate-300">
                     現在時刻: <strong class="font-mono text-emerald-400">{{ $nowTime }}</strong>
@@ -29,89 +29,24 @@
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight">
                 {{ $selectedTimetable?->name ?? '運行タイムテーブル' }}
             </h1>
-            <p class="text-xs text-slate-300 mt-1 max-w-2xl">
-                各担当班（レーン）の時系列作業動態・道路規制・まつり運行を30分刻みで横断俯瞰します。
-            </p>
         </div>
 
-        <!-- KPIサマリー & クイックアクションボタン -->
-        <div class="flex flex-wrap items-center gap-3">
-            <div class="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-700 text-center min-w-[90px]">
-                <div class="text-[10px] text-slate-400 font-bold uppercase">全タスク</div>
-                <div class="text-lg font-bold font-mono text-white">{{ $tasksCount }} <span class="text-[10px] font-normal text-slate-400">件</span></div>
-            </div>
-
-            <div class="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-700 text-center min-w-[110px]">
-                <div class="text-[10px] text-slate-400 font-bold uppercase">人員充足</div>
-                <div class="text-lg font-bold font-mono {{ $satisfiedTasksCount === $tasksCount && $tasksCount > 0 ? 'text-emerald-400' : 'text-amber-400' }}">
-                    {{ $satisfiedTasksCount }} / {{ $tasksCount }}
-                </div>
-            </div>
-
-            <div class="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-700 text-center min-w-[110px]">
-                <div class="text-[10px] text-slate-400 font-bold uppercase">人員配置総数</div>
-                <div class="text-lg font-bold font-mono {{ $totalAssigned >= $totalRequired && $totalRequired > 0 ? 'text-emerald-400' : 'text-indigo-300' }}">
-                    {{ $totalAssigned }} / {{ $totalRequired }} <span class="text-[10px] font-normal text-slate-400">名</span>
-                </div>
-            </div>
-
-            <!-- 印刷・PDF保存ボタン -->
-            <button type="button" data-action="print"
-                class="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
-                <span>🖨️</span>
-                <span>A4横 印刷 / PDF保存</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- 2. 運行日タブ & 操作ツールバー -->
-    <div class="print:hidden flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-        <!-- 運行日タブ -->
-        <div class="flex flex-wrap items-center gap-2">
-            @forelse($timetables as $tt)
-            <a href="{{ route('timetable.index', ['timetable_id' => $tt->id]) }}"
-                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ $selectedTimetable?->id === $tt->id ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-600/30' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}">
-                <span>📅 {{ $tt->target_date?->format('m/d') }}</span>
-                <span>{{ $tt->name }}</span>
-                @if($tt->status === 'active')
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="現在運行中"></span>
-                @endif
-            </a>
-            @empty
-            <span class="text-xs text-slate-400">運行日が登録されていません</span>
-            @endforelse
-        </div>
-
-        <!-- アクションリンク群 -->
+        <!-- 右側: コンパクトなアクションボタン群（担当班管理 ＆ A4横印刷） -->
         @if($selectedTimetable)
-        <div class="flex flex-wrap items-center gap-2">
-            @can('create', App\Models\Lane::class)
-            <button type="button" data-action="open-lane-modal"
-                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
-                <span>➕</span>
-                <span>担当班を追加</span>
-            </button>
-            @endcan
-
-            @can('create', App\Models\TimetableTask::class)
-            <a href="{{ route('timetable-tasks.create', ['timetable_id' => $selectedTimetable->id]) }}"
-                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1">
-                <span>➕</span>
-                <span>タスク追加</span>
-            </a>
-            @endcan
-
+        <div class="flex items-center gap-2 shrink-0">
+            <!-- 担当班管理リンク -->
             <a href="{{ route('timetables.lanes.index', $selectedTimetable) }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                class="px-3.5 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-xs">
                 <span>🏷️</span>
                 <span>担当班管理</span>
             </a>
 
-            <a href="{{ route('timetables.show', $selectedTimetable) }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
-                <span>📋</span>
-                <span>一覧詳細</span>
-            </a>
+            <!-- A4横 印刷 / PDF保存ボタン（コンパクト表示） -->
+            <button type="button" data-action="print"
+                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5 cursor-pointer">
+                <span>🖨️</span>
+                <span>A4横 印刷 / PDF保存</span>
+            </button>
         </div>
         @endif
     </div>

@@ -74,7 +74,7 @@ class TimetableMatrixTest extends TestCase
 
         $response = $this->get(route('timetable.index'));
         $response->assertStatus(200);
-        $response->assertSee('タイムテーブル（当日進行表）');
+        $response->assertSee('タイムテーブル');
         $response->assertSee('1日目 本祭運行');
         $response->assertSee('カラーコーン');
         $response->assertSee('中央通りコーン設置');
@@ -211,25 +211,47 @@ class TimetableMatrixTest extends TestCase
     {
         $this->actingAs($this->operator);
 
+        $activeTimetable = Timetable::factory()->create([
+            'name' => '本祭1日目',
+            'target_date' => '2026-10-17',
+            'status' => 'active',
+        ]);
+        $draftTimetable = Timetable::factory()->create([
+            'name' => '本祭2日目',
+            'target_date' => '2026-10-18',
+            'status' => 'draft',
+        ]);
+        $completedTimetable = Timetable::factory()->create([
+            'name' => '前日準備完了分',
+            'target_date' => '2026-10-16',
+            'status' => 'completed',
+        ]);
+
         $response = $this->get(route('dashboard'));
         $response->assertStatus(200);
 
         // まつり運行グループ
         $response->assertSee('まつり運行');
 
-        // セクション1: 当日の進行・確認
-        $response->assertSee('当日の進行・確認');
-        $response->assertSee('当日タイムテーブル');
-        $response->assertSee('進行表');
+        // セクション1: 進行表（日程別）
+        $response->assertSee('進行表（日程別）');
+        $response->assertSee('本祭1日目');
+        $response->assertSee('運行中');
+        $response->assertSee(route('timetable.index', ['timetable_id' => $activeTimetable->id]));
+        $response->assertSee('本祭2日目');
+        $response->assertSee(route('timetable.index', ['timetable_id' => $draftTimetable->id]));
 
-        // セクション2: 事前の計画・編成
-        $response->assertSee('事前の計画・編成');
-        $response->assertSee('運行日程・タスク管理');
-        $response->assertSee('担当班（レーン）編成');
-        $response->assertSee('交通規制・通行止め');
+        // 運行完了（completed）はプルダウンメニューに表示されないこと
+        $response->assertDontSee(route('timetable.index', ['timetable_id' => $completedTimetable->id]));
+
+        // セクション2: 計画・編成・帳票出力
+        $response->assertSee('計画・編成・帳票出力');
+        $response->assertSee('運行計画・タスク台帳');
+        $response->assertSee('担当班・リーダー編成');
+        $response->assertSee('人員配置表の印刷');
+        $response->assertSee(route('timetables.print-assignments', $activeTimetable));
 
         // 各ルートへのリンクが含まれていること
-        $response->assertSee(route('timetable.index'));
         $response->assertSee(route('timetables.index'));
         $response->assertSee(route('lanes.index'));
     }

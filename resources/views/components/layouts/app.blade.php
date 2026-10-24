@@ -84,7 +84,7 @@
                             </div>
                         </div>
 
-                        <!-- 3. まつり運行 ▾ （案A: 目的別セクション分割） -->
+                        <!-- 3. まつり運行 ▾ -->
                         <div class="relative nav-dropdown shrink-0">
                             <button type="button"
                                 class="dropdown-trigger px-2.5 py-1.5 lg:px-3 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap cursor-pointer {{ $isOperationActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
@@ -92,58 +92,87 @@
                                 <span>まつり運行</span>
                                 <span class="text-[9px] opacity-75">▼</span>
                             </button>
-                            <div class="dropdown-menu hidden absolute left-0 mt-1.5 w-72 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 z-50">
-                                <!-- セクション1: 当日の進行・確認 -->
+                            <div class="dropdown-menu hidden absolute left-0 mt-1.5 w-80 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 z-50">
+                                <!-- セクション1: 当日の進行・確認（日別進行表） -->
                                 <div class="px-2.5 py-1.5 text-[10px] font-bold text-indigo-300 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
-                                    <span>⏱️ 当日の進行・確認</span>
+                                    <span>⏱️ 進行表（日程別）</span>
                                     <span class="text-[9px] text-emerald-400 font-mono font-bold">当日用</span>
                                 </div>
-                                <div class="py-1">
-                                    <a href="{{ route('timetable.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('timetable.index') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">⏱️</span>
-                                        <div class="min-w-0">
-                                            <div class="text-xs font-bold flex items-center space-x-1.5">
-                                                <span>当日タイムテーブル</span>
-                                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">進行表</span>
+                                <div class="py-1 space-y-0.5">
+                                    @forelse($navTimetables ?? [] as $tt)
+                                        @php
+                                            $isCurrentTimetable = request()->routeIs('timetable.index') && (
+                                                request('timetable_id') == $tt->id ||
+                                                (!request('timetable_id') && (collect($navTimetables ?? [])->firstWhere('status', 'active') ?? collect($navTimetables ?? [])->first())?->id == $tt->id)
+                                            );
+                                        @endphp
+                                        <a href="{{ route('timetable.index', ['timetable_id' => $tt->id]) }}"
+                                            class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ $isCurrentTimetable ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                            <span class="text-base shrink-0">⏱️</span>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="text-xs font-bold flex items-center justify-between">
+                                                    <span class="truncate">
+                                                        {{ $tt->target_date ? $tt->target_date->format('m/d') . ' ' : '' }}{{ $tt->name }}
+                                                    </span>
+                                                    @if($tt->status === 'active')
+                                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 shrink-0 ml-1.5 flex items-center space-x-1">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                            <span>運行中</span>
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <p class="text-[10px] {{ $isCurrentTimetable ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">
+                                                    {{ substr($tt->start_time, 0, 5) }}〜{{ substr($tt->end_time, 0, 5) }} / 全レーン進行表・規制
+                                                </p>
                                             </div>
-                                            <p class="text-[10px] {{ request()->routeIs('timetable.index') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">時間帯×全担当班の帳票グリッド・A4横印刷</p>
+                                        </a>
+                                    @empty
+                                        <div class="p-3 text-center text-xs text-slate-400">
+                                            現在進行中・予定の運行日はありません
                                         </div>
-                                    </a>
+                                    @endforelse
                                 </div>
 
                                 <!-- 区切り線 -->
                                 <div class="border-t border-slate-800/80 my-1"></div>
 
-                                <!-- セクション2: 事前の計画・編成 -->
+                                <!-- セクション2: 計画・編成・帳票出力 -->
                                 <div class="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg">
-                                    🛠️ 事前の計画・編成
+                                    🛠️ 計画・編成・帳票出力
                                 </div>
                                 <div class="py-1 space-y-0.5">
                                     <a href="{{ route('timetables.index') }}"
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">📅</span>
+                                        <span class="text-base shrink-0">📋</span>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold">運行日程・タスク管理</div>
-                                            <p class="text-[10px] {{ request()->routeIs('timetables.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">4日間の日程枠（前日〜翌日）と作業登録</p>
+                                            <div class="text-xs font-bold">運行計画・タスク台帳</div>
+                                            <p class="text-[10px] {{ request()->routeIs('timetables.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">各日の日程枠登録・作業タスク管理・人員配置</p>
                                         </div>
                                     </a>
                                     <a href="{{ route('lanes.index') }}"
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('lanes.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🏷️</span>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold">担当班（レーン）編成</div>
-                                            <p class="text-[10px] {{ request()->routeIs('lanes.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">衛生・コーン・給水等の班と現場リーダー設定</p>
+                                            <div class="text-xs font-bold">担当班・リーダー編成</div>
+                                            <p class="text-[10px] {{ request()->routeIs('lanes.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">衛生・コーン等の班編成と現場リーダー設定</p>
                                         </div>
                                     </a>
-                                    <a href="{{ route('timetable.index') }}"
+                                    @php
+                                        $targetPrintTimetable = collect($navTimetables ?? [])->firstWhere('status', 'active') ?? collect($navTimetables ?? [])->first();
+                                    @endphp
+                                    @if($targetPrintTimetable)
+                                    <a href="{{ route('timetables.print-assignments', $targetPrintTimetable) }}" target="_blank"
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition text-slate-200 hover:bg-slate-800 hover:text-white">
-                                        <span class="text-base shrink-0">🚧</span>
+                                        <span class="text-base shrink-0">🖨️</span>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold">交通規制・通行止め</div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">車両通行止め区画とコーン配置（進行表）</p>
+                                            <div class="text-xs font-bold flex items-center space-x-1">
+                                                <span>人員配置表の印刷</span>
+                                                <span class="text-[9px] text-slate-400 font-normal">↗</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">各班・タスクのスタッフ配置一覧表をA4印刷</p>
                                         </div>
                                     </a>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -260,37 +289,79 @@
                 </div>
 
                 <div class="space-y-3">
-                    <!-- セクション1: 当日進行・確認 -->
+                    <!-- セクション1: 当日進行・確認（未完了の日別一覧） -->
                     <div>
-                        <div class="text-[11px] font-bold text-indigo-400 mb-1.5 flex items-center space-x-1">
-                            <span>⏱️ 当日の進行・確認</span>
+                        <div class="text-[11px] font-bold text-indigo-400 mb-1.5 flex items-center justify-between">
+                            <span>⏱️ 進行表（日程別）</span>
+                            <span class="text-[9px] text-emerald-400 font-bold">当日用</span>
                         </div>
-                        <a href="{{ route('timetable.index') }}" class="p-3 bg-indigo-950/60 hover:bg-indigo-900/60 border border-indigo-700/60 rounded-xl flex items-center justify-between text-white {{ request()->routeIs('timetable.index') ? 'ring-2 ring-indigo-500' : '' }}">
-                            <div class="flex items-center space-x-2.5">
-                                <span class="text-xl">⏱️</span>
-                                <div>
-                                    <div class="font-bold text-sm flex items-center space-x-1.5">
-                                        <span>当日タイムテーブル</span>
-                                        <span class="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded text-[9px]">進行表</span>
+                        <div class="space-y-1.5">
+                            @forelse($navTimetables ?? [] as $tt)
+                                @php
+                                    $isCurrentTimetable = request()->routeIs('timetable.index') && (
+                                        request('timetable_id') == $tt->id ||
+                                        (!request('timetable_id') && (collect($navTimetables ?? [])->firstWhere('status', 'active') ?? collect($navTimetables ?? [])->first())?->id == $tt->id)
+                                    );
+                                @endphp
+                                <a href="{{ route('timetable.index', ['timetable_id' => $tt->id]) }}" 
+                                    class="p-2.5 bg-indigo-950/60 hover:bg-indigo-900/60 border border-indigo-700/60 rounded-xl flex items-center justify-between text-white {{ $isCurrentTimetable ? 'ring-2 ring-indigo-500' : '' }}">
+                                    <div class="flex items-center space-x-2.5 min-w-0">
+                                        <span class="text-lg">⏱️</span>
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-xs flex items-center space-x-1.5">
+                                                <span class="truncate">{{ $tt->target_date ? $tt->target_date->format('m/d') . ' ' : '' }}{{ $tt->name }}</span>
+                                                @if($tt->status === 'active')
+                                                    <span class="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded text-[9px] shrink-0 flex items-center space-x-1">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                        <span>運行中</span>
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <div class="text-[10px] text-slate-300 truncate">
+                                                {{ substr($tt->start_time, 0, 5) }}〜{{ substr($tt->end_time, 0, 5) }} / 進行表・交通規制
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="text-[10px] text-slate-300">時間帯×全担当班グリッド・A4横印刷</div>
+                                    <span class="text-xs text-indigo-300 font-bold shrink-0 ml-2">開く →</span>
+                                </a>
+                            @empty
+                                <div class="text-xs text-slate-400 p-2 text-center bg-slate-800/50 rounded-xl">
+                                    現在進行中・予定の運行日はありません
                                 </div>
-                            </div>
-                            <span class="text-xs text-indigo-300 font-bold">開く →</span>
-                        </a>
+                            @endforelse
+                        </div>
+
+                        @if($targetPrintTimetable)
+                        <div class="pt-1.5">
+                            <a href="{{ route('timetables.print-assignments', $targetPrintTimetable) }}" target="_blank"
+                                class="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-xl flex items-center justify-between text-slate-200">
+                                <div class="flex items-center space-x-2.5">
+                                    <span class="text-base">🖨️</span>
+                                    <div>
+                                        <div class="font-bold text-xs flex items-center space-x-1">
+                                            <span>人員配置表の印刷</span>
+                                            <span class="text-[9px] text-slate-400">↗</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400">各班・タスクの配置一覧（A4印刷）</div>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-slate-400 font-bold">開く →</span>
+                            </a>
+                        </div>
+                        @endif
                     </div>
 
                     <!-- セクション2: まつり計画・運行管理 -->
                     <div>
                         <div class="text-[11px] font-bold text-slate-400 mb-1.5">
-                            🛠️ 運行計画・編成
+                            🛠️ 運行計画・スケジュール・体制
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-xs">
                             <a href="{{ route('timetables.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('timetables.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
-                                <span class="text-base">📅</span>
+                                <span class="text-base">📋</span>
                                 <div class="min-w-0">
-                                    <span class="font-bold block truncate">運行日程・タスク</span>
-                                    <span class="text-[10px] text-slate-400 block truncate">4日間の枠組</span>
+                                    <span class="font-bold block truncate">運行計画・タスク</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">日程枠・タスク台帳</span>
                                 </div>
                             </a>
                             <a href="{{ route('lanes.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('lanes.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
@@ -300,11 +371,11 @@
                                     <span class="text-[10px] text-slate-400 block truncate">リーダー設定</span>
                                 </div>
                             </a>
-                            <a href="{{ route('timetable.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200">
-                                <span class="text-base">🚧</span>
+                            <a href="{{ route('calendar.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('calendar.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                                <span class="text-base">📅</span>
                                 <div class="min-w-0">
-                                    <span class="font-bold block truncate">交通規制・通行止め</span>
-                                    <span class="text-[10px] text-slate-400 block truncate">進行表・コーン配置</span>
+                                    <span class="font-bold block truncate">総合カレンダー</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">月間予定・俯瞰</span>
                                 </div>
                             </a>
                             <a href="{{ route('annual-schedules.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('annual-schedules.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">

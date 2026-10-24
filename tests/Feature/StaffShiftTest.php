@@ -27,6 +27,7 @@ class StaffShiftTest extends TestCase
         $this->staff = Staff::factory()->create([
             'name' => '木村 拓也',
             'kana' => 'キムラ タクヤ',
+            'affiliation' => '本部運営委員会',
             'is_active' => true,
         ]);
 

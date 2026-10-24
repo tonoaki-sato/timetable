@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Timetable;
 use App\Repositories\Contracts\AnnualScheduleRepositoryInterface;
 use App\Repositories\Contracts\MeetingRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
@@ -12,6 +13,7 @@ use App\Repositories\Eloquent\MeetingRepository;
 use App\Repositories\Eloquent\StaffRepository;
 use App\Repositories\Eloquent\TimetableRepository;
 use App\Repositories\Eloquent\TimetableTaskRepository;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -52,6 +54,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer('components.layouts.app', function ($view): void {
+            $navTimetables = Timetable::where('status', '!=', 'completed')
+                ->orderBy('target_date')
+                ->get();
+
+            $view->with('navTimetables', $navTimetables);
+        });
     }
 }
