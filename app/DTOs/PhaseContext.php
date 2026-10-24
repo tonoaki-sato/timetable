@@ -10,12 +10,12 @@ readonly class PhaseContext
 {
     public function __construct(
         public AnnualPhase $phase,
-        public string $displayName,
-        public string $subStatus,
         public bool $isMainEventDay,
         public ?Timetable $activeTimetable = null,
         public ?AnnualSchedule $nextTask = null,
         public int $pendingTaskCount = 0,
         public ?string $actionUrl = null,
+        public ?string $displayName = null,
+        public ?string $subStatus = null,
     ) {}
 }

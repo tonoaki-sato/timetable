@@ -63,9 +63,7 @@ class PhaseManagementTest extends TestCase
 
         $this->assertFalse($context->isMainEventDay);
         $this->assertSame(AnnualPhase::Planning, $context->phase);
-        $this->assertSame('フェーズ2【計画段階】', $context->displayName);
-        $this->assertStringContainsString('第3回幹事会・予算案確定', $context->subStatus);
-        $this->assertStringContainsString('あと5日', $context->subStatus);
+        $this->assertSame('第3回幹事会・予算案確定', $context->nextTask?->title);
         $this->assertGreaterThanOrEqual(1, $context->pendingTaskCount);
     }
 
@@ -86,8 +84,6 @@ class PhaseManagementTest extends TestCase
         $context = $service->getCurrentContext($eventDate);
 
         $this->assertTrue($context->isMainEventDay);
-        $this->assertSame('1日目 (Day 1) 本祭運行・ござ市', $context->displayName);
-        $this->assertSame('本番運行セッション進行中', $context->subStatus);
         $this->assertSame($timetable->id, $context->activeTimetable?->id);
     }
 
@@ -147,7 +143,6 @@ class PhaseManagementTest extends TestCase
         $this->assertFalse($context->isMainEventDay);
         $this->assertSame(AnnualPhase::Planning, $context->phase);
         $this->assertNull($context->nextTask);
-        $this->assertSame('直近の年間行事予定なし', $context->subStatus);
         $this->assertSame(0, $context->pendingTaskCount);
     }
 

@@ -12,6 +12,8 @@ class PhaseCard extends Component
 {
     public readonly PhaseContext $context;
 
+    public readonly Carbon $now;
+
     /**
      * Create a new component instance.
      */
@@ -20,8 +22,8 @@ class PhaseCard extends Component
         ?Carbon $now = null,
         ?PhaseContext $phaseContext = null
     ) {
-        $simulatedNow = $now ?? Carbon::now('Asia/Tokyo');
-        $this->context = $phaseContext ?? $this->phaseService->getCurrentContext($simulatedNow);
+        $this->now = $now ?? Carbon::now('Asia/Tokyo');
+        $this->context = $phaseContext ?? $this->phaseService->getCurrentContext($this->now);
     }
 
     /**
@@ -61,7 +63,15 @@ class PhaseCard extends Component
      */
     public function displayName(): string
     {
-        return $this->context->displayName;
+        if ($this->context->displayName !== null) {
+            return $this->context->displayName;
+        }
+
+        if ($this->context->isMainEventDay) {
+            return $this->context->activeTimetable?->name ?? 'NO NAME';
+        }
+
+        return $this->context->phase->label();
     }
 
     /**
@@ -69,7 +79,31 @@ class PhaseCard extends Component
      */
     public function subStatus(): string
     {
-        return $this->context->subStatus;
+        if ($this->context->subStatus !== null) {
+            return $this->context->subStatus;
+        }
+
+        if ($this->context->isMainEventDay) {
+            return '本番運行セッション進行中';
+        }
+
+        $nextTask = $this->context->nextTask;
+        if ($nextTask === null || $nextTask->start_date === null) {
+            return '直近の年間行事予定なし';
+        }
+
+        $dateStr = $nextTask->start_date->format('n/j');
+        $daysDiff = (int) $this->now->startOfDay()->diffInDays($nextTask->start_date->startOfDay(), false);
+
+        if ($daysDiff === 0) {
+            return "本日: {$nextTask->title}";
+        }
+
+        if ($daysDiff > 0) {
+            return "直近: {$dateStr} {$nextTask->title} (あと{$daysDiff}日)";
+        }
+
+        return "直近: {$dateStr} {$nextTask->title}";
     }
 
     /**
