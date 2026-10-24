@@ -85,6 +85,12 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('10:00');
         $response->assertSee('通行止め');
         $response->assertSee('開催中');
+
+        // ヘッダー1行化・リアルタイム時計・赤ボーダーライン・印刷ボタン
+        $response->assertSee('matrix-live-clock');
+        $response->assertSee('matrix-current-time-line');
+        $response->assertSee('A4横 印刷 / PDF保存');
+        $response->assertDontSee('担当班管理</span>', false);
     }
 
     /**

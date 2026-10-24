@@ -16,34 +16,31 @@
     </div>
 
     <!-- 1. ヘッダー（タイトル ＆ アクションを1行に集約） -->
-    <div class="print:hidden bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-4 sm:p-5 text-white shadow-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center space-x-2 mb-1">
-                <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-                    ⏱️ タイムテーブル
-                </span>
-                <span class="text-xs text-slate-300">
-                    現在時刻: <strong class="font-mono text-emerald-400">{{ $nowTime }}</strong>
-                </span>
-            </div>
-            <h1 class="text-xl sm:text-2xl font-bold tracking-tight">
+    <div class="print:hidden bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl px-4 py-3 sm:px-5 sm:py-3 text-white shadow-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 min-w-0">
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 shrink-0">
+                ⏱️ タイムテーブル
+            </span>
+            <h1 class="text-base sm:text-lg font-bold tracking-tight truncate">
                 {{ $selectedTimetable?->name ?? '運行タイムテーブル' }}
             </h1>
+            <span class="h-4 w-px bg-slate-700 hidden sm:inline-block shrink-0"></span>
+            <div class="flex items-center space-x-1.5 text-xs text-slate-300 shrink-0">
+                <span class="text-slate-400">現在時刻:</span>
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <strong id="matrix-live-clock" class="font-mono text-emerald-400 font-bold text-sm tracking-wider">{{ $nowTime }}</strong>
+            </div>
         </div>
 
-        <!-- 右側: コンパクトなアクションボタン群（担当班管理 ＆ A4横印刷） -->
+        <!-- 右側: コンパクトなアクションボタン（A4横印刷のみ） -->
         @if($selectedTimetable)
         <div class="flex items-center gap-2 shrink-0">
-            <!-- 担当班管理リンク -->
-            <a href="{{ route('timetables.lanes.index', $selectedTimetable) }}"
-                class="px-3.5 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-xs">
-                <span>🏷️</span>
-                <span>担当班管理</span>
-            </a>
-
-            <!-- A4横 印刷 / PDF保存ボタン（コンパクト表示） -->
+            <!-- A4横 印刷 / PDF保存ボタン -->
             <button type="button" data-action="print"
-                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5 cursor-pointer">
+                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5 cursor-pointer">
                 <span>🖨️</span>
                 <span>A4横 印刷 / PDF保存</span>
             </button>
@@ -136,7 +133,23 @@
     </div>
 
     <!-- 4. タイムテーブル帳票グリッド（PDFレイアウト完全再現） -->
-    <div id="timetable-grid-container" class="relative bg-white rounded-xl border-2 border-slate-800 shadow-sm overflow-x-auto print:overflow-visible print:border print:border-black">
+    <div id="timetable-grid-container"
+        data-target-date="{{ $selectedTimetable?->target_date?->format('Y-m-d') }}"
+        class="relative bg-white rounded-xl border-2 border-slate-800 shadow-sm overflow-x-auto print:overflow-visible print:border print:border-black">
+
+        <!-- リアルタイム現在時刻 赤ボーダーライン -->
+        <div id="matrix-current-time-line"
+            class="hidden absolute left-0 right-0 pointer-events-none z-25 print:hidden transition-[top] duration-1000 ease-linear"
+            style="top: 0px;">
+            <!-- 左端の現在時刻ピルバッジ -->
+            <div class="absolute left-1 sm:left-2 -top-3 flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-rose-600 text-white font-mono text-[10px] font-bold shadow-md ring-1 ring-white">
+                <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                <span id="matrix-line-time-label">{{ $nowTime }}</span>
+            </div>
+            <!-- テーブル全幅の赤線 -->
+            <div class="w-full border-t-2 border-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]"></div>
+        </div>
+
         <table class="w-full border-collapse text-left border-spacing-0 select-text font-sans">
             <!-- テーブルヘッダー（Sticky Top ＆ 左4列 Sticky Left） -->
             <thead class="sticky top-0 z-30 bg-slate-100 print:static">
@@ -211,7 +224,7 @@
             <!-- テーブル本体（30分刻みスロット行） -->
             <tbody class="divide-y divide-slate-300 print:divide-black">
                 @foreach($timeSlots as $sIdx => $slot)
-                <tr class="border-b border-slate-400 hover:bg-slate-50/60 transition-colors print:border-black">
+                <tr data-slot-time="{{ $slot['time'] }}" class="border-b border-slate-400 hover:bg-slate-50/60 transition-colors print:border-black">
                     <!-- 1. 日付セル（全スロット数分、初回のみ縦結合） -->
                     @if($loop->first)
                     <td rowspan="{{ count($timeSlots) }}"

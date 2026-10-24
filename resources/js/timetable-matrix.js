@@ -5,7 +5,98 @@ document.addEventListener('DOMContentLoaded', () => {
     initLaneModal();
     initGridScroll();
     initLaneFilters();
+    initLiveClock();
+    initCurrentTimeIndicator();
 });
+
+/**
+ * ヘッダーの現在時刻を毎秒リアルタイム更新
+ */
+function initLiveClock() {
+    const clockEl = document.getElementById('matrix-live-clock');
+    if (!clockEl) return;
+
+    function update() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        clockEl.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    update();
+    setInterval(update, 1000);
+}
+
+/**
+ * タイムテーブル上の現在時刻赤ボーダーラインをリアルタイムに計算・移動
+ */
+function initCurrentTimeIndicator() {
+    const container = document.getElementById('timetable-grid-container');
+    const lineEl = document.getElementById('matrix-current-time-line');
+    const timeLabel = document.getElementById('matrix-line-time-label');
+    if (!container || !lineEl) return;
+
+    function updatePosition() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${year}-${month}-${day}`;
+
+        const targetDate = container.getAttribute('data-target-date');
+        // 日程が指定されており、当日でない場合は非表示（targetDate未設定時は表示許容）
+        if (targetDate && targetDate !== todayStr) {
+            lineEl.classList.add('hidden');
+            return;
+        }
+
+        const currentHours = now.getHours();
+        const currentMinutes = now.getMinutes();
+        const currentSeconds = now.getSeconds();
+        const currentTimeStr = `${String(currentHours).padStart(2, '0')}:${String(currentMinutes).padStart(2, '0')}`;
+
+        // 30分スロットの特定
+        const slotMinute = currentMinutes >= 30 ? 30 : 0;
+        const currentSlotTime = `${String(currentHours).padStart(2, '0')}:${String(slotMinute).padStart(2, '0')}`;
+
+        // 次のスロット
+        let nextSlotHours = currentHours;
+        let nextSlotMinute = slotMinute === 30 ? 0 : 30;
+        if (slotMinute === 30) {
+            nextSlotHours++;
+        }
+        const nextSlotTime = `${String(nextSlotHours).padStart(2, '0')}:${String(nextSlotMinute).padStart(2, '0')}`;
+
+        const currentRow = container.querySelector(`tr[data-slot-time="${currentSlotTime}"]`);
+        if (!currentRow) {
+            // 現在時刻がスロット範囲外（早朝または夜間終了後）
+            lineEl.classList.add('hidden');
+            return;
+        }
+
+        // 次のスロット行（または行の高さから推定）
+        const nextRow = container.querySelector(`tr[data-slot-time="${nextSlotTime}"]`);
+        const currentTop = currentRow.offsetTop;
+        const slotHeight = nextRow ? (nextRow.offsetTop - currentTop) : currentRow.offsetHeight;
+
+        // 30分（1800秒）に対する経過割合
+        const elapsedSeconds = ((currentMinutes % 30) * 60) + currentSeconds;
+        const progress = elapsedSeconds / 1800;
+
+        const calculatedTop = currentTop + (slotHeight * progress);
+
+        lineEl.style.top = `${calculatedTop}px`;
+        if (timeLabel) {
+            timeLabel.textContent = currentTimeStr;
+        }
+        lineEl.classList.remove('hidden');
+    }
+
+    updatePosition();
+    setInterval(updatePosition, 1000);
+    window.addEventListener('resize', updatePosition);
+}
 
 function initLaneModal() {
     const modal = document.getElementById('laneModal');
