@@ -84,6 +84,20 @@
                     {{ $timetable->description }}
                 </p>
                 @endif
+
+                <!-- クイックアクセスリンク（タイムテーブル & 担当班管理） -->
+                <div class="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100">
+                    <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
+                        class="inline-flex items-center justify-center space-x-1 px-2.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition">
+                        <span>⏱️</span>
+                        <span>タイムテーブル</span>
+                    </a>
+                    <a href="{{ route('timetables.lanes.index', $timetable) }}"
+                        class="inline-flex items-center justify-center space-x-1 px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+                        <span>🏷️</span>
+                        <span>担当班管理</span>
+                    </a>
+                </div>
             </div>
 
             <!-- カードフッター / アクション -->

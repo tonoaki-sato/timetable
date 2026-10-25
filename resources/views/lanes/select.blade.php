@@ -26,11 +26,6 @@
                 <span>新規タイムテーブルを登録</span>
             </a>
             @endcan
-            <a href="{{ route('timetables.index') }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
-                <span>📋</span>
-                <span>タイムテーブル・タスク台帳</span>
-            </a>
         </div>
     </div>
 

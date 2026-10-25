@@ -1,4 +1,4 @@
-<x-layouts.app title="年間スケジュール管理">
+<x-layouts.app title="年間スケジュール">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- 1. ヘッダーエリア -->
@@ -6,10 +6,7 @@
         <div>
             <div class="flex items-center space-x-2.5">
                 <span class="text-2xl">📋</span>
-                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">年間スケジュール管理</h1>
-                <span class="bg-indigo-100 text-indigo-700 text-xs px-2.5 py-0.5 rounded-full font-bold">
-                    {{ $selectedYear }}年度
-                </span>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">年間スケジュール</h1>
             </div>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">
                 行政協議・出店募集・会場設営・運行準備などの年間工程・タスクを管理します。

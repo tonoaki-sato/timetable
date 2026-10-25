@@ -442,6 +442,7 @@ class LaneManagementTest extends TestCase
         $response->assertSee($secondTimetable->name);
         $response->assertSee(route('timetables.lanes.index', $this->timetable));
         $response->assertSee(route('timetables.lanes.index', $secondTimetable));
+        $response->assertDontSee('タイムテーブル・タスク台帳');
     }
 
     /**

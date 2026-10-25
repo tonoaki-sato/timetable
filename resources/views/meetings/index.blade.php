@@ -1,4 +1,4 @@
-<x-layouts.app title="会議・打ち合わせ日程">
+<x-layouts.app title="会議・打ち合わせ">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
     <!-- 1. ヘッダーエリア -->
@@ -6,7 +6,7 @@
         <div>
             <div class="flex items-center space-x-2">
                 <span class="text-2xl">🤝</span>
-                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">会議・打ち合わせ日程</h1>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">会議・打ち合わせ</h1>
             </div>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">
                 定例幹事会・部会打ち合わせの管理と、全体LINEグループへの告知テキスト自動生成

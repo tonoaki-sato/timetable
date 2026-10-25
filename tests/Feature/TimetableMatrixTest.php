@@ -252,7 +252,7 @@ class TimetableMatrixTest extends TestCase
 
         // セクション2: 計画・編成・帳票出力
         $response->assertSee('計画・編成・帳票出力');
-        $response->assertSee('タイムテーブル・タスク台帳');
+        $response->assertSee('タイムテーブル管理');
         $response->assertSee('担当班（レーン）管理');
         $response->assertSee('人員配置表の印刷');
         $response->assertSee(route('timetables.print-assignments', $activeTimetable));

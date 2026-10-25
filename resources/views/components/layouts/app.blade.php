@@ -75,7 +75,7 @@
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('meetings.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🤝</span>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold">会議・打合せ日程</div>
+                                            <div class="text-xs font-bold">会議・打ち合わせ</div>
                                             <p class="text-[10px] {{ request()->routeIs('meetings.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">幹事会・総会・LINE告知テキスト生成</p>
                                         </div>
                                     </a>
@@ -144,7 +144,7 @@
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">📋</span>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold">タイムテーブル・タスク台帳</div>
+                                            <div class="text-xs font-bold">タイムテーブル管理</div>
                                             <p class="text-[10px] {{ request()->routeIs('timetables.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">各日の日程枠登録・作業タスク管理・人員配置</p>
                                         </div>
                                     </a>
@@ -398,7 +398,7 @@
                             <a href="{{ route('timetables.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('timetables.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">📋</span>
                                 <div class="min-w-0">
-                                    <span class="font-bold block truncate">タイムテーブル・タスク</span>
+                                    <span class="font-bold block truncate">タイムテーブル管理</span>
                                     <span class="text-[10px] text-slate-400 block truncate">日程枠・タスク台帳</span>
                                 </div>
                             </a>
@@ -426,7 +426,7 @@
                             <a href="{{ route('meetings.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('meetings.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">🤝</span>
                                 <div class="min-w-0">
-                                    <span class="font-bold block truncate">会議・打合せ</span>
+                                    <span class="font-bold block truncate">会議・打ち合わせ</span>
                                     <span class="text-[10px] text-slate-400 block truncate">幹事会・総会</span>
                                 </div>
                             </a>

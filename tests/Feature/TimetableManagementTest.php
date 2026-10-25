@@ -70,6 +70,10 @@ class TimetableManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('1日目 本祭運行');
         $response->assertSee('前日 設営運行');
+        $response->assertSee(route('timetable.index', ['timetable_id' => $timetableA->id]));
+        $response->assertSee(route('timetables.lanes.index', $timetableA));
+        $response->assertSee('タイムテーブル');
+        $response->assertSee('担当班管理');
 
         // active のみ絞り込み
         $filterResponse = $this->get(route('timetables.index', ['status' => 'active']));

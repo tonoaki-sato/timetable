@@ -7,9 +7,6 @@
             <div class="flex items-center space-x-2.5">
                 <span class="text-2xl">📅</span>
                 <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">総合カレンダー</h1>
-                <span class="bg-indigo-100 text-indigo-700 text-xs px-2.5 py-0.5 rounded-full font-bold">
-                    {{ $selectedYear }}年度
-                </span>
             </div>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">
                 行政締切、準備タスク、定例会議、まつり本番運行日のすべてをカレンダー上で俯瞰・調整できます。
