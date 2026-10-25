@@ -36,7 +36,7 @@
                     @php
                         $isScheduleActive = request()->routeIs('calendar.*') || request()->routeIs('annual-schedules.*') || request()->routeIs('meetings.*');
                         $isOperationActive = request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') || request()->routeIs('timetable.index') || request()->routeIs('lanes.*');
-                        $isManagementActive = request()->routeIs('staff.*') || request()->routeIs('users.*') || request()->routeIs('phases.*');
+                        $isManagementActive = request()->routeIs('staff.*') || request()->routeIs('users.*') || request()->routeIs('phases.*') || request()->routeIs('manual.*');
                     @endphp
                     <nav class="hidden md:flex items-center space-x-1 pl-3 lg:pl-4 border-l border-slate-800 shrink-0">
                         <!-- 1. 本部ダッシュボード -->
@@ -203,6 +203,18 @@
                                             <p class="text-[10px] {{ request()->routeIs('users.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">本部アカウント・ログイン権限</p>
                                         </div>
                                     </a>
+                                    <div class="border-t border-slate-800/80 my-1"></div>
+                                    <a href="{{ route('manual.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('manual.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">📖</span>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-bold flex items-center space-x-1">
+                                                <span>操作マニュアル</span>
+                                                <span class="bg-indigo-500/30 text-indigo-200 text-[9px] px-1.5 py-0.2 rounded font-normal">ガイド</span>
+                                            </div>
+                                            <p class="text-[10px] {{ request()->routeIs('manual.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">図解・画面付きシステム利用手順</p>
+                                        </div>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -227,6 +239,14 @@
                                 @endif
                             </div>
                         </div>
+
+                        <!-- マニュアルクイックリンク -->
+                        <a href="{{ route('manual.index') }}"
+                            class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap shrink-0 {{ request()->routeIs('manual.*') ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-800/80 text-slate-200 hover:bg-slate-800 hover:text-white border border-slate-700/80' }}"
+                            title="操作マニュアルを開く">
+                            <span>📖</span>
+                            <span class="hidden xl:inline">マニュアル</span>
+                        </a>
 
                         <!-- プロフィールショートカット -->
                         <a href="{{ route('profile') }}"
@@ -418,6 +438,13 @@
                             <div class="min-w-0">
                                 <span class="font-bold block truncate">アカウント</span>
                                 <span class="text-[10px] text-slate-400 block truncate">情報・パスワード</span>
+                            </div>
+                        </a>
+                        <a href="{{ route('manual.index') }}" class="col-span-2 p-2.5 bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-700/50 rounded-xl flex items-center space-x-2.5 text-indigo-200 transition {{ request()->routeIs('manual.*') ? 'ring-2 ring-indigo-400' : '' }}">
+                            <span class="text-lg">📖</span>
+                            <div class="min-w-0">
+                                <span class="font-bold text-xs block">操作マニュアル（図解ガイド）</span>
+                                <span class="text-[10px] text-indigo-300/80 block">機能別の使い方・画面操作手順</span>
                             </div>
                         </a>
                         <form action="{{ route('logout') }}" method="POST" class="col-span-2 p-0">

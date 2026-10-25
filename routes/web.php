@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaneController;
+use App\Http\Controllers\ManualController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffCsvController;
@@ -106,6 +107,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', function () {
         return redirect()->route('users.show', Auth::user());
     })->name('profile');
+
+    // システム操作マニュアル
+    Route::get('/manual', [ManualController::class, 'index'])->name('manual.index');
 
     // タイムテーブル全体運行マトリクスビュー
     Route::get('/timetable', [TimetableMatrixController::class, 'index'])->name('timetable.index');
