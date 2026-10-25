@@ -50,16 +50,12 @@ class LaneController extends Controller
 
         $lanes = $timetable->lanes()->with(['leadStaff', 'tasks'])->ordered()->get();
         $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
-        $allTimetables = Timetable::orderBy('target_date', 'asc')->get();
-        $otherTimetables = $allTimetables->where('id', '!=', $timetable->id)->values();
 
         return view('lanes.index', [
             'timetable' => $timetable,
             'lanes' => $lanes,
             'activeStaff' => $activeStaff,
             'colorOptions' => Lane::COLOR_OPTIONS,
-            'allTimetables' => $allTimetables,
-            'otherTimetables' => $otherTimetables,
         ]);
     }
 
@@ -144,62 +140,6 @@ class LaneController extends Controller
             'success' => true,
             'message' => 'レーンの表示順を更新しました。',
         ]);
-    }
-
-    /**
-     * 他の日程からレーン構成を一括コピー
-     */
-    public function copyFrom(Request $request, Timetable $timetable): RedirectResponse
-    {
-        $this->authorize('create', Lane::class);
-
-        $validated = $request->validate([
-            'source_timetable_id' => ['required', 'integer', 'exists:timetables,id', 'different:timetable'],
-        ]);
-
-        $sourceTimetable = Timetable::findOrFail($validated['source_timetable_id']);
-        $sourceLanes = $sourceTimetable->lanes()->ordered()->get();
-
-        if ($sourceLanes->isEmpty()) {
-            return back()->with('error', "コピー元「{$sourceTimetable->name}」にレーンが設定されていません。");
-        }
-
-        $createdCount = 0;
-        $updatedCount = 0;
-
-        DB::transaction(function () use ($timetable, $sourceLanes, &$createdCount, &$updatedCount) {
-            foreach ($sourceLanes as $src) {
-                $existing = $timetable->lanes()->where('name', $src->name)->first();
-                if ($existing) {
-                    $existing->update([
-                        'icon' => $src->icon,
-                        'color' => $src->color,
-                        'code' => $src->code,
-                        'is_core' => $src->is_core,
-                        'is_active' => $src->is_active,
-                        'description' => $src->description,
-                        'display_order' => $src->display_order,
-                    ]);
-                    $updatedCount++;
-                } else {
-                    $timetable->lanes()->create([
-                        'name' => $src->name,
-                        'icon' => $src->icon,
-                        'color' => $src->color,
-                        'code' => $src->code,
-                        'is_core' => $src->is_core,
-                        'is_active' => $src->is_active,
-                        'lead_staff_id' => null, // 他日程の担当者は引き継がず未設定
-                        'description' => $src->description,
-                        'display_order' => $src->display_order,
-                    ]);
-                    $createdCount++;
-                }
-            }
-        });
-
-        return redirect()->route('timetables.lanes.index', $timetable)
-            ->with('success', "「{$sourceTimetable->name}」からレーン構成をコピーしました。（新規追加: {$createdCount}件、更新: {$updatedCount}件）");
     }
 
     /**

@@ -4,7 +4,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     initDragAndDropReorder();
-    initCopyModal();
     initDeleteMigrationModal();
 });
 
@@ -89,34 +88,7 @@ function initDragAndDropReorder() {
 }
 
 /**
- * 2. 他日程コピー用モーダル制御
- */
-function initCopyModal() {
-    const openBtn = document.getElementById('open-copy-modal-btn');
-    const modal = document.getElementById('copy-lane-modal');
-    if (!openBtn || !modal) return;
-
-    const closeBtns = modal.querySelectorAll('[data-close-modal]');
-
-    openBtn.addEventListener('click', () => {
-        modal.classList.remove('hidden');
-    });
-
-    closeBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
-    });
-
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.add('hidden');
-        }
-    });
-}
-
-/**
- * 3. タスク移行付き削除モーダル制御
+ * 2. タスク移行付き削除モーダル制御
  */
 function initDeleteMigrationModal() {
     const modal = document.getElementById('delete-migration-modal');

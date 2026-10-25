@@ -22,54 +22,13 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-            @if(isset($otherTimetables) && $otherTimetables->isNotEmpty())
-            <button type="button" id="open-copy-modal-btn"
-                class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
-                <span>📥</span>
-                <span>他日程からコピー</span>
-            </button>
-            @endif
-
-            <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
-                class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center space-x-1">
-                <span>⏱️</span>
-                <span>運行マトリクスを見る</span>
-            </a>
-            <a href="{{ route('timetables.show', $timetable) }}"
+            <a href="{{ route('lanes.index') }}"
                 class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
                 <span>←</span>
-                <span>運行日詳細に戻る</span>
+                <span>運行日別 担当班編成一覧に戻る</span>
             </a>
         </div>
     </div>
-
-    <!-- タイムテーブルクイック切り替えタブ -->
-    @if(isset($allTimetables) && $allTimetables->count() > 1)
-    <div class="bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs flex flex-wrap items-center gap-1.5">
-        <span class="text-xs font-bold text-slate-500 mr-1.5 flex items-center space-x-1">
-            <span>📅</span>
-            <span>タイムテーブル:</span>
-        </span>
-        @foreach($allTimetables as $tt)
-            @php
-                $isCurrent = $tt->id === $timetable->id;
-            @endphp
-            <a href="{{ route('timetables.lanes.index', $tt) }}"
-                class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition {{ $isCurrent ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200' }}">
-                <span>{{ $tt->target_date ? $tt->target_date->format('m/d') . ' ' : '' }}{{ $tt->name }}</span>
-                @if($tt->status === 'active')
-                    <span class="w-1.5 h-1.5 rounded-full {{ $isCurrent ? 'bg-emerald-300' : 'bg-emerald-500' }} animate-pulse"></span>
-                @endif
-                <span class="text-[10px] {{ $isCurrent ? 'text-indigo-200' : 'text-slate-400' }} font-mono">({{ $tt->lanes->count() }}班)</span>
-            </a>
-        @endforeach
-        <a href="{{ route('lanes.index') }}"
-            class="ml-auto inline-flex items-center space-x-1 text-xs font-bold text-slate-500 hover:text-indigo-600 transition px-2 py-1">
-            <span>日程選択へ戻る</span>
-            <span>→</span>
-        </a>
-    </div>
-    @endif
 
     <!-- アラートメッセージ -->
     @if(session('success'))
@@ -451,53 +410,6 @@
 
 </div>
 
-<!-- 3. 他日程からレーン構成コピー用モーダル -->
-@if(isset($otherTimetables) && $otherTimetables->isNotEmpty())
-<div id="copy-lane-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
-                <span>📥</span>
-                <span>他の運行日からレーン構成をコピー</span>
-            </h3>
-            <button type="button" data-close-modal class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
-        </div>
-
-        <form action="{{ route('timetables.lanes.copy-from', $timetable) }}" method="POST" class="p-5 space-y-4">
-            @csrf
-            <div>
-                <label for="source_timetable_id" class="block text-xs font-bold text-slate-700 mb-1">
-                    コピー元の運行日を選択 <span class="text-rose-600">*</span>
-                </label>
-                <select id="source_timetable_id" name="source_timetable_id" required
-                    class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="">-- 運行日を選択してください --</option>
-                    @foreach($otherTimetables as $ot)
-                    <option value="{{ $ot->id }}">
-                        {{ $ot->name }}（{{ $ot->target_date?->format('Y/m/d') }}）- {{ $ot->lanes()->count() }} レーン
-                    </option>
-                    @endforeach
-                </select>
-                <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">
-                    ※ コピー元のレーン名・テーマカラー・アイコン・主要班設定・表示順を取り込みます。<br>
-                    ※ 既に同名のレーンが存在する場合は設定が上書き更新され、存在しないレーンは新規作成されます。既存タスクはそのまま保持されます。
-                </p>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                <button type="button" data-close-modal
-                    class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
-                    キャンセル
-                </button>
-                <button type="submit"
-                    class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
-                    コピーを実行する
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-@endif
 
 <!-- 4. タスク移行削除モーダル -->
 <div id="delete-migration-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">

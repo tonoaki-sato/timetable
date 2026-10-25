@@ -85,6 +85,11 @@ class LaneManagementTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('担当班（レーン）管理');
+        $response->assertSee('運行日別 担当班編成一覧に戻る');
+        $response->assertDontSee('他日程からコピー');
+        $response->assertDontSee('運行マトリクスを見る');
+        $response->assertDontSee('copy-lane-modal');
+        $response->assertDontSee('日程選択へ戻る');
         $response->assertSee('カラーコーン');
         $response->assertSee('ステカン');
         $response->assertSee('lanes-container');
@@ -318,48 +323,6 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 11. 他の日程からレーン構成を一括コピーできること
-     */
-    public function test_can_copy_lanes_from_another_timetable(): void
-    {
-        // コピー元の日程を作成
-        $sourceTimetable = Timetable::factory()->create([
-            'name' => '設営準備日',
-            'target_date' => '2027-10-16',
-        ]);
-        $sourceTimetable->createDefaultLanes();
-
-        // コピー元にカスタムレーンを追加
-        $customLane = $sourceTimetable->lanes()->create([
-            'name' => '特別警備班',
-            'icon' => '🛡️',
-            'color' => 'indigo',
-            'is_core' => true,
-            'is_active' => true,
-            'display_order' => 120,
-            'description' => '深夜の資材監視',
-        ]);
-
-        // コピー実行
-        $response = $this->actingAs($this->adminUser)
-            ->post(route('timetables.lanes.copy-from', $this->timetable), [
-                'source_timetable_id' => $sourceTimetable->id,
-            ]);
-
-        $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
-        $response->assertSessionHas('success');
-
-        // コピー先日程に「特別警備班」が作成されたこと
-        $this->assertDatabaseHas('lanes', [
-            'timetable_id' => $this->timetable->id,
-            'name' => '特別警備班',
-            'icon' => '🛡️',
-            'color' => 'indigo',
-            'is_core' => true,
-        ]);
-    }
-
-    /**
      * 12. タスクが存在するレーンを別レーンにタスク移管して安全に削除できること
      */
     public function test_can_delete_lane_with_task_migration(): void
@@ -484,7 +447,7 @@ class LaneManagementTest extends TestCase
     /**
      * 17. 個別日程のレーン一覧画面で運行計画クイック切り替えタブが表示されること
      */
-    public function test_lane_index_displays_timetable_quick_switch_tabs(): void
+    public function test_lane_index_does_not_display_timetable_quick_switch_tabs(): void
     {
         $secondTimetable = Timetable::factory()->create([
             'name' => '本祭2日目',
@@ -497,11 +460,7 @@ class LaneManagementTest extends TestCase
             ->get(route('timetables.lanes.index', $this->timetable));
 
         $response->assertStatus(200);
-        $response->assertSee('タイムテーブル:');
-        $response->assertSee($this->timetable->name);
-        $response->assertSee($secondTimetable->name);
-        $response->assertSee(route('timetables.lanes.index', $secondTimetable));
-        $response->assertSee('日程選択へ戻る');
-        $response->assertSee(route('lanes.index'));
+        $response->assertDontSee('タイムテーブル:');
+        $response->assertDontSee('日程選択へ戻る');
     }
 }
