@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\ManualController;
 use App\Http\Controllers\MeetingController;
+use App\Http\Controllers\PresentationController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffCsvController;
 use App\Http\Controllers\StaffJoinController;
@@ -110,6 +111,9 @@ Route::middleware('auth')->group(function () {
 
     // システム操作マニュアル
     Route::get('/manual', [ManualController::class, 'index'])->name('manual.index');
+
+    // 幹事会向けプレゼンテーションスライド
+    Route::get('/presentation', [PresentationController::class, 'index'])->name('presentation.index');
 
     // タイムテーブル全体運行マトリクスビュー
     Route::get('/timetable', [TimetableMatrixController::class, 'index'])->name('timetable.index');

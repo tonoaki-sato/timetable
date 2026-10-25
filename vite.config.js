@@ -16,6 +16,7 @@ export default defineConfig({
                 'resources/js/staff-timeline.js',
                 'resources/js/timetable-task-show.js',
                 'resources/js/timetable-show.js',
+                'resources/js/presentation.js',
             ],
             refresh: true,
             fonts: [

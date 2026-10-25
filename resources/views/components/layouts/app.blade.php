@@ -204,6 +204,17 @@
                                         </div>
                                     </a>
                                     <div class="border-t border-slate-800/80 my-1"></div>
+                                    <a href="{{ route('presentation.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('presentation.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">📽️</span>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-bold flex items-center space-x-1">
+                                                <span>幹事会プレゼン</span>
+                                                <span class="bg-indigo-500/30 text-indigo-200 text-[9px] px-1.5 py-0.2 rounded font-normal">スライド</span>
+                                            </div>
+                                            <p class="text-[10px] {{ request()->routeIs('presentation.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">情報一元管理の協力要請プレゼン</p>
+                                        </div>
+                                    </a>
                                     <a href="{{ route('manual.index') }}"
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('manual.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">📖</span>
@@ -239,6 +250,14 @@
                                 @endif
                             </div>
                         </div>
+
+                        <!-- プレゼンテーションクイックリンク -->
+                        <a href="{{ route('presentation.index') }}"
+                            class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap shrink-0 {{ request()->routeIs('presentation.*') ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-800/80 text-slate-200 hover:bg-slate-800 hover:text-white border border-slate-700/80' }}"
+                            title="幹事会向けプレゼンテーションスライドを開く">
+                            <span>📽️</span>
+                            <span class="hidden xl:inline">プレゼン</span>
+                        </a>
 
                         <!-- マニュアルクイックリンク -->
                         <a href="{{ route('manual.index') }}"

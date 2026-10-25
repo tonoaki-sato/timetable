@@ -28,5 +28,37 @@
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
+
+    /* プレゼンテーション印刷用スタイル */
+    #presentationContainer {
+        background: white !important;
+        color: #0f172a !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+    .slide-content {
+        display: block !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        padding: 40px 20px !important;
+        min-height: 90vh !important;
+    }
+    .slide-content h2 {
+        color: #0f172a !important;
+    }
+    .slide-content p, .slide-content span, .slide-content td, .slide-content th {
+        color: #334155 !important;
+    }
+    #speakerNotesArea {
+        display: block !important;
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #475569 !important;
+        page-break-inside: avoid !important;
+    }
+    #speakerNotesText {
+        color: #1e293b !important;
+    }
 }
 
