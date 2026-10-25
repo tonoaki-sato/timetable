@@ -12,28 +12,10 @@
                 <span>/</span>
                 <span class="text-slate-700 font-bold">📅 {{ $timetable->name }}</span>
             </div>
-            <div class="flex flex-wrap items-center gap-2.5">
-                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 flex items-center space-x-2">
-                    <span>⏱️</span>
-                    <span>{{ $timetable->name }}</span>
-                </h1>
-                <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    📅 {{ $timetable->target_date?->format('Y年m月d日') }}
-                </span>
-                <span class="px-2.5 py-0.5 rounded text-xs font-mono text-slate-600 bg-slate-100 border border-slate-200">
-                    ⏱️ {{ substr($timetable->start_time, 0, 5) }} 〜 {{ substr($timetable->end_time, 0, 5) }}
-                </span>
-                @php
-                    $statusBadge = match($timetable->status) {
-                        'active' => 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold',
-                        'completed' => 'bg-slate-100 text-slate-600 border-slate-200',
-                        default => 'bg-blue-50 text-blue-700 border-blue-200',
-                    };
-                @endphp
-                <span class="px-2.5 py-0.5 rounded text-xs font-medium border {{ $statusBadge }}">
-                    {{ $timetable->status_label }}
-                </span>
-            </div>
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 flex items-center space-x-2">
+                <span>⏱️</span>
+                <span>{{ $timetable->name }}</span>
+            </h1>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">
                 @if($timetable->description)
                     {{ $timetable->description }}
@@ -62,12 +44,6 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-            <a href="{{ route('timetables.index') }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
-                <span>←</span>
-                <span>タイムテーブル一覧に戻る</span>
-            </a>
-
             <a href="{{ route('timetables.staff-timeline', $timetable) }}"
                 class="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
                 <span>👥</span>
@@ -87,6 +63,12 @@
                 <span>作業タスクを追加</span>
             </a>
             @endcan
+
+            <a href="{{ route('timetables.index') }}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                <span>←</span>
+                <span>タイムテーブル一覧に戻る</span>
+            </a>
         </div>
     </div>
 

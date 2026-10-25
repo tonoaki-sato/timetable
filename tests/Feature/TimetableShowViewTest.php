@@ -65,10 +65,9 @@ class TimetableShowViewTest extends TestCase
         $response->assertSee('タイムテーブル一覧');
         $response->assertSee(route('timetables.index'));
 
-        // タイトル & 基本情報
+        // タイトル & 説明（タイトル横の日付・時間帯バッジは削除されていること）
         $response->assertSee('1日目 本祭運行');
-        $response->assertSee('2026年10月17日');
-        $response->assertSee('08:00 〜 18:00');
+        $response->assertDontSee('08:00 〜 18:00');
         $response->assertSee('パレード及びメインステージ周辺の運行計画');
 
         // 残すアクションボタンが表示されていること
