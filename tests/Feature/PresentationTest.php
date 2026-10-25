@@ -56,6 +56,16 @@ class PresentationTest extends TestCase
         // 正しい画像アセットが参照されていること（404だった10_staff_card_printではなく09_staff_print_cards）
         $response->assertSee('09_staff_print_cards.png');
         $response->assertDontSee('10_staff_card_print.png');
+
+        // 待機場所（本陣受付裏）および多種多様な備品（カラーコーン、ニッパー、交通整理用棒等）が反映されていること
+        $response->assertSee('本陣受付裏');
+        $response->assertSee('カラーコーン');
+        $response->assertSee('ニッパー');
+        $response->assertSee('交通整理用の棒');
+
+        // リーダーに原因を帰するような表現が含まれていないこと
+        $response->assertDontSee('各リーダーの頭の中にしか');
+        $response->assertDontSee('頭の中にしか');
     }
 
     /**

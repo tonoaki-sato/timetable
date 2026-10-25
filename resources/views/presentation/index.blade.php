@@ -149,7 +149,7 @@
                                 <div class="text-sm font-bold text-indigo-200">幹事の皆様へのお願い</div>
                                 <p class="text-base sm:text-lg font-black text-white mt-2 leading-relaxed">
                                     「システムへの直接入力は私（佐藤）が代行します。<br>
-                                    皆様の頭の中やメモにある情報を教えてください！」
+                                    皆様が現場で培われた貴重なノウハウや運行計画を教えてください！」
                                 </p>
                             </div>
                         </div>
@@ -161,43 +161,43 @@
                     <div class="max-w-4xl mx-auto">
                         <div class="text-xs text-rose-400 font-bold uppercase tracking-wider mb-1">Actual Situation</div>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-white">当日の私の混乱状況：現場で直面した4つの負荷</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">対面での応対に追われながら、運行状況の把握と指示出しに奔走していました</p>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">本陣受付裏への来客集中と備品対応に追われ、運行指示が常に綱渡りでした</p>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                             <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
                                 <div class="flex items-center space-x-2 text-indigo-300 font-bold text-sm mb-1">
                                     <span>👥</span>
-                                    <span>① 多様な関係者への対面応対</span>
+                                    <span>① 本陣受付裏の立地による来客・応対の集中</span>
                                 </div>
                                 <p class="text-xs text-slate-300 leading-relaxed">
-                                    一般来場者、ござ市出店者、イベント参加者、ボランティア参加者、実行委員など、直接の問い合わせ・世間話・挨拶対応に常時追われていた。
+                                    待機場所が本陣受付のすぐ後ろで仕切りがなく、一般来場者・ござ市出店者・ボランティア・実行委員などあらゆる人が直接アクセス可能。常に問い合わせ、挨拶、世間話の応対に追われ、統括業務に集中できない環境だった。
                                 </p>
                             </div>
                             <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
                                 <div class="flex items-center space-x-2 text-indigo-300 font-bold text-sm mb-1">
                                     <span>⏱️</span>
-                                    <span>② 運行テーブルとスマホ時計の監視</span>
+                                    <span>② 紙テーブルとスマホ時計での綱渡りな運行把握</span>
                                 </div>
                                 <p class="text-xs text-slate-300 leading-relaxed">
-                                    紙の運行管理テーブルとスマホ（現在時刻の監視）を見ながら、常に運行状況の把握に神経を尖らせていた。
+                                    ひっきりなしの対面応対の合間に、紙の運行管理テーブルとスマホ時計を常に見比べ、運行全体の把握に神経を尖らせていた。
                                 </p>
                             </div>
                             <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
                                 <div class="flex items-center space-x-2 text-indigo-300 font-bold text-sm mb-1">
                                     <span>🚦</span>
-                                    <span>③ 通りの状況変化と人員指示出し</span>
+                                    <span>③ 通りの状況変化に伴う急な人員確保と指示出し</span>
                                 </div>
                                 <p class="text-xs text-slate-300 leading-relaxed">
-                                    通行止め開始・解除前後、ござ市開始・終了前後など、通りの状況変化を見越して先回りで人員確保と指示出しをしていた。
+                                    通行止め開始・解除前後、ござ市開始・終了前後など、通りの状況変化を見越して「誰が動けるか」直前で人員確保と指示出しに奔走していた。
                                 </p>
                             </div>
                             <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
                                 <div class="flex items-center space-x-2 text-indigo-300 font-bold text-sm mb-1">
-                                    <span>🛒</span>
-                                    <span>④ 資機材管理と各リーダーへの相談確認</span>
+                                    <span>📦</span>
+                                    <span>④ 多種多様な備品の持ち出し対応と問い合わせ殺到</span>
                                 </div>
                                 <p class="text-xs text-slate-300 leading-relaxed">
-                                    台車を勝手に持ち出されないよう気を配り、1日目と2日目とで異なる資機材の搬入・搬出の場所やタイミングを各リーダーに相談確認していた。
+                                    台車の勝手な持ち出し防止（一例）に加え、カラーコーンや交通整理用の棒の持ち出し、ニッパー・ガムテープ等消耗品の問い合わせが本陣裏に次々と寄せられ、日別の搬入出手順の確認にも追われていた。
                                 </p>
                             </div>
                         </div>
@@ -208,33 +208,33 @@
                 <div class="slide-content hidden" data-title="運行が見えないことによる指示の限界" data-section="第1部: 現状の課題">
                     <div class="max-w-4xl mx-auto">
                         <div class="text-xs text-rose-400 font-bold uppercase tracking-wider mb-1">Root Causes</div>
-                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">なぜ混乱したのか？「見えない」ことによる指示の限界</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">情報が各リーダーの頭の中にしかなく、先回り指示が難しかった</p>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">なぜ混乱したのか？ 受付背後での対応集中と、全体共有の仕組み不足</h2>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">各部会の綿密な運行情報が全体に可視化されておらず、本陣裏へのアクセス集中も重なり指示が後手に回った</p>
 
                         <div class="mt-6 overflow-hidden rounded-2xl border border-slate-700 bg-slate-800/60 text-xs sm:text-sm">
                             <table class="w-full text-left">
                                 <thead class="bg-slate-800 text-slate-300 font-bold border-b border-slate-700">
                                     <tr>
-                                        <th class="p-3.5 w-1/3">これまでの運用</th>
+                                        <th class="p-3.5 w-1/3">直面していた要因</th>
                                         <th class="p-3.5">生じていた指示出しのボトルネック</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-700/60 text-slate-300">
                                     <tr>
-                                        <td class="p-3.5 font-bold text-indigo-300">紙テーブルと時計を見比べる</td>
-                                        <td class="p-3.5">来場者対応や挨拶の合間では、<strong class="text-rose-400">リアルタイムの進行状況の把握が追いつかない</strong></td>
+                                        <td class="p-3.5 font-bold text-indigo-300">待機場所（本陣受付裏）のオープン性</td>
+                                        <td class="p-3.5">仕切りがなくあらゆる人が直接アクセス可能なため、<strong class="text-rose-400">対面応対や挨拶が途切れず、運行指示に専念できない</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3.5 font-bold text-indigo-300">紙テーブルと時計を見比べる運用</td>
+                                        <td class="p-3.5">応対の合間では、<strong class="text-rose-400">リアルタイムの進行状況の全体把握が追いつかない</strong></td>
                                     </tr>
                                     <tr>
                                         <td class="p-3.5 font-bold text-indigo-300">通行止め・ござ市の節目対応</td>
-                                        <td class="p-3.5">「誰がどこに空いているか」が見えず、<strong class="text-rose-400">直前になって慌てて人員を確保・指示出し</strong>する</td>
+                                        <td class="p-3.5">誰がどこで動けるかが一覧化されておらず、<strong class="text-rose-400">直前になって慌てて人員を確保・指示出し</strong>する</td>
                                     </tr>
                                     <tr>
-                                        <td class="p-3.5 font-bold text-indigo-300">台車の管理</td>
-                                        <td class="p-3.5">定位置や利用ルールが共有されず、<strong class="text-rose-400">台車を勝手に持ち出されないよう目を配り続ける</strong>負担が発生</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="p-3.5 font-bold text-indigo-300">1日目と2日目の搬入出の差</td>
-                                        <td class="p-3.5">各リーダーの頭の中にしか手順がなく、<strong class="text-rose-400">搬入・搬出の場所やタイミングをその都度相談・確認</strong>する手間が発生</td>
+                                        <td class="p-3.5 font-bold text-indigo-300">台車・備品の管理と日別搬入出<br><span class="text-[11px] font-normal text-slate-400">（※台車の管理は一例）</span></td>
+                                        <td class="p-3.5">コーン、誘導棒、ニッパー・テープ等消耗品や日別搬入出が共有されておらず、<strong class="text-rose-400">本陣裏へ備品問い合わせが集中し確認に追われる</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -255,9 +255,9 @@
                                     <span>❌</span>
                                     <span>これまで（状況把握に忙殺）</span>
                                 </div>
-                                <p class="text-xs text-rose-200 mb-2">来場者対応の合間に紙と時計を見比べ、人を集め、台車や搬入出を各リーダーに都度相談</p>
+                                <p class="text-xs text-rose-200 mb-2">受付裏で対面応対・備品対応に追われながら紙と時計を見比べ、人を集め、搬入出の確認に奔走</p>
                                 <div class="bg-rose-900/40 p-3 rounded-xl border border-rose-700/50 text-center font-bold text-rose-300 text-xs sm:text-sm">
-                                    「把握と確認に追われ、指示が後手に回る」
+                                    「突発対応と状況確認に追われ、指示が後手に回る」
                                 </div>
                             </div>
 
@@ -336,33 +336,33 @@
                     </div>
                 </div>
 
-                <!-- スライド 08: 変化③ 台車の管理と搬入出の効率化 -->
-                <div class="slide-content hidden" data-title="変化③: 台車管理と搬入出の効率化" data-section="第2部: 見える化による変化">
+                <!-- スライド 08: 変化③ 台車・備品管理の適正化と搬入出のスムーズ化 -->
+                <div class="slide-content hidden" data-title="変化③: 台車・備品管理と搬入出の効率化" data-section="第2部: 見える化による変化">
                     <div class="max-w-4xl mx-auto">
                         <div class="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1">Advantage 03</div>
-                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">台車の勝手な持ち出し防止と、日別の搬入出をスムーズに</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">資機材ルールが明確になり、各リーダーへ都度相談に走る必要がなくなります</p>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">台車・各種備品の持ち出し適正化と、日別の搬入出をスムーズに</h2>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">備品ルールや搬入出計画が一元化され、本陣裏への問い合わせ集中や確認負担を解消</p>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                             <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
                                 <div class="text-2xl mb-1">🛒</div>
-                                <h3 class="font-bold text-sm text-indigo-300">台車の定位置と持ち出しルール</h3>
+                                <h3 class="font-bold text-sm text-indigo-300">台車・コーン・誘導棒の管理</h3>
                                 <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    台車の配置場所と使用ルールをあらかじめ共有。勝手な持ち出しを防ぎ、資機材運搬の混乱を防止。
+                                    台車の勝手な持ち出し防止（一例）はもちろん、カラーコーンや交通整理用の棒の定位置・利用ルールを事前共有し勝手な持ち出しを防止。
+                                </p>
+                            </div>
+                            <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
+                                <div class="text-2xl mb-1">✂️</div>
+                                <h3 class="font-bold text-sm text-indigo-300">ニッパー・テープ等消耗品の定位置化</h3>
+                                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                                    「ニッパーどこ？」「ガムテープある？」等の備品保管場所を可視化。本陣受付裏への問い合わせ殺到をゼロに。
                                 </p>
                             </div>
                             <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
                                 <div class="text-2xl mb-1">📅</div>
-                                <h3 class="font-bold text-sm text-indigo-300">1日目・2日目の搬入出差を整理</h3>
+                                <h3 class="font-bold text-sm text-indigo-300">1・2日目搬入出差＆駐車場遵守</h3>
                                 <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    日によって異なる搬入・搬出の場所やタイミングを事前共有。当日に各リーダーへ確認に回る負担を解消。
-                                </p>
-                            </div>
-                            <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
-                                <div class="text-2xl mb-1">⏱️</div>
-                                <h3 class="font-bold text-sm text-indigo-300">貸切駐車場の時間制約遵守</h3>
-                                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    各貸切駐車場（3箇所）の利用可能時間をシステムで管理し、時間外配置や近隣トラブルを未然に防止。
+                                    日によって異なる搬入・搬出の場所や時間、貸切駐車場（3箇所）の利用時間を事前一元化。当日の確認負担や近隣トラブルを防止。
                                 </p>
                             </div>
                         </div>
@@ -461,7 +461,7 @@
                     <div class="max-w-4xl mx-auto">
                         <div class="text-xs text-amber-400 font-bold uppercase tracking-wider mb-1">Requests</div>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-white">幹事の皆様に教えていただきたい「3つの情報」</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">皆様の頭の中や手帳にある情報を共有してください</p>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">各部会・リーダーの皆様がお持ちの運行計画や現場ノウハウを共有してください</p>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                             <div class="bg-slate-800/90 border-2 border-indigo-500/50 p-5 rounded-2xl">
@@ -482,7 +482,7 @@
                                 <div class="text-indigo-400 font-black text-sm mb-1">③ 機材・場所ルール</div>
                                 <h3 class="font-bold text-base text-white">何がどこにあり、どんな制約があるか</h3>
                                 <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    台車の配置・利用ルール、1日目・2日目で異なる搬入出の場所と時間、駐車場の時間制約。
+                                    台車・コーン・誘導棒・消耗品等の配置と持ち出しルール、1・2日目で異なる搬入出の場所と時間、駐車場の時間制約。
                                 </p>
                             </div>
                         </div>
@@ -523,7 +523,8 @@
                                     <tr>
                                         <td class="p-3 font-bold text-indigo-300">③ 機材・場所</td>
                                         <td class="p-3">
-                                            ・台車の定位置と持ち出しルール（勝手な持ち出し防止）<br>
+                                            ・台車、カラーコーン、交通整理用の棒（誘導棒）の定位置と持ち出しルール（勝手な持ち出し防止）<br>
+                                            ・ニッパー、ガムテープなどよく使われる備品・消耗品の保管場所（本陣裏への問い合わせ削減）<br>
                                             ・1日目と2日目で異なる資機材搬入・搬出の場所・時間・順序<br>
                                             ・カラーコーン保管場所（番所地下等）、貸切駐車場3箇所の利用可能時間帯と鍵の担当者
                                         </td>
@@ -629,8 +630,8 @@
                             </div>
                             <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700">
                                 <div class="text-xl mb-1">💎</div>
-                                <div class="font-bold text-white text-sm">ノウハウは最大の資産</div>
-                                <p class="text-xs text-slate-400 mt-1">皆様の頭の中にある情報こそが、このまつりを支える財産です。</p>
+                                <div class="font-bold text-white text-sm">現場ノウハウは最大の資産</div>
+                                <p class="text-xs text-slate-400 mt-1">各リーダー・部会の皆様がお持ちの綿密な計画こそが、このまつりを支える財産です。</p>
                             </div>
                             <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700">
                                 <div class="text-xl mb-1">🤝</div>
