@@ -1,2 +1,11 @@
 User-agent: *
-Disallow:
+Disallow: /join
+Disallow: /staff/
+Disallow: /users/
+Disallow: /timetables/
+Disallow: /timetable-tasks/
+Disallow: /dashboard
+Disallow: /calendar
+Disallow: /lanes
+Disallow: /meetings
+Disallow: /annual-schedules

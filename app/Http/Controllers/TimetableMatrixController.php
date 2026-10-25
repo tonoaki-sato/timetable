@@ -18,6 +18,8 @@ class TimetableMatrixController extends Controller
      */
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Timetable::class);
+
         $timetables = Timetable::orderBy('target_date')->get();
 
         $selectedTimetableId = $request->integer('timetable_id');

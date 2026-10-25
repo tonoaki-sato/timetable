@@ -542,6 +542,10 @@ class TimetableTaskController extends Controller
     {
         $this->authorize('update', $task);
 
+        if ($assignment->timetable_task_id !== $task->id) {
+            abort(404, '指定されたタスクに該当するアサイン情報が見つかりません。');
+        }
+
         $this->taskService->updateAttendanceStatus($assignment->id, $request->validated('attendance_status'));
 
         return back()->with('success', '出欠ステータスを更新しました。');

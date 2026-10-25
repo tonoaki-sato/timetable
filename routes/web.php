@@ -29,7 +29,7 @@ Route::get('/', function () {
 
 // 2. スタッフセルフ登録ルート (未ログインでアクセス可)
 Route::get('/join', [StaffJoinController::class, 'create'])->name('staff.join');
-Route::post('/join', [StaffJoinController::class, 'store'])->name('staff.join.store');
+Route::post('/join', [StaffJoinController::class, 'store'])->name('staff.join.store')->middleware('throttle:10,1');
 Route::get('/join/completed', [StaffJoinController::class, 'completed'])->name('staff.join.completed');
 
 // 3. 現場マイタイムテーブル閲覧 & チェックイン & 動態操作ルート (トークン認証)

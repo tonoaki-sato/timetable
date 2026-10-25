@@ -51,15 +51,26 @@ class StaffCsvController extends Controller
             ]);
 
             Staff::orderBy('id')->chunk(200, function ($staffList) use ($handle) {
+                $sanitize = function (?string $value): string {
+                    if ($value === null || $value === '') {
+                        return '';
+                    }
+                    if (in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+                        return "'".$value;
+                    }
+
+                    return $value;
+                };
+
                 foreach ($staffList as $staff) {
                     $shiftUrl = route('staff.myshift', ['token' => $staff->access_token]);
 
                     fputcsv($handle, [
                         $staff->id,
-                        $staff->name,
-                        $staff->kana,
-                        $staff->affiliation ?? '',
-                        $staff->line_display_name ?? '',
+                        $sanitize($staff->name),
+                        $sanitize($staff->kana),
+                        $sanitize($staff->affiliation),
+                        $sanitize($staff->line_display_name),
                         $staff->registered_via === 'self' ? 'LINEセルフ' : '本部登録',
                         $staff->checked_in_at?->format('Y-m-d H:i:s') ?? '',
                         $staff->is_active ? '稼働可能' : '停止中',
@@ -129,16 +140,16 @@ class StaffCsvController extends Controller
             // 形式B (シンプル手動作成): [0: 氏名, 1: フリガナ, 2: 所属, 3: LINE表示名]
             if (is_numeric($row[0] ?? null) && count($row) >= 4) {
                 // 形式A
-                $name = trim($row[1] ?? '');
-                $kana = trim($row[2] ?? '');
-                $affiliation = trim($row[3] ?? '');
-                $lineDisplayName = trim($row[4] ?? '');
+                $name = mb_substr(trim($row[1] ?? ''), 0, 255);
+                $kana = mb_substr(trim($row[2] ?? ''), 0, 255);
+                $affiliation = mb_substr(trim($row[3] ?? ''), 0, 100);
+                $lineDisplayName = mb_substr(trim($row[4] ?? ''), 0, 100);
             } else {
                 // 形式B
-                $name = trim($row[0] ?? '');
-                $kana = trim($row[1] ?? '');
-                $affiliation = trim($row[2] ?? '');
-                $lineDisplayName = trim($row[3] ?? '');
+                $name = mb_substr(trim($row[0] ?? ''), 0, 255);
+                $kana = mb_substr(trim($row[1] ?? ''), 0, 255);
+                $affiliation = mb_substr(trim($row[2] ?? ''), 0, 100);
+                $lineDisplayName = mb_substr(trim($row[3] ?? ''), 0, 100);
             }
 
             if ($name === '') {

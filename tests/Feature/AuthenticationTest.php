@@ -72,7 +72,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors(['email' => 'ログイン情報が一致しません。']);
     }
 
     /**
@@ -91,7 +91,21 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors(['email' => 'ログイン情報が一致しません。']);
+    }
+
+    /**
+     * 存在しないユーザーでのログイン試行時も同一エラーメッセージが返ること
+     */
+    public function test_non_existent_users_receive_same_error_message(): void
+    {
+        $response = $this->post('/login', [
+            'email' => 'nobody@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors(['email' => 'ログイン情報が一致しません。']);
     }
 
     /**

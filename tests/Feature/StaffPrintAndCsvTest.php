@@ -133,6 +133,33 @@ class StaffPrintAndCsvTest extends TestCase
     }
 
     /**
+     * CSVエクスポート時に数式インジェクション文字がシングルクォートでエスケープされること
+     */
+    public function test_export_staff_csv_escapes_formula_injection(): void
+    {
+        $this->actingAs($this->operator);
+
+        Staff::factory()->create([
+            'name' => '=SUM(1+1)',
+            'kana' => '+KANA',
+            'affiliation' => '@Admin',
+            'line_display_name' => '-Minus',
+        ]);
+
+        $response = $this->get(route('staff.export-csv'));
+        $response->assertStatus(200);
+
+        ob_start();
+        $response->sendContent();
+        $content = ob_get_clean();
+
+        $this->assertStringContainsString("'=SUM(1+1)", $content);
+        $this->assertStringContainsString("'+KANA", $content);
+        $this->assertStringContainsString("'@Admin", $content);
+        $this->assertStringContainsString("'-Minus", $content);
+    }
+
+    /**
      * CSVファイルをアップロードしてスタッフを一括インポートできること
      */
     public function test_can_import_staff_csv(): void

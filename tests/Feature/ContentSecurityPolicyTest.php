@@ -30,5 +30,11 @@ class ContentSecurityPolicyTest extends TestCase
         $this->assertStringContainsString("style-src 'self' https://fonts.bunny.net", $csp);
         $this->assertStringNotContainsString('unsafe-inline', $csp);
         $this->assertStringNotContainsString('unsafe-eval', $csp);
+
+        // 各種セキュリティヘッダーの検証
+        $response->assertHeader('X-Content-Type-Options', 'nosniff');
+        $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
+        $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        $response->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     }
 }

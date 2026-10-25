@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -31,10 +33,20 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        // レートリミット判定（メールアドレス+IP単位、1分間に5回まで）
+        $throttleKey = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            throw ValidationException::withMessages([
+                'email' => [trans('auth.throttle', ['seconds' => $seconds])],
+            ]);
+        }
+
         $remember = $request->boolean('remember');
 
         // 2. 認証試行 (有効アカウント is_active = true のみ許可)
         if (Auth::attempt(array_merge($credentials, ['is_active' => true]), $remember)) {
+            RateLimiter::clear($throttleKey);
             $request->session()->regenerate();
 
             // 最終ログイン日時の更新 (U-101 連携)
@@ -47,14 +59,9 @@ class LoginController extends Controller
             return redirect()->intended(route('dashboard'));
         }
 
-        // 3. アカウントが無効化 (is_active = false) されている場合の個別判定
-        if (Auth::validate($credentials)) {
-            throw ValidationException::withMessages([
-                'email' => ['このアカウントは現在停止されています。システム管理者に確認してください。'],
-            ]);
-        }
+        RateLimiter::hit($throttleKey);
 
-        // 4. 認証失敗時
+        // 3. 認証失敗時（アカウント非存在、誤パスワード、停止中アカウントすべて同一メッセージ）
         throw ValidationException::withMessages([
             'email' => [trans('auth.failed')],
         ]);
