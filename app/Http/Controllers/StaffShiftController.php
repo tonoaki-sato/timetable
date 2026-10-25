@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Services\StaffService;
 use Illuminate\Http\JsonResponse;
@@ -184,60 +183,5 @@ class StaffShiftController extends Controller
 
         return redirect()->route('staff.myshift', ['token' => $token])
             ->with('success', '作業進捗状況を更新しました。');
-    }
-
-    /**
-     * URL紛失時の照合画面表示
-     */
-    public function showFindForm(): View
-    {
-        return view('staff.find');
-    }
-
-    /**
-     * 氏名・フリガナによる照合処理（所属による絞り込み対応）
-     */
-    public function find(Request $request): View|RedirectResponse
-    {
-        $request->validate([
-            'name' => ['required', 'string'],
-            'kana' => ['required', 'string'],
-            'affiliation' => ['nullable', 'string', 'max:100'],
-        ], [
-            'name.required' => 'お名前を入力してください。',
-            'kana.required' => 'フリガナを入力してください。',
-        ]);
-
-        $name = trim($request->input('name'));
-        $kana = trim($request->input('kana'));
-        $affiliation = trim($request->input('affiliation', ''));
-
-        $query = Staff::where('name', $name)
-            ->where('kana', $kana)
-            ->where('is_active', true);
-
-        if ($affiliation !== '') {
-            $query->where('affiliation', 'like', "%{$affiliation}%");
-        }
-
-        $matched = $query->get();
-
-        if ($matched->isEmpty()) {
-            return back()->withInput()->withErrors([
-                'name' => '一致するスタッフ情報が見つかりませんでした。入力内容をご確認いただくか、新規登録をお願いいたします。',
-            ]);
-        }
-
-        if ($matched->count() === 1) {
-            $staff = $matched->first();
-            Cookie::queue('staff_token', $staff->access_token, 60 * 24 * 30);
-
-            return redirect()->route('staff.myshift', ['token' => $staff->access_token]);
-        }
-
-        // 同姓同名が複数ある場合は候補リストを提示
-        return view('staff.find', [
-            'candidates' => $matched,
-        ]);
     }
 }

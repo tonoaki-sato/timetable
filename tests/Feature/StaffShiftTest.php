@@ -160,79 +160,18 @@ class StaffShiftTest extends TestCase
     }
 
     /**
-     * 氏名・フリガナ照合画面が正常に表示されること
+     * URL紛失照合ルート（/my/find）は完全に削除され 404 を返すこと
      */
-    public function test_find_screen_can_be_rendered(): void
+    public function test_my_find_route_returns_404(): void
     {
-        $response = $this->get(route('staff.myshift.find'));
-        $response->assertStatus(200);
-        $response->assertSee('タイムテーブル再検索');
-    }
+        $responseGet = $this->get('/my/find');
+        $responseGet->assertStatus(404);
 
-    /**
-     * 氏名＋フリガナの完全一致でマイシフト画面へリダイレクトされること
-     */
-    public function test_can_recover_url_by_matching_name_and_kana(): void
-    {
-        $response = $this->post(route('staff.myshift.find.post'), [
+        $responsePost = $this->post('/my/find', [
             'name' => '木村 拓也',
             'kana' => 'キムラ タクヤ',
         ]);
-
-        $response->assertRedirect(route('staff.myshift', ['token' => $this->staff->access_token]));
-    }
-
-    /**
-     * 同姓同名が複数ヒットした場合に候補選択画面が表示されること
-     */
-    public function test_find_with_multiple_matches_shows_selection(): void
-    {
-        Staff::factory()->create([
-            'name' => '木村 拓也',
-            'kana' => 'キムラ タクヤ',
-            'affiliation' => '青葉大学',
-        ]);
-
-        $response = $this->post(route('staff.myshift.find.post'), [
-            'name' => '木村 拓也',
-            'kana' => 'キムラ タクヤ',
-        ]);
-
-        $response->assertStatus(200);
-        $response->assertSee('同姓同名のスタッフが複数見つかりました');
-    }
-
-    /**
-     * 同姓同名が複数いる場合でも、所属を指定すれば1名に絞り込まれて直接リダイレクトされること
-     */
-    public function test_find_with_affiliation_narrows_down_to_single_staff(): void
-    {
-        $targetStaff = Staff::factory()->create([
-            'name' => '木村 拓也',
-            'kana' => 'キムラ タクヤ',
-            'affiliation' => '中央商店街振興組合',
-        ]);
-
-        $response = $this->post(route('staff.myshift.find.post'), [
-            'name' => '木村 拓也',
-            'kana' => 'キムラ タクヤ',
-            'affiliation' => '商店街',
-        ]);
-
-        $response->assertRedirect(route('staff.myshift', ['token' => $targetStaff->access_token]));
-    }
-
-    /**
-     * 一致するスタッフがいない場合エラーメッセージが表示されること
-     */
-    public function test_find_with_no_match_returns_error(): void
-    {
-        $response = $this->post(route('staff.myshift.find.post'), [
-            'name' => '存在しない名前',
-            'kana' => 'ソンザイシナイ',
-        ]);
-
-        $response->assertSessionHasErrors('name');
+        $responsePost->assertStatus(404);
     }
 
     /**

@@ -240,6 +240,8 @@ class StaffService
 
         $this->staffRepository->update($staff, [
             'access_token' => $newToken,
+            'token_reissued_at' => now(),
+            'reissue_count' => $staff->reissue_count + 1,
         ]);
 
         return $newToken;

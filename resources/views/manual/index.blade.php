@@ -571,11 +571,11 @@
 
                             <div class="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-1">
                                 <h4 class="font-bold text-amber-950 flex items-center space-x-1.5">
-                                    <span>🔍</span>
-                                    <span>URLを紛失したときは？（`/my/find`）</span>
+                                    <span>⚠️</span>
+                                    <span>名札やURLを紛失したときは？（本部管理者が再発行）</span>
                                 </h4>
                                 <p class="text-amber-900 text-xs leading-relaxed">
-                                    名札やリンクを紛失した場合は、スタッフ照合画面（`/my/find`）で登録した電話番号または氏名を入力すると、自身のマイシフトURLをいつでも再取得できます。
+                                    名札やリンクを紛失した場合は、本部受付にお越しください。管理者が台帳からURLを確認・再送するか、落とした名札の古いQRコードを即時無効化して新しい名札カードを再発行します。
                                 </p>
                             </div>
                         </div>

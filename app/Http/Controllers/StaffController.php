@@ -117,6 +117,7 @@ class StaffController extends Controller
         $this->staffService->regenerateAccessToken($staff);
 
         return redirect()->route('staff.show', $staff)
-            ->with('success', "スタッフ「{$staff->name}」の個別マイタイムテーブルURLを再発行しました。（古いURLは無効化されました）");
+            ->with('reissued_success', true)
+            ->with('success', "スタッフ「{$staff->name}」の名札トークンを再発行しました。以前のQRコードとURLは無効化（404）されました。新しい名札カードを印刷してください。");
     }
 }

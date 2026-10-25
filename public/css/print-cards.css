@@ -98,6 +98,20 @@ body {
     color: #4338ca;
     letter-spacing: 0.5px;
 }
+.badge-header-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.reissue-tag {
+    font-size: 8.5px;
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #f87171;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 800;
+}
 .role-tag {
     font-size: 9px;
     background: #e0e7ff;

@@ -29,7 +29,12 @@
                 <!-- ヘッダー -->
                 <div class="badge-header">
                     <span class="event-title">まつり運行スタッフ証</span>
-                    <span class="role-tag">現場STAFF</span>
+                    <div class="badge-header-right">
+                        @if($staff->is_reissued)
+                        <span class="reissue-tag">再発行 (Ver.{{ $staff->reissue_count + 1 }})</span>
+                        @endif
+                        <span class="role-tag">現場STAFF</span>
+                    </div>
                 </div>
 
                 <!-- ボディ -->

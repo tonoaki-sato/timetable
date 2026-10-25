@@ -59,4 +59,15 @@ class StaffFactory extends Factory
             'line_picture_url' => 'https://profile.line-scdn.net/sample',
         ]);
     }
+
+    /**
+     * 再発行済み状態
+     */
+    public function reissued(int $count = 1): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'token_reissued_at' => now(),
+            'reissue_count' => $count,
+        ]);
+    }
 }

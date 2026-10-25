@@ -100,11 +100,11 @@
             </form>
         </div>
 
-        <!-- すでに登録済みの方への案内リンク -->
+        <!-- すでに登録済みの方への案内 -->
         <div class="text-center mt-6">
-            <a href="{{ route('staff.myshift.find') }}" class="text-xs text-indigo-300 hover:text-white underline transition">
-                すでに登録済みでURLが分からない方はこちら
-            </a>
+            <p class="text-xs text-indigo-200">
+                すでに登録済みでマイシフトURLがご不明な場合は、本部受付までお申し出ください。
+            </p>
         </div>
     </div>
 

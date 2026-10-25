@@ -28,6 +28,8 @@ return new class extends Migration
             // 現場アクセス・受付用日時
             $table->dateTime('last_accessed_at')->nullable()->comment('最終確認日時');
             $table->dateTime('checked_in_at')->nullable()->comment('当日受付・現場到着日時');
+            $table->dateTime('token_reissued_at')->nullable()->comment('トークン再発行日時');
+            $table->unsignedSmallInteger('reissue_count')->default(0)->comment('名札・トークン再発行回数');
 
             // 2038年問題対策として DATETIME 型を採用
             $table->dateTime('created_at')->nullable();

@@ -39,6 +39,27 @@
         </div>
     </div>
 
+    <!-- セキュリティ再発行完了バナー -->
+    @if(session('reissued_success'))
+    <div class="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div class="flex items-start space-x-3">
+            <span class="text-2xl">⚠️</span>
+            <div>
+                <h4 class="text-sm font-bold text-amber-900">名札トークンのセキュリティ再発行が完了しました</h4>
+                <p class="text-xs text-amber-800 mt-0.5">
+                    以前の古いQRコード・URLはすべて無効化（404）されました。新しく発行された名札カードを印刷してスタッフにお渡しください。
+                </p>
+            </div>
+        </div>
+        <a href="{{ route('staff.print-card', $staff) }}" target="_blank"
+           class="inline-flex items-center justify-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm transition whitespace-nowrap space-x-1.5 cursor-pointer">
+            <span>🖨️</span>
+            <span>新名札カードを印刷する</span>
+            <span>↗</span>
+        </a>
+    </div>
+    @endif
+
     <!-- スタッフ基本情報カード -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-6 sm:p-8 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center justify-between">
@@ -51,7 +72,13 @@
                 </h1>
             </div>
 
-            <div>
+            <div class="flex items-center space-x-2">
+                @if($staff->is_reissued)
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    ⚠️ 再発行 {{ $staff->reissue_count }}回目 ({{ $staff->token_reissued_at?->format('m/d H:i') }})
+                </span>
+                @endif
+
                 @if($staff->is_active)
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                     ● 稼働可能
@@ -106,7 +133,7 @@
                 </div>
             </div>
 
-            <!-- 専用マイタイムテーブルURL & QR -->
+            <!-- 専用マイタイムテーブルURL & セキュリティ再発行 -->
             <div class="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-3">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
@@ -119,20 +146,28 @@
                         </p>
                     </div>
 
+                    @can('update', $staff)
                     <div class="flex items-center space-x-2">
                         <form action="{{ route('staff.regenerate-token', $staff) }}" method="POST"
-                              data-confirm="アクセストークンを再生成しますか？&#10;（古いURLは無効化されます）">
+                              data-confirm="スタッフ「{{ $staff->name }}」の名札紛失・セキュリティ再発行を実行しますか？&#10;&#10;【注意】落とした名札の古いQRコードは即時に無効化（404）され、新しい名札が発行されます。">
                             @csrf
-                            <button type="submit" class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 rounded text-[11px] font-medium transition cursor-pointer">
-                                🔄 URL再発行
+                            <button type="submit" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                                <span>⚠️</span>
+                                <span>名札紛失・セキュリティ再発行</span>
                             </button>
                         </form>
                     </div>
+                    @endcan
                 </div>
 
                 <div class="flex items-center space-x-2">
-                    <input type="text" readonly value="{{ $staff->my_shift_url }}"
+                    <input type="text" id="staffShiftUrlInput" readonly value="{{ $staff->my_shift_url }}"
                            class="flex-1 px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-mono text-slate-700">
+                    <button type="button" id="copyShiftUrlBtn"
+                            class="px-3 py-1.5 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                        <span>📋</span>
+                        <span id="copyShiftUrlBtnText">URLコピー</span>
+                    </button>
                     <a href="{{ $staff->my_shift_url }}" target="_blank" rel="noopener noreferrer"
                        class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1">
                         <span>開く</span>
@@ -209,4 +244,7 @@
     </div>
 
 </div>
+
+<!-- 外部JS（CSP準拠） -->
+<script src="{{ asset('js/staff-management.js') }}" defer></script>
 </x-layouts.app>

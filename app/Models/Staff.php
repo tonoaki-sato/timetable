@@ -23,6 +23,8 @@ use Illuminate\Support\Str;
     'registered_via',
     'last_accessed_at',
     'checked_in_at',
+    'token_reissued_at',
+    'reissue_count',
 ])]
 class Staff extends Model
 {
@@ -52,7 +54,17 @@ class Staff extends Model
             'is_active' => 'boolean',
             'last_accessed_at' => 'datetime',
             'checked_in_at' => 'datetime',
+            'token_reissued_at' => 'datetime',
+            'reissue_count' => 'integer',
         ];
+    }
+
+    /**
+     * トークンが再発行されたスタッフかどうか
+     */
+    public function getIsReissuedAttribute(): bool
+    {
+        return $this->reissue_count > 0;
     }
 
     /**

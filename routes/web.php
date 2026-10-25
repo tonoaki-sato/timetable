@@ -38,10 +38,6 @@ Route::post('/my/shift/{token}/checkin', [StaffShiftController::class, 'checkIn'
 Route::post('/my/shift/{token}/line-bind', [StaffShiftController::class, 'bindLine'])->name('staff.myshift.line-bind');
 Route::post('/my/shift/{token}/assignments/{assignment}/status', [StaffShiftController::class, 'updateAssignmentStatus'])->name('staff.myshift.assignment-status');
 
-// 4. URL紛失時のスタッフ照合ルート
-Route::get('/my/find', [StaffShiftController::class, 'showFindForm'])->name('staff.myshift.find');
-Route::post('/my/find', [StaffShiftController::class, 'find'])->name('staff.myshift.find.post');
-
 // 5. 認証ルート (未ログイン時のみアクセス可)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');

@@ -103,5 +103,26 @@
                 }
             });
         }
+
+        // 詳細画面でのURLコピー
+        const copyShiftUrlBtn = document.getElementById('copyShiftUrlBtn');
+        const staffShiftUrlInput = document.getElementById('staffShiftUrlInput');
+        const copyShiftUrlBtnText = document.getElementById('copyShiftUrlBtnText');
+        if (copyShiftUrlBtn && staffShiftUrlInput) {
+            copyShiftUrlBtn.addEventListener('click', async function () {
+                try {
+                    await navigator.clipboard.writeText(staffShiftUrlInput.value);
+                    if (copyShiftUrlBtnText) {
+                        const originalText = copyShiftUrlBtnText.textContent;
+                        copyShiftUrlBtnText.textContent = 'コピー完了！';
+                        setTimeout(() => {
+                            copyShiftUrlBtnText.textContent = originalText;
+                        }, 2000);
+                    }
+                } catch (e) {
+                    staffShiftUrlInput.select();
+                }
+            });
+        }
     });
 })();
