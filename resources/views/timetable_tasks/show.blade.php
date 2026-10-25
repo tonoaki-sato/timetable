@@ -3,16 +3,19 @@
 
     <!-- ナビゲーション & 操作 -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <a href="{{ route('timetables.show', $task->timetable_id) }}"
-            class="inline-flex items-center space-x-1 text-xs font-medium text-slate-500 hover:text-slate-800 transition">
-            <span>←</span>
-            <span>「{{ $task->timetable?->name }}」に戻る</span>
-        </a>
+        <div class="flex items-center space-x-2 text-xs text-slate-500">
+            <a href="{{ route('timetables.show', $task->timetable_id) }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                <span>⏱️</span>
+                <span>{{ $task->timetable?->name }}</span>
+            </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">📋 {{ $task->title }}</span>
+        </div>
 
-        <div class="flex items-center space-x-2">
+        <div class="flex flex-wrap items-center gap-2">
             @can('update', $task)
             <a href="{{ route('timetable-tasks.edit', $task) }}"
-                class="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
                 <span>✏️</span>
                 <span>タスク情報編集</span>
             </a>
@@ -24,12 +27,18 @@
                 @csrf
                 @method('DELETE')
                 <button type="submit"
-                    class="px-3 py-2 bg-white hover:bg-red-50 text-red-600 border border-slate-200 hover:border-red-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                    class="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs cursor-pointer">
                     <span>🗑️</span>
                     <span>削除</span>
                 </button>
             </form>
             @endcan
+
+            <a href="{{ route('timetables.show', $task->timetable_id) }}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>←</span>
+                <span>「{{ $task->timetable?->name }}」に戻る</span>
+            </a>
         </div>
     </div>
 

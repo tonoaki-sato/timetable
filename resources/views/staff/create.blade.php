@@ -1,16 +1,27 @@
 <x-layouts.app title="新規スタッフ登録">
-<div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
+<div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
 
-    <!-- ヘッダー -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h2 class="text-2xl font-bold tracking-tight text-slate-900">➕ 新規スタッフ登録</h2>
-            <p class="text-xs text-slate-500 mt-1">現場運行を補助するボランティア・スタッフを登録します。</p>
-        </div>
-        <a href="{{ route('staff.index') }}" class="text-xs font-medium text-slate-500 hover:text-slate-800 transition">
-            ← 一覧に戻る
-        </a>
-    </div>
+    <!-- ナビゲーション & ヘッダー -->
+    <x-page-header
+        title="新規スタッフ登録"
+        icon="➕"
+        description="現場運行を補助するボランティア・スタッフを登録します。">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('staff.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                <span>👷</span>
+                <span>スタッフ一覧</span>
+            </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">新規登録</span>
+        </x-slot:breadcrumbs>
+
+        <x-slot:actions>
+            <a href="{{ route('staff.index') }}" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>←</span>
+                <span>スタッフ一覧に戻る</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- バリデーションエラーサマリー -->
     @if ($errors->any())

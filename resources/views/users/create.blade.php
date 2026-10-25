@@ -1,12 +1,27 @@
 <x-layouts.app title="新規ユーザー登録">
-<div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
+<div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
 
-    <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-bold tracking-tight text-slate-900">➕ 新規ユーザー登録</h2>
-        <a href="{{ route('users.index') }}" class="text-xs text-slate-500 hover:text-slate-800 transition">
-            ← 一覧に戻る
-        </a>
-    </div>
+    <!-- ナビゲーション & ヘッダー -->
+    <x-page-header
+        title="新規ユーザー登録"
+        icon="➕"
+        description="本部管理者およびオペレーターアカウントを新規発行します。">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('users.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                <span>👥</span>
+                <span>ユーザー一覧</span>
+            </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">新規登録</span>
+        </x-slot:breadcrumbs>
+
+        <x-slot:actions>
+            <a href="{{ route('users.index') }}" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>←</span>
+                <span>ユーザー一覧に戻る</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- エラー表示 -->
     @if ($errors->any())

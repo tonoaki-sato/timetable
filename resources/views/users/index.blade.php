@@ -2,18 +2,20 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- ヘッダーエリア -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-bold tracking-tight text-slate-900">👥 ユーザー管理</h2>
-            <p class="text-xs text-slate-500 mt-1">本部管理者およびオペレーターアカウントの閲覧・管理</p>
-        </div>
-
+    <x-page-header
+        title="ユーザー管理"
+        icon="👥"
+        description="本部管理者およびオペレーターアカウントの閲覧・管理">
         @can('create', App\Models\User::class)
-        <a href="{{ route('users.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-sm transition">
-            ➕ 新規ユーザー登録
-        </a>
+        <x-slot:actions>
+            <a href="{{ route('users.create') }}"
+                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                <span>➕</span>
+                <span>新規ユーザー登録</span>
+            </a>
+        </x-slot:actions>
         @endcan
-    </div>
+    </x-page-header>
 
     <!-- 成功通知メッセージ -->
     @if(session('success'))

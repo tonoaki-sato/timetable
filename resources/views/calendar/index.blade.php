@@ -2,27 +2,20 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- 1. ヘッダーエリア -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center space-x-2.5">
-                <span class="text-2xl">📅</span>
-                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">総合カレンダー</h1>
-            </div>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">
-                行政締切、準備タスク、定例会議、まつり本番運行日のすべてをカレンダー上で俯瞰・調整できます。
-            </p>
-        </div>
-
-        <div class="flex items-center space-x-2">
-            @can('create', App\Models\AnnualSchedule::class)
+    <x-page-header
+        title="総合カレンダー"
+        icon="📅"
+        description="行政締切、準備タスク、定例会議、まつり本番運行日のすべてをカレンダー上で俯瞰・調整できます。">
+        @can('create', App\Models\AnnualSchedule::class)
+        <x-slot:actions>
             <button type="button" data-action="open-new-event-modal"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
                 <span>➕</span>
                 <span>新規予定を登録</span>
             </button>
-            @endcan
-        </div>
-    </div>
+        </x-slot:actions>
+        @endcan
+    </x-page-header>
 
     <!-- 2. 検索・絞り込みフォーム -->
     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">

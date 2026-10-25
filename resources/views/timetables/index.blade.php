@@ -2,22 +2,20 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- ヘッダー -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-bold tracking-tight text-slate-900">⏱️ タイムテーブル管理</h2>
-            <p class="text-xs text-slate-500 mt-1">
-                まつり開催日ごとの基本枠（運行日・開始終了時刻）および各日の作業タスク・人員動態を管理します。
-            </p>
-        </div>
-
+    <x-page-header
+        title="タイムテーブル管理"
+        icon="⏱️"
+        description="まつり開催日ごとの基本枠（運行日・開始終了時刻）および各日の作業タスク・人員動態を管理します。">
         @can('create', App\Models\Timetable::class)
-        <a href="{{ route('timetables.create') }}"
-            class="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
-            <span>➕</span>
-            <span>新規タイムテーブルを登録</span>
-        </a>
+        <x-slot:actions>
+            <a href="{{ route('timetables.create') }}"
+                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                <span>➕</span>
+                <span>新規タイムテーブルを登録</span>
+            </a>
+        </x-slot:actions>
         @endcan
-    </div>
+    </x-page-header>
 
     <!-- ステータス絞り込みタブ -->
     <div class="flex items-center space-x-2 border-b border-slate-200 pb-2">

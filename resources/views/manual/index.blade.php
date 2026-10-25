@@ -2,34 +2,27 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         <!-- ページヘッダー -->
-        <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-slate-200">
-            <div>
-                <div class="flex items-center space-x-2.5">
-                    <span class="text-3xl">📖</span>
-                    <div>
-                        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">システム操作マニュアル</h1>
-                        <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
-                            まつり総合管理システム（運行本部・タイムテーブル・人員機材動態・年間工程）の公式操作ガイド
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2.5">
+        <x-page-header
+            title="システム操作マニュアル"
+            icon="📖"
+            description="まつり総合管理システム（運行本部・タイムテーブル・人員機材動態・年間工程）の公式操作ガイド"
+            class="mb-6 pb-5 border-b border-slate-200">
+            <x-slot:actions>
                 <!-- キーワードクイック検索 -->
                 <div class="relative w-48 sm:w-64">
                     <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400 text-xs">🔍</span>
                     <input type="text" id="manualSearchInput"
                         placeholder="キーワード検索 (例: アサイン)..."
-                        class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                        class="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs">
                 </div>
                 <!-- 印刷ボタン -->
                 <button type="button" onclick="window.print()"
-                    class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1.5 shadow-xs cursor-pointer print:hidden shrink-0">
+                    class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer print:hidden shrink-0">
                     <span>🖨️</span>
                     <span>印刷 / PDF出力</span>
                 </button>
-            </div>
-        </div>
+            </x-slot:actions>
+        </x-page-header>
 
         <!-- メイングリッド (サイドバー目次 + コンテンツ) -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">

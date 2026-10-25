@@ -1,24 +1,48 @@
 <x-layouts.app :title="$staff->name . ' - スタッフ詳細'">
-<div class="max-w-4xl mx-auto px-4 py-8 space-y-6">
+<div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 
-    <!-- ナビゲーション & 操作 -->
-    <div class="flex items-center justify-between">
-        <a href="{{ route('staff.index') }}"
-            class="inline-flex items-center space-x-1 text-xs font-medium text-slate-500 hover:text-slate-800 transition">
-            <span>←</span>
-            <span>スタッフ一覧に戻る</span>
-        </a>
+    <!-- ナビゲーション & ヘッダー -->
+    <x-page-header
+        :title="$staff->name"
+        icon="👷"
+        :description="($staff->kana ? 'フリガナ: ' . $staff->kana . ' ｜ ' : '') . '所属: ' . ($staff->affiliation ?: '一般・ボランティア')">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('staff.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                <span>👷</span>
+                <span>スタッフ一覧</span>
+            </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">{{ $staff->name }}</span>
+        </x-slot:breadcrumbs>
 
-        <div class="flex items-center space-x-2">
+        <x-slot:badges>
+            @if($staff->is_active)
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                ● 稼働可能
+            </span>
+            @else
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                休止中
+            </span>
+            @endif
+
+            @if($staff->is_reissued)
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                ⚠️ 再発行 {{ $staff->reissue_count }}回目
+            </span>
+            @endif
+        </x-slot:badges>
+
+        <x-slot:actions>
             <a href="{{ route('staff.print-card', $staff) }}" target="_blank"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
                 <span>🖨️</span>
                 <span>名札印刷</span>
             </a>
 
             @can('update', $staff)
             <a href="{{ route('staff.edit', $staff) }}"
-                class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
                 <span>✏️</span>
                 <span>編集する</span>
             </a>
@@ -30,14 +54,20 @@
                 @csrf
                 @method('DELETE')
                 <button type="submit"
-                    class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                    class="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs cursor-pointer">
                     <span>🗑️</span>
                     <span>削除</span>
                 </button>
             </form>
             @endcan
-        </div>
-    </div>
+
+            <a href="{{ route('staff.index') }}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>←</span>
+                <span>スタッフ一覧に戻る</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- セキュリティ再発行完了バナー -->
     @if(session('reissued_success'))
@@ -62,15 +92,6 @@
 
     <!-- スタッフ基本情報カード -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-6 sm:p-8 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center justify-between">
-            <div>
-                <span class="text-xs font-mono text-slate-400 block mb-1">
-                    {{ $staff->kana ?: 'フリガナ未登録' }}
-                </span>
-                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-                    {{ $staff->name }}
-                </h1>
-            </div>
 
             <div class="flex items-center space-x-2">
                 @if($staff->is_reissued)

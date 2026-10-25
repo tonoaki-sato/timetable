@@ -2,26 +2,38 @@
 <div class="max-w-[1700px] mx-auto px-2 sm:px-4 lg:px-6 py-4 space-y-4">
 
     <!-- ナビゲーション & アクションバー -->
-    <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-2xs print:hidden">
-        <div class="flex items-center space-x-2">
-            <a href="{{ route('timetables.show', $timetable) }}"
-                class="inline-flex items-center space-x-1 text-xs font-bold text-slate-600 hover:text-slate-900 transition">
-                <span>←</span>
-                <span>タイムテーブル詳細へ戻る</span>
+    <div class="flex flex-wrap items-center justify-between gap-3 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-2xs print:hidden">
+        <div class="flex items-center space-x-2 text-xs text-slate-500">
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                <span>⏱️</span>
+                <span>タイムテーブル一覧</span>
             </a>
-            <span class="text-slate-300">|</span>
-            <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
-                class="inline-flex items-center space-x-1 text-xs font-bold text-indigo-600 hover:underline">
-                <span>⏱️ 全体マトリクス進行表へ</span>
+            <span>/</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition">
+                <span>📅 {{ $timetable->name }}</span>
             </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">👥 スタッフ稼働タイムライン</span>
         </div>
 
         <div class="flex items-center space-x-2">
+            <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
+                class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>⏱️</span>
+                <span>全体マトリクス進行表へ</span>
+            </a>
+
             <button type="button" data-action="print"
                 class="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs">
                 <span>🖨️</span>
                 <span>A4横 印刷</span>
             </button>
+
+            <a href="{{ route('timetables.show', $timetable) }}"
+                class="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>←</span>
+                <span>タイムテーブル詳細へ戻る</span>
+            </a>
         </div>
     </div>
 

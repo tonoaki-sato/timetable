@@ -4,10 +4,10 @@
     <!-- 1. 最上部: 本部運行サマリーヘッダー (1行幅コンパクトレイアウト) -->
     <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl px-4 sm:px-5 py-3 text-white shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <h2 class="text-lg sm:text-xl font-bold tracking-tight flex items-center space-x-2">
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight flex items-center space-x-2">
                 <span>📊</span>
                 <span>本部運行総合ダッシュボード</span>
-            </h2>
+            </h1>
             <span class="inline-flex items-center space-x-1.5 text-xs text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span>システム正常稼働中</span>

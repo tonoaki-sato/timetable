@@ -1,19 +1,54 @@
 <x-layouts.app :title="$schedule->title . ' - 年間スケジュール詳細'">
-<div class="max-w-4xl mx-auto px-4 py-8 space-y-6">
+<div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 
-    <!-- ナビゲーション・戻る -->
-    <div class="flex items-center justify-between">
-        <a href="{{ route('annual-schedules.index', ['year' => $schedule->target_year]) }}"
-            class="inline-flex items-center space-x-1 text-xs font-medium text-slate-500 hover:text-slate-800 transition">
-            <span>←</span>
-            <span>{{ $schedule->target_year }}年度 年間スケジュール一覧に戻る</span>
-        </a>
+    @php
+        $categoryBadgeClasses = match($schedule->category) {
+            'committee' => 'bg-purple-50 text-purple-700 border-purple-200',
+            'permit' => 'bg-amber-50 text-amber-700 border-amber-200',
+            'briefing' => 'bg-sky-50 text-sky-700 border-sky-200',
+            'operation' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+            default => 'bg-slate-100 text-slate-700 border-slate-200',
+        };
 
-        <!-- 操作ボタン群 -->
-        <div class="flex items-center space-x-2">
+        $statusBadgeClasses = match($schedule->status) {
+            'planned' => 'bg-blue-50 text-blue-700 border-blue-200',
+            'in_progress' => 'bg-amber-50 text-amber-800 border-amber-300 font-bold',
+            'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+            'cancelled' => 'bg-slate-100 text-slate-500 border-slate-200 line-through',
+            default => 'bg-slate-50 text-slate-700 border-slate-200',
+        };
+    @endphp
+
+    <!-- ナビゲーション & ヘッダー -->
+    <x-page-header
+        :title="$schedule->title"
+        icon="📋"
+        :description="$schedule->start_date ? '実施日程: ' . $schedule->start_date->format('Y年m月d日') . ($schedule->end_date && !$schedule->end_date->isSameDay($schedule->start_date) ? ' 〜 ' . $schedule->end_date->format('Y年m月d日') : '') : null">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('annual-schedules.index', ['year' => $schedule->target_year]) }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                <span>📋</span>
+                <span>{{ $schedule->target_year }}年度 年間スケジュール一覧</span>
+            </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">{{ $schedule->title }}</span>
+        </x-slot:breadcrumbs>
+
+        <x-slot:badges>
+            <span class="bg-slate-900 text-white text-xs px-2.5 py-0.5 rounded font-mono font-bold">
+                {{ $schedule->target_year }}年度
+            </span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold border {{ $categoryBadgeClasses }}">
+                {{ $schedule->category_label }}
+            </span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium border {{ $statusBadgeClasses }}">
+                {{ $schedule->status_label }}
+            </span>
+        </x-slot:badges>
+
+        <x-slot:actions>
             @can('update', $schedule)
             <a href="{{ route('annual-schedules.edit', $schedule) }}"
-                class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
                 <span>✏️</span>
                 <span>編集する</span>
             </a>
@@ -25,55 +60,23 @@
                 @csrf
                 @method('DELETE')
                 <button type="submit"
-                    class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                    class="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs cursor-pointer">
                     <span>🗑️</span>
                     <span>削除</span>
                 </button>
             </form>
             @endcan
-        </div>
-    </div>
+
+            <a href="{{ route('annual-schedules.index', ['year' => $schedule->target_year]) }}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>←</span>
+                <span>{{ $schedule->target_year }}年度 年間スケジュール一覧に戻る</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- メイン詳細カード -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <!-- カードヘッダー -->
-        <div class="p-6 sm:p-8 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-            <div class="flex flex-wrap items-center gap-2 mb-3">
-                <span class="bg-slate-900 text-white text-xs px-2.5 py-0.5 rounded font-mono font-bold">
-                    {{ $schedule->target_year }}年度
-                </span>
-
-                @php
-                    $categoryBadgeClasses = match($schedule->category) {
-                        'committee' => 'bg-purple-50 text-purple-700 border-purple-200',
-                        'permit' => 'bg-amber-50 text-amber-700 border-amber-200',
-                        'briefing' => 'bg-sky-50 text-sky-700 border-sky-200',
-                        'operation' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                        default => 'bg-slate-100 text-slate-700 border-slate-200',
-                    };
-
-                    $statusBadgeClasses = match($schedule->status) {
-                        'planned' => 'bg-blue-50 text-blue-700 border-blue-200',
-                        'in_progress' => 'bg-amber-50 text-amber-800 border-amber-300 font-bold',
-                        'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                        'cancelled' => 'bg-slate-100 text-slate-500 border-slate-200 line-through',
-                        default => 'bg-slate-50 text-slate-700 border-slate-200',
-                    };
-                @endphp
-
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold border {{ $categoryBadgeClasses }}">
-                    {{ $schedule->category_label }}
-                </span>
-
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium border {{ $statusBadgeClasses }}">
-                    {{ $schedule->status_label }}
-                </span>
-            </div>
-
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-                {{ $schedule->title }}
-            </h1>
-        </div>
 
         <!-- カードボディ -->
         <div class="p-6 sm:p-8 space-y-6">

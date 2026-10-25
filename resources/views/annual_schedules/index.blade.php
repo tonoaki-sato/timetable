@@ -2,27 +2,20 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- 1. ヘッダーエリア -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center space-x-2.5">
-                <span class="text-2xl">📋</span>
-                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">年間スケジュール</h1>
-            </div>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">
-                行政協議・出店募集・会場設営・運行準備などの年間工程・タスクを管理します。
-            </p>
-        </div>
-
-        <div class="flex items-center space-x-2">
-            @can('create', App\Models\AnnualSchedule::class)
+    <x-page-header
+        title="年間スケジュール"
+        icon="📋"
+        description="行政協議・出店募集・会場設営・運行準備などの年間工程・タスクを管理します。">
+        @can('create', App\Models\AnnualSchedule::class)
+        <x-slot:actions>
             <a href="{{ route('annual-schedules.create', ['year' => $selectedYear]) }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
                 <span>➕</span>
                 <span>新規登録</span>
             </a>
-            @endcan
-        </div>
-    </div>
+        </x-slot:actions>
+        @endcan
+    </x-page-header>
 
     <!-- 成功・エラーメッセージ表示 -->
     @if(session('success'))

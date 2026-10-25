@@ -1,25 +1,31 @@
 <x-layouts.app :title="'会議の編集 - ' . $meeting->title">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- ナビゲーション・戻る -->
-        <div>
-            <a href="{{ route('meetings.show', $meeting) }}"
-                class="inline-flex items-center space-x-1 text-xs font-medium text-slate-500 hover:text-slate-800 transition">
-                <span>←</span>
-                <span>「{{ $meeting->title }}」詳細に戻る</span>
-            </a>
-        </div>
+        <!-- ナビゲーション & ヘッダー -->
+        <x-page-header
+            title="会議・打合せの編集"
+            icon="✏️"
+            description="内容を変更すると、LINE告知用テキストも自動更新されます。">
+            <x-slot:breadcrumbs>
+                <a href="{{ route('meetings.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                    <span>🤝</span>
+                    <span>会議・打ち合わせ一覧</span>
+                </a>
+                <span>/</span>
+                <a href="{{ route('meetings.show', $meeting) }}" class="hover:text-indigo-600 transition">
+                    <span>{{ $meeting->title }}</span>
+                </a>
+                <span>/</span>
+                <span class="text-slate-700 font-bold">編集</span>
+            </x-slot:breadcrumbs>
 
-        <!-- ヘッダー -->
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center space-x-2">
-                <span>✏️</span>
-                <span>会議・打合せの編集</span>
-            </h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">
-                内容を変更すると、LINE告知用テキストも自動更新されます。
-            </p>
-        </div>
+            <x-slot:actions>
+                <a href="{{ route('meetings.show', $meeting) }}" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                    <span>←</span>
+                    <span>詳細に戻る</span>
+                </a>
+            </x-slot:actions>
+        </x-page-header>
 
         <!-- バリデーションエラー表示 -->
         @if ($errors->any())

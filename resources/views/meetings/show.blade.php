@@ -1,19 +1,50 @@
 <x-layouts.app :title="$meeting->title . ' - 会議詳細'">
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- ナビゲーション・戻る & 操作ボタン -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <a href="{{ route('meetings.index', ['tab' => $meeting->is_upcoming ? 'upcoming' : 'past']) }}"
-            class="inline-flex items-center space-x-1 text-xs font-medium text-slate-500 hover:text-slate-800 transition">
-            <span>←</span>
-            <span>会議・打ち合わせ一覧に戻る</span>
-        </a>
+    <!-- ナビゲーション & ヘッダー -->
+    <x-page-header
+        :title="$meeting->title"
+        icon="🤝"
+        :description="$meeting->formatted_datetime . ($meeting->location ? ' ｜ 場所: ' . $meeting->location : '')">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('meetings.index', ['tab' => $meeting->is_upcoming ? 'upcoming' : 'past']) }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                <span>🤝</span>
+                <span>会議・打ち合わせ一覧</span>
+            </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">{{ $meeting->title }}</span>
+        </x-slot:breadcrumbs>
 
-        <!-- 操作ボタン群 -->
-        <div class="flex items-center space-x-2">
+        <x-slot:badges>
+            @if($meeting->is_upcoming)
+                @if($meeting->meeting_date?->isToday())
+                <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                    今日開催
+                </span>
+                @elseif($meeting->meeting_date?->diffInDays(now()) <= 3)
+                <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                    まもなく開催
+                </span>
+                @else
+                <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                    開催予定
+                </span>
+                @endif
+            @else
+                <span class="px-2.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                    終了した会議
+                </span>
+            @endif
+
+            <span class="text-xs text-slate-400 font-mono">
+                ID: #{{ $meeting->id }}
+            </span>
+        </x-slot:badges>
+
+        <x-slot:actions>
             @can('update', $meeting)
             <a href="{{ route('meetings.edit', $meeting) }}"
-                class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
                 <span>✏️</span>
                 <span>編集する</span>
             </a>
@@ -25,49 +56,23 @@
                 @csrf
                 @method('DELETE')
                 <button type="submit"
-                    class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                    class="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs cursor-pointer">
                     <span>🗑️</span>
                     <span>削除</span>
                 </button>
             </form>
             @endcan
-        </div>
-    </div>
+
+            <a href="{{ route('meetings.index', ['tab' => $meeting->is_upcoming ? 'upcoming' : 'past']) }}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>←</span>
+                <span>会議・打ち合わせ一覧に戻る</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- 1. メイン会議情報カード -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <!-- カードヘッダー -->
-        <div class="p-6 sm:p-8 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-            <div class="flex flex-wrap items-center gap-2 mb-3">
-                @if($meeting->is_upcoming)
-                    @if($meeting->meeting_date?->isToday())
-                    <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                        今日開催
-                    </span>
-                    @elseif($meeting->meeting_date?->diffInDays(now()) <= 3)
-                    <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                        まもなく開催
-                    </span>
-                    @else
-                    <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                        開催予定
-                    </span>
-                    @endif
-                @else
-                    <span class="px-2.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                        終了した会議
-                    </span>
-                @endif
-
-                <span class="text-xs text-slate-400 font-mono">
-                    ID: #{{ $meeting->id }}
-                </span>
-            </div>
-
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-                {{ $meeting->title }}
-            </h1>
-        </div>
 
         <!-- 基本情報グリッド -->
         <div class="p-6 sm:p-8 space-y-6">

@@ -2,33 +2,27 @@
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- ナビゲーション & ヘッダー -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center space-x-2 text-xs text-slate-500 mb-1">
-                <a href="{{ route('lanes.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
-                    <span>🏷️</span>
-                    <span>担当班（レーン）管理</span>
-                </a>
-                <span>/</span>
-                <span class="text-slate-700 font-bold">📅 {{ $timetable->name }}</span>
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 flex items-center space-x-2">
+    <x-page-header
+        title="担当班（レーン）管理"
+        icon="🏷️"
+        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）のレーン編成と、現場を率いる主担当（リーダー）を設定・管理します。'">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('lanes.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
                 <span>🏷️</span>
                 <span>担当班（レーン）管理</span>
-            </h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">
-                「{{ $timetable->name }}」（{{ $timetable->target_date?->format('Y年m月d日') }}）のレーン編成と、現場を率いる主担当（リーダー）を設定・管理します。
-            </p>
-        </div>
+            </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">📅 {{ $timetable->name }}</span>
+        </x-slot:breadcrumbs>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <x-slot:actions>
             <a href="{{ route('lanes.index') }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
                 <span>←</span>
                 <span>運行日別 担当班編成一覧に戻る</span>
             </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- アラートメッセージ -->
     @if(session('success'))

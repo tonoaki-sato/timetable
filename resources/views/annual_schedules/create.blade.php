@@ -1,17 +1,27 @@
 <x-layouts.app title="年間スケジュール新規登録">
-<div class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+<div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
 
-    <!-- ヘッダー -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h2 class="text-2xl font-bold tracking-tight text-slate-900">➕ 年間スケジュール新規登録</h2>
-            <p class="text-xs text-slate-500 mt-1">まつりの年次計画・各部会マイルストーンを新設します。</p>
-        </div>
-        <a href="{{ route('annual-schedules.index', ['year' => request('year', 2026)]) }}"
-            class="text-xs font-medium text-slate-500 hover:text-slate-800 transition">
-            ← 一覧に戻る
-        </a>
-    </div>
+    <!-- ナビゲーション & ヘッダー -->
+    <x-page-header
+        title="年間スケジュール新規登録"
+        icon="➕"
+        description="まつりの年次計画・各部会マイルストーンを新設します。">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('annual-schedules.index', ['year' => request('year', 2026)]) }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                <span>📋</span>
+                <span>{{ request('year', 2026) }}年度 年間スケジュール一覧</span>
+            </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">新規登録</span>
+        </x-slot:breadcrumbs>
+
+        <x-slot:actions>
+            <a href="{{ route('annual-schedules.index', ['year' => request('year', 2026)]) }}" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>←</span>
+                <span>年間スケジュール一覧に戻る</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- バリデーションエラーサマリー -->
     @if ($errors->any())

@@ -1,23 +1,31 @@
 <x-layouts.app :title="'新規作業タスク登録 - ' . $timetable->name">
-<div class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+<div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
 
     <!-- ナビゲーション & ヘッダー -->
-    <div class="flex items-center justify-between">
-        <div>
-            <div class="flex items-center space-x-2 text-xs text-slate-500 mb-1">
-                <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition">
-                    📅 {{ $timetable->name }}
-                </a>
-                <span>/</span>
-                <span>タスク追加</span>
-            </div>
-            <h2 class="text-2xl font-bold tracking-tight text-slate-900">➕ 新規作業タスク登録</h2>
-            <p class="text-xs text-slate-500 mt-1">「{{ $timetable->name }}」（{{ $timetable->target_date?->format('Y/m/d') }}）に紐づく作業タスクと必要人員を登録します。</p>
-        </div>
-        <a href="{{ route('timetables.show', $timetable) }}" class="text-xs font-medium text-slate-500 hover:text-slate-800 transition">
-            ← 運行日詳細に戻る
-        </a>
-    </div>
+    <x-page-header
+        title="新規作業タスク登録"
+        icon="➕"
+        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y/m/d') . '）に紐づく作業タスクと必要人員を登録します。'">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                <span>⏱️</span>
+                <span>タイムテーブル一覧</span>
+            </a>
+            <span>/</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition">
+                <span>📅 {{ $timetable->name }}</span>
+            </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">タスク追加</span>
+        </x-slot:breadcrumbs>
+
+        <x-slot:actions>
+            <a href="{{ route('timetables.show', $timetable) }}" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>←</span>
+                <span>「{{ $timetable->name }}」に戻る</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- エラーサマリー -->
     @if ($errors->any())

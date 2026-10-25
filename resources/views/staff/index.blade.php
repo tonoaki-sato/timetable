@@ -2,25 +2,21 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- ヘッダー -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-bold tracking-tight text-slate-900">👷 現場スタッフ・ボランティア管理</h2>
-            <p class="text-xs text-slate-500 mt-1">
-                まつり運行を支える現場スタッフ・ボランティアの台帳管理および担当タスクの確認を行います。
-            </p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
+    <x-page-header
+        title="現場スタッフ・ボランティア管理"
+        icon="👷"
+        description="まつり運行を支える現場スタッフ・ボランティアの台帳管理および担当タスクの確認を行います。">
+        <x-slot:actions>
             <!-- 名札一括印刷 -->
             <a href="{{ route('staff.print-cards') }}" target="_blank"
-                class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition">
+                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition">
                 <span>🖨️</span>
                 <span>名札カード一括印刷</span>
             </a>
 
             <!-- CSVエクスポート -->
             <a href="{{ route('staff.export-csv') }}"
-                class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition">
+                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition">
                 <span>📥</span>
                 <span>CSV出力</span>
             </a>
@@ -31,7 +27,7 @@
                 @csrf
                 <input type="file" name="file" id="csvFileInput" accept=".csv,text/csv" class="hidden">
                 <button type="button" id="csvImportBtn"
-                    class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition cursor-pointer">
+                    class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                     <span>📤</span>
                     <span>CSV取込</span>
                 </button>
@@ -52,8 +48,8 @@
                 <span>新規スタッフ登録</span>
             </a>
             @endcan
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- 検索・絞り込みフォーム -->
     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">

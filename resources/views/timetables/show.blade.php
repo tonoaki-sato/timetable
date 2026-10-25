@@ -2,48 +2,39 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- ナビゲーション & ヘッダー -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center space-x-2 text-xs text-slate-500 mb-1">
-                <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
-                    <span>⏱️</span>
-                    <span>タイムテーブル一覧</span>
-                </a>
-                <span>/</span>
-                <span class="text-slate-700 font-bold">📅 {{ $timetable->name }}</span>
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 flex items-center space-x-2">
+    <x-page-header
+        :title="$timetable->name"
+        icon="⏱️"
+        :description="$timetable->description ?: '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）のタイムテーブル詳細および作業タスク一覧です。'">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
                 <span>⏱️</span>
-                <span>{{ $timetable->name }}</span>
-            </h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">
-                @if($timetable->description)
-                    {{ $timetable->description }}
-                @else
-                    「{{ $timetable->name }}」（{{ $timetable->target_date?->format('Y年m月d日') }}）のタイムテーブル詳細および作業タスク一覧です。
-                @endif
-            </p>
-            @if(!empty($timetable->road_periods) || !empty($timetable->festival_periods))
-            <div class="flex flex-wrap items-center gap-1.5 mt-2">
-                @if(!empty($timetable->road_periods))
-                    @foreach($timetable->road_periods as $rp)
-                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-rose-50 text-rose-700 border border-rose-200">
-                        🚧 {{ substr($rp['start_time'] ?? '', 0, 5) }}〜{{ substr($rp['end_time'] ?? '', 0, 5) }} {{ $rp['label'] ?? '通行止め' }}
-                    </span>
-                    @endforeach
-                @endif
-                @if(!empty($timetable->festival_periods))
-                    @foreach($timetable->festival_periods as $fp)
-                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        🏮 {{ substr($fp['start_time'] ?? '', 0, 5) }}〜{{ substr($fp['end_time'] ?? '', 0, 5) }} {{ $fp['label'] ?? '開催中' }}
-                    </span>
-                    @endforeach
-                @endif
-            </div>
-            @endif
-        </div>
+                <span>タイムテーブル一覧</span>
+            </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">📅 {{ $timetable->name }}</span>
+        </x-slot:breadcrumbs>
 
-        <div class="flex flex-wrap items-center gap-2">
+        @if(!empty($timetable->road_periods) || !empty($timetable->festival_periods))
+        <x-slot:badges>
+            @if(!empty($timetable->road_periods))
+                @foreach($timetable->road_periods as $rp)
+                <span class="px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-rose-50 text-rose-700 border border-rose-200">
+                    🚧 {{ substr($rp['start_time'] ?? '', 0, 5) }}〜{{ substr($rp['end_time'] ?? '', 0, 5) }} {{ $rp['label'] ?? '通行止め' }}
+                </span>
+                @endforeach
+            @endif
+            @if(!empty($timetable->festival_periods))
+                @foreach($timetable->festival_periods as $fp)
+                <span class="px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    🏮 {{ substr($fp['start_time'] ?? '', 0, 5) }}〜{{ substr($fp['end_time'] ?? '', 0, 5) }} {{ $fp['label'] ?? '開催中' }}
+                </span>
+                @endforeach
+            @endif
+        </x-slot:badges>
+        @endif
+
+        <x-slot:actions>
             <a href="{{ route('timetables.staff-timeline', $timetable) }}"
                 class="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
                 <span>👥</span>
@@ -69,8 +60,8 @@
                 <span>←</span>
                 <span>タイムテーブル一覧に戻る</span>
             </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- アラートメッセージ -->
     @if(session('success'))

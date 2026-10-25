@@ -1,16 +1,31 @@
 <x-layouts.app title="タイムテーブル編集">
-<div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
+<div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
 
-    <!-- ヘッダー -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h2 class="text-2xl font-bold tracking-tight text-slate-900">✏️ タイムテーブル編集</h2>
-            <p class="text-xs text-slate-500 mt-1">「{{ $timetable->name }}」の運行基本設定を更新します。</p>
-        </div>
-        <a href="{{ route('timetables.show', $timetable) }}" class="text-xs font-medium text-slate-500 hover:text-slate-800 transition">
-            ← 詳細に戻る
-        </a>
-    </div>
+    <!-- ナビゲーション & ヘッダー -->
+    <x-page-header
+        title="タイムテーブル編集"
+        icon="✏️"
+        :description="'「' . $timetable->name . '」の運行基本設定を更新します。'">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                <span>⏱️</span>
+                <span>タイムテーブル一覧</span>
+            </a>
+            <span>/</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition">
+                <span>📅 {{ $timetable->name }}</span>
+            </a>
+            <span>/</span>
+            <span class="text-slate-700 font-bold">編集</span>
+        </x-slot:breadcrumbs>
+
+        <x-slot:actions>
+            <a href="{{ route('timetables.show', $timetable) }}" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>←</span>
+                <span>詳細に戻る</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- バリデーションエラーサマリー -->
     @if ($errors->any())
