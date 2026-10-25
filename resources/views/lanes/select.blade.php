@@ -1,4 +1,4 @@
-<x-layouts.app title="担当班（レーン）管理 - 運行計画の選択">
+<x-layouts.app title="担当班（レーン）管理 - タイムテーブルの選択">
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- ナビゲーション & ヘッダー -->
@@ -14,7 +14,7 @@
                 <span>担当班（レーン）管理</span>
             </h1>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">
-                班編成や現場リーダー設定を行う運行計画（日程）を選択してください。
+                班編成や現場リーダー設定を行うタイムテーブル（日程）を選択してください。
             </p>
         </div>
 
@@ -23,13 +23,13 @@
             <a href="{{ route('timetables.create') }}"
                 class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1">
                 <span>➕</span>
-                <span>新規運行日を登録</span>
+                <span>新規タイムテーブルを登録</span>
             </a>
             @endcan
             <a href="{{ route('timetables.index') }}"
                 class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
                 <span>📋</span>
-                <span>運行計画・タスク台帳</span>
+                <span>タイムテーブル・タスク台帳</span>
             </a>
         </div>
     </div>
@@ -49,7 +49,7 @@
     </div>
     @endif
 
-    <!-- 運行計画選択カードグリッド -->
+    <!-- タイムテーブル選択カードグリッド -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach($timetables as $timetable)
             @php

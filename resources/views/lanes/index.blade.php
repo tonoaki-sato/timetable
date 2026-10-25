@@ -43,12 +43,12 @@
         </div>
     </div>
 
-    <!-- 運行計画クイック切り替えタブ -->
+    <!-- タイムテーブルクイック切り替えタブ -->
     @if(isset($allTimetables) && $allTimetables->count() > 1)
     <div class="bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs flex flex-wrap items-center gap-1.5">
         <span class="text-xs font-bold text-slate-500 mr-1.5 flex items-center space-x-1">
             <span>📅</span>
-            <span>運行計画:</span>
+            <span>タイムテーブル:</span>
         </span>
         @foreach($allTimetables as $tt)
             @php

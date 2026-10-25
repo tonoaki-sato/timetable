@@ -59,10 +59,10 @@
     <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 shadow-sm">
         <span class="text-4xl block mb-3">📅</span>
         <h3 class="text-base font-bold text-slate-800">表示できるタイムテーブルがありません</h3>
-        <p class="text-xs text-slate-500 mt-1">「運行タイムテーブル管理」から運行日を登録してください。</p>
+        <p class="text-xs text-slate-500 mt-1">「タイムテーブル管理」から新規タイムテーブルを登録してください。</p>
         <div class="mt-4">
             <a href="{{ route('timetables.create') }}" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow transition">
-                新規運行日を登録
+                新規タイムテーブルを登録
             </a>
         </div>
     </div>

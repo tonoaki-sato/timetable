@@ -19,7 +19,6 @@
                     <div>
                         <div class="flex items-center space-x-2">
                             <span class="font-bold text-base tracking-tight text-white">まつり総合管理システム</span>
-                            <span class="bg-indigo-600 text-indigo-100 text-[10px] px-2 py-0.5 rounded font-mono font-bold">2026年度</span>
                         </div>
                         <p class="text-[11px] text-slate-400">運行本部・タイムテーブル・人員機材動態・年間工程</p>
                     </div>

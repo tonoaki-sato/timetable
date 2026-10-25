@@ -318,9 +318,9 @@ class AnnualScheduleManagementTest extends TestCase
     }
 
     /**
-     * 年間スケジュール一覧画面に総合カレンダーへのリンクが表示され、工程タスクが一覧表示されること
+     * 年間スケジュール一覧画面に工程タスクが一覧表示されること
      */
-    public function test_annual_schedule_index_displays_calendar_link_and_tasks(): void
+    public function test_annual_schedule_index_displays_tasks(): void
     {
         $this->actingAs($this->user);
 
@@ -336,8 +336,7 @@ class AnnualScheduleManagementTest extends TestCase
         ]));
 
         $response->assertStatus(200);
-        $response->assertSee('総合カレンダーを見る');
-        $response->assertSee(route('calendar.index', ['year' => 2026]));
+        $response->assertDontSee('総合カレンダーを見る');
         $response->assertSee('警察署協議（4月）');
         $response->assertSee('工程・タスク一覧');
     }

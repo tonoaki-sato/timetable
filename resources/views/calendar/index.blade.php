@@ -1,4 +1,4 @@
-<x-layouts.app title="総合イベントカレンダー">
+<x-layouts.app title="総合カレンダー">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- 1. ヘッダーエリア -->
@@ -6,7 +6,7 @@
         <div>
             <div class="flex items-center space-x-2.5">
                 <span class="text-2xl">📅</span>
-                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">総合イベントカレンダー</h1>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">総合カレンダー</h1>
                 <span class="bg-indigo-100 text-indigo-700 text-xs px-2.5 py-0.5 rounded-full font-bold">
                     {{ $selectedYear }}年度
                 </span>
@@ -17,12 +17,6 @@
         </div>
 
         <div class="flex items-center space-x-2">
-            <a href="{{ route('annual-schedules.index', ['year' => $selectedYear]) }}"
-                class="inline-flex items-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
-                <span>📋</span>
-                <span>年間工程表・タスク一覧</span>
-            </a>
-
             @can('create', App\Models\AnnualSchedule::class)
             <button type="button" data-action="open-new-event-modal"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">

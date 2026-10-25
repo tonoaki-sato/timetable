@@ -17,7 +17,7 @@ use Illuminate\View\View;
 class LaneController extends Controller
 {
     /**
-     * 担当班管理の対象運行計画選択画面の表示
+     * 担当班管理の対象タイムテーブル選択画面の表示
      */
     public function select(): View|RedirectResponse
     {

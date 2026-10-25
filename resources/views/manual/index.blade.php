@@ -262,7 +262,7 @@
                         <span>•</span>
                         <span>Calendar & Schedules</span>
                     </div>
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">第3章 総合カレンダー & 年間工程表の管理</h2>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">第3章 総合カレンダー & 年間スケジュールの管理</h2>
                     <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
                         4月から翌年3月までの12ヶ月運用サイクルを管理します。行政協議（警察の道路使用許可、消防・保健所届出）、業者機材早期予約、出店者募集、定期会議（総会・幹事会）の漏れを防ぎます。
                     </p>
@@ -294,21 +294,21 @@
                         </p>
                     </div>
 
-                    <!-- 実際の画面画像: 年間工程表 -->
+                    <!-- 実際の画面画像: 年間スケジュール -->
                     <div class="mt-8 border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-slate-900">
                         <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 flex items-center justify-between text-xs">
                             <span class="flex items-center space-x-2 text-slate-300 font-mono">
                                 <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
-                                <span class="ml-2">【実画面】年間工程表・タスク一覧 (/annual-schedules)</span>
+                                <span class="ml-2">【実画面】年間スケジュール一覧 (/annual-schedules)</span>
                             </span>
                             <span class="text-[10px] text-slate-400">クリックで拡大</span>
                         </div>
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/04_annual_schedules.png') }}"
-                                alt="年間工程表画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, '年間工程表・タスク一覧画面')"
+                                alt="年間スケジュール画面の実画面キャプチャ"
+                                onclick="openImageModal(this.src, '年間スケジュール一覧画面')"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -388,26 +388,26 @@
                         <span>•</span>
                         <span>Task & Lanes</span>
                     </div>
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">第5章 運行計画台帳・担当班（レーン）編成・人員アサイン</h2>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">第5章 タイムテーブル台帳・担当班（レーン）編成・人員アサイン</h2>
                     <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
                         まつり本番に先立ち、日程枠の登録、担当班（レーン）の編成、作業タスクの洗い出し、および各タスクへのスタッフアサインを行う手順です。
                     </p>
 
-                    <!-- 実際の画面画像: 運行計画・タスク台帳 -->
+                    <!-- 実際の画面画像: タイムテーブル・タスク台帳 -->
                     <div class="mt-6 border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-slate-900">
                         <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 flex items-center justify-between text-xs">
                             <span class="flex items-center space-x-2 text-slate-300 font-mono">
                                 <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
-                                <span class="ml-2">【実画面】運行計画・タスク台帳 (/timetables)</span>
+                                <span class="ml-2">【実画面】タイムテーブル・タスク台帳 (/timetables)</span>
                             </span>
                             <span class="text-[10px] text-slate-400">クリックで拡大</span>
                         </div>
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/06_timetables_plan.png') }}"
-                                alt="運行計画・タスク台帳画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, '運行計画・タスク台帳画面')"
+                                alt="タイムテーブル・タスク台帳画面の実画面キャプチャ"
+                                onclick="openImageModal(this.src, 'タイムテーブル・タスク台帳画面')"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>

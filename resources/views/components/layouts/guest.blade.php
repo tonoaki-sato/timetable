@@ -19,7 +19,6 @@
                 <span class="text-xl sm:text-2xl font-black tracking-tight text-white group-hover:text-indigo-400 transition">
                     まつり総合管理システム
                 </span>
-                <span class="bg-indigo-600 text-indigo-100 text-[10px] px-2 py-0.5 rounded font-mono font-bold">2026年度</span>
             </div>
         </a>
         <p class="mt-2 text-xs text-slate-400">

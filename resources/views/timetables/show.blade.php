@@ -1,4 +1,4 @@
-<x-layouts.app :title="$timetable->name . ' - 運行タイムテーブル詳細'">
+<x-layouts.app :title="$timetable->name . ' - タイムテーブル詳細'">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- ナビゲーション & 操作 -->
@@ -6,7 +6,7 @@
         <a href="{{ route('timetables.index') }}"
             class="inline-flex items-center space-x-1 text-xs font-medium text-slate-500 hover:text-slate-800 transition">
             <span>←</span>
-            <span>運行タイムテーブル一覧に戻る</span>
+            <span>タイムテーブル一覧に戻る</span>
         </a>
 
         <div class="flex flex-wrap items-center gap-2">

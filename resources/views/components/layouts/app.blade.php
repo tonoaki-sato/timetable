@@ -26,7 +26,6 @@
                                 <span class="font-bold text-sm lg:text-base tracking-tight text-white group-hover:text-indigo-300 transition whitespace-nowrap">
                                     まつり総合管理システム
                                 </span>
-                                <span class="bg-indigo-600 text-indigo-100 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold whitespace-nowrap">2026年度</span>
                             </div>
                             <p class="text-[10px] text-slate-400 hidden 2xl:block whitespace-nowrap">運行本部・タイムテーブル・人員機材動態</p>
                         </div>
@@ -68,7 +67,7 @@
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('annual-schedules.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">📋</span>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold">年間工程表・タスク</div>
+                                            <div class="text-xs font-bold">年間スケジュール</div>
                                             <p class="text-[10px] {{ request()->routeIs('annual-schedules.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">年次マイルストーン・準備工程管理</p>
                                         </div>
                                     </a>
@@ -145,7 +144,7 @@
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">📋</span>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold">運行計画・タスク台帳</div>
+                                            <div class="text-xs font-bold">タイムテーブル・タスク台帳</div>
                                             <p class="text-[10px] {{ request()->routeIs('timetables.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">各日の日程枠登録・作業タスク管理・人員配置</p>
                                         </div>
                                     </a>
@@ -393,13 +392,13 @@
                     <!-- セクション2: まつり計画・運行管理 -->
                     <div>
                         <div class="text-[11px] font-bold text-slate-400 mb-1.5">
-                            🛠️ 運行計画・スケジュール・体制
+                            🛠️ タイムテーブル・スケジュール・体制
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-xs">
                             <a href="{{ route('timetables.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('timetables.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">📋</span>
                                 <div class="min-w-0">
-                                    <span class="font-bold block truncate">運行計画・タスク</span>
+                                    <span class="font-bold block truncate">タイムテーブル・タスク</span>
                                     <span class="text-[10px] text-slate-400 block truncate">日程枠・タスク台帳</span>
                                 </div>
                             </a>
@@ -420,7 +419,7 @@
                             <a href="{{ route('annual-schedules.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('annual-schedules.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">📋</span>
                                 <div class="min-w-0">
-                                    <span class="font-bold block truncate">年間工程表</span>
+                                    <span class="font-bold block truncate">年間スケジュール</span>
                                     <span class="text-[10px] text-slate-400 block truncate">マイルストーン</span>
                                 </div>
                             </a>

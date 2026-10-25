@@ -1,10 +1,10 @@
-<x-layouts.app title="運行タイムテーブル編集">
+<x-layouts.app title="タイムテーブル編集">
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
 
     <!-- ヘッダー -->
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-2xl font-bold tracking-tight text-slate-900">✏️ 運行タイムテーブル編集</h2>
+            <h2 class="text-2xl font-bold tracking-tight text-slate-900">✏️ タイムテーブル編集</h2>
             <p class="text-xs text-slate-500 mt-1">「{{ $timetable->name }}」の運行基本設定を更新します。</p>
         </div>
         <a href="{{ route('timetables.show', $timetable) }}" class="text-xs font-medium text-slate-500 hover:text-slate-800 transition">

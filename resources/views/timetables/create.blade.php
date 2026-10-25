@@ -1,10 +1,10 @@
-<x-layouts.app title="新規運行タイムテーブル登録">
+<x-layouts.app title="新規タイムテーブル登録">
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
 
     <!-- ヘッダー -->
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-2xl font-bold tracking-tight text-slate-900">➕ 新規運行タイムテーブル登録</h2>
+            <h2 class="text-2xl font-bold tracking-tight text-slate-900">➕ 新規タイムテーブル登録</h2>
             <p class="text-xs text-slate-500 mt-1">まつり開催日（例: 前日設営、本祭1日目など）の基本枠を新設します。</p>
         </div>
         <a href="{{ route('timetables.index') }}" class="text-xs font-medium text-slate-500 hover:text-slate-800 transition">

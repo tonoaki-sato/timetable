@@ -1,40 +1,33 @@
 <x-layouts.app title="本部運行ダッシュボード">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- 1. 最上部: 本部運行サマリーヘッダー -->
-    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-lg border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center space-x-3 mb-2">
-                <span class="px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 rounded-full text-xs font-semibold tracking-wide">
-                    2026年度 まつり本番運行
-                </span>
-                <span class="flex items-center space-x-1.5 text-xs text-emerald-400 font-mono">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>システム正常稼働中</span>
-                </span>
-            </div>
-            <h2 class="text-2xl font-bold tracking-tight">本部運行総合ダッシュボード</h2>
-            <p class="text-sm text-slate-300 mt-1">
+    <!-- 1. 最上部: 本部運行サマリーヘッダー (1行幅コンパクトレイアウト) -->
+    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl px-4 sm:px-5 py-3 text-white shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <h2 class="text-lg sm:text-xl font-bold tracking-tight flex items-center space-x-2">
+                <span>📊</span>
+                <span>本部運行総合ダッシュボード</span>
+            </h2>
+            <span class="inline-flex items-center space-x-1.5 text-xs text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>システム正常稼働中</span>
+            </span>
+            <span class="text-xs text-slate-300">
                 ログイン中: <strong class="text-white">{{ Auth::user()->name ?? '本部スタッフ' }}</strong>
                 ({{ Auth::user()?->isAdmin() ? '管理者' : 'オペレーター' }})
-            </p>
+            </span>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-            <div class="bg-slate-800/80 backdrop-blur px-4 py-2 rounded-xl border border-slate-700/80 text-right">
-                <div class="flex items-center justify-end space-x-1.5 text-[11px] text-slate-400 font-mono">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>現在日時</span>
-                </div>
-                <div id="realtime-clock"
-                     data-server-time="{{ now('Asia/Tokyo')->valueOf() }}"
-                     class="text-lg font-bold font-mono text-white tracking-wide">
+        <div class="flex items-center space-x-2 shrink-0">
+            <div class="bg-slate-800/80 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-700/80 flex items-center space-x-2 text-xs">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-[11px] text-slate-400 font-mono">現在日時:</span>
+                <span id="realtime-clock"
+                      data-server-time="{{ now('Asia/Tokyo')->valueOf() }}"
+                      class="font-bold font-mono text-white tracking-wide">
                     {{ $nowDatetime ?? now('Asia/Tokyo')->translatedFormat('n月j日 (D) H:i:s') }}
-                </div>
+                </span>
             </div>
-            <a href="{{ route('timetable.index') }}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5">
-                <span>⏱️ タイムテーブル（当日進行表）へ</span>
-            </a>
         </div>
     </div>
 

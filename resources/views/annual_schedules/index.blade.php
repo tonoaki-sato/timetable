@@ -17,13 +17,6 @@
         </div>
 
         <div class="flex items-center space-x-2">
-            <!-- カレンダー画面への導線ボタン -->
-            <a href="{{ route('calendar.index', ['year' => $selectedYear]) }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold shadow-xs transition">
-                <span>📅</span>
-                <span>総合カレンダーを見る</span>
-            </a>
-
             @can('create', App\Models\AnnualSchedule::class)
             <a href="{{ route('annual-schedules.create', ['year' => $selectedYear]) }}"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
@@ -48,23 +41,23 @@
     </div>
     @endif
 
-    <!-- 2. サマリーステータスカード -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
-            <span class="text-[11px] font-bold text-slate-500">年間総件数</span>
-            <div class="text-lg sm:text-xl font-bold text-slate-900 mt-0.5 font-mono">{{ $yearSummary['total'] }} <span class="text-xs font-normal text-slate-500">件</span></div>
+    <!-- 2. サマリーステータスカード (コンパクト横型) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div class="bg-white px-3 py-1.5 sm:py-2 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-600">年間総件数</span>
+            <span class="text-base font-bold font-mono text-slate-900">{{ $yearSummary['total'] }}<span class="text-[11px] font-normal text-slate-400 ml-0.5">件</span></span>
         </div>
-        <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-blue-200 shadow-xs">
-            <span class="text-[11px] font-bold text-blue-700">予定（未着手）</span>
-            <div class="text-lg sm:text-xl font-bold text-blue-700 mt-0.5 font-mono">{{ $yearSummary['planned'] }} <span class="text-xs font-normal text-slate-500">件</span></div>
+        <div class="bg-white px-3 py-1.5 sm:py-2 rounded-lg border border-blue-200 shadow-2xs flex items-center justify-between">
+            <span class="text-xs font-bold text-blue-700">予定</span>
+            <span class="text-base font-bold font-mono text-blue-700">{{ $yearSummary['planned'] }}<span class="text-[11px] font-normal text-blue-400 ml-0.5">件</span></span>
         </div>
-        <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-amber-200 shadow-xs">
-            <span class="text-[11px] font-bold text-amber-700">進行中</span>
-            <div class="text-lg sm:text-xl font-bold text-amber-700 mt-0.5 font-mono">{{ $yearSummary['in_progress'] }} <span class="text-xs font-normal text-slate-500">件</span></div>
+        <div class="bg-white px-3 py-1.5 sm:py-2 rounded-lg border border-amber-200 shadow-2xs flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-700">進行中</span>
+            <span class="text-base font-bold font-mono text-amber-700">{{ $yearSummary['in_progress'] }}<span class="text-[11px] font-normal text-amber-400 ml-0.5">件</span></span>
         </div>
-        <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-emerald-200 shadow-xs">
-            <span class="text-[11px] font-bold text-emerald-700">完了</span>
-            <div class="text-lg sm:text-xl font-bold text-emerald-700 mt-0.5 font-mono">{{ $yearSummary['completed'] }} <span class="text-xs font-normal text-slate-500">件</span></div>
+        <div class="bg-white px-3 py-1.5 sm:py-2 rounded-lg border border-emerald-200 shadow-2xs flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-700">完了</span>
+            <span class="text-base font-bold font-mono text-emerald-700">{{ $yearSummary['completed'] }}<span class="text-[11px] font-normal text-emerald-400 ml-0.5">件</span></span>
         </div>
     </div>
 

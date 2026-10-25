@@ -437,7 +437,7 @@ class LaneManagementTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('担当班（レーン）管理');
-        $response->assertSee('班編成や現場リーダー設定を行う運行計画（日程）を選択してください。');
+        $response->assertSee('班編成や現場リーダー設定を行うタイムテーブル（日程）を選択してください。');
         $response->assertSee($this->timetable->name);
         $response->assertSee($secondTimetable->name);
         $response->assertSee(route('timetables.lanes.index', $this->timetable));
@@ -486,7 +486,7 @@ class LaneManagementTest extends TestCase
             ->get(route('timetables.lanes.index', $this->timetable));
 
         $response->assertStatus(200);
-        $response->assertSee('運行計画:');
+        $response->assertSee('タイムテーブル:');
         $response->assertSee($this->timetable->name);
         $response->assertSee($secondTimetable->name);
         $response->assertSee(route('timetables.lanes.index', $secondTimetable));
