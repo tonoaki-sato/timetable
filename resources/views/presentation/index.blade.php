@@ -58,7 +58,7 @@
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-6">
                 <div class="flex items-center space-x-3">
                     <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-700/60" id="slideBadge">
-                        SLIDE 01 / 19
+                        SLIDE 01 / 18
                     </span>
                     <span class="text-xs text-slate-400 font-medium truncate max-w-[200px] sm:max-w-md" id="slideSectionName">
                         表紙
@@ -102,14 +102,14 @@
                             <span>令和8年度 まつり実行委員会 幹事会専用資料</span>
                         </div>
                         <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-                            当日の負担を半減させる<br>
-                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-sky-300 to-indigo-300">「情報一元管理」</span>へのご協力のお願い
+                            まつり運行の<span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-sky-300 to-indigo-300">「見える化」</span>で<br>
+                            より適切な指示と安心の運営を実現するために
                         </h2>
                         <p class="text-sm sm:text-lg text-slate-300 mt-6 leading-relaxed max-w-2xl mx-auto">
-                            〜幹事の皆様の頭の中にある情報・ノウハウを集約し、<br class="hidden sm:inline">誰もが自律して動ける安心の運営体制を共につくる〜
+                            〜現場対応に追われながらも的確に動くために、<br class="hidden sm:inline">各部会が持つ運行情報・ノウハウの集約にご協力をお願いします〜
                         </p>
                         <div class="mt-8 pt-6 border-t border-slate-800/80 flex items-center justify-center space-x-6 text-xs text-slate-400">
-                            <div>発表：まつり実行委員会 運営本部</div>
+                            <div>発表：まつり実行委員会 運営本部（佐藤）</div>
                             <div>•</div>
                             <div>想定時間：約15分</div>
                         </div>
@@ -121,7 +121,7 @@
                     <div class="max-w-4xl mx-auto">
                         <div class="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1">Purpose & Goal</div>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-white">本日の目的とゴール</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">「幹事の皆様の情報を集めて管理したい」理由</p>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">まつり全体の運行を見える化し、私自身がより適切な指示を出せるようにする</p>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                             <div class="bg-slate-800/80 border border-slate-700 p-5 rounded-2xl">
@@ -132,11 +132,11 @@
                                 <ul class="space-y-3 text-xs sm:text-sm text-slate-300">
                                     <li class="flex items-start space-x-2">
                                         <span class="text-indigo-400 font-bold">1.</span>
-                                        <span>当日の現場混乱と幹事への負担集中という<strong class="text-white">「共通の課題」</strong>を共有する</span>
+                                        <span>当日の<strong class="text-white">「私の混乱状況（4つの実態）」</strong>を共有する</span>
                                     </li>
                                     <li class="flex items-start space-x-2">
                                         <span class="text-indigo-400 font-bold">2.</span>
-                                        <span>情報を一元化することで<strong class="text-white">「幹事自身がどれだけ楽になるか」</strong>を知る</span>
+                                        <span>運行情報を一元化することで<strong class="text-white">「何が変わり、どう指示しやすくなるか」</strong>を知る</span>
                                     </li>
                                     <li class="flex items-start space-x-2">
                                         <span class="text-indigo-400 font-bold">3.</span>
@@ -148,7 +148,7 @@
                                 <span class="text-3xl mb-2">🤝</span>
                                 <div class="text-sm font-bold text-indigo-200">幹事の皆様へのお願い</div>
                                 <p class="text-base sm:text-lg font-black text-white mt-2 leading-relaxed">
-                                    「システムへの直接入力は事務局が代行します。<br>
+                                    「システムへの直接入力は私（佐藤）が代行します。<br>
                                     皆様の頭の中やメモにある情報を教えてください！」
                                 </p>
                             </div>
@@ -156,70 +156,85 @@
                     </div>
                 </div>
 
-                <!-- スライド 03: 幹事の皆様の現状と本音 -->
-                <div class="slide-content hidden" data-title="幹事の皆様の現状と本音" data-section="第1部: 現状の課題">
+                <!-- スライド 03: 当日の私の混乱状況 -->
+                <div class="slide-content hidden" data-title="当日の私の混乱状況（実態）" data-section="第1部: 現状の課題">
                     <div class="max-w-4xl mx-auto">
-                        <div class="text-xs text-rose-400 font-bold uppercase tracking-wider mb-1">Pain Points</div>
-                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">当日のこんな状況、心当たりはありませんか？</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">幹事一人ひとりに集中する当日の過密な問い合わせ</p>
+                        <div class="text-xs text-rose-400 font-bold uppercase tracking-wider mb-1">Actual Situation</div>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">当日の私の混乱状況：現場で直面した4つの負荷</h2>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">対面での応対に追われながら、運行状況の把握と指示出しに奔走していました</p>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                            <div class="bg-slate-800/80 border border-rose-500/30 p-5 rounded-2xl">
-                                <div class="text-2xl mb-2">📞</div>
-                                <h3 class="font-bold text-sm text-rose-300">電話・無線が鳴り止まない</h3>
-                                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    「あの荷物はどこ？」「コーンが足りない」「スタッフが来ない」など、現場の疑問がすべて担当幹事の携帯に直撃。
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                            <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
+                                <div class="flex items-center space-x-2 text-indigo-300 font-bold text-sm mb-1">
+                                    <span>👥</span>
+                                    <span>① 多様な関係者への対面応対</span>
+                                </div>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    一般来場者、ござ市出店者、イベント参加者、ボランティア参加者、実行委員など、直接の問い合わせ・世間話・挨拶対応に常時追われていた。
                                 </p>
                             </div>
-                            <div class="bg-slate-800/80 border border-amber-500/30 p-5 rounded-2xl">
-                                <div class="text-2xl mb-2">🏃</div>
-                                <h3 class="font-bold text-sm text-amber-300">現場から一歩も離れられない</h3>
-                                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    自分しか段取りやルールを知らないため、昼食も取れず、休憩もできずに指示出しとトラブル対応で走り回る。
+                            <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
+                                <div class="flex items-center space-x-2 text-indigo-300 font-bold text-sm mb-1">
+                                    <span>⏱️</span>
+                                    <span>② 運行テーブルとスマホ時計の監視</span>
+                                </div>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    紙の運行管理テーブルとスマホ（現在時刻の監視）を見ながら、常に運行状況の把握に神経を尖らせていた。
                                 </p>
                             </div>
-                            <div class="bg-slate-800/80 border border-slate-700 p-5 rounded-2xl">
-                                <div class="text-2xl mb-2">📑</div>
-                                <h3 class="font-bold text-sm text-slate-200">紙の台帳が手直しだらけ</h3>
-                                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    時間変更や人員交代があっても全体に伝達できず、現場と本部で行き違いや連絡ミスが発生する。
+                            <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
+                                <div class="flex items-center space-x-2 text-indigo-300 font-bold text-sm mb-1">
+                                    <span>🚦</span>
+                                    <span>③ 通りの状況変化と人員指示出し</span>
+                                </div>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    通行止め開始・解除前後、ござ市開始・終了前後など、通りの状況変化を見越して先回りで人員確保と指示出しをしていた。
+                                </p>
+                            </div>
+                            <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
+                                <div class="flex items-center space-x-2 text-indigo-300 font-bold text-sm mb-1">
+                                    <span>🛒</span>
+                                    <span>④ 資機材管理と各リーダーへの相談確認</span>
+                                </div>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    台車を勝手に持ち出されないよう気を配り、1日目と2日目とで異なる資機材の搬入・搬出の場所やタイミングを各リーダーに相談確認していた。
                                 </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- スライド 04: 情報分散のリスク -->
-                <div class="slide-content hidden" data-title="現場で起きる「情報分散」のリスク" data-section="第1部: 現状の課題">
+                <!-- スライド 04: 見える化されていないことの課題 -->
+                <div class="slide-content hidden" data-title="運行が見えないことによる指示の限界" data-section="第1部: 現状の課題">
                     <div class="max-w-4xl mx-auto">
-                        <div class="text-xs text-rose-400 font-bold uppercase tracking-wider mb-1">Risk Analysis</div>
-                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">「属人化」が引き起こす現場トラブル</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">幹事個人の頭やメモに情報が留まることの弊害</p>
+                        <div class="text-xs text-rose-400 font-bold uppercase tracking-wider mb-1">Root Causes</div>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">なぜ混乱したのか？「見えない」ことによる指示の限界</h2>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">情報が各リーダーの頭の中にしかなく、先回り指示が難しかった</p>
 
                         <div class="mt-6 overflow-hidden rounded-2xl border border-slate-700 bg-slate-800/60 text-xs sm:text-sm">
                             <table class="w-full text-left">
                                 <thead class="bg-slate-800 text-slate-300 font-bold border-b border-slate-700">
                                     <tr>
-                                        <th class="p-3.5 w-1/3">現在の情報管理</th>
-                                        <th class="p-3.5">現場で起きるリスク・トラブル</th>
+                                        <th class="p-3.5 w-1/3">これまでの運用</th>
+                                        <th class="p-3.5">生じていた指示出しのボトルネック</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-700/60 text-slate-300">
                                     <tr>
-                                        <td class="p-3.5 font-bold text-indigo-300">幹事個人の手帳・LINEメモ</td>
-                                        <td class="p-3.5">担当幹事が電話に出られないと、<strong class="text-rose-400">現場作業が完全にストップ</strong>する</td>
+                                        <td class="p-3.5 font-bold text-indigo-300">紙テーブルと時計を見比べる</td>
+                                        <td class="p-3.5">来場者対応や挨拶の合間では、<strong class="text-rose-400">リアルタイムの進行状況の把握が追いつかない</strong></td>
                                     </tr>
                                     <tr>
-                                        <td class="p-3.5 font-bold text-indigo-300">貸切駐車場の時間制約</td>
-                                        <td class="p-3.5">利用可能時間帯が周知されず、<strong class="text-rose-400">時間外利用による近隣苦情</strong>が発生</td>
+                                        <td class="p-3.5 font-bold text-indigo-300">通行止め・ござ市の節目対応</td>
+                                        <td class="p-3.5">「誰がどこに空いているか」が見えず、<strong class="text-rose-400">直前になって慌てて人員を確保・指示出し</strong>する</td>
                                     </tr>
                                     <tr>
-                                        <td class="p-3.5 font-bold text-indigo-300">機材（コーン・給水）の保管場所</td>
-                                        <td class="p-3.5">誰がどこに置いたか分からず、<strong class="text-rose-400">「足りない」と勝手な持ち出し</strong>が発生</td>
+                                        <td class="p-3.5 font-bold text-indigo-300">台車の管理</td>
+                                        <td class="p-3.5">定位置や利用ルールが共有されず、<strong class="text-rose-400">台車を勝手に持ち出されないよう目を配り続ける</strong>負担が発生</td>
                                     </tr>
                                     <tr>
-                                        <td class="p-3.5 font-bold text-indigo-300">スタッフの出欠・配置状況</td>
-                                        <td class="p-3.5">誰が来ていて誰がいないか把握できず、<strong class="text-rose-400">欠員穴埋めに幹事が走る</strong></td>
+                                        <td class="p-3.5 font-bold text-indigo-300">1日目と2日目の搬入出の差</td>
+                                        <td class="p-3.5">各リーダーの頭の中にしか手順がなく、<strong class="text-rose-400">搬入・搬出の場所やタイミングをその都度相談・確認</strong>する手間が発生</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -231,125 +246,123 @@
                 <div class="slide-content hidden" data-title="私たちが目指す姿（ビジョン）" data-section="第1部: 現状の課題">
                     <div class="max-w-4xl mx-auto">
                         <div class="text-xs text-emerald-400 font-bold uppercase tracking-wider mb-1">Vision</div>
-                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">目指すのは「幹事パンク型」から「自律分散型」へ</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">幹事の頭の中の情報を一元化し、誰もが迷わず動ける体制へ</p>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">目指すのは「状況把握に追われる運営」から<br>「運行の見える化で適切な指示が出せる運営」へ</h2>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">画面一つで全体を把握し、ゆとりを持って的確な先回り指示を出す体制へ</p>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                             <div class="bg-rose-950/30 border border-rose-500/40 p-5 rounded-2xl">
                                 <div class="flex items-center space-x-2 text-rose-400 font-bold text-sm mb-2">
                                     <span>❌</span>
-                                    <span>これまで（幹事パンク型）</span>
+                                    <span>これまで（状況把握に忙殺）</span>
                                 </div>
-                                <p class="text-xs text-rose-200 mb-3">すべての質問・判断・指示が担当幹事に集中</p>
-                                <div class="bg-rose-900/40 p-3 rounded-xl border border-rose-700/50 text-center font-bold text-rose-300 text-sm">
-                                    「幹事さんに聞かないと動けない」
+                                <p class="text-xs text-rose-200 mb-2">来場者対応の合間に紙と時計を見比べ、人を集め、台車や搬入出を各リーダーに都度相談</p>
+                                <div class="bg-rose-900/40 p-3 rounded-xl border border-rose-700/50 text-center font-bold text-rose-300 text-xs sm:text-sm">
+                                    「把握と確認に追われ、指示が後手に回る」
                                 </div>
-                                <p class="text-xs text-slate-400 mt-3">→ 幹事が疲弊し、トラブル対応が後手に回る</p>
                             </div>
 
                             <div class="bg-emerald-950/30 border border-emerald-500/40 p-5 rounded-2xl">
                                 <div class="flex items-center space-x-2 text-emerald-400 font-bold text-sm mb-2">
                                     <span>⭕</span>
-                                    <span>これから（自律分散型）</span>
+                                    <span>これから（運行の見える化と的確な指示）</span>
                                 </div>
-                                <p class="text-xs text-emerald-200 mb-3">幹事の情報を事前にシステムへ一元集約</p>
-                                <div class="bg-emerald-900/40 p-3 rounded-xl border border-emerald-700/50 text-center font-bold text-emerald-300 text-sm">
-                                    「画面を見れば誰でも自律して動ける」
+                                <p class="text-xs text-emerald-200 mb-2">時間軸×レーンのマトリクス画面で現在進行と次のタスクが一目瞭然。通りの変化に先手指示</p>
+                                <div class="bg-emerald-900/40 p-3 rounded-xl border border-emerald-700/50 text-center font-bold text-emerald-300 text-xs sm:text-sm">
+                                    「全体が見えるから、余裕を持って適切な指示が出せる」
                                 </div>
-                                <p class="text-xs text-slate-400 mt-3">→ 本部・現場が自走し、幹事は全体統括に専念できる</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- スライド 06: 幹事のメリット① 当日の問い合わせ激減 -->
-                <div class="slide-content hidden" data-title="幹事のメリット①: 当日の問い合わせ激減" data-section="第2部: 幹事のメリット">
+                <!-- スライド 06: 変化① 運行状況の把握が一瞬で完了 -->
+                <div class="slide-content hidden" data-title="変化①: 運行状況の把握が一瞬で完了" data-section="第2部: 見える化による変化">
                     <div class="max-w-4xl mx-auto">
-                        <div class="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1">Benefit 01</div>
-                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">「あの件どうなってる？」の電話がなくなります</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">本部と現場が画面上で自己解決できる仕組み</p>
+                        <div class="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1">Advantage 01</div>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">運行状況の把握が一瞬で完了する</h2>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">紙テーブルとスマホの時計を睨めっこする必要がなくなります</p>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                             <div class="bg-slate-800/80 border border-slate-700 p-5 rounded-2xl">
-                                <span class="text-2xl">🔍</span>
-                                <h3 class="font-bold text-sm text-indigo-300 mt-2">本部オペレーターが即答</h3>
+                                <span class="text-2xl">👀</span>
+                                <h3 class="font-bold text-sm text-indigo-300 mt-2">一瞥で現在地が分かる</h3>
                                 <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    「コーンは番所地下に20本、鍵は本部保管」がマトリクス上に表示。本部に電話が来ても幹事に回さず解決。
+                                    画面を開くだけで「今どのレーンが進行中か」「予定通りか」が瞬時に判明。紙をめくって探す手間がゼロに。
                                 </p>
                             </div>
                             <div class="bg-slate-800/80 border border-slate-700 p-5 rounded-2xl">
-                                <span class="text-2xl">📱</span>
-                                <h3 class="font-bold text-sm text-indigo-300 mt-2">現場スタッフが手元で確認</h3>
+                                <span class="text-2xl">🤝</span>
+                                <h3 class="font-bold text-sm text-indigo-300 mt-2">対面応対の合間に確認</h3>
                                 <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    「次はどこへ行けばいいか」「誰と組むか」はスタッフの手元スマホに表示されるため、幹事への質問がゼロに。
+                                    来場者や出店者への挨拶・問い合わせ対応の合間でも、画面をチラッと見るだけで運行全体の流れを把握。
                                 </p>
                             </div>
                             <div class="bg-slate-800/80 border border-slate-700 p-5 rounded-2xl">
-                                <span class="text-2xl">🧘</span>
-                                <h3 class="font-bold text-sm text-indigo-300 mt-2">本来の重要業務に集中</h3>
+                                <span class="text-2xl">🎯</span>
+                                <h3 class="font-bold text-sm text-indigo-300 mt-2">次の指示出しに専念</h3>
                                 <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    来賓対応、安全巡回、緊急時の重要判断など、幹事にしかできない本質的な仕事にゆとりを持って専念。
+                                    「今何が起きているか」の確認に脳のメモリを奪われず、落ち着いて「次にどう動かすか」の指示出しに集中。
                                 </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- スライド 07: 幹事のメリット② スタッフ点呼自動化 -->
-                <div class="slide-content hidden" data-title="幹事のメリット②: 出欠点呼の自動化" data-section="第2部: 幹事のメリット">
+                <!-- スライド 07: 変化② 通りの変化に先手で人員指示 -->
+                <div class="slide-content hidden" data-title="変化②: 通りの変化に先手で人員指示" data-section="第2部: 見える化による変化">
                     <div class="max-w-4xl mx-auto">
-                        <div class="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1">Benefit 02</div>
-                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">名簿片手にスタッフを探し回る必要はありません</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">QRコードによるワンタップ出勤とリアルタイム本部集約</p>
+                        <div class="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1">Advantage 02</div>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">通りの変化（通行止め・ござ市）に先手で人員指示が出せる</h2>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">節目ごとの必要人員が可視化され、直前に慌てて人を集めずに済みます</p>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                             <div class="bg-slate-800/60 border border-slate-700 p-5 rounded-2xl">
-                                <div class="text-xs font-bold text-slate-400 mb-2">これまでの朝</div>
+                                <div class="text-xs font-bold text-slate-400 mb-2">これまでの現場</div>
                                 <ul class="space-y-2 text-xs sm:text-sm text-slate-300">
-                                    <li>❌ 紙の名簿を広げて一人ずつ名前を呼んで点呼</li>
-                                    <li>❌ 来ていないスタッフに幹事が焦って個別電話</li>
-                                    <li>❌ 誰がどの持ち場に行ったか分からなくなる</li>
+                                    <li>❌ 車両通行止めの開始・解除直前になって「誰がどこに立てるか」慌てて確認</li>
+                                    <li>❌ ござ市の開始・終了時に人手が足りず、直前で人を呼び集めて指示</li>
+                                    <li>❌ 誰がどの持ち場にいるか見えず、指示出しが常に後手に回る</li>
                                 </ul>
                             </div>
                             <div class="bg-indigo-950/40 border border-indigo-500/50 p-5 rounded-2xl">
-                                <div class="text-xs font-bold text-indigo-300 mb-2">システム導入後</div>
+                                <div class="text-xs font-bold text-indigo-300 mb-2">運行見える化後</div>
                                 <ul class="space-y-2 text-xs sm:text-sm text-slate-200">
-                                    <li>⭕ スタッフが<strong class="text-indigo-300">QRコードをスマホで読んで出勤タップ</strong></li>
-                                    <li>⭕ 本部画面に<strong class="text-indigo-300">「誰が来ていて誰が未着か」即時表示</strong></li>
-                                    <li>⭕ 未着スタッフへの確認電話は本部が代行</li>
+                                    <li>⭕ 通行止めやござ市の前後に<strong class="text-indigo-300">「誰がどこに動くか」事前に時間軸で一覧化</strong></li>
+                                    <li>⭕ ボランティアの手元スマホに担当タスクが表示され、<strong class="text-indigo-300">各自が迷わず持ち場へ移動</strong></li>
+                                    <li>⭕ 指示を出す側も、15分〜30分前の段階で余裕を持って人員配置を確認・指示可能</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- スライド 08: 幹事のメリット③ 機材・場所トラブル防止 -->
-                <div class="slide-content hidden" data-title="幹事のメリット③: 機材・場所トラブル防止" data-section="第2部: 幹事のメリット">
+                <!-- スライド 08: 変化③ 台車の管理と搬入出の効率化 -->
+                <div class="slide-content hidden" data-title="変化③: 台車管理と搬入出の効率化" data-section="第2部: 見える化による変化">
                     <div class="max-w-4xl mx-auto">
-                        <div class="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1">Benefit 03</div>
-                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">駐車場の時間違反や、機材の勝手な持ち出しを防ぐ</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">地域との信頼関係を守るための制約管理機能</p>
+                        <div class="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1">Advantage 03</div>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-white">台車の勝手な持ち出し防止と、日別の搬入出をスムーズに</h2>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">資機材ルールが明確になり、各リーダーへ都度相談に走る必要がなくなります</p>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                             <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
+                                <div class="text-2xl mb-1">🛒</div>
+                                <h3 class="font-bold text-sm text-indigo-300">台車の定位置と持ち出しルール</h3>
+                                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                                    台車の配置場所と使用ルールをあらかじめ共有。勝手な持ち出しを防ぎ、資機材運搬の混乱を防止。
+                                </p>
+                            </div>
+                            <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
+                                <div class="text-2xl mb-1">📅</div>
+                                <h3 class="font-bold text-sm text-indigo-300">1日目・2日目の搬入出差を整理</h3>
+                                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                                    日によって異なる搬入・搬出の場所やタイミングを事前共有。当日に各リーダーへ確認に回る負担を解消。
+                                </p>
+                            </div>
+                            <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
                                 <div class="text-2xl mb-1">⏱️</div>
-                                <h3 class="font-bold text-sm text-indigo-300">貸切駐車場の時間厳守</h3>
+                                <h3 class="font-bold text-sm text-indigo-300">貸切駐車場の時間制約遵守</h3>
                                 <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    「〇〇駐車場は13時〜18時のみ」など地主さんとの約束時間をシステムが把握。時間外配置の事故を未然防止。
-                                </p>
-                            </div>
-                            <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
-                                <div class="text-2xl mb-1">🛑</div>
-                                <h3 class="font-bold text-sm text-indigo-300">自前資材とレンタルを分離</h3>
-                                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    番所地下保管の自前コーンと外部レンタル品を区分管理。回収時の混同や紛失・延滞料金の発生を防止。
-                                </p>
-                            </div>
-                            <div class="bg-slate-800/80 border border-slate-700 p-4 sm:p-5 rounded-2xl">
-                                <div class="text-2xl mb-1">📝</div>
-                                <h3 class="font-bold text-sm text-indigo-300">追加要請ルートの一元化</h3>
-                                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    店舗や住民からの「コーンを足してほしい」要望を本部に集約。予備プールからの勝手な持ち出しを防止。
+                                    各貸切駐車場（3箇所）の利用可能時間をシステムで管理し、時間外配置や近隣トラブルを未然に防止。
                                 </p>
                             </div>
                         </div>
@@ -455,7 +468,7 @@
                                 <div class="text-indigo-400 font-black text-sm mb-1">① 運行・手順情報</div>
                                 <h3 class="font-bold text-base text-white">何時に・どこで・何をするか</h3>
                                 <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    前日設営、当日本番、撤収に至るまでの担当タスクの流れ、時間、場所。
+                                    前日設営、当日本番（通行止め開始・解除前後、ござ市開始・終了前後）、撤収に至るタスクの流れと手順。
                                 </p>
                             </div>
                             <div class="bg-slate-800/90 border-2 border-indigo-500/50 p-5 rounded-2xl">
@@ -469,7 +482,7 @@
                                 <div class="text-indigo-400 font-black text-sm mb-1">③ 機材・場所ルール</div>
                                 <h3 class="font-bold text-base text-white">何がどこにあり、どんな制約があるか</h3>
                                 <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                                    自前資材の保管場所、レンタル受領時間、貸切駐車場の時間帯制約。
+                                    台車の配置・利用ルール、1日目・2日目で異なる搬入出の場所と時間、駐車場の時間制約。
                                 </p>
                             </div>
                         </div>
@@ -495,9 +508,9 @@
                                     <tr>
                                         <td class="p-3 font-bold text-indigo-300">① 運行・タスク</td>
                                         <td class="p-3">
-                                            ・前日設営の開始時間と手順（テント張り、看板設置等）<br>
-                                            ・車両通行止め開始（〇時）直後の最優先設置箇所（交差点、支道等）<br>
-                                            ・終了後の撤収手順と資材集約場所
+                                             ・前日設営の開始時間と手順（看板設置、テント組み立て等）<br>
+                                             ・車両通行止め開始・解除前後の最優先配置と手順<br>
+                                             ・ござ市開始・終了前後の通り状況変化に合わせた人員指示手順
                                         </td>
                                     </tr>
                                     <tr>
@@ -510,9 +523,9 @@
                                     <tr>
                                         <td class="p-3 font-bold text-indigo-300">③ 機材・場所</td>
                                         <td class="p-3">
-                                            ・カラーコーン・給水タンク等の自前保管場所（番所地下など）<br>
-                                            ・外部レンタル品の手配先と受領・返却時間<br>
-                                            ・貸切駐車場3箇所の利用可能時間帯、鍵の担当者
+                                            ・台車の定位置と持ち出しルール（勝手な持ち出し防止）<br>
+                                            ・1日目と2日目で異なる資機材搬入・搬出の場所・時間・順序<br>
+                                            ・カラーコーン保管場所（番所地下等）、貸切駐車場3箇所の利用可能時間帯と鍵の担当者
                                         </td>
                                     </tr>
                                 </tbody>
@@ -526,7 +539,7 @@
                     <div class="max-w-4xl mx-auto">
                         <div class="text-xs text-emerald-400 font-bold uppercase tracking-wider mb-1">Support</div>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-white">幹事の皆様の入力負担はゼロに近づけます</h2>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">パソコンが苦手でも大丈夫！事務局が全面代行します</p>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">パソコンが苦手でも大丈夫！私（佐藤）が全面代行します</p>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                             <div class="bg-indigo-950/40 border border-indigo-700/60 p-5 rounded-2xl">
@@ -537,16 +550,16 @@
                                 <ul class="space-y-3 text-xs sm:text-sm text-slate-300">
                                     <li>📸 去年の<strong class="text-white">手書きメモ</strong>をスマホで撮ってLINE送信</li>
                                     <li>📎 お手持ちの<strong class="text-white">Excel・Word・PDF</strong>をそのまま送付</li>
-                                    <li>☕ 事務局スタッフが<strong class="text-white">口頭で15分ヒアリング</strong>（雑談でOK）</li>
+                                    <li>☕ 私（佐藤）が<strong class="text-white">口頭で15分ヒアリング</strong>（雑談でOK）</li>
                                 </ul>
                             </div>
                             <div class="bg-emerald-950/40 border border-emerald-700/60 p-5 rounded-2xl">
                                 <div class="flex items-center space-x-2 text-emerald-300 font-bold text-sm mb-3">
                                     <span>💻</span>
-                                    <span>事務局・本部が代行します</span>
+                                    <span>私（佐藤）が代行します</span>
                                 </div>
                                 <ul class="space-y-3 text-xs sm:text-sm text-slate-300">
-                                    <li>⚙️ いただいた資料をもとに、<strong class="text-emerald-300">システム入力は事務局が代行</strong></li>
+                                    <li>⚙️ いただいた資料をもとに、<strong class="text-emerald-300">システム入力は私（佐藤）が代行</strong></li>
                                     <li>🖨️ 登録完了後、画面印刷をお渡しします</li>
                                     <li>👀 幹事の皆様は<strong class="text-emerald-300">「内容に間違いがないかチェック」</strong>するだけ</li>
                                 </ul>
@@ -567,7 +580,7 @@
                                 <div class="flex items-center space-x-3">
                                     <span class="bg-indigo-600 text-white font-bold px-2 py-0.5 rounded text-xs">Step 1</span>
                                     <span class="font-bold text-white">本日〜来週</span>
-                                    <span class="text-slate-300">情報・メモ・名簿の共有受付（事務局宛て）</span>
+                                    <span class="text-slate-300">情報・メモ・名簿の共有受付（私・佐藤宛て）</span>
                                 </div>
                                 <span class="text-xs text-indigo-300 font-bold">幹事の皆様</span>
                             </div>
@@ -575,9 +588,9 @@
                                 <div class="flex items-center space-x-3">
                                     <span class="bg-slate-700 text-slate-300 font-bold px-2 py-0.5 rounded text-xs">Step 2</span>
                                     <span class="font-bold text-white">来週〜再来週</span>
-                                    <span class="text-slate-300">事務局によるシステム代行入力・データ化</span>
+                                    <span class="text-slate-300">私（佐藤）によるシステム代行入力・データ化</span>
                                 </div>
-                                <span class="text-xs text-slate-400">事務局作業</span>
+                                <span class="text-xs text-slate-400">佐藤作業</span>
                             </div>
                             <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
@@ -611,8 +624,8 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 text-left">
                             <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700">
                                 <div class="text-xl mb-1">🛡️</div>
-                                <div class="font-bold text-white text-sm">幹事の負担を減らす</div>
-                                <p class="text-xs text-slate-400 mt-1">当日の電話対応や指示出しから解放され、全体を見渡せます。</p>
+                                <div class="font-bold text-white text-sm">的確な指示と安心</div>
+                                <p class="text-xs text-slate-400 mt-1">状況把握や確認に追われず、落ち着いて適切な指示出しに専念できます。</p>
                             </div>
                             <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700">
                                 <div class="text-xl mb-1">💎</div>
@@ -621,7 +634,7 @@
                             </div>
                             <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700">
                                 <div class="text-xl mb-1">🤝</div>
-                                <div class="font-bold text-white text-sm">入力は事務局が代行</div>
+                                <div class="font-bold text-white text-sm">入力は私（佐藤）が代行</div>
                                 <p class="text-xs text-slate-400 mt-1">難しい作業はありません。まずはメモやExcelをお寄せください。</p>
                             </div>
                         </div>
@@ -649,7 +662,7 @@
                             </div>
                             <div class="bg-slate-800/70 p-4 rounded-xl border border-slate-700">
                                 <div class="font-bold text-indigo-300 mb-1">📮 情報の送付先</div>
-                                <p class="text-slate-400">事務局LINEグループ、または本部メールアドレス宛てにお気軽にお送りください。</p>
+                                <p class="text-slate-400">幹事会LINEグループ、または私（佐藤）宛てにお気軽にお送りください。</p>
                             </div>
                         </div>
                     </div>

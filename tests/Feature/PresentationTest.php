@@ -34,12 +34,19 @@ class PresentationTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('まつり実行委員会 幹事会向けプレゼンテーション');
-        $response->assertSee('当日の負担を半減させる');
-        $response->assertSee('情報一元管理');
+        $response->assertSee('まつり運行の');
+        $response->assertSee('見える化');
+        $response->assertSee('より適切な指示と安心の運営');
+        $response->assertSee('当日の私の混乱状況');
         $response->assertSee('幹事の皆様に教えていただきたい「3つの情報」');
+        $response->assertSee('私（佐藤）が代行');
         $response->assertSee('発表者用トークスクリプト');
         $response->assertSee('exitFullscreenBtn');
         $response->assertSee('全画面解除');
+
+        // 電話・無線に関する記述が削除されていること
+        $response->assertDontSee('電話');
+        $response->assertDontSee('無線');
 
         // CSP準拠：インラインイベントハンドラやstyle属性が存在しないこと
         $response->assertDontSee('onclick=');
