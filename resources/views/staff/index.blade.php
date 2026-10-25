@@ -100,9 +100,7 @@
                         <th class="px-4 py-3 font-bold">フリガナ</th>
                         <th class="px-4 py-3 font-bold">LINE表示名</th>
                         <th class="px-4 py-3 font-bold">所属団体・地域会等</th>
-                        <th class="px-4 py-3 font-bold">登録経路</th>
                         <th class="px-4 py-3 font-bold">稼働状態</th>
-                        <th class="px-4 py-3 font-bold">割当タスク数</th>
                         <th class="px-4 py-3 font-bold text-right">操作</th>
                     </tr>
                 </thead>
@@ -132,17 +130,6 @@
                         </td>
                         <td class="px-4 py-3 text-slate-700">{{ $staff->affiliation ?? '未設定' }}</td>
                         <td class="px-4 py-3">
-                            @if($staff->registered_via === 'self')
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                LINEセルフ
-                            </span>
-                            @else
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                本部登録
-                            </span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3">
                             @if($staff->is_active)
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                 ● 稼働可能
@@ -152,9 +139,6 @@
                                 停止中
                             </span>
                             @endif
-                        </td>
-                        <td class="px-4 py-3 font-mono text-slate-700">
-                            {{ $staff->assignments_count ?? 0 }} <span class="text-[10px] text-slate-400">件</span>
                         </td>
                         <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
                             <!-- QR表示ボタン -->
@@ -192,7 +176,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-4 py-12 text-center text-slate-400">
+                        <td colspan="7" class="px-4 py-12 text-center text-slate-400">
                             <span class="text-3xl block mb-2">👷</span>
                             登録されているスタッフは見つかりませんでした。
                         </td>

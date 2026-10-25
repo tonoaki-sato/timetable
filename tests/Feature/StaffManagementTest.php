@@ -141,9 +141,9 @@ class StaffManagementTest extends TestCase
     }
 
     /**
-     * スタッフ一覧にLINE情報・登録経路が表示されること
+     * スタッフ一覧にLINE情報が表示され、詳細画面で登録経路が表示されること
      */
-    public function test_admin_staff_index_displays_line_info_and_registered_via(): void
+    public function test_admin_staff_index_displays_line_info_and_show_displays_registered_via(): void
     {
         $this->actingAs($this->operator);
 
@@ -155,7 +155,10 @@ class StaffManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('山田 太郎');
         $response->assertSee('やまちゃん');
-        $response->assertSee('LINEセルフ');
+
+        $showResponse = $this->get(route('staff.show', $lineStaff));
+        $showResponse->assertStatus(200);
+        $showResponse->assertSee('LINEセルフ登録');
     }
 
     /**

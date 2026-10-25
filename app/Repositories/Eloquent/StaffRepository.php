@@ -14,7 +14,7 @@ class StaffRepository implements StaffRepositoryInterface
      */
     public function paginateFiltered(?string $search = null, ?bool $status = null, int $perPage = 15): LengthAwarePaginator
     {
-        $query = Staff::query()->withCount('assignments');
+        $query = Staff::query();
 
         if ($search) {
             $query->search($search);
