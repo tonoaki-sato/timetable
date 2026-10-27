@@ -40,6 +40,13 @@ class PresentationTest extends TestCase
         $response->assertSee('当日の私の混乱状況');
         $response->assertSee('幹事の皆様に教えていただきたい「3つの情報」');
         $response->assertSee('私（佐藤）が代行');
+        $response->assertSee('入力は私が代行');
+        $response->assertSee('本日〜本番直前');
+        $response->assertSee('来週〜更新の都度');
+        $response->assertSee('幹事会都度');
+        $response->assertSee('画面の確認・修正受付');
+        $response->assertDontSee('入力は私（佐藤）が代行');
+        $response->assertDontSee('来週〜再来週');
         $response->assertSee('発表者用トークスクリプト');
         $response->assertSee('exitFullscreenBtn');
         $response->assertSee('全画面解除');

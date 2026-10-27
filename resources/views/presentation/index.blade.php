@@ -148,7 +148,7 @@
                                 <span class="text-3xl mb-2">🤝</span>
                                 <div class="text-sm font-bold text-indigo-200">幹事の皆様へのお願い</div>
                                 <p class="text-base sm:text-lg font-black text-white mt-2 leading-relaxed">
-                                    「システムへの直接入力は私（佐藤）が代行します。<br>
+                                    「システムへの直接入力は私が代行します。<br>
                                     皆様が現場で培われた貴重なノウハウや運行計画を教えてください！」
                                 </p>
                             </div>
@@ -560,7 +560,7 @@
                                     <span>私（佐藤）が代行します</span>
                                 </div>
                                 <ul class="space-y-3 text-xs sm:text-sm text-slate-300">
-                                    <li>⚙️ いただいた資料をもとに、<strong class="text-emerald-300">システム入力は私（佐藤）が代行</strong></li>
+                                    <li>⚙️ いただいた資料をもとに、<strong class="text-emerald-300">システム入力は私が代行</strong></li>
                                     <li>🖨️ 登録完了後、画面印刷をお渡しします</li>
                                     <li>👀 幹事の皆様は<strong class="text-emerald-300">「内容に間違いがないかチェック」</strong>するだけ</li>
                                 </ul>
@@ -580,7 +580,7 @@
                             <div class="bg-slate-800/80 border border-indigo-500/40 p-4 rounded-xl flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
                                     <span class="bg-indigo-600 text-white font-bold px-2 py-0.5 rounded text-xs">Step 1</span>
-                                    <span class="font-bold text-white">本日〜来週</span>
+                                    <span class="font-bold text-white">本日〜本番直前</span>
                                     <span class="text-slate-300">情報・メモ・名簿の共有受付（私・佐藤宛て）</span>
                                 </div>
                                 <span class="text-xs text-indigo-300 font-bold">幹事の皆様</span>
@@ -588,16 +588,16 @@
                             <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
                                     <span class="bg-slate-700 text-slate-300 font-bold px-2 py-0.5 rounded text-xs">Step 2</span>
-                                    <span class="font-bold text-white">来週〜再来週</span>
-                                    <span class="text-slate-300">私（佐藤）によるシステム代行入力・データ化</span>
+                                    <span class="font-bold text-white">来週〜更新の都度</span>
+                                    <span class="text-slate-300">私によるシステム代行入力・データ化</span>
                                 </div>
                                 <span class="text-xs text-slate-400">佐藤作業</span>
                             </div>
                             <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
                                     <span class="bg-slate-700 text-slate-300 font-bold px-2 py-0.5 rounded text-xs">Step 3</span>
-                                    <span class="font-bold text-white">次回幹事会</span>
-                                    <span class="text-slate-300">プロジェクターで登録画面の確認・修正受付</span>
+                                    <span class="font-bold text-white">幹事会都度</span>
+                                    <span class="text-slate-300">画面の確認・修正受付</span>
                                 </div>
                                 <span class="text-xs text-indigo-300 font-bold">幹事会全体</span>
                             </div>
@@ -635,7 +635,7 @@
                             </div>
                             <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700">
                                 <div class="text-xl mb-1">🤝</div>
-                                <div class="font-bold text-white text-sm">入力は私（佐藤）が代行</div>
+                                <div class="font-bold text-white text-sm">入力は私が代行</div>
                                 <p class="text-xs text-slate-400 mt-1">難しい作業はありません。まずはメモやExcelをお寄せください。</p>
                             </div>
                         </div>
