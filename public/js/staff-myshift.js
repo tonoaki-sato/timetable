@@ -138,13 +138,20 @@
                 }
             }
 
+            // ログイン復帰フラグの確認（sessionStorage または URLパラメータ）
+            const urlParamsBeforeInit = new URLSearchParams(window.location.search);
+            const hadLoginParams = urlParamsBeforeInit.has('code') || urlParamsBeforeInit.has('liff.state');
+            const hadRequestedBind = sessionStorage.getItem('line_binding_requested') === '1';
+
             // ページロード時のLIFF初期化および外部ブラウザでのログイン復帰判定
             if (liffId && typeof liff !== 'undefined') {
                 liff.init({ liffId: liffId }).then(async () => {
-                    // 外部ブラウザでliff.login()から戻ってきた場合（URLにcodeまたはliff.stateがある）
-                    const urlParams = new URLSearchParams(window.location.search);
-                    if (liff.isLoggedIn() && (urlParams.has('code') || urlParams.has('liff.state'))) {
-                        await executeBind();
+                    // 外部ブラウザでliff.login()から戻ってきた場合
+                    if (hadRequestedBind || hadLoginParams) {
+                        sessionStorage.removeItem('line_binding_requested');
+                        if (liff.isLoggedIn()) {
+                            await executeBind();
+                        }
                     }
                 }).catch(err => {
                     console.warn('[LIFF] Init warning on page load:', err);
@@ -164,9 +171,15 @@
                 lineBindBtn.innerHTML = '<span>⏳</span><span>連携中...</span>';
 
                 try {
-                    await liff.init({ liffId: liffId });
+                    // liff.ready を待つ（多重 init によるエラーを防止）
+                    if (liff.ready) {
+                        await liff.ready;
+                    } else {
+                        await liff.init({ liffId: liffId });
+                    }
 
                     if (!liff.isLoggedIn()) {
+                        sessionStorage.setItem('line_binding_requested', '1');
                         liff.login({ redirectUri: window.location.href });
                         return;
                     }
