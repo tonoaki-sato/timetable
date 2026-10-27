@@ -16,6 +16,13 @@ class LineAuthService
     {
         $channelId = config('services.line.channel_id');
         if (empty($channelId)) {
+            $liffId = config('services.line.liff_id');
+            if (! empty($liffId) && str_contains($liffId, '-')) {
+                $channelId = explode('-', $liffId)[0];
+            }
+        }
+
+        if (empty($channelId)) {
             Log::error('[LINE Auth] LINE_CHANNEL_ID is not configured.');
 
             return null;
