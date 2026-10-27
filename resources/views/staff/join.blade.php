@@ -39,7 +39,7 @@
                 @csrf
 
                 <!-- LINE自動取得情報の隠しフィールド -->
-                <input type="hidden" id="line_user_id" name="line_user_id" value="{{ old('line_user_id') }}">
+                <input type="hidden" id="line_id_token" name="line_id_token" value="{{ old('line_id_token') }}">
                 <input type="hidden" id="line_display_name" name="line_display_name" value="{{ old('line_display_name') }}">
                 <input type="hidden" id="line_picture_url" name="line_picture_url" value="{{ old('line_picture_url') }}">
 

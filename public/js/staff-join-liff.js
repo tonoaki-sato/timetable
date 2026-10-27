@@ -28,11 +28,12 @@
                 const profile = await liff.getProfile();
 
                 // フォームの隠しフィールドにセット
-                const userIdInput = document.getElementById('line_user_id');
+                const idToken = liff.getIDToken();
+                const idTokenInput = document.getElementById('line_id_token');
                 const displayNameInput = document.getElementById('line_display_name');
                 const pictureUrlInput = document.getElementById('line_picture_url');
 
-                if (userIdInput) userIdInput.value = profile.userId || '';
+                if (idTokenInput && idToken) idTokenInput.value = idToken;
                 if (displayNameInput) displayNameInput.value = profile.displayName || '';
                 if (pictureUrlInput) pictureUrlInput.value = profile.pictureUrl || '';
 

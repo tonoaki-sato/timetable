@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Staff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class StaffJoinTest extends TestCase
@@ -54,16 +55,25 @@ class StaffJoinTest extends TestCase
     }
 
     /**
-     * LIFF経由を想定したダミーLINE情報を含むセルフ登録ができること (外部通信なし)
+     * LIFF IDトークンが正当に検証された場合にセルフ登録ができること (Http::fake)
      */
-    public function test_staff_can_register_with_simulated_line_data(): void
+    public function test_staff_can_register_with_verified_line_id_token(): void
     {
+        config(['services.line.channel_id' => '1234567890']);
+
+        Http::fake([
+            'https://api.line.me/oauth2/v2.1/verify' => Http::response([
+                'sub' => 'U1234567890abcdef1234567890abcdef',
+                'name' => 'あおい@青大',
+                'picture' => 'https://example.com/avatar.jpg',
+                'aud' => '1234567890',
+            ], 200),
+        ]);
+
         $response = $this->post(route('staff.join.store'), [
             'name' => '青山 葵',
             'kana' => 'アオヤマ アオイ',
-            'line_user_id' => 'U1234567890abcdef1234567890abcdef',
-            'line_display_name' => 'あおい@青大',
-            'line_picture_url' => 'https://example.com/avatar.jpg',
+            'line_id_token' => 'valid-dummy-jwt-token',
         ]);
 
         $response->assertRedirect(route('staff.join.completed'));
@@ -76,6 +86,53 @@ class StaffJoinTest extends TestCase
             'line_picture_url' => 'https://example.com/avatar.jpg',
             'registered_via' => 'self',
         ]);
+    }
+
+    /**
+     * 無効または期限切れのIDトークンの場合バリデーションエラーとなること
+     */
+    public function test_registration_fails_with_invalid_or_expired_line_id_token(): void
+    {
+        config(['services.line.channel_id' => '1234567890']);
+
+        Http::fake([
+            'https://api.line.me/oauth2/v2.1/verify' => Http::response([
+                'error' => 'invalid_request',
+                'error_description' => 'ID token has expired',
+            ], 400),
+        ]);
+
+        $response = $this->post(route('staff.join.store'), [
+            'name' => '青山 葵',
+            'kana' => 'アオヤマ アオイ',
+            'line_id_token' => 'expired-dummy-token',
+        ]);
+
+        $response->assertSessionHasErrors(['line_id_token']);
+        $this->assertDatabaseMissing('staff', ['name' => '青山 葵']);
+    }
+
+    /**
+     * トークンの発行先チャネル（aud）が不一致の場合登録拒否されること
+     */
+    public function test_registration_fails_when_token_audience_mismatches(): void
+    {
+        config(['services.line.channel_id' => '1234567890']);
+
+        Http::fake([
+            'https://api.line.me/oauth2/v2.1/verify' => Http::response([
+                'sub' => 'U1234567890abcdef1234567890abcdef',
+                'aud' => 'different_channel_id',
+            ], 200),
+        ]);
+
+        $response = $this->post(route('staff.join.store'), [
+            'name' => '青山 葵',
+            'kana' => 'アオヤマ アオイ',
+            'line_id_token' => 'other-channel-token',
+        ]);
+
+        $response->assertSessionHasErrors(['line_id_token']);
     }
 
     /**
@@ -154,14 +211,23 @@ class StaffJoinTest extends TestCase
             'line_display_name' => null,
         ]);
 
+        config(['services.line.channel_id' => '1234567890']);
+
+        Http::fake([
+            'https://api.line.me/oauth2/v2.1/verify' => Http::response([
+                'sub' => 'U99998888777766665555444433332222',
+                'name' => 'いちろう@鈴木組',
+                'picture' => 'https://example.com/ichirou.jpg',
+                'aud' => '1234567890',
+            ], 200),
+        ]);
+
         $initialCount = Staff::count();
 
         $response = $this->post(route('staff.join.store'), [
             'name' => '鈴木 一郎',
             'kana' => 'スズキ イチロウ',
-            'line_user_id' => 'U99998888777766665555444433332222',
-            'line_display_name' => 'いちろう@鈴木組',
-            'line_picture_url' => 'https://example.com/ichirou.jpg',
+            'line_id_token' => 'dummy-valid-id-token',
         ]);
 
         $response->assertRedirect(route('staff.join.completed'));

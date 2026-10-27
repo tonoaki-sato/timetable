@@ -25,7 +25,7 @@ class StoreStaffJoinRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'kana' => ['required', 'string', 'max:255'],
-            'line_user_id' => ['nullable', 'string', 'max:64'],
+            'line_id_token' => ['nullable', 'string'],
             'line_display_name' => ['nullable', 'string', 'max:100'],
             'line_picture_url' => ['nullable', 'string', 'max:500'],
             'manual_line_display_name' => ['nullable', 'string', 'max:100'],
@@ -42,6 +42,7 @@ class StoreStaffJoinRequest extends FormRequest
         return [
             'name' => 'お名前（氏名）',
             'kana' => 'フリガナ',
+            'line_id_token' => 'LINE認証情報',
             'line_display_name' => 'LINE表示名',
             'manual_line_display_name' => 'LINE表示名',
         ];

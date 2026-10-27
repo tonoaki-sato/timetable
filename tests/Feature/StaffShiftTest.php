@@ -8,6 +8,7 @@ use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class StaffShiftTest extends TestCase
@@ -175,16 +176,25 @@ class StaffShiftTest extends TestCase
     }
 
     /**
-     * マイシフト画面からワンタップでLINE連携ができること
+     * マイシフト画面からワンタップでLINE連携ができること (Http::fake)
      */
     public function test_staff_can_bind_line_profile_from_myshift_screen(): void
     {
+        config(['services.line.channel_id' => '1234567890']);
+
+        Http::fake([
+            'https://api.line.me/oauth2/v2.1/verify' => Http::response([
+                'sub' => 'U1234567890abcdef1234567890abcdef',
+                'name' => '拓也LINE',
+                'picture' => 'https://example.com/pic.jpg',
+                'aud' => '1234567890',
+            ], 200),
+        ]);
+
         $this->assertNull($this->staff->line_user_id);
 
         $response = $this->postJson(route('staff.myshift.line-bind', ['token' => $this->staff->access_token]), [
-            'line_user_id' => 'U1234567890abcdef1234567890abcdef',
-            'line_display_name' => '拓也LINE',
-            'line_picture_url' => 'https://example.com/pic.jpg',
+            'line_id_token' => 'valid-jwt-token',
         ]);
 
         $response->assertStatus(200)
@@ -202,21 +212,52 @@ class StaffShiftTest extends TestCase
     }
 
     /**
+     * 無効なLINE IDトークンではマイシフト連携できず422エラーになること
+     */
+    public function test_staff_cannot_bind_with_invalid_line_id_token(): void
+    {
+        config(['services.line.channel_id' => '1234567890']);
+
+        Http::fake([
+            'https://api.line.me/oauth2/v2.1/verify' => Http::response([
+                'error' => 'invalid_request',
+                'error_description' => 'invalid id_token',
+            ], 400),
+        ]);
+
+        $response = $this->postJson(route('staff.myshift.line-bind', ['token' => $this->staff->access_token]), [
+            'line_id_token' => 'invalid-token-string',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['line_id_token']);
+    }
+
+    /**
      * 既に使用されているLINE User IDは連携できず422エラーになること
      */
     public function test_staff_cannot_bind_already_taken_line_user_id(): void
     {
+        config(['services.line.channel_id' => '1234567890']);
+
+        Http::fake([
+            'https://api.line.me/oauth2/v2.1/verify' => Http::response([
+                'sub' => 'U1234567890abcdef1234567890abcdef',
+                'name' => '拓也LINE',
+                'aud' => '1234567890',
+            ], 200),
+        ]);
+
         Staff::factory()->create([
             'line_user_id' => 'U1234567890abcdef1234567890abcdef',
         ]);
 
         $response = $this->postJson(route('staff.myshift.line-bind', ['token' => $this->staff->access_token]), [
-            'line_user_id' => 'U1234567890abcdef1234567890abcdef',
-            'line_display_name' => '拓也LINE',
+            'line_id_token' => 'valid-jwt-token-for-already-taken-user',
         ]);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['line_user_id']);
+            ->assertJsonValidationErrors(['line_id_token']);
     }
 
     /**

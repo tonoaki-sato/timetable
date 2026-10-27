@@ -4,16 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreStaffJoinRequest;
 use App\Models\Staff;
+use App\Services\LineAuthService;
 use App\Services\StaffService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class StaffJoinController extends Controller
 {
     public function __construct(
-        protected StaffService $staffService
+        protected StaffService $staffService,
+        protected LineAuthService $lineAuthService
     ) {}
 
     /**
@@ -31,7 +34,24 @@ class StaffJoinController extends Controller
      */
     public function store(StoreStaffJoinRequest $request): RedirectResponse
     {
-        $staff = $this->staffService->registerSelfStaff($request->validated());
+        $validated = $request->validated();
+
+        if (! empty($validated['line_id_token'])) {
+            $verified = $this->lineAuthService->verifyIdToken($validated['line_id_token']);
+            if (! $verified) {
+                throw ValidationException::withMessages([
+                    'line_id_token' => ['LINEの認証検証に失敗しました。LINEアプリから再度お試しください。'],
+                ]);
+            }
+
+            $validated['line_user_id'] = $verified['line_user_id'];
+            $validated['line_display_name'] = $verified['line_display_name'] ?? $validated['line_display_name'] ?? null;
+            $validated['line_picture_url'] = $verified['line_picture_url'] ?? $validated['line_picture_url'] ?? null;
+        } else {
+            $validated['line_user_id'] = null;
+        }
+
+        $staff = $this->staffService->registerSelfStaff($validated);
 
         // 端末自動認識用の長期Cookie（30日間）をキューに追加
         Cookie::queue('staff_token', $staff->access_token, 60 * 24 * 30);

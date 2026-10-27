@@ -86,11 +86,9 @@
                         return;
                     }
 
-                    const profile = await liff.getProfile();
+                    const idToken = liff.getIDToken();
                     const payload = {
-                        line_user_id: profile.userId,
-                        line_display_name: profile.displayName || null,
-                        line_picture_url: profile.pictureUrl || null
+                        line_id_token: idToken
                     };
 
                     const response = await fetch(endpoint, {

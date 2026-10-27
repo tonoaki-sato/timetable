@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TaskStaffAssignment;
+use App\Services\LineAuthService;
 use App\Services\StaffService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -13,7 +14,8 @@ use Illuminate\View\View;
 class StaffShiftController extends Controller
 {
     public function __construct(
-        protected StaffService $staffService
+        protected StaffService $staffService,
+        protected LineAuthService $lineAuthService
     ) {}
 
     /**
@@ -117,24 +119,37 @@ class StaffShiftController extends Controller
         }
 
         $validated = $request->validate([
-            'line_user_id' => ['required', 'string', 'max:64'],
-            'line_display_name' => ['nullable', 'string', 'max:100'],
-            'line_picture_url' => ['nullable', 'string', 'max:500'],
+            'line_id_token' => ['required', 'string'],
         ]);
 
-        $success = $this->staffService->bindLineProfile($staff, $validated);
+        $verified = $this->lineAuthService->verifyIdToken($validated['line_id_token']);
+
+        if (! $verified) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'LINE認証の検証に失敗しました。再度お試しください。',
+                    'errors' => [
+                        'line_id_token' => ['LINE認証の検証に失敗しました。再度お試しください。'],
+                    ],
+                ], 422);
+            }
+
+            return back()->withErrors(['line_id_token' => 'LINE認証の検証に失敗しました。再度お試しください。']);
+        }
+
+        $success = $this->staffService->bindLineProfile($staff, $verified);
 
         if (! $success) {
             if ($request->wantsJson()) {
                 return response()->json([
                     'message' => 'このLINEアカウントは既に別のスタッフ情報に紐づけられています。',
                     'errors' => [
-                        'line_user_id' => ['このLINEアカウントは既に別のスタッフ情報に紐づけられています。'],
+                        'line_id_token' => ['このLINEアカウントは既に別のスタッフ情報に紐づけられています。'],
                     ],
                 ], 422);
             }
 
-            return back()->withErrors(['line_user_id' => 'このLINEアカウントは既に別のスタッフ情報に紐づけられています。']);
+            return back()->withErrors(['line_id_token' => 'このLINEアカウントは既に別のスタッフ情報に紐づけられています。']);
         }
 
         if ($request->wantsJson()) {
