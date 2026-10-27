@@ -61,32 +61,29 @@
         // 2. LINEワンタップ連携処理 (UC-106 パターンB)
         const lineBindBtn = document.getElementById('lineBindBtn');
         if (lineBindBtn) {
-            lineBindBtn.addEventListener('click', async function () {
-                const endpoint = lineBindBtn.dataset.bindEndpoint;
-                const liffId = lineBindBtn.dataset.liffId;
-                const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
-                const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+            const endpoint = lineBindBtn.dataset.bindEndpoint;
+            const liffId = lineBindBtn.dataset.liffId;
+            const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
 
+            // 連携APIの実行関数
+            async function executeBind() {
                 if (!endpoint) return;
-
-                if (!liffId || typeof liff === 'undefined') {
-                    alert('LINE連携機能の初期化情報が見つかりません。');
-                    return;
-                }
 
                 lineBindBtn.disabled = true;
                 const originalText = lineBindBtn.innerHTML;
                 lineBindBtn.innerHTML = '<span>⏳</span><span>連携中...</span>';
 
                 try {
-                    await liff.init({ liffId: liffId });
-
-                    if (!liff.isLoggedIn()) {
-                        liff.login({ redirectUri: window.location.href });
+                    const idToken = liff.getIDToken();
+                    if (!idToken) {
+                        console.error('[LIFF] IDトークンが取得できませんでした。LINE DevelopersのLIFF設定で「Scopes」に「openid」が含まれているかご確認ください。');
+                        alert('LINEの認証情報（IDトークン）を取得できませんでした。\n\n【原因の可能性】\nLINE DevelopersのLIFF設定で「Scopes」の「openid」にチェックが入っていない可能性があります。設定をご確認ください。');
+                        lineBindBtn.disabled = false;
+                        lineBindBtn.innerHTML = originalText;
                         return;
                     }
 
-                    const idToken = liff.getIDToken();
                     const payload = {
                         line_id_token: idToken
                     };
@@ -116,16 +113,68 @@
                             profileArea.appendChild(badge);
                         }
 
+                        // URLクエリパラメータをクリーンアップ（codeやstateを除去）
+                        if (window.history && window.history.replaceState) {
+                            const cleanUrl = window.location.pathname;
+                            window.history.replaceState({}, document.title, cleanUrl);
+                        }
+
                         alert('LINEアカウントとの連携が完了しました！');
                     } else {
                         const errData = await response.json().catch(() => ({}));
-                        alert(errData.message || 'LINE連携に失敗しました。');
+                        const errorMsg = (errData.errors && errData.errors.line_id_token)
+                            ? errData.errors.line_id_token.join('\n')
+                            : (errData.message || 'LINE連携に失敗しました。');
+                        console.error('[LIFF] Bind API error response:', errData);
+                        alert(errorMsg);
                         lineBindBtn.disabled = false;
                         lineBindBtn.innerHTML = originalText;
                     }
                 } catch (err) {
-                    console.error('Line bind error:', err);
-                    alert('LINE連携処理中にエラーが発生しました。');
+                    console.error('[LIFF] Line bind network error:', err);
+                    alert('LINE連携処理中に通信エラーが発生しました。電波の良い場所で再度お試しください。');
+                    lineBindBtn.disabled = false;
+                    lineBindBtn.innerHTML = originalText;
+                }
+            }
+
+            // ページロード時のLIFF初期化および外部ブラウザでのログイン復帰判定
+            if (liffId && typeof liff !== 'undefined') {
+                liff.init({ liffId: liffId }).then(async () => {
+                    // 外部ブラウザでliff.login()から戻ってきた場合（URLにcodeまたはliff.stateがある）
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (liff.isLoggedIn() && (urlParams.has('code') || urlParams.has('liff.state'))) {
+                        await executeBind();
+                    }
+                }).catch(err => {
+                    console.warn('[LIFF] Init warning on page load:', err);
+                });
+            }
+
+            lineBindBtn.addEventListener('click', async function () {
+                if (!endpoint) return;
+
+                if (!liffId || typeof liff === 'undefined') {
+                    alert('LINE連携機能の初期化情報が見つかりません。');
+                    return;
+                }
+
+                lineBindBtn.disabled = true;
+                const originalText = lineBindBtn.innerHTML;
+                lineBindBtn.innerHTML = '<span>⏳</span><span>連携中...</span>';
+
+                try {
+                    await liff.init({ liffId: liffId });
+
+                    if (!liff.isLoggedIn()) {
+                        liff.login({ redirectUri: window.location.href });
+                        return;
+                    }
+
+                    await executeBind();
+                } catch (err) {
+                    console.error('[LIFF] Line bind error:', err);
+                    alert('LINE連携処理の開始に失敗しました。');
                     lineBindBtn.disabled = false;
                     lineBindBtn.innerHTML = originalText;
                 }
