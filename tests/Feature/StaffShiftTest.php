@@ -378,4 +378,39 @@ class StaffShiftTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    /**
+     * LIFFログインからの復帰時、ルートURLがターゲットマイシフトURLへリダイレクトすること
+     */
+    public function test_root_redirects_to_myshift_on_liff_redirect_uri(): void
+    {
+        $targetUrl = route('staff.myshift', ['token' => $this->staff->access_token]);
+
+        $response = $this->get('/?liffRedirectUri='.urlencode($targetUrl).'&code=sample_code_123&state=sample_state_456');
+
+        $response->assertRedirect($targetUrl.'?code=sample_code_123&state=sample_state_456');
+    }
+
+    /**
+     * liff.state クエリパラメータが付与された場合でも適切にリダイレクトすること
+     */
+    public function test_root_redirects_to_myshift_on_liff_state(): void
+    {
+        $path = '/my/shift/'.$this->staff->access_token;
+
+        $response = $this->get('/?liff.state='.urlencode($path).'&code=sample_code_789');
+
+        $response->assertRedirect($path.'?code=sample_code_789');
+    }
+
+    /**
+     * 外部の不正なURLへのオープンリダイレクトを防止すること
+     */
+    public function test_root_does_not_redirect_to_external_malicious_domain(): void
+    {
+        $response = $this->get('/?liffRedirectUri='.urlencode('https://malicious-site.example.com/steal-token'));
+
+        $response->assertOk()
+            ->assertViewIs('welcome');
+    }
 }
