@@ -19,11 +19,44 @@ use App\Http\Controllers\TimetableMatrixController;
 use App\Http\Controllers\TimetablePrintController;
 use App\Http\Controllers\TimetableTaskController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // 1. トップページ
-Route::get('/', function () {
+Route::get('/', function (Request $request) {
+    // LINE LIFFからのリダイレクト復帰処理 (UC-106)
+    // 外部ブラウザでのLIFF認証後、LINEはEndpoint URL (/) に1次リダイレクトし、
+    // クエリパラメータに liffRedirectUri または liff.state / liff_state を付与します。
+    $redirectTarget = $request->query('liffRedirectUri')
+        ?? $request->query('liff_state')
+        ?? $request->query('liff.state');
+
+    if ($redirectTarget) {
+        $decoded = urldecode($redirectTarget);
+        $targetHost = parse_url($decoded, PHP_URL_HOST);
+        $appHost = parse_url(config('app.url'), PHP_URL_HOST) ?: $request->getHost();
+
+        // 外部不正サイトへのオープンリダイレクトを防止
+        if (empty($targetHost) || $targetHost === $appHost) {
+            $parsedUrl = parse_url($decoded);
+            $path = $parsedUrl['path'] ?? '';
+            if (! empty($path) && ! str_starts_with($path, '/')) {
+                $path = '/'.$path;
+            }
+
+            if (! empty($path)) {
+                parse_str($parsedUrl['query'] ?? '', $targetParams);
+                $authParams = $request->except(['liffRedirectUri', 'liff_state', 'liff.state']);
+                $mergedParams = array_merge($targetParams, $authParams);
+
+                $finalUrl = $path.(! empty($mergedParams) ? '?'.http_build_query($mergedParams) : '');
+
+                return redirect($finalUrl);
+            }
+        }
+    }
+
     return view('welcome');
 })->name('home');
 
