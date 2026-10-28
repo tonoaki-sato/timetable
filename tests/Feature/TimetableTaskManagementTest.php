@@ -240,6 +240,64 @@ class TimetableTaskManagementTest extends TestCase
     }
 
     /**
+     * 作業タスク詳細画面（人員配置・出欠アテンド管理）が正常に表示されること
+     */
+    public function test_can_view_task_show_page_with_compact_content_and_staff_grid(): void
+    {
+        $this->actingAs($this->operator);
+
+        $coneLane = $this->timetable->lanes()->where('name', 'カラーコーン')->firstOrFail();
+
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $coneLane->id,
+            'title' => '中央通り規制コーン設置',
+            'content' => "1行目の手順指示です。\n2行目の詳細な注意事項です。",
+            'location' => '中央通り交差点',
+            'start_time' => '08:00',
+            'end_time' => '09:30',
+            'required_people_count' => 4,
+            'is_at_least' => true,
+            'is_critical' => true,
+        ]);
+
+        $assignedStaff = Staff::factory()->create([
+            'name' => '配置済み太郎',
+            'kana' => 'ハイチズミタロウ',
+            'affiliation' => 'カラーコーン班',
+            'is_active' => true,
+        ]);
+
+        $candidateStaff = Staff::factory()->create([
+            'name' => '候補者次郎',
+            'kana' => 'コウホシャジロウ',
+            'affiliation' => '青年部',
+            'is_active' => true,
+        ]);
+
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $task->id,
+            'staff_id' => $assignedStaff->id,
+            'role_description' => '班リーダー',
+            'attendance_status' => 'checked_in',
+        ]);
+
+        $response = $this->get(route('timetable-tasks.show', $task));
+
+        $response->assertOk()
+            ->assertSee('中央通り規制コーン設置')
+            ->assertSee('カラーコーン')
+            ->assertSee('08:00 〜 09:30')
+            ->assertSee('中央通り交差点')
+            ->assertSee('配置スタッフ・出欠アテンド管理')
+            ->assertSee('スタッフ一括配置・スマートアサイン')
+            ->assertSee('配置済み太郎')
+            ->assertSee('候補者次郎')
+            ->assertSee('1行目の手順指示です。')
+            ->assertSee('全文を表示');
+    }
+
+    /**
      * 「〇〇名以上」設定時の人員充足ステータス判定の検証
      */
     public function test_at_least_satisfaction_logic(): void

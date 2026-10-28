@@ -108,14 +108,18 @@ function initBulkAssignSection() {
             }
         }
 
-        // 行のハイライト更新
+        // 行（カード）のハイライト更新
         rows.forEach(row => {
             const cb = row.querySelector('.bulk-candidate-checkbox');
             if (!cb) return;
             if (cb.checked) {
-                row.classList.add('bg-indigo-50/70', 'border-l-4', 'border-indigo-600');
+                row.classList.add('bg-indigo-50/90', 'border-indigo-600', 'ring-1', 'ring-indigo-500');
+                row.classList.remove('bg-white', 'border-slate-200');
             } else {
-                row.classList.remove('bg-indigo-50/70', 'border-l-4', 'border-indigo-600');
+                row.classList.remove('bg-indigo-50/90', 'border-indigo-600', 'ring-1', 'ring-indigo-500');
+                if (row.dataset.isAssigned !== '1' && row.dataset.isConflicted !== '1') {
+                    row.classList.add('bg-white', 'border-slate-200');
+                }
             }
         });
     }
@@ -210,7 +214,10 @@ function initSwapModal() {
 
         // ラジオボタンのクリア
         document.querySelectorAll('input[name="new_staff_id"]').forEach(r => r.checked = false);
-        candidateRows.forEach(r => r.classList.remove('bg-indigo-50/80', 'border-l-4', 'border-l-indigo-600'));
+        candidateRows.forEach(r => {
+            r.classList.remove('bg-indigo-50/90', 'border-indigo-600', 'ring-1', 'ring-indigo-500');
+            r.classList.add('bg-white', 'border-slate-200');
+        });
 
         if (submitBtn) {
             submitBtn.disabled = true;
@@ -277,8 +284,12 @@ function initSwapModal() {
 
             radio.checked = true;
 
-            candidateRows.forEach(r => r.classList.remove('bg-indigo-50/80', 'border-l-4', 'border-l-indigo-600'));
-            row.classList.add('bg-indigo-50/80', 'border-l-4', 'border-l-indigo-600');
+            candidateRows.forEach(r => {
+                r.classList.remove('bg-indigo-50/90', 'border-indigo-600', 'ring-1', 'ring-indigo-500');
+                r.classList.add('bg-white', 'border-slate-200');
+            });
+            row.classList.remove('bg-white', 'border-slate-200');
+            row.classList.add('bg-indigo-50/90', 'border-indigo-600', 'ring-1', 'ring-indigo-500');
 
             if (submitBtn) {
                 submitBtn.disabled = false;
