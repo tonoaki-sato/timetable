@@ -193,6 +193,7 @@ class TimetableMatrixTest extends TestCase
 
         $timetable = Timetable::factory()->create([
             'name' => '本祭運行',
+            'target_date' => now('Asia/Tokyo')->toDateString(),
             'status' => 'active',
         ]);
 
@@ -208,6 +209,8 @@ class TimetableMatrixTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('本部運行総合ダッシュボード');
         $response->assertSee('重要ゲート封鎖');
+        $response->assertDontSee('現場人員充足状況');
+        $response->assertDontSee('現場機材調整要請');
     }
 
     /**

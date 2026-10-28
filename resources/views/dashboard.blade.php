@@ -31,8 +31,8 @@
         </div>
     </div>
 
-    <!-- 2. 主要KPIステータスカード群 (4カラム) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- 2. 主要KPIステータスカード群 (2カラム) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- フェーズ -->
         <x-dashboard.phase-card />
 
@@ -59,36 +59,9 @@
                 {{ $trafficRegulationContext?->status?->icon() ?? '⛔' }}
             </div>
         </a>
-
-        <!-- 人員アサイン充足率 -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
-            <div>
-                <p class="text-xs font-medium text-slate-500">現場人員充足状況</p>
-                <div class="flex items-baseline space-x-1.5 mt-1">
-                    <h3 class="text-xl font-bold text-slate-900">{{ $assignedPeopleCount ?? 38 }}</h3>
-                    <span class="text-xs text-slate-500">/ {{ $requiredPeopleCount ?? 40 }}名配置済</span>
-                </div>
-                <span class="text-[11px] text-red-600 font-bold">⚠️ 2名不足（要アサイン）</span>
-            </div>
-            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-2xl">
-                👥
-            </div>
-        </div>
-
-        <!-- 現場機材要請 -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
-            <div>
-                <p class="text-xs font-medium text-slate-500">現場機材調整要請</p>
-                <h3 class="text-xl font-bold text-slate-900 mt-1">{{ count($equipmentRequests ?? [1]) }} 件 <span class="text-xs text-amber-600 font-bold">(対応中)</span></h3>
-                <span class="text-[11px] text-slate-500">予備コーン残: 18本</span>
-            </div>
-            <div class="w-12 h-12 bg-cyan-50 text-cyan-600 rounded-xl flex items-center justify-center text-2xl">
-                🔺
-            </div>
-        </div>
     </div>
 
-    <!-- 3. メイングリッド (2カラム: Now & Next / アラート・要請) -->
+    <!-- 3. メイングリッド (2カラム: Now & Next / アラート監視) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- 左側2カラム: Now & Next ビュー (F-106) -->
@@ -102,7 +75,7 @@
 
         </div>
 
-        <!-- 右側1カラム: 会議日程 & アラート監視 & 現場要請 -->
+        <!-- 右側1カラム: 会議日程 & アラート監視 -->
         <div class="space-y-6">
 
             <!-- 直近の会議・打合せ (最大3件) -->
@@ -132,30 +105,6 @@
                             <div class="text-[10px] text-slate-500 font-mono">Day 1 09:00 〜 Day 1 18:00</div>
                         </div>
                         <span class="text-[11px] font-bold text-amber-700">本日18:00返却必須</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. 現場機材調整・追加要請 (F-407) -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
-                        <span>🔺</span>
-                        <span>現場機材調整要請</span>
-                    </h3>
-                    <span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">未完了 1件</span>
-                </div>
-                <p class="text-[11px] text-slate-500">正規連絡ルート: 住民/出店者 → 漆原さん/萩原さん → コーン担当</p>
-
-                <div class="p-3 bg-amber-50/60 rounded-xl border border-amber-200 text-xs space-y-1.5">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-900">【要請】コーン追加 2本・バー 1本</span>
-                        <span class="text-[10px] font-mono text-amber-700">10:18 受付</span>
-                    </div>
-                    <p class="text-slate-700">場所: <strong>ガスト前 店舗前</strong>（客列整理用）</p>
-                    <div class="flex items-center justify-between text-[11px] text-slate-600 pt-1 border-t border-amber-200/60">
-                        <span>窓口: 漆原さん 承認済</span>
-                        <span class="text-indigo-600 font-bold">設備班 運搬中</span>
                     </div>
                 </div>
             </div>
