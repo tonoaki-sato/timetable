@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name')->comment('氏名');
             $table->string('kana')->nullable()->comment('フリガナ');
             $table->string('affiliation', 100)->nullable()->comment('所属団体・地域会等');
+            $table->string('staff_type', 30)->default('fulfillment')->comment('スタッフ区分（fixed:固定スタッフ, fulfillment:充足スタッフ）');
             $table->boolean('is_active')->default(true)->comment('稼働可能フラグ');
 
             // 個別アクセス用カラム

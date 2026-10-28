@@ -34,6 +34,25 @@ return new class extends Migration
             $table->index(['timetable_id', 'start_time']);
             $table->index(['lane_id']);
         });
+
+        Schema::create('lane_requests', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
+            $table->foreignId('lane_id')->constrained('lanes')->cascadeOnDelete();
+            $table->foreignId('timetable_task_id')->nullable()->constrained('timetable_tasks')->nullOnDelete();
+            $table->foreignId('requested_by_staff_id')->nullable()->constrained('staff')->nullOnDelete();
+            $table->string('request_type', 30)->comment('staffing:人員応援要請, equipment:必要機材申請');
+            $table->unsignedSmallInteger('requested_count')->default(1)->comment('要請人数または必要機材数量');
+            $table->string('equipment_name')->nullable()->comment('必要機材名');
+            $table->text('reason')->nullable()->comment('理由・備考・受け渡し場所');
+            $table->string('status', 30)->default('pending')->index()->comment('pending / approved / resolved / rejected');
+            $table->foreignId('resolved_by_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->dateTime('resolved_at')->nullable();
+            $table->dateTime('created_at')->nullable();
+            $table->dateTime('updated_at')->nullable();
+
+            $table->index(['timetable_id', 'lane_id', 'status']);
+        });
     }
 
     /**
@@ -41,6 +60,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('lane_requests');
         Schema::dropIfExists('timetable_tasks');
     }
 };

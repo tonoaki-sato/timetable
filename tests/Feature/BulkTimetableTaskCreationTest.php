@@ -117,12 +117,12 @@ class BulkTimetableTaskCreationTest extends TestCase
         $this->assertSame('最終撤収・清掃', $createdTasks[2]->title);
         $this->assertTrue($createdTasks[2]->is_critical);
 
-        // 主担当スタッフが3件すべてのタスクに班リーダーとして自動アサインされていることを確認
+        // 主担当スタッフが3件すべてのタスクに班長として自動アサインされていることを確認
         foreach ($createdTasks as $task) {
             $this->assertDatabaseHas('task_staff_assignments', [
                 'timetable_task_id' => $task->id,
                 'staff_id' => $leadStaff->id,
-                'role_description' => '班リーダー',
+                'role_description' => '班長',
                 'attendance_status' => 'assigned',
             ]);
         }

@@ -208,10 +208,13 @@ class TimetableTaskController extends Controller
         $roleDescription = $request->validated('role_description');
         $isForced = $request->boolean('force');
 
-        // 同一時間帯の重複アサインを検知
+        // 同一時間帯の重複アサインを検知（他班で定員超過により余剰となっている固定スタッフは自動融通）
         $conflictingTask = $this->conflictService->checkConflict($task, $staffId);
+        $transferableSurplusTasks = $conflictingTask
+            ? $this->conflictService->getTransferableSurplusTasks($task, $staffId)
+            : collect();
 
-        if ($conflictingTask && ! $isForced) {
+        if ($conflictingTask && $transferableSurplusTasks->isEmpty() && ! $isForced) {
             $conflictingLane = $conflictingTask->lane ?: '担当班未設定';
             $startTime = substr($conflictingTask->start_time, 0, 5);
             $endTime = substr($conflictingTask->end_time, 0, 5);
@@ -239,11 +242,21 @@ class TimetableTaskController extends Controller
             ])->withInput();
         }
 
-        $this->taskService->assignStaff($task, $staffId, $roleDescription);
+        DB::transaction(function () use ($task, $staffId, $roleDescription, $transferableSurplusTasks) {
+            foreach ($transferableSurplusTasks as $surplusTask) {
+                $this->taskService->removeStaff($surplusTask, $staffId);
+            }
+            $effectiveRole = $roleDescription ?: ($transferableSurplusTasks->isNotEmpty() ? '他班応援' : null);
+            $this->taskService->assignStaff($task, $staffId, $effectiveRole);
+        });
 
-        $message = $conflictingTask
-            ? 'スタッフをタスクに割り当てました（重複を承認）。'
-            : 'スタッフをタスクに割り当てました。';
+        if ($transferableSurplusTasks->isNotEmpty()) {
+            $message = '余剰のある別班タスクからスタッフをこのタスクへ融通・割り当てました。';
+        } elseif ($conflictingTask) {
+            $message = 'スタッフをタスクに割り当てました（重複を承認）。';
+        } else {
+            $message = 'スタッフをタスクに割り当てました。';
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -349,9 +362,18 @@ class TimetableTaskController extends Controller
             return back()->with('info', $msg);
         }
 
-        // 当該レーンに所属するアクティブスタッフを取得
+        // 当該レーンに所属するアクティブスタッフ（固定スタッフおよび所属一致スタッフ）を取得
+        $task->loadMissing('laneRelation.fixedStaff');
+        $fixedStaffIds = $task->laneRelation
+            ? $task->laneRelation->fixedStaff->pluck('id')->map(fn ($id) => (int) $id)->all()
+            : [];
+
         $activeStaff = Staff::active()->get();
-        $laneMembers = $activeStaff->filter(function (Staff $s) use ($laneName) {
+        $laneMembers = $activeStaff->filter(function (Staff $s) use ($laneName, $fixedStaffIds) {
+            if (in_array((int) $s->id, $fixedStaffIds, true)) {
+                return true;
+            }
+
             return ! empty($s->affiliation) && (
                 mb_strpos($s->affiliation, $laneName) !== false ||
                 mb_strpos($laneName, $s->affiliation) !== false
@@ -452,11 +474,16 @@ class TimetableTaskController extends Controller
                     'name' => $s->name,
                     'kana' => $s->kana ?? '',
                     'affiliation' => $s->affiliation ?? '',
+                    'staff_type' => $s->staff_type ?? 'fulfillment',
+                    'staff_type_label' => $s->staff_type_label,
                     'priority_tier' => $s->priority_tier ?? 2,
                     'is_conflicted' => $s->conflict_task !== null,
                     'conflicted_task_title' => $s->conflict_task?->title ?? '',
                     'conflicted_label' => $s->conflict_task ? "重複中: {$s->conflict_task->title}" : '',
                     'is_lane_lead' => (bool) ($s->is_lane_lead ?? false),
+                    'is_fixed_in_lane' => (bool) ($s->is_fixed_in_lane ?? false),
+                    'is_surplus_fixed' => (bool) ($s->is_surplus_fixed ?? false),
+                    'surplus_type' => $s->surplus_type ?? null,
                     'is_same_lane' => (bool) ($s->is_same_lane ?? false),
                     'is_checked_in' => (bool) ($s->is_checked_in ?? false),
                     'minutes_today' => $s->today_assigned_minutes ?? 0,

@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lane;
+use App\Models\LaneRequest;
 use App\Models\TaskStaffAssignment;
+use App\Models\TimetableTask;
 use App\Services\StaffService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -72,11 +75,21 @@ class StaffShiftController extends Controller
             }
         }
 
+        $ledLanes = $staff->ledLanes()
+            ->with([
+                'timetable',
+                'fixedStaff',
+                'tasks.assignments.staff',
+                'laneRequests.task',
+            ])
+            ->get();
+
         return view('staff.myshift', [
             'staff' => $staff,
             'assignments' => $assignments,
             'currentTask' => $currentTask,
             'nextTask' => $nextTask,
+            'ledLanes' => $ledLanes,
         ]);
     }
 
@@ -136,5 +149,90 @@ class StaffShiftController extends Controller
 
         return redirect()->route('staff.myshift', ['token' => $token])
             ->with('success', '作業進捗状況を更新しました。');
+    }
+
+    /**
+     * 班長による担当班（レーン）タスクの全体ステータス更新
+     */
+    public function updateLaneTaskStatus(Request $request, string $token, TimetableTask $task): JsonResponse|RedirectResponse
+    {
+        $staff = $this->staffService->getStaffByToken($token);
+
+        if (! $staff || ! $staff->is_active) {
+            abort(404, '指定されたスタッフが見つかりません。');
+        }
+
+        $task->loadMissing('laneRelation');
+        if (! $task->laneRelation || (int) $task->laneRelation->lead_staff_id !== (int) $staff->id) {
+            abort(403, '担当する班の班長のみタスク全体の進捗を更新できます。');
+        }
+
+        $validated = $request->validate([
+            'status' => ['required', 'string', 'in:not_started,in_progress,completed,cancelled'],
+        ]);
+
+        $task->update([
+            'status' => $validated['status'],
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'status' => $task->status,
+                'status_label' => $task->status_label,
+            ]);
+        }
+
+        return redirect()->route('staff.myshift', ['token' => $token])
+            ->with('success', "班タスク「{$task->title}」の進捗を「{$task->status_label}」に更新しました。");
+    }
+
+    /**
+     * 班長による管理者（本部）への人員不足要請・必要機材申請の送信
+     */
+    public function storeLaneRequest(Request $request, string $token, Lane $lane): JsonResponse|RedirectResponse
+    {
+        $staff = $this->staffService->getStaffByToken($token);
+
+        if (! $staff || ! $staff->is_active) {
+            abort(404, '指定されたスタッフが見つかりません。');
+        }
+
+        if ((int) $lane->lead_staff_id !== (int) $staff->id) {
+            abort(403, '担当する班の班長のみ管理者への要請・申請を行えます。');
+        }
+
+        $validated = $request->validate([
+            'request_type' => ['required', 'string', 'in:staffing,equipment'],
+            'timetable_task_id' => ['nullable', 'integer', 'exists:timetable_tasks,id'],
+            'requested_count' => ['required', 'integer', 'min:1', 'max:100'],
+            'equipment_name' => ['required_if:request_type,equipment', 'nullable', 'string', 'max:255'],
+            'reason' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $laneRequest = LaneRequest::create([
+            'timetable_id' => $lane->timetable_id,
+            'lane_id' => $lane->id,
+            'timetable_task_id' => $validated['timetable_task_id'] ?? null,
+            'requested_by_staff_id' => $staff->id,
+            'request_type' => $validated['request_type'],
+            'requested_count' => (int) $validated['requested_count'],
+            'equipment_name' => $validated['equipment_name'] ?? null,
+            'reason' => $validated['reason'] ?? null,
+            'status' => 'pending',
+        ]);
+
+        $label = $laneRequest->type_label;
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "管理者（本部）へ「{$label}」を送信しました。",
+                'lane_request' => $laneRequest,
+            ]);
+        }
+
+        return redirect()->route('staff.myshift', ['token' => $token])
+            ->with('success', "管理者（本部）へ「{$label}」を送信しました。");
     }
 }

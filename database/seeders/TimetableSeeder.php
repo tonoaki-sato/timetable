@@ -537,7 +537,7 @@ class TimetableSeeder extends Seeder
                 $task->assignments()->firstOrCreate(
                     ['staff_id' => $lane->lead_staff_id],
                     [
-                        'role_description' => '班リーダー',
+                        'role_description' => '班長',
                         'attendance_status' => 'assigned',
                     ]
                 );

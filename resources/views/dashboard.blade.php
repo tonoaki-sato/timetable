@@ -76,6 +76,76 @@
             <!-- 直近の会議・打合せ (最大3件) -->
             <x-dashboard.upcoming-meetings-card :limit="3" />
 
+            <!-- 班長からの人員応援要請・必要機材申請カード -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+                        <span>👑</span>
+                        <span>班長からの人員要請・機材申請</span>
+                    </h3>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded {{ isset($laneRequests) && $laneRequests->where('status', 'pending')->isNotEmpty() ? 'bg-rose-100 text-rose-700' : 'bg-emerald-50 text-emerald-700' }}">
+                        未対応 {{ isset($laneRequests) ? $laneRequests->where('status', 'pending')->count() : 0 }} 件
+                    </span>
+                </div>
+
+                @if(isset($laneRequests) && $laneRequests->isNotEmpty())
+                <div class="space-y-2 text-xs">
+                    @foreach($laneRequests as $laneRequest)
+                    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-1.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-bold text-slate-900">
+                                [{{ $laneRequest->lane?->name ?? '班' }}] {{ $laneRequest->type_label }}
+                            </span>
+                            <span class="text-[10px] px-2 py-0.5 rounded font-bold {{ $laneRequest->status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800' }}">
+                                {{ $laneRequest->status_label }}
+                            </span>
+                        </div>
+                        <div class="text-slate-700">
+                            @if($laneRequest->request_type === 'equipment')
+                                機材: <strong>{{ $laneRequest->equipment_name }}</strong> × {{ $laneRequest->requested_count }}
+                            @else
+                                応援要請: <strong>+{{ $laneRequest->requested_count }}名</strong>
+                                @if($laneRequest->task)
+                                    （{{ $laneRequest->task->title }}）
+                                @endif
+                            @endif
+                        </div>
+                        @if($laneRequest->reason)
+                        <div class="text-[11px] text-slate-500">{{ $laneRequest->reason }}</div>
+                        @endif
+                        <div class="flex items-center justify-between pt-1">
+                            <span class="text-[10px] text-slate-400">
+                                班長: {{ $laneRequest->requestedByStaff?->name ?? '-' }}
+                            </span>
+                            <div class="flex items-center gap-1">
+                                @if($laneRequest->status === 'pending')
+                                <form action="{{ route('lane-requests.update-status', $laneRequest) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="approved">
+                                    <button type="submit" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold cursor-pointer">
+                                        承認・手配
+                                    </button>
+                                </form>
+                                @endif
+                                <form action="{{ route('lane-requests.update-status', $laneRequest) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="resolved">
+                                    <button type="submit" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold cursor-pointer">
+                                        完了
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                @else
+                <p class="text-xs text-slate-400">現在、未対応の人員要請・機材申請はありません。</p>
+                @endif
+            </div>
+
             <!-- 1. 駐車場利用時間制約監視 (F-405) -->
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
                 <div class="flex items-center justify-between">

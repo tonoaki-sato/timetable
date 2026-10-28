@@ -53,7 +53,7 @@ class LaneController extends Controller
     {
         $this->authorize('viewAny', Lane::class);
 
-        $lanes = $timetable->lanes()->with(['leadStaff', 'tasks'])->ordered()->get();
+        $lanes = $timetable->lanes()->with(['leadStaff', 'fixedStaff', 'tasks', 'laneRequests.task', 'laneRequests.requestedByStaff'])->ordered()->get();
         $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
 
         return view('lanes.index', [
@@ -70,12 +70,19 @@ class LaneController extends Controller
     public function store(StoreLaneRequest $request, Timetable $timetable): RedirectResponse
     {
         $data = $request->validated();
+        $fixedStaffIds = $data['fixed_staff_ids'] ?? [];
+        unset($data['fixed_staff_ids']);
+
         if (! isset($data['display_order']) || $data['display_order'] === null) {
             $maxOrder = $timetable->lanes()->max('display_order') ?? 0;
             $data['display_order'] = $maxOrder + 10;
         }
 
         $lane = $timetable->lanes()->create($data);
+
+        if (! empty($fixedStaffIds)) {
+            $this->taskService->syncLaneFixedStaffToTasks($lane, $fixedStaffIds);
+        }
 
         if ($request->input('redirect_to') === 'matrix') {
             return redirect()->route('timetable.index', ['timetable_id' => $timetable->id])
@@ -87,23 +94,31 @@ class LaneController extends Controller
     }
 
     /**
-     * レーン更新処理（主担当の後付け・変更、主要班・表示状態切り替えを含む）
+     * レーン更新処理（班長・固定スタッフの設定・変更、主要班・表示状態切り替えを含む）
      */
     public function update(UpdateLaneRequest $request, Timetable $timetable, Lane $lane): JsonResponse|RedirectResponse
     {
         $oldLeadStaffId = $lane->lead_staff_id ? (int) $lane->lead_staff_id : null;
+        $validated = $request->validated();
+        $hasFixedStaffInput = array_key_exists('fixed_staff_ids', $validated) || $request->boolean('sync_fixed_staff');
+        $fixedStaffIds = $validated['fixed_staff_ids'] ?? [];
+        unset($validated['fixed_staff_ids']);
 
-        $lane->update($request->validated());
+        $lane->update($validated);
 
         if ($lane->lead_staff_id) {
             $this->taskService->syncLaneLeadToTasks($lane, $oldLeadStaffId);
+        }
+
+        if ($hasFixedStaffInput) {
+            $this->taskService->syncLaneFixedStaffToTasks($lane, $fixedStaffIds);
         }
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => "担当班（レーン）「{$lane->name}」を更新しました。",
-                'lane' => $lane->fresh(['leadStaff']),
+                'lane' => $lane->fresh(['leadStaff', 'fixedStaff']),
             ]);
         }
 
@@ -112,7 +127,7 @@ class LaneController extends Controller
     }
 
     /**
-     * 主担当スタッフのクイック更新・解除（既存タスクへの自動アサイン同期対応）
+     * 班長（主担当スタッフ）のクイック更新・解除（既存タスクへの自動アサイン同期対応）
      */
     public function updateLeadStaff(UpdateLaneLeadStaffRequest $request, Timetable $timetable, Lane $lane): RedirectResponse
     {
@@ -129,8 +144,8 @@ class LaneController extends Controller
 
         $leadName = $lane->leadStaff ? $lane->leadStaff->name : '未設定';
         $message = $syncedCount > 0
-            ? "レーン「{$lane->name}」の主担当を「{$leadName}」に更新し、{$syncedCount}件のタスクに反映しました。"
-            : "レーン「{$lane->name}」の主担当を「{$leadName}」に更新しました。";
+            ? "レーン「{$lane->name}」の班長を「{$leadName}」に更新し、{$syncedCount}件のタスクに反映しました。"
+            : "レーン「{$lane->name}」の班長を「{$leadName}」に更新しました。";
 
         return back()->with('success', $message);
     }

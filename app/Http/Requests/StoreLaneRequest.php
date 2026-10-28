@@ -44,6 +44,8 @@ class StoreLaneRequest extends FormRequest
             ],
             'icon' => ['nullable', 'string', 'max:50'],
             'lead_staff_id' => ['nullable', 'integer', 'exists:staff,id'],
+            'fixed_staff_ids' => ['nullable', 'array'],
+            'fixed_staff_ids.*' => ['integer', 'exists:staff,id'],
             'is_core' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
             'description' => ['nullable', 'string', 'max:2000'],
@@ -62,7 +64,8 @@ class StoreLaneRequest extends FormRequest
             'name' => 'レーン名',
             'color' => 'テーマカラー',
             'icon' => 'アイコン',
-            'lead_staff_id' => '主担当スタッフ',
+            'lead_staff_id' => '班長',
+            'fixed_staff_ids' => '固定スタッフ',
             'description' => '業務範囲・説明',
             'display_order' => '表示順',
         ];

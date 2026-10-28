@@ -27,6 +27,7 @@ class StoreStaffRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'kana' => ['nullable', 'string', 'max:255'],
             'affiliation' => ['nullable', 'string', 'max:100'],
+            'staff_type' => ['nullable', 'string', 'in:fixed,fulfillment'],
             'is_active' => ['nullable', 'boolean'],
         ];
     }
@@ -42,6 +43,7 @@ class StoreStaffRequest extends FormRequest
             'name' => '氏名',
             'kana' => 'フリガナ',
             'affiliation' => '所属団体・地域会等',
+            'staff_type' => 'スタッフ区分',
             'is_active' => '稼働可能フラグ',
         ];
     }

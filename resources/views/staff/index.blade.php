@@ -94,6 +94,7 @@
                         <th class="px-4 py-3 font-bold">ID</th>
                         <th class="px-4 py-3 font-bold">氏名</th>
                         <th class="px-4 py-3 font-bold">フリガナ</th>
+                        <th class="px-4 py-3 font-bold">スタッフ区分</th>
                         <th class="px-4 py-3 font-bold">所属団体・地域会等</th>
                         <th class="px-4 py-3 font-bold">稼働状態</th>
                         <th class="px-4 py-3 font-bold text-right">操作</th>
@@ -109,6 +110,17 @@
                             </a>
                         </td>
                         <td class="px-4 py-3 text-slate-500 font-mono text-[11px]">{{ $staff->kana ?? '-' }}</td>
+                        <td class="px-4 py-3">
+                            @if($staff->isFixed())
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                📌 固定スタッフ
+                            </span>
+                            @else
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-sky-50 text-sky-700 border border-sky-200">
+                                🔄 充足スタッフ
+                            </span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-slate-700">{{ $staff->affiliation ?? '未設定' }}</td>
                         <td class="px-4 py-3">
                             @if($staff->is_active)

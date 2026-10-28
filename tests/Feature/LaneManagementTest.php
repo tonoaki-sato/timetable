@@ -272,7 +272,7 @@ class LaneManagementTest extends TestCase
             ->first();
 
         $this->assertNotNull($assignment);
-        $this->assertSame('班リーダー', $assignment->role_description);
+        $this->assertSame('班長', $assignment->role_description);
         $this->assertSame('assigned', $assignment->attendance_status);
     }
 
@@ -309,7 +309,7 @@ class LaneManagementTest extends TestCase
         $this->assertDatabaseHas('task_staff_assignments', [
             'timetable_task_id' => $task->id,
             'staff_id' => $leadStaff->id,
-            'role_description' => '班リーダー',
+            'role_description' => '班長',
             'attendance_status' => 'assigned',
         ]);
     }
@@ -349,17 +349,17 @@ class LaneManagementTest extends TestCase
         $this->assertDatabaseHas('task_staff_assignments', [
             'timetable_task_id' => $task1->id,
             'staff_id' => $firstLead->id,
-            'role_description' => '班リーダー',
+            'role_description' => '班長',
             'attendance_status' => 'assigned',
         ]);
         $this->assertDatabaseHas('task_staff_assignments', [
             'timetable_task_id' => $task2->id,
             'staff_id' => $firstLead->id,
-            'role_description' => '班リーダー',
+            'role_description' => '班長',
             'attendance_status' => 'assigned',
         ]);
 
-        // 2. 二代目リーダーに変更 -> 班リーダーが二代目へ引き継がれること
+        // 2. 二代目リーダーに変更 -> 班長が二代目へ引き継がれること
         $this->actingAs($this->operatorUser)
             ->patch(route('timetables.lanes.update-lead', [$this->timetable, $lane]), [
                 'lead_staff_id' => $secondLead->id,
@@ -369,7 +369,7 @@ class LaneManagementTest extends TestCase
         $this->assertDatabaseHas('task_staff_assignments', [
             'timetable_task_id' => $task1->id,
             'staff_id' => $secondLead->id,
-            'role_description' => '班リーダー',
+            'role_description' => '班長',
         ]);
         $this->assertDatabaseMissing('task_staff_assignments', [
             'timetable_task_id' => $task1->id,

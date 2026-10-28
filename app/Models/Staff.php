@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
     'name',
     'kana',
     'affiliation',
+    'staff_type',
     'is_active',
     'access_token',
     'registered_via',
@@ -27,6 +28,16 @@ class Staff extends Model
 {
     /** @use HasFactory<StaffFactory> */
     use HasFactory;
+
+    /**
+     * 班員スタッフ区分定義（固定スタッフ / 充足スタッフ）
+     *
+     * @var array<string, string>
+     */
+    public const array STAFF_TYPES = [
+        'fixed' => '固定スタッフ',
+        'fulfillment' => '充足スタッフ',
+    ];
 
     /**
      * モデルの起動処理
@@ -81,6 +92,30 @@ class Staff extends Model
     }
 
     /**
+     * スタッフ区分の日本語表示ラベル
+     */
+    public function getStaffTypeLabelAttribute(): string
+    {
+        return self::STAFF_TYPES[$this->staff_type ?? 'fulfillment'] ?? '充足スタッフ';
+    }
+
+    /**
+     * 固定スタッフかどうか
+     */
+    public function isFixed(): bool
+    {
+        return ($this->staff_type ?? 'fulfillment') === 'fixed';
+    }
+
+    /**
+     * 充足スタッフかどうか
+     */
+    public function isFulfillment(): bool
+    {
+        return ! $this->isFixed();
+    }
+
+    /**
      * アサイン中間情報とのリレーション
      */
     public function assignments(): HasMany
@@ -89,11 +124,20 @@ class Staff extends Model
     }
 
     /**
-     * 主担当（現場リーダー）を務めるレーン一覧とのリレーション
+     * 班長（主担当）を務めるレーン一覧とのリレーション
      */
     public function ledLanes(): HasMany
     {
         return $this->hasMany(Lane::class, 'lead_staff_id');
+    }
+
+    /**
+     * 固定スタッフとして所属するレーン一覧との多対多リレーション
+     */
+    public function fixedLanes(): BelongsToMany
+    {
+        return $this->belongsToMany(Lane::class, 'lane_fixed_staff')
+            ->withTimestamps();
     }
 
     /**

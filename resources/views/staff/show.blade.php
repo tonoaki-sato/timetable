@@ -16,6 +16,16 @@
         </x-slot:breadcrumbs>
 
         <x-slot:badges>
+            @if($staff->isFixed())
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                📌 固定スタッフ
+            </span>
+            @else
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                🔄 充足スタッフ
+            </span>
+            @endif
+
             @if($staff->is_active)
             <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                 ● 稼働可能

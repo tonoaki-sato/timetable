@@ -31,6 +31,16 @@ return new class extends Migration
             $table->index(['timetable_id', 'display_order']);
             $table->unique(['timetable_id', 'name']);
         });
+
+        Schema::create('lane_fixed_staff', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('lane_id')->constrained('lanes')->cascadeOnDelete();
+            $table->foreignId('staff_id')->constrained('staff')->cascadeOnDelete();
+            $table->dateTime('created_at')->nullable();
+            $table->dateTime('updated_at')->nullable();
+
+            $table->unique(['lane_id', 'staff_id']);
+        });
     }
 
     /**
@@ -38,6 +48,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('lane_fixed_staff');
         Schema::dropIfExists('lanes');
     }
 };

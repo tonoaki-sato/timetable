@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
@@ -102,11 +103,28 @@ class Lane extends Model
     }
 
     /**
-     * 主担当スタッフ（現場リーダー）とのリレーション
+     * 班長（主担当スタッフ）とのリレーション
      */
     public function leadStaff(): BelongsTo
     {
         return $this->belongsTo(Staff::class, 'lead_staff_id');
+    }
+
+    /**
+     * 固定スタッフ一覧との多対多リレーション
+     */
+    public function fixedStaff(): BelongsToMany
+    {
+        return $this->belongsToMany(Staff::class, 'lane_fixed_staff')
+            ->withTimestamps();
+    }
+
+    /**
+     * 班長からの要請・機材申請一覧とのリレーション
+     */
+    public function laneRequests(): HasMany
+    {
+        return $this->hasMany(LaneRequest::class)->orderByDesc('id');
     }
 
     /**
@@ -118,7 +136,7 @@ class Lane extends Model
     }
 
     /**
-     * 主担当が設定されているか
+     * 班長（主担当）が設定されているか
      */
     public function hasLead(): bool
     {

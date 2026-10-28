@@ -115,20 +115,20 @@
                         </div>
                         <div class="p-4 bg-amber-50/60 border border-amber-200/80 rounded-xl">
                             <div class="flex items-center space-x-2">
-                                <span class="bg-amber-700 text-amber-100 text-[10px] font-bold px-2 py-0.5 rounded">👑 班リーダー (現場責任者)</span>
+                                <span class="bg-amber-700 text-amber-100 text-[10px] font-bold px-2 py-0.5 rounded">👑 班長 (担当レーン主担当)</span>
                             </div>
-                            <h3 class="font-bold text-sm text-amber-950 mt-2">担当レーン責任者・班長</h3>
+                            <h3 class="font-bold text-sm text-amber-950 mt-2">ボランティアと管理者の中間管理・班責任者</h3>
                             <p class="text-xs text-amber-800 mt-1 leading-normal">
-                                担当班（レーン）の現場指揮、班員の出欠・到着状況確認、タスクリーダー自動配置、本部とのホットライン連絡を担当。
+                                班（レーン）に紐づく主担当を「班長」と呼称。ボランティアスタッフと管理者との中間に位置し、班のタスク管理、人員不足時の管理者への要請、現場での関係班長を集めた打ち合わせ参加、必要機材の申請を担います。
                             </p>
                         </div>
                         <div class="p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-xl">
                             <div class="flex items-center space-x-2">
-                                <span class="bg-emerald-700 text-emerald-100 text-[10px] font-bold px-2 py-0.5 rounded">現場スタッフ・ボランティア</span>
+                                <span class="bg-emerald-700 text-emerald-100 text-[10px] font-bold px-2 py-0.5 rounded">現場スタッフ・班員（固定 / 充足）</span>
                             </div>
-                            <h3 class="font-bold text-sm text-emerald-950 mt-2">ボランティア・現場班員</h3>
+                            <h3 class="font-bold text-sm text-emerald-950 mt-2">固定スタッフ &amp; 充足スタッフ</h3>
                             <p class="text-xs text-emerald-800 mt-1 leading-normal">
-                                ID・パスワード不要。配布される個別QRコード/URLからスマートフォンで「マイシフト」を閲覧・出勤報告。
+                                班員は「固定スタッフ（所属班の全タスクに基本アサイン／余剰時は他班タスクへ割当）」と「充足スタッフ（各班の不足枠を充足）」の2タイプで構成されます。
                             </p>
                         </div>
                     </div>
@@ -444,13 +444,66 @@
                         </div>
                     </div>
 
+                    <!-- 班（レーン）・班長・班員（固定スタッフ／充足スタッフ）運用仕様書セクション -->
+                    <div id="sec-lane-spec" class="mt-6 p-5 sm:p-6 bg-amber-50/60 border-2 border-amber-200 rounded-2xl space-y-4">
+                        <div class="flex items-center justify-between border-b border-amber-200 pb-3">
+                            <div>
+                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-600 text-white uppercase tracking-wider">Specification</span>
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 mt-1">
+                                    👑 班（レーン）・班長・班員（固定スタッフ／充足スタッフ）運用仕様
+                                </h3>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                            <div class="p-3.5 bg-white rounded-xl border border-amber-200/80 space-y-1.5">
+                                <h4 class="font-bold text-amber-950 flex items-center space-x-1.5">
+                                    <span>1.</span>
+                                    <span>班長の定義と位置づけ（ボランティアスタッフと管理者の中間層）</span>
+                                </h4>
+                                <p class="text-xs text-slate-600">
+                                    班（レーン）に紐づく主担当を<strong>「班長」</strong>と呼称します。班長はボランティアスタッフ（班員）と管理者（本部）との中間に位置し、現場における班のタスク管理を担います。
+                                </p>
+                                <ul class="list-disc list-inside text-xs text-slate-700 space-y-1 pl-1 pt-1">
+                                    <li><strong>班のタスク管理:</strong> 担当班の全タスクの進捗ステータス更新、班員の着任・出欠確認を行います。</li>
+                                    <li><strong>人員が足りない場合の管理者への要請:</strong> 欠員や作業負荷増により人員が不足した場合、班長コンソール（マイタイムテーブル画面）から管理者へ増員・応援を要請します。</li>
+                                    <li><strong>現場での関係班長を集めた打ち合わせの参加:</strong> 交通規制前後や工程切り替え時など、現場で関係する班長同士が集まる連絡調整打ち合わせに参加します。</li>
+                                    <li><strong>必要機材の申請:</strong> 班のタスク遂行に必要な機材（カラーコーン、台車、給水タンク等）と数量を管理者へ申請します。</li>
+                                </ul>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div class="p-3.5 bg-white rounded-xl border border-indigo-200 space-y-1.5">
+                                    <h4 class="font-bold text-indigo-950 flex items-center space-x-1.5">
+                                        <span>📌</span>
+                                        <span>固定スタッフ（Fixed Staff）</span>
+                                    </h4>
+                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                        特定の班（レーン）に所属する専属スタッフです。<strong>その班のすべてのタスクに基本的に自動アサイン</strong>され、班長を補佐して一連の作業を通しで担います。<br>
+                                        <span class="text-indigo-700 font-bold">【余剰時の他班割当ルール】</span> 自班のタスクがない空き時間帯、または自班タスクの必要人数に対して余剰（定員超過）がある場合は、他の班のタスクに応援として割り当て（融通）られます。
+                                    </p>
+                                </div>
+
+                                <div class="p-3.5 bg-white rounded-xl border border-sky-200 space-y-1.5">
+                                    <h4 class="font-bold text-sky-950 flex items-center space-x-1.5">
+                                        <span>🔄</span>
+                                        <span>充足スタッフ（Fulfillment Staff）</span>
+                                    </h4>
+                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                        特定の班に固定されず、各班のタスクの必要人数に対する<strong>不足枠を充足するために柔軟に割り当てられるスタッフ</strong>です。班長と固定スタッフの基本アサイン後に残った不足人数分や、班長からの人員応援要請に対して優先的に配置されます。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- レーン編成の操作ポイント -->
                     <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm space-y-2">
-                        <h4 class="font-bold text-slate-900">班編成と現場リーダー設定の手順</h4>
+                        <h4 class="font-bold text-slate-900">班編成と班長・固定スタッフ設定の手順</h4>
                         <ol class="list-decimal list-inside space-y-1.5 text-slate-600 text-xs leading-relaxed">
                             <li>「担当班管理」画面（<code class="px-1 py-0.2 bg-slate-100 rounded text-indigo-600 font-mono">/lanes</code>）で、該当日（例: Day 1）を選択します。</li>
                             <li>「新規レーン追加」から班名（例: 道路警備班、衛生班）、表示色、種別を設定します。</li>
-                            <li>各レーンに「現場リーダー（班長）」を任命すると、タスク作成時に自動配置され、当日の緊急連絡網にも反映されます。</li>
+                            <li>各レーンに「👑 班長」および「📌 固定スタッフ」を設定すると、その班の全タスクへ自動的に基本アサインされます。</li>
                             <li>ドラッグ操作でタイムテーブル上の左右の並び順を自在に並び替えできます。</li>
                         </ol>
                     </div>

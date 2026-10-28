@@ -68,7 +68,7 @@ class TimetableSeederTest extends TestCase
             $this->assertDatabaseHas('task_staff_assignments', [
                 'timetable_task_id' => $eiseiTask->id,
                 'staff_id' => 27,
-                'role_description' => '班リーダー',
+                'role_description' => '班長',
                 'attendance_status' => 'assigned',
             ]);
         }

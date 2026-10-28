@@ -39,7 +39,7 @@ class UpdateLaneLeadStaffRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'lead_staff_id' => '主担当スタッフ',
+            'lead_staff_id' => '班長',
         ];
     }
 }

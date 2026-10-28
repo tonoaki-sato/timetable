@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LaneRequest;
 use App\Services\NextTasksService;
 use App\Services\NowTasksService;
 use App\Services\TrafficRegulationService;
@@ -31,9 +32,16 @@ class DashboardController extends Controller
         $nowDatetime = $now->translatedFormat('n月j日 (D) H:i:s');
         $trafficRegulationContext = $this->trafficRegulationService->getCurrentContext($now);
 
+        $laneRequests = LaneRequest::with(['lane', 'task', 'requestedByStaff'])
+            ->whereIn('status', ['pending', 'approved'])
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get();
+
         return view('dashboard', [
             'trafficRegulationContext' => $trafficRegulationContext,
             'nowDatetime' => $nowDatetime,
+            'laneRequests' => $laneRequests,
         ]);
     }
 

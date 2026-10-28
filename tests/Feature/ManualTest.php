@@ -46,7 +46,7 @@ class ManualTest extends TestCase
         $response->assertSee('11_myshift_mobile.png');
 
         // 第1章・第5章の追加要素
-        $response->assertSee('👑 班リーダー (現場責任者)');
+        $response->assertSee('👑 班長 (担当レーン主担当)');
         $response->assertSee('同一時間帯の重複アサイン自動検知（コンフリクト警告ダイアログ）');
         $response->assertSee('スタッフタイムライン（ガントチャート）による過密防止・過不足調整');
 

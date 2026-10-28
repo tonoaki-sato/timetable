@@ -71,6 +71,23 @@
                     class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
+            <!-- 班員スタッフ区分（固定スタッフ / 充足スタッフ） -->
+            <div>
+                <label for="staff_type" class="block text-xs font-bold text-slate-700 mb-1">
+                    班員スタッフ区分
+                </label>
+                <select id="staff_type" name="staff_type"
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="fulfillment" {{ old('staff_type', 'fulfillment') === 'fulfillment' ? 'selected' : '' }}>
+                        🔄 充足スタッフ（各班タスクの不足枠へ柔軟に割り当て）
+                    </option>
+                    <option value="fixed" {{ old('staff_type') === 'fixed' ? 'selected' : '' }}>
+                        📌 固定スタッフ（所属班の全タスクに基本アサイン／余剰時は他班へ割当）
+                    </option>
+                </select>
+                <p class="text-[11px] text-slate-400 mt-1">※ 担当班（レーン）管理画面で固定スタッフに指定すると、自動的にその班の全タスクへ基本アサインされます。</p>
+            </div>
+
 
             <!-- 稼働状態 -->
             <div class="pt-2">

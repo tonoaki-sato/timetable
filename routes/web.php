@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaneController;
+use App\Http\Controllers\LaneRequestController;
 use App\Http\Controllers\ManualController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\PresentationController;
@@ -32,10 +33,12 @@ Route::get('/join', [StaffJoinController::class, 'create'])->name('staff.join');
 Route::post('/join', [StaffJoinController::class, 'store'])->name('staff.join.store')->middleware('throttle:10,1');
 Route::get('/join/completed', [StaffJoinController::class, 'completed'])->name('staff.join.completed');
 
-// 3. 現場マイタイムテーブル閲覧 & チェックイン & 動態操作ルート (トークン認証)
+// 3. 現場マイタイムテーブル閲覧 & チェックイン & 動態操作・班長要請ルート (トークン認証)
 Route::get('/my/shift/{token}', [StaffShiftController::class, 'show'])->name('staff.myshift');
 Route::post('/my/shift/{token}/checkin', [StaffShiftController::class, 'checkIn'])->name('staff.myshift.checkin');
 Route::post('/my/shift/{token}/assignments/{assignment}/status', [StaffShiftController::class, 'updateAssignmentStatus'])->name('staff.myshift.assignment-status');
+Route::post('/my/shift/{token}/tasks/{task}/status', [StaffShiftController::class, 'updateLaneTaskStatus'])->name('staff.myshift.lane-task-status');
+Route::post('/my/shift/{token}/lanes/{lane}/requests', [StaffShiftController::class, 'storeLaneRequest'])->name('staff.myshift.lane-requests.store');
 
 // 5. 認証ルート (未ログイン時のみアクセス可)
 Route::middleware('guest')->group(function () {
@@ -85,6 +88,7 @@ Route::middleware('auth')->group(function () {
     Route::put('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'update'])->name('timetables.lanes.update');
     Route::patch('timetables/{timetable}/lanes/{lane}/lead-staff', [LaneController::class, 'updateLeadStaff'])->name('timetables.lanes.update-lead');
     Route::delete('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'destroy'])->name('timetables.lanes.destroy');
+    Route::patch('lane-requests/{laneRequest}/status', [LaneRequestController::class, 'updateStatus'])->name('lane-requests.update-status');
 
     // 作業タスクリソースルート
     Route::resource('timetable-tasks', TimetableTaskController::class)->parameters(['timetable-tasks' => 'task']);
