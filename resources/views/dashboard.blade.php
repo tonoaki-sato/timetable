@@ -95,51 +95,7 @@
         <div class="lg:col-span-2 space-y-6">
 
             <!-- Now: 現在進行中のタスク -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-                    <div class="flex items-center space-x-2">
-                        <span class="flex h-2.5 w-2.5 relative">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                        </span>
-                        <h3 class="text-base font-bold text-slate-900">⚡ NOW : 現在進行中のタスク</h3>
-                    </div>
-                    <span class="text-xs text-slate-500 font-mono">10:00 〜 10:45 スロット</span>
-                </div>
-
-                <div class="space-y-3">
-                    @forelse($nowTasks ?? [] as $task)
-                    <div class="p-3.5 {{ $task['is_critical'] ?? false ? 'bg-red-50/60 border-red-200' : 'bg-white border-slate-200' }} rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="space-y-1">
-                            <div class="flex items-center space-x-2">
-                                @if($task['is_critical'] ?? false)
-                                <span class="px-2 py-0.5 bg-red-600 text-white font-bold text-[10px] rounded">🚨 最優先設置</span>
-                                @endif
-                                @if($task['requires_review'] ?? false)
-                                <span class="px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 font-semibold text-[10px] rounded">🔍 漆原さん確認済</span>
-                                @endif
-                                <span class="text-xs font-semibold text-slate-600">{{ $task['lane'] ?? '' }}</span>
-                            </div>
-                            <h4 class="font-bold text-slate-900 text-sm">{{ $task['title'] }}</h4>
-                            <p class="text-xs text-slate-500 font-mono">📍 {{ $task['location'] ?? '' }} | 📦 {{ $task['equipment'] ?? '' }}</p>
-                        </div>
-                        <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
-                            <span class="text-xs font-medium px-2 py-0.5 bg-slate-100 rounded text-slate-700">👥 {{ $task['assigned_count'] ?? 0 }}名配置済</span>
-                            <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md">{{ $task['status_text'] ?? '進行中' }}</span>
-                        </div>
-                    </div>
-                    @empty
-                    <div class="p-3.5 bg-red-50/60 rounded-xl border border-red-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="space-y-1">
-                            <span class="px-2 py-0.5 bg-red-600 text-white font-bold text-[10px] rounded">🚨 最優先設置</span>
-                            <h4 class="font-bold text-slate-900 text-sm">通行止め出入り口・支道接続点 最優先コーン設置</h4>
-                            <p class="text-xs text-slate-600 font-mono">📍 出入り口・支道接続点 | 📦 単管プレート・コーンバー</p>
-                        </div>
-                        <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md">完了報告済</span>
-                    </div>
-                    @endforelse
-                </div>
-            </div>
+            <x-dashboard.now-tasks-card />
 
             <!-- Next: 次に控えるタスク -->
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
