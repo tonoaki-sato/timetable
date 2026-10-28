@@ -158,10 +158,10 @@
                 <span class="text-2xl">💬</span>
                 <div>
                     <h2 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center space-x-2">
-                        <span>全体LINE告知テキスト</span>
+                        <span>共有告知テキスト</span>
                         <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">自動生成</span>
                     </h2>
-                    <p class="text-xs text-slate-400 mt-0.5">LINEグループにそのまま貼り付けて送信できます</p>
+                    <p class="text-xs text-slate-400 mt-0.5">チャットツールやメール等にそのまま貼り付けて送信できます</p>
                 </div>
             </div>
 
@@ -180,30 +180,19 @@
 
         <!-- テキスト表示エリア -->
         <div class="p-6 space-y-4">
-            <template id="shareTextTemplate">{{ $meeting->line_share_text }}</template>
-            <template id="remindTextTemplate">{{ $meeting->line_remind_text }}</template>
+            <template id="shareTextTemplate">{{ $meeting->share_text }}</template>
+            <template id="remindTextTemplate">{{ $meeting->remind_text }}</template>
 
-            <div class="bg-slate-950/80 p-5 rounded-xl border border-slate-800 font-mono text-xs sm:text-sm text-slate-100 whitespace-pre-wrap leading-relaxed select-all" id="lineTextBox">{{ $meeting->line_share_text }}</div>
+            <div class="bg-slate-950/80 p-5 rounded-xl border border-slate-800 font-mono text-xs sm:text-sm text-slate-100 whitespace-pre-wrap leading-relaxed select-all" id="lineTextBox">{{ $meeting->share_text }}</div>
 
             <!-- アクションボタン群 -->
             <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
                 <div class="text-xs text-slate-400 flex items-center space-x-1">
                     <span>💡</span>
-                    <span>下のボタンでコピーし、LINEアプリに貼り付けてください</span>
+                    <span>下のボタンでコピーし、連絡用チャット等に貼り付けてください</span>
                 </div>
 
                 <div class="flex items-center space-x-3">
-                    <!-- LINEアプリ直接起動リンク (スマホ用) -->
-                    @php
-                        $encodedShare = urlencode($meeting->line_share_text);
-                    @endphp
-                    <a href="https://line.me/R/msg/text/?{{ $encodedShare }}" target="_blank" rel="noopener noreferrer"
-                        id="lineAppBtn"
-                        class="px-4 py-2.5 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5">
-                        <span class="text-base font-bold">L</span>
-                        <span>LINEで送る</span>
-                    </a>
-
                     <!-- クリップボードコピーボタン -->
                     <button type="button" data-action="copy-current-line"
                         id="copyLineBtn"

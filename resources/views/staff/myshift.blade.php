@@ -6,8 +6,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $staff->name }} さんのタイムテーブル - まつり運行システム</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <!-- LIFF SDK -->
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body class="min-h-full pb-16 font-sans antialiased bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
 
@@ -20,11 +18,6 @@
                     <h1 class="text-sm font-bold text-white tracking-tight leading-tight">マイタイムテーブル</h1>
                     <div class="flex items-center space-x-1.5" id="headerProfileArea">
                         <span class="text-xs font-bold text-indigo-400">{{ $staff->name }} さん</span>
-                        @if($staff->line_display_name)
-                        <span id="headerLineBadge" class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-[#06C755]/20 text-[#06C755] border border-[#06C755]/30">
-                            {{ $staff->line_display_name }}
-                        </span>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -55,25 +48,6 @@
         <div class="p-3.5 bg-emerald-950/80 border border-emerald-500/50 rounded-2xl text-emerald-300 text-xs flex items-center space-x-2">
             <span>✅</span>
             <span>{{ session('success') }}</span>
-        </div>
-        @endif
-
-        <!-- LINE未連携時のワンタップ連携バナー (UC-106 パターンB) -->
-        @if(! $staff->line_user_id)
-        <div id="lineBindBanner" class="p-3.5 bg-gradient-to-r from-emerald-950/90 to-teal-950/90 border border-emerald-500/50 rounded-2xl flex items-center justify-between shadow-lg">
-            <div class="flex items-center space-x-2.5 overflow-hidden pr-2">
-                <span class="text-2xl flex-shrink-0">💬</span>
-                <div class="overflow-hidden">
-                    <p class="text-xs font-bold text-emerald-200">LINEと未連携です</p>
-                    <p class="text-[11px] text-emerald-400 truncate">ワンタップで連携すると呼名やアイコンが反映されます</p>
-                </div>
-            </div>
-            <button type="button" id="lineBindBtn"
-                    data-bind-endpoint="{{ route('staff.myshift.line-bind', ['token' => $staff->access_token]) }}"
-                    data-liff-id="{{ $liffId }}"
-                    class="px-3.5 py-1.5 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-xl text-xs font-bold shadow-md transition transform active:scale-95 flex items-center space-x-1 cursor-pointer flex-shrink-0">
-                <span>LINE連携</span>
-            </button>
         </div>
         @endif
 

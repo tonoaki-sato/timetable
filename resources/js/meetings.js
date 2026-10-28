@@ -1,5 +1,5 @@
 /**
- * 会議管理（プレビュー・タブ切替・LINE文面コピー）スクリプト
+ * 会議管理（プレビュー・タブ切替・文面コピー）スクリプト
  */
 document.addEventListener('DOMContentLoaded', () => {
     initMeetingPreview();
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * 1. 会議作成/編集画面: LINE案内文のリアルタイムプレビュー
+ * 1. 会議作成/編集画面: 共有案内文のリアルタイムプレビュー
  */
 function initMeetingPreview() {
     const previewBox = document.getElementById('linePreviewBox');
@@ -100,18 +100,15 @@ function initMeetingShowTabs() {
         const textBox = document.getElementById('lineTextBox');
         const tabShare = document.getElementById('tabBtnShare');
         const tabRemind = document.getElementById('tabBtnRemind');
-        const lineAppBtn = document.getElementById('lineAppBtn');
 
         if (mode === 'share') {
             if (textBox) textBox.textContent = shareText;
             if (tabShare) tabShare.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-xs cursor-pointer';
             if (tabRemind) tabRemind.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer';
-            if (lineAppBtn) lineAppBtn.href = 'https://line.me/R/msg/text/?' + encodeURIComponent(shareText);
         } else {
             if (textBox) textBox.textContent = remindText;
             if (tabRemind) tabRemind.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-xs cursor-pointer';
             if (tabShare) tabShare.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer';
-            if (lineAppBtn) lineAppBtn.href = 'https://line.me/R/msg/text/?' + encodeURIComponent(remindText);
         }
     });
 }

@@ -71,16 +71,6 @@
                     class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
-            <!-- LINEグループ表示名（呼名） -->
-            <div>
-                <label for="line_display_name" class="block text-xs font-bold text-slate-700 mb-1">
-                    LINEグループ表示名（呼名） <span class="text-slate-400 font-normal">（任意）</span>
-                </label>
-                <input type="text" id="line_display_name" name="line_display_name" value="{{ old('line_display_name') }}"
-                    placeholder="例: やまちゃん / 〇〇町内会・鈴木"
-                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <p class="text-[11px] text-slate-400 mt-1">※現場LINEグループでのメンションや指示出し用の呼名です。後から本人がLINE連携することも可能です。</p>
-            </div>
 
             <!-- 稼働状態 -->
             <div class="pt-2">

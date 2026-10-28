@@ -74,7 +74,6 @@ class StaffManagementTest extends TestCase
             'name' => '新規 太郎',
             'kana' => 'シンキ タロウ',
             'affiliation' => '一般公募',
-            'line_display_name' => 'しんき@実行委員',
             'is_active' => '1',
         ]);
 
@@ -83,7 +82,6 @@ class StaffManagementTest extends TestCase
             'name' => '新規 太郎',
             'kana' => 'シンキ タロウ',
             'affiliation' => '一般公募',
-            'line_display_name' => 'しんき@実行委員',
             'is_active' => true,
         ]);
     }
@@ -112,7 +110,6 @@ class StaffManagementTest extends TestCase
             'name' => '更新後 次郎',
             'kana' => 'コウシンゴ ジロウ',
             'affiliation' => '北町青年団',
-            'line_display_name' => 'こうしんご',
             'is_active' => '1',
         ]);
 
@@ -121,7 +118,6 @@ class StaffManagementTest extends TestCase
             'id' => $staff->id,
             'name' => '更新後 次郎',
             'affiliation' => '北町青年団',
-            'line_display_name' => 'こうしんご',
         ]);
     }
 
@@ -141,24 +137,23 @@ class StaffManagementTest extends TestCase
     }
 
     /**
-     * スタッフ一覧にLINE情報が表示され、詳細画面で登録経路が表示されること
+     * スタッフ一覧が表示され、詳細画面で登録経路が表示されること
      */
-    public function test_admin_staff_index_displays_line_info_and_show_displays_registered_via(): void
+    public function test_admin_staff_index_and_show_displays_registered_via(): void
     {
         $this->actingAs($this->operator);
 
-        $lineStaff = Staff::factory()->selfRegistered()->withLine('やまちゃん')->create([
+        $staff = Staff::factory()->selfRegistered()->create([
             'name' => '山田 太郎',
         ]);
 
         $response = $this->get(route('staff.index'));
         $response->assertStatus(200);
         $response->assertSee('山田 太郎');
-        $response->assertSee('やまちゃん');
 
-        $showResponse = $this->get(route('staff.show', $lineStaff));
+        $showResponse = $this->get(route('staff.show', $staff));
         $showResponse->assertStatus(200);
-        $showResponse->assertSee('LINEセルフ登録');
+        $showResponse->assertSee('セルフ登録');
     }
 
     /**

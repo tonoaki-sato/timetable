@@ -34,11 +34,11 @@
             </form>
             @endcan
 
-            <!-- LINE募集案内文コピーボタン -->
+            <!-- 登録案内文コピーボタン -->
             <button type="button" id="copyInviteBtn" data-join-url="{{ route('staff.join') }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
-                <span>💬</span>
-                <span>LINE募集文コピー</span>
+                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                <span>📋</span>
+                <span>登録案内文コピー</span>
             </button>
 
             @can('create', App\Models\Staff::class)
@@ -58,7 +58,7 @@
             <div>
                 <label for="search" class="block text-[11px] font-bold text-slate-600 mb-1">フリーワード</label>
                 <input type="text" id="search" name="search" value="{{ request('search') }}"
-                    placeholder="氏名・フリガナ・所属・LINE名"
+                    placeholder="氏名・フリガナ・所属"
                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
@@ -94,7 +94,6 @@
                         <th class="px-4 py-3 font-bold">ID</th>
                         <th class="px-4 py-3 font-bold">氏名</th>
                         <th class="px-4 py-3 font-bold">フリガナ</th>
-                        <th class="px-4 py-3 font-bold">LINE表示名</th>
                         <th class="px-4 py-3 font-bold">所属団体・地域会等</th>
                         <th class="px-4 py-3 font-bold">稼働状態</th>
                         <th class="px-4 py-3 font-bold text-right">操作</th>
@@ -110,20 +109,6 @@
                             </a>
                         </td>
                         <td class="px-4 py-3 text-slate-500 font-mono text-[11px]">{{ $staff->kana ?? '-' }}</td>
-                        <td class="px-4 py-3">
-                            @if($staff->line_display_name)
-                            <div class="flex items-center space-x-1.5">
-                                @if($staff->line_picture_url)
-                                <img src="{{ $staff->line_picture_url }}" class="w-5 h-5 rounded-full object-cover border border-slate-200" alt="">
-                                @endif
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-[#06C755]/10 text-[#05963f] border border-[#06C755]/20">
-                                    {{ $staff->line_display_name }}
-                                </span>
-                            </div>
-                            @else
-                            <span class="text-slate-400 text-[11px]">未連携</span>
-                            @endif
-                        </td>
                         <td class="px-4 py-3 text-slate-700">{{ $staff->affiliation ?? '未設定' }}</td>
                         <td class="px-4 py-3">
                             @if($staff->is_active)

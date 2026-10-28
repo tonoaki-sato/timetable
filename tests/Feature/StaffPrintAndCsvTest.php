@@ -143,7 +143,6 @@ class StaffPrintAndCsvTest extends TestCase
             'name' => '=SUM(1+1)',
             'kana' => '+KANA',
             'affiliation' => '@Admin',
-            'line_display_name' => '-Minus',
         ]);
 
         $response = $this->get(route('staff.export-csv'));
@@ -156,7 +155,6 @@ class StaffPrintAndCsvTest extends TestCase
         $this->assertStringContainsString("'=SUM(1+1)", $content);
         $this->assertStringContainsString("'+KANA", $content);
         $this->assertStringContainsString("'@Admin", $content);
-        $this->assertStringContainsString("'-Minus", $content);
     }
 
     /**
@@ -174,9 +172,9 @@ class StaffPrintAndCsvTest extends TestCase
         ]);
 
         $csvContent = implode("\n", [
-            '氏名,フリガナ,所属,LINE表示名',
-            '新着 次郎,シンチャク ジロウ,新町子供会,しんちゃん',
-            '既存 太郎,キゾン タロウ,新町青年部,きぞん',
+            '氏名,フリガナ,所属',
+            '新着 次郎,シンチャク ジロウ,新町子供会',
+            '既存 太郎,キゾン タロウ,新町青年部',
         ]);
 
         $file = UploadedFile::fake()->createWithContent('staff.csv', $csvContent);
@@ -193,14 +191,12 @@ class StaffPrintAndCsvTest extends TestCase
             'name' => '新着 次郎',
             'kana' => 'シンチャク ジロウ',
             'affiliation' => '新町子供会',
-            'line_display_name' => 'しんちゃん',
             'registered_via' => 'admin',
         ]);
 
         // 既存更新確認
         $existingStaff->refresh();
         $this->assertSame('新町青年部', $existingStaff->affiliation);
-        $this->assertSame('きぞん', $existingStaff->line_display_name);
     }
 
     /**

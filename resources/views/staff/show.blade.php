@@ -122,19 +122,14 @@
                     </div>
                 </div>
 
-                <!-- LINEアカウント情報 -->
+                <!-- 登録経路情報 -->
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span class="text-[11px] font-bold text-slate-500 block mb-1">💬 LINE連携</span>
-                    <div class="flex items-center space-x-2">
-                        @if($staff->line_picture_url)
-                        <img src="{{ $staff->line_picture_url }}" class="w-6 h-6 rounded-full object-cover border border-slate-200" alt="">
-                        @endif
-                        <span class="text-sm font-bold text-slate-900">
-                            {{ $staff->line_display_name ?: '未連携' }}
-                        </span>
+                    <span class="text-[11px] font-bold text-slate-500 block mb-1">🏷️ 登録情報</span>
+                    <div class="text-sm font-bold text-slate-900">
+                        {{ $staff->registered_via === 'self' ? 'Webセルフ登録' : '本部登録' }}
                     </div>
                     <span class="text-[10px] text-slate-400 mt-0.5 block">
-                        登録経路: {{ $staff->registered_via === 'self' ? 'LINEセルフ登録' : '本部登録' }}
+                        登録日: {{ $staff->created_at?->format('Y/m/d') ?? '-' }}
                     </span>
                 </div>
 

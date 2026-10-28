@@ -31,7 +31,7 @@
                         copyInviteBtn.innerHTML = originalText;
                     }, 2500);
                 } catch (e) {
-                    prompt('以下の案内文をコピーしてLINEグループに投稿してください:', message);
+                    prompt('以下の案内文をコピーして共有してください:', message);
                 }
             });
         }

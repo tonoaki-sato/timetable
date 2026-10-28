@@ -103,9 +103,9 @@ class Meeting extends Model
     }
 
     /**
-     * 開催案内用の全体LINEテキスト
+     * 開催案内用の全体共有テキスト
      */
-    public function getLineShareTextAttribute(): string
+    public function getShareTextAttribute(): string
     {
         $datetime = $this->formatted_datetime;
         $hostName = $this->host?->name ?? '未定（後から設定）';
@@ -140,9 +140,9 @@ class Meeting extends Model
     }
 
     /**
-     * 前日リマインド用の全体LINEテキスト
+     * 前日リマインド用の全体共有テキスト
      */
-    public function getLineRemindTextAttribute(): string
+    public function getRemindTextAttribute(): string
     {
         $datetime = $this->formatted_datetime;
         $hostName = $this->host?->name ?? '未定（後から設定）';

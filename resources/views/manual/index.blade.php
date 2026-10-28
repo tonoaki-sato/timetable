@@ -179,10 +179,10 @@
                             <div class="p-3.5 bg-emerald-50/80 border-l-4 border-emerald-500 rounded-r-xl text-emerald-900">
                                 <div class="font-bold flex items-center space-x-1.5 text-emerald-950">
                                     <span>📱</span>
-                                    <span>LINEからの1分セルフ登録に対応</span>
+                                    <span>Webからの1分セルフ登録に対応</span>
                                 </div>
                                 <p class="mt-1 text-emerald-800 text-[11px] leading-relaxed">
-                                    一般公募や学生ボランティアは、本部が発行する募集URL（<code class="px-1 py-0.2 bg-emerald-100 text-emerald-900 rounded font-mono">/join</code>）からLINE経由でアカウント作成なしに即座に事前セルフ登録できます（第6章参照）。
+                                    一般公募や学生ボランティアは、本部が発行する募集URL（<code class="px-1 py-0.2 bg-emerald-100 text-emerald-900 rounded font-mono">/join</code>）からアカウント作成なしに即座に事前セルフ登録できます（第6章参照）。
                                 </p>
                             </div>
                         </div>
@@ -576,7 +576,7 @@
                             <span>高速台帳検索 & 状態フィルタ</span>
                         </h4>
                         <p class="text-slate-600 text-xs leading-relaxed">
-                            スタッフ台帳（<code class="px-1 py-0.2 bg-slate-100 rounded text-indigo-600 font-mono">/staff</code>）では、氏名・フリガナ・所属団体（商店街、大学、消防団等）・LINE表示名でのあいまい検索が可能です。さらに「稼働可能フラグ」や「当日の出勤状況（未到着／到着済）」でワンクリック絞り込みできます。
+                            スタッフ台帳（<code class="px-1 py-0.2 bg-slate-100 rounded text-indigo-600 font-mono">/staff</code>）では、氏名・フリガナ・所属団体（商店街、大学、消防団等）でのあいまい検索が可能です。さらに「稼働可能フラグ」や「当日の出勤状況（未到着／到着済）」でワンクリック絞り込みできます。
                         </p>
                     </div>
 
@@ -600,19 +600,19 @@
                             </p>
                         </div>
 
-                        <!-- 機能B: LINE募集・自動名寄せ -->
+                        <!-- 機能B: Web募集・自動名寄せ -->
                         <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2">
                             <div class="font-bold text-emerald-950 flex items-center space-x-1.5 text-sm">
                                 <span>💬</span>
-                                <span>LINEセルフ登録 &amp; スマート自動名寄せ</span>
+                                <span>Webセルフ登録 &amp; スマート自動名寄せ</span>
                             </div>
                             <p class="text-emerald-900 leading-relaxed text-[11px]">
-                                一般公募や学生ボランティアへ登録URL（<code class="px-1 py-0.2 bg-emerald-100 rounded font-mono text-emerald-950">/join</code>）を告知。LINEアプリ内で開くとLIFFが起動し、ID・パスワード不要で1分で登録完了します。
+                                一般公募や学生ボランティアへ登録URL（<code class="px-1 py-0.2 bg-emerald-100 rounded font-mono text-emerald-950">/join</code>）を告知。ブラウザからID・パスワード不要で1分で登録完了します。
                             </p>
                             <div class="p-2 bg-white/90 border border-emerald-200 rounded-lg text-[11px] text-emerald-900 space-y-1">
                                 <div class="font-bold text-emerald-950">二重登録を防ぐスマート名寄せ:</div>
                                 <div class="text-[10px] leading-relaxed text-emerald-800">
-                                    本部が事前にCSV等で登録していた名簿がある場合、「LINE ID」または「氏名＋カナ」で自動照合。二重レコードを作らず、既存台帳にLINE情報を自動統合バインドします。
+                                    本部が事前にCSV等で登録していた名簿がある場合、「氏名＋カナ」で自動照合。二重レコードを作らず、既存台帳と自動統合します。
                                 </div>
                             </div>
                         </div>
@@ -756,15 +756,14 @@
                             </ul>
                         </div>
 
-                        <!-- LINE連携 & URL保存 -->
+                        <!-- マイシフトURLの保存 -->
                         <div class="p-4 bg-indigo-50/80 border border-indigo-200 rounded-xl space-y-2">
                             <div class="font-bold text-indigo-950 flex items-center space-x-1.5 text-sm">
                                 <span>📲</span>
-                                <span>LINE連携バナー &amp; URLの保存</span>
+                                <span>マイシフトURLの保存</span>
                             </div>
                             <ul class="list-disc list-inside text-indigo-950 space-y-1 leading-relaxed text-[11px] pl-1">
-                                <li><strong>LINE未連携バナー:</strong> 未連携時に表示される緑色バナーからLINE連携すると、マイシフトや本部画面にLINEの表示名とアイコンが反映されます。</li>
-                                <li><strong>URLコピーボタン:</strong> 画面最下部の「このページのURLをコピーして保存」を押し、LINE Keepやメモアプリに保存しておくと便利です。</li>
+                                <li><strong>URLコピーボタン:</strong> 画面最下部の「このページのURLをコピーして保存」を押し、メモアプリ等に保存しておくと便利です。</li>
                                 <li><strong>ホーム画面への追加:</strong> スマホブラウザの「共有 > ホーム画面に追加」を行うと、アプリ感覚でワンタップ起動できます。</li>
                                 <li><strong>名札紛失時:</strong> 名札を紛失した場合は、本部受付で古いQRを即時無効化し、2分で新しい名札を再印刷できます。</li>
                             </ul>
@@ -901,12 +900,12 @@
                             <summary class="font-bold text-slate-900 flex items-center justify-between list-none">
                                 <span class="flex items-center space-x-2">
                                     <span class="text-indigo-600 font-bold">Q.</span>
-                                    <span>LINEアプリを使っていないボランティアはどのように登録すればよいですか？</span>
+                                    <span>ボランティア自身が事前登録する方法はありますか？</span>
                                 </span>
                                 <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
                             </summary>
                             <p class="mt-3 text-slate-600 leading-relaxed text-xs border-t border-slate-200 pt-3">
-                                LINEアプリを持たない場合でも、SafariやChrome等の通常ブラウザから登録URL（<code class="px-1 py-0.2 bg-slate-100 rounded text-indigo-600 font-mono">/join</code>）を開くことで、氏名・カナ・所属・連絡先を入力して問題なく登録できます。また本部側でスタッフ台帳から手動個別登録、またはCSV一括登録することも可能です。
+                                本部が発行する登録URL（<code class="px-1 py-0.2 bg-slate-100 rounded text-indigo-600 font-mono">/join</code>）を案内することで、SafariやChrome等の通常ブラウザから氏名・カナ・所属・連絡先を入力して1分で事前セルフ登録できます。また本部側でスタッフ台帳から手動個別登録、またはCSV一括登録することも可能です。
                             </p>
                         </details>
 

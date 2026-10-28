@@ -74,95 +74,39 @@ class StaffService
     }
 
     /**
-     * スタッフ本人によるセルフ登録（既存台帳との自動照合・バインド対応）
+     * スタッフ本人によるセルフ登録（既存台帳との自動照合対応）
      *
      * @param  array<string, mixed>  $data
      */
     public function registerSelfStaff(array $data): Staff
     {
-        $lineDisplayName = $data['line_display_name'] ?? null;
-        if (empty($lineDisplayName) && ! empty($data['manual_line_display_name'])) {
-            $lineDisplayName = $data['manual_line_display_name'];
-        }
-
-        // 1. LINE User IDによる既存照合
+        // 氏名・フリガナによる既存台帳照合（本部先行登録スタッフとの結合）
         $existingStaff = null;
-        if (! empty($data['line_user_id'])) {
-            $existingStaff = $this->staffRepository->findByLineUserId($data['line_user_id']);
-        }
-
-        // 2. 氏名・フリガナによる既存台帳照合（本部先行登録スタッフとの結合）
-        if (! $existingStaff && ! empty($data['name']) && ! empty($data['kana'])) {
+        if (! empty($data['name']) && ! empty($data['kana'])) {
             $matched = $this->staffRepository->findByNameAndKana($data['name'], $data['kana']);
             if ($matched->count() === 1) {
                 $existingStaff = $matched->first();
             }
         }
 
-        // 3. 既存スタッフが存在する場合はLINE情報を統合バインド
+        // 既存スタッフが存在する場合は最終確認日時を更新して返却
         if ($existingStaff) {
-            $updateData = [
+            $this->staffRepository->update($existingStaff, [
                 'last_accessed_at' => now(),
-            ];
-
-            if (! empty($data['line_user_id']) && empty($existingStaff->line_user_id)) {
-                $updateData['line_user_id'] = $data['line_user_id'];
-            }
-
-            if (! empty($lineDisplayName)) {
-                $updateData['line_display_name'] = $lineDisplayName;
-            }
-
-            if (! empty($data['line_picture_url'])) {
-                $updateData['line_picture_url'] = $data['line_picture_url'];
-            }
-
-            $this->staffRepository->update($existingStaff, $updateData);
+            ]);
 
             return $existingStaff->fresh();
         }
 
-        // 4. 既存に該当しない場合は新規作成
+        // 既存に該当しない場合は新規作成
         $attributes = [
             'name' => $data['name'],
             'kana' => $data['kana'],
-            'line_user_id' => $data['line_user_id'] ?? null,
-            'line_display_name' => $lineDisplayName,
-            'line_picture_url' => $data['line_picture_url'] ?? null,
             'registered_via' => 'self',
             'is_active' => true,
         ];
 
         return $this->staffRepository->create($attributes);
-    }
-
-    /**
-     * マイシフト画面等からのLINEアカウント直接バインド
-     *
-     * @param  array{line_user_id: string, line_display_name?: ?string, line_picture_url?: ?string}  $data
-     */
-    public function bindLineProfile(Staff $staff, array $data): bool
-    {
-        // 既に他のスタッフに同一のLINE User IDが割り当てられていないか確認
-        $other = $this->staffRepository->findByLineUserId($data['line_user_id']);
-        if ($other && $other->id !== $staff->id) {
-            return false;
-        }
-
-        $updateData = [
-            'line_user_id' => $data['line_user_id'],
-            'last_accessed_at' => now(),
-        ];
-
-        if (! empty($data['line_display_name'])) {
-            $updateData['line_display_name'] = $data['line_display_name'];
-        }
-
-        if (! empty($data['line_picture_url'])) {
-            $updateData['line_picture_url'] = $data['line_picture_url'];
-        }
-
-        return $this->staffRepository->update($staff, $updateData);
     }
 
     /**
@@ -179,14 +123,6 @@ class StaffService
         }
 
         return $staff;
-    }
-
-    /**
-     * LINEユーザーIDによるスタッフ特定
-     */
-    public function getStaffByLineUserId(string $lineUserId): ?Staff
-    {
-        return $this->staffRepository->findByLineUserId($lineUserId);
     }
 
     /**

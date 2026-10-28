@@ -18,12 +18,9 @@ return new class extends Migration
             $table->string('affiliation', 100)->nullable()->comment('所属団体・地域会等');
             $table->boolean('is_active')->default(true)->comment('稼働可能フラグ');
 
-            // 個別アクセス & LINE連携用カラム
+            // 個別アクセス用カラム
             $table->string('access_token', 64)->unique()->comment('個別マイタイムテーブル用アクセストークン');
-            $table->string('line_user_id', 64)->nullable()->unique()->comment('LINE一意ユーザーID');
-            $table->string('line_display_name', 100)->nullable()->comment('LINE表示名（メンション用）');
-            $table->string('line_picture_url', 500)->nullable()->comment('LINEアイコンURL');
-            $table->enum('registered_via', ['admin', 'self'])->default('admin')->comment('登録経路（admin:本部, self:LINEセルフ）');
+            $table->enum('registered_via', ['admin', 'self'])->default('admin')->comment('登録経路（admin:本部, self:セルフ登録）');
 
             // 現場アクセス・受付用日時
             $table->dateTime('last_accessed_at')->nullable()->comment('最終確認日時');

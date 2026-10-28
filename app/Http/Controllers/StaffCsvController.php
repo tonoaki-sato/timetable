@@ -43,7 +43,6 @@ class StaffCsvController extends Controller
                 '氏名',
                 'フリガナ',
                 '所属',
-                'LINE表示名',
                 '登録経路',
                 '現場到着日時',
                 '稼働状態',
@@ -70,8 +69,7 @@ class StaffCsvController extends Controller
                         $sanitize($staff->name),
                         $sanitize($staff->kana),
                         $sanitize($staff->affiliation),
-                        $sanitize($staff->line_display_name),
-                        $staff->registered_via === 'self' ? 'LINEセルフ' : '本部登録',
+                        $staff->registered_via === 'self' ? 'セルフ登録' : '本部登録',
                         $staff->checked_in_at?->format('Y-m-d H:i:s') ?? '',
                         $staff->is_active ? '稼働可能' : '停止中',
                         $shiftUrl,
@@ -136,20 +134,18 @@ class StaffCsvController extends Controller
             }
 
             // CSV列定義:
-            // 形式A (エクスポート同等): [0: ID, 1: 氏名, 2: フリガナ, 3: 所属, 4: LINE表示名, ...]
-            // 形式B (シンプル手動作成): [0: 氏名, 1: フリガナ, 2: 所属, 3: LINE表示名]
+            // 形式A (エクスポート同等): [0: ID, 1: 氏名, 2: フリガナ, 3: 所属, ...]
+            // 形式B (シンプル手動作成): [0: 氏名, 1: フリガナ, 2: 所属]
             if (is_numeric($row[0] ?? null) && count($row) >= 4) {
                 // 形式A
                 $name = mb_substr(trim($row[1] ?? ''), 0, 255);
                 $kana = mb_substr(trim($row[2] ?? ''), 0, 255);
                 $affiliation = mb_substr(trim($row[3] ?? ''), 0, 100);
-                $lineDisplayName = mb_substr(trim($row[4] ?? ''), 0, 100);
             } else {
                 // 形式B
                 $name = mb_substr(trim($row[0] ?? ''), 0, 255);
                 $kana = mb_substr(trim($row[1] ?? ''), 0, 255);
                 $affiliation = mb_substr(trim($row[2] ?? ''), 0, 100);
-                $lineDisplayName = mb_substr(trim($row[3] ?? ''), 0, 100);
             }
 
             if ($name === '') {
@@ -171,9 +167,6 @@ class StaffCsvController extends Controller
                 if ($affiliation !== '') {
                     $updateData['affiliation'] = $affiliation;
                 }
-                if ($lineDisplayName !== '') {
-                    $updateData['line_display_name'] = $lineDisplayName;
-                }
 
                 if (! empty($updateData)) {
                     $existing->update($updateData);
@@ -184,7 +177,6 @@ class StaffCsvController extends Controller
                     'name' => $name,
                     'kana' => $kana,
                     'affiliation' => $affiliation !== '' ? $affiliation : null,
-                    'line_display_name' => $lineDisplayName !== '' ? $lineDisplayName : null,
                     'registered_via' => 'admin',
                     'is_active' => true,
                 ]);

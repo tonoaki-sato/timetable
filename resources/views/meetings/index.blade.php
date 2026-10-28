@@ -161,14 +161,14 @@
 
             <!-- 右側: アクションボタン群（LINEコピー、詳細、編集） -->
             <div class="flex items-center space-x-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 justify-end">
-                <!-- LINEテキストクイックコピーボタン -->
+                <!-- 告知テキストクイックコピーボタン -->
                 <button type="button"
                     data-action="copy-meeting-line"
-                    data-line-text="{{ $meeting->line_share_text }}"
-                    title="全体LINE用の告知テキストをクリップボードにコピー"
+                    data-line-text="{{ $meeting->share_text }}"
+                    title="共有用の告知テキストをクリップボードにコピー"
                     class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
                     <span>📋</span>
-                    <span>LINE文面コピー</span>
+                    <span>案内文コピー</span>
                 </button>
 
                 <a href="{{ route('meetings.show', $meeting) }}"

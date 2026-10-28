@@ -45,11 +45,6 @@ interface StaffRepositoryInterface
     public function findByAccessToken(string $token): ?Staff;
 
     /**
-     * LINEユーザーIDによるスタッフ取得
-     */
-    public function findByLineUserId(string $lineUserId): ?Staff;
-
-    /**
      * 氏名・フリガナによるスタッフ検索（照合用）
      *
      * @return Collection<int, Staff>

@@ -45,11 +45,6 @@
                         <div class="staff-affiliation">
                             🏢 {{ $staff->affiliation ?: '本部直属 / 一般公募' }}
                         </div>
-                        @if($staff->line_display_name)
-                        <div class="staff-line-name">
-                            💬 LINE: {{ $staff->line_display_name }}
-                        </div>
-                        @endif
                     </div>
 
                     <!-- QRコード -->

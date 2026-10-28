@@ -31,7 +31,6 @@ class UpdateStaffRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'kana' => ['nullable', 'string', 'max:255'],
             'affiliation' => ['nullable', 'string', 'max:100'],
-            'line_display_name' => ['nullable', 'string', 'max:100'],
             'is_active' => ['nullable', 'boolean'],
         ];
     }
@@ -47,7 +46,6 @@ class UpdateStaffRequest extends FormRequest
             'name' => '氏名',
             'kana' => 'フリガナ',
             'affiliation' => '所属団体・地域会等',
-            'line_display_name' => 'LINE表示名（呼名）',
             'is_active' => '稼働可能フラグ',
         ];
     }

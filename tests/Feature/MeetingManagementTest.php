@@ -236,9 +236,9 @@ class MeetingManagementTest extends TestCase
     }
 
     /**
-     * 主催者未設定時のLINE共有文面で適切にフォールバックされること
+     * 主催者未設定時の共有文面で適切にフォールバックされること
      */
-    public function test_line_text_when_host_staff_is_unassigned(): void
+    public function test_share_text_when_host_staff_is_unassigned(): void
     {
         $meeting = Meeting::factory()->create([
             'title' => '企画検討会（主催未定）',
@@ -248,10 +248,10 @@ class MeetingManagementTest extends TestCase
             'staff_id' => null,
         ]);
 
-        $shareText = $meeting->line_share_text;
+        $shareText = $meeting->share_text;
         $this->assertStringContainsString('👤 主催：未定（後から設定）', $shareText);
 
-        $remindText = $meeting->line_remind_text;
+        $remindText = $meeting->remind_text;
         $this->assertStringContainsString('👤 主催：未定（後から設定）', $remindText);
     }
 
@@ -287,9 +287,9 @@ class MeetingManagementTest extends TestCase
     }
 
     /**
-     * 詳細画面で会議情報およびLINE告知文が表示されること
+     * 詳細画面で会議情報および共有告知文が表示されること
      */
-    public function test_can_show_meeting_with_line_texts(): void
+    public function test_can_show_meeting_with_share_texts(): void
     {
         $this->actingAs($this->user);
 
@@ -308,8 +308,7 @@ class MeetingManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('全体進行打ち合わせ');
         $response->assertSee('漆原 拓也');
-        $response->assertSee('全体LINE告知テキスト');
-        $response->assertSee('LINEで送る');
+        $response->assertSee('共有告知テキスト');
         $response->assertSee('文面をコピーする');
     }
 
@@ -368,9 +367,9 @@ class MeetingManagementTest extends TestCase
     }
 
     /**
-     * LINE共有用・リマインド用のテキストアクセサが正しく組み立てられること
+     * 共有用・リマインド用のテキストアクセサが正しく組み立てられること
      */
-    public function test_line_text_accessors(): void
+    public function test_share_text_accessors(): void
     {
         $meeting = Meeting::factory()->create([
             'title' => '幹事会キックオフ',
@@ -383,7 +382,7 @@ class MeetingManagementTest extends TestCase
             'notice_note' => '出欠は1/8までにお願いします。',
         ]);
 
-        $shareText = $meeting->line_share_text;
+        $shareText = $meeting->share_text;
         $this->assertStringContainsString('【会議開催のお知らせ】', $shareText);
         $this->assertStringContainsString('「幹事会キックオフ」の開催日程が決まりました。', $shareText);
         $this->assertStringContainsString('2027年1月10日(日) 18:00 〜 20:00', $shareText);
@@ -392,7 +391,7 @@ class MeetingManagementTest extends TestCase
         $this->assertStringContainsString('年間スケジュールの策定', $shareText);
         $this->assertStringContainsString('出欠は1/8までにお願いします。', $shareText);
 
-        $remindText = $meeting->line_remind_text;
+        $remindText = $meeting->remind_text;
         $this->assertStringContainsString('【リマインド】明日開催の会議案内', $remindText);
         $this->assertStringContainsString('明日、「幹事会キックオフ」が開催されます。', $remindText);
     }

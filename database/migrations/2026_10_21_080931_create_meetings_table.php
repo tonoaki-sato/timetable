@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('location')->nullable()->comment('開催場所');
             $table->foreignId('staff_id')->nullable()->constrained('staff')->nullOnDelete()->comment('担当者');
             $table->text('description')->nullable()->comment('内容・議題・持ち物');
-            $table->text('notice_note')->nullable()->comment('LINE告知用特記メモ（返信期日等）');
+            $table->text('notice_note')->nullable()->comment('共有告知用特記メモ（返信期日等）');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->comment('登録者');
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();

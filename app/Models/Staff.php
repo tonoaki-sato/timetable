@@ -17,9 +17,6 @@ use Illuminate\Support\Str;
     'affiliation',
     'is_active',
     'access_token',
-    'line_user_id',
-    'line_display_name',
-    'line_picture_url',
     'registered_via',
     'last_accessed_at',
     'checked_in_at',
@@ -73,14 +70,6 @@ class Staff extends Model
     public function getMyShiftUrlAttribute(): string
     {
         return route('staff.myshift', ['token' => $this->access_token]);
-    }
-
-    /**
-     * LINEグループでの呼び名（LINE表示名があればそれを優先、なければ本名）
-     */
-    public function getMentionNameAttribute(): string
-    {
-        return $this->line_display_name ?: $this->name;
     }
 
     /**
@@ -150,8 +139,7 @@ class Staff extends Model
             return $query->where(function (Builder $q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('kana', 'like', "%{$search}%")
-                    ->orWhere('affiliation', 'like', "%{$search}%")
-                    ->orWhere('line_display_name', 'like', "%{$search}%");
+                    ->orWhere('affiliation', 'like', "%{$search}%");
             });
         }
 

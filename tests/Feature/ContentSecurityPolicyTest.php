@@ -26,7 +26,9 @@ class ContentSecurityPolicyTest extends TestCase
         $csp = $response->headers->get('Content-Security-Policy');
 
         $this->assertNotNull($csp);
-        $this->assertStringContainsString("script-src 'self' https://static.line-scdn.net", $csp);
+        $this->assertStringContainsString("script-src 'self'", $csp);
+        $this->assertStringNotContainsString('static.line-scdn.net', $csp);
+        $this->assertStringNotContainsString('access.line.me', $csp);
         $this->assertStringContainsString("style-src 'self' https://fonts.bunny.net", $csp);
         $this->assertStringNotContainsString('unsafe-inline', $csp);
         $this->assertStringNotContainsString('unsafe-eval', $csp);

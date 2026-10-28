@@ -40,19 +40,12 @@
                     <span>当日のためにURLを保存してください</span>
                 </div>
                 <p class="text-xs text-amber-900/80 leading-relaxed">
-                    まつり当日、あなた専用のタイムテーブル確認用ページへアクセスできるよう、以下のいずれかの方法で保存をお願いいたします。
+                    まつり当日、あなた専用のタイムテーブル確認用ページへアクセスできるよう、以下のボタンからURLをコピーしてメモ帳等に保存をお願いいたします。
                 </p>
 
-                <!-- アクション1: LINE Keepに送る -->
-                <a href="https://line.me/R/share?text={{ urlencode("【まつり】私のタイムテーブル確認URL\n" . $staff->name . "さん専用ページ\n" . $staff->my_shift_url) }}"
-                   class="w-full py-2.5 px-3 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-sm">
-                    <span>💬</span>
-                    <span>LINEのKeepメモやトークに送る</span>
-                </a>
-
-                <!-- アクション2: URLコピー -->
+                <!-- 専用URLコピーボタン -->
                 <button type="button" id="copyUrlBtn"
-                        class="w-full py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 cursor-pointer">
+                        class="w-full py-3 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-sm cursor-pointer">
                     <span>📋</span>
                     <span>専用URLをコピーする</span>
                 </button>
@@ -64,12 +57,6 @@
                     <span class="text-slate-400">お名前:</span>
                     <span class="font-bold text-slate-700">{{ $staff->name }} ({{ $staff->kana }})</span>
                 </div>
-                @if($staff->line_display_name)
-                <div class="flex justify-between">
-                    <span class="text-slate-400">LINE表示名:</span>
-                    <span class="font-bold text-emerald-700">{{ $staff->line_display_name }}</span>
-                </div>
-                @endif
             </div>
         </div>
 

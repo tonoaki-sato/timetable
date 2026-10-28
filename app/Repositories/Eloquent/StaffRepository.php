@@ -78,16 +78,6 @@ class StaffRepository implements StaffRepositoryInterface
     }
 
     /**
-     * LINEユーザーIDによるスタッフ取得
-     */
-    public function findByLineUserId(string $lineUserId): ?Staff
-    {
-        return Staff::where('line_user_id', $lineUserId)
-            ->where('is_active', true)
-            ->first();
-    }
-
-    /**
      * 氏名・フリガナによるスタッフ検索（照合用）
      *
      * @return Collection<int, Staff>

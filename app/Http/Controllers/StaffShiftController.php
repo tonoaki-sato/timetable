@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\TaskStaffAssignment;
-use App\Services\LineAuthService;
 use App\Services\StaffService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -14,8 +13,7 @@ use Illuminate\View\View;
 class StaffShiftController extends Controller
 {
     public function __construct(
-        protected StaffService $staffService,
-        protected LineAuthService $lineAuthService
+        protected StaffService $staffService
     ) {}
 
     /**
@@ -79,7 +77,6 @@ class StaffShiftController extends Controller
             'assignments' => $assignments,
             'currentTask' => $currentTask,
             'nextTask' => $nextTask,
-            'liffId' => config('services.line.liff_id', ''),
         ]);
     }
 
@@ -105,65 +102,6 @@ class StaffShiftController extends Controller
 
         return redirect()->route('staff.myshift', ['token' => $token])
             ->with('success', '現場到着を受付完了しました！');
-    }
-
-    /**
-     * マイシフト画面からのLINEアカウントワンタップ紐付け
-     */
-    public function bindLine(Request $request, string $token): JsonResponse|RedirectResponse
-    {
-        $staff = $this->staffService->getStaffByToken($token);
-
-        if (! $staff || ! $staff->is_active) {
-            abort(404, '指定されたスタッフが見つかりません。');
-        }
-
-        $validated = $request->validate([
-            'line_id_token' => ['required', 'string'],
-        ]);
-
-        $verified = $this->lineAuthService->verifyIdToken($validated['line_id_token']);
-
-        if (! $verified) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'message' => 'LINE認証の検証に失敗しました。再度お試しください。',
-                    'errors' => [
-                        'line_id_token' => ['LINE認証の検証に失敗しました。再度お試しください。'],
-                    ],
-                ], 422);
-            }
-
-            return back()->withErrors(['line_id_token' => 'LINE認証の検証に失敗しました。再度お試しください。']);
-        }
-
-        $success = $this->staffService->bindLineProfile($staff, $verified);
-
-        if (! $success) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'message' => 'このLINEアカウントは既に別のスタッフ情報に紐づけられています。',
-                    'errors' => [
-                        'line_id_token' => ['このLINEアカウントは既に別のスタッフ情報に紐づけられています。'],
-                    ],
-                ], 422);
-            }
-
-            return back()->withErrors(['line_id_token' => 'このLINEアカウントは既に別のスタッフ情報に紐づけられています。']);
-        }
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'staff' => [
-                    'line_display_name' => $staff->fresh()->line_display_name,
-                ],
-                'line_display_name' => $staff->fresh()->line_display_name,
-            ]);
-        }
-
-        return redirect()->route('staff.myshift', ['token' => $token])
-            ->with('success', 'LINEアカウントとの連携が完了しました！');
     }
 
     /**

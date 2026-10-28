@@ -49,18 +49,6 @@ class StaffFactory extends Factory
     }
 
     /**
-     * LINE連携状態
-     */
-    public function withLine(?string $displayName = null, ?string $userId = null): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'line_user_id' => $userId ?? 'U'.Str::random(32),
-            'line_display_name' => $displayName ?? fake()->userName(),
-            'line_picture_url' => 'https://profile.line-scdn.net/sample',
-        ]);
-    }
-
-    /**
      * 再発行済み状態
      */
     public function reissued(int $count = 1): static

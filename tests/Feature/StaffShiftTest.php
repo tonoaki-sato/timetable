@@ -8,7 +8,6 @@ use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class StaffShiftTest extends TestCase
@@ -176,91 +175,6 @@ class StaffShiftTest extends TestCase
     }
 
     /**
-     * マイシフト画面からワンタップでLINE連携ができること (Http::fake)
-     */
-    public function test_staff_can_bind_line_profile_from_myshift_screen(): void
-    {
-        config(['services.line.channel_id' => '1234567890']);
-
-        Http::fake([
-            'https://api.line.me/oauth2/v2.1/verify' => Http::response([
-                'sub' => 'U1234567890abcdef1234567890abcdef',
-                'name' => '拓也LINE',
-                'picture' => 'https://example.com/pic.jpg',
-                'aud' => '1234567890',
-            ], 200),
-        ]);
-
-        $this->assertNull($this->staff->line_user_id);
-
-        $response = $this->postJson(route('staff.myshift.line-bind', ['token' => $this->staff->access_token]), [
-            'line_id_token' => 'valid-jwt-token',
-        ]);
-
-        $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'staff' => [
-                    'line_display_name' => '拓也LINE',
-                ],
-            ]);
-
-        $this->staff->refresh();
-        $this->assertSame('U1234567890abcdef1234567890abcdef', $this->staff->line_user_id);
-        $this->assertSame('拓也LINE', $this->staff->line_display_name);
-        $this->assertSame('https://example.com/pic.jpg', $this->staff->line_picture_url);
-    }
-
-    /**
-     * 無効なLINE IDトークンではマイシフト連携できず422エラーになること
-     */
-    public function test_staff_cannot_bind_with_invalid_line_id_token(): void
-    {
-        config(['services.line.channel_id' => '1234567890']);
-
-        Http::fake([
-            'https://api.line.me/oauth2/v2.1/verify' => Http::response([
-                'error' => 'invalid_request',
-                'error_description' => 'invalid id_token',
-            ], 400),
-        ]);
-
-        $response = $this->postJson(route('staff.myshift.line-bind', ['token' => $this->staff->access_token]), [
-            'line_id_token' => 'invalid-token-string',
-        ]);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['line_id_token']);
-    }
-
-    /**
-     * 既に使用されているLINE User IDは連携できず422エラーになること
-     */
-    public function test_staff_cannot_bind_already_taken_line_user_id(): void
-    {
-        config(['services.line.channel_id' => '1234567890']);
-
-        Http::fake([
-            'https://api.line.me/oauth2/v2.1/verify' => Http::response([
-                'sub' => 'U1234567890abcdef1234567890abcdef',
-                'name' => '拓也LINE',
-                'aud' => '1234567890',
-            ], 200),
-        ]);
-
-        Staff::factory()->create([
-            'line_user_id' => 'U1234567890abcdef1234567890abcdef',
-        ]);
-
-        $response = $this->postJson(route('staff.myshift.line-bind', ['token' => $this->staff->access_token]), [
-            'line_id_token' => 'valid-jwt-token-for-already-taken-user',
-        ]);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['line_id_token']);
-    }
-
-    /**
      * 現場到着チェックイン時、当日運行日の最も早いタスクの出欠が自動連動更新されること
      */
     public function test_checkin_automatically_updates_first_task_attendance_status(): void
@@ -377,40 +291,5 @@ class StaffShiftTest extends TestCase
         ]);
 
         $response->assertStatus(403);
-    }
-
-    /**
-     * LIFFログインからの復帰時、ルートURLがターゲットマイシフトURLへリダイレクトすること
-     */
-    public function test_root_redirects_to_myshift_on_liff_redirect_uri(): void
-    {
-        $targetUrl = route('staff.myshift', ['token' => $this->staff->access_token]);
-
-        $response = $this->get('/?liffRedirectUri='.urlencode($targetUrl).'&code=sample_code_123&state=sample_state_456');
-
-        $response->assertRedirect($targetUrl.'?code=sample_code_123&state=sample_state_456');
-    }
-
-    /**
-     * liff.state クエリパラメータが付与された場合でも適切にリダイレクトすること
-     */
-    public function test_root_redirects_to_myshift_on_liff_state(): void
-    {
-        $path = '/my/shift/'.$this->staff->access_token;
-
-        $response = $this->get('/?liff.state='.urlencode($path).'&code=sample_code_789');
-
-        $response->assertRedirect($path.'?code=sample_code_789');
-    }
-
-    /**
-     * 外部の不正なURLへのオープンリダイレクトを防止すること
-     */
-    public function test_root_does_not_redirect_to_external_malicious_domain(): void
-    {
-        $response = $this->get('/?liffRedirectUri='.urlencode('https://malicious-site.example.com/steal-token'));
-
-        $response->assertOk()
-            ->assertViewIs('welcome');
     }
 }

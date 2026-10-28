@@ -149,8 +149,8 @@
             <div class="lg:col-span-5 bg-gradient-to-b from-slate-900 to-slate-800 text-white p-5 sm:p-6 rounded-2xl shadow-lg border border-slate-700 sticky top-24">
                 <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-700">
                     <div class="flex items-center space-x-2">
-                        <span class="text-lg">💬</span>
-                        <span class="font-bold text-xs uppercase tracking-wider text-emerald-400">LINE告知文 リアルタイムプレビュー</span>
+                        <span class="text-lg">📢</span>
+                        <span class="font-bold text-xs uppercase tracking-wider text-emerald-400">共有告知文 リアルタイムプレビュー</span>
                     </div>
                     <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-600 font-mono">自動生成</span>
                 </div>
@@ -160,7 +160,7 @@
                 </p>
 
                 <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800/80 font-mono text-xs text-slate-200 whitespace-pre-wrap leading-relaxed select-all" id="linePreviewBox">
-                    {{ $meeting->line_share_text }}
+                    {{ $meeting->share_text }}
                 </div>
             </div>
 

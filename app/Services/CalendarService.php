@@ -99,7 +99,7 @@ class CalendarService
                         'status_label' => $timetable->status_label,
                         'description' => $timetable->description,
                         'notice_note' => null,
-                        'line_share_text' => null,
+                        'share_text' => null,
                         'show_url' => route('timetables.show', $timetable),
                         'edit_url' => route('timetables.edit', $timetable),
                     ];
@@ -132,7 +132,7 @@ class CalendarService
                         'status_label' => $meeting->is_upcoming ? '予定' : '終了',
                         'description' => $meeting->description,
                         'notice_note' => $meeting->notice_note,
-                        'line_share_text' => $meeting->line_share_text,
+                        'share_text' => $meeting->share_text,
                         'show_url' => route('meetings.show', $meeting),
                         'edit_url' => route('meetings.edit', $meeting),
                     ];
@@ -178,7 +178,7 @@ class CalendarService
                         'status_label' => $schedule->status_label,
                         'description' => $schedule->description,
                         'notice_note' => null,
-                        'line_share_text' => null,
+                        'share_text' => null,
                         'show_url' => route('annual-schedules.show', $schedule),
                         'edit_url' => route('annual-schedules.edit', $schedule),
                     ];

@@ -228,9 +228,9 @@ function initCalendar() {
         if (detailDescription) detailDescription.textContent = event.description || '詳細内容の登録はありません。';
 
         if (lineSection && detailLineText) {
-            if (event.source === 'meeting' && event.line_share_text) {
+            if (event.source === 'meeting' && event.share_text) {
                 lineSection.classList.remove('hidden');
-                detailLineText.textContent = event.line_share_text;
+                detailLineText.textContent = event.share_text;
             } else {
                 lineSection.classList.add('hidden');
             }
@@ -302,8 +302,8 @@ function initCalendar() {
     }
 
     function copyDetailLineText() {
-        if (!currentDetailEvent || !currentDetailEvent.line_share_text) return;
-        navigator.clipboard.writeText(currentDetailEvent.line_share_text).then(() => {
+        if (!currentDetailEvent || !currentDetailEvent.share_text) return;
+        navigator.clipboard.writeText(currentDetailEvent.share_text).then(() => {
             const btn = document.getElementById('copyLineTextBtn');
             if (btn) {
                 const originalHtml = btn.innerHTML;
@@ -314,7 +314,7 @@ function initCalendar() {
                     btn.classList.replace('bg-emerald-800', 'bg-emerald-600');
                 }, 2000);
             }
-            showToast('LINE告知文をクリップボードにコピーしました！', '📋');
+            showToast('告知文をクリップボードにコピーしました！', '📋');
         });
     }
 

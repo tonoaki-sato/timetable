@@ -52,7 +52,7 @@ class ManualTest extends TestCase
 
         // 第6章・第7章・FAQの追加要素
         $response->assertSee('前年度Excel名簿のCSV一括登録');
-        $response->assertSee('LINEセルフ登録 & スマート自動名寄せ');
+        $response->assertSee('Webセルフ登録 & スマート自動名寄せ');
         $response->assertSee('名札紛失時の旧QR即時失効 & 再発行');
         $response->assertSee('「Now & Next」による現場自律移動');
         $response->assertSee('現場到着チェックイン（第1タスク自動連動）');
