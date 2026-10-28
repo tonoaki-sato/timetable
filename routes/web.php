@@ -50,6 +50,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->midd
 Route::middleware('auth')->group(function () {
     // 本部ダッシュボード
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/realtime', [DashboardController::class, 'realtime'])->name('dashboard.realtime');
 
     // 総合イベントカレンダー
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');

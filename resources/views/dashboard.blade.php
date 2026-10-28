@@ -1,5 +1,7 @@
 <x-layouts.app title="本部運行ダッシュボード">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div id="dashboard-realtime-root"
+     data-realtime-url="{{ route('dashboard.realtime') }}"
+     class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- 1. 最上部: 本部運行サマリーヘッダー (1行幅コンパクトレイアウト) -->
     <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl px-4 sm:px-5 py-3 text-white shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -18,7 +20,7 @@
             </span>
         </div>
 
-        <div class="flex items-center space-x-2 shrink-0">
+        <div class="flex flex-wrap items-center gap-2 shrink-0">
             <div class="bg-slate-800/80 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-700/80 flex items-center space-x-2 text-xs">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span class="text-[11px] text-slate-400 font-mono">現在日時:</span>
@@ -28,6 +30,14 @@
                     {{ $nowDatetime ?? now('Asia/Tokyo')->translatedFormat('n月j日 (D) H:i:s') }}
                 </span>
             </div>
+
+            <button type="button"
+                    id="dashboard-manual-refresh"
+                    title="交通規制・進行中タスク・次期タスクを今すぐ最新状態に更新"
+                    class="bg-slate-800/80 hover:bg-indigo-900/80 text-slate-200 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-700/80 hover:border-indigo-500/60 transition flex items-center space-x-1.5 text-xs cursor-pointer">
+                <span id="dashboard-refresh-icon" class="inline-block text-xs leading-none">🔄</span>
+                <span id="dashboard-realtime-status" class="text-[11px] font-mono text-slate-300">自動同期中</span>
+            </button>
         </div>
     </div>
 
@@ -36,29 +46,10 @@
         <!-- フェーズ -->
         <x-dashboard.phase-card />
 
-
-        <!-- 道路交通規制 -->
-        <a href="{{ $trafficRegulationContext?->actionUrl ?? route('timetable.index') }}"
-            class="bg-white p-5 rounded-xl border {{ $trafficRegulationContext?->status?->borderClasses() ?? 'border-red-200' }} shadow-xs flex items-center justify-between relative overflow-hidden hover:shadow-sm transition group">
-            <div class="absolute top-0 right-0 w-2 h-full {{ $trafficRegulationContext?->status?->accentBarClasses() ?? 'bg-red-500' }}"></div>
-            <div class="min-w-0 pr-2">
-                <p class="text-xs {{ $trafficRegulationContext?->status?->badgeClasses() ?? 'text-red-600 font-bold' }} flex items-center space-x-1.5">
-                    @if($trafficRegulationContext?->isAlertActive)
-                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                    @endif
-                    <span>{{ $trafficRegulationContext?->badgeText ?? '🚨 道路交通規制中' }}</span>
-                </p>
-                <h3 class="text-xl font-bold text-slate-900 mt-1 truncate group-hover:text-indigo-600 transition">
-                    {{ $trafficRegulationContext?->headline ?? '車両通行止め' }}
-                </h3>
-                <span class="text-[11px] text-slate-500 font-mono line-clamp-1 mt-0.5">
-                    {{ $trafficRegulationContext?->subStatus ?? '10:00 〜 18:00' }}
-                </span>
-            </div>
-            <div class="w-12 h-12 {{ $trafficRegulationContext?->isRoadClosed ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-600' }} rounded-xl flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition">
-                {{ $trafficRegulationContext?->status?->icon() ?? '⛔' }}
-            </div>
-        </a>
+        <!-- 道路交通規制 (リアルタイム更新対象) -->
+        <div id="dashboard-card-traffic-regulation">
+            <x-dashboard.traffic-regulation-card :traffic-regulation-context="$trafficRegulationContext ?? null" />
+        </div>
     </div>
 
     <!-- 3. メイングリッド (2カラム: Now & Next / アラート監視) -->
@@ -67,11 +58,15 @@
         <!-- 左側2カラム: Now & Next ビュー (F-106) -->
         <div class="lg:col-span-2 space-y-6">
 
-            <!-- Now: 現在進行中のタスク -->
-            <x-dashboard.now-tasks-card />
+            <!-- Now: 現在進行中のタスク (リアルタイム更新対象) -->
+            <div id="dashboard-card-now-tasks">
+                <x-dashboard.now-tasks-card />
+            </div>
 
-            <!-- Next: 次に控えるタスク -->
-            <x-dashboard.next-tasks-card />
+            <!-- Next: 次に控えるタスク (リアルタイム更新対象) -->
+            <div id="dashboard-card-next-tasks">
+                <x-dashboard.next-tasks-card />
+            </div>
 
         </div>
 

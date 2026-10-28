@@ -1,6 +1,7 @@
 // まつり総合管理システム アプリケーションスクリプト
 document.addEventListener('DOMContentLoaded', () => {
     initRealtimeClock();
+    initDashboardRealtime();
     initGlobalEventHandlers();
     initNavigation();
     initTimetablePeriodsForm();
@@ -127,11 +128,12 @@ function initRealtimeClock() {
 
     const serverTimeMs = parseInt(clockElement.dataset.serverTime, 10);
     const clientTimeMs = Date.now();
-    const timeOffset = isNaN(serverTimeMs) ? 0 : (serverTimeMs - clientTimeMs);
+    window.__dashboardTimeOffset = isNaN(serverTimeMs) ? 0 : (serverTimeMs - clientTimeMs);
     const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
     function updateClock() {
-        const now = new Date(Date.now() + timeOffset);
+        const offset = typeof window.__dashboardTimeOffset === 'number' ? window.__dashboardTimeOffset : 0;
+        const now = new Date(Date.now() + offset);
         const month = now.getMonth() + 1;
         const date = now.getDate();
         const day = dayNames[now.getDay()];
@@ -144,6 +146,117 @@ function initRealtimeClock() {
 
     updateClock();
     setInterval(updateClock, 1000);
+}
+
+/**
+ * ダッシュボード主要3カード（道路交通規制・NOWタスク・NEXTタスク）のリアルタイム自動同期
+ */
+function initDashboardRealtime() {
+    const rootEl = document.getElementById('dashboard-realtime-root');
+    if (!rootEl || window.__dashboardRealtimeInitialized) return;
+    window.__dashboardRealtimeInitialized = true;
+
+    const realtimeUrl = rootEl.dataset.realtimeUrl;
+    if (!realtimeUrl) return;
+
+    const trafficContainer = document.getElementById('dashboard-card-traffic-regulation');
+    const nowTasksContainer = document.getElementById('dashboard-card-now-tasks');
+    const nextTasksContainer = document.getElementById('dashboard-card-next-tasks');
+    const statusTextEl = document.getElementById('dashboard-realtime-status');
+    const refreshBtn = document.getElementById('dashboard-manual-refresh');
+    const refreshIcon = document.getElementById('dashboard-refresh-icon');
+
+    let isFetching = false;
+    let lastTriggeredSlotKey = null;
+
+    async function fetchRealtimeCards() {
+        if (isFetching) return;
+        isFetching = true;
+
+        if (refreshIcon) {
+            refreshIcon.classList.add('animate-spin');
+        }
+        if (statusTextEl) {
+            statusTextEl.textContent = '同期中...';
+        }
+
+        try {
+            const response = await fetch(realtimeUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (typeof data.server_time_ms === 'number') {
+                window.__dashboardTimeOffset = data.server_time_ms - Date.now();
+            }
+
+            if (data.cards) {
+                if (trafficContainer && typeof data.cards.traffic_regulation === 'string') {
+                    trafficContainer.innerHTML = data.cards.traffic_regulation;
+                }
+                if (nowTasksContainer && typeof data.cards.now_tasks === 'string') {
+                    nowTasksContainer.innerHTML = data.cards.now_tasks;
+                }
+                if (nextTasksContainer && typeof data.cards.next_tasks === 'string') {
+                    nextTasksContainer.innerHTML = data.cards.next_tasks;
+                }
+            }
+
+            if (statusTextEl) {
+                statusTextEl.textContent = data.updated_at_label
+                    ? `${data.updated_at_label} 同期済`
+                    : '自動同期中';
+            }
+        } catch (err) {
+            if (statusTextEl) {
+                statusTextEl.textContent = '再接続待機中';
+            }
+        } finally {
+            isFetching = false;
+            if (refreshIcon) {
+                refreshIcon.classList.remove('animate-spin');
+            }
+        }
+    }
+
+    // 1. 毎分00秒（分境界）および30秒のタイミングで自動同期
+    setInterval(() => {
+        if (document.hidden) return;
+
+        const offset = typeof window.__dashboardTimeOffset === 'number' ? window.__dashboardTimeOffset : 0;
+        const now = new Date(Date.now() + offset);
+        const seconds = now.getSeconds();
+
+        if (seconds === 0 || seconds === 30) {
+            const slotKey = `${now.getHours()}:${now.getMinutes()}:${seconds}`;
+            if (lastTriggeredSlotKey !== slotKey) {
+                lastTriggeredSlotKey = slotKey;
+                fetchRealtimeCards();
+            }
+        }
+    }, 1000);
+
+    // 2. バックグラウンドからタブ復帰した際に即時同期
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            fetchRealtimeCards();
+        }
+    });
+
+    // 3. 手動更新ボタンクリック時に即時同期
+    refreshBtn?.addEventListener('click', () => {
+        fetchRealtimeCards();
+    });
 }
 
 /**
@@ -228,4 +341,3 @@ function initTimetablePeriodsForm() {
         festivalContainer.appendChild(createRow('festival', 1, '11:00', '17:00', '開催中', 'active'));
     });
 }
-
