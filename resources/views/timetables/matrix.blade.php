@@ -480,36 +480,45 @@
     <!-- 7. クイックアサイン スライドオーバーモーダル (CSP完全準拠・バニラJS駆動) -->
     <div id="quickAssignModal"
         class="hidden fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-xs flex justify-end">
-        <div class="bg-white w-full max-w-xl h-full shadow-2xl flex flex-col border-l border-slate-200">
+        <div class="bg-white w-full max-w-2xl h-full shadow-2xl flex flex-col border-l border-slate-200">
 
-            <!-- モーダルヘッダー -->
-            <div class="p-4 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
-                <div class="min-w-0 pr-3">
-                    <div class="flex items-center space-x-2 text-xs text-indigo-300 mb-1">
-                        <span id="quickAssignTaskTime" class="font-mono font-bold"></span>
-                        <span id="quickAssignTaskLane" class="px-2 py-0.5 rounded bg-indigo-500/20 border border-indigo-400/30 text-[10px] font-bold"></span>
+            <!-- モーダルヘッダー（時間帯・担当班・場所・充足状況・自動配置を集約） -->
+            <div class="px-4 py-3 bg-gradient-to-r from-slate-900 to-indigo-950 text-white shrink-0 space-y-1.5">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                        <span id="quickAssignTaskTime" class="font-mono font-bold text-indigo-200 bg-slate-800/90 px-2 py-0.5 rounded border border-slate-700"></span>
+                        <span id="quickAssignTaskLane" class="px-2 py-0.5 rounded bg-indigo-500/20 border border-indigo-400/30 text-[10px] font-bold text-indigo-200"></span>
+                        <span id="quickAssignTaskLocation" class="hidden px-2 py-0.5 rounded bg-slate-800/80 border border-slate-700 text-[10px] text-slate-300"></span>
+                        <span id="quickAssignHeaderStatus"></span>
                     </div>
-                    <h3 id="quickAssignTaskTitle" class="text-base font-bold truncate text-white">作業タスク詳細</h3>
+
+                    <div class="flex items-center space-x-2 shrink-0">
+                        <span id="quickAssignHeaderPoolBtn"></span>
+                        <button type="button" data-action="close-quick-assign"
+                            class="text-slate-400 hover:text-white text-2xl font-bold leading-none cursor-pointer px-1">
+                            &times;
+                        </button>
+                    </div>
                 </div>
-                <button type="button" data-action="close-quick-assign"
-                    class="text-slate-400 hover:text-white text-2xl font-bold leading-none cursor-pointer shrink-0">
-                    &times;
-                </button>
+
+                <div class="flex items-center justify-between gap-2">
+                    <h3 id="quickAssignTaskTitle" class="text-sm sm:text-base font-bold truncate text-white">作業タスク詳細</h3>
+                </div>
             </div>
 
-            <!-- モーダル本体（動的レンダリング） -->
-            <div id="quickAssignModalBody" class="flex-1 overflow-y-auto p-4 space-y-4">
+            <!-- モーダル本体（内部で候補リストのみ独立スクロールし、配置ボタンは常時表示） -->
+            <div id="quickAssignModalBody" class="flex-1 min-h-0 flex flex-col overflow-hidden">
             </div>
 
-            <!-- モーダルフッター -->
-            <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs">
+            <!-- モーダルフッター（ナビゲーション） -->
+            <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs shrink-0">
                 <a id="quickAssignDetailLink" href="#" target="_blank"
                     class="text-indigo-600 hover:underline font-bold flex items-center space-x-1">
                     <span>タスク詳細ページを開く</span>
                     <span>↗</span>
                 </a>
                 <button type="button" data-action="reload-matrix"
-                    class="px-4 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg font-bold transition cursor-pointer">
+                    class="px-3.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg font-bold transition cursor-pointer">
                     閉じて画面を更新
                 </button>
             </div>

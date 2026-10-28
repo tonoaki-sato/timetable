@@ -270,6 +270,7 @@ function initQuickAssignModal() {
     let selectedStaffIds = [];
     let searchQuery = '';
     let statusFilter = 'all';
+    let affiliationFilter = '';
 
     const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
@@ -279,6 +280,7 @@ function initQuickAssignModal() {
         selectedStaffIds = [];
         searchQuery = '';
         statusFilter = 'all';
+        affiliationFilter = '';
         modal.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
 
@@ -324,7 +326,7 @@ function initQuickAssignModal() {
         const body = document.getElementById('quickAssignModalBody');
         if (body) {
             body.innerHTML = `
-                <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
+                <div class="p-4 m-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
                     <p class="font-bold mb-1">エラーが発生しました</p>
                     <p>${escapeHtml(msg)}</p>
                     <button type="button" data-action="retry-quick-assign" class="mt-3 px-3 py-1 bg-white border border-red-300 rounded text-xs text-red-700 font-bold hover:bg-red-50 cursor-pointer">再試行</button>
@@ -333,117 +335,200 @@ function initQuickAssignModal() {
         }
     };
 
+    // 現在フィルタリングされている候補スタッフ一覧を取得
+    const getFilteredCandidates = () => {
+        if (!taskData) return [];
+        const candidates = taskData.candidate_staff || [];
+        const q = searchQuery.toLowerCase();
+
+        return candidates.filter(c => {
+            const matchQ = !q
+                || c.name.toLowerCase().includes(q)
+                || (c.kana && c.kana.toLowerCase().includes(q))
+                || (c.affiliation && c.affiliation.toLowerCase().includes(q));
+            const matchAff = !affiliationFilter || (c.affiliation || '') === affiliationFilter;
+            let matchStatus = true;
+            if (statusFilter === 'available') matchStatus = !c.is_conflicted && !c.is_already_assigned;
+            else if (statusFilter === 'recommended') matchStatus = c.priority_tier === 1 && !c.is_already_assigned;
+            else if (statusFilter === 'checked_in') matchStatus = c.is_checked_in && !c.is_already_assigned;
+
+            return matchQ && matchAff && matchStatus;
+        });
+    };
+
+    const updateSelectionCountersAndButtons = () => {
+        const count = selectedStaffIds.length;
+        const countEl = document.getElementById('quickAssignSelectedCount');
+        const submitCountEl = document.getElementById('quickAssignSubmitCount');
+        const clearBtn = document.getElementById('quickAssignClearBtn');
+        const submitBtn = document.getElementById('quickAssignSubmitBtn');
+
+        if (countEl) countEl.textContent = count;
+        if (submitCountEl) submitCountEl.textContent = count;
+
+        if (clearBtn) {
+            if (count > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+        }
+
+        if (submitBtn) {
+            if (count > 0) {
+                submitBtn.disabled = false;
+                submitBtn.className = 'px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition flex items-center space-x-1 bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer shrink-0';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.className = 'px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition flex items-center space-x-1 bg-slate-200 text-slate-400 cursor-not-allowed shrink-0';
+            }
+        }
+    };
+
     const renderContent = () => {
         if (!taskData) return;
         const task = taskData.task;
         const assignments = taskData.assignments || [];
+        const candidates = taskData.candidate_staff || [];
 
-        // ヘッダー情報
+        // 所属団体リストの抽出
+        const affiliations = [...new Set(candidates.map(c => c.affiliation).filter(Boolean))];
+
+        // 1. ヘッダー情報と人員充足バッジ・自動配置ボタンの更新
         const headerTitle = document.getElementById('quickAssignTaskTitle');
         const headerTime = document.getElementById('quickAssignTaskTime');
         const headerLane = document.getElementById('quickAssignTaskLane');
+        const headerLocation = document.getElementById('quickAssignTaskLocation');
+        const headerStatus = document.getElementById('quickAssignHeaderStatus');
+        const headerPoolBtn = document.getElementById('quickAssignHeaderPoolBtn');
         const detailLink = document.getElementById('quickAssignDetailLink');
 
         if (headerTitle) headerTitle.textContent = task.title;
-        if (headerTime) headerTime.textContent = `${task.start_time} 〜 ${task.end_time}`;
-        if (headerLane) headerLane.textContent = task.lane || '班未設定';
+        if (headerTime) headerTime.textContent = `⏱️ ${task.start_time} 〜 ${task.end_time}`;
+        if (headerLane) headerLane.textContent = `🏷️ ${task.lane || '班未設定'}`;
+        if (headerLocation) {
+            if (task.location) {
+                headerLocation.textContent = `📍 ${task.location}`;
+                headerLocation.classList.remove('hidden');
+            } else {
+                headerLocation.classList.add('hidden');
+            }
+        }
+        if (headerStatus) {
+            headerStatus.innerHTML = task.is_satisfied
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-mono">✔ ${task.assigned_count}/${escapeHtml(task.required_people_label)} 充足</span>`
+                : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/25 text-amber-200 border border-amber-400/50 font-mono">⚠️ ${task.assigned_count}/${escapeHtml(task.required_people_label)} (不足${task.shortage_count}名)</span>`;
+        }
+        if (headerPoolBtn) {
+            headerPoolBtn.innerHTML = (!task.is_satisfied && task.lane)
+                ? `<button type="button" data-action="assign-lane-pool" title="この班の空きメンバーから不足分を自動配置" class="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-lg text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer shadow-xs">
+                    <span>⚡</span>
+                    <span>「${escapeHtml(task.lane)}」自動配置</span>
+                   </button>`
+                : '';
+        }
         if (detailLink) detailLink.href = `/timetable-tasks/${task.id}`;
 
         const body = document.getElementById('quickAssignModalBody');
         if (!body) return;
 
-        // 充足ステータス
-        const satisfiedBadge = task.is_satisfied
-            ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✔ 充足</span>`
-            : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">⚠️ 不足 ${task.shortage_count}名</span>`;
-
-        const lanePoolBtn = (!task.is_satisfied && task.lane)
-            ? `<button type="button" data-action="assign-lane-pool" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
-                <span>⚡</span>
-                <span>「${escapeHtml(task.lane)}」から自動配置</span>
-               </button>`
-            : '';
-
-        // 配置済みスタッフ一覧
+        // 2. 現在配置中のスタッフ一覧（2列スリムグリッド）
         let assignedListHtml = '';
         if (assignments.length === 0) {
-            assignedListHtml = `<div class="p-4 bg-slate-50 rounded-lg border border-dashed border-slate-200 text-center text-xs text-slate-400">スタッフはまだ配置されていません。</div>`;
+            assignedListHtml = `<div class="px-3 py-2 bg-slate-50 rounded-lg border border-dashed border-slate-200 text-center text-[11px] text-slate-400">まだスタッフが配置されていません。下の一覧から選択して配置してください。</div>`;
         } else {
-            assignedListHtml = assignments.map(a => `
-                <div class="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between text-xs hover:border-slate-300 transition">
-                    <div class="min-w-0 pr-2">
-                        <div class="flex items-center space-x-1.5">
-                            <span class="font-bold text-slate-900">${escapeHtml(a.staff_name)}</span>
-                            ${a.staff_kana ? `<span class="text-[10px] text-slate-400 font-normal">(${escapeHtml(a.staff_kana)})</span>` : ''}
-                            <span class="px-1.5 py-0.2 rounded text-[9px] bg-slate-100 text-slate-600 border border-slate-200">${escapeHtml(a.role_description)}</span>
-                        </div>
-                        <div class="text-[10px] text-slate-500">${escapeHtml(a.affiliation || '所属なし')}</div>
+            assignedListHtml = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-28 overflow-y-auto pr-0.5">` + assignments.map(a => `
+                <div class="px-2.5 py-1.5 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between text-xs hover:border-slate-300 transition">
+                    <div class="min-w-0 pr-1.5 flex items-center space-x-1.5">
+                        <span class="font-bold text-slate-900 truncate">${escapeHtml(a.staff_name)}</span>
+                        <span class="px-1.5 py-0.2 rounded text-[9px] bg-white text-slate-600 border border-slate-200 shrink-0">${escapeHtml(a.role_description)}</span>
+                        ${a.affiliation ? `<span class="text-[10px] text-slate-400 truncate hidden sm:inline">(${escapeHtml(a.affiliation)})</span>` : ''}
                     </div>
-                    <button type="button" data-action="remove-staff" data-staff-id="${a.staff_id}" class="px-2 py-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded text-xs transition cursor-pointer shrink-0">
-                        解除 &times;
+                    <button type="button" data-action="remove-staff" data-staff-id="${a.staff_id}" title="割り当て解除" class="px-1.5 py-0.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded text-[11px] font-bold transition cursor-pointer shrink-0">
+                        解除
                     </button>
                 </div>
-            `).join('');
+            `).join('') + `</div>`;
         }
 
-        body.innerHTML = `
-            <div id="quickAssignAlertArea" class="hidden"></div>
+        const affiliationOptionsHtml = affiliations.map(aff =>
+            `<option value="${escapeHtml(aff)}" ${affiliationFilter === aff ? 'selected' : ''}>${escapeHtml(aff)}</option>`
+        ).join('');
 
-            <!-- 人員充足ステータス & 班自動配置 -->
-            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        body.innerHTML = `
+            <!-- 上部固定領域: アラート & 現在配置中のスタッフ -->
+            <div class="px-4 pt-3 pb-2.5 border-b border-slate-200 space-y-2.5 shrink-0 bg-white">
+                <div id="quickAssignAlertArea" class="hidden"></div>
+
                 <div>
-                    <span class="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">必要人員 & 充足状況</span>
-                    <div class="flex items-center space-x-2 mt-0.5">
-                        <span class="font-mono text-base font-bold ${task.is_satisfied ? 'text-emerald-600' : 'text-amber-600'}">
-                            ${task.assigned_count} / ${escapeHtml(task.required_people_label)}
+                    <div class="flex items-center justify-between mb-1.5">
+                        <h4 class="text-xs font-bold text-slate-700 flex items-center space-x-1">
+                            <span>👥</span>
+                            <span>現在配置中のスタッフ (${assignments.length}名)</span>
+                        </h4>
+                    </div>
+                    ${assignedListHtml}
+                </div>
+            </div>
+
+            <!-- 中央ヘッダー & フィルターバー (固定) -->
+            <div class="px-4 pt-2.5 pb-2 bg-slate-50/80 border-b border-slate-200 space-y-2 shrink-0">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h4 class="text-xs font-bold text-slate-800 flex items-center space-x-1">
+                        <span>➕</span>
+                        <span>スタッフを追加配置する</span>
+                        <span class="text-[10px] font-normal text-slate-400">（全 ${candidates.length} 名）</span>
+                    </h4>
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-[11px] text-slate-600 font-medium">
+                            選択中: <strong id="quickAssignSelectedCount" class="text-indigo-600 font-mono text-xs">${selectedStaffIds.length}</strong> 名
                         </span>
-                        ${satisfiedBadge}
+                        <button type="button" data-action="select-all-filtered"
+                            class="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded text-[11px] font-medium transition cursor-pointer">
+                            表示中を全選択
+                        </button>
+                        <button type="button" id="quickAssignClearBtn" data-action="clear-selection"
+                            class="${selectedStaffIds.length > 0 ? '' : 'hidden'} px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-500 border border-slate-200 rounded text-[11px] font-medium transition cursor-pointer">
+                            解除
+                        </button>
                     </div>
                 </div>
-                ${lanePoolBtn}
-            </div>
 
-            <!-- 現在配置中のスタッフ -->
-            <div>
-                <h4 class="text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
-                    <span>👥 現在配置中のスタッフ (${assignments.length}名)</span>
-                </h4>
-                <div class="space-y-1.5">${assignedListHtml}</div>
-            </div>
-
-            <!-- 候補スタッフから追加 -->
-            <div class="border-t border-slate-200 pt-3 space-y-3">
-                <div class="flex items-center justify-between">
-                    <h4 class="text-xs font-bold text-slate-800">➕ スタッフを追加配置する</h4>
-                    <span class="text-[11px] text-slate-500">選択: <strong id="quickAssignSelectedCount" class="text-indigo-600 font-mono">${selectedStaffIds.length}</strong> 名</span>
-                </div>
-
-                <!-- フィルター -->
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" id="quickAssignSearchInput" value="${escapeHtml(searchQuery)}" placeholder="🔍 氏名・所属で検索..."
-                        class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <!-- 検索・状態・所属フィルター (3カラム) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                    <input type="text" id="quickAssignSearchInput" value="${escapeHtml(searchQuery)}" placeholder="🔍 氏名・カナ・所属で検索..."
+                        class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                     <select id="quickAssignStatusSelect"
-                        class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                        <option value="all" ${statusFilter === 'all' ? 'selected' : ''}>全員表示</option>
+                        class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <option value="all" ${statusFilter === 'all' ? 'selected' : ''}>すべての状態</option>
                         <option value="recommended" ${statusFilter === 'recommended' ? 'selected' : ''}>🌟 推奨（同班＆空き）</option>
-                        <option value="available" ${statusFilter === 'available' ? 'selected' : ''}>🟢 空きのみ</option>
+                        <option value="available" ${statusFilter === 'available' ? 'selected' : ''}>🟢 空きスタッフのみ</option>
+                        <option value="checked_in" ${statusFilter === 'checked_in' ? 'selected' : ''}>📍 現場到着済のみ</option>
+                    </select>
+                    <select id="quickAssignAffiliationSelect"
+                        class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <option value="">すべての所属団体</option>
+                        ${affiliationOptionsHtml}
                     </select>
                 </div>
+            </div>
 
-                <!-- 候補リスト -->
-                <div id="quickAssignCandidateListContainer" class="max-h-56 overflow-y-auto border border-slate-200 rounded-lg divide-y divide-slate-100 bg-white">
+            <!-- 候補スタッフ一覧（独立スクロール領域・2列高密度グリッド） -->
+            <div class="flex-1 min-h-0 overflow-y-auto bg-slate-50/50 p-3">
+                <div id="quickAssignCandidateListContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 </div>
+            </div>
 
-                <!-- 担当役割 & 配置実行ボタン -->
-                <div class="flex items-center space-x-2 pt-1">
-                    <input type="text" id="quickAssignRoleInput" placeholder="担当役割（任意）"
-                        class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                    <button type="button" id="quickAssignSubmitBtn" data-action="submit-bulk-assign"
-                        class="px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition ${selectedStaffIds.length > 0 ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}"
-                        ${selectedStaffIds.length === 0 ? 'disabled' : ''}>
-                        配置する
-                    </button>
-                </div>
+            <!-- 下部常時表示アクションバー（担当役割 & 配置するボタンが隠れない固定枠） -->
+            <div class="px-4 py-2.5 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0 shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
+                <input type="text" id="quickAssignRoleInput" placeholder="担当役割（任意、例: チーフ、案内、運搬）"
+                    class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <button type="button" id="quickAssignSubmitBtn" data-action="submit-bulk-assign"
+                    class="px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition flex items-center space-x-1 shrink-0 ${selectedStaffIds.length > 0 ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}"
+                    ${selectedStaffIds.length === 0 ? 'disabled' : ''}>
+                    <span>➕</span>
+                    <span>選択した <strong id="quickAssignSubmitCount">${selectedStaffIds.length}</strong> 名を配置する</span>
+                </button>
             </div>
         `;
 
@@ -455,19 +540,10 @@ function initQuickAssignModal() {
         const container = document.getElementById('quickAssignCandidateListContainer');
         if (!container || !taskData) return;
 
-        const candidates = taskData.candidate_staff || [];
-        const q = searchQuery.toLowerCase();
-
-        const filtered = candidates.filter(c => {
-            const matchQ = !q || c.name.toLowerCase().includes(q) || (c.kana && c.kana.toLowerCase().includes(q)) || (c.affiliation && c.affiliation.toLowerCase().includes(q));
-            let matchStatus = true;
-            if (statusFilter === 'available') matchStatus = !c.is_conflicted && !c.is_already_assigned;
-            else if (statusFilter === 'recommended') matchStatus = c.priority_tier === 1 && !c.is_already_assigned;
-            return matchQ && matchStatus;
-        });
+        const filtered = getFilteredCandidates();
 
         if (filtered.length === 0) {
-            container.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">該当するスタッフがいません。</div>`;
+            container.innerHTML = `<div class="col-span-full p-6 text-center text-xs text-slate-400">該当するスタッフがいません。</div>`;
             return;
         }
 
@@ -476,42 +552,57 @@ function initQuickAssignModal() {
             const isAssigned = c.is_already_assigned;
             const isConflicted = c.is_conflicted;
 
-            let rowClass = 'p-2 flex items-center justify-between text-xs select-none transition ';
+            let cardClass = 'px-2.5 py-2 rounded-lg border text-xs select-none transition flex flex-col justify-between gap-1 ';
             if (isAssigned) {
-                rowClass += 'opacity-50 bg-slate-50 cursor-not-allowed';
+                cardClass += 'opacity-55 bg-slate-100 border-slate-200 cursor-not-allowed';
             } else if (isSelected) {
-                rowClass += 'bg-indigo-50/70 border-l-4 border-indigo-600 cursor-pointer';
+                cardClass += 'bg-indigo-50/90 border-indigo-600 ring-1 ring-indigo-500 cursor-pointer';
             } else if (isConflicted) {
-                rowClass += 'bg-amber-50/50 hover:bg-slate-50 cursor-pointer';
+                cardClass += 'bg-amber-50/60 border-amber-200/80 hover:border-amber-300 cursor-pointer';
             } else {
-                rowClass += 'hover:bg-slate-50 cursor-pointer';
+                cardClass += 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-2xs cursor-pointer';
             }
 
-            let badgeHtml = '';
+            let topRightBadges = '';
             if (c.is_checked_in) {
-                badgeHtml += `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-100 text-sky-800 border border-sky-300">着</span>`;
+                topRightBadges += `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-100 text-sky-800 border border-sky-300" title="現場到着受付済み">着</span>`;
             }
+            if (isAssigned) {
+                topRightBadges += `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-200 text-slate-600">配置済</span>`;
+            }
+
+            let statusBadge = '';
             if (isConflicted) {
-                badgeHtml += `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300">⚠️ ${escapeHtml(c.conflicted_label)}</span>`;
+                statusBadge = `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300 truncate max-w-[115px]" title="${escapeHtml(c.conflicted_label)}">⚠️ ${escapeHtml(c.conflicted_task_title || '重複中')}</span>`;
             } else if (c.is_same_lane) {
-                badgeHtml += `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">🌟 推奨</span>`;
+                statusBadge = `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">🌟 同班推奨</span>`;
             } else {
-                badgeHtml += `<span class="px-1.5 py-0.2 rounded text-[9px] text-slate-500">🟢 空き</span>`;
+                statusBadge = `<span class="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-100 text-slate-600 border border-slate-200">🟢 空き</span>`;
             }
+
+            const hours = Math.round(((c.minutes_today || 0) / 60) * 10) / 10;
 
             return `
-                <div class="${rowClass}" data-action="toggle-candidate" data-staff-id="${c.id}" data-assigned="${isAssigned ? '1' : '0'}">
-                    <div class="flex items-center space-x-2 min-w-0">
-                        <input type="checkbox" value="${c.id}" ${isSelected ? 'checked' : ''} ${isAssigned ? 'disabled' : ''}
-                            class="candidate-checkbox h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 cursor-pointer pointer-events-none">
-                        <div class="min-w-0">
-                            <div class="flex items-center space-x-1">
-                                <span class="font-bold text-slate-900 truncate">${escapeHtml(c.name)}</span>
-                                <span class="text-[10px] text-slate-500 truncate">(${escapeHtml(c.affiliation || '無所属')})</span>
-                            </div>
+                <div class="${cardClass}" data-action="toggle-candidate" data-staff-id="${c.id}" data-assigned="${isAssigned ? '1' : '0'}">
+                    <div class="flex items-center justify-between gap-1.5 min-w-0">
+                        <div class="flex items-center space-x-2 min-w-0">
+                            <input type="checkbox" value="${c.id}" ${isSelected ? 'checked' : ''} ${isAssigned ? 'disabled' : ''}
+                                class="candidate-checkbox h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 cursor-pointer pointer-events-none shrink-0">
+                            <span class="font-bold text-slate-900 truncate" title="${escapeHtml(c.name)}">${escapeHtml(c.name)}</span>
+                            ${c.kana ? `<span class="text-[10px] text-slate-400 font-normal truncate hidden xl:inline">(${escapeHtml(c.kana)})</span>` : ''}
+                        </div>
+                        <div class="flex items-center space-x-1 shrink-0">${topRightBadges}</div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-1.5 pl-5 text-[10px]">
+                        <span class="text-slate-500 truncate" title="${escapeHtml(c.affiliation || '所属なし')}">
+                            ${escapeHtml(c.affiliation || '所属なし')}
+                        </span>
+                        <div class="flex items-center space-x-1.5 shrink-0">
+                            ${statusBadge}
+                            <span class="font-mono text-slate-400">${hours}h</span>
                         </div>
                     </div>
-                    <div class="shrink-0 flex items-center space-x-1">${badgeHtml}</div>
                 </div>
             `;
         }).join('');
@@ -533,17 +624,73 @@ function initQuickAssignModal() {
                 renderCandidateList();
             });
         }
+
+        const affiliationSelect = document.getElementById('quickAssignAffiliationSelect');
+        if (affiliationSelect) {
+            affiliationSelect.addEventListener('change', (e) => {
+                affiliationFilter = e.target.value;
+                renderCandidateList();
+            });
+        }
     };
 
-    const showAlert = (msg, type = 'error') => {
+    const showAlert = (msg, type = 'error', allowForce = false) => {
         const alertArea = document.getElementById('quickAssignAlertArea');
         if (!alertArea) return;
-        const bg = type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700';
-        alertArea.className = `p-3 rounded-xl border text-xs mb-3 flex items-center justify-between ${bg}`;
+        const bg = type === 'error'
+            ? 'bg-amber-50 border-amber-300 text-amber-900'
+            : 'bg-emerald-50 border-emerald-200 text-emerald-800';
+        alertArea.className = `p-2.5 rounded-xl border text-xs flex flex-col gap-2 ${bg}`;
+
+        const forceBtnHtml = allowForce
+            ? `<div class="flex justify-end">
+                <button type="button" data-action="submit-bulk-assign-force" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold transition cursor-pointer">
+                    ⚠️ 重複を承認してそのまま配置する
+                </button>
+               </div>`
+            : '';
+
         alertArea.innerHTML = `
-            <span>${escapeHtml(msg)}</span>
-            <button type="button" data-action="dismiss-alert" class="font-bold ml-2 text-sm leading-none cursor-pointer">&times;</button>
+            <div class="flex items-start justify-between gap-2">
+                <span>${escapeHtml(msg)}</span>
+                <button type="button" data-action="dismiss-alert" class="font-bold text-sm leading-none cursor-pointer shrink-0">&times;</button>
+            </div>
+            ${forceBtnHtml}
         `;
+    };
+
+    const executeBulkAssign = async (force = 0) => {
+        if (selectedStaffIds.length === 0 || !currentTaskId) return;
+        const roleInput = document.getElementById('quickAssignRoleInput');
+        const roleDescription = roleInput ? roleInput.value : '';
+
+        try {
+            const res = await fetch(`/timetable-tasks/${currentTaskId}/assign-bulk`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                },
+                body: JSON.stringify({
+                    staff_ids: selectedStaffIds,
+                    role_description: roleDescription,
+                    force: force
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                showAlert(data.message || '配置処理に失敗しました', 'error', Boolean(data.has_conflict));
+                return;
+            }
+
+            selectedStaffIds = [];
+            await fetchAndRenderData();
+            showAlert(data.message, 'success');
+        } catch (err) {
+            showAlert(err.message || '通信エラーが発生しました', 'error');
+        }
     };
 
     // イベント委譲（クリック）
@@ -586,7 +733,7 @@ function initQuickAssignModal() {
             return;
         }
 
-        // 6. 候補スタッフ行の選択トグル
+        // 6. 候補スタッフカードの選択トグル
         const candidateRow = e.target.closest('[data-action="toggle-candidate"]');
         if (candidateRow) {
             if (candidateRow.dataset.assigned === '1') return;
@@ -599,57 +746,40 @@ function initQuickAssignModal() {
                 selectedStaffIds.push(staffId);
             }
 
-            const countEl = document.getElementById('quickAssignSelectedCount');
-            if (countEl) countEl.textContent = selectedStaffIds.length;
-
-            const submitBtn = document.getElementById('quickAssignSubmitBtn');
-            if (submitBtn) {
-                if (selectedStaffIds.length > 0) {
-                    submitBtn.disabled = false;
-                    submitBtn.className = 'px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer';
-                } else {
-                    submitBtn.disabled = true;
-                    submitBtn.className = 'px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition bg-slate-200 text-slate-400 cursor-not-allowed';
-                }
-            }
-
+            updateSelectionCountersAndButtons();
             renderCandidateList();
             return;
         }
 
-        // 7. 一括配置の実行
-        if (e.target.closest('[data-action="submit-bulk-assign"]')) {
-            if (selectedStaffIds.length === 0 || !currentTaskId) return;
-            const roleInput = document.getElementById('quickAssignRoleInput');
-            const roleDescription = roleInput ? roleInput.value : '';
-
-            try {
-                const res = await fetch(`/timetable-tasks/${currentTaskId}/assign-bulk`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': getCsrfToken()
-                    },
-                    body: JSON.stringify({
-                        staff_ids: selectedStaffIds,
-                        role_description: roleDescription,
-                        force: 0
-                    })
-                });
-
-                const data = await res.json();
-                if (!res.ok) {
-                    showAlert(data.message || '配置処理に失敗しました', 'error');
-                    return;
+        // 6-b. 表示中を全選択
+        if (e.target.closest('[data-action="select-all-filtered"]')) {
+            const filtered = getFilteredCandidates();
+            filtered.forEach(c => {
+                if (!c.is_already_assigned && !selectedStaffIds.includes(c.id)) {
+                    selectedStaffIds.push(c.id);
                 }
+            });
+            updateSelectionCountersAndButtons();
+            renderCandidateList();
+            return;
+        }
 
-                selectedStaffIds = [];
-                await fetchAndRenderData();
-                showAlert(data.message, 'success');
-            } catch (err) {
-                showAlert(err.message || '通信エラーが発生しました', 'error');
-            }
+        // 6-c. 選択解除
+        if (e.target.closest('[data-action="clear-selection"]')) {
+            selectedStaffIds = [];
+            updateSelectionCountersAndButtons();
+            renderCandidateList();
+            return;
+        }
+
+        // 7. 一括配置の実行（通常 / 重複強制承認）
+        if (e.target.closest('[data-action="submit-bulk-assign"]')) {
+            await executeBulkAssign(0);
+            return;
+        }
+
+        if (e.target.closest('[data-action="submit-bulk-assign-force"]')) {
+            await executeBulkAssign(1);
             return;
         }
 

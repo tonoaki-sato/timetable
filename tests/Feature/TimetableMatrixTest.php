@@ -91,6 +91,61 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('matrix-current-time-line');
         $response->assertSee('A4横 印刷 / PDF保存');
         $response->assertDontSee('担当班管理</span>', false);
+
+        // クイックアサインモーダルの統合ヘッダー要素が含まれていること
+        $response->assertSee('quickAssignModal');
+        $response->assertSee('quickAssignHeaderStatus');
+        $response->assertSee('quickAssignHeaderPoolBtn');
+    }
+
+    /**
+     * クイックアサインモーダル用のタスク・スタッフ候補JSONデータが取得できること
+     */
+    public function test_assign_modal_data_endpoint_returns_task_and_prioritized_candidates(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '1日目 本祭運行',
+            'target_date' => '2026-10-17',
+            'status' => 'active',
+        ]);
+
+        $lane = Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => 'カラーコーン',
+        ]);
+
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'title' => 'コーン設置タスク',
+            'location' => '北口ゲート',
+            'start_time' => '09:00:00',
+            'end_time' => '10:30:00',
+            'required_people_count' => 3,
+        ]);
+
+        $staff = Staff::factory()->create([
+            'name' => '候補スタッフA',
+            'kana' => 'コウホスタッフエー',
+            'affiliation' => 'カラーコーン班',
+            'is_active' => true,
+        ]);
+
+        $response = $this->getJson(route('timetable-tasks.assign-modal-data', $task));
+        $response->assertOk()
+            ->assertJsonPath('task.id', $task->id)
+            ->assertJsonPath('task.title', 'コーン設置タスク')
+            ->assertJsonPath('task.lane', 'カラーコーン')
+            ->assertJsonPath('task.location', '北口ゲート')
+            ->assertJsonPath('task.required_people_count', 3)
+            ->assertJsonPath('task.shortage_count', 3);
+
+        $candidates = $response->json('candidate_staff');
+        $this->assertNotEmpty($candidates);
+        $this->assertSame($staff->id, $candidates[0]['id']);
+        $this->assertTrue($candidates[0]['is_same_lane']);
     }
 
     /**
