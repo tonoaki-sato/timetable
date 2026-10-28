@@ -45,41 +45,6 @@ class DashboardController extends Controller
             $assignedPeopleCount = 38;
         }
 
-        // 4. ⏳ NEXT: 次に控えるタスク
-        $dbNextTasks = $totalTasks->filter(function (TimetableTask $task) {
-            return $task->status === 'not_started';
-        })->sortBy('start_time')->take(3);
-
-        $nextTasks = [];
-        if ($dbNextTasks->isNotEmpty()) {
-            foreach ($dbNextTasks as $task) {
-                $nextTasks[] = [
-                    'time' => substr($task->start_time, 0, 5).' - '.substr($task->end_time, 0, 5),
-                    'lane' => $task->lane,
-                    'title' => $task->title,
-                    'location' => $task->location ?: '指定現場',
-                    'required_people' => $task->required_people_count,
-                ];
-            }
-        } else {
-            $nextTasks = [
-                [
-                    'time' => '11:00 - 12:00',
-                    'lane' => '衛生班 (有江さん)',
-                    'title' => 'ゴミ箱チェック（圧縮・袋交換）',
-                    'location' => '全ゴミステーション',
-                    'required_people' => 3,
-                ],
-                [
-                    'time' => '11:00 - 12:00',
-                    'lane' => '給水班 (宮永さん)',
-                    'title' => '給水設備 定期点検 (第1回)',
-                    'location' => '税務署前・北川駐車場',
-                    'required_people' => 2,
-                ],
-            ];
-        }
-
         // 5. 現場機材調整要請
         $equipmentRequests = [
             [
@@ -98,7 +63,6 @@ class DashboardController extends Controller
             'nowDatetime' => $nowDatetime,
             'requiredPeopleCount' => $requiredPeopleCount,
             'assignedPeopleCount' => $assignedPeopleCount,
-            'nextTasks' => $nextTasks,
             'equipmentRequests' => $equipmentRequests,
         ]);
     }

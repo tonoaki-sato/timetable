@@ -98,35 +98,7 @@
             <x-dashboard.now-tasks-card />
 
             <!-- Next: 次に控えるタスク -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-base">⏳</span>
-                        <h3 class="text-base font-bold text-slate-900">NEXT : 次に控えるタスク (11:00開始)</h3>
-                    </div>
-                    <span class="text-xs text-indigo-600 font-bold">あと 35分後 開始</span>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                        <div class="flex items-center justify-between text-xs text-slate-500 font-mono mb-1">
-                            <span>11:00 - 12:00</span>
-                            <span class="font-bold text-slate-700">衛生班 (有江さん)</span>
-                        </div>
-                        <h5 class="font-bold text-slate-900 text-xs">ゴミ箱チェック（圧縮・袋交換）</h5>
-                        <p class="text-[11px] text-slate-500 mt-1">📍 全ゴミステーション【必要: 3名】</p>
-                    </div>
-
-                    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                        <div class="flex items-center justify-between text-xs text-slate-500 font-mono mb-1">
-                            <span>11:00 - 12:00</span>
-                            <span class="font-bold text-slate-700">給水班 (宮永さん)</span>
-                        </div>
-                        <h5 class="font-bold text-slate-900 text-xs">給水設備 定期点検 (第1回)</h5>
-                        <p class="text-[11px] text-slate-500 mt-1">📍 税務署前・北川駐車場【必要: 2名】</p>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.next-tasks-card />
 
         </div>
 

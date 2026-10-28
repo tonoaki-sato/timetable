@@ -54,10 +54,10 @@ class NowTasksCardTest extends TestCase
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
             'lane_id' => $lane->id,
-            'title' => '10時開始の本設置タスク',
-            'start_time' => '10:00:00',
-            'end_time' => '11:00:00',
-            'status' => 'not_started',
+            'title' => '06時完了済の早朝準備タスク',
+            'start_time' => '06:00:00',
+            'end_time' => '06:15:00',
+            'status' => 'completed',
         ]);
 
         $response = $this->actingAs($user)->get(route('dashboard'));
@@ -65,7 +65,7 @@ class NowTasksCardTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('06:30 時点');
         $response->assertSee('現在進行中のタスクはありません');
-        $response->assertDontSee('10時開始の本設置タスク');
+        $response->assertDontSee('06時完了済の早朝準備タスク');
     }
 
     public function test_renders_active_now_tasks_with_badges_lane_leader_and_staff_shortage_on_event_day(): void
