@@ -67,6 +67,14 @@ class NextTasksCard extends Component
     }
 
     /**
+     * 各タスクの開始時刻までの残り時間表示（例: あと 35分後 開始）
+     */
+    public function formatTaskRemainingTime(TimetableTask $task): string
+    {
+        return $this->nextTasksService->formatRemainingTime($this->now, (string) $task->start_time);
+    }
+
+    /**
      * 担当班（レーン）の表示文字列（アイコン＋班名＋主担当名）
      */
     public function formatLaneDisplay(TimetableTask $task): string
@@ -95,4 +103,3 @@ class NextTasksCard extends Component
         return view('components.dashboard.next-tasks-card');
     }
 }
-

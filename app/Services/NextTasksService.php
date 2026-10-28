@@ -89,7 +89,7 @@ class NextTasksService
     /**
      * 現在時刻から次のタスク開始時刻までの残り時間ラベルを算出
      */
-    private function formatRemainingTime(Carbon $now, string $startTime): string
+    public function formatRemainingTime(Carbon $now, string $startTime): string
     {
         $parts = explode(':', $startTime);
         $hour = (int) ($parts[0] ?? 0);
@@ -114,4 +114,3 @@ class NextTasksService
         return "あと {$hours}時間後 開始";
     }
 }
-

@@ -13,6 +13,5 @@ readonly class TrafficRegulationContext
         public string $subStatus,
         public bool $isRoadClosed,
         public bool $isAlertActive = false,
-        public ?string $actionUrl = null,
     ) {}
 }

@@ -6,8 +6,10 @@ use App\Enums\TrafficRegulationStatus;
 use App\Models\Timetable;
 use App\Models\User;
 use App\Services\TrafficRegulationService;
+use App\View\Components\Dashboard\TrafficRegulationCard;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
 use Tests\TestCase;
 
 class TrafficRegulationTest extends TestCase
@@ -171,7 +173,7 @@ class TrafficRegulationTest extends TestCase
     }
 
     /**
-     * ダッシュボード画面で道路交通規制カードが正常に描画されること
+     * ダッシュボード画面で道路交通規制カードがリンクなしの非対話カードとして正常に描画されること
      */
     public function test_dashboard_renders_traffic_regulation_card(): void
     {
@@ -180,5 +182,12 @@ class TrafficRegulationTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('道路交通状況');
         $response->assertSee('通常交通（規制なし）');
+        $response->assertSee('<div id="dashboard-card-traffic-regulation">', false);
+
+        $componentHtml = Blade::renderComponent(
+            new TrafficRegulationCard(app(TrafficRegulationService::class))
+        );
+        $this->assertStringStartsWith('<div ', trim($componentHtml));
+        $this->assertStringNotContainsString('<a ', $componentHtml);
     }
 }

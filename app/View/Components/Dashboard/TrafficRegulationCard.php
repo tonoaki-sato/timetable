@@ -27,14 +27,6 @@ class TrafficRegulationCard extends Component
     }
 
     /**
-     * カード全体のリンク先URLを取得
-     */
-    public function actionUrl(): string
-    {
-        return $this->context->actionUrl ?? route('timetable.index');
-    }
-
-    /**
      * Get the view / contents that represent the component.
      */
     public function render(): View
@@ -42,4 +34,3 @@ class TrafficRegulationCard extends Component
         return view('components.dashboard.traffic-regulation-card');
     }
 }
-

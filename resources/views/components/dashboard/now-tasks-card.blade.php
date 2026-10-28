@@ -37,7 +37,7 @@
         <!-- 進行中タスク一覧 -->
         <div class="space-y-3">
             @foreach ($context->tasks as $task)
-                <div class="p-3.5 {{ $task->is_critical ? 'bg-red-50/60 border-red-200' : 'bg-white border-slate-200' }} rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div data-task-id="{{ $task->id }}" class="p-3.5 {{ $task->is_critical ? 'bg-red-50/60 border-red-200' : 'bg-white border-slate-200' }} rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="space-y-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-1.5">
                             <span class="px-1.5 py-0.5 bg-slate-100 text-slate-700 font-mono font-bold text-[10px] rounded border border-slate-200">
@@ -98,7 +98,7 @@
                 現在時刻（{{ $context->currentTimeLabel }}時点）に該当する未完了タスクはありません。
             </p>
             <a href="{{ $context->actionUrl }}" class="inline-flex items-center space-x-1 mt-3 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition shadow-xs">
-                <span>運行タイムテーブルマトリクスを確認</span>
+                <span>タイムテーブルを確認</span>
                 <span>→</span>
             </a>
         </div>

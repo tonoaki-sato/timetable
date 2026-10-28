@@ -169,6 +169,41 @@ function initDashboardRealtime() {
     let isFetching = false;
     let lastTriggeredSlotKey = null;
 
+    function getTaskIdsSignature(container) {
+        if (!container) return '';
+        const ids = Array.from(container.querySelectorAll('[data-task-id]'))
+            .map(el => el.getAttribute('data-task-id') || '')
+            .filter(Boolean);
+        return ids.length > 0 ? ids.join(',') : '__empty__';
+    }
+
+    function updateTaskCardWithAnimation(container, html) {
+        if (!container || typeof html !== 'string') return;
+
+        const prevTaskIds = new Set(
+            Array.from(container.querySelectorAll('[data-task-id]'))
+                .map(el => el.getAttribute('data-task-id'))
+                .filter(Boolean)
+        );
+        const prevSignature = getTaskIdsSignature(container);
+
+        container.innerHTML = html;
+
+        const nextSignature = getTaskIdsSignature(container);
+        if (prevSignature !== nextSignature) {
+            container.classList.remove('animate-dashboard-card-swap');
+            void container.offsetWidth;
+            container.classList.add('animate-dashboard-card-swap');
+
+            container.querySelectorAll('[data-task-id]').forEach(el => {
+                const taskId = el.getAttribute('data-task-id');
+                if (taskId && !prevTaskIds.has(taskId)) {
+                    el.classList.add('animate-dashboard-task-enter');
+                }
+            });
+        }
+    }
+
     async function fetchRealtimeCards() {
         if (isFetching) return;
         isFetching = true;
@@ -205,10 +240,10 @@ function initDashboardRealtime() {
                     trafficContainer.innerHTML = data.cards.traffic_regulation;
                 }
                 if (nowTasksContainer && typeof data.cards.now_tasks === 'string') {
-                    nowTasksContainer.innerHTML = data.cards.now_tasks;
+                    updateTaskCardWithAnimation(nowTasksContainer, data.cards.now_tasks);
                 }
                 if (nextTasksContainer && typeof data.cards.next_tasks === 'string') {
-                    nextTasksContainer.innerHTML = data.cards.next_tasks;
+                    updateTaskCardWithAnimation(nextTasksContainer, data.cards.next_tasks);
                 }
             }
 

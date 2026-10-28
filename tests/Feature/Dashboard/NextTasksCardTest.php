@@ -103,18 +103,34 @@ class NextTasksCardTest extends TestCase
             'attendance_status' => 'assigned',
         ]);
 
+        TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '午後開始の巡回タスク',
+            'location' => '宿場通り中央',
+            'start_time' => '12:00:00',
+            'end_time' => '13:00:00',
+            'required_people_count' => 2,
+            'is_at_least' => false,
+            'is_critical' => false,
+            'requires_review' => false,
+            'status' => 'not_started',
+        ]);
+
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('(11:00開始)');
+        $response->assertSee('(直近11:00開始)');
         $response->assertSee('あと 35分後 開始');
+        $response->assertSee('あと 1時間35分後 開始');
         $response->assertSee('11:00 - 12:00');
+        $response->assertSee('12:00 - 13:00');
         $response->assertSee('🚻 衛生 (有エ 喜一郎)');
         $response->assertSee('🚨 最優先');
         $response->assertSee('🔍 要確認・立会');
         $response->assertSee('北川製粉所横ゴミステーション巡回回収');
+        $response->assertSee('午後開始の巡回タスク');
         $response->assertSee('📍 北川製粉所横');
         $response->assertSee('⚠️ 1/4名以上 (不足3名)');
     }
 }
-

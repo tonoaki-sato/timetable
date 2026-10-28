@@ -27,11 +27,15 @@ class PhaseCard extends Component
     }
 
     /**
-     * カード全体のリンク先URLを取得
+     * カード全体のリンク先URLを取得（平常時はリンクなしのため null）
      */
-    public function actionUrl(): string
+    public function actionUrl(): ?string
     {
-        return $this->context->actionUrl ?? route('annual-schedules.index');
+        if (! $this->context->isMainEventDay) {
+            return null;
+        }
+
+        return $this->context->actionUrl;
     }
 
     /**

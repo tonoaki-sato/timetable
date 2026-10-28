@@ -28,7 +28,6 @@ class TrafficRegulationService
     {
         $now = $now ?? Carbon::now('Asia/Tokyo');
         $todayStr = $now->toDateString();
-        $actionUrl = route('timetable.index');
 
         // 1. 本日開催の運行タイムテーブル（本番日判定）
         $timetable = Timetable::whereDate('target_date', $todayStr)->first();
@@ -42,8 +41,7 @@ class TrafficRegulationService
                 headline: $status->headline(),
                 subStatus: '一般車両通行中（本日の車両規制はありません）',
                 isRoadClosed: false,
-                isAlertActive: false,
-                actionUrl: $actionUrl
+                isAlertActive: false
             );
         }
 
@@ -60,8 +58,7 @@ class TrafficRegulationService
                 headline: '早朝待機中',
                 subStatus: '06:00より機材仮設置開始 / 10:00より車両通行止め',
                 isRoadClosed: false,
-                isAlertActive: false,
-                actionUrl: $actionUrl
+                isAlertActive: false
             );
         }
 
@@ -78,8 +75,7 @@ class TrafficRegulationService
                 headline: $status->headline(),
                 subStatus: "10:00より車両通行止め ({$remaining}) / 路上本設置準備",
                 isRoadClosed: false,
-                isAlertActive: false,
-                actionUrl: $actionUrl
+                isAlertActive: false
             );
         }
 
@@ -96,8 +92,7 @@ class TrafficRegulationService
                 headline: $status->headline(),
                 subStatus: "ござ市テント・機材展開中 (11:00本番まで{$remaining})",
                 isRoadClosed: true,
-                isAlertActive: true,
-                actionUrl: $actionUrl
+                isAlertActive: true
             );
         }
 
@@ -117,8 +112,7 @@ class TrafficRegulationService
                 headline: $status->headline(),
                 subStatus: "10:00〜18:00通行止め ({$clearingNote}解除まであと{$remaining})",
                 isRoadClosed: true,
-                isAlertActive: false,
-                actionUrl: $actionUrl
+                isAlertActive: false
             );
         }
 
@@ -135,8 +129,7 @@ class TrafficRegulationService
                 headline: $status->headline(),
                 subStatus: "車道資材・ゴミ箱完全回収中 (18:00解除まで{$remaining})",
                 isRoadClosed: true,
-                isAlertActive: true,
-                actionUrl: $actionUrl
+                isAlertActive: true
             );
         }
 
@@ -149,8 +142,7 @@ class TrafficRegulationService
             headline: $status->headline(),
             subStatus: '18:00に通行止め解除済 (一般車両通行中・足元注意 / 番所格納中)',
             isRoadClosed: false,
-            isAlertActive: false,
-            actionUrl: $actionUrl
+            isAlertActive: false
         );
     }
 }

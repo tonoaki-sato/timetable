@@ -6,7 +6,7 @@
             <h3 class="text-base font-bold text-slate-900">
                 NEXT : 次に控えるタスク
                 @if ($hasTasks() && $context->nextStartTimeLabel)
-                    <span class="text-sm font-bold text-slate-600">({{ $context->nextStartTimeLabel }}開始)</span>
+                    <span class="text-sm font-bold text-slate-600">(直近{{ $context->nextStartTimeLabel }}開始)</span>
                 @endif
             </h3>
             @if ($hasTasks())
@@ -21,13 +21,9 @@
         </div>
 
         <div class="flex items-center space-x-2">
-            @if ($hasTasks() && $context->remainingTimeLabel)
-                <span class="text-xs text-indigo-600 font-bold bg-indigo-50/80 px-2.5 py-0.5 rounded-full border border-indigo-200/80">
-                    {{ $context->remainingTimeLabel }}
-                </span>
-            @elseif ($isMainEventDay())
+            @if (! $hasTasks() && $isMainEventDay())
                 <span class="text-xs text-slate-400 font-mono">以降の予定タスクなし</span>
-            @else
+            @elseif (! $hasTasks())
                 <span class="text-xs text-slate-400 font-mono">本日の運行予定なし</span>
             @endif
         </div>
@@ -37,13 +33,18 @@
         <!-- 次期タスク一覧（2カラムグリッド・最大6件） -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             @foreach ($context->tasks as $task)
-                <div class="p-3.5 {{ $task->is_critical ? 'bg-red-50/50 border-red-200' : 'bg-slate-50 border-slate-200' }} rounded-xl border flex flex-col justify-between gap-2">
+                <div data-task-id="{{ $task->id }}" class="p-3.5 {{ $task->is_critical ? 'bg-red-50/50 border-red-200' : 'bg-slate-50 border-slate-200' }} rounded-xl border flex flex-col justify-between gap-2">
                     <div class="space-y-1.5">
-                        <!-- 上段: 時間帯 & 担当班 -->
+                        <!-- 上段: 時間帯・残り時間 & 担当班 -->
                         <div class="flex items-center justify-between gap-2 text-xs text-slate-500">
-                            <span class="font-mono font-bold text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">
-                                {{ $formatTimeRange($task) }}
-                            </span>
+                            <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                                <span class="font-mono font-bold text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                                    {{ $formatTimeRange($task) }}
+                                </span>
+                                <span class="text-[10px] text-indigo-600 font-bold bg-indigo-50/90 px-2 py-0.5 rounded-full border border-indigo-200/80">
+                                    {{ $formatTaskRemainingTime($task) }}
+                                </span>
+                            </div>
                             @if ($laneDisplay = $formatLaneDisplay($task))
                                 <span class="font-bold text-slate-700 truncate">{{ $laneDisplay }}</span>
                             @endif

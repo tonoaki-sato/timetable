@@ -65,6 +65,8 @@ class NowTasksCardTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('06:30 時点');
         $response->assertSee('現在進行中のタスクはありません');
+        $response->assertSee('タイムテーブルを確認');
+        $response->assertDontSee('運行タイムテーブルマトリクスを確認');
         $response->assertDontSee('06時完了済の早朝準備タスク');
     }
 

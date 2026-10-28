@@ -26,7 +26,7 @@ class PhaseService
                 activeTimetable: $timetable,
                 nextTask: null,
                 pendingTaskCount: 0,
-                actionUrl: route('timetable.index')
+                actionUrl: route('timetable.index', ['timetable_id' => $timetable->id])
             );
         }
 
@@ -42,7 +42,7 @@ class PhaseService
             activeTimetable: null,
             nextTask: $nextTask,
             pendingTaskCount: $pendingCount,
-            actionUrl: route('annual-schedules.index', ['year' => $targetYear])
+            actionUrl: null
         );
     }
 
@@ -51,7 +51,10 @@ class PhaseService
      */
     private function getTodaysTimetable(Carbon $now): ?Timetable
     {
-        return Timetable::whereDate('target_date', $now->toDateString())->first();
+        return Timetable::whereDate('target_date', $now->toDateString())
+            ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
+            ->orderBy('id')
+            ->first();
     }
 
     /**

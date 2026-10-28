@@ -65,6 +65,7 @@ class PhaseManagementTest extends TestCase
         $this->assertSame(AnnualPhase::Planning, $context->phase);
         $this->assertSame('第3回幹事会・予算案確定', $context->nextTask?->title);
         $this->assertGreaterThanOrEqual(1, $context->pendingTaskCount);
+        $this->assertNull($context->actionUrl);
     }
 
     /**
@@ -85,6 +86,7 @@ class PhaseManagementTest extends TestCase
 
         $this->assertTrue($context->isMainEventDay);
         $this->assertSame($timetable->id, $context->activeTimetable?->id);
+        $this->assertSame(route('timetable.index', ['timetable_id' => $timetable->id]), $context->actionUrl);
     }
 
     /**
@@ -128,6 +130,36 @@ class PhaseManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('準備フェーズ');
         $response->assertSee('保土ケ谷宿場まつり実行委員会 総会');
+        $response->assertDontSee('href="'.route('annual-schedules.index', ['year' => Carbon::now('Asia/Tokyo')->year]).'"', false);
+    }
+
+    /**
+     * 本番運行日のダッシュボード画面で運行フェーズカードが該当運行スケジュールへリンクすること
+     */
+    public function test_dashboard_renders_phase_card_with_active_timetable_link_on_event_day(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 10, 11, 11, 0, 0, 'Asia/Tokyo'));
+
+        Timetable::factory()->create([
+            'target_date' => '2026-10-10',
+            'name' => '前日準備（下書き）',
+            'status' => 'draft',
+        ]);
+
+        $activeTimetable = Timetable::factory()->create([
+            'target_date' => '2026-10-11',
+            'name' => '本祭当日スケジュール',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->operator)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('運行フェーズ');
+        $response->assertSee('本祭当日スケジュール');
+        $response->assertSee('href="'.route('timetable.index', ['timetable_id' => $activeTimetable->id]).'"', false);
+
+        Carbon::setTestNow();
     }
 
     /**

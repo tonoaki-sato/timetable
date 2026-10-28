@@ -109,9 +109,13 @@ class DashboardRealtimeTest extends TestCase
 
         $this->assertSame('09:45:00', $resBefore->json('updated_at_label'));
         $this->assertStringContainsString('10:00より車両通行止め (あと15分)', $resBefore->json('cards.traffic_regulation'));
+        $this->assertStringNotContainsString('<a ', $resBefore->json('cards.traffic_regulation'));
         $this->assertStringContainsString('現在進行中のタスクはありません', $resBefore->json('cards.now_tasks'));
+        $this->assertStringContainsString('タイムテーブルを確認', $resBefore->json('cards.now_tasks'));
         $this->assertStringContainsString('10時開始の通行止めコーン一斉設置', $resBefore->json('cards.next_tasks'));
+        $this->assertStringContainsString('(直近10:00開始)', $resBefore->json('cards.next_tasks'));
         $this->assertStringContainsString('あと 15分後 開始', $resBefore->json('cards.next_tasks'));
+        $this->assertStringContainsString('data-task-id="'.$task->id.'"', $resBefore->json('cards.next_tasks'));
 
         // 2. 10:05 時点: 時刻が10時を過ぎ、タスクが自動的に NEXT から NOW へ移動＆交通規制が「路上への本設置集中中」へ変化
         Carbon::setTestNow(Carbon::create(2026, 10, 11, 10, 5, 0, 'Asia/Tokyo'));
@@ -142,4 +146,3 @@ class DashboardRealtimeTest extends TestCase
         $this->assertStringContainsString('進行中', $resUpdated->json('cards.now_tasks'));
     }
 }
-

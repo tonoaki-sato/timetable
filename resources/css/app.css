@@ -8,6 +8,37 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/* ダッシュボード NOW / NEXT カード切り替えアニメーション */
+@keyframes dashboardCardSwap {
+    0% {
+        opacity: 0.35;
+        transform: translateY(6px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes dashboardTaskEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(8px) scale(0.99);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-dashboard-card-swap {
+    animation: dashboardCardSwap 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-dashboard-task-enter {
+    animation: dashboardTaskEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* タイムテーブル印刷用スタイル（A4横 Landscape） */
 @media print {
     @page {
