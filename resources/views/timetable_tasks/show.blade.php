@@ -85,7 +85,7 @@
             @endif
 
             <!-- 人員充足状況バッジ -->
-            @if($task->assigned_count > $task->required_people_count && !$task->is_at_least)
+            @if($task->required_people_count > 0 && $task->assigned_count > $task->required_people_count && !$task->is_at_least)
             <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
                 ℹ 人員余剰: {{ $task->assigned_count }} / {{ $task->required_people_label }} (+{{ $task->assigned_count - $task->required_people_count }}名)
             </span>
@@ -189,7 +189,7 @@
                         </div>
                     </div>
                     <div>
-                        @if($task->assigned_count > $task->required_people_count && !$task->is_at_least)
+                        @if($task->required_people_count > 0 && $task->assigned_count > $task->required_people_count && !$task->is_at_least)
                         <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-sky-100 text-sky-800 border border-sky-200">
                             余剰 +{{ $task->assigned_count - $task->required_people_count }}名
                         </span>
@@ -206,6 +206,25 @@
                 </div>
 
                 @can('update', $task)
+                    @php
+                        $laneLeadStaff = $laneRel?->leadStaff;
+                        $isLaneLeadAssigned = $laneLeadStaff && $task->assignments->contains('staff_id', $laneLeadStaff->id);
+                    @endphp
+                    @if($laneLeadStaff && !$isLaneLeadAssigned)
+                    <form action="{{ route('timetable-tasks.assign', $task) }}" method="POST" class="inline">
+                        @csrf
+                        <input type="hidden" name="staff_id" value="{{ $laneLeadStaff->id }}">
+                        <input type="hidden" name="role_description" value="班リーダー">
+                        <input type="hidden" name="force" value="1">
+                        <button type="submit"
+                            title="このレーンの主担当（{{ $laneLeadStaff->name }}）を班リーダーとして配置します"
+                            class="px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer">
+                            <span>👑</span>
+                            <span>班主担当（{{ $laneLeadStaff->name }}）を配置</span>
+                        </button>
+                    </form>
+                    @endif
+
                     @if($task->shortage_count > 0 && $task->lane)
                     <form action="{{ route('timetable-tasks.assign-lane-pool', $task) }}" method="POST" class="inline">
                         @csrf
@@ -246,6 +265,11 @@
                                 @if($assignment->staff?->kana)
                                 <span class="text-[10px] text-slate-400 font-normal">
                                     ({{ $assignment->staff->kana }})
+                                </span>
+                                @endif
+                                @if($laneRel && $laneRel->lead_staff_id && (int) $assignment->staff_id === (int) $laneRel->lead_staff_id)
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                    👑 班主担当
                                 </span>
                                 @endif
                             </div>
@@ -566,6 +590,10 @@
                                         <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300 truncate max-w-[120px]"
                                             title="重複中: {{ $s->conflict_task?->title }}">
                                             ⚠️ {{ $s->conflict_task?->title }}
+                                        </span>
+                                        @elseif(!empty($s->is_lane_lead))
+                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">
+                                            👑 班主担当
                                         </span>
                                         @elseif($isSameLane)
                                         <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">

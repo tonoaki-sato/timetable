@@ -23,7 +23,9 @@ class StoreTimetableTaskRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $mergeData = [
-            'auto_assign_lead' => $this->boolean('auto_assign_lead'),
+            'auto_assign_lead' => $this->has('auto_assign_lead')
+                ? $this->boolean('auto_assign_lead')
+                : true,
         ];
 
         if (! $this->filled('lane_id') && $this->filled('lane')) {
@@ -95,6 +97,8 @@ class StoreTimetableTaskRequest extends FormRequest
             'tasks.*.location' => ['nullable', 'string', 'max:255'],
             'tasks.*.start_time' => ['required', 'date_format:H:i'],
             'tasks.*.end_time' => ['required', 'date_format:H:i', 'after:tasks.*.start_time'],
+            'start_time' => ['nullable', 'date_format:H:i'],
+            'end_time' => ['nullable', 'date_format:H:i', 'after:start_time'],
             'tasks.*.required_people_count' => ['required', 'integer', 'min:0', 'max:999'],
             'tasks.*.is_at_least' => ['required', 'boolean'],
             'tasks.*.is_critical' => ['required', 'boolean'],

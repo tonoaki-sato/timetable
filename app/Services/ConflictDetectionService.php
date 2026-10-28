@@ -165,19 +165,23 @@ class ConflictDetectionService
         }
 
         $taskLaneName = $task->lane ?: ($task->laneRelation?->name ?? '');
+        $leadStaffId = $task->laneRelation?->lead_staff_id
+            ? (int) $task->laneRelation->lead_staff_id
+            : null;
 
         foreach ($activeStaff as $staff) {
             $conflict = $conflictsMap[$staff->id] ?? null;
-            $isSameLane = false;
+            $isLaneLead = $leadStaffId !== null && (int) $staff->id === $leadStaffId;
+            $isSameLane = $isLaneLead;
 
-            if (! empty($taskLaneName) && ! empty($staff->affiliation)) {
+            if (! $isSameLane && ! empty($taskLaneName) && ! empty($staff->affiliation)) {
                 $isSameLane = (mb_strpos($staff->affiliation, $taskLaneName) !== false)
                     || (mb_strpos($taskLaneName, $staff->affiliation) !== false);
             }
 
             $minutes = $staffDayMinutes[$staff->id] ?? 0;
 
-            // 優先度ティア判定: 1=推奨(同班・空き), 2=通常空き, 3=重複あり
+            // 優先度ティア判定: 1=推奨(主担当または同班・空き), 2=通常空き, 3=重複あり
             $tier = 2;
             if ($conflict !== null) {
                 $tier = 3;
@@ -186,6 +190,7 @@ class ConflictDetectionService
             }
 
             $staff->conflict_task = $conflict;
+            $staff->is_lane_lead = $isLaneLead;
             $staff->is_same_lane = $isSameLane;
             $staff->today_assigned_minutes = $minutes;
             $staff->priority_tier = $tier;
@@ -198,12 +203,17 @@ class ConflictDetectionService
                 return $a->priority_tier <=> $b->priority_tier;
             }
 
-            // 2. 現場チェックイン（到着受付）済みを優先
+            // 2. 当該レーンの主担当（班リーダー）を最優先
+            if ($a->is_lane_lead !== $b->is_lane_lead) {
+                return $b->is_lane_lead <=> $a->is_lane_lead;
+            }
+
+            // 3. 現場チェックイン（到着受付）済みを優先
             if ($a->is_checked_in !== $b->is_checked_in) {
                 return $b->is_checked_in <=> $a->is_checked_in;
             }
 
-            // 3. 当日累計稼働時間が少ない順（負荷平準化）
+            // 4. 当日累計稼働時間が少ない順（負荷平準化）
             if ($a->today_assigned_minutes !== $b->today_assigned_minutes) {
                 return $a->today_assigned_minutes <=> $b->today_assigned_minutes;
             }

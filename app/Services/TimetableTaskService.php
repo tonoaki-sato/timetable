@@ -25,17 +25,34 @@ class TimetableTaskService
     }
 
     /**
-     * 新規タスクの登録
+     * 新規タスクの登録（主担当デフォルト自動アサイン対応）
      *
      * @param  array<string, mixed>  $data
      */
-    public function createTask(array $data): TimetableTask
+    public function createTask(array $data, bool $autoAssignLead = true): TimetableTask
     {
-        return $this->taskRepository->create($data);
+        return DB::transaction(function () use ($data, $autoAssignLead) {
+            $task = $this->taskRepository->create($data);
+
+            if ($autoAssignLead && ! empty($task->lane_id)) {
+                $lane = Lane::find($task->lane_id);
+                if ($lane && $lane->lead_staff_id) {
+                    $task->assignments()->firstOrCreate(
+                        ['staff_id' => $lane->lead_staff_id],
+                        [
+                            'role_description' => '班リーダー',
+                            'attendance_status' => 'assigned',
+                        ]
+                    );
+                }
+            }
+
+            return $task;
+        });
     }
 
     /**
-     * 選択したレーンに対する複数タスクの一括登録（主担当自動アサイン対応）
+     * 選択したレーンに対する複数タスクの一括登録（主担当デフォルト自動アサイン対応）
      *
      * @param  array<int, array<string, mixed>>  $tasksData
      * @return Collection<int, TimetableTask>
@@ -44,7 +61,7 @@ class TimetableTaskService
         int $timetableId,
         int $laneId,
         array $tasksData,
-        bool $autoAssignLead = false
+        bool $autoAssignLead = true
     ): Collection {
         return DB::transaction(function () use ($timetableId, $laneId, $tasksData, $autoAssignLead) {
             $attributesList = [];
@@ -65,7 +82,7 @@ class TimetableTaskService
                             ['staff_id' => $lane->lead_staff_id],
                             [
                                 'role_description' => '班リーダー',
-                                'attendance_status' => 'present',
+                                'attendance_status' => 'assigned',
                             ]
                         );
                     }
@@ -73,6 +90,64 @@ class TimetableTaskService
             }
 
             return $createdTasks;
+        });
+    }
+
+    /**
+     * レーンの主担当が設定・変更された際、そのレーンの既存タスクへ主担当を自動アサイン（同期）する
+     */
+    public function syncLaneLeadToTasks(Lane $lane, ?int $oldLeadStaffId = null): int
+    {
+        $newLeadStaffId = $lane->lead_staff_id ? (int) $lane->lead_staff_id : null;
+        if ($newLeadStaffId === null) {
+            return 0;
+        }
+
+        return DB::transaction(function () use ($lane, $oldLeadStaffId, $newLeadStaffId) {
+            $tasks = $lane->tasks()
+                ->where('status', '!=', 'cancelled')
+                ->with('assignments')
+                ->get();
+
+            $syncedCount = 0;
+
+            foreach ($tasks as $task) {
+                $existingNewLeadAssignment = $task->assignments
+                    ->firstWhere('staff_id', $newLeadStaffId);
+
+                // 旧主担当が「班リーダー」としてアサインされている場合の引き継ぎ処理
+                if ($oldLeadStaffId !== null && $oldLeadStaffId !== $newLeadStaffId) {
+                    $oldLeadAssignment = $task->assignments
+                        ->where('staff_id', $oldLeadStaffId)
+                        ->where('role_description', '班リーダー')
+                        ->first();
+
+                    if ($oldLeadAssignment) {
+                        if ($existingNewLeadAssignment) {
+                            $oldLeadAssignment->delete();
+                            if (empty($existingNewLeadAssignment->role_description) || $existingNewLeadAssignment->role_description === '一般担当') {
+                                $existingNewLeadAssignment->update(['role_description' => '班リーダー']);
+                            }
+                        } else {
+                            $oldLeadAssignment->update(['staff_id' => $newLeadStaffId]);
+                            $syncedCount++;
+
+                            continue;
+                        }
+                    }
+                }
+
+                if (! $existingNewLeadAssignment) {
+                    $task->assignments()->create([
+                        'staff_id' => $newLeadStaffId,
+                        'role_description' => '班リーダー',
+                        'attendance_status' => 'assigned',
+                    ]);
+                    $syncedCount++;
+                }
+            }
+
+            return $syncedCount;
         });
     }
 

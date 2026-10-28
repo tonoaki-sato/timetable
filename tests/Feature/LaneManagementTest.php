@@ -273,7 +273,108 @@ class LaneManagementTest extends TestCase
 
         $this->assertNotNull($assignment);
         $this->assertSame('班リーダー', $assignment->role_description);
-        $this->assertSame('present', $assignment->attendance_status);
+        $this->assertSame('assigned', $assignment->attendance_status);
+    }
+
+    /**
+     * 8b. レーンに主担当が決まっている場合、auto_assign_lead パラメータを省略してもデフォルトでタスクにアサインされること
+     */
+    public function test_task_creation_auto_assigns_lead_staff_by_default_when_param_omitted(): void
+    {
+        $this->timetable->createDefaultLanes();
+        $lane = $this->timetable->lanes()->where('name', 'カラーコーン')->firstOrFail();
+
+        $leadStaff = Staff::factory()->create([
+            'name' => 'デフォルト主担当 太郎',
+            'is_active' => true,
+        ]);
+        $lane->update(['lead_staff_id' => $leadStaff->id]);
+
+        // auto_assign_lead パラメータを省略して送信
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('timetable-tasks.store'), [
+                'timetable_id' => $this->timetable->id,
+                'lane_id' => $lane->id,
+                'title' => 'コーン設置タスク（デフォルトアサイン確認）',
+                'start_time' => '08:00',
+                'end_time' => '09:00',
+                'required_people_count' => 3,
+                'status' => 'not_started',
+            ]);
+
+        $response->assertRedirect(route('timetables.show', $this->timetable));
+
+        $task = TimetableTask::where('title', 'コーン設置タスク（デフォルトアサイン確認）')->firstOrFail();
+
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $task->id,
+            'staff_id' => $leadStaff->id,
+            'role_description' => '班リーダー',
+            'attendance_status' => 'assigned',
+        ]);
+    }
+
+    /**
+     * 8c. 既存タスクがあるレーンに後から主担当を設定・変更した際、既存タスクにも主担当が自動アサイン（同期）されること
+     */
+    public function test_updating_lane_lead_staff_syncs_to_existing_tasks(): void
+    {
+        $this->timetable->createDefaultLanes();
+        $lane = $this->timetable->lanes()->where('name', '衛生')->firstOrFail();
+
+        // 主担当未設定の状態でタスクを2件作成
+        $task1 = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '衛生タスク1',
+            'status' => 'not_started',
+        ]);
+        $task2 = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '衛生タスク2',
+            'status' => 'not_started',
+        ]);
+
+        $firstLead = Staff::factory()->create(['name' => '初代リーダー', 'is_active' => true]);
+        $secondLead = Staff::factory()->create(['name' => '二代目リーダー', 'is_active' => true]);
+
+        // 1. 後付けで初代リーダーを設定 -> 既存2タスクに自動アサインされること
+        $this->actingAs($this->operatorUser)
+            ->patch(route('timetables.lanes.update-lead', [$this->timetable, $lane]), [
+                'lead_staff_id' => $firstLead->id,
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $task1->id,
+            'staff_id' => $firstLead->id,
+            'role_description' => '班リーダー',
+            'attendance_status' => 'assigned',
+        ]);
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $task2->id,
+            'staff_id' => $firstLead->id,
+            'role_description' => '班リーダー',
+            'attendance_status' => 'assigned',
+        ]);
+
+        // 2. 二代目リーダーに変更 -> 班リーダーが二代目へ引き継がれること
+        $this->actingAs($this->operatorUser)
+            ->patch(route('timetables.lanes.update-lead', [$this->timetable, $lane]), [
+                'lead_staff_id' => $secondLead->id,
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $task1->id,
+            'staff_id' => $secondLead->id,
+            'role_description' => '班リーダー',
+        ]);
+        $this->assertDatabaseMissing('task_staff_assignments', [
+            'timetable_task_id' => $task1->id,
+            'staff_id' => $firstLead->id,
+        ]);
     }
 
     /**

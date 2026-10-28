@@ -129,6 +129,7 @@
                         </span>
                     </div>
                     <label class="inline-flex items-center space-x-2 cursor-pointer font-bold text-indigo-700 hover:text-indigo-900">
+                        <input type="hidden" name="auto_assign_lead" value="0">
                         <input type="checkbox" name="auto_assign_lead" value="1"
                             {{ old('auto_assign_lead', '1') ? 'checked' : '' }}
                             class="w-4 h-4 text-indigo-600 rounded border-indigo-300 focus:ring-indigo-500">

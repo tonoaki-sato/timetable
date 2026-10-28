@@ -105,7 +105,9 @@ class TimetableTaskController extends Controller
         $timetableId = (int) $validated['timetable_id'];
         $laneId = (int) $validated['lane_id'];
         $tasksData = $validated['tasks'];
-        $autoAssignLead = $request->boolean('auto_assign_lead');
+        $autoAssignLead = $request->has('auto_assign_lead')
+            ? $request->boolean('auto_assign_lead')
+            : true;
 
         $createdTasks = $this->taskService->createBulkTasks(
             $timetableId,
@@ -429,7 +431,9 @@ class TimetableTaskController extends Controller
                 'is_satisfied' => $detailedTask->is_satisfied,
                 'shortage_count' => $detailedTask->shortage_count,
             ],
-            'assignments' => $detailedTask->assignments->map(function ($a) {
+            'assignments' => $detailedTask->assignments->map(function ($a) use ($detailedTask) {
+                $leadId = $detailedTask->laneRelation?->lead_staff_id;
+
                 return [
                     'id' => $a->id,
                     'staff_id' => $a->staff_id,
@@ -439,6 +443,7 @@ class TimetableTaskController extends Controller
                     'role_description' => $a->role_description ?: '一般担当',
                     'attendance_status' => $a->attendance_status,
                     'attendance_status_label' => $a->attendance_status_label,
+                    'is_lane_lead' => $leadId !== null && (int) $a->staff_id === (int) $leadId,
                 ];
             })->values(),
             'candidate_staff' => $prioritizedStaff->map(function ($s) use ($detailedTask) {
@@ -451,6 +456,7 @@ class TimetableTaskController extends Controller
                     'is_conflicted' => $s->conflict_task !== null,
                     'conflicted_task_title' => $s->conflict_task?->title ?? '',
                     'conflicted_label' => $s->conflict_task ? "重複中: {$s->conflict_task->title}" : '',
+                    'is_lane_lead' => (bool) ($s->is_lane_lead ?? false),
                     'is_same_lane' => (bool) ($s->is_same_lane ?? false),
                     'is_checked_in' => (bool) ($s->is_checked_in ?? false),
                     'minutes_today' => $s->today_assigned_minutes ?? 0,

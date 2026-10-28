@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateLaneRequest;
 use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Services\TimetableTaskService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,10 @@ use Illuminate\View\View;
 
 class LaneController extends Controller
 {
+    public function __construct(
+        protected TimetableTaskService $taskService
+    ) {}
+
     /**
      * 担当班管理の対象タイムテーブル選択画面の表示
      */
@@ -86,7 +91,13 @@ class LaneController extends Controller
      */
     public function update(UpdateLaneRequest $request, Timetable $timetable, Lane $lane): JsonResponse|RedirectResponse
     {
+        $oldLeadStaffId = $lane->lead_staff_id ? (int) $lane->lead_staff_id : null;
+
         $lane->update($request->validated());
+
+        if ($lane->lead_staff_id) {
+            $this->taskService->syncLaneLeadToTasks($lane, $oldLeadStaffId);
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -101,17 +112,27 @@ class LaneController extends Controller
     }
 
     /**
-     * 主担当スタッフのクイック更新・解除
+     * 主担当スタッフのクイック更新・解除（既存タスクへの自動アサイン同期対応）
      */
     public function updateLeadStaff(UpdateLaneLeadStaffRequest $request, Timetable $timetable, Lane $lane): RedirectResponse
     {
+        $oldLeadStaffId = $lane->lead_staff_id ? (int) $lane->lead_staff_id : null;
+
         $lane->update([
             'lead_staff_id' => $request->validated('lead_staff_id'),
         ]);
 
-        $leadName = $lane->leadStaff ? $lane->leadStaff->name : '未設定';
+        $syncedCount = 0;
+        if ($lane->lead_staff_id) {
+            $syncedCount = $this->taskService->syncLaneLeadToTasks($lane, $oldLeadStaffId);
+        }
 
-        return back()->with('success', "レーン「{$lane->name}」の主担当を「{$leadName}」に更新しました。");
+        $leadName = $lane->leadStaff ? $lane->leadStaff->name : '未設定';
+        $message = $syncedCount > 0
+            ? "レーン「{$lane->name}」の主担当を「{$leadName}」に更新し、{$syncedCount}件のタスクに反映しました。"
+            : "レーン「{$lane->name}」の主担当を「{$leadName}」に更新しました。";
+
+        return back()->with('success', $message);
     }
 
     /**

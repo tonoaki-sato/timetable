@@ -15,7 +15,7 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
      */
     public function findWithAssignments(int $id): ?TimetableTask
     {
-        return TimetableTask::with(['timetable', 'assignments.staff'])->find($id);
+        return TimetableTask::with(['timetable', 'laneRelation.leadStaff', 'assignments.staff'])->find($id);
     }
 
     /**

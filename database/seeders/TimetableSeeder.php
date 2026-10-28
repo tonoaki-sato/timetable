@@ -513,7 +513,7 @@ class TimetableSeeder extends Seeder
         foreach ($tasksDay1 as $taskData) {
             $lane = $lanesDay1[$taskData['lane_name']];
 
-            TimetableTask::updateOrCreate(
+            $task = TimetableTask::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay1->id,
                     'lane_id' => $lane->id,
@@ -532,6 +532,16 @@ class TimetableSeeder extends Seeder
                     'status' => $taskData['status'],
                 ]
             );
+
+            if ($lane->lead_staff_id) {
+                $task->assignments()->firstOrCreate(
+                    ['staff_id' => $lane->lead_staff_id],
+                    [
+                        'role_description' => '班リーダー',
+                        'attendance_status' => 'assigned',
+                    ]
+                );
+            }
         }
 
         // =========================================================================

@@ -123,9 +123,50 @@ class BulkTimetableTaskCreationTest extends TestCase
                 'timetable_task_id' => $task->id,
                 'staff_id' => $leadStaff->id,
                 'role_description' => '班リーダー',
-                'attendance_status' => 'present',
+                'attendance_status' => 'assigned',
             ]);
         }
+    }
+
+    /**
+     * 明示的に auto_assign_lead = 0 が指定された場合は主担当が自動アサインされないこと
+     */
+    public function test_does_not_auto_assign_lead_when_explicitly_disabled(): void
+    {
+        $user = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $timetable = Timetable::factory()->create(['created_by' => $user->id]);
+        $leadStaff = Staff::factory()->create(['name' => '除外確認 リーダー']);
+        $lane = Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => '巡回',
+            'lead_staff_id' => $leadStaff->id,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('timetable-tasks.store'), [
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'auto_assign_lead' => '0',
+            'tasks' => [
+                [
+                    'title' => '個別アサイン予定タスク',
+                    'start_time' => '09:00',
+                    'end_time' => '10:00',
+                    'required_people_count' => 2,
+                    'is_at_least' => '0',
+                    'is_critical' => '0',
+                    'requires_review' => '0',
+                    'status' => 'not_started',
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect(route('timetables.show', $timetable->id));
+
+        $task = TimetableTask::where('title', '個別アサイン予定タスク')->firstOrFail();
+        $this->assertDatabaseMissing('task_staff_assignments', [
+            'timetable_task_id' => $task->id,
+            'staff_id' => $leadStaff->id,
+        ]);
     }
 
     /**
@@ -203,4 +244,3 @@ class BulkTimetableTaskCreationTest extends TestCase
         $this->assertSame(0, TimetableTask::where('timetable_id', $timetable->id)->count());
     }
 }
-

@@ -62,6 +62,17 @@ class TimetableSeederTest extends TestCase
         $this->assertSame(1, Lane::where('timetable_id', $timetableDay1->id)->where('name', '巡回')->value('lead_staff_id'));
         $this->assertNull(Lane::where('timetable_id', $timetableDay1->id)->where('name', '道路清掃')->value('lead_staff_id'));
 
+        // 主担当が決まっているレーンのタスクには、その主担当がデフォルトでアサインされていること
+        $eiseiLane = Lane::where('timetable_id', $timetableDay1->id)->where('name', '衛生')->firstOrFail();
+        foreach ($eiseiLane->tasks as $eiseiTask) {
+            $this->assertDatabaseHas('task_staff_assignments', [
+                'timetable_task_id' => $eiseiTask->id,
+                'staff_id' => 27,
+                'role_description' => '班リーダー',
+                'attendance_status' => 'assigned',
+            ]);
+        }
+
         // 最優先タスクの存在確認
         $criticalTask = TimetableTask::where('timetable_id', $timetableDay1->id)
             ->where('is_critical', true)

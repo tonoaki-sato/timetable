@@ -249,8 +249,9 @@
                         @csrf
                         @method('PATCH')
                         <div class="flex items-center space-x-1.5">
-                            <span class="text-xs text-slate-500 font-bold">👤 主担当:</span>
+                            <span class="text-xs text-slate-500 font-bold" title="主担当を設定・変更すると、このレーンのタスクにデフォルトで自動アサインされます">👤 主担当:</span>
                             <select name="lead_staff_id" data-auto-submit
+                                title="主担当を選択すると、このレーンのタスクに班リーダーとして自動アサインされます"
                                 class="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
                                 <option value="" {{ !$lane->lead_staff_id ? 'selected' : '' }}>-- 未設定 --</option>
                                 @foreach($activeStaff as $st)
