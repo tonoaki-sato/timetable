@@ -45,21 +45,41 @@ class TimetableTaskController extends Controller
         $timetableId = $request->integer('timetable_id');
         $timetable = Timetable::findOrFail($timetableId);
 
-        $timetableLanes = $timetable->lanes()->with('leadStaff')->get();
+        $timetableLanes = $timetable->lanes()->with(['leadStaff', 'tasks'])->get();
         if ($timetableLanes->isEmpty()) {
             $timetable->createDefaultLanes();
-            $timetableLanes = $timetable->lanes()->with('leadStaff')->get();
+            $timetableLanes = $timetable->lanes()->with(['leadStaff', 'tasks'])->get();
         }
 
         $selectedLaneId = $request->integer('lane_id') ?: null;
-        $selectedLane = $selectedLaneId ? $timetableLanes->firstWhere('id', $selectedLaneId) : null;
+        $selectedLane = $selectedLaneId
+            ? $timetableLanes->firstWhere('id', $selectedLaneId)
+            : $timetableLanes->first();
 
-        $suggestedStartTime = '08:00';
-        if ($selectedLane) {
-            $latestTask = $selectedLane->tasks()->latest('end_time')->first();
-            if ($latestTask) {
-                $suggestedStartTime = substr($latestTask->end_time, 0, 5);
+        $laneSuggestedStartTimes = [];
+        foreach ($timetableLanes as $laneItem) {
+            $latest = $laneItem->tasks->sortByDesc('end_time')->first();
+            $laneSuggestedStartTimes[$laneItem->id] = $latest ? substr($latest->end_time, 0, 5) : '08:00';
+        }
+
+        $requestedStartTime = $request->query('start_time');
+        if (is_string($requestedStartTime) && preg_match('/^\d{2}:\d{2}$/', $requestedStartTime)) {
+            $suggestedStartTime = $requestedStartTime;
+        } elseif ($selectedLane && isset($laneSuggestedStartTimes[$selectedLane->id])) {
+            $suggestedStartTime = $laneSuggestedStartTimes[$selectedLane->id];
+        } else {
+            $suggestedStartTime = '08:00';
+        }
+
+        // 初期終了時刻の算出（開始時刻の60分後、または08:00なら09:30）
+        $suggestedEndTime = '09:30';
+        if (preg_match('/^(\d{2}):(\d{2})$/', $suggestedStartTime, $matches)) {
+            $startMinutes = ((int) $matches[1]) * 60 + ((int) $matches[2]);
+            $endMinutes = min(23 * 60 + 59, $startMinutes + ($suggestedStartTime === '08:00' && ! $requestedStartTime ? 90 : 60));
+            if ($endMinutes <= $startMinutes) {
+                $endMinutes = min(23 * 60 + 59, $startMinutes + 30);
             }
+            $suggestedEndTime = sprintf('%02d:%02d', intdiv($endMinutes, 60), $endMinutes % 60);
         }
 
         return view('timetable_tasks.create', [
@@ -67,38 +87,45 @@ class TimetableTaskController extends Controller
             'timetableLanes' => $timetableLanes,
             'selectedLane' => $selectedLane,
             'suggestedStartTime' => $suggestedStartTime,
+            'suggestedEndTime' => $suggestedEndTime,
+            'laneSuggestedStartTimes' => $laneSuggestedStartTimes,
             'lanes' => $timetableLanes->pluck('name', 'name')->all(),
             'statuses' => TimetableTask::STATUSES,
         ]);
     }
 
     /**
-     * 作業タスク新規登録処理
+     * 作業タスク新規登録処理（単一・複数タスク一括登録対応）
      */
     public function store(StoreTimetableTaskRequest $request): RedirectResponse
     {
         $this->authorize('create', TimetableTask::class);
 
-        $data = $request->validated();
+        $validated = $request->validated();
+        $timetableId = (int) $validated['timetable_id'];
+        $laneId = (int) $validated['lane_id'];
+        $tasksData = $validated['tasks'];
         $autoAssignLead = $request->boolean('auto_assign_lead');
 
-        $task = $this->taskService->createTask($data);
+        $createdTasks = $this->taskService->createBulkTasks(
+            $timetableId,
+            $laneId,
+            $tasksData,
+            $autoAssignLead
+        );
 
-        // 主担当スタッフの自動アサイン（班リーダー）
-        if ($autoAssignLead && $task->lane_id) {
-            $lane = Lane::find($task->lane_id);
-            if ($lane && $lane->lead_staff_id) {
-                $task->assignments()->firstOrCreate([
-                    'staff_id' => $lane->lead_staff_id,
-                ], [
-                    'role_description' => '班リーダー',
-                    'attendance_status' => 'present',
-                ]);
-            }
+        $count = $createdTasks->count();
+        if ($count === 1) {
+            $firstTask = $createdTasks->first();
+            $message = "作業タスク「{$firstTask->title}」を登録しました。";
+        } else {
+            $lane = Lane::find($laneId);
+            $laneName = $lane?->name ?? '選択した担当班';
+            $message = "「{$laneName}」に {$count} 件の作業タスクを一括登録しました。";
         }
 
-        return redirect()->route('timetables.show', $task->timetable_id)
-            ->with('success', "作業タスク「{$task->title}」を登録しました。");
+        return redirect()->route('timetables.show', $timetableId)
+            ->with('success', $message);
     }
 
     /**

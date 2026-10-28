@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\TimetableTask;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class TimetableTaskService
 {
@@ -30,6 +32,48 @@ class TimetableTaskService
     public function createTask(array $data): TimetableTask
     {
         return $this->taskRepository->create($data);
+    }
+
+    /**
+     * 選択したレーンに対する複数タスクの一括登録（主担当自動アサイン対応）
+     *
+     * @param  array<int, array<string, mixed>>  $tasksData
+     * @return Collection<int, TimetableTask>
+     */
+    public function createBulkTasks(
+        int $timetableId,
+        int $laneId,
+        array $tasksData,
+        bool $autoAssignLead = false
+    ): Collection {
+        return DB::transaction(function () use ($timetableId, $laneId, $tasksData, $autoAssignLead) {
+            $attributesList = [];
+            foreach ($tasksData as $taskItem) {
+                $attributesList[] = array_merge($taskItem, [
+                    'timetable_id' => $timetableId,
+                    'lane_id' => $laneId,
+                ]);
+            }
+
+            $createdTasks = $this->taskRepository->createMany($attributesList);
+
+            if ($autoAssignLead) {
+                $lane = Lane::find($laneId);
+                if ($lane && $lane->lead_staff_id) {
+                    foreach ($createdTasks as $task) {
+                        $task->assignments()->firstOrCreate(
+                            ['staff_id' => $lane->lead_staff_id],
+                            [
+                                'role_description' => '班リーダー',
+                                'attendance_status' => 'present',
+                            ]
+                        );
+                    }
+                }
+            }
+
+            return $createdTasks;
+        });
     }
 
     /**

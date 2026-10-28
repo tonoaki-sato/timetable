@@ -28,6 +28,14 @@ interface TimetableTaskRepositoryInterface
     public function create(array $attributes): TimetableTask;
 
     /**
+     * 複数タスクの一括新規作成
+     *
+     * @param  array<int, array<string, mixed>>  $tasksAttributes
+     * @return Collection<int, TimetableTask>
+     */
+    public function createMany(array $tasksAttributes): Collection;
+
+    /**
      * タスク更新
      *
      * @param  array<string, mixed>  $attributes

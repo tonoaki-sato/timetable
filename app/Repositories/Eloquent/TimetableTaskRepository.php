@@ -42,6 +42,25 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
     }
 
     /**
+     * 複数タスクの一括新規作成
+     *
+     * @param  array<int, array<string, mixed>>  $tasksAttributes
+     * @return Collection<int, TimetableTask>
+     */
+    public function createMany(array $tasksAttributes): Collection
+    {
+        return DB::transaction(function () use ($tasksAttributes) {
+            $createdTasks = new Collection;
+
+            foreach ($tasksAttributes as $attributes) {
+                $createdTasks->push(TimetableTask::create($attributes));
+            }
+
+            return $createdTasks;
+        });
+    }
+
+    /**
      * タスク更新
      *
      * @param  array<string, mixed>  $attributes

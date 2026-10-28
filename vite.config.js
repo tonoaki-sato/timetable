@@ -14,6 +14,7 @@ export default defineConfig({
                 'resources/js/meetings.js',
                 'resources/js/lanes.js',
                 'resources/js/staff-timeline.js',
+                'resources/js/timetable-task-create.js',
                 'resources/js/timetable-task-show.js',
                 'resources/js/presentation.js',
             ],
