@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
@@ -119,6 +120,40 @@ class LaneManagementTest extends TestCase
             'name' => '音響・PA班',
             'lead_staff_id' => null,
             'color' => 'indigo',
+        ]);
+    }
+
+    /**
+     * 3b. 新規レーン作成時に班長および固定スタッフを指定して同時に登録できること
+     */
+    public function test_can_create_lane_with_lead_and_fixed_staff(): void
+    {
+        $lead = Staff::factory()->create(['name' => '班長リーダー', 'is_active' => true]);
+        $fixedStaff1 = Staff::factory()->create(['name' => '固定スタッフA', 'is_active' => true]);
+        $fixedStaff2 = Staff::factory()->create(['name' => '固定スタッフB', 'is_active' => true]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('timetables.lanes.store', $this->timetable), [
+                'name' => '警備・巡回特務班',
+                'color' => 'purple',
+                'icon' => '🚨',
+                'lead_staff_id' => $lead->id,
+                'fixed_staff_ids' => [$fixedStaff1->id, $fixedStaff2->id],
+                'description' => '会場外周の警備と迷子対応',
+            ]);
+
+        $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
+
+        $lane = Lane::where('name', '警備・巡回特務班')->firstOrFail();
+        $this->assertSame($lead->id, (int) $lane->lead_staff_id);
+
+        $this->assertDatabaseHas('lane_fixed_staff', [
+            'lane_id' => $lane->id,
+            'staff_id' => $fixedStaff1->id,
+        ]);
+        $this->assertDatabaseHas('lane_fixed_staff', [
+            'lane_id' => $lane->id,
+            'staff_id' => $fixedStaff2->id,
         ]);
     }
 
@@ -260,7 +295,7 @@ class LaneManagementTest extends TestCase
         $response = $this->actingAs($this->adminUser)
             ->post(route('timetable-tasks.store'), $taskData);
 
-        $response->assertRedirect(route('timetables.show', $this->timetable));
+        $response->assertRedirect(route('timetable.index', ['timetable_id' => $this->timetable->id]));
 
         $task = TimetableTask::where('title', '足踏み式給水設備 設置点検')->firstOrFail();
         $this->assertSame($lane->id, $task->lane_id);
@@ -302,7 +337,7 @@ class LaneManagementTest extends TestCase
                 'status' => 'not_started',
             ]);
 
-        $response->assertRedirect(route('timetables.show', $this->timetable));
+        $response->assertRedirect(route('timetable.index', ['timetable_id' => $this->timetable->id]));
 
         $task = TimetableTask::where('title', 'コーン設置タスク（デフォルトアサイン確認）')->firstOrFail();
 

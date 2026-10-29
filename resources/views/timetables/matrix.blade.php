@@ -55,6 +55,74 @@
         @endif
     </div>
 
+    @if($selectedTimetable)
+    <x-timetable-workflow-steps :current-step="5" :timetable="$selectedTimetable" />
+
+    <!-- 2. 人員充足状況 & 人員不足タスク即時アサインサマリーバー (Step 5) -->
+    <div class="print:hidden bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <span class="w-8 h-8 rounded-xl {{ $shortageTasks->isNotEmpty() ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }} flex items-center justify-center text-lg font-bold">
+                    {{ $shortageTasks->isNotEmpty() ? '⚠️' : '✔' }}
+                </span>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h2 class="text-xs sm:text-sm font-bold text-slate-900">
+                            人員配置状況サマリー (Step 5: 過不足調整)
+                        </h2>
+                        @if($shortageTasks->isNotEmpty())
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                            未充足 {{ $shortageTasks->count() }} 件
+                        </span>
+                        @else
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            全タスク充足
+                        </span>
+                        @endif
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-0.5">
+                        全タスク必要人数: <strong class="text-slate-800 font-mono">{{ $totalRequired }}</strong> 名 / 現在配置済: <strong class="text-slate-800 font-mono">{{ $totalAssigned }}</strong> 名
+                        @if($shortageTasks->isNotEmpty())
+                            （※下のボタンをクリックして、空きスタッフや他班の余剰スタッフをワンクリックで割り当てられます）
+                        @endif
+                    </p>
+                </div>
+            </div>
+
+            <!-- クイックタスク追加ボタン -->
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="{{ route('timetable-tasks.create', ['timetable_id' => $selectedTimetable->id]) }}"
+                    class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
+                    <span>➕</span>
+                    <span>作業タスクを追加 (Step 4)</span>
+                </a>
+                <a href="{{ route('timetables.lanes.index', $selectedTimetable) }}"
+                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                    <span>🏷️ 班編成を確認 (Step 3)</span>
+                </a>
+            </div>
+        </div>
+
+        @if($shortageTasks->isNotEmpty())
+        <!-- 人員不足タスククイックジャンプリスト -->
+        <div class="pt-3 border-t border-slate-100">
+            <span class="text-[11px] font-bold text-amber-900 block mb-2">👇 人員不足のタスク（クリックすると即座にアサインモーダルが開きます）:</span>
+            <div class="flex flex-wrap gap-2">
+                @foreach($shortageTasks as $sTask)
+                <button type="button" data-action="open-quick-assign" data-task-id="{{ $sTask->id }}"
+                    class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 hover:border-amber-400 rounded-xl text-xs font-bold transition flex items-center space-x-2 cursor-pointer shadow-2xs">
+                    <span class="font-mono text-[10px] bg-amber-200/60 px-1 rounded">{{ substr($sTask->start_time, 0, 5) }}</span>
+                    <span>[{{ $sTask->lane ?: '班未設定' }}]</span>
+                    <span class="truncate max-w-[140px]">{{ $sTask->title }}</span>
+                    <span class="px-1.5 py-0.2 rounded text-[10px] bg-rose-100 text-rose-700 font-mono">不足{{ $sTask->shortage_count }}名</span>
+                </button>
+                @endforeach
+            </div>
+        </div>
+        @endif
+    </div>
+    @endif
+
     @if(!$selectedTimetable)
     <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 shadow-sm">
         <span class="text-4xl block mb-3">📅</span>

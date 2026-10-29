@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Lane;
 use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -102,7 +103,7 @@ class TimetableManagementTest extends TestCase
         ]);
 
         $timetable = Timetable::where('name', '1日目 (Day 1) 本祭運行')->firstOrFail();
-        $response->assertRedirect(route('timetables.show', $timetable));
+        $response->assertRedirect(route('timetables.lanes.index', $timetable));
 
         $this->assertDatabaseHas('timetables', [
             'id' => $timetable->id,
@@ -110,6 +111,29 @@ class TimetableManagementTest extends TestCase
             'status' => 'active',
             'created_by' => $this->operator->id,
         ]);
+        $this->assertCount(count(Lane::DEFAULT_LANES), $timetable->lanes);
+    }
+
+    /**
+     * create_default_lanes を false にすると初期班が自動生成されないこと
+     */
+    public function test_can_create_timetable_without_default_lanes(): void
+    {
+        $this->actingAs($this->operator);
+
+        $response = $this->post(route('timetables.store'), [
+            'target_date' => '2026-10-18',
+            'name' => '2日目 独自班編成',
+            'start_time' => '08:00',
+            'end_time' => '18:00',
+            'status' => 'active',
+            'create_default_lanes' => 0,
+        ]);
+
+        $timetable = Timetable::where('name', '2日目 独自班編成')->firstOrFail();
+        $response->assertRedirect(route('timetables.lanes.index', $timetable));
+
+        $this->assertCount(0, $timetable->lanes);
     }
 
     /**

@@ -16,13 +16,22 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('lanes.index') }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
-                <span>←</span>
-                <span>運行日別 担当班編成一覧に戻る</span>
-            </a>
+            <div class="flex items-center space-x-2">
+                <a href="{{ route('lanes.index') }}"
+                    class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                    <span>←</span>
+                    <span>運行日別 担当班編成一覧に戻る</span>
+                </a>
+                <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
+                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5">
+                    <span>進行表・タスク登録へ進む (Step 4へ)</span>
+                    <span>→</span>
+                </a>
+            </div>
         </x-slot:actions>
     </x-page-header>
+
+    <x-timetable-workflow-steps :current-step="3" :timetable="$timetable" />
 
     <!-- アラートメッセージ -->
     @if(session('success'))
@@ -136,6 +145,32 @@
                         <input type="text" id="new_description" name="description" value="{{ old('description') }}"
                             placeholder="例: 会場放送設備の設営、式典アナウンスの実施"
                             class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <!-- 固定スタッフ選択エリア (新規作成時) -->
+                <div class="p-4 bg-white rounded-xl border border-indigo-200 space-y-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <span class="text-xs font-bold text-indigo-950 flex items-center space-x-1">
+                            <span>📌</span>
+                            <span>固定スタッフ設定（この班のタスクに自動で基本配置されます）</span>
+                        </span>
+                        <span class="text-[11px] text-slate-500">決まっている場合は選択（複数選択可）</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-40 overflow-y-auto p-1 border border-slate-100 rounded-lg bg-slate-50/50">
+                        @foreach($activeStaff as $st)
+                        <label class="flex items-center space-x-1.5 text-xs text-slate-700 cursor-pointer hover:bg-indigo-50 p-1.5 rounded transition">
+                            <input type="checkbox" name="fixed_staff_ids[]" value="{{ $st->id }}"
+                                {{ in_array($st->id, old('fixed_staff_ids', [])) ? 'checked' : '' }}
+                                class="w-3.5 h-3.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                            <span class="truncate" title="{{ $st->name }} ({{ $st->affiliation ?: '所属なし' }})">
+                                {{ $st->name }}
+                                @if($st->affiliation)
+                                <span class="text-[10px] text-slate-400">({{ $st->affiliation }})</span>
+                                @endif
+                            </span>
+                        </label>
+                        @endforeach
                     </div>
                 </div>
 
@@ -438,6 +473,29 @@
                 レーンがまだ登録されていません。上の「新しい担当班を追加する」から登録してください。
             </div>
             @endforelse
+        </div>
+    </div>
+
+    <!-- 3. Step 3 完了案内 & Step 4（タスク登録）への次ステップ大型バナー -->
+    <div class="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-2xl p-6 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                    Step 3 完了
+                </span>
+                <h3 class="text-base font-bold text-white">班長・固定スタッフの編成が整いましたか？</h3>
+            </div>
+            <p class="text-xs text-slate-300">
+                次はタイムテーブル進行表を開いて、各班の作業タスクを登録していきます。班員はタスクに自動配置されます。
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3 shrink-0">
+            <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
+                class="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center space-x-2">
+                <span>⏱️ 進行表を開いてタスク登録へ進む (Step 4へ)</span>
+                <span>→</span>
+            </a>
         </div>
     </div>
 

@@ -160,4 +160,3 @@ class NextTasksServiceTest extends TestCase
         $this->assertSame('あと 1時間45分後 開始', $context->remainingTimeLabel);
     }
 }
-

@@ -45,10 +45,10 @@ class TimetableTaskController extends Controller
         $timetableId = $request->integer('timetable_id');
         $timetable = Timetable::findOrFail($timetableId);
 
-        $timetableLanes = $timetable->lanes()->with(['leadStaff', 'tasks'])->get();
+        $timetableLanes = $timetable->lanes()->with(['leadStaff', 'fixedStaff', 'tasks'])->get();
         if ($timetableLanes->isEmpty()) {
             $timetable->createDefaultLanes();
-            $timetableLanes = $timetable->lanes()->with(['leadStaff', 'tasks'])->get();
+            $timetableLanes = $timetable->lanes()->with(['leadStaff', 'fixedStaff', 'tasks'])->get();
         }
 
         $selectedLaneId = $request->integer('lane_id') ?: null;
@@ -126,7 +126,12 @@ class TimetableTaskController extends Controller
             $message = "「{$laneName}」に {$count} 件の作業タスクを一括登録しました。";
         }
 
-        return redirect()->route('timetables.show', $timetableId)
+        if ($request->input('redirect_to') === 'show') {
+            return redirect()->route('timetables.show', $timetableId)
+                ->with('success', $message);
+        }
+
+        return redirect()->route('timetable.index', ['timetable_id' => $timetableId])
             ->with('success', $message);
     }
 
@@ -177,7 +182,12 @@ class TimetableTaskController extends Controller
 
         $this->taskService->updateTask($task, $request->validated());
 
-        return redirect()->route('timetables.show', $task->timetable_id)
+        if ($request->input('redirect_to') === 'show') {
+            return redirect()->route('timetables.show', $task->timetable_id)
+                ->with('success', "作業タスク「{$task->title}」を更新しました。");
+        }
+
+        return redirect()->route('timetable.index', ['timetable_id' => $task->timetable_id])
             ->with('success', "作業タスク「{$task->title}」を更新しました。");
     }
 
@@ -193,7 +203,12 @@ class TimetableTaskController extends Controller
 
         $this->taskService->deleteTask($task);
 
-        return redirect()->route('timetables.show', $timetableId)
+        if (request()->input('redirect_to') === 'show') {
+            return redirect()->route('timetables.show', $timetableId)
+                ->with('success', "作業タスク「{$title}」を削除しました。");
+        }
+
+        return redirect()->route('timetable.index', ['timetable_id' => $timetableId])
             ->with('success', "作業タスク「{$title}」を削除しました。");
     }
 

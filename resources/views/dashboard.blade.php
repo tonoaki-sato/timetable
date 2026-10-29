@@ -41,7 +41,68 @@
         </div>
     </div>
 
-    <!-- 2. 主要KPIステータスカード群 (2カラム) -->
+    @if(isset($workflowState))
+    <!-- 2. まつり運行準備ナビゲーター (Step 1〜5) -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div class="flex items-center space-x-2.5">
+                <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">🚀</span>
+                <div>
+                    <h2 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                        <span>まつり運行準備ナビゲーター</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-100 text-indigo-800">
+                            現在: Step {{ $workflowState['current_step'] }} / 5
+                        </span>
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        タイムテーブル作成から班編成・タスク登録・余剰スタッフ配置までの手順をナビゲートします。
+                    </p>
+                </div>
+            </div>
+
+            @if(!empty($workflowState['action_url']))
+            <a href="{{ $workflowState['action_url'] }}"
+               class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center justify-center space-x-1.5 shrink-0">
+                <span>{{ $workflowState['action_btn_text'] }}</span>
+                <span>→</span>
+            </a>
+            @endif
+        </div>
+
+        <x-timetable-workflow-steps
+            :current-step="$workflowState['current_step']"
+            :timetable="$workflowState['active_timetable']" />
+
+        <!-- 推奨アクション案内バナー -->
+        <div class="p-4 rounded-xl border {{ $workflowState['shortage_tasks_count'] > 0 ? 'bg-amber-50/80 border-amber-200 text-amber-900' : 'bg-indigo-50/60 border-indigo-100 text-slate-800' }} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1">
+                <div class="font-bold text-xs flex items-center space-x-1.5">
+                    <span>💡</span>
+                    <span>現在の推奨アクション: {{ $workflowState['action_title'] }}</span>
+                </div>
+                <p class="text-[11px] text-slate-600">
+                    {{ $workflowState['action_desc'] }}
+                </p>
+            </div>
+
+            @if($workflowState['active_timetable'])
+            <div class="flex items-center space-x-3 text-xs shrink-0 font-mono">
+                <span class="text-slate-500">班: <strong class="text-slate-800">{{ $workflowState['lanes_count'] }}</strong></span>
+                <span class="text-slate-300">|</span>
+                <span class="text-slate-500">タスク: <strong class="text-slate-800">{{ $workflowState['total_tasks_count'] }}</strong></span>
+                <span class="text-slate-300">|</span>
+                @if($workflowState['shortage_tasks_count'] > 0)
+                    <span class="text-rose-600 font-bold">⚠️ 不足タスク: {{ $workflowState['shortage_tasks_count'] }}</span>
+                @else
+                    <span class="text-emerald-600 font-bold">✔ 人員充足</span>
+                @endif
+            </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
+    <!-- 3. 主要KPIステータスカード群 (2カラム) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- フェーズ -->
         <x-dashboard.phase-card />

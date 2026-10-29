@@ -60,6 +60,7 @@ class StoreTimetableRequest extends FormRequest
             'festival_periods.*.end_time' => ['required_with:festival_periods', 'string'],
             'festival_periods.*.label' => ['required_with:festival_periods', 'string', 'max:50'],
             'festival_periods.*.status' => ['nullable', 'string', 'max:30'],
+            'create_default_lanes' => ['nullable', 'boolean'],
         ];
     }
 

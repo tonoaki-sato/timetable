@@ -23,6 +23,8 @@
         </x-slot:actions>
     </x-page-header>
 
+    <x-timetable-workflow-steps :current-step="2" />
+
     <!-- バリデーションエラーサマリー -->
     @if ($errors->any())
     <div class="p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl space-y-1">
@@ -108,6 +110,22 @@
             <!-- 運行状況・時間帯指定（道路・まつり） -->
             @include('timetables._periods_form', ['timetable' => null])
 
+            <!-- 初期班自動生成オプション (Step 3 連携) -->
+            <div class="p-4 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-1">
+                <label class="flex items-start space-x-2.5 cursor-pointer select-none">
+                    <input type="checkbox" name="create_default_lanes" value="1" {{ old('create_default_lanes', '1') === '1' ? 'checked' : '' }}
+                        class="w-4 h-4 mt-0.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-950">
+                            🏷️ まつり標準10班（カラーコーン・給水・衛生・巡回・キッズ村など）を自動生成する（推奨）
+                        </span>
+                        <p class="text-[11px] text-slate-500 mt-0.5">
+                            チェックを入れて登録すると、登録完了後にそのまま各班の班長および固定スタッフ編成画面（Step 3）へ進みます。
+                        </p>
+                    </div>
+                </label>
+            </div>
+
             <!-- ボタンエリア -->
             <div class="pt-4 border-t border-slate-200 flex items-center justify-end space-x-3">
                 <a href="{{ route('timetables.index') }}"
@@ -115,8 +133,9 @@
                     キャンセル
                 </a>
                 <button type="submit"
-                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer">
-                    運行日を登録する
+                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer flex items-center space-x-1.5">
+                    <span>運行日を登録して担当班編成へ進む (Step 3へ)</span>
+                    <span>→</span>
                 </button>
             </div>
 

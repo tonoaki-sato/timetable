@@ -43,6 +43,8 @@ function initLaneSelectorSync() {
     const noLeadBanner = document.getElementById('no-lead-staff-banner');
     const leadNameEl = document.getElementById('lead-staff-name');
     const leadAffEl = document.getElementById('lead-staff-affiliation');
+    const fixedCountEl = document.getElementById('fixed-staff-count');
+    const fixedNamesEl = document.getElementById('fixed-staff-names');
     const tasksContainer = document.getElementById('tasks-container');
 
     if (!laneSelect) return;
@@ -53,10 +55,15 @@ function initLaneSelectorSync() {
 
         const leadName = selectedOption.dataset.leadName || '';
         const leadAff = selectedOption.dataset.leadAff || '';
+        const fixedCount = selectedOption.dataset.fixedCount || '0';
+        const fixedNames = selectedOption.dataset.fixedNames || '';
         const suggestedStart = selectedOption.dataset.suggestedStart || '';
 
-        if (leadName) {
-            if (leadNameEl) leadNameEl.textContent = leadName;
+        if (fixedCountEl) fixedCountEl.textContent = fixedCount;
+        if (fixedNamesEl) fixedNamesEl.textContent = fixedNames || '（設定なし）';
+
+        if (leadName || parseInt(fixedCount, 10) > 0) {
+            if (leadNameEl) leadNameEl.textContent = leadName || '未設定';
             if (leadAffEl) {
                 if (leadAff) {
                     leadAffEl.textContent = `(${leadAff})`;
@@ -67,7 +74,11 @@ function initLaneSelectorSync() {
                 }
             }
             leadBanner?.classList.remove('hidden');
-            noLeadBanner?.classList.add('hidden');
+            if (leadName) {
+                noLeadBanner?.classList.add('hidden');
+            } else {
+                noLeadBanner?.classList.remove('hidden');
+            }
         } else {
             leadBanner?.classList.add('hidden');
             noLeadBanner?.classList.remove('hidden');

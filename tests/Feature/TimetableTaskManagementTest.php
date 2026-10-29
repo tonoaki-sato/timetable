@@ -69,7 +69,7 @@ class TimetableTaskManagementTest extends TestCase
             'status' => 'not_started',
         ]);
 
-        $response->assertRedirect(route('timetables.show', $this->timetable));
+        $response->assertRedirect(route('timetable.index', ['timetable_id' => $this->timetable->id]));
 
         $lane = $this->timetable->lanes()->where('name', 'カラーコーン')->firstOrFail();
 
@@ -132,7 +132,7 @@ class TimetableTaskManagementTest extends TestCase
             'status' => 'in_progress',
         ]);
 
-        $response->assertRedirect(route('timetables.show', $this->timetable));
+        $response->assertRedirect(route('timetable.index', ['timetable_id' => $this->timetable->id]));
 
         $this->assertDatabaseHas('timetable_tasks', [
             'id' => $task->id,
@@ -155,7 +155,7 @@ class TimetableTaskManagementTest extends TestCase
         $task = TimetableTask::factory()->create(['timetable_id' => $this->timetable->id]);
 
         $response = $this->delete(route('timetable-tasks.destroy', $task));
-        $response->assertRedirect(route('timetables.show', $this->timetable));
+        $response->assertRedirect(route('timetable.index', ['timetable_id' => $this->timetable->id]));
 
         $this->assertDatabaseMissing('timetable_tasks', ['id' => $task->id]);
     }

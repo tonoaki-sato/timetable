@@ -20,12 +20,16 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.show', $timetable) }}" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
-                <span>←</span>
-                <span>「{{ $timetable->name }}」に戻る</span>
-            </a>
+            <div class="flex items-center space-x-2">
+                <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                    <span>←</span>
+                    <span>タイムテーブル進行表に戻る</span>
+                </a>
+            </div>
         </x-slot:actions>
     </x-page-header>
+
+    <x-timetable-workflow-steps :current-step="4" :timetable="$timetable" />
 
     <!-- エラーサマリー -->
     @if ($errors->any())
@@ -98,12 +102,15 @@
                             <option value="{{ $l->id }}"
                                 data-lead-name="{{ $l->leadStaff?->name ?? '' }}"
                                 data-lead-aff="{{ $l->leadStaff?->affiliation ?? '' }}"
+                                data-fixed-count="{{ $l->fixedStaff->count() }}"
+                                data-fixed-names="{{ $l->fixedStaff->pluck('name')->implode('、') }}"
                                 data-suggested-start="{{ $laneStart }}"
                                 {{ ($currentLaneObj?->id == $l->id || old('lane') == $l->name) ? 'selected' : '' }}>
                                 {{ $l->icon ?: '📋' }} {{ $l->name }}
-                                @if($l->leadStaff)
-                                    (主担当: {{ $l->leadStaff->name }})
-                                @endif
+                                @php
+                                    $membersCount = ($l->lead_staff_id ? 1 : 0) + $l->fixedStaff->count();
+                                @endphp
+                                （配置予定メンバー: {{ $membersCount }}名）
                             </option>
                             @endforeach
                         @else
@@ -118,23 +125,32 @@
 
                 <!-- 主担当スタッフの自動アサイン案内（主担当あり時） -->
                 <div id="lead-staff-banner"
-                    class="{{ $initialLeadStaff ? '' : 'hidden' }} p-3 bg-indigo-50/70 border border-indigo-200/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-indigo-900">
-                    <div class="flex items-center space-x-2">
-                        <span>👤</span>
-                        <span>
-                            レーン主担当: <strong id="lead-staff-name">{{ $initialLeadStaff?->name }}</strong>
-                            <span id="lead-staff-affiliation" class="text-indigo-600 text-[11px] {{ $initialLeadStaff?->affiliation ? '' : 'hidden' }}">
-                                ({{ $initialLeadStaff?->affiliation }})
+                    class="{{ ($initialLeadStaff || ($currentLaneObj && $currentLaneObj->fixedStaff->isNotEmpty())) ? '' : 'hidden' }} p-3 bg-indigo-50/70 border border-indigo-200/80 rounded-xl space-y-2 text-xs text-indigo-900">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center space-x-2">
+                            <span>👑</span>
+                            <span>
+                                班長（主担当）: <strong id="lead-staff-name">{{ $initialLeadStaff?->name ?: '未設定' }}</strong>
+                                <span id="lead-staff-affiliation" class="text-indigo-600 text-[11px] {{ $initialLeadStaff?->affiliation ? '' : 'hidden' }}">
+                                    ({{ $initialLeadStaff?->affiliation }})
+                                </span>
                             </span>
+                        </div>
+                        <label class="inline-flex items-center space-x-2 cursor-pointer font-bold text-indigo-700 hover:text-indigo-900">
+                            <input type="hidden" name="auto_assign_lead" value="0">
+                            <input type="checkbox" name="auto_assign_lead" value="1"
+                                {{ old('auto_assign_lead', '1') ? 'checked' : '' }}
+                                class="w-4 h-4 text-indigo-600 rounded border-indigo-300 focus:ring-indigo-500">
+                            <span>班長・固定スタッフを自動配置する</span>
+                        </label>
+                    </div>
+
+                    <div id="fixed-staff-container" class="pt-1.5 border-t border-indigo-200/60 flex items-center space-x-2 text-[11px] text-slate-700">
+                        <span class="font-bold text-indigo-900 shrink-0">📌 固定スタッフ (<span id="fixed-staff-count">{{ $currentLaneObj?->fixedStaff->count() ?? 0 }}</span>名):</span>
+                        <span id="fixed-staff-names" class="text-slate-600 truncate">
+                            {{ $currentLaneObj?->fixedStaff->pluck('name')->implode('、') ?: '（設定なし）' }}
                         </span>
                     </div>
-                    <label class="inline-flex items-center space-x-2 cursor-pointer font-bold text-indigo-700 hover:text-indigo-900">
-                        <input type="hidden" name="auto_assign_lead" value="0">
-                        <input type="checkbox" name="auto_assign_lead" value="1"
-                            {{ old('auto_assign_lead', '1') ? 'checked' : '' }}
-                            class="w-4 h-4 text-indigo-600 rounded border-indigo-300 focus:ring-indigo-500">
-                        <span>登録する全タスクに主担当を班リーダーとして自動アサインする</span>
-                    </label>
                 </div>
 
                 <!-- 主担当未設定時の案内 -->

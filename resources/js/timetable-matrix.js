@@ -350,6 +350,7 @@ function initQuickAssignModal() {
             let matchStatus = true;
             if (statusFilter === 'available') matchStatus = !c.is_conflicted && !c.is_already_assigned;
             else if (statusFilter === 'recommended') matchStatus = c.priority_tier === 1 && !c.is_already_assigned;
+            else if (statusFilter === 'surplus') matchStatus = c.is_surplus_fixed && !c.is_already_assigned;
             else if (statusFilter === 'checked_in') matchStatus = c.is_checked_in && !c.is_already_assigned;
 
             return matchQ && matchAff && matchStatus;
@@ -483,6 +484,11 @@ function initQuickAssignModal() {
                         <span class="text-[11px] text-slate-600 font-medium">
                             選択中: <strong id="quickAssignSelectedCount" class="text-indigo-600 font-mono text-xs">${selectedStaffIds.length}</strong> 名
                         </span>
+                        ${(!task.is_satisfied && task.shortage_count > 0) ? `
+                        <button type="button" data-action="select-shortage-auto"
+                            class="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded text-[11px] font-bold transition cursor-pointer">
+                            ⚡ 不足${task.shortage_count}名を自動選択
+                        </button>` : ''}
                         <button type="button" data-action="select-all-filtered"
                             class="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded text-[11px] font-medium transition cursor-pointer">
                             表示中を全選択
@@ -502,6 +508,7 @@ function initQuickAssignModal() {
                         class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                         <option value="all" ${statusFilter === 'all' ? 'selected' : ''}>すべての状態</option>
                         <option value="recommended" ${statusFilter === 'recommended' ? 'selected' : ''}>🌟 推奨（同班＆空き）</option>
+                        <option value="surplus" ${statusFilter === 'surplus' ? 'selected' : ''}>✨ 他班の余剰スタッフ（融通可）</option>
                         <option value="available" ${statusFilter === 'available' ? 'selected' : ''}>🟢 空きスタッフのみ</option>
                         <option value="checked_in" ${statusFilter === 'checked_in' ? 'selected' : ''}>📍 現場到着済のみ</option>
                     </select>
@@ -559,6 +566,8 @@ function initQuickAssignModal() {
                 cardClass += 'bg-indigo-50/90 border-indigo-600 ring-1 ring-indigo-500 cursor-pointer';
             } else if (isConflicted) {
                 cardClass += 'bg-amber-50/60 border-amber-200/80 hover:border-amber-300 cursor-pointer';
+            } else if (c.is_surplus_fixed) {
+                cardClass += 'bg-purple-50/60 border-purple-200 hover:border-purple-300 cursor-pointer';
             } else {
                 cardClass += 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-2xs cursor-pointer';
             }
@@ -576,6 +585,8 @@ function initQuickAssignModal() {
                 statusBadge = `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300 truncate max-w-[115px]" title="${escapeHtml(c.conflicted_label)}">⚠️ ${escapeHtml(c.conflicted_task_title || '重複中')}</span>`;
             } else if (c.is_same_lane) {
                 statusBadge = `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">🌟 同班推奨</span>`;
+            } else if (c.is_surplus_fixed) {
+                statusBadge = `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-100 text-purple-800 border border-purple-300" title="他班で待機中または定員超過のため融通可能">✨ 他班余剰</span>`;
             } else {
                 statusBadge = `<span class="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-100 text-slate-600 border border-slate-200">🟢 空き</span>`;
             }
@@ -748,6 +759,23 @@ function initQuickAssignModal() {
 
             updateSelectionCountersAndButtons();
             renderCandidateList();
+            return;
+        }
+
+        // 6-b-2. 不足分を自動選択（優先度順）
+        if (e.target.closest('[data-action="select-shortage-auto"]')) {
+            const shortage = taskData?.task?.shortage_count || 0;
+            if (shortage > 0) {
+                selectedStaffIds = [];
+                const filtered = getFilteredCandidates();
+                // 優先度順（未アサインかつ重複なしを優先）
+                const eligible = filtered.filter(c => !c.is_already_assigned && !c.is_conflicted);
+                const toPick = eligible.slice(0, shortage);
+                toPick.forEach(c => selectedStaffIds.push(c.id));
+
+                updateSelectionCountersAndButtons();
+                renderCandidateList();
+            }
             return;
         }
 

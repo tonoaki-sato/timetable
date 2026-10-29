@@ -112,4 +112,3 @@ class LaneRequest extends Model
         return self::STATUSES[$this->status] ?? $this->status;
     }
 }
-

@@ -80,4 +80,3 @@ class TrafficRegulationServiceTest extends TestCase
         $this->assertFalse($postContext->isAlertActive);
     }
 }
-

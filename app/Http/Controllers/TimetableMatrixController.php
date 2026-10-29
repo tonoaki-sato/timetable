@@ -63,6 +63,7 @@ class TimetableMatrixController extends Controller
 
             $tasksCount = $tasks->count();
             $satisfiedTasksCount = $tasks->filter(fn (TimetableTask $t) => $t->is_satisfied)->count();
+            $shortageTasks = $tasks->filter(fn (TimetableTask $t) => ! $t->is_satisfied)->values();
             $totalRequired = $tasks->sum('required_people_count');
             $totalAssigned = $tasks->sum(fn (TimetableTask $t) => $t->assigned_count);
 
@@ -92,6 +93,7 @@ class TimetableMatrixController extends Controller
             'nowTime' => $nowTime,
             'tasksCount' => $tasksCount,
             'satisfiedTasksCount' => $satisfiedTasksCount,
+            'shortageTasks' => $shortageTasks ?? collect(),
             'totalRequired' => $totalRequired,
             'totalAssigned' => $totalAssigned,
             'activeStaff' => $activeStaff,

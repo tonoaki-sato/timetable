@@ -21,4 +21,3 @@ readonly class NextTasksContext
         public string $actionUrl,
     ) {}
 }
-

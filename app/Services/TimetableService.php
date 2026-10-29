@@ -48,10 +48,18 @@ class TimetableService
      */
     public function createTimetable(array $data, ?User $creator): Timetable
     {
+        $createDefaultLanes = isset($data['create_default_lanes'])
+            ? (bool) $data['create_default_lanes']
+            : true;
+        unset($data['create_default_lanes']);
+
         $data['created_by'] = $creator?->id;
 
         $timetable = $this->timetableRepository->create($data);
-        $timetable->createDefaultLanes();
+
+        if ($createDefaultLanes) {
+            $timetable->createDefaultLanes();
+        }
 
         return $timetable;
     }

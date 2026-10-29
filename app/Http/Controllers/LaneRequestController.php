@@ -39,4 +39,3 @@ class LaneRequestController extends Controller
         return back()->with('success', "班長からの「{$laneRequest->type_label}」を「{$laneRequest->status_label}」に更新しました。");
     }
 }
-
