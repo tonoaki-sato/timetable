@@ -137,6 +137,43 @@ class TimetableManagementTest extends TestCase
     }
 
     /**
+     * 新規作成画面にゆとりあるコンテナ幅、ステップガイド、およびデフォルト班自動生成のhidden inputが存在すること
+     */
+    public function test_create_view_displays_workflow_steps_with_expanded_width_and_hidden_input(): void
+    {
+        $this->actingAs($this->operator);
+
+        $response = $this->get(route('timetables.create'));
+        $response->assertStatus(200);
+        $response->assertSee('max-w-5xl');
+        $response->assertSee('まつり運行準備ステップガイド');
+        $response->assertSee('<input type="hidden" name="create_default_lanes" value="0">', false);
+        $response->assertSee('まつり標準10班（カラーコーン・給水・衛生・巡回・キッズ村など）を自動生成する（推奨）');
+    }
+
+    /**
+     * チェックを外して文字列 '0' が送信された場合に標準10班が作成されないこと
+     */
+    public function test_can_create_timetable_without_default_lanes_with_string_zero(): void
+    {
+        $this->actingAs($this->operator);
+
+        $response = $this->post(route('timetables.store'), [
+            'target_date' => '2026-10-19',
+            'name' => '3日目 ゼロ班編成',
+            'start_time' => '08:00',
+            'end_time' => '18:00',
+            'status' => 'active',
+            'create_default_lanes' => '0',
+        ]);
+
+        $timetable = Timetable::where('name', '3日目 ゼロ班編成')->firstOrFail();
+        $response->assertRedirect(route('timetables.lanes.index', $timetable));
+
+        $this->assertCount(0, $timetable->lanes);
+    }
+
+    /**
      * 閲覧者ロール（viewer）は登録・編集・削除が禁止されること
      */
     public function test_viewer_cannot_create_or_edit_or_delete_timetable(): void

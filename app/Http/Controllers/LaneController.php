@@ -80,6 +80,10 @@ class LaneController extends Controller
 
         $lane = $timetable->lanes()->create($data);
 
+        if ($lane->lead_staff_id && ! in_array((int) $lane->lead_staff_id, array_map('intval', $fixedStaffIds), true)) {
+            $fixedStaffIds[] = (int) $lane->lead_staff_id;
+        }
+
         if (! empty($fixedStaffIds)) {
             $this->taskService->syncLaneFixedStaffToTasks($lane, $fixedStaffIds);
         }
@@ -111,6 +115,9 @@ class LaneController extends Controller
         }
 
         if ($hasFixedStaffInput) {
+            if ($lane->lead_staff_id && ! in_array((int) $lane->lead_staff_id, array_map('intval', $fixedStaffIds), true)) {
+                $fixedStaffIds[] = (int) $lane->lead_staff_id;
+            }
             $this->taskService->syncLaneFixedStaffToTasks($lane, $fixedStaffIds);
         }
 
@@ -139,6 +146,8 @@ class LaneController extends Controller
 
         $syncedCount = 0;
         if ($lane->lead_staff_id) {
+            $lane->fixedStaff()->syncWithoutDetaching([$lane->lead_staff_id]);
+            Staff::where('id', $lane->lead_staff_id)->update(['staff_type' => 'fixed']);
             $syncedCount = $this->taskService->syncLaneLeadToTasks($lane, $oldLeadStaffId);
         }
 

@@ -97,6 +97,8 @@ class LaneManagementTest extends TestCase
         $response->assertSee('⋮⋮');
         $response->assertSee('主要班');
         $response->assertSee('delete-migration-modal');
+        $response->assertSee(route('timetable-tasks.create', ['timetable_id' => $this->timetable->id]));
+        $response->assertSee('タスク登録へ進む (Step 4へ)');
     }
 
     /**
@@ -214,6 +216,14 @@ class LaneManagementTest extends TestCase
         $response->assertSessionHas('success');
         $lane->refresh();
         $this->assertSame($staff->id, $lane->lead_staff_id);
+        $this->assertTrue($lane->fixedStaff->contains($staff));
+        $this->assertSame('fixed', $staff->fresh()->staff_type);
+
+        // レーン一覧のHTMLでも固定スタッフ一覧に「👑 班長」として含まれていること
+        $viewResponse = $this->actingAs($this->operatorUser)
+            ->get(route('timetables.lanes.index', $this->timetable));
+        $viewResponse->assertStatus(200);
+        $viewResponse->assertSee('👑 班長');
 
         // 2. 解除 (null)
         $response = $this->actingAs($this->operatorUser)

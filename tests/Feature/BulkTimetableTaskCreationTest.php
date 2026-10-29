@@ -101,7 +101,7 @@ class BulkTimetableTaskCreationTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('timetable-tasks.store'), $payload);
 
-        $response->assertRedirect(route('timetables.show', $timetable->id));
+        $response->assertRedirect(route('timetable.index', ['timetable_id' => $timetable->id]));
         $response->assertSessionHas('success', '「衛生」に 3 件の作業タスクを一括登録しました。');
 
         $createdTasks = TimetableTask::where('timetable_id', $timetable->id)
@@ -160,7 +160,7 @@ class BulkTimetableTaskCreationTest extends TestCase
             ],
         ]);
 
-        $response->assertRedirect(route('timetables.show', $timetable->id));
+        $response->assertRedirect(route('timetable.index', ['timetable_id' => $timetable->id]));
 
         $task = TimetableTask::where('title', '個別アサイン予定タスク')->firstOrFail();
         $this->assertDatabaseMissing('task_staff_assignments', [
@@ -195,7 +195,7 @@ class BulkTimetableTaskCreationTest extends TestCase
             'status' => 'not_started',
         ]);
 
-        $response->assertRedirect(route('timetables.show', $timetable->id));
+        $response->assertRedirect(route('timetable.index', ['timetable_id' => $timetable->id]));
         $response->assertSessionHas('success', '作業タスク「給水タンク設置」を登録しました。');
 
         $this->assertDatabaseHas('timetable_tasks', [

@@ -34,6 +34,12 @@ class StoreTimetableRequest extends FormRequest
             }));
             $this->merge(['festival_periods' => empty($filtered) ? null : $filtered]);
         }
+
+        if ($this->has('create_default_lanes')) {
+            $this->merge([
+                'create_default_lanes' => $this->boolean('create_default_lanes'),
+            ]);
+        }
     }
 
     /**

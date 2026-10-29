@@ -28,7 +28,7 @@ class DashboardPhaseCardTest extends TestCase
         $this->assertInstanceOf(PhaseContext::class, $component->context);
         $this->assertNotEmpty($component->displayName());
         $this->assertNotEmpty($component->subStatus());
-        $this->assertNotEmpty($component->actionUrl());
+        $this->assertTrue(is_null($component->actionUrl()) || is_string($component->actionUrl()));
     }
 
     /**

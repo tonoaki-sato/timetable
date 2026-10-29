@@ -22,9 +22,9 @@
                     <span>←</span>
                     <span>運行日別 担当班編成一覧に戻る</span>
                 </a>
-                <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
+                <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
                     class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5">
-                    <span>進行表・タスク登録へ進む (Step 4へ)</span>
+                    <span>タスク登録へ進む (Step 4へ)</span>
                     <span>→</span>
                 </a>
             </div>
@@ -428,6 +428,9 @@
                         </div>
                         @php
                             $currentFixedIds = $lane->fixedStaff->pluck('id')->all();
+                            if ($lane->lead_staff_id && ! in_array((int) $lane->lead_staff_id, array_map('intval', $currentFixedIds), true)) {
+                                $currentFixedIds[] = (int) $lane->lead_staff_id;
+                            }
                         @endphp
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-40 overflow-y-auto p-1">
                             @foreach($activeStaff as $st)
@@ -436,6 +439,9 @@
                                     {{ in_array($st->id, $currentFixedIds) ? 'checked' : '' }}
                                     class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5">
                                 <span class="truncate">{{ $st->name }}</span>
+                                @if($lane->lead_staff_id == $st->id)
+                                <span class="text-[10px] text-amber-700 font-bold ml-0.5 shrink-0">👑 班長</span>
+                                @endif
                             </label>
                             @endforeach
                         </div>
@@ -491,9 +497,9 @@
         </div>
 
         <div class="flex items-center gap-3 shrink-0">
-            <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
+            <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
                 class="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center space-x-2">
-                <span>⏱️ 進行表を開いてタスク登録へ進む (Step 4へ)</span>
+                <span>📝 タスク登録へ進む (Step 4へ)</span>
                 <span>→</span>
             </a>
         </div>

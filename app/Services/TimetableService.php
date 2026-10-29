@@ -48,7 +48,7 @@ class TimetableService
      */
     public function createTimetable(array $data, ?User $creator): Timetable
     {
-        $createDefaultLanes = isset($data['create_default_lanes'])
+        $createDefaultLanes = array_key_exists('create_default_lanes', $data)
             ? (bool) $data['create_default_lanes']
             : true;
         unset($data['create_default_lanes']);

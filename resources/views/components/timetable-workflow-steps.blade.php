@@ -78,8 +78,8 @@
                         : 'bg-slate-50 hover:bg-slate-100 text-slate-500 border-slate-200');
             @endphp
             <a href="{{ $step['route'] }}"
-               class="p-2.5 sm:p-3 rounded-xl border transition flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-2 select-none group {{ $cardBg }}">
-                <div class="flex items-center space-x-2 sm:space-x-1.5 w-full">
+               class="p-2.5 sm:p-3 rounded-xl border transition flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-1.5 sm:gap-2 select-none group min-w-0 {{ $cardBg }}">
+                <div class="flex items-center space-x-2 sm:space-x-1.5 w-full min-w-0">
                     <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-mono shrink-0 {{ $isCurrent ? 'bg-white text-indigo-600' : ($isCompleted ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600') }}">
                         @if($isCompleted)
                             ✔
@@ -87,12 +87,12 @@
                             {{ $num }}
                         @endif
                     </span>
-                    <span class="text-xs font-bold truncate flex-1 {{ $isCurrent ? 'text-white' : ($isCompleted ? 'text-emerald-950 group-hover:text-emerald-800' : 'text-slate-700 group-hover:text-slate-900') }}">
+                    <span class="text-xs font-bold leading-tight break-words flex-1 min-w-0 {{ $isCurrent ? 'text-white' : ($isCompleted ? 'text-emerald-950 group-hover:text-emerald-800' : 'text-slate-700 group-hover:text-slate-900') }}">
                         {{ $step['title'] }}
                     </span>
                     <span class="text-sm shrink-0 sm:hidden">{{ $step['icon'] }}</span>
                 </div>
-                <div class="text-[10px] hidden sm:block truncate w-full mt-0.5 {{ $isCurrent ? 'text-indigo-100' : ($isCompleted ? 'text-emerald-700' : 'text-slate-400') }}">
+                <div class="text-[10px] hidden sm:block leading-tight break-words w-full mt-0.5 {{ $isCurrent ? 'text-indigo-100' : ($isCompleted ? 'text-emerald-700' : 'text-slate-400') }}">
                     {{ $step['desc'] }}
                 </div>
             </a>

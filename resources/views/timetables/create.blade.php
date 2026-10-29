@@ -1,5 +1,5 @@
 <x-layouts.app title="新規タイムテーブル登録">
-<div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
@@ -113,6 +113,7 @@
             <!-- 初期班自動生成オプション (Step 3 連携) -->
             <div class="p-4 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-1">
                 <label class="flex items-start space-x-2.5 cursor-pointer select-none">
+                    <input type="hidden" name="create_default_lanes" value="0">
                     <input type="checkbox" name="create_default_lanes" value="1" {{ old('create_default_lanes', '1') === '1' ? 'checked' : '' }}
                         class="w-4 h-4 mt-0.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
                     <div>

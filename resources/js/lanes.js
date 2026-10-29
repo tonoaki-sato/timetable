@@ -5,6 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initDragAndDropReorder();
     initDeleteMigrationModal();
+    initLeadStaffAutoSelection();
 });
 
 /**
@@ -166,4 +167,29 @@ function showToast(message, type = 'success') {
         toast.classList.add('opacity-0', 'translate-y-2');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+/**
+ * 3. 班長選択時に固定スタッフチェックボックスを自動選択
+ */
+function initLeadStaffAutoSelection() {
+    document.addEventListener('change', (e) => {
+        const select = e.target;
+        if (!select || select.name !== 'lead_staff_id') return;
+
+        // data-auto-submitを持つクイック更新セレクトはフォーム全体が即時送信されるため除外
+        if (select.hasAttribute('data-auto-submit')) return;
+
+        const form = select.closest('form');
+        if (!form) return;
+
+        const selectedStaffId = select.value;
+        if (!selectedStaffId) return;
+
+        // 同一フォーム内の固定スタッフチェックボックスから該当スタッフを自動選択
+        const checkbox = form.querySelector(`input[name="fixed_staff_ids[]"][value="${selectedStaffId}"]`);
+        if (checkbox) {
+            checkbox.checked = true;
+        }
+    });
 }

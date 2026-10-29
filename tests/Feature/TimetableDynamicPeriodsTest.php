@@ -129,7 +129,7 @@ class TimetableDynamicPeriodsTest extends TestCase
         $response = $this->post(route('timetables.store'), $payload);
 
         $timetable = Timetable::where('target_date', '2026-10-20')->firstOrFail();
-        $response->assertRedirect(route('timetables.show', $timetable));
+        $response->assertRedirect(route('timetables.lanes.index', $timetable));
 
         $this->assertCount(1, $timetable->road_periods);
         $this->assertSame('10:00', $timetable->road_periods[0]['start_time']);
