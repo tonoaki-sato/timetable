@@ -34,4 +34,3 @@ class ParkingMonitoringCard extends Component
         return view('components.dashboard.parking-monitoring-card');
     }
 }
-

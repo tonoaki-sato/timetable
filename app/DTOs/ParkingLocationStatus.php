@@ -41,4 +41,3 @@ readonly class ParkingLocationStatus
         return ! empty($this->warnings);
     }
 }
-
