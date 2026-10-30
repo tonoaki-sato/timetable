@@ -146,32 +146,9 @@
                 @endif
             </div>
 
-            <!-- 1. 駐車場利用時間制約監視 (F-405) -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
-                        <span>🅿️</span>
-                        <span>駐車場利用時間制約監視</span>
-                    </h3>
-                    <span class="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-bold">違反なし</span>
-                </div>
-                <div class="space-y-2 text-xs">
-                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
-                        <div>
-                            <div class="font-bold text-slate-800">北川駐車場</div>
-                            <div class="text-[10px] text-slate-500 font-mono">Day 0 13:00 〜 Day 3 12:00</div>
-                        </div>
-                        <span class="text-[11px] font-bold text-emerald-700">利用中 (適正)</span>
-                    </div>
-
-                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
-                        <div>
-                            <div class="font-bold text-slate-800">駅前南駐車場</div>
-                            <div class="text-[10px] text-slate-500 font-mono">Day 1 09:00 〜 Day 1 18:00</div>
-                        </div>
-                        <span class="text-[11px] font-bold text-amber-700">本日18:00返却必須</span>
-                    </div>
-                </div>
+            <!-- 1. 駐車場利用時間制約監視 (F-405) (リアルタイム更新対象) -->
+            <div id="dashboard-card-parking-monitoring">
+                <x-dashboard.parking-monitoring-card :context="$parkingMonitoringContext ?? null" />
             </div>
 
         </div>

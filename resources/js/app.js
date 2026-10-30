@@ -162,6 +162,7 @@ function initDashboardRealtime() {
     const trafficContainer = document.getElementById('dashboard-card-traffic-regulation');
     const nowTasksContainer = document.getElementById('dashboard-card-now-tasks');
     const nextTasksContainer = document.getElementById('dashboard-card-next-tasks');
+    const parkingContainer = document.getElementById('dashboard-card-parking-monitoring');
     const statusTextEl = document.getElementById('dashboard-realtime-status');
     const refreshBtn = document.getElementById('dashboard-manual-refresh');
     const refreshIcon = document.getElementById('dashboard-refresh-icon');
@@ -244,6 +245,9 @@ function initDashboardRealtime() {
                 }
                 if (nextTasksContainer && typeof data.cards.next_tasks === 'string') {
                     updateTaskCardWithAnimation(nextTasksContainer, data.cards.next_tasks);
+                }
+                if (parkingContainer && typeof data.cards.parking_monitoring === 'string') {
+                    parkingContainer.innerHTML = data.cards.parking_monitoring;
                 }
             }
 
