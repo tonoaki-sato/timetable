@@ -24,14 +24,14 @@
                 </a>
                 <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
                     class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5">
-                    <span>タスク登録へ進む (Step 4へ)</span>
+                    <span>タスク登録へ進む (Step 3へ)</span>
                     <span>→</span>
                 </a>
             </div>
         </x-slot:actions>
     </x-page-header>
 
-    <x-timetable-workflow-steps :current-step="3" :timetable="$timetable" />
+    <x-timetable-workflow-steps :current-step="2" :timetable="$timetable" />
 
     <!-- アラートメッセージ -->
     @if(session('success'))
@@ -482,12 +482,12 @@
         </div>
     </div>
 
-    <!-- 3. Step 3 完了案内 & Step 4（タスク登録）への次ステップ大型バナー -->
+    <!-- 3. Step 2 完了案内 & Step 3（タスク登録）への次ステップ大型バナー -->
     <div class="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-2xl p-6 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="space-y-1">
             <div class="flex items-center space-x-2">
                 <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                    Step 3 完了
+                    Step 2 完了
                 </span>
                 <h3 class="text-base font-bold text-white">班長・固定スタッフの編成が整いましたか？</h3>
             </div>
@@ -499,7 +499,7 @@
         <div class="flex items-center gap-3 shrink-0">
             <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
                 class="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center space-x-2">
-                <span>📝 タスク登録へ進む (Step 4へ)</span>
+                <span>📝 タスク登録へ進む (Step 3へ)</span>
                 <span>→</span>
             </a>
         </div>

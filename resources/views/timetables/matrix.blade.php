@@ -56,9 +56,9 @@
     </div>
 
     @if($selectedTimetable)
-    <x-timetable-workflow-steps :current-step="5" :timetable="$selectedTimetable" />
+    <x-timetable-workflow-steps :current-step="4" :timetable="$selectedTimetable" />
 
-    <!-- 2. 人員充足状況 & 人員不足タスク即時アサインサマリーバー (Step 5) -->
+    <!-- 2. 人員充足状況 & 人員不足タスク即時アサインサマリーバー (Step 4) -->
     <div class="print:hidden bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center space-x-3">
@@ -68,7 +68,7 @@
                 <div>
                     <div class="flex items-center space-x-2">
                         <h2 class="text-xs sm:text-sm font-bold text-slate-900">
-                            人員配置状況サマリー (Step 5: 過不足調整)
+                            人員配置状況サマリー (Step 4: 過不足調整)
                         </h2>
                         @if($shortageTasks->isNotEmpty())
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
@@ -94,11 +94,11 @@
                 <a href="{{ route('timetable-tasks.create', ['timetable_id' => $selectedTimetable->id]) }}"
                     class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
                     <span>➕</span>
-                    <span>作業タスクを追加 (Step 4)</span>
+                    <span>作業タスクを追加 (Step 3)</span>
                 </a>
                 <a href="{{ route('timetables.lanes.index', $selectedTimetable) }}"
                     class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
-                    <span>🏷️ 班編成を確認 (Step 3)</span>
+                    <span>🏷️ 班編成を確認 (Step 2)</span>
                 </a>
             </div>
         </div>

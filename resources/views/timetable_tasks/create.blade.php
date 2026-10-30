@@ -29,7 +29,7 @@
         </x-slot:actions>
     </x-page-header>
 
-    <x-timetable-workflow-steps :current-step="4" :timetable="$timetable" />
+    <x-timetable-workflow-steps :current-step="3" :timetable="$timetable" />
 
     <!-- エラーサマリー -->
     @if ($errors->any())

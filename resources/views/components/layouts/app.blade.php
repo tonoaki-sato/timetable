@@ -34,7 +34,7 @@
                     <!-- 主要リンク（グループ化ドロップダウン） -->
                     @php
                         $isScheduleActive = request()->routeIs('calendar.*') || request()->routeIs('annual-schedules.*') || request()->routeIs('meetings.*');
-                        $isOperationActive = request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') || request()->routeIs('timetable.index') || request()->routeIs('lanes.*');
+                        $isOperationActive = request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') || request()->routeIs('timetable.index') || request()->routeIs('lanes.*') || request()->routeIs('preparation-navigator.*');
                         $isManagementActive = request()->routeIs('staff.*') || request()->routeIs('users.*') || request()->routeIs('phases.*') || request()->routeIs('manual.*');
                     @endphp
                     <nav class="hidden md:flex items-center space-x-1 pl-3 lg:pl-4 border-l border-slate-800 shrink-0">
@@ -140,6 +140,17 @@
                                     🛠️ 計画・編成・帳票出力
                                 </div>
                                 <div class="py-1 space-y-0.5">
+                                    <a href="{{ route('preparation-navigator.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('preparation-navigator.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">🚀</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold flex items-center justify-between">
+                                                <span>まつり運行準備ナビゲーター</span>
+                                                <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded {{ request()->routeIs('preparation-navigator.*') ? 'bg-indigo-700 text-white' : 'bg-indigo-500/30 text-indigo-200' }}">Step 1〜4</span>
+                                            </div>
+                                            <p class="text-[10px] {{ request()->routeIs('preparation-navigator.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">タイムテーブル・班・タスク・人員配置を手順通りに準備・実行</p>
+                                        </div>
+                                    </a>
                                     <a href="{{ route('timetables.index') }}"
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">📋</span>
@@ -395,6 +406,19 @@
                             🛠️ タイムテーブル・スケジュール・体制
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-xs">
+                            <a href="{{ route('preparation-navigator.index') }}" class="p-2.5 col-span-2 bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 rounded-xl flex items-center justify-between text-white {{ request()->routeIs('preparation-navigator.*') ? 'ring-2 ring-indigo-500' : '' }}">
+                                <div class="flex items-center space-x-2.5">
+                                    <span class="text-base">🚀</span>
+                                    <div>
+                                        <div class="font-bold text-xs flex items-center space-x-1.5">
+                                            <span>まつり運行準備ナビゲーター</span>
+                                            <span class="text-[9px] bg-indigo-500/30 text-indigo-200 px-1.5 py-0.2 rounded font-mono font-bold">Step 1〜4</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-300">タイムテーブル・班・タスク・人員配置を手順通りに準備・実行</div>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-indigo-300 font-bold shrink-0 ml-2">開く →</span>
+                            </a>
                             <a href="{{ route('timetables.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('timetables.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">📋</span>
                                 <div class="min-w-0">

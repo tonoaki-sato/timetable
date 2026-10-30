@@ -98,7 +98,7 @@ class LaneManagementTest extends TestCase
         $response->assertSee('主要班');
         $response->assertSee('delete-migration-modal');
         $response->assertSee(route('timetable-tasks.create', ['timetable_id' => $this->timetable->id]));
-        $response->assertSee('タスク登録へ進む (Step 4へ)');
+        $response->assertSee('タスク登録へ進む (Step 3へ)');
     }
 
     /**

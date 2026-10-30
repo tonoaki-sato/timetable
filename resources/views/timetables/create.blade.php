@@ -23,7 +23,7 @@
         </x-slot:actions>
     </x-page-header>
 
-    <x-timetable-workflow-steps :current-step="2" />
+    <x-timetable-workflow-steps :current-step="1" />
 
     <!-- バリデーションエラーサマリー -->
     @if ($errors->any())
@@ -110,7 +110,7 @@
             <!-- 運行状況・時間帯指定（道路・まつり） -->
             @include('timetables._periods_form', ['timetable' => null])
 
-            <!-- 初期班自動生成オプション (Step 3 連携) -->
+            <!-- 初期班自動生成オプション (Step 2 連携) -->
             <div class="p-4 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-1">
                 <label class="flex items-start space-x-2.5 cursor-pointer select-none">
                     <input type="hidden" name="create_default_lanes" value="0">
@@ -121,7 +121,7 @@
                             🏷️ まつり標準10班（カラーコーン・給水・衛生・巡回・キッズ村など）を自動生成する（推奨）
                         </span>
                         <p class="text-[11px] text-slate-500 mt-0.5">
-                            チェックを入れて登録すると、登録完了後にそのまま各班の班長および固定スタッフ編成画面（Step 3）へ進みます。
+                            チェックを入れて登録すると、登録完了後にそのまま各班の班長および固定スタッフ編成画面（Step 2）へ進みます。
                         </p>
                     </div>
                 </label>
@@ -135,7 +135,7 @@
                 </a>
                 <button type="submit"
                     class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer flex items-center space-x-1.5">
-                    <span>運行日を登録して担当班編成へ進む (Step 3へ)</span>
+                    <span>運行日を登録して担当班編成へ進む (Step 2へ)</span>
                     <span>→</span>
                 </button>
             </div>

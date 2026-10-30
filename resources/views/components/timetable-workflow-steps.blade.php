@@ -7,27 +7,20 @@
     $steps = [
         1 => [
             'num' => 1,
-            'title' => 'ログイン・運行状況確認',
-            'desc' => 'ダッシュボードで進捗確認',
-            'icon' => '📊',
-            'route' => route('dashboard'),
-        ],
-        2 => [
-            'num' => 2,
             'title' => 'タイムテーブル作成',
             'desc' => '運行日・基本枠の登録',
             'icon' => '📅',
             'route' => route('timetables.create'),
         ],
-        3 => [
-            'num' => 3,
+        2 => [
+            'num' => 2,
             'title' => '担当班・スタッフ編成',
             'desc' => '班長・固定スタッフ登録',
             'icon' => '🏷️',
             'route' => $timetable ? route('timetables.lanes.index', $timetable) : route('lanes.index'),
         ],
-        4 => [
-            'num' => 4,
+        3 => [
+            'num' => 3,
             'title' => 'タスク登録',
             'desc' => '作業登録・班員自動配置',
             'icon' => '📝',
@@ -35,8 +28,8 @@
                 ? route('timetable-tasks.create', ['timetable_id' => $timetable->id])
                 : route('timetables.index'),
         ],
-        5 => [
-            'num' => 5,
+        4 => [
+            'num' => 4,
             'title' => '人員不足・余剰スタッフ配置',
             'desc' => 'マトリクス進行表で過不足調整',
             'icon' => '⚡',
@@ -59,12 +52,12 @@
             </h3>
         </div>
         <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-            Step {{ $currentStep }} / 5
+            Step {{ $currentStep }} / 4
         </span>
     </div>
 
     <!-- ステップ一覧 (横並び / スマホ対応) -->
-    <div class="grid grid-cols-1 sm:grid-cols-5 gap-2 relative">
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 relative">
         @foreach($steps as $num => $step)
             @php
                 $isCurrent = ($num === $currentStep);
