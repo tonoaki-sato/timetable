@@ -34,7 +34,7 @@
                     <!-- 主要リンク（グループ化ドロップダウン） -->
                     @php
                         $isScheduleActive = request()->routeIs('calendar.*') || request()->routeIs('annual-schedules.*') || request()->routeIs('meetings.*');
-                        $isOperationActive = request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') || request()->routeIs('timetable.index') || request()->routeIs('lanes.*') || request()->routeIs('preparation-navigator.*');
+                        $isOperationActive = request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') || request()->routeIs('timetable.index') || request()->routeIs('lanes.*') || request()->routeIs('preparation-navigator.*') || request()->routeIs('equipments.*') || request()->routeIs('logistics-locations.*');
                         $isManagementActive = request()->routeIs('staff.*') || request()->routeIs('users.*') || request()->routeIs('phases.*') || request()->routeIs('manual.*');
                     @endphp
                     <nav class="hidden md:flex items-center space-x-1 pl-3 lg:pl-4 border-l border-slate-800 shrink-0">
@@ -165,6 +165,17 @@
                                         <div class="min-w-0">
                                             <div class="text-xs font-bold">担当班（レーン）管理</div>
                                             <p class="text-[10px] {{ request()->routeIs('lanes.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">各日の班編成と現場リーダー設定</p>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('equipments.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('equipments.*') || request()->routeIs('logistics-locations.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">📦</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold flex items-center justify-between">
+                                                <span>資材・搬出入計画</span>
+                                                <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">New</span>
+                                            </div>
+                                            <p class="text-[10px] {{ request()->routeIs('equipments.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">自前・レンタル資材の移動・中継・夜間保管管理</p>
                                         </div>
                                     </a>
                                     @php
