@@ -1,147 +1,27 @@
 <x-layouts.app title="まつり運行準備ナビゲーター">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- ページヘッダー -->
-    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="space-y-1.5">
-            <div class="flex items-center space-x-2.5">
-                <span class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center text-xl shrink-0">
-                    🚀
-                </span>
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-black tracking-tight flex items-center space-x-2">
-                        <span>まつり運行準備ナビゲーター</span>
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                            Step 1〜4
-                        </span>
-                    </h1>
-                    <p class="text-xs text-slate-300 mt-1">
-                        タイムテーブル作成から班編成・タスク登録・余剰スタッフ配置まで、本番運行に向けた準備手順をガイドします。
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-            @if($activeTimetable)
-            <a href="{{ route('timetable.index', ['timetable_id' => $activeTimetable->id]) }}"
-               class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-bold border border-slate-700 transition flex items-center space-x-1.5 shadow-xs">
-                <span>⏱️</span>
-                <span>進行表（マトリクス）を開く</span>
-            </a>
-            @endif
-            <a href="{{ route('timetables.index') }}"
-               class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-bold border border-slate-700 transition flex items-center space-x-1.5 shadow-xs">
-                <span>📋</span>
-                <span>運行日一覧</span>
-            </a>
-        </div>
-    </div>
-
-    <!-- 運行日（タイムテーブル）セレクター（複数登録がある場合） -->
-    @if($timetables->isNotEmpty())
-    <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="flex items-center space-x-2 shrink-0">
-            <span class="text-xs font-bold text-slate-700 flex items-center space-x-1">
-                <span>📅</span>
-                <span>準備対象の運行日:</span>
+    <!-- ページヘッダー (スリム版) -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 sm:p-5 text-white shadow-md border border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <span class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center text-lg shrink-0">
+                🚀
             </span>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-1.5 flex-1 justify-start sm:justify-end">
-            @foreach($timetables as $tt)
-                @php
-                    $isSelected = $activeTimetable && $activeTimetable->id === $tt->id;
-                @endphp
-                <a href="{{ route('preparation-navigator.index', ['timetable_id' => $tt->id]) }}"
-                   class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ $isSelected ? 'bg-indigo-600 text-white shadow-xs ring-2 ring-indigo-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700' }}">
-                    <span>{{ $tt->name }}</span>
-                    @if($tt->status === 'active')
-                        <span class="px-1.5 py-0.2 rounded text-[9px] font-bold {{ $isSelected ? 'bg-indigo-700 text-indigo-100' : 'bg-emerald-100 text-emerald-800' }}">
-                            運行中
-                        </span>
-                    @endif
-                </a>
-            @endforeach
-        </div>
-    </div>
-    @endif
-
-    <!-- ステップガイドバー (全4ステップ) -->
-    <x-timetable-workflow-steps
-        :current-step="$workflowState['current_step']"
-        :timetable="$workflowState['active_timetable']" />
-
-    <!-- メイン推奨アクションバナー (目立つ実行カード) -->
-    <div class="bg-white rounded-2xl border-2 {{ $workflowState['shortage_tasks_count'] > 0 ? 'border-amber-300 bg-amber-50/40' : 'border-indigo-200 bg-indigo-50/40' }} shadow-sm p-6 space-y-4">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="space-y-2">
-                <div class="flex items-center space-x-2">
-                    <span class="px-2.5 py-0.5 rounded-md text-xs font-mono font-bold {{ $workflowState['shortage_tasks_count'] > 0 ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-indigo-100 text-indigo-900 border border-indigo-200' }}">
-                        現在の推奨アクション (Step {{ $workflowState['current_step'] }} / 4)
+            <div>
+                <h1 class="text-base sm:text-lg font-black tracking-tight flex items-center space-x-2">
+                    <span>まつり運行準備ナビゲーター</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                        Step 1〜4
                     </span>
-                    @if($workflowState['active_timetable'])
-                    <span class="text-xs text-slate-500">
-                        対象: <strong>{{ $workflowState['active_timetable']->name }}</strong>
-                    </span>
-                    @endif
-                </div>
-                <h2 class="text-base sm:text-lg font-black text-slate-900 flex items-center space-x-2">
-                    <span>💡</span>
-                    <span>{{ $workflowState['action_title'] }}</span>
-                </h2>
-                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl">
-                    {{ $workflowState['action_desc'] }}
+                </h1>
+                <p class="text-[11px] text-slate-300 mt-0.5">
+                    タイムテーブル作成から班編成・タスク登録・余剰スタッフ配置まで、本番運行に向けた準備手順をガイドします。
                 </p>
             </div>
-
-            @if(!empty($workflowState['action_url']))
-            <div class="shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <a href="{{ $workflowState['action_url'] }}"
-                   class="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md transition flex items-center justify-center space-x-2 group">
-                    <span>{{ $workflowState['action_btn_text'] }}</span>
-                    <span class="transition transform group-hover:translate-x-1">→</span>
-                </a>
-            </div>
-            @endif
         </div>
-
-        @if($workflowState['active_timetable'])
-        <!-- KPIステータスミニバー -->
-        <div class="pt-3 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div class="flex flex-wrap items-center gap-4 font-mono">
-                <span class="text-slate-600">
-                    担当班数: <strong class="text-slate-900">{{ $workflowState['lanes_count'] }}</strong> 班
-                    <span class="text-slate-400 text-[11px]">（班長設定: {{ $workflowState['lead_configured_count'] }}/{{ $workflowState['lanes_count'] }}）</span>
-                </span>
-                <span class="text-slate-300">|</span>
-                <span class="text-slate-600">
-                    作業タスク総数: <strong class="text-slate-900">{{ $workflowState['total_tasks_count'] }}</strong> 件
-                </span>
-                <span class="text-slate-300">|</span>
-                @if($workflowState['shortage_tasks_count'] > 0)
-                    <span class="text-rose-600 font-bold flex items-center space-x-1">
-                        <span>⚠️ 人員不足タスク:</span>
-                        <span>{{ $workflowState['shortage_tasks_count'] }} 件</span>
-                    </span>
-                @else
-                    <span class="text-emerald-600 font-bold flex items-center space-x-1">
-                        <span>✔</span>
-                        <span>全タスク人員充足</span>
-                    </span>
-                @endif
-            </div>
-
-            <a href="{{ route('preparation-navigator.run', ['timetable_id' => $workflowState['active_timetable']->id]) }}"
-               class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
-                <span>推奨ステップを直接実行</span>
-                <span>↗</span>
-            </a>
-        </div>
-        @endif
     </div>
 
-    <!-- 4ステップ詳細カード一覧 -->
+    <!-- 1. 運行準備 4つのステップ詳細 (最上部に配置) -->
     <div class="space-y-3">
         <div class="flex items-center justify-between">
             <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
@@ -327,6 +207,12 @@
         </div>
     </div>
 
+    <!-- 2. まつり運行準備ステップガイド (運行日切り替え & 現在の推奨アクション統合) -->
+    <x-timetable-workflow-steps
+        :current-step="$workflowState['current_step']"
+        :timetable="$workflowState['active_timetable']"
+        :timetables="$timetables"
+        :workflow-state="$workflowState" />
+
 </div>
 </x-layouts.app>
-

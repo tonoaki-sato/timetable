@@ -239,4 +239,36 @@ class PreparationNavigatorTest extends TestCase
         // timetable2は班未登録なのでStep 2
         $response2->assertSee('Step 2 / 4');
     }
+
+    /**
+     * ヘッダー右のリンクが削除され、ステップ詳細がコンテンツの最初（上部）に配置されていること
+     */
+    public function test_header_is_slimmed_down_and_layout_reordered(): void
+    {
+        Timetable::factory()->create([
+            'name' => '本祭1日目',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('preparation-navigator.index'));
+
+        $response->assertStatus(200);
+
+        // ヘッダー右リンクが削除されていること
+        $response->assertDontSee('進行表（マトリクス）を開く');
+        $response->assertDontSee('運行日一覧');
+
+        // 「運行準備 4つのステップ詳細」が「まつり運行準備ステップガイド」より前に配置されていること
+        $content = $response->getContent();
+        $stepDetailsPos = mb_strpos($content, '運行準備 4つのステップ詳細');
+        $stepGuidePos = mb_strpos($content, 'まつり運行準備ステップガイド');
+
+        $this->assertNotFalse($stepDetailsPos);
+        $this->assertNotFalse($stepGuidePos);
+        $this->assertLessThan($stepGuidePos, $stepDetailsPos, '「運行準備 4つのステップ詳細」が「まつり運行準備ステップガイド」より上に配置されていません');
+
+        // 運行日切り替えと現在の推奨アクションがステップガイド内に統合されていること
+        $response->assertSee('準備対象の運行日:');
+        $response->assertSee('現在の推奨アクション');
+    }
 }

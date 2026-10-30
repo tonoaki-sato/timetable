@@ -146,4 +146,3 @@ class PreparationNavigatorController extends Controller
         return $workflowState;
     }
 }
-
