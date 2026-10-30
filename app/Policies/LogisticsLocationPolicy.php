@@ -47,4 +47,3 @@ class LogisticsLocationPolicy
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }
 }
-

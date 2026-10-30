@@ -47,4 +47,3 @@ class EquipmentLogisticsPlanPolicy
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }
 }
-

@@ -37,7 +37,7 @@ class StaffShiftController extends Controller
         // アサイン情報を運行日・開始時刻順でロード
         $staff->load([
             'assignments.task.timetable',
-            'assignments.task.laneRelation',
+            'assignments.task.laneRelation.leadStaff',
         ]);
 
         $assignments = $staff->assignments->sortBy([
@@ -72,6 +72,9 @@ class StaffShiftController extends Controller
                         $nextTask = $assignment;
                     }
                 }
+            } elseif ($taskDate > $todayDate && ! $currentTask && ! $nextTask) {
+                // 当日にタスクがなく未来日のタスクがある場合、最初のタスクを次の予定とする
+                $nextTask = $assignment;
             }
         }
 

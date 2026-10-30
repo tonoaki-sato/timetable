@@ -77,4 +77,3 @@ class LogisticsLocationSeeder extends Seeder
         }
     }
 }
-

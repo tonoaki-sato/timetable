@@ -573,4 +573,3 @@ class EquipmentLogisticsService
             ->get();
     }
 }
-
