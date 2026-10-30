@@ -272,4 +272,89 @@ class PreparationNavigatorTest extends TestCase
         // 各日程行に推奨アクションが表示されていること
         $response->assertSee('💡 推奨:');
     }
+
+    /**
+     * 完了した運行スケジュールがグレーアウトされ、進行中一覧の下部に表示されること
+     */
+    public function test_completed_timetables_are_displayed_at_bottom_and_grayed_out(): void
+    {
+        $activeTimetable = Timetable::factory()->create([
+            'name' => '本祭1日目 運行中日程',
+            'status' => 'active',
+            'target_date' => '2026-10-17',
+        ]);
+
+        $completedTimetable = Timetable::factory()->create([
+            'name' => '前日設営 完了日程',
+            'status' => 'completed',
+            'target_date' => '2026-10-16',
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('preparation-navigator.index'));
+
+        $response->assertStatus(200);
+
+        // 両方の日程が表示されていること
+        $response->assertSee('本祭1日目 運行中日程');
+        $response->assertSee('前日設営 完了日程');
+
+        // 完了した日程が進行中日程よりも後ろ（下部）に描画されていること
+        $content = $response->getContent();
+        $activePos = mb_strpos($content, '本祭1日目 運行中日程');
+        $completedPos = mb_strpos($content, '前日設営 完了日程');
+
+        $this->assertNotFalse($activePos);
+        $this->assertNotFalse($completedPos);
+        $this->assertLessThan($completedPos, $activePos, '進行中日程が完了日程より前に配置されていません');
+
+        // 完了スケジュールセクションとグレーアウトクラスが存在すること
+        $response->assertSee('運行完了したスケジュール');
+        $response->assertSee('opacity-75 grayscale-[30%]');
+        $response->assertSee('運行完了');
+        $response->assertSee('運行実績を確認');
+    }
+
+    /**
+     * 完了した運行スケジュールは最大2件までに制限されること
+     */
+    public function test_completed_timetables_are_limited_to_max_2(): void
+    {
+        // 完了スケジュールを3件作成（日付降順で直近2件が取得される想定）
+        Timetable::factory()->create([
+            'name' => '過去の運行日1',
+            'status' => 'completed',
+            'target_date' => '2026-10-01',
+        ]);
+        Timetable::factory()->create([
+            'name' => '過去の運行日2',
+            'status' => 'completed',
+            'target_date' => '2026-10-05',
+        ]);
+        Timetable::factory()->create([
+            'name' => '過去の運行日3',
+            'status' => 'completed',
+            'target_date' => '2026-10-10',
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('preparation-navigator.index'));
+
+        $response->assertStatus(200);
+
+        // 直近2件（10/10 と 10/05）が表示され、最も古い 10/01 はナビゲーター一覧に表示されないこと
+        $response->assertSee('過去の運行日3');
+        $response->assertSee('過去の運行日2');
+        $response->assertDontSee('過去の運行日1');
+    }
+
+    /**
+     * リスト最下部に「全ての運行スケジュールを見る」リンクが設置されていること
+     */
+    public function test_contains_link_to_all_timetables_at_the_bottom(): void
+    {
+        $response = $this->actingAs($this->user)->get(route('preparation-navigator.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('全ての運行スケジュールを見る');
+        $response->assertSee(route('timetables.index'));
+    }
 }

@@ -49,4 +49,28 @@ interface TimetableRepositoryInterface
      * 削除
      */
     public function delete(Timetable $timetable): bool;
+
+    /**
+     * 運行準備用の進行中・準備中タイムテーブル一覧を取得（日付昇順）
+     *
+     * @return Collection<int, Timetable>
+     */
+    public function getActiveAndDraftWithWorkflowDetails(): Collection;
+
+    /**
+     * 運行準備用の直近完了済みタイムテーブルを取得（日付降順・最大件数指定）
+     *
+     * @return Collection<int, Timetable>
+     */
+    public function getRecentCompletedWithWorkflowDetails(int $limit = 2): Collection;
+
+    /**
+     * タイムテーブルの総登録数を取得
+     */
+    public function getTotalCount(): int;
+
+    /**
+     * ワークフロー詳細付きで単一タイムテーブルを取得
+     */
+    public function findWithWorkflowDetails(int $id): ?Timetable;
 }

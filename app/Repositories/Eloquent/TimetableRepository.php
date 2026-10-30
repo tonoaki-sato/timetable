@@ -85,4 +85,48 @@ class TimetableRepository implements TimetableRepositoryInterface
     {
         return (bool) $timetable->delete();
     }
+
+    /**
+     * 運行準備用の進行中・準備中タイムテーブル一覧を取得（日付昇順）
+     *
+     * @return Collection<int, Timetable>
+     */
+    public function getActiveAndDraftWithWorkflowDetails(): Collection
+    {
+        return Timetable::with(['lanes.fixedStaff', 'lanes.leadStaff', 'tasks.assignments'])
+            ->where('status', '!=', 'completed')
+            ->orderBy('target_date', 'asc')
+            ->get();
+    }
+
+    /**
+     * 運行準備用の直近完了済みタイムテーブルを取得（日付降順・最大件数指定）
+     *
+     * @return Collection<int, Timetable>
+     */
+    public function getRecentCompletedWithWorkflowDetails(int $limit = 2): Collection
+    {
+        return Timetable::with(['lanes.fixedStaff', 'lanes.leadStaff', 'tasks.assignments'])
+            ->where('status', 'completed')
+            ->orderBy('target_date', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * タイムテーブルの総登録数を取得
+     */
+    public function getTotalCount(): int
+    {
+        return Timetable::count();
+    }
+
+    /**
+     * ワークフロー詳細付きで単一タイムテーブルを取得
+     */
+    public function findWithWorkflowDetails(int $id): ?Timetable
+    {
+        return Timetable::with(['lanes.fixedStaff', 'lanes.leadStaff', 'tasks.assignments'])
+            ->find($id);
+    }
 }

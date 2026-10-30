@@ -36,17 +36,14 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
             <!-- Step 1 カード -->
-            @php
-                $hasAnyTimetable = $timetables->isNotEmpty();
-            @endphp
-            <div class="bg-white rounded-2xl border {{ !$hasAnyTimetable ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-slate-200' }} p-4 shadow-2xs flex flex-col justify-between space-y-3">
+            <div class="bg-white rounded-2xl border {{ $totalCount === 0 ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-slate-200' }} p-4 shadow-2xs flex flex-col justify-between space-y-3">
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold font-mono {{ $hasAnyTimetable ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white' }}">
-                            {{ $hasAnyTimetable ? '✔' : '1' }}
+                        <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold font-mono {{ $totalCount > 0 ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white' }}">
+                            {{ $totalCount > 0 ? '✔' : '1' }}
                         </span>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $hasAnyTimetable ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200' }}">
-                            {{ $hasAnyTimetable ? '登録済 (' . $timetables->count() . '日)' : '未着手' }}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $totalCount > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200' }}">
+                            {{ $totalCount > 0 ? '登録済 (' . $totalCount . '日)' : '未着手' }}
                         </span>
                     </div>
                     <div>
@@ -160,7 +157,7 @@
         </div>
     </div>
 
-    <!-- 2. まつり運行準備ステップガイド（日程別一覧・スリム版） -->
+    <!-- 2. まつり運行準備ステップガイド（日程別一覧） -->
     <div class="space-y-3">
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
@@ -168,14 +165,14 @@
                 <h3 class="text-sm font-bold text-slate-900">
                     まつり運行準備ステップガイド（日程別一覧）
                 </h3>
-                @if($timetables->isNotEmpty())
+                @if($totalCount > 0)
                 <span class="text-xs text-slate-500 font-normal">
-                    全 {{ $timetables->count() }} 運行日
+                    進行・準備中 {{ $activeTimetableStates->count() }}件 / 完了 {{ $completedTimetableStates->count() }}件
                 </span>
                 @endif
             </div>
 
-            @if($timetables->isNotEmpty())
+            @if($totalCount > 0)
             <a href="{{ route('timetables.create') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
                 <span>＋ 運行日を追加</span>
             </a>
@@ -184,7 +181,9 @@
 
         <!-- 一覧リストコンテナ -->
         <div class="space-y-3">
-            @forelse($timetableStates as $state)
+
+            <!-- A. 進行中・準備中の運行スケジュール一覧 -->
+            @foreach($activeTimetableStates as $state)
                 @php
                     $tt = $state['timetable'];
                     $isSatisfied = $state['is_satisfied'];
@@ -206,13 +205,9 @@
                                         <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 shrink-0">
                                             運行中
                                         </span>
-                                    @elseif($tt->status === 'completed')
-                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-100 text-slate-600 shrink-0">
-                                            完了
-                                        </span>
                                     @else
                                         <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-50 text-indigo-700 shrink-0">
-                                            計画中
+                                            準備中
                                         </span>
                                     @endif
                                 </div>
@@ -319,8 +314,103 @@
                         </div>
                     </div>
                 </div>
-            @empty
-                <!-- 運行日未登録時のスリム案内カード (Step 1) -->
+            @endforeach
+
+            <!-- B. 完了した運行スケジュール一覧 (下部配置・グレーアウト・最大2件) -->
+            @if($completedTimetableStates->isNotEmpty())
+                <div class="pt-3 space-y-2">
+                    <div class="flex items-center space-x-1.5 text-xs text-slate-500 font-bold">
+                        <span>🏁</span>
+                        <span>運行完了したスケジュール（直近{{ $completedTimetableStates->count() }}件）</span>
+                    </div>
+
+                    @foreach($completedTimetableStates as $state)
+                        @php
+                            $tt = $state['timetable'];
+                        @endphp
+                        <div class="bg-slate-100/70 border border-slate-200/90 rounded-2xl p-4 shadow-2xs opacity-75 grayscale-[30%] space-y-3">
+                            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-2.5 border-b border-slate-200">
+                                <!-- 運行日情報 -->
+                                <div class="flex items-center space-x-2.5 min-w-0">
+                                    <span class="w-8 h-8 rounded-xl bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold shrink-0">
+                                        🏁
+                                    </span>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center space-x-2">
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-700 truncate">
+                                                {{ $tt->target_date ? $tt->target_date->translatedFormat('n月j日 (D) ') : '' }}{{ $tt->name }}
+                                            </h4>
+                                            <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-200 text-slate-700 shrink-0">
+                                                運行完了
+                                            </span>
+                                        </div>
+                                        <p class="text-[10px] text-slate-500 font-mono mt-0.5">
+                                            {{ substr($tt->start_time, 0, 5) }}〜{{ substr($tt->end_time, 0, 5) }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- 4ステップ進捗ミニバー (完了表示) -->
+                                <div class="grid grid-cols-4 gap-1.5 flex-1 max-w-xl mx-0 lg:mx-4 text-[11px] select-none">
+                                    <div class="px-2 py-1 rounded-lg border bg-slate-200/60 text-slate-600 border-slate-300 flex items-center justify-between">
+                                        <span class="font-bold flex items-center space-x-1">
+                                            <span class="text-[10px] font-mono">1.</span>
+                                            <span>作成</span>
+                                        </span>
+                                        <span class="text-xs">✔</span>
+                                    </div>
+                                    <div class="px-2 py-1 rounded-lg border bg-slate-200/60 text-slate-600 border-slate-300 flex items-center justify-between">
+                                        <span class="font-bold flex items-center space-x-1 truncate">
+                                            <span class="text-[10px] font-mono">2.</span>
+                                            <span>班編成</span>
+                                        </span>
+                                        <span class="text-[10px] font-mono">✔</span>
+                                    </div>
+                                    <div class="px-2 py-1 rounded-lg border bg-slate-200/60 text-slate-600 border-slate-300 flex items-center justify-between">
+                                        <span class="font-bold flex items-center space-x-1 truncate">
+                                            <span class="text-[10px] font-mono">3.</span>
+                                            <span>タスク</span>
+                                        </span>
+                                        <span class="text-[10px] font-mono">{{ $state['total_tasks_count'] }}件</span>
+                                    </div>
+                                    <div class="px-2 py-1 rounded-lg border bg-slate-200/60 text-slate-600 border-slate-300 flex items-center justify-between">
+                                        <span class="font-bold flex items-center space-x-1 truncate">
+                                            <span class="text-[10px] font-mono">4.</span>
+                                            <span>配置</span>
+                                        </span>
+                                        <span class="text-xs">✔</span>
+                                    </div>
+                                </div>
+
+                                <!-- アクションボタン -->
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <a href="{{ route('timetable.index', ['timetable_id' => $tt->id]) }}"
+                                       class="px-3.5 py-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-xl text-xs font-bold shadow-2xs transition flex items-center space-x-1 shrink-0">
+                                        <span>運行実績を確認</span>
+                                        <span>→</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- 下段スリム情報: 完了案内 & 実績数値 -->
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-500">
+                                <span class="truncate">
+                                    「{{ $tt->name }}」の運行は無事完了しました。進行表で実績やアサイン結果を確認できます。
+                                </span>
+
+                                <div class="flex items-center space-x-3 shrink-0 font-mono text-[10px] text-slate-500">
+                                    <span>班: <strong class="text-slate-600">{{ $state['lanes_count'] }}</strong></span>
+                                    <span>タスク: <strong class="text-slate-600">{{ $state['total_tasks_count'] }}</strong></span>
+                                    <span class="text-slate-600 font-bold">✔ 完了済</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            <!-- C. 運行日未登録時のスリム案内カード (Step 1) -->
+            @if($totalCount === 0)
                 <div class="bg-white border border-slate-200 rounded-2xl p-6 text-center space-y-3">
                     <span class="text-3xl">📅</span>
                     <div class="space-y-1">
@@ -336,7 +426,18 @@
                         </a>
                     </div>
                 </div>
-            @endforelse
+            @endif
+
+            <!-- D. リスト最下部: 「全ての運行スケジュールを見る」リンク -->
+            <div class="pt-3 pb-1 text-center">
+                <a href="{{ route('timetables.index') }}"
+                   class="inline-flex items-center space-x-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-xl text-xs font-bold border border-slate-200 transition shadow-2xs">
+                    <span>📋</span>
+                    <span>全ての運行スケジュールを見る</span>
+                    <span>→</span>
+                </a>
+            </div>
+
         </div>
     </div>
 
