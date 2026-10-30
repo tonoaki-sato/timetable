@@ -61,11 +61,10 @@ class PreparationNavigatorTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('まつり運行準備ステップガイド');
-        $response->assertSee('Step 1 / 4');
-        $response->assertSee('タイムテーブル作成');
-        $response->assertSee('担当班・スタッフ編成');
-        $response->assertSee('タスク登録');
-        $response->assertSee('人員不足・余剰スタッフ配置');
+        $response->assertSee('Step 1: タイムテーブル作成');
+        $response->assertSee('Step 2: 担当班・スタッフ編成');
+        $response->assertSee('Step 3: 作業タスク登録');
+        $response->assertSee('Step 4: 人員不足・過不足調整');
         $response->assertDontSee('ログイン・運行状況確認');
     }
 
@@ -78,8 +77,8 @@ class PreparationNavigatorTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('まつり運行準備ナビゲーター');
-        $response->assertSee('Step 1 / 4');
-        $response->assertSee('運行日（タイムテーブル）を登録しましょう');
+        $response->assertSee('運行日（タイムテーブル）が未登録です');
+        $response->assertSee('新規タイムテーブルを登録 (Step 1)');
         $response->assertSee(route('timetables.create'));
     }
 
@@ -101,7 +100,6 @@ class PreparationNavigatorTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('preparation-navigator.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('Step 2 / 4');
         $response->assertSee('担当班の編成・班長・固定スタッフを登録しましょう');
         $response->assertSee(route('timetables.lanes.index', $timetable));
     }
@@ -125,7 +123,6 @@ class PreparationNavigatorTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('preparation-navigator.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('Step 3 / 4');
         $response->assertSee('作業タスクを登録しましょう');
         $response->assertSee(route('timetable-tasks.create', ['timetable_id' => $timetable->id]));
     }
@@ -156,7 +153,6 @@ class PreparationNavigatorTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('preparation-navigator.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('Step 4 / 4');
         $response->assertSee('余剰スタッフを配置しましょう');
         $response->assertSee(route('timetable.index', ['timetable_id' => $timetable->id]));
     }
@@ -207,16 +203,16 @@ class PreparationNavigatorTest extends TestCase
     }
 
     /**
-     * 複数運行日がある場合に query パラメータで運行日を切り替えられること
+     * 全運行日のステップ進捗がタブ切り替えではなく同時に一覧として描画されること
      */
-    public function test_can_switch_timetable_in_navigator(): void
+    public function test_displays_all_timetables_in_list_simultaneously(): void
     {
         $timetable1 = Timetable::factory()->create([
-            'name' => '1日目',
+            'name' => '1日目 案内フェーズ',
             'status' => 'draft',
         ]);
         $timetable2 = Timetable::factory()->create([
-            'name' => '2日目',
+            'name' => '2日目 本番フェーズ',
             'status' => 'draft',
         ]);
 
@@ -227,17 +223,23 @@ class PreparationNavigatorTest extends TestCase
             'lead_staff_id' => $lead->id,
         ]);
 
-        $response = $this->actingAs($this->user)->get(route('preparation-navigator.index', ['timetable_id' => $timetable1->id]));
+        $response = $this->actingAs($this->user)->get(route('preparation-navigator.index'));
 
         $response->assertStatus(200);
-        // timetable1は班・リーダーあり、タスク未登録なのでStep 3
-        $response->assertSee('Step 3 / 4');
 
-        $response2 = $this->actingAs($this->user)->get(route('preparation-navigator.index', ['timetable_id' => $timetable2->id]));
+        // 両方の日程が同時に一覧内に描画されていること
+        $response->assertSee('1日目 案内フェーズ');
+        $response->assertSee('2日目 本番フェーズ');
 
-        $response2->assertStatus(200);
-        // timetable2は班未登録なのでStep 2
-        $response2->assertSee('Step 2 / 4');
+        // timetable1 (班編成済・タスク未登録) の推奨アクションが表示されていること
+        $response->assertSee(route('timetable-tasks.create', ['timetable_id' => $timetable1->id]));
+
+        // timetable2 (班未編成) の推奨アクションが表示されていること
+        $response->assertSee(route('timetables.lanes.index', $timetable2));
+
+        // タブ切り替え案内ラベル（準備対象の運行日:）が存在せず、日程別一覧として表示されること
+        $response->assertSee('まつり運行準備ステップガイド（日程別一覧）');
+        $response->assertDontSee('準備対象の運行日:');
     }
 
     /**
@@ -258,17 +260,16 @@ class PreparationNavigatorTest extends TestCase
         $response->assertDontSee('進行表（マトリクス）を開く');
         $response->assertDontSee('運行日一覧');
 
-        // 「運行準備 4つのステップ詳細」が「まつり運行準備ステップガイド」より前に配置されていること
+        // 「運行準備 4つのステップ詳細」が「まつり運行準備ステップガイド（日程別一覧）」より前に配置されていること
         $content = $response->getContent();
         $stepDetailsPos = mb_strpos($content, '運行準備 4つのステップ詳細');
-        $stepGuidePos = mb_strpos($content, 'まつり運行準備ステップガイド');
+        $stepGuidePos = mb_strpos($content, 'まつり運行準備ステップガイド（日程別一覧）');
 
         $this->assertNotFalse($stepDetailsPos);
         $this->assertNotFalse($stepGuidePos);
-        $this->assertLessThan($stepGuidePos, $stepDetailsPos, '「運行準備 4つのステップ詳細」が「まつり運行準備ステップガイド」より上に配置されていません');
+        $this->assertLessThan($stepGuidePos, $stepDetailsPos, '「運行準備 4つのステップ詳細」が「まつり運行準備ステップガイド（日程別一覧）」より上に配置されていません');
 
-        // 運行日切り替えと現在の推奨アクションがステップガイド内に統合されていること
-        $response->assertSee('準備対象の運行日:');
-        $response->assertSee('現在の推奨アクション');
+        // 各日程行に推奨アクションが表示されていること
+        $response->assertSee('💡 推奨:');
     }
 }
