@@ -36,9 +36,9 @@ class FeatureSettingController extends Controller
         }
 
         $feature = $this->featureSettingService->toggleFeature($featureKey);
+        $status = $this->featureSettingService->getFeatureStatus($featureKey);
+        $stateText = $status['label'];
 
-        $stateText = $feature->is_enabled ? '「受付中（有効）」' : '「停止中（無効）」';
-
-        return back()->with('success', "「{$feature->name}」のステータスを {$stateText} に変更しました。");
+        return back()->with('success', "「{$feature->name}」のステータスを「{$stateText}」に変更しました。");
     }
 }

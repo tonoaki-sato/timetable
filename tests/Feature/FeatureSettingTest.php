@@ -310,4 +310,127 @@ class FeatureSettingTest extends TestCase
         $response->assertSee('Webセルフ登録機能');
         $response->assertSee('即時停止');
     }
+
+    /**
+     * 日本時間基準で過去・現在・未来のスケジュール指定が即座に正しく評価されること
+     */
+    public function test_feature_setting_evaluates_schedule_correctly_with_jst(): void
+    {
+        // 1. 現在時刻を挟む期間（今から前後1時間）: 受付中
+        $openSetting = FeatureSetting::create([
+            'feature_key' => 'test_open',
+            'name' => '受付中テスト',
+            'is_enabled' => true,
+            'opened_at' => now()->subHour(),
+            'closed_at' => now()->addHour(),
+        ]);
+        $this->assertTrue($openSetting->isOpen());
+        $this->assertSame('open', $openSetting->getStatus());
+        $this->assertSame('受付中', $openSetting->getStatusLabel());
+
+        // 2. 開始前（明日）: 開始前
+        $upcomingSetting = FeatureSetting::create([
+            'feature_key' => 'test_upcoming',
+            'name' => '開始前テスト',
+            'is_enabled' => true,
+            'opened_at' => now()->addDay(),
+            'closed_at' => now()->addDays(2),
+        ]);
+        $this->assertFalse($upcomingSetting->isOpen());
+        $this->assertSame('upcoming', $upcomingSetting->getStatus());
+        $this->assertStringContainsString('開始前', $upcomingSetting->getStatusLabel());
+
+        // 3. 受付終了（昨日終了）: 受付終了
+        $closedSetting = FeatureSetting::create([
+            'feature_key' => 'test_closed',
+            'name' => '終了テスト',
+            'is_enabled' => true,
+            'opened_at' => now()->subDays(2),
+            'closed_at' => now()->subDay(),
+        ]);
+        $this->assertFalse($closedSetting->isOpen());
+        $this->assertSame('closed', $closedSetting->getStatus());
+        $this->assertStringContainsString('受付終了', $closedSetting->getStatusLabel());
+    }
+
+    /**
+     * 各ステータスに応じてスタッフ一覧画面のボタンおよびヘッダーバッジが適切に出し分けられること
+     */
+    public function test_staff_index_displays_proper_buttons_and_badges_for_each_status(): void
+    {
+        $this->actingAs($this->operator);
+
+        // A. upcoming（開始前）
+        FeatureSetting::updateOrCreate(
+            ['feature_key' => FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION],
+            [
+                'name' => 'スタッフセルフ登録',
+                'is_enabled' => true,
+                'opened_at' => now()->addDay(),
+                'closed_at' => now()->addDays(2),
+            ]
+        );
+        $resUpcoming = $this->get(route('staff.index'));
+        $resUpcoming->assertStatus(200);
+        $resUpcoming->assertSee('受付予約を停止');
+        $resUpcoming->assertSee('⏳ 開始前');
+
+        // B. closed（受付終了）
+        FeatureSetting::updateOrCreate(
+            ['feature_key' => FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION],
+            [
+                'name' => 'スタッフセルフ登録',
+                'is_enabled' => true,
+                'opened_at' => now()->subDays(2),
+                'closed_at' => now()->subDay(),
+            ]
+        );
+        $resClosed = $this->get(route('staff.index'));
+        $resClosed->assertStatus(200);
+        $resClosed->assertSee('受付期間を再設定');
+        $resClosed->assertSee('⌛ 受付終了');
+
+        // C. disabled（手動停止）
+        FeatureSetting::updateOrCreate(
+            ['feature_key' => FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION],
+            [
+                'name' => 'スタッフセルフ登録',
+                'is_enabled' => false,
+                'opened_at' => null,
+                'closed_at' => null,
+            ]
+        );
+        $resDisabled = $this->get(route('staff.index'));
+        $resDisabled->assertStatus(200);
+        $resDisabled->assertSee('即時再開');
+        $resDisabled->assertSee('⚠️ 停止中（手動）');
+    }
+
+    /**
+     * トグル実行時の成功フラッシュメッセージに実際の評価ステータスラベルが反映されること
+     */
+    public function test_toggle_success_message_contains_evaluated_status_label(): void
+    {
+        $this->actingAs($this->operator);
+
+        FeatureSetting::updateOrCreate(
+            ['feature_key' => FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION],
+            [
+                'name' => 'スタッフセルフ登録',
+                'is_enabled' => true,
+                'opened_at' => now()->addDay(),
+                'closed_at' => now()->addDays(2),
+            ]
+        );
+
+        // 有効（開始前）からトグル実行 -> 停止中（手動）
+        $res1 = $this->patch(route('feature-settings.toggle', FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION));
+        $res1->assertSessionHas('success', '「スタッフセルフ登録」のステータスを「停止中（手動）」に変更しました。');
+
+        // 停止中からトグル実行 -> 開始前（予約中）
+        $res2 = $this->patch(route('feature-settings.toggle', FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION));
+        $res2->assertSessionHas('success');
+        $message = session('success');
+        $this->assertStringContainsString('開始前', $message);
+    }
 }

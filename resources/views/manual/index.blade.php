@@ -16,7 +16,7 @@
                         class="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs">
                 </div>
                 <!-- 印刷ボタン -->
-                <button type="button" onclick="window.print()"
+                <button type="button" data-action="print"
                     class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer print:hidden shrink-0">
                     <span>🖨️</span>
                     <span>印刷 / PDF出力</span>
@@ -147,7 +147,7 @@
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/01_login.png') }}"
                                 alt="本部ログイン画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, '本部ログイン認証画面')"
+                                data-modal-image data-caption="本部ログイン認証画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -217,7 +217,7 @@
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/02_dashboard.png') }}"
                                 alt="本部ダッシュボード画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, '本部ダッシュボード画面')"
+                                data-modal-image data-caption="本部ダッシュボード画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -294,7 +294,7 @@
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/03_calendar.png') }}"
                                 alt="総合カレンダー画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, '総合カレンダー画面')"
+                                data-modal-image data-caption="総合カレンダー画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -321,7 +321,7 @@
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/04_annual_schedules.png') }}"
                                 alt="年間スケジュール画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, '年間スケジュール一覧画面')"
+                                data-modal-image data-caption="年間スケジュール一覧画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -355,7 +355,7 @@
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/05_timetable_matrix.png') }}"
                                 alt="タイムテーブルマトリクス画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, '運行進行表マトリクス俯瞰画面')"
+                                data-modal-image data-caption="運行進行表マトリクス俯瞰画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -420,7 +420,7 @@
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/06_timetables_plan.png') }}"
                                 alt="タイムテーブル・タスク台帳画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, 'タイムテーブル・タスク台帳画面')"
+                                data-modal-image data-caption="タイムテーブル・タスク台帳画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -439,7 +439,7 @@
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/07_lanes.png') }}"
                                 alt="担当班管理画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, '担当班（レーン）管理画面')"
+                                data-modal-image data-caption="担当班（レーン）管理画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -617,7 +617,7 @@
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/08_staff_index.png') }}"
                                 alt="スタッフ名簿一覧画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, 'スタッフ名簿一覧画面')"
+                                data-modal-image data-caption="スタッフ名簿一覧画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -713,7 +713,7 @@
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/09_staff_print_cards.png') }}"
                                 alt="スタッフカード印刷プレビュー画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, 'スタッフカード・名札印刷プレビュー画面')"
+                                data-modal-image data-caption="スタッフカード・名札印刷プレビュー画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -743,7 +743,7 @@
                             <div class="rounded-[28px] overflow-hidden border border-slate-700 bg-white shadow-inner">
                                 <img src="{{ asset('images/manual/11_myshift_mobile.png') }}"
                                     alt="現場マイシフト実画面キャプチャ（スマホ表示）"
-                                    onclick="openImageModal(this.src, '現場マイシフト画面（スマホ表示）')"
+                                    data-modal-image data-caption="現場マイシフト画面（スマホ表示）"
                                     class="w-full cursor-zoom-in hover:opacity-95 transition">
                             </div>
                             <div class="text-center text-[10px] text-slate-400 mt-2 font-mono">iPhone 相当ビュー</div>
@@ -852,7 +852,7 @@
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/10_users.png') }}"
                                 alt="ユーザー管理画面の実画面キャプチャ"
-                                onclick="openImageModal(this.src, 'ユーザー管理画面')"
+                                data-modal-image data-caption="ユーザー管理画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -982,15 +982,15 @@
 
     </div>
 
-    <!-- 画像拡大表示モーダル (ライトボックス) -->
-    <div id="imageModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-50 hidden flex flex-col items-center justify-center p-4" onclick="closeImageModal()">
-        <div class="max-w-6xl w-full bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex flex-col max-h-[92vh]" onclick="event.stopPropagation()">
+    <!-- 画像拡大表示モーダル (ライトボックス・CSP準拠) -->
+    <div id="imageModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-50 hidden flex flex-col items-center justify-center p-4">
+        <div class="max-w-6xl w-full bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex flex-col max-h-[92vh]">
             <div class="px-4 py-2.5 bg-slate-800 border-b border-slate-700 flex items-center justify-between text-xs text-white">
                 <span id="modalCaption" class="font-bold flex items-center space-x-2">
                     <span>🖼️</span>
                     <span>画像プレビュー</span>
                 </span>
-                <button type="button" onclick="closeImageModal()" class="text-slate-400 hover:text-white text-lg p-1 cursor-pointer">✕ 閉じる</button>
+                <button type="button" data-action="close-modal" class="text-slate-400 hover:text-white text-lg p-1 cursor-pointer">✕ 閉じる</button>
             </div>
             <div class="p-2 sm:p-4 overflow-auto flex-1 flex items-center justify-center bg-slate-950/60">
                 <img id="modalImage" src="" alt="拡大画像" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg">

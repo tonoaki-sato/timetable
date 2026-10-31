@@ -61,6 +61,36 @@ class ManualTest extends TestCase
     }
 
     /**
+     * マニュアル画面はCSP完全準拠でありインラインイベントハンドラを持たないこと
+     */
+    public function test_manual_page_strictly_complies_with_csp_without_inline_event_handlers(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'operator',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('manual.index'));
+
+        $response->assertStatus(200);
+
+        // CSPヘッダーが付与されていること
+        $csp = $response->headers->get('Content-Security-Policy');
+        $this->assertNotNull($csp);
+        $this->assertStringContainsString("script-src 'self'", $csp);
+
+        // HTML本文にインラインイベントハンドラ (onclick, onload等) が含まれていないこと
+        $content = $response->getContent();
+        $this->assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $content);
+
+        // 外部ヘルパースクリプトおよびデータ属性が使われていること
+        $this->assertStringContainsString('js/manual-helper.js', $content);
+        $this->assertStringContainsString('data-action="print"', $content);
+        $this->assertStringContainsString('data-modal-image', $content);
+        $this->assertStringContainsString('data-action="close-modal"', $content);
+    }
+
+    /**
      * ログイン後のヘッダーナビゲーションにマニュアルリンクが存在すること
      */
     public function test_manual_link_is_present_in_navigation_menu(): void

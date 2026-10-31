@@ -42,9 +42,19 @@
                     <span>登録案内文コピー</span>
                 </button>
                 @if(isset($selfRegistrationStatus) && ! $selfRegistrationStatus['isOpen'])
-                    <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-lg border border-rose-200">
-                        ⚠️ 登録停止中
-                    </span>
+                    @if($selfRegistrationStatus['status'] === 'upcoming')
+                        <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                            ⏳ 開始前
+                        </span>
+                    @elseif($selfRegistrationStatus['status'] === 'closed')
+                        <span class="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">
+                            ⌛ 受付終了
+                        </span>
+                    @else
+                        <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-lg border border-rose-200">
+                            ⚠️ 停止中（手動）
+                        </span>
+                    @endif
                 @endif
             </div>
 
@@ -88,7 +98,7 @@
                 <p class="text-[11px] text-slate-500 mt-0.5">
                     受付期間: 
                     @if($selfRegistrationSetting->opened_at || $selfRegistrationSetting->closed_at)
-                        {{ $selfRegistrationSetting->opened_at?->format('Y/m/d H:i') ?? '制限なし' }} 〜 {{ $selfRegistrationSetting->closed_at?->format('Y/m/d H:i') ?? '制限なし' }}
+                        {{ $selfRegistrationSetting->opened_at?->timezone('Asia/Tokyo')->format('Y/m/d H:i') ?? '制限なし' }} 〜 {{ $selfRegistrationSetting->closed_at?->timezone('Asia/Tokyo')->format('Y/m/d H:i') ?? '制限なし' }}
                     @else
                         期間制限なし（常時受付）
                     @endif
@@ -101,26 +111,34 @@
 
         <div class="flex items-center space-x-2 shrink-0">
             @can('create', App\Models\Staff::class)
-            <!-- 即時トグルボタン -->
-            <form action="{{ route('feature-settings.toggle', 'staff_self_registration') }}" method="POST" class="inline">
-                @csrf
-                @method('PATCH')
-                @if($selfRegistrationSetting->is_enabled)
-                    <button type="submit" class="inline-flex items-center space-x-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer">
-                        <span>⏹️</span>
-                        <span>即時停止</span>
-                    </button>
-                @else
-                    <button type="submit" class="inline-flex items-center space-x-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition cursor-pointer">
-                        <span>▶️</span>
-                        <span>即時再開</span>
-                    </button>
-                @endif
-            </form>
+            @if($selfRegistrationStatus['status'] === 'closed')
+                <!-- 受付終了時は期間再設定を促す -->
+                <button type="button" class="open-registration-setting-trigger inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition cursor-pointer">
+                    <span>⚙️</span>
+                    <span>受付期間を再設定</span>
+                </button>
+            @else
+                <!-- 即時トグルボタン -->
+                <form action="{{ route('feature-settings.toggle', 'staff_self_registration') }}" method="POST" class="inline">
+                    @csrf
+                    @method('PATCH')
+                    @if($selfRegistrationSetting->is_enabled)
+                        <button type="submit" class="inline-flex items-center space-x-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer">
+                            <span>⏹️</span>
+                            <span>{{ $selfRegistrationStatus['status'] === 'upcoming' ? '受付予約を停止' : '即時停止' }}</span>
+                        </button>
+                    @else
+                        <button type="submit" class="inline-flex items-center space-x-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition cursor-pointer">
+                            <span>▶️</span>
+                            <span>即時再開</span>
+                        </button>
+                    @endif
+                </form>
+            @endif
 
             <!-- 受付日時設定ボタン -->
             <button type="button" id="openRegistrationSettingModalBtn"
-                    class="inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition cursor-pointer">
+                    class="open-registration-setting-trigger inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition cursor-pointer">
                 <span>⚙️</span>
                 <span>日時・メッセージ設定</span>
             </button>
@@ -338,21 +356,31 @@
 
                     <!-- 受付開始日時 -->
                     <div>
-                        <label for="opened_at" class="block text-xs font-bold text-slate-700 mb-1">
-                            受付開始日時（未指定時は即時開始）
-                        </label>
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="opened_at" class="block text-xs font-bold text-slate-700">
+                                受付開始日時（日本時間・未指定時は即時開始）
+                            </label>
+                            <button type="button" data-clear-target="opened_at" class="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer">
+                                ✕ クリア
+                            </button>
+                        </div>
                         <input type="datetime-local" id="opened_at" name="opened_at"
-                               value="{{ old('opened_at', $selfRegistrationSetting->opened_at?->format('Y-m-d\TH:i')) }}"
+                               value="{{ old('opened_at', $selfRegistrationSetting->opened_at?->timezone('Asia/Tokyo')->format('Y-m-d\TH:i')) }}"
                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
 
                     <!-- 受付終了日時 -->
                     <div>
-                        <label for="closed_at" class="block text-xs font-bold text-slate-700 mb-1">
-                            受付終了日時（未指定時は無期限）
-                        </label>
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="closed_at" class="block text-xs font-bold text-slate-700">
+                                受付終了日時（日本時間・未指定時は無期限）
+                            </label>
+                            <button type="button" data-clear-target="closed_at" class="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer">
+                                ✕ クリア
+                            </button>
+                        </div>
                         <input type="datetime-local" id="closed_at" name="closed_at"
-                               value="{{ old('closed_at', $selfRegistrationSetting->closed_at?->format('Y-m-d\TH:i')) }}"
+                               value="{{ old('closed_at', $selfRegistrationSetting->closed_at?->timezone('Asia/Tokyo')->format('Y-m-d\TH:i')) }}"
                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
 

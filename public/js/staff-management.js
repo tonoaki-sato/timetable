@@ -124,12 +124,8 @@
                 }
             });
         }
-        // 3. セルフ登録設定モーダル
+        // 3. セルフ登録設定モーダル (CSP準拠・イベント委譲)
         const registrationSettingModal = document.getElementById('registrationSettingModal');
-        const openRegistrationSettingModalBtn = document.getElementById('openRegistrationSettingModalBtn');
-        const registrationSettingModalCloseBtn = document.getElementById('registrationSettingModalCloseBtn');
-        const registrationSettingModalCancelBtn = document.getElementById('registrationSettingModalCancelBtn');
-        const registrationSettingModalBackdrop = document.getElementById('registrationSettingModalBackdrop');
 
         function openRegistrationSettingModal() {
             if (registrationSettingModal) {
@@ -143,17 +139,31 @@
             }
         }
 
-        if (openRegistrationSettingModalBtn) {
-            openRegistrationSettingModalBtn.addEventListener('click', openRegistrationSettingModal);
-        }
-        if (registrationSettingModalCloseBtn) {
-            registrationSettingModalCloseBtn.addEventListener('click', closeRegistrationSettingModal);
-        }
-        if (registrationSettingModalCancelBtn) {
-            registrationSettingModalCancelBtn.addEventListener('click', closeRegistrationSettingModal);
-        }
-        if (registrationSettingModalBackdrop) {
-            registrationSettingModalBackdrop.addEventListener('click', closeRegistrationSettingModal);
-        }
+        document.addEventListener('click', function (e) {
+            // モーダルを開く
+            if (e.target.closest('#openRegistrationSettingModalBtn') || e.target.closest('.open-registration-setting-trigger')) {
+                openRegistrationSettingModal();
+                return;
+            }
+
+            // モーダルを閉じる
+            if (e.target.closest('#registrationSettingModalCloseBtn') ||
+                e.target.closest('#registrationSettingModalCancelBtn') ||
+                e.target.closest('#registrationSettingModalBackdrop')) {
+                closeRegistrationSettingModal();
+                return;
+            }
+
+            // 日時入力クリアボタン
+            const clearBtn = e.target.closest('[data-clear-target]');
+            if (clearBtn) {
+                const targetId = clearBtn.getAttribute('data-clear-target');
+                const targetInput = document.getElementById(targetId);
+                if (targetInput) {
+                    targetInput.value = '';
+                    targetInput.focus();
+                }
+            }
+        });
     });
 })();

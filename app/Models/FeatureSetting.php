@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Database\Factories\FeatureSettingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -44,7 +45,7 @@ class FeatureSetting extends Model
     }
 
     /**
-     * 指定時刻において本機能が利用可能（受付中）かどうかを判定
+     * 指定時刻において本機能が利用可能（受付中）かどうかを判定 (Asia/Tokyo基準)
      */
     public function isOpen(?CarbonInterface $now = null): bool
     {
@@ -52,13 +53,15 @@ class FeatureSetting extends Model
             return false;
         }
 
-        $now = $now ?? now();
+        $now = $now ? Carbon::parse($now)->timezone('Asia/Tokyo') : Carbon::now('Asia/Tokyo');
+        $openedAt = $this->opened_at?->timezone('Asia/Tokyo');
+        $closedAt = $this->closed_at?->timezone('Asia/Tokyo');
 
-        if ($this->opened_at && $now->lt($this->opened_at)) {
+        if ($openedAt && $now->lt($openedAt)) {
             return false;
         }
 
-        if ($this->closed_at && $now->gt($this->closed_at)) {
+        if ($closedAt && $now->gt($closedAt)) {
             return false;
         }
 
@@ -74,13 +77,15 @@ class FeatureSetting extends Model
             return 'disabled';
         }
 
-        $now = $now ?? now();
+        $now = $now ? Carbon::parse($now)->timezone('Asia/Tokyo') : Carbon::now('Asia/Tokyo');
+        $openedAt = $this->opened_at?->timezone('Asia/Tokyo');
+        $closedAt = $this->closed_at?->timezone('Asia/Tokyo');
 
-        if ($this->opened_at && $now->lt($this->opened_at)) {
+        if ($openedAt && $now->lt($openedAt)) {
             return 'upcoming';
         }
 
-        if ($this->closed_at && $now->gt($this->closed_at)) {
+        if ($closedAt && $now->gt($closedAt)) {
             return 'closed';
         }
 
@@ -93,11 +98,13 @@ class FeatureSetting extends Model
     public function getStatusLabel(?CarbonInterface $now = null): string
     {
         $status = $this->getStatus($now);
+        $openedAt = $this->opened_at?->timezone('Asia/Tokyo');
+        $closedAt = $this->closed_at?->timezone('Asia/Tokyo');
 
         return match ($status) {
             'disabled' => '停止中（手動）',
-            'upcoming' => '開始前（'.($this->opened_at?->format('Y/m/d H:i') ?? '').' 開始）',
-            'closed' => '受付終了（'.($this->closed_at?->format('Y/m/d H:i') ?? '').' 終了）',
+            'upcoming' => '開始前（'.($openedAt?->format('Y/m/d H:i') ?? '').' 開始）',
+            'closed' => '受付終了（'.($closedAt?->format('Y/m/d H:i') ?? '').' 終了）',
             default => '受付中',
         };
     }
@@ -112,10 +119,12 @@ class FeatureSetting extends Model
         }
 
         $status = $this->getStatus($now);
+        $openedAt = $this->opened_at?->timezone('Asia/Tokyo');
+        $closedAt = $this->closed_at?->timezone('Asia/Tokyo');
 
         return match ($status) {
-            'upcoming' => "「{$this->name}」は、".($this->opened_at?->format('Y年n月j日 H:i') ?? '').' より開始いたします。',
-            'closed' => "「{$this->name}」は、".($this->closed_at?->format('Y年n月j日 H:i') ?? '').' をもって終了いたしました。',
+            'upcoming' => "「{$this->name}」は、".($openedAt?->format('Y年n月j日 H:i') ?? '').' より開始いたします。',
+            'closed' => "「{$this->name}」は、".($closedAt?->format('Y年n月j日 H:i') ?? '').' をもって終了いたしました。',
             default => "現在、「{$this->name}」の受付を停止しております。本部スタッフまで直接お問い合わせください。",
         };
     }
