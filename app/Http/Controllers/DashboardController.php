@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\LaneRequest;
 use App\Services\NextTasksService;
 use App\Services\NowTasksService;
+use App\Services\ParkingConstraintService;
 use App\Services\TrafficRegulationService;
 use App\View\Components\Dashboard\NextTasksCard;
 use App\View\Components\Dashboard\NowTasksCard;
+use App\View\Components\Dashboard\ParkingMonitoringCard;
 use App\View\Components\Dashboard\TrafficRegulationCard;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +22,8 @@ class DashboardController extends Controller
     public function __construct(
         protected TrafficRegulationService $trafficRegulationService,
         protected NowTasksService $nowTasksService,
-        protected NextTasksService $nextTasksService
+        protected NextTasksService $nextTasksService,
+        protected ParkingConstraintService $parkingConstraintService
     ) {}
 
     /**
@@ -31,6 +34,7 @@ class DashboardController extends Controller
         $now = Carbon::now('Asia/Tokyo');
         $nowDatetime = $now->translatedFormat('n月j日 (D) H:i:s');
         $trafficRegulationContext = $this->trafficRegulationService->getCurrentContext($now);
+        $parkingMonitoringContext = $this->parkingConstraintService->getMonitoringContext($now);
 
         $laneRequests = LaneRequest::with(['lane', 'task', 'requestedByStaff'])
             ->whereIn('status', ['pending', 'approved'])
@@ -40,6 +44,7 @@ class DashboardController extends Controller
 
         return view('dashboard', [
             'trafficRegulationContext' => $trafficRegulationContext,
+            'parkingMonitoringContext' => $parkingMonitoringContext,
             'nowDatetime' => $nowDatetime,
             'laneRequests' => $laneRequests,
         ]);
@@ -55,6 +60,7 @@ class DashboardController extends Controller
         $trafficComponent = new TrafficRegulationCard($this->trafficRegulationService, $now);
         $nowTasksComponent = new NowTasksCard($this->nowTasksService, $now);
         $nextTasksComponent = new NextTasksCard($this->nextTasksService, NextTasksService::DEFAULT_LIMIT, $now);
+        $parkingComponent = new ParkingMonitoringCard($this->parkingConstraintService, $now);
 
         return response()->json([
             'server_time_ms' => $now->valueOf(),
@@ -63,6 +69,7 @@ class DashboardController extends Controller
                 'traffic_regulation' => Blade::renderComponent($trafficComponent),
                 'now_tasks' => Blade::renderComponent($nowTasksComponent),
                 'next_tasks' => Blade::renderComponent($nextTasksComponent),
+                'parking_monitoring' => Blade::renderComponent($parkingComponent),
             ],
         ]);
     }

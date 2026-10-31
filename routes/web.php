@@ -9,6 +9,9 @@ use App\Http\Controllers\EquipmentLogisticsPlanController;
 use App\Http\Controllers\EquipmentPrintController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LaneRequestController;
+use App\Http\Controllers\LocationController;
+use App\Http\Controllers\LocationScheduleController;
+use App\Http\Controllers\LocationTypeController;
 use App\Http\Controllers\LogisticsLocationController;
 use App\Http\Controllers\ManualController;
 use App\Http\Controllers\MeetingController;
@@ -134,4 +137,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('equipment-plans/{plan}', [EquipmentLogisticsPlanController::class, 'destroy'])->name('equipment-plans.destroy');
     Route::patch('equipment-plans/{plan}/status', [EquipmentLogisticsPlanController::class, 'updateStatus'])->name('equipment-plans.update-status');
     Route::resource('logistics-locations', LogisticsLocationController::class)->parameters(['logistics-locations' => 'location']);
+
+    // 拠点管理・時間帯スケジュール・拠点タイプ管理
+    Route::resource('locations', LocationController::class);
+    Route::post('locations/{location}/schedules', [LocationScheduleController::class, 'store'])->name('locations.schedules.store');
+    Route::put('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'update'])->name('locations.schedules.update');
+    Route::patch('locations/{location}/schedules/{schedule}/status', [LocationScheduleController::class, 'updateStatus'])->name('locations.schedules.update-status');
+    Route::delete('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'destroy'])->name('locations.schedules.destroy');
+    Route::resource('location-types', LocationTypeController::class)->except(['create', 'show', 'edit']);
 });

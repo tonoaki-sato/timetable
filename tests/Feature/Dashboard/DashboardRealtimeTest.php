@@ -50,6 +50,7 @@ class DashboardRealtimeTest extends TestCase
         $response->assertSee('id="dashboard-card-traffic-regulation"', false);
         $response->assertSee('id="dashboard-card-now-tasks"', false);
         $response->assertSee('id="dashboard-card-next-tasks"', false);
+        $response->assertSee('id="dashboard-card-parking-monitoring"', false);
         $response->assertSee('id="dashboard-manual-refresh"', false);
         $response->assertSee('10:00より車両通行止め (あと20分) / 路上本設置準備');
     }
@@ -104,6 +105,7 @@ class DashboardRealtimeTest extends TestCase
                     'traffic_regulation',
                     'now_tasks',
                     'next_tasks',
+                    'parking_monitoring',
                 ],
             ]);
 
