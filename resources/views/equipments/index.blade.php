@@ -1,46 +1,34 @@
 <x-layouts.app title="資材・機材 搬出入計画">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    @if (session('status'))
-        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between shadow-xs">
-            <div class="flex items-center space-x-2">
-                <span>✅</span>
-                <span>{{ session('status') }}</span>
-            </div>
-            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 font-bold">&times;</button>
-        </div>
-    @endif
-
     <!-- 1. ヘッダーセクション -->
-    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-5 sm:p-6 text-white shadow-lg border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center space-x-3">
-                <span class="text-3xl">📦</span>
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-black tracking-tight">資材・機材 搬出入計画</h1>
-                    <p class="text-xs text-slate-300 mt-1">実行委員会管理機材・イベント会社レンタル機材の倉庫出し・中継・現場設置・夜間分散保管・最終撤収スケジュール</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-            <a href="{{ route('equipments.create') }}"
-               class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition flex items-center space-x-1.5 cursor-pointer">
-                <span>➕</span>
-                <span>新規資材を登録</span>
-            </a>
-            <a href="{{ route('equipments.print', ['format' => $tab]) }}" target="_blank"
-               class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition flex items-center space-x-1.5 cursor-pointer">
-                <span>🖨️</span>
-                <span>A4帳票印刷</span>
-            </a>
-            <button type="button" onclick="document.getElementById('modal-location-create').classList.remove('hidden')"
-               class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center space-x-1.5 cursor-pointer">
+    <x-page-header
+        title="資材・機材 搬出入計画"
+        icon="📦"
+        description="実行委員会管理機材・イベント会社レンタル機材の倉庫出し・中継・現場設置・夜間分散保管・最終撤収スケジュール">
+        <x-slot:badges>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                全 {{ $equipments->count() }} 資材
+            </span>
+        </x-slot:badges>
+        <x-slot:actions>
+            <button type="button" data-action="open-location-modal" data-mode="create"
+                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                 <span>📍</span>
                 <span>拠点を追加</span>
             </button>
-        </div>
-    </div>
+            <a href="{{ route('equipments.print', ['format' => $tab]) }}" target="_blank"
+                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
+                <span>🖨️</span>
+                <span>A4帳票印刷</span>
+            </a>
+            <a href="{{ route('equipments.create') }}"
+                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                <span>➕</span>
+                <span>新規資材を登録</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- 2. ナビゲーションタブ -->
     <div class="border-b border-slate-200">
@@ -104,8 +92,8 @@
                     <input type="hidden" name="type" value="{{ $typeFilter }}">
                 @endif
                 <label for="lane-select" class="text-xs font-bold text-slate-500 whitespace-nowrap">担当班:</label>
-                <select id="lane-select" name="lane_id" onchange="this.form.submit()"
-                        class="text-xs rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-1.5 pl-2.5 pr-8">
+                <select id="lane-select" name="lane_id" data-auto-submit
+                        class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-8">
                     <option value="">全班表示</option>
                     @foreach($lanes as $lane)
                         <option value="{{ $lane->id }}" {{ $laneFilter == $lane->id ? 'selected' : '' }}>
@@ -382,7 +370,9 @@
                             </div>
 
                             <button type="button"
-                                    onclick="editLocation({{ json_encode($loc) }})"
+                                    data-action="open-location-modal"
+                                    data-mode="edit"
+                                    data-location="{{ json_encode($loc) }}"
                                     class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition text-xs" title="拠点を編集">
                                 ✏️ 編集
                             </button>
@@ -546,16 +536,16 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- 拠点登録・編集モーダル -->
+<!-- 拠点登録・編集モーダル (既存標準モーダルデザイン・CSP準拠) -->
 <!-- ========================================================================= -->
 <div id="modal-location-create" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-left space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 id="modal-location-title" class="text-base font-bold text-slate-900 flex items-center space-x-2">
+            <h3 id="modal-location-title" class="text-sm sm:text-base font-bold text-slate-900 flex items-center space-x-2">
                 <span>📍</span>
                 <span>拠点の登録</span>
             </h3>
-            <button type="button" onclick="closeLocationModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+            <button type="button" data-action="close-location-modal" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">✕</button>
         </div>
 
         <form id="form-location" method="POST" action="{{ route('logistics-locations.store') }}" class="space-y-4">
@@ -563,15 +553,15 @@
             <div id="form-location-method"></div>
 
             <div>
-                <label for="location_name" class="block text-xs font-bold text-slate-700 mb-1">拠点名 <span class="text-rose-500">*</span></label>
+                <label for="location_name" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">拠点名 <span class="text-rose-500">*</span></label>
                 <input type="text" id="location_name" name="name" required placeholder="例: 税務署前駐車場、北川駐車場、○○広場"
-                       class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 p-2.5">
+                       class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label for="location_type" class="block text-xs font-bold text-slate-700 mb-1">拠点種別</label>
-                    <select id="location_type" name="type" class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 p-2.5">
+                    <label for="location_type" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">拠点種別</label>
+                    <select id="location_type" name="type" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <option value="parking">駐車場</option>
                         <option value="facility">施設・倉庫</option>
                         <option value="open_space">空きスペース</option>
@@ -580,9 +570,9 @@
                 </div>
 
                 <div>
-                    <label for="location_display_order" class="block text-xs font-bold text-slate-700 mb-1">表示順</label>
+                    <label for="location_display_order" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">表示順</label>
                     <input type="number" id="location_display_order" name="display_order" value="10" min="0"
-                           class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 p-2.5">
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
             </div>
 
@@ -590,38 +580,39 @@
             <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <label class="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" id="location_is_all_day" name="is_all_day" value="1"
-                           onchange="toggleAvailabilityInputs(this.checked)"
-                           class="rounded text-indigo-600 focus:ring-indigo-500">
+                           class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
                     <span class="text-xs font-bold text-slate-800">終日使用可能（貸切期間の制限なし）</span>
                 </label>
                 <p class="text-[11px] text-slate-400 mt-1">番所地下倉庫やコミュニティルームなど常時利用できる場合はチェック</p>
             </div>
 
             <!-- 貸切期間設定（終日利用時は非活性） -->
-            <div id="availability-inputs" class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-amber-50/50 border border-amber-200">
+            <div id="availability-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-amber-50/50 border border-amber-200">
                 <div>
                     <label for="location_available_from" class="block text-[11px] font-bold text-amber-900 mb-1">貸切開始日時</label>
                     <input type="datetime-local" id="location_available_from" name="available_from"
-                           class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 p-2">
+                           class="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
                 </div>
                 <div>
                     <label for="location_available_to" class="block text-[11px] font-bold text-amber-900 mb-1">貸切終了日時</label>
                     <input type="datetime-local" id="location_available_to" name="available_to"
-                           class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 p-2">
+                           class="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
                 </div>
             </div>
 
             <div>
-                <label for="location_description" class="block text-xs font-bold text-slate-700 mb-1">備考・注意事項</label>
+                <label for="location_description" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">備考・注意事項</label>
                 <textarea id="location_description" name="description" rows="2" placeholder="例: 関係車両のみ13時より駐車可。鍵は事務室。"
-                          class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 p-2.5"></textarea>
+                          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed"></textarea>
             </div>
 
-            <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
-                <button type="button" onclick="closeLocationModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+                <button type="button" data-action="close-location-modal"
+                        class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                     キャンセル
                 </button>
-                <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition">
+                <button type="submit"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
                     保存する
                 </button>
             </div>
@@ -629,54 +620,6 @@
     </div>
 </div>
 
-<script>
-    function toggleAvailabilityInputs(isAllDay) {
-        const box = document.getElementById('availability-inputs');
-        if (isAllDay) {
-            box.classList.add('opacity-40', 'pointer-events-none');
-        } else {
-            box.classList.remove('opacity-40', 'pointer-events-none');
-        }
-    }
-
-    function editLocation(location) {
-        document.getElementById('modal-location-title').innerHTML = '<span>📍</span><span>拠点の編集</span>';
-        const form = document.getElementById('form-location');
-        form.action = `/logistics-locations/${location.id}`;
-        document.getElementById('form-location-method').innerHTML = '<input type="hidden" name="_method" value="PUT">';
-
-        document.getElementById('location_name').value = location.name || '';
-        document.getElementById('location_type').value = location.type || 'parking';
-        document.getElementById('location_display_order').value = location.display_order ?? 10;
-        document.getElementById('location_description').value = location.description || '';
-
-        const isAllDay = !!location.is_all_day;
-        document.getElementById('location_is_all_day').checked = isAllDay;
-        toggleAvailabilityInputs(isAllDay);
-
-        if (location.available_from) {
-            document.getElementById('location_available_from').value = location.available_from.replace(' ', 'T').substring(0, 16);
-        } else {
-            document.getElementById('location_available_from').value = '';
-        }
-
-        if (location.available_to) {
-            document.getElementById('location_available_to').value = location.available_to.replace(' ', 'T').substring(0, 16);
-        } else {
-            document.getElementById('location_available_to').value = '';
-        }
-
-        document.getElementById('modal-location-create').classList.remove('hidden');
-    }
-
-    function closeLocationModal() {
-        document.getElementById('modal-location-create').classList.add('hidden');
-        document.getElementById('form-location').reset();
-        document.getElementById('form-location').action = "{{ route('logistics-locations.store') }}";
-        document.getElementById('form-location-method').innerHTML = '';
-        document.getElementById('modal-location-title').innerHTML = '<span>📍</span><span>拠点の登録</span>';
-        toggleAvailabilityInputs(false);
-    }
-</script>
+@vite(['resources/js/equipments.js'])
 </x-layouts.app>
 

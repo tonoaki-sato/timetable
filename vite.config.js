@@ -18,6 +18,7 @@ export default defineConfig({
                 'resources/js/timetable-task-show.js',
                 'resources/js/presentation.js',
                 'resources/js/locations.js',
+                'resources/js/equipments.js',
             ],
             refresh: true,
             fonts: [

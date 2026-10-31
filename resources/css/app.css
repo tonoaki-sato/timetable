@@ -91,5 +91,10 @@
     #speakerNotesText {
         color: #1e293b !important;
     }
+
+    /* 資材搬出入計画書 印刷スタイル */
+    .table-print th, .table-print td {
+        border-color: #cbd5e1 !important;
+    }
 }
 

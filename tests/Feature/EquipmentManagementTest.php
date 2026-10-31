@@ -172,4 +172,59 @@ class EquipmentManagementTest extends TestCase
         $deleteResponse->assertRedirect(route('equipments.index'));
         $this->assertDatabaseMissing('equipments', ['id' => $equipment->id]);
     }
+
+    /**
+     * 資材一覧の events タブおよび関連画面が CSP に準拠し、インラインスクリプトやインラインイベントハンドラを含まないこと
+     */
+    public function test_events_tab_and_equipments_views_comply_with_csp_without_inline_scripts_or_handlers(): void
+    {
+        $this->actingAs($this->operator);
+
+        $equipment = Equipment::factory()->rental()->create([
+            'name' => 'パイプテント 2K×3K',
+            'event_company_name' => 'テストイベント企画',
+        ]);
+
+        $urls = [
+            route('equipments.index', ['tab' => 'events']),
+            route('equipments.index', ['tab' => 'flow']),
+            route('equipments.create'),
+            route('equipments.show', $equipment),
+            route('equipments.edit', $equipment),
+            route('equipments.print', ['format' => 'events']),
+        ];
+
+        foreach ($urls as $url) {
+            $response = $this->get($url);
+            $response->assertStatus(200);
+
+            $csp = $response->headers->get('Content-Security-Policy');
+            $this->assertNotNull($csp, "CSP header must be present on {$url}");
+            $this->assertStringContainsString("script-src 'self'", $csp);
+            $this->assertStringNotContainsString('unsafe-inline', $csp);
+
+            $content = $response->getContent();
+
+            // インライン <script>（src属性を持たないタグ）が存在しないこと
+            $this->assertDoesNotMatchRegularExpression(
+                '/<script(?![^>]*\bsrc=)[^>]*>/i',
+                $content,
+                "Inline <script> tag found on {$url}"
+            );
+
+            // インラインイベントハンドラ属性（onclick, onchange, onsubmit 等）が存在しないこと
+            $this->assertDoesNotMatchRegularExpression(
+                '/\s(on[a-z]+)\s*=/i',
+                $content,
+                "Inline event handler attribute found on {$url}"
+            );
+
+            // インライン <style> タグが存在しないこと
+            $this->assertDoesNotMatchRegularExpression(
+                '/<style\b[^>]*>/i',
+                $content,
+                "Inline <style> tag found on {$url}"
+            );
+        }
+    }
 }

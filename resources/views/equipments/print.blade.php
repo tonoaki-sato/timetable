@@ -5,28 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>資材搬出入・中継・夜間保管 計画書 - まつり運行本部</title>
     @vite(['resources/css/app.css'])
-    <style>
-        @media print {
-            @page {
-                size: A4 landscape;
-                margin: 10mm 12mm;
-            }
-            body {
-                background: white !important;
-                color: black !important;
-                font-size: 10pt;
-            }
-            .no-print {
-                display: none !important;
-            }
-            .page-break {
-                page-break-before: always;
-            }
-            .table-print th, .table-print td {
-                border-color: #cbd5e1 !important;
-            }
-        }
-    </style>
+    <script src="{{ asset('js/print-helper.js') }}" defer></script>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased p-4 sm:p-6 print:p-0">
 
@@ -44,7 +23,7 @@
             <a href="{{ route('equipments.index') }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
                 ← 画面に戻る
             </a>
-            <button type="button" onclick="window.print()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition flex items-center space-x-1 cursor-pointer">
+            <button type="button" data-action="print" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition flex items-center space-x-1 cursor-pointer">
                 <span>🖨️</span>
                 <span>今すぐ印刷 (Ctrl+P)</span>
             </button>
