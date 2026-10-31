@@ -42,11 +42,13 @@ Route::post('/join', [StaffJoinController::class, 'store'])->name('staff.join.st
 Route::get('/join/completed', [StaffJoinController::class, 'completed'])->name('staff.join.completed');
 
 // 3. 現場マイタイムテーブル閲覧 & チェックイン & 動態操作・班長要請ルート (トークン認証)
-Route::get('/my/shift/{token}', [StaffShiftController::class, 'show'])->name('staff.myshift');
-Route::post('/my/shift/{token}/checkin', [StaffShiftController::class, 'checkIn'])->name('staff.myshift.checkin');
-Route::post('/my/shift/{token}/assignments/{assignment}/status', [StaffShiftController::class, 'updateAssignmentStatus'])->name('staff.myshift.assignment-status');
-Route::post('/my/shift/{token}/tasks/{task}/status', [StaffShiftController::class, 'updateLaneTaskStatus'])->name('staff.myshift.lane-task-status');
-Route::post('/my/shift/{token}/lanes/{lane}/requests', [StaffShiftController::class, 'storeLaneRequest'])->name('staff.myshift.lane-requests.store');
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/my/shift/{token}', [StaffShiftController::class, 'show'])->name('staff.myshift');
+    Route::post('/my/shift/{token}/checkin', [StaffShiftController::class, 'checkIn'])->name('staff.myshift.checkin');
+    Route::post('/my/shift/{token}/assignments/{assignment}/status', [StaffShiftController::class, 'updateAssignmentStatus'])->name('staff.myshift.assignment-status');
+    Route::post('/my/shift/{token}/tasks/{task}/status', [StaffShiftController::class, 'updateLaneTaskStatus'])->name('staff.myshift.lane-task-status');
+    Route::post('/my/shift/{token}/lanes/{lane}/requests', [StaffShiftController::class, 'storeLaneRequest'])->name('staff.myshift.lane-requests.store');
+});
 
 // 5. 認証ルート (未ログイン時のみアクセス可)
 Route::middleware('guest')->group(function () {
@@ -90,12 +92,14 @@ Route::middleware('auth')->group(function () {
 
     // 担当班（レーン）管理
     Route::get('/lanes', [LaneController::class, 'select'])->name('lanes.index');
-    Route::get('timetables/{timetable}/lanes', [LaneController::class, 'index'])->name('timetables.lanes.index');
-    Route::post('timetables/{timetable}/lanes', [LaneController::class, 'store'])->name('timetables.lanes.store');
-    Route::post('timetables/{timetable}/lanes/reorder', [LaneController::class, 'reorder'])->name('timetables.lanes.reorder');
-    Route::put('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'update'])->name('timetables.lanes.update');
-    Route::patch('timetables/{timetable}/lanes/{lane}/lead-staff', [LaneController::class, 'updateLeadStaff'])->name('timetables.lanes.update-lead');
-    Route::delete('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'destroy'])->name('timetables.lanes.destroy');
+    Route::scopeBindings()->group(function () {
+        Route::get('timetables/{timetable}/lanes', [LaneController::class, 'index'])->name('timetables.lanes.index');
+        Route::post('timetables/{timetable}/lanes', [LaneController::class, 'store'])->name('timetables.lanes.store');
+        Route::post('timetables/{timetable}/lanes/reorder', [LaneController::class, 'reorder'])->name('timetables.lanes.reorder');
+        Route::put('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'update'])->name('timetables.lanes.update');
+        Route::patch('timetables/{timetable}/lanes/{lane}/lead-staff', [LaneController::class, 'updateLeadStaff'])->name('timetables.lanes.update-lead');
+        Route::delete('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'destroy'])->name('timetables.lanes.destroy');
+    });
     Route::patch('lane-requests/{laneRequest}/status', [LaneRequestController::class, 'updateStatus'])->name('lane-requests.update-status');
 
     // 作業タスクリソースルート
@@ -140,9 +144,11 @@ Route::middleware('auth')->group(function () {
 
     // 拠点管理・時間帯スケジュール・拠点タイプ管理
     Route::resource('locations', LocationController::class);
-    Route::post('locations/{location}/schedules', [LocationScheduleController::class, 'store'])->name('locations.schedules.store');
-    Route::put('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'update'])->name('locations.schedules.update');
-    Route::patch('locations/{location}/schedules/{schedule}/status', [LocationScheduleController::class, 'updateStatus'])->name('locations.schedules.update-status');
-    Route::delete('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'destroy'])->name('locations.schedules.destroy');
+    Route::scopeBindings()->group(function () {
+        Route::post('locations/{location}/schedules', [LocationScheduleController::class, 'store'])->name('locations.schedules.store');
+        Route::put('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'update'])->name('locations.schedules.update');
+        Route::patch('locations/{location}/schedules/{schedule}/status', [LocationScheduleController::class, 'updateStatus'])->name('locations.schedules.update-status');
+        Route::delete('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'destroy'])->name('locations.schedules.destroy');
+    });
     Route::resource('location-types', LocationTypeController::class)->except(['create', 'show', 'edit']);
 });

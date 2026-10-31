@@ -419,4 +419,18 @@ class StaffShiftTest extends TestCase
         $response->assertDontSee('<span class="text-indigo-400 font-bold shrink-0">役割:</span>', false);
         $response->assertDontSee('<span class="text-indigo-400 font-bold shrink-0">場所:</span>', false);
     }
+
+    /**
+     * マイシフト関連エンドポイントにレートリミットが適用されていること
+     */
+    public function test_shift_endpoints_are_rate_limited(): void
+    {
+        for ($i = 0; $i < 60; $i++) {
+            $response = $this->get(route('staff.myshift', ['token' => $this->staff->access_token]));
+            $response->assertStatus(200);
+        }
+
+        $limitedResponse = $this->get(route('staff.myshift', ['token' => $this->staff->access_token]));
+        $limitedResponse->assertStatus(429);
+    }
 }

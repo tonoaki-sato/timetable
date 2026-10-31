@@ -19,6 +19,8 @@ class LocationController extends Controller
      */
     public function index(Request $request): View|JsonResponse
     {
+        $this->authorize('viewAny', Location::class);
+
         $now = Carbon::now('Asia/Tokyo');
         $today = $now->format('Y-m-d');
 
@@ -59,6 +61,8 @@ class LocationController extends Controller
      */
     public function create(): View
     {
+        $this->authorize('create', Location::class);
+
         $types = LocationType::active()->ordered()->get();
 
         return view('locations.create', compact('types'));
@@ -69,6 +73,8 @@ class LocationController extends Controller
      */
     public function store(StoreLocationRequest $request): RedirectResponse|JsonResponse
     {
+        $this->authorize('create', Location::class);
+
         $validated = $request->validated();
         $validated['created_by'] = $request->user()?->id;
 
@@ -91,6 +97,8 @@ class LocationController extends Controller
      */
     public function show(Location $location): View
     {
+        $this->authorize('view', $location);
+
         $location->load(['type', 'schedules' => function ($query) {
             $query->orderBy('start_at', 'asc');
         }]);
@@ -105,6 +113,8 @@ class LocationController extends Controller
      */
     public function edit(Location $location): View
     {
+        $this->authorize('update', $location);
+
         $types = LocationType::active()->ordered()->get();
 
         return view('locations.edit', compact('location', 'types'));
@@ -115,6 +125,8 @@ class LocationController extends Controller
      */
     public function update(UpdateLocationRequest $request, Location $location): RedirectResponse|JsonResponse
     {
+        $this->authorize('update', $location);
+
         $location->update($request->validated());
 
         if ($request->wantsJson()) {
@@ -134,6 +146,8 @@ class LocationController extends Controller
      */
     public function destroy(Request $request, Location $location): RedirectResponse|JsonResponse
     {
+        $this->authorize('delete', $location);
+
         $name = $location->name;
         $location->delete();
 

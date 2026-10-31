@@ -18,6 +18,8 @@ class LocationScheduleController extends Controller
      */
     public function store(StoreLocationScheduleRequest $request, Location $location): RedirectResponse|JsonResponse
     {
+        $this->authorize('create', LocationSchedule::class);
+
         $validated = $request->validated();
         $validated['location_id'] = $location->id;
 
@@ -41,6 +43,7 @@ class LocationScheduleController extends Controller
     public function update(UpdateLocationScheduleRequest $request, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
     {
         abort_if($schedule->location_id !== $location->id, 404);
+        $this->authorize('update', $schedule);
 
         $schedule->update($request->validated());
 
@@ -62,6 +65,7 @@ class LocationScheduleController extends Controller
     public function updateStatus(Request $request, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
     {
         abort_if($schedule->location_id !== $location->id, 404);
+        $this->authorize('update', $schedule);
 
         $validated = $request->validate([
             'application_status' => ['required', Rule::in(array_keys(LocationSchedule::APPLICATION_STATUSES))],
@@ -89,6 +93,7 @@ class LocationScheduleController extends Controller
     public function destroy(Request $request, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
     {
         abort_if($schedule->location_id !== $location->id, 404);
+        $this->authorize('delete', $schedule);
 
         $schedule->delete();
 

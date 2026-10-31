@@ -14,7 +14,11 @@ class UpdateLocationScheduleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $schedule = $this->route('schedule');
+
+        return $schedule instanceof LocationSchedule
+            ? ($this->user()?->can('update', $schedule) ?? false)
+            : ($this->user()?->can('update', LocationSchedule::class) ?? false);
     }
 
     /**

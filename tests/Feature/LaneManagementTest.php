@@ -609,4 +609,26 @@ class LaneManagementTest extends TestCase
         $response->assertDontSee('タイムテーブル:');
         $response->assertDontSee('日程選択へ戻る');
     }
+
+    /**
+     * 18. 親タイムテーブルに属さないレーンへのアクセスは404となること（スコープバインディング）
+     */
+    public function test_lane_scoped_binding_rejects_mismatched_timetable(): void
+    {
+        $secondTimetable = Timetable::factory()->create([
+            'name' => '本祭2日目',
+            'target_date' => '2027-10-18',
+        ]);
+        $laneOnSecond = Lane::factory()->create([
+            'timetable_id' => $secondTimetable->id,
+            'name' => '別日レーン',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->put(route('timetables.lanes.update', [$this->timetable, $laneOnSecond]), [
+                'name' => '改ざん名称',
+            ]);
+
+        $response->assertStatus(404);
+    }
 }

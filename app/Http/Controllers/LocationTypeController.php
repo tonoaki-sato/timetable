@@ -17,6 +17,8 @@ class LocationTypeController extends Controller
      */
     public function index(Request $request): View|JsonResponse
     {
+        $this->authorize('viewAny', LocationType::class);
+
         $types = LocationType::withCount('locations')->ordered()->get();
 
         if ($request->wantsJson()) {
@@ -34,6 +36,8 @@ class LocationTypeController extends Controller
      */
     public function store(StoreLocationTypeRequest $request): RedirectResponse|JsonResponse
     {
+        $this->authorize('create', LocationType::class);
+
         $type = LocationType::create($request->validated());
 
         if ($request->wantsJson()) {
@@ -53,6 +57,8 @@ class LocationTypeController extends Controller
      */
     public function update(UpdateLocationTypeRequest $request, LocationType $locationType): RedirectResponse|JsonResponse
     {
+        $this->authorize('update', $locationType);
+
         $locationType->update($request->validated());
 
         if ($request->wantsJson()) {
@@ -72,6 +78,8 @@ class LocationTypeController extends Controller
      */
     public function destroy(Request $request, LocationType $locationType): RedirectResponse|JsonResponse
     {
+        $this->authorize('delete', $locationType);
+
         if ($locationType->locations()->exists()) {
             $msg = "拠点タイプ「{$locationType->label}」は既に拠点が紐付いているため削除できません。";
             if ($request->wantsJson()) {

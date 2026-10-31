@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\LocationType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,7 +13,7 @@ class StoreLocationTypeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return $this->user()?->can('create', LocationType::class) ?? false;
     }
 
     /**

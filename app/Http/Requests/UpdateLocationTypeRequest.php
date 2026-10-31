@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\LocationType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -13,7 +14,11 @@ class UpdateLocationTypeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $type = $this->route('location_type');
+
+        return $type instanceof LocationType
+            ? ($this->user()?->can('update', $type) ?? false)
+            : ($this->user()?->can('update', LocationType::class) ?? false);
     }
 
     /**
