@@ -31,7 +31,7 @@
                 </div>
                 @else
                 <button type="button" id="checkInBtn"
-                        data-endpoint="{{ route('staff.myshift.checkin', ['token' => $staff->access_token]) }}"
+                        data-endpoint="{{ route('staff.myshift.checkin', ['token' => $staff->access_token], false) }}"
                         class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-900/40 transition transform active:scale-95 flex items-center space-x-1 cursor-pointer">
                     <span>📍</span>
                     <span>現場到着（受付）</span>
@@ -94,7 +94,7 @@
                                 <span class="text-[11px] text-slate-400">
                                     班員: {{ $laneTask->assignments->map(fn($a) => $a->staff?->name . '(' . ($a->role_description ?: '担当') . ')')->implode('、') ?: '未配置' }}
                                 </span>
-                                <form action="{{ route('staff.myshift.lane-task-status', ['token' => $staff->access_token, 'task' => $laneTask->id]) }}" method="POST" class="flex items-center gap-1 shrink-0">
+                                <form action="{{ route('staff.myshift.lane-task-status', ['token' => $staff->access_token, 'task' => $laneTask->id], false) }}" method="POST" class="flex items-center gap-1 shrink-0">
                                     @csrf
                                     <select name="status" data-auto-submit class="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-[11px] text-slate-100">
                                         @foreach(\App\Models\TimetableTask::STATUSES as $stKey => $stLabel)
@@ -111,7 +111,7 @@
                 <!-- 2. 人員不足時の管理者への要請 & 3. 必要機材の申請フォーム -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-amber-500/30">
                     <!-- 人員応援要請フォーム -->
-                    <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'lane' => $ledLane->id]) }}" method="POST" class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                    <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'lane' => $ledLane->id], false) }}" method="POST" class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
                         @csrf
                         <input type="hidden" name="request_type" value="staffing">
                         <div class="text-xs font-bold text-amber-300">🙋 人員不足時の管理者への要請</div>
@@ -136,7 +136,7 @@
                     </form>
 
                     <!-- 必要機材の申請フォーム -->
-                    <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'lane' => $ledLane->id]) }}" method="POST" class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                    <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'lane' => $ledLane->id], false) }}" method="POST" class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
                         @csrf
                         <input type="hidden" name="request_type" value="equipment">
                         <div class="text-xs font-bold text-sky-300">🧰 必要機材の申請</div>
@@ -303,13 +303,13 @@
                             <div class="flex items-center space-x-1.5">
                                 @if($assignment->attendance_status !== 'in_progress')
                                 <button type="button" class="assignmentStatusBtn px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-lg text-xs font-bold transition active:scale-95 cursor-pointer flex items-center space-x-1"
-                                        data-endpoint="{{ route('staff.myshift.assignment-status', ['token' => $staff->access_token, 'assignment' => $assignment->id]) }}"
+                                        data-endpoint="{{ route('staff.myshift.assignment-status', ['token' => $staff->access_token, 'assignment' => $assignment->id], false) }}"
                                         data-status="in_progress">
                                     <span>▶</span><span>着手</span>
                                 </button>
                                 @endif
                                 <button type="button" class="assignmentStatusBtn px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition active:scale-95 cursor-pointer flex items-center space-x-1"
-                                        data-endpoint="{{ route('staff.myshift.assignment-status', ['token' => $staff->access_token, 'assignment' => $assignment->id]) }}"
+                                        data-endpoint="{{ route('staff.myshift.assignment-status', ['token' => $staff->access_token, 'assignment' => $assignment->id], false) }}"
                                         data-status="completed">
                                     <span>✅</span><span>完了</span>
                                 </button>

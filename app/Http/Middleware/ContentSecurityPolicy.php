@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
 class ContentSecurityPolicy
@@ -15,6 +16,9 @@ class ContentSecurityPolicy
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Viteおよび各種ツール連携用CSPノンスを発行
+        $nonce = Vite::useCspNonce();
+
         $response = $next($request);
 
         // APIやJSONレスポンスにはCSPヘッダーを付与しない
@@ -24,7 +28,7 @@ class ContentSecurityPolicy
 
         $cspPolicy = implode('; ', [
             "default-src 'self'",
-            "script-src 'self'",
+            "script-src 'self' 'nonce-{$nonce}'",
             "style-src 'self' https://fonts.bunny.net",
             "font-src 'self' https://fonts.bunny.net data:",
             "img-src 'self' data: https:",
