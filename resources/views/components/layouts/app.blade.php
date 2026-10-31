@@ -33,9 +33,10 @@
 
                     <!-- 主要リンク（グループ化ドロップダウン） -->
                     @php
+                        $isOperationActive = request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') || request()->routeIs('timetable.index') || request()->routeIs('lanes.*') || request()->routeIs('preparation-navigator.*');
+                        $isResourceActive = request()->routeIs('staff.*') || request()->routeIs('equipments.*') || request()->routeIs('logistics-locations.*') || request()->routeIs('locations.*') || request()->routeIs('location-types.*');
                         $isScheduleActive = request()->routeIs('calendar.*') || request()->routeIs('annual-schedules.*') || request()->routeIs('meetings.*');
-                        $isOperationActive = request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') || request()->routeIs('timetable.index') || request()->routeIs('lanes.*') || request()->routeIs('preparation-navigator.*') || request()->routeIs('equipments.*') || request()->routeIs('logistics-locations.*') || request()->routeIs('locations.*') || request()->routeIs('location-types.*');
-                        $isManagementActive = request()->routeIs('staff.*') || request()->routeIs('users.*') || request()->routeIs('phases.*') || request()->routeIs('manual.*');
+                        $isSystemActive = request()->routeIs('users.*') || request()->routeIs('manual.*') || request()->routeIs('presentation.*');
                     @endphp
                     <nav class="hidden md:flex items-center space-x-1 pl-3 lg:pl-4 border-l border-slate-800 shrink-0">
                         <!-- 1. 本部ダッシュボード -->
@@ -45,45 +46,7 @@
                             <span>本部ダッシュボード</span>
                         </a>
 
-                        <!-- 2. スケジュール ▾ -->
-                        <div class="relative nav-dropdown shrink-0">
-                            <button type="button"
-                                class="dropdown-trigger px-2.5 py-1.5 lg:px-3 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap cursor-pointer {{ $isScheduleActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
-                                <span>📅</span>
-                                <span>スケジュール</span>
-                                <span class="text-[9px] opacity-75">▼</span>
-                            </button>
-                            <div class="dropdown-menu hidden absolute left-0 mt-1.5 w-64 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 z-50 divide-y divide-slate-800/80">
-                                <div class="py-1 space-y-0.5">
-                                    <a href="{{ route('calendar.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('calendar.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">📅</span>
-                                        <div class="min-w-0">
-                                            <div class="text-xs font-bold">総合カレンダー</div>
-                                            <p class="text-[10px] {{ request()->routeIs('calendar.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">月間グリッドで予定・会議・運行日を俯瞰</p>
-                                        </div>
-                                    </a>
-                                    <a href="{{ route('annual-schedules.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('annual-schedules.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">📋</span>
-                                        <div class="min-w-0">
-                                            <div class="text-xs font-bold">年間スケジュール</div>
-                                            <p class="text-[10px] {{ request()->routeIs('annual-schedules.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">年次マイルストーン・準備工程管理</p>
-                                        </div>
-                                    </a>
-                                    <a href="{{ route('meetings.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('meetings.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">🤝</span>
-                                        <div class="min-w-0">
-                                            <div class="text-xs font-bold">会議・打ち合わせ</div>
-                                            <p class="text-[10px] {{ request()->routeIs('meetings.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">幹事会・総会・LINE告知テキスト生成</p>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. まつり運行 ▾ -->
+                        <!-- 2. まつり運行 ▾ -->
                         <div class="relative nav-dropdown shrink-0">
                             <button type="button"
                                 class="dropdown-trigger px-2.5 py-1.5 lg:px-3 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap cursor-pointer {{ $isOperationActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
@@ -132,6 +95,25 @@
                                     @endforelse
                                 </div>
 
+                                @php
+                                    $targetPrintTimetable = collect($navTimetables ?? [])->firstWhere('status', 'active') ?? collect($navTimetables ?? [])->first();
+                                @endphp
+                                @if($targetPrintTimetable)
+                                <div class="pt-0.5 pb-1">
+                                    <a href="{{ route('timetables.print-assignments', $targetPrintTimetable) }}" target="_blank"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition text-slate-200 hover:bg-slate-800 hover:text-white">
+                                        <span class="text-base shrink-0">🖨️</span>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-bold flex items-center space-x-1">
+                                                <span>人員配置表の印刷</span>
+                                                <span class="text-[9px] text-slate-400 font-normal">↗</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">各班・タスクの配置一覧（A4印刷）</p>
+                                        </div>
+                                    </a>
+                                </div>
+                                @endif
+
                                 <!-- 区切り線 -->
                                 <div class="border-t border-slate-800/80 my-1"></div>
 
@@ -148,7 +130,7 @@
                                                 <span>まつり運行準備ナビゲーター</span>
                                                 <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded {{ request()->routeIs('preparation-navigator.*') ? 'bg-indigo-700 text-white' : 'bg-indigo-500/30 text-indigo-200' }}">Step 1〜4</span>
                                             </div>
-                                            <p class="text-[10px] {{ request()->routeIs('preparation-navigator.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">タイムテーブル・班・タスク・人員配置を手順通りに準備・実行</p>
+                                            <p class="text-[10px] {{ request()->routeIs('preparation-navigator.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">タイムテーブル・班・タスク・人員配置を手順通りに準備</p>
                                         </div>
                                     </a>
                                     <a href="{{ route('timetables.index') }}"
@@ -156,7 +138,7 @@
                                         <span class="text-base shrink-0">📋</span>
                                         <div class="min-w-0">
                                             <div class="text-xs font-bold">タイムテーブル管理</div>
-                                            <p class="text-[10px] {{ request()->routeIs('timetables.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">各日の日程枠登録・作業タスク管理・人員配置</p>
+                                            <p class="text-[10px] {{ request()->routeIs('timetables.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">各日の日程枠登録・作業タスク台帳</p>
                                         </div>
                                     </a>
                                     <a href="{{ route('lanes.index') }}"
@@ -167,66 +149,184 @@
                                             <p class="text-[10px] {{ request()->routeIs('lanes.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">各日の班編成と現場リーダー設定</p>
                                         </div>
                                     </a>
-                                    <a href="{{ route('equipments.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('equipments.*') || request()->routeIs('logistics-locations.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">📦</span>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold flex items-center justify-between">
-                                                <span>資材・搬出入計画</span>
-                                                <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">New</span>
-                                            </div>
-                                            <p class="text-[10px] {{ request()->routeIs('equipments.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">自前・レンタル資材の移動・中継・夜間保管管理</p>
-                                        </div>
-                                    </a>
-                                    <a href="{{ route('locations.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('locations.*') || request()->routeIs('location-types.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">📍</span>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold flex items-center justify-between">
-                                                <span>拠点管理</span>
-                                                <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">New</span>
-                                            </div>
-                                            <p class="text-[10px] {{ request()->routeIs('locations.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">番所・駐車場・コミュニティスペース・利用時間帯</p>
-                                        </div>
-                                    </a>
-                                    @php
-                                        $targetPrintTimetable = collect($navTimetables ?? [])->firstWhere('status', 'active') ?? collect($navTimetables ?? [])->first();
-                                    @endphp
-                                    @if($targetPrintTimetable)
-                                    <a href="{{ route('timetables.print-assignments', $targetPrintTimetable) }}" target="_blank"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition text-slate-200 hover:bg-slate-800 hover:text-white">
-                                        <span class="text-base shrink-0">🖨️</span>
-                                        <div class="min-w-0">
-                                            <div class="text-xs font-bold flex items-center space-x-1">
-                                                <span>人員配置表の印刷</span>
-                                                <span class="text-[9px] text-slate-400 font-normal">↗</span>
-                                            </div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">各班・タスクのスタッフ配置一覧表をA4印刷</p>
-                                        </div>
-                                    </a>
-                                    @endif
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 4. 設定・管理 ▾ -->
+                        <!-- 3. リソース・物流 ▾ -->
                         <div class="relative nav-dropdown shrink-0">
                             <button type="button"
-                                class="dropdown-trigger px-2.5 py-1.5 lg:px-3 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap cursor-pointer {{ $isManagementActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
-                                <span>👥</span>
-                                <span>設定・管理</span>
+                                class="dropdown-trigger px-2.5 py-1.5 lg:px-3 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap cursor-pointer {{ $isResourceActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                                <span>📦</span>
+                                <span>リソース・物流</span>
                                 <span class="text-[9px] opacity-75">▼</span>
                             </button>
-                            <div class="dropdown-menu hidden absolute right-0 sm:left-0 mt-1.5 w-60 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 z-50 divide-y divide-slate-800/80">
+                            <div class="dropdown-menu hidden absolute left-0 mt-1.5 w-80 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 z-50">
+                                <!-- セクション1: スタッフ体制 -->
+                                <div class="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
+                                    <span>👷 スタッフ体制</span>
+                                    <span class="text-[9px] text-indigo-300 font-mono font-bold">人員</span>
+                                </div>
                                 <div class="py-1 space-y-0.5">
                                     <a href="{{ route('staff.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('staff.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('staff.index') || request()->routeIs('staff.show') || request()->routeIs('staff.create') || request()->routeIs('staff.edit') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">👷</span>
-                                        <div class="min-w-0">
-                                            <div class="text-xs font-bold">スタッフ管理</div>
-                                            <p class="text-[10px] {{ request()->routeIs('staff.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">現場ボランティア・幹事名簿</p>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold">スタッフ名簿</div>
+                                            <p class="text-[10px] {{ request()->routeIs('staff.*') && !request()->routeIs('staff.print*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">現場ボランティア・幹事名簿・参加QR・CSV</p>
                                         </div>
                                     </a>
+                                    <a href="{{ route('staff.print-cards') }}" target="_blank"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('staff.print*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">🪪</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold flex items-center space-x-1">
+                                                <span>スタッフ名札印刷</span>
+                                                <span class="text-[9px] text-slate-400 font-normal">↗</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">QR付き名札カードの一括A4印刷</p>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- 区切り線 -->
+                                <div class="border-t border-slate-800/80 my-1"></div>
+
+                                <!-- セクション2: 資材・機材物流 -->
+                                <div class="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
+                                    <span>📦 資材・機材物流</span>
+                                    <span class="text-[9px] text-amber-300 font-mono font-bold">機材</span>
+                                </div>
+                                <div class="py-1 space-y-0.5">
+                                    <a href="{{ route('equipments.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('equipments.*') && !request()->routeIs('equipments.print') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">📦</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold">資材・搬出入計画</div>
+                                            <p class="text-[10px] {{ request()->routeIs('equipments.*') && !request()->routeIs('equipments.print') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">自前・レンタル資材の移動・中継・夜間保管管理</p>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('equipments.print') }}" target="_blank"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('equipments.print') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">🖨️</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold flex items-center space-x-1">
+                                                <span>資材搬出入計画の印刷</span>
+                                                <span class="text-[9px] text-slate-400 font-normal">↗</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">搬出入指示書・チェックリストの印刷</p>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- 区切り線 -->
+                                <div class="border-t border-slate-800/80 my-1"></div>
+
+                                <!-- セクション3: 拠点・会場管理 -->
+                                <div class="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
+                                    <span>📍 拠点・会場管理</span>
+                                    <span class="text-[9px] text-indigo-300 font-mono font-bold">施設</span>
+                                </div>
+                                <div class="py-1 space-y-0.5">
+                                    <a href="{{ route('locations.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('locations.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">📍</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold">拠点管理</div>
+                                            <p class="text-[10px] {{ request()->routeIs('locations.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">番所・駐車場・コミュニティスペース・利用時間帯</p>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('location-types.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('location-types.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">🏷️</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold">拠点タイプ管理</div>
+                                            <p class="text-[10px] {{ request()->routeIs('location-types.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">拠点種別・アイコン・カラー設定</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. 日程・会議 ▾ -->
+                        <div class="relative nav-dropdown shrink-0">
+                            <button type="button"
+                                class="dropdown-trigger px-2.5 py-1.5 lg:px-3 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap cursor-pointer {{ $isScheduleActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                                <span>📅</span>
+                                <span>日程・会議</span>
+                                <span class="text-[9px] opacity-75">▼</span>
+                            </button>
+                            <div class="dropdown-menu hidden absolute left-0 mt-1.5 w-64 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 z-50 divide-y divide-slate-800/80">
+                                <div class="py-1 space-y-0.5">
+                                    <a href="{{ route('calendar.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('calendar.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">📅</span>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-bold">総合カレンダー</div>
+                                            <p class="text-[10px] {{ request()->routeIs('calendar.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">月間グリッドで予定・会議・運行日を俯瞰</p>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('annual-schedules.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('annual-schedules.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">📋</span>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-bold">年間スケジュール</div>
+                                            <p class="text-[10px] {{ request()->routeIs('annual-schedules.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">年次マイルストーン・準備工程管理</p>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('meetings.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('meetings.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">🤝</span>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-bold">会議・打ち合わせ</div>
+                                            <p class="text-[10px] {{ request()->routeIs('meetings.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">幹事会・総会・LINE告知テキスト生成</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. 設定・資料 ▾ -->
+                        <div class="relative nav-dropdown shrink-0">
+                            <button type="button"
+                                class="dropdown-trigger px-2.5 py-1.5 lg:px-3 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap cursor-pointer {{ $isSystemActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                                <span>⚙️</span>
+                                <span>設定・資料</span>
+                                <span class="text-[9px] opacity-75">▼</span>
+                            </button>
+                            <div class="dropdown-menu hidden absolute right-0 sm:left-auto lg:left-0 mt-1.5 w-64 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 z-50">
+                                <!-- セクション1: ガイド・広報 -->
+                                <div class="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg">
+                                    📖 ガイド・広報
+                                </div>
+                                <div class="py-1 space-y-0.5">
+                                    <a href="{{ route('manual.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('manual.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">📖</span>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-bold">操作マニュアル</div>
+                                            <p class="text-[10px] {{ request()->routeIs('manual.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">図解・画面付きシステム利用手順</p>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('presentation.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('presentation.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">📽️</span>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-bold">幹事会プレゼン</div>
+                                            <p class="text-[10px] {{ request()->routeIs('presentation.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">情報一元管理の協力要請スライド</p>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- 区切り線 -->
+                                <div class="border-t border-slate-800/80 my-1"></div>
+
+                                <!-- セクション2: システム管理 -->
+                                <div class="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg">
+                                    ⚙️ システム管理
+                                </div>
+                                <div class="py-1 space-y-0.5">
+                                    @can('viewAny', App\Models\User::class)
                                     <a href="{{ route('users.index') }}"
                                         class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('users.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">👥</span>
@@ -235,27 +335,13 @@
                                             <p class="text-[10px] {{ request()->routeIs('users.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">本部アカウント・ログイン権限</p>
                                         </div>
                                     </a>
-                                    <div class="border-t border-slate-800/80 my-1"></div>
-                                    <a href="{{ route('presentation.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('presentation.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">📽️</span>
+                                    @endcan
+                                    <a href="{{ route('profile') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('profile') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">👤</span>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold flex items-center space-x-1">
-                                                <span>幹事会プレゼン</span>
-                                                <span class="bg-indigo-500/30 text-indigo-200 text-[9px] px-1.5 py-0.2 rounded font-normal">スライド</span>
-                                            </div>
-                                            <p class="text-[10px] {{ request()->routeIs('presentation.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">情報一元管理の協力要請プレゼン</p>
-                                        </div>
-                                    </a>
-                                    <a href="{{ route('manual.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('manual.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">📖</span>
-                                        <div class="min-w-0">
-                                            <div class="text-xs font-bold flex items-center space-x-1">
-                                                <span>操作マニュアル</span>
-                                                <span class="bg-indigo-500/30 text-indigo-200 text-[9px] px-1.5 py-0.2 rounded font-normal">ガイド</span>
-                                            </div>
-                                            <p class="text-[10px] {{ request()->routeIs('manual.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">図解・画面付きシステム利用手順</p>
+                                            <div class="text-xs font-bold">アカウント情報</div>
+                                            <p class="text-[10px] {{ request()->routeIs('profile') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">登録プロファイル・パスワード変更</p>
                                         </div>
                                     </a>
                                 </div>
@@ -282,22 +368,6 @@
                                 @endif
                             </div>
                         </div>
-
-                        <!-- プレゼンテーションクイックリンク -->
-                        <a href="{{ route('presentation.index') }}"
-                            class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap shrink-0 {{ request()->routeIs('presentation.*') ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-800/80 text-slate-200 hover:bg-slate-800 hover:text-white border border-slate-700/80' }}"
-                            title="幹事会向けプレゼンテーションスライドを開く">
-                            <span>📽️</span>
-                            <span class="hidden xl:inline">プレゼン</span>
-                        </a>
-
-                        <!-- マニュアルクイックリンク -->
-                        <a href="{{ route('manual.index') }}"
-                            class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap shrink-0 {{ request()->routeIs('manual.*') ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-800/80 text-slate-200 hover:bg-slate-800 hover:text-white border border-slate-700/80' }}"
-                            title="操作マニュアルを開く">
-                            <span>📖</span>
-                            <span class="hidden xl:inline">マニュアル</span>
-                        </a>
 
                         <!-- プロフィールショートカット -->
                         <a href="{{ route('profile') }}"
@@ -359,12 +429,12 @@
                     <button type="button" data-toggle="mobile-menu" class="text-slate-400 hover:text-white text-lg p-1 cursor-pointer">✕</button>
                 </div>
 
-                <div class="space-y-3">
-                    <!-- セクション1: 当日進行・確認（未完了の日別一覧） -->
+                <div class="space-y-4">
+                    <!-- セクション1: まつり運行・進行表 -->
                     <div>
                         <div class="text-[11px] font-bold text-indigo-400 mb-1.5 flex items-center justify-between">
-                            <span>⏱️ 進行表（日程別）</span>
-                            <span class="text-[9px] text-emerald-400 font-bold">当日用</span>
+                            <span>⏱️ まつり運行・進行表</span>
+                            <span class="text-[9px] text-emerald-400 font-bold">当日運行 & 計画</span>
                         </div>
                         <div class="space-y-1.5">
                             @forelse($navTimetables ?? [] as $tt)
@@ -400,10 +470,8 @@
                                     現在進行中・予定の運行日はありません
                                 </div>
                             @endforelse
-                        </div>
 
-                        @if($targetPrintTimetable)
-                        <div class="pt-1.5">
+                            @if($targetPrintTimetable)
                             <a href="{{ route('timetables.print-assignments', $targetPrintTimetable) }}" target="_blank"
                                 class="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-xl flex items-center justify-between text-slate-200">
                                 <div class="flex items-center space-x-2.5">
@@ -418,16 +486,10 @@
                                 </div>
                                 <span class="text-xs text-slate-400 font-bold">開く →</span>
                             </a>
+                            @endif
                         </div>
-                        @endif
-                    </div>
 
-                    <!-- セクション2: まつり計画・運行管理 -->
-                    <div>
-                        <div class="text-[11px] font-bold text-slate-400 mb-1.5">
-                            🛠️ タイムテーブル・スケジュール・体制
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="grid grid-cols-2 gap-2 text-xs mt-2">
                             <a href="{{ route('preparation-navigator.index') }}" class="p-2.5 col-span-2 bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 rounded-xl flex items-center justify-between text-white {{ request()->routeIs('preparation-navigator.*') ? 'ring-2 ring-indigo-500' : '' }}">
                                 <div class="flex items-center space-x-2.5">
                                     <span class="text-base">🚀</span>
@@ -436,7 +498,7 @@
                                             <span>まつり運行準備ナビゲーター</span>
                                             <span class="text-[9px] bg-indigo-500/30 text-indigo-200 px-1.5 py-0.2 rounded font-mono font-bold">Step 1〜4</span>
                                         </div>
-                                        <div class="text-[10px] text-slate-300">タイムテーブル・班・タスク・人員配置を手順通りに準備・実行</div>
+                                        <div class="text-[10px] text-slate-300">タイムテーブル・班・タスク・人員配置を手順通りに準備</div>
                                     </div>
                                 </div>
                                 <span class="text-xs text-indigo-300 font-bold shrink-0 ml-2">開く →</span>
@@ -455,6 +517,74 @@
                                     <span class="text-[10px] text-slate-400 block truncate">班編成・リーダー設定</span>
                                 </div>
                             </a>
+                        </div>
+                    </div>
+
+                    <!-- セクション2: リソース・物流・拠点 -->
+                    <div>
+                        <div class="text-[11px] font-bold text-slate-400 mb-1.5 flex items-center justify-between">
+                            <span>📦 リソース・物流・拠点</span>
+                            <span class="text-[9px] text-indigo-300 font-mono font-bold">体制管理</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <a href="{{ route('staff.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('staff.*') && !request()->routeIs('staff.print*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                                <span class="text-base">👷</span>
+                                <div class="min-w-0">
+                                    <span class="font-bold block truncate">スタッフ名簿</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">名簿・参加QR・CSV</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('staff.print-cards') }}" target="_blank" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('staff.print*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                                <span class="text-base">🪪</span>
+                                <div class="min-w-0">
+                                    <div class="flex items-center space-x-1">
+                                        <span class="font-bold truncate">スタッフ名札印刷</span>
+                                        <span class="text-[9px] text-slate-400">↗</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 block truncate">QR付きA4名札</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('equipments.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('equipments.*') && !request()->routeIs('equipments.print') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                                <span class="text-base">📦</span>
+                                <div class="min-w-0">
+                                    <span class="font-bold block truncate">資材・搬出入計画</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">移動・保管・機材台帳</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('equipments.print') }}" target="_blank" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('equipments.print') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                                <span class="text-base">🖨️</span>
+                                <div class="min-w-0">
+                                    <div class="flex items-center space-x-1">
+                                        <span class="font-bold truncate">資材搬出入印刷</span>
+                                        <span class="text-[9px] text-slate-400">↗</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 block truncate">搬出入指示書A4</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('locations.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('locations.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                                <span class="text-base">📍</span>
+                                <div class="min-w-0">
+                                    <span class="font-bold block truncate">拠点管理</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">番所・駐車場・会場</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('location-types.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('location-types.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                                <span class="text-base">🏷️</span>
+                                <div class="min-w-0">
+                                    <span class="font-bold block truncate">拠点タイプ管理</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">種別・カラー設定</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- セクション3: 日程・会議 -->
+                    <div>
+                        <div class="text-[11px] font-bold text-slate-400 mb-1.5 flex items-center justify-between">
+                            <span>📅 日程・会議</span>
+                            <span class="text-[9px] text-indigo-300 font-mono font-bold">スケジュール</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
                             <a href="{{ route('calendar.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('calendar.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">📅</span>
                                 <div class="min-w-0">
@@ -469,55 +599,61 @@
                                     <span class="text-[10px] text-slate-400 block truncate">マイルストーン</span>
                                 </div>
                             </a>
-                            <a href="{{ route('meetings.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('meetings.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                            <a href="{{ route('meetings.index') }}" class="col-span-2 p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('meetings.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">🤝</span>
                                 <div class="min-w-0">
                                     <span class="font-bold block truncate">会議・打ち合わせ</span>
-                                    <span class="text-[10px] text-slate-400 block truncate">幹事会・総会</span>
-                                </div>
-                            </a>
-                            <a href="{{ route('staff.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('staff.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
-                                <span class="text-base">👷</span>
-                                <div class="min-w-0">
-                                    <span class="font-bold block truncate">スタッフ名簿</span>
-                                    <span class="text-[10px] text-slate-400 block truncate">所属・役割</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">幹事会・総会・LINE告知テキスト生成</span>
                                 </div>
                             </a>
                         </div>
                     </div>
 
-                    <!-- セクション3: 設定・アカウント -->
-                    <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-800">
-                        @can('viewAny', App\Models\User::class)
-                        <a href="{{ route('users.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('users.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
-                            <span class="text-base">👥</span>
-                            <div class="min-w-0">
-                                <span class="font-bold block truncate">ユーザー管理</span>
-                                <span class="text-[10px] text-slate-400 block truncate">本部アカウント</span>
-                            </div>
-                        </a>
-                        @endcan
-                        <a href="{{ route('profile') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('profile') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
-                            <span class="text-base">👤</span>
-                            <div class="min-w-0">
-                                <span class="font-bold block truncate">アカウント</span>
-                                <span class="text-[10px] text-slate-400 block truncate">情報・パスワード</span>
-                            </div>
-                        </a>
-                        <a href="{{ route('manual.index') }}" class="col-span-2 p-2.5 bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-700/50 rounded-xl flex items-center space-x-2.5 text-indigo-200 transition {{ request()->routeIs('manual.*') ? 'ring-2 ring-indigo-400' : '' }}">
-                            <span class="text-lg">📖</span>
-                            <div class="min-w-0">
-                                <span class="font-bold text-xs block">操作マニュアル（図解ガイド）</span>
-                                <span class="text-[10px] text-indigo-300/80 block">機能別の使い方・画面操作手順</span>
-                            </div>
-                        </a>
-                        <form action="{{ route('logout') }}" method="POST" class="col-span-2 p-0">
-                            @csrf
-                            <button type="submit" data-confirm="ログアウトしますか？" class="w-full p-2.5 bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 rounded-xl flex items-center justify-center space-x-2 text-red-200 cursor-pointer">
-                                <span>🚪</span>
-                                <span class="font-bold">ログアウト</span>
-                            </button>
-                        </form>
+                    <!-- セクション4: 設定・資料・アカウント -->
+                    <div class="pt-2 border-t border-slate-800">
+                        <div class="text-[11px] font-bold text-slate-400 mb-1.5 flex items-center justify-between">
+                            <span>⚙️ 設定・資料・アカウント</span>
+                            <span class="text-[9px] text-indigo-300 font-mono font-bold">システム</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <a href="{{ route('manual.index') }}" class="p-2.5 bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-700/50 rounded-xl flex items-center space-x-2 text-indigo-200 transition {{ request()->routeIs('manual.*') ? 'ring-2 ring-indigo-400' : '' }}">
+                                <span class="text-base">📖</span>
+                                <div class="min-w-0">
+                                    <span class="font-bold block truncate">操作マニュアル</span>
+                                    <span class="text-[10px] text-indigo-300/80 block truncate">図解ガイド</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('presentation.index') }}" class="p-2.5 bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-700/50 rounded-xl flex items-center space-x-2 text-indigo-200 transition {{ request()->routeIs('presentation.*') ? 'ring-2 ring-indigo-400' : '' }}">
+                                <span class="text-base">📽️</span>
+                                <div class="min-w-0">
+                                    <span class="font-bold block truncate">幹事会プレゼン</span>
+                                    <span class="text-[10px] text-indigo-300/80 block truncate">スライド資料</span>
+                                </div>
+                            </a>
+                            @can('viewAny', App\Models\User::class)
+                            <a href="{{ route('users.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('users.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                                <span class="text-base">👥</span>
+                                <div class="min-w-0">
+                                    <span class="font-bold block truncate">ユーザー管理</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">本部アカウント</span>
+                                </div>
+                            </a>
+                            @endcan
+                            <a href="{{ route('profile') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('profile') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                                <span class="text-base">👤</span>
+                                <div class="min-w-0">
+                                    <span class="font-bold block truncate">アカウント</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">情報・パスワード</span>
+                                </div>
+                            </a>
+                            <form action="{{ route('logout') }}" method="POST" class="col-span-2 p-0">
+                                @csrf
+                                <button type="submit" data-confirm="ログアウトしますか？" class="w-full p-2.5 bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 rounded-xl flex items-center justify-center space-x-2 text-red-200 cursor-pointer">
+                                    <span>🚪</span>
+                                    <span class="font-bold">ログアウト</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>

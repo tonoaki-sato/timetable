@@ -346,4 +346,51 @@ class TimetableMatrixTest extends TestCase
         $response = $this->get(route('lanes.index'));
         $response->assertRedirect(route('timetables.index'));
     }
+
+    /**
+     * リソース・物流メニューおよび設定・資料メニューが正しく整理・表示されること
+     */
+    public function test_navigation_displays_resource_and_system_menu_sections(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin);
+
+        $response = $this->get(route('dashboard'));
+        $response->assertStatus(200);
+
+        // リソース・物流グループ
+        $response->assertSee('リソース・物流');
+        $response->assertSee('スタッフ体制');
+        $response->assertSee(route('staff.index'));
+        $response->assertSee('スタッフ名札印刷');
+        $response->assertSee(route('staff.print-cards'));
+        $response->assertSee('資材・機材物流');
+        $response->assertSee(route('equipments.index'));
+        $response->assertSee('資材搬出入計画の印刷');
+        $response->assertSee(route('equipments.print'));
+        $response->assertSee('拠点・会場管理');
+        $response->assertSee(route('locations.index'));
+        $response->assertSee(route('location-types.index'));
+
+        // 日程・会議グループ
+        $response->assertSee('日程・会議');
+        $response->assertSee(route('calendar.index'));
+        $response->assertSee(route('annual-schedules.index'));
+        $response->assertSee(route('meetings.index'));
+
+        // 設定・資料グループ
+        $response->assertSee('設定・資料');
+        $response->assertSee('操作マニュアル');
+        $response->assertSee(route('manual.index'));
+        $response->assertSee('幹事会プレゼン');
+        $response->assertSee(route('presentation.index'));
+        $response->assertSee('ユーザー管理');
+        $response->assertSee(route('users.index'));
+        $response->assertSee('アカウント情報');
+        $response->assertSee(route('profile'));
+    }
 }
