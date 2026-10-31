@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentLogisticsPlanController;
 use App\Http\Controllers\EquipmentPrintController;
+use App\Http\Controllers\FeatureSettingController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LaneRequestController;
 use App\Http\Controllers\LocationController;
@@ -84,6 +85,10 @@ Route::middleware('auth')->group(function () {
     Route::get('staff/{staff}/print-card', [StaffPrintController::class, 'printSingleCard'])->name('staff.print-card');
     Route::post('staff/{staff}/regenerate-token', [StaffController::class, 'regenerateToken'])->name('staff.regenerate-token');
     Route::resource('staff', StaffController::class);
+
+    // 汎用機能オン・オフ＆日時設定ルート
+    Route::put('features/{featureKey}', [FeatureSettingController::class, 'update'])->name('feature-settings.update');
+    Route::patch('features/{featureKey}/toggle', [FeatureSettingController::class, 'toggle'])->name('feature-settings.toggle');
 
     // タイムテーブル基本運行日リソースルート & 帳票印刷
     Route::get('timetables/{timetable}/print-assignments', [TimetablePrintController::class, 'printAssignments'])->name('timetables.print-assignments');

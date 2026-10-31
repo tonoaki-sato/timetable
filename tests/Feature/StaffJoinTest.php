@@ -112,4 +112,74 @@ class StaffJoinTest extends TestCase
         $existingStaff->refresh();
         $this->assertNotNull($existingStaff->last_accessed_at);
     }
+
+    /**
+     * 有効なstaff_token Cookieを保持している場合、セルフ登録画面から完了画面へリダイレクトされること（二重登録防止）
+     */
+    public function test_join_screen_redirects_to_completed_when_staff_token_cookie_present(): void
+    {
+        $staff = Staff::factory()->selfRegistered()->create([
+            'name' => '佐藤 太郎',
+            'kana' => 'サトウ タロウ',
+            'is_active' => true,
+        ]);
+
+        $response = $this->withCookie('staff_token', $staff->access_token)
+            ->get(route('staff.join'));
+
+        $response->assertRedirect(route('staff.join.completed'));
+        $response->assertSessionHas('info', 'すでにスタッフ登録が完了しています。');
+    }
+
+    /**
+     * 有効なstaff_token Cookieを保持している状態でPOST送信した場合、新規登録されず完了画面へリダイレクトされること
+     */
+    public function test_store_does_not_duplicate_staff_when_cookie_present(): void
+    {
+        $staff = Staff::factory()->selfRegistered()->create([
+            'name' => '田中 次郎',
+            'kana' => 'タナカ ジロウ',
+            'is_active' => true,
+        ]);
+
+        $initialCount = Staff::count();
+
+        $response = $this->withCookie('staff_token', $staff->access_token)
+            ->post(route('staff.join.store'), [
+                'name' => '偽名 三郎',
+                'kana' => 'ギメイ サブロウ',
+            ]);
+
+        $response->assertRedirect(route('staff.join.completed'));
+        $this->assertEquals($initialCount, Staff::count(), '二重登録が阻止されレコードが増加しないこと');
+        $this->assertDatabaseMissing('staff', ['name' => '偽名 三郎']);
+    }
+
+    /**
+     * 無効なCookie（存在しないトークン）の場合は通常通り登録フォームが表示されること
+     */
+    public function test_invalid_cookie_does_not_prevent_registration(): void
+    {
+        $response = $this->withCookie('staff_token', 'non-existent-token-123456789012')
+            ->get(route('staff.join'));
+
+        $response->assertStatus(200);
+        $response->assertSee('スタッフ・ボランティア登録');
+    }
+
+    /**
+     * 非アクティブなスタッフのCookieの場合は通常通り登録フォームが表示されること
+     */
+    public function test_inactive_staff_cookie_does_not_prevent_registration(): void
+    {
+        $inactiveStaff = Staff::factory()->create([
+            'is_active' => false,
+        ]);
+
+        $response = $this->withCookie('staff_token', $inactiveStaff->access_token)
+            ->get(route('staff.join'));
+
+        $response->assertStatus(200);
+        $response->assertSee('スタッフ・ボランティア登録');
+    }
 }

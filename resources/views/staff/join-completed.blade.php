@@ -14,11 +14,25 @@
             <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-3xl mb-3 border border-emerald-500/40 shadow-lg shadow-emerald-500/10">
                 ✓
             </div>
-            <h1 class="text-2xl font-black tracking-tight text-white">スタッフ登録が完了しました！</h1>
-            <p class="mt-1 text-xs text-slate-300">
-                {{ $staff->name }} さん、ご協力ありがとうございます！
-            </p>
+            @if (session('info'))
+                <h1 class="text-2xl font-black tracking-tight text-white">スタッフ登録済みです</h1>
+                <p class="mt-1 text-xs text-slate-300">
+                    {{ session('info') }}
+                </p>
+            @else
+                <h1 class="text-2xl font-black tracking-tight text-white">スタッフ登録が完了しました！</h1>
+                <p class="mt-1 text-xs text-slate-300">
+                    {{ $staff->name }} さん、ご協力ありがとうございます！
+                </p>
+            @endif
         </div>
+
+        @if (session('info'))
+            <div class="mb-4 p-4 bg-indigo-900/60 border border-indigo-500/40 rounded-2xl text-xs text-indigo-100 flex items-center space-x-2">
+                <span class="text-base">ℹ️</span>
+                <span>この端末はすでに登録済みです。以下よりご自身のタイムテーブルをご確認いただけます。</span>
+            </div>
+        @endif
 
         <!-- カード -->
         <div class="bg-white text-slate-900 p-6 sm:p-8 rounded-3xl shadow-2xl border border-slate-200 space-y-6">

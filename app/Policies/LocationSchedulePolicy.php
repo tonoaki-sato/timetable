@@ -47,4 +47,3 @@ class LocationSchedulePolicy
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }
 }
-

@@ -124,5 +124,36 @@
                 }
             });
         }
+        // 3. セルフ登録設定モーダル
+        const registrationSettingModal = document.getElementById('registrationSettingModal');
+        const openRegistrationSettingModalBtn = document.getElementById('openRegistrationSettingModalBtn');
+        const registrationSettingModalCloseBtn = document.getElementById('registrationSettingModalCloseBtn');
+        const registrationSettingModalCancelBtn = document.getElementById('registrationSettingModalCancelBtn');
+        const registrationSettingModalBackdrop = document.getElementById('registrationSettingModalBackdrop');
+
+        function openRegistrationSettingModal() {
+            if (registrationSettingModal) {
+                registrationSettingModal.classList.remove('hidden');
+            }
+        }
+
+        function closeRegistrationSettingModal() {
+            if (registrationSettingModal) {
+                registrationSettingModal.classList.add('hidden');
+            }
+        }
+
+        if (openRegistrationSettingModalBtn) {
+            openRegistrationSettingModalBtn.addEventListener('click', openRegistrationSettingModal);
+        }
+        if (registrationSettingModalCloseBtn) {
+            registrationSettingModalCloseBtn.addEventListener('click', closeRegistrationSettingModal);
+        }
+        if (registrationSettingModalCancelBtn) {
+            registrationSettingModalCancelBtn.addEventListener('click', closeRegistrationSettingModal);
+        }
+        if (registrationSettingModalBackdrop) {
+            registrationSettingModalBackdrop.addEventListener('click', closeRegistrationSettingModal);
+        }
     });
 })();

@@ -109,4 +109,3 @@ class LocationAuthorizationTest extends TestCase
         $this->assertDatabaseMissing('locations', ['id' => $location->id]);
     }
 }
-
