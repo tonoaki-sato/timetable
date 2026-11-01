@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use App\Models\Lane;
-use App\Models\LogisticsLocation;
+use App\Models\Location;
 use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,9 +16,9 @@ class EquipmentManagementTest extends TestCase
 
     private User $operator;
 
-    private LogisticsLocation $locationTaxOffice;
+    private Location $locationTaxOffice;
 
-    private LogisticsLocation $locationKitagawa;
+    private Location $locationKitagawa;
 
     protected function setUp(): void
     {
@@ -32,8 +32,8 @@ class EquipmentManagementTest extends TestCase
         Timetable::factory()->create(['target_date' => '2026-10-11', 'name' => '1日目']);
         Timetable::factory()->create(['target_date' => '2026-10-12', 'name' => '2日目']);
 
-        $this->locationTaxOffice = LogisticsLocation::factory()->create(['name' => '税務署前駐車場']);
-        $this->locationKitagawa = LogisticsLocation::factory()->create(['name' => '北川駐車場']);
+        $this->locationTaxOffice = Location::factory()->create(['name' => '税務署前駐車場']);
+        $this->locationKitagawa = Location::factory()->create(['name' => '北川駐車場']);
     }
 
     /**

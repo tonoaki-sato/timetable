@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Equipment;
-use App\Models\LogisticsLocation;
+use App\Models\Location;
 use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,7 +26,7 @@ class EquipmentPrintTest extends TestCase
 
         Timetable::factory()->create(['target_date' => '2026-10-11', 'name' => '1日目']);
         Timetable::factory()->create(['target_date' => '2026-10-12', 'name' => '2日目']);
-        LogisticsLocation::factory()->create(['name' => '税務署前駐車場']);
+        Location::factory()->create(['name' => '税務署前駐車場']);
     }
 
     /**

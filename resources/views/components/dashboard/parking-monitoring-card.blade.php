@@ -12,8 +12,8 @@
     <!-- ヘッダー -->
     <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5 truncate">
-            <span>🅿️</span>
-            <span>駐車場利用時間制約監視</span>
+            <span>📍</span>
+            <span>拠点・駐車場 利用状況監視</span>
             <span class="text-[10px] font-mono text-slate-400 font-normal">F-405</span>
         </h3>
         <span class="text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap {{ $context->summaryBadgeClasses() }}">
@@ -86,16 +86,21 @@
             </div>
         @empty
             <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-400 text-center text-xs">
-                監視対象の貸切駐車場が登録されていません。
+                監視対象の拠点が登録されていません。
             </div>
         @endforelse
     </div>
 
     <!-- フッターリンク -->
-    <div class="pt-1 flex items-center justify-end">
+    <div class="pt-1 flex items-center justify-between text-[11px] font-bold">
+        <a href="{{ route('locations.index') }}"
+           class="text-slate-600 hover:text-slate-900 flex items-center space-x-1 group">
+            <span>拠点管理</span>
+            <span class="transition group-hover:translate-x-0.5">→</span>
+        </a>
         <a href="{{ route('equipments.index', ['tab' => 'locations']) }}"
-           class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center space-x-1 group">
-            <span>拠点別保管 & 貸切スケジュール</span>
+           class="text-indigo-600 hover:text-indigo-800 flex items-center space-x-1 group">
+            <span>拠点別 機材配備状況</span>
             <span class="transition group-hover:translate-x-0.5">→</span>
         </a>
     </div>

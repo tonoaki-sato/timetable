@@ -30,8 +30,8 @@ class LocationTypeSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'name' => 'facility',
-                'label' => '番所・倉庫',
+                'name' => 'storage',
+                'label' => '倉庫',
                 'description' => '常設の番所事務室や常備機材の保管倉庫。',
                 'color' => 'emerald',
                 'display_order' => 30,

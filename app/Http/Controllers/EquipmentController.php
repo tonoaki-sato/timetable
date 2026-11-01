@@ -6,7 +6,7 @@ use App\Http\Requests\StoreEquipmentRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
 use App\Models\Equipment;
 use App\Models\Lane;
-use App\Models\LogisticsLocation;
+use App\Models\Location;
 use App\Models\Staff;
 use App\Services\EquipmentLogisticsService;
 use Illuminate\Http\JsonResponse;
@@ -37,7 +37,7 @@ class EquipmentController extends Controller
         $locationsData = $this->logisticsService->getLocationsStatusData();
         $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData();
 
-        $locations = LogisticsLocation::active()->ordered()->get();
+        $locations = Location::active()->ordered()->get();
         $lanes = Lane::active()->ordered()->get();
         $staffs = Staff::active()->orderBy('kana')->get();
 
@@ -63,7 +63,7 @@ class EquipmentController extends Controller
     {
         $this->authorize('create', Equipment::class);
 
-        $locations = LogisticsLocation::active()->ordered()->get();
+        $locations = Location::active()->ordered()->get();
         $lanes = Lane::active()->ordered()->get();
         $staffs = Staff::active()->orderBy('kana')->get();
 
@@ -107,7 +107,7 @@ class EquipmentController extends Controller
             'plans' => fn ($q) => $q->with(['fromLocationModel', 'toLocationModel', 'witnessStaff'])->orderBy('display_order')->orderBy('id'),
         ]);
 
-        $locations = LogisticsLocation::active()->ordered()->get();
+        $locations = Location::active()->ordered()->get();
         $staffs = Staff::active()->orderBy('kana')->get();
 
         return view('equipments.show', compact('equipment', 'locations', 'staffs'));
@@ -120,7 +120,7 @@ class EquipmentController extends Controller
     {
         $this->authorize('update', $equipment);
 
-        $locations = LogisticsLocation::active()->ordered()->get();
+        $locations = Location::active()->ordered()->get();
         $lanes = Lane::active()->ordered()->get();
 
         return view('equipments.edit', compact('equipment', 'locations', 'lanes'));

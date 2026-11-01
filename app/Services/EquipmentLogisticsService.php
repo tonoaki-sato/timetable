@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPlan;
-use App\Models\LogisticsLocation;
+use App\Models\Location;
 use App\Models\Timetable;
 use App\Models\User;
 use Carbon\Carbon;
@@ -85,23 +85,25 @@ class EquipmentLogisticsService
 
         // 拠点の取得
         $stagingLocation = ! empty($options['staging_location_id'])
-            ? LogisticsLocation::find($options['staging_location_id'])
-            : LogisticsLocation::where('name', 'like', '%税務署%')->first();
+            ? Location::find($options['staging_location_id'])
+            : Location::where('name', 'like', '%税務署%')->first();
 
         $nightLocation1 = ! empty($options['night_location_1_id'])
-            ? LogisticsLocation::find($options['night_location_1_id'])
+            ? Location::find($options['night_location_1_id'])
             : $stagingLocation;
 
         $nightLocation2 = ! empty($options['night_location_2_id'])
-            ? LogisticsLocation::find($options['night_location_2_id'])
-            : LogisticsLocation::where('name', 'like', '%北川%')->first();
+            ? Location::find($options['night_location_2_id'])
+            : Location::where('name', 'like', '%北川%')->first();
 
         $storageLocationName = $equipment->storage_location ?: '番所地下倉庫';
-        $storageLocationModel = LogisticsLocation::where('name', $storageLocationName)->first()
-            ?? LogisticsLocation::where('name', 'like', '%番所地下%')->first();
+        $storageLocationModel = Location::where('name', $storageLocationName)->first()
+            ?? Location::where('name', 'like', '%番所地下%')->first();
 
-        $banshoSpace = LogisticsLocation::where('name', 'like', '%番所空き%')->first()
-            ?? LogisticsLocation::where('name', 'like', '%番所%')->first();
+        $banshoSpace = Location::where('name', 'like', '%番所%スペース%')->first()
+            ?? Location::where('name', 'like', '%番所前%')->first()
+            ?? Location::where('name', 'like', '%番所空き%')->first()
+            ?? Location::where('name', 'like', '%番所%')->first();
 
         $witnessStaffId = $options['witness_staff_id'] ?? null;
 
@@ -527,11 +529,11 @@ class EquipmentLogisticsService
     /**
      * 拠点別 保管状況 & 貸切スケジュール一覧用のデータ取得
      *
-     * @return array<int, array{location: LogisticsLocation, nightPlans: Collection<int, EquipmentLogisticsPlan>, currentPlans: Collection<int, EquipmentLogisticsPlan>}>
+     * @return array<int, array{location: Location, nightPlans: Collection<int, EquipmentLogisticsPlan>, currentPlans: Collection<int, EquipmentLogisticsPlan>}>
      */
     public function getLocationsStatusData(): array
     {
-        $locations = LogisticsLocation::active()->ordered()->get();
+        $locations = Location::active()->ordered()->with(['type', 'schedules'])->get();
         $result = [];
 
         foreach ($locations as $loc) {

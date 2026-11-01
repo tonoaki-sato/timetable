@@ -26,8 +26,9 @@ class DatabaseSeeder extends Seeder
         // 5. 会議・打ち合わせ初期データ
         $this->call(MeetingSeeder::class);
 
-        // 6. 中継・保管拠点初期データ
-        $this->call(LogisticsLocationSeeder::class);
+        // 6. 拠点種別および拠点・利用枠初期データ
+        $this->call(LocationTypeSeeder::class);
+        $this->call(LocationSeeder::class);
 
         // 7. 資材＆搬出入計画初期データ
         $this->call(EquipmentSeeder::class);

@@ -119,7 +119,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function fromLocationModel(): BelongsTo
     {
-        return $this->belongsTo(LogisticsLocation::class, 'from_location_id');
+        return $this->belongsTo(Location::class, 'from_location_id');
     }
 
     /**
@@ -127,7 +127,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function toLocationModel(): BelongsTo
     {
-        return $this->belongsTo(LogisticsLocation::class, 'to_location_id');
+        return $this->belongsTo(Location::class, 'to_location_id');
     }
 
     /**

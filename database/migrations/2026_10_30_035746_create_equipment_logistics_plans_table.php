@@ -23,8 +23,8 @@ return new class extends Migration
             $table->string('end_time', 10)->nullable()->comment('終了予定時刻 (HH:mm)');
             $table->string('from_location')->nullable()->comment('移動元（表示テキスト）');
             $table->string('to_location')->nullable()->comment('移動先（表示テキスト）');
-            $table->foreignId('from_location_id')->nullable()->constrained('logistics_locations')->nullOnDelete();
-            $table->foreignId('to_location_id')->nullable()->constrained('logistics_locations')->nullOnDelete();
+            $table->foreignId('from_location_id')->nullable()->constrained('locations')->nullOnDelete();
+            $table->foreignId('to_location_id')->nullable()->constrained('locations')->nullOnDelete();
             $table->string('operator_type', 30)->default('committee')->comment('作業主体: committee, event_company');
             $table->boolean('witness_required')->default(false)->comment('立会要否フラグ');
             $table->foreignId('witness_staff_id')->nullable()->constrained('staff')->nullOnDelete()->comment('立会スタッフ');

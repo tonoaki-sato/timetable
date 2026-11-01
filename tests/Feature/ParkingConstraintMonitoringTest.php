@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPlan;
-use App\Models\LogisticsLocation;
+use App\Models\Location;
+use App\Models\LocationSchedule;
+use App\Models\LocationType;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,6 +22,33 @@ class ParkingConstraintMonitoringTest extends TestCase
         parent::tearDown();
     }
 
+    private function createParkingLocation(array $attributes = [], ?string $startAt = '2026-10-10 13:00:00', ?string $endAt = '2026-10-12 20:30:00'): Location
+    {
+        $parkingType = LocationType::firstOrCreate(
+            ['name' => 'parking'],
+            ['label' => '駐車場', 'color' => 'amber', 'display_order' => 20, 'is_active' => true]
+        );
+
+        $location = Location::factory()->create(array_merge([
+            'name' => '北川駐車場',
+            'location_type_id' => $parkingType->id,
+            'is_all_day' => false,
+            'is_active' => true,
+        ], $attributes));
+
+        if ($startAt && $endAt) {
+            LocationSchedule::create([
+                'location_id' => $location->id,
+                'start_at' => $startAt,
+                'end_at' => $endAt,
+                'application_status' => 'approved',
+                'title' => '貸切枠',
+            ]);
+        }
+
+        return $location;
+    }
+
     public function test_guest_cannot_access_dashboard(): void
     {
         $response = $this->get(route('dashboard'));
@@ -30,20 +59,13 @@ class ParkingConstraintMonitoringTest extends TestCase
     public function test_dashboard_renders_parking_monitoring_card_container(): void
     {
         $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
-        $parking = LogisticsLocation::factory()->create([
-            'name' => '北川駐車場',
-            'type' => 'parking',
-            'is_all_day' => false,
-            'available_from' => '2026-10-10 13:00:00',
-            'available_to' => '2026-10-12 20:30:00',
-            'is_active' => true,
-        ]);
+        $this->createParkingLocation(['name' => '北川駐車場']);
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
         $response->assertSee('id="dashboard-card-parking-monitoring"', false);
-        $response->assertSee('駐車場利用時間制約監視');
+        $response->assertSee('拠点・駐車場 利用状況監視');
         $response->assertSee('北川駐車場');
     }
 
@@ -53,14 +75,7 @@ class ParkingConstraintMonitoringTest extends TestCase
         Carbon::setTestNow(Carbon::create(2026, 10, 11, 14, 0, 0, 'Asia/Tokyo'));
 
         $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
-        $parking = LogisticsLocation::factory()->create([
-            'name' => '北川駐車場',
-            'type' => 'parking',
-            'is_all_day' => false,
-            'available_from' => '2026-10-10 13:00:00',
-            'available_to' => '2026-10-12 20:30:00',
-            'is_active' => true,
-        ]);
+        $parking = $this->createParkingLocation(['name' => '北川駐車場']);
 
         $equipment = Equipment::factory()->create(['name' => 'カラーコーン']);
         EquipmentLogisticsPlan::factory()->create([
@@ -88,14 +103,7 @@ class ParkingConstraintMonitoringTest extends TestCase
         Carbon::setTestNow(Carbon::create(2026, 10, 10, 10, 0, 0, 'Asia/Tokyo'));
 
         $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
-        $parking = LogisticsLocation::factory()->create([
-            'name' => '北川駐車場',
-            'type' => 'parking',
-            'is_all_day' => false,
-            'available_from' => '2026-10-10 13:00:00',
-            'available_to' => '2026-10-12 20:30:00',
-            'is_active' => true,
-        ]);
+        $this->createParkingLocation(['name' => '北川駐車場']);
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 
@@ -111,14 +119,7 @@ class ParkingConstraintMonitoringTest extends TestCase
         Carbon::setTestNow(Carbon::create(2026, 10, 12, 19, 30, 0, 'Asia/Tokyo'));
 
         $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
-        $parking = LogisticsLocation::factory()->create([
-            'name' => '北川駐車場',
-            'type' => 'parking',
-            'is_all_day' => false,
-            'available_from' => '2026-10-10 13:00:00',
-            'available_to' => '2026-10-12 20:30:00',
-            'is_active' => true,
-        ]);
+        $parking = $this->createParkingLocation(['name' => '北川駐車場']);
 
         $equipment = Equipment::factory()->create(['name' => 'カラーコーン']);
         EquipmentLogisticsPlan::factory()->create([
@@ -144,14 +145,7 @@ class ParkingConstraintMonitoringTest extends TestCase
         Carbon::setTestNow(Carbon::create(2026, 10, 12, 21, 0, 0, 'Asia/Tokyo'));
 
         $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
-        $parking = LogisticsLocation::factory()->create([
-            'name' => '北川駐車場',
-            'type' => 'parking',
-            'is_all_day' => false,
-            'available_from' => '2026-10-10 13:00:00',
-            'available_to' => '2026-10-12 20:30:00',
-            'is_active' => true,
-        ]);
+        $parking = $this->createParkingLocation(['name' => '北川駐車場']);
 
         $equipment = Equipment::factory()->create(['name' => 'カラーコーン']);
         EquipmentLogisticsPlan::factory()->create([
@@ -178,14 +172,7 @@ class ParkingConstraintMonitoringTest extends TestCase
         Carbon::setTestNow(Carbon::create(2026, 10, 10, 8, 0, 0, 'Asia/Tokyo'));
 
         $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
-        $parking = LogisticsLocation::factory()->create([
-            'name' => '北川駐車場',
-            'type' => 'parking',
-            'is_all_day' => false,
-            'available_from' => '2026-10-10 13:00:00',
-            'available_to' => '2026-10-12 20:30:00',
-            'is_active' => true,
-        ]);
+        $parking = $this->createParkingLocation(['name' => '北川駐車場']);
 
         $equipment = Equipment::factory()->create(['name' => '給水タンク']);
         EquipmentLogisticsPlan::factory()->create([
@@ -205,19 +192,47 @@ class ParkingConstraintMonitoringTest extends TestCase
         $response->assertSee('給水タンク: 貸切開始（10/10 13:00）前の搬入計画');
     }
 
+    public function test_monitoring_includes_all_day_storage_locations(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
+        $storageType = LocationType::firstOrCreate(
+            ['name' => 'storage'],
+            ['label' => '倉庫', 'color' => 'emerald', 'display_order' => 30, 'is_active' => true]
+        );
+
+        $storage = Location::factory()->allDay()->create([
+            'name' => '番所地下倉庫',
+            'location_type_id' => $storageType->id,
+            'is_active' => true,
+        ]);
+
+        $equipment = Equipment::factory()->create(['name' => 'ござ']);
+        EquipmentLogisticsPlan::factory()->create([
+            'equipment_id' => $equipment->id,
+            'to_location_id' => $storage->id,
+            'target_date' => '2026-10-10',
+            'start_time' => '09:00',
+            'status' => 'completed',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('番所地下倉庫');
+        $response->assertSee('保管・稼働中');
+        $response->assertSee('1品目');
+    }
+
     public function test_realtime_api_returns_parking_monitoring_html(): void
     {
         Carbon::setTestNow(Carbon::create(2026, 10, 11, 14, 0, 0, 'Asia/Tokyo'));
 
         $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
-        $parking = LogisticsLocation::factory()->create([
-            'name' => '税務署前駐車場',
-            'type' => 'parking',
-            'is_all_day' => false,
-            'available_from' => '2026-10-10 12:00:00',
-            'available_to' => '2026-10-12 21:00:00',
-            'is_active' => true,
-        ]);
+        $parking = $this->createParkingLocation(
+            ['name' => '税務署前駐車場'],
+            '2026-10-10 12:00:00',
+            '2026-10-12 21:00:00'
+        );
 
         $response = $this->actingAs($user)->getJson(route('dashboard.realtime'));
 

@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Lane;
-use App\Models\LogisticsLocation;
+use App\Models\Location;
 use App\Models\Staff;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -23,10 +23,10 @@ class EquipmentSeeder extends Seeder
         $staffWitness = Staff::first();
         $staffWitnessId = $staffWitness?->id;
 
-        $locBanshoUnderground = LogisticsLocation::where('name', '番所地下倉庫')->first();
-        $locBanshoSpace = LogisticsLocation::where('name', '番所空きスペース')->first();
-        $locTaxOfficeParking = LogisticsLocation::where('name', '税務署前駐車場')->first();
-        $locKitagawaParking = LogisticsLocation::where('name', '北川駐車場')->first();
+        $locBanshoUnderground = Location::where('name', '番所地下倉庫')->first();
+        $locBanshoSpace = Location::where('name', '番所前スペース')->first() ?? Location::where('name', 'like', '%番所%')->first();
+        $locTaxOfficeParking = Location::where('name', '税務署前駐車場')->first();
+        $locKitagawaParking = Location::where('name', '長島駐車場（旧北川駐車場）')->first() ?? Location::where('name', 'like', '%長島%')->first() ?? Location::where('name', 'like', '%北川%')->first();
 
         $laneColorCone = Lane::where('name', 'カラーコーン')->first();
         $laneWater = Lane::where('name', '給水設備')->first();

@@ -15,22 +15,11 @@ class UserSeeder extends Seeder
     {
         // 1. システム管理者アカウント (admin@example.com / password)
         User::updateOrCreate(
-            ['email' => 'admin@example.com'],
+            ['email' => 'no-10.sato@docomo.ne.jp'],
             [
-                'name' => '実行委員長（システム管理者）',
-                'password' => Hash::make('password'),
+                'name' => 'システム管理者',
+                'password' => Hash::make('p9MPGrzfit4fRN2T'),
                 'role' => 'admin',
-                'is_active' => true,
-            ]
-        );
-
-        // 2. 本部オペレーターアカウント (operator@example.com / password)
-        User::updateOrCreate(
-            ['email' => 'operator@example.com'],
-            [
-                'name' => '本部オペレーター',
-                'password' => Hash::make('password'),
-                'role' => 'operator',
                 'is_active' => true,
             ]
         );

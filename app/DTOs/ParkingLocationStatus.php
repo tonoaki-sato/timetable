@@ -3,7 +3,7 @@
 namespace App\DTOs;
 
 use App\Enums\ParkingConstraintStatus;
-use App\Models\LogisticsLocation;
+use App\Models\Location;
 use Illuminate\Support\Collection;
 
 readonly class ParkingLocationStatus
@@ -14,7 +14,7 @@ readonly class ParkingLocationStatus
      * @param  array<string>  $warnings
      */
     public function __construct(
-        public LogisticsLocation $location,
+        public Location $location,
         public ParkingConstraintStatus $status,
         public string $statusDetail,
         public ?string $periodLabel,

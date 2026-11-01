@@ -69,6 +69,91 @@ class Location extends Model
     }
 
     /**
+     * この拠点へ搬入・保管される機材物流計画
+     */
+    public function plansTo(): HasMany
+    {
+        return $this->hasMany(EquipmentLogisticsPlan::class, 'to_location_id');
+    }
+
+    /**
+     * この拠点から搬出される機材物流計画
+     */
+    public function plansFrom(): HasMany
+    {
+        return $this->hasMany(EquipmentLogisticsPlan::class, 'from_location_id');
+    }
+
+    /**
+     * 種別ラベルのアクセサ
+     */
+    public function getTypeLabelAttribute(): string
+    {
+        return $this->type?->label ?? $this->type?->name ?? '';
+    }
+
+    /**
+     * 説明・備考アクセサ（notesのエイリアス）
+     */
+    public function getDescriptionAttribute(): ?string
+    {
+        return $this->notes;
+    }
+
+    /**
+     * 利用可能開始日時のアクセサ（登録スケジュールの最早上限）
+     */
+    public function getAvailableFromAttribute(): ?Carbon
+    {
+        $min = $this->relationLoaded('schedules')
+            ? $this->schedules->min('start_at')
+            : $this->schedules()->min('start_at');
+
+        return $min ? Carbon::parse($min) : null;
+    }
+
+    /**
+     * 利用可能終了日時のアクセサ（登録スケジュールの最遅上限）
+     */
+    public function getAvailableToAttribute(): ?Carbon
+    {
+        $max = $this->relationLoaded('schedules')
+            ? $this->schedules->max('end_at')
+            : $this->schedules()->max('end_at');
+
+        return $max ? Carbon::parse($max) : null;
+    }
+
+    /**
+     * 指定日時にこの拠点・駐車場が利用（貸切）可能か判定
+     */
+    public function isAvailableAt(?DateTimeInterface $dateTime = null): bool
+    {
+        if ($this->is_all_day) {
+            return true;
+        }
+
+        $dateTime = $dateTime
+            ? Carbon::parse($dateTime)->timezone('Asia/Tokyo')
+            : Carbon::now('Asia/Tokyo');
+
+        $schedules = $this->relationLoaded('schedules')
+            ? $this->schedules
+            : $this->schedules()->get();
+
+        if ($schedules->isEmpty()) {
+            return false;
+        }
+
+        return $schedules->contains(function (LocationSchedule $schedule) use ($dateTime) {
+            $inSlot = $schedule->start_at <= $dateTime && $dateTime <= $schedule->end_at;
+            $approved = in_array($schedule->application_status, ['approved', 'not_required'], true);
+
+            return $inSlot && $approved;
+        });
+    }
+
+    /**
      * 有効拠点のみ抽出
      */
     public function scopeActive(Builder $query): Builder

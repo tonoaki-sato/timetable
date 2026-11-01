@@ -31,4 +31,14 @@ class LocationFactory extends Factory
             'created_by' => User::factory(),
         ];
     }
+
+    /**
+     * 終日利用可能
+     */
+    public function allDay(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_all_day' => true,
+        ]);
+    }
 }

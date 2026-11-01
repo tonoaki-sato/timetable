@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPlan;
-use App\Models\LogisticsLocation;
+use App\Models\Location;
 use App\Models\Staff;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -33,8 +33,8 @@ class EquipmentLogisticsPlanFactory extends Factory
             'end_time' => '14:00',
             'from_location' => '番所地下倉庫',
             'to_location' => '税務署前駐車場',
-            'from_location_id' => LogisticsLocation::factory(),
-            'to_location_id' => LogisticsLocation::factory(),
+            'from_location_id' => Location::factory(),
+            'to_location_id' => Location::factory(),
             'operator_type' => 'committee',
             'witness_required' => false,
             'witness_staff_id' => null,

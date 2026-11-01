@@ -34,9 +34,9 @@ class StoreEquipmentRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:2000'],
             'display_order' => ['nullable', 'integer', 'min:0'],
             'template_type' => ['nullable', 'string', 'in:none,pattern_a,pattern_b,pattern_c'],
-            'staging_location_id' => ['nullable', 'exists:logistics_locations,id'],
-            'night_location_1_id' => ['nullable', 'exists:logistics_locations,id'],
-            'night_location_2_id' => ['nullable', 'exists:logistics_locations,id'],
+            'staging_location_id' => ['nullable', 'exists:locations,id'],
+            'night_location_1_id' => ['nullable', 'exists:locations,id'],
+            'night_location_2_id' => ['nullable', 'exists:locations,id'],
             'witness_staff_id' => ['nullable', 'exists:staff,id'],
         ];
     }

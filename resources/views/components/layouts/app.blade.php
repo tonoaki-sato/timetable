@@ -34,7 +34,7 @@
                     <!-- 主要リンク（グループ化ドロップダウン） -->
                     @php
                         $isOperationActive = request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') || request()->routeIs('timetable.index') || request()->routeIs('lanes.*') || request()->routeIs('preparation-navigator.*');
-                        $isResourceActive = request()->routeIs('staff.*') || request()->routeIs('equipments.*') || request()->routeIs('logistics-locations.*') || request()->routeIs('locations.*') || request()->routeIs('location-types.*');
+                        $isResourceActive = request()->routeIs('staff.*') || request()->routeIs('equipments.*') || request()->routeIs('locations.*') || request()->routeIs('location-types.*');
                         $isScheduleActive = request()->routeIs('calendar.*') || request()->routeIs('annual-schedules.*') || request()->routeIs('meetings.*');
                         $isSystemActive = request()->routeIs('users.*') || request()->routeIs('manual.*') || request()->routeIs('presentation.*');
                     @endphp

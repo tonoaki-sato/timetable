@@ -12,11 +12,11 @@
             </span>
         </x-slot:badges>
         <x-slot:actions>
-            <button type="button" data-action="open-location-modal" data-mode="create"
+            <a href="{{ route('locations.create') }}"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                 <span>📍</span>
                 <span>拠点を追加</span>
-            </button>
+            </a>
             <a href="{{ route('equipments.print', ['format' => $tab]) }}" target="_blank"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                 <span>🖨️</span>
@@ -369,13 +369,10 @@
                                 </span>
                             </div>
 
-                            <button type="button"
-                                    data-action="open-location-modal"
-                                    data-mode="edit"
-                                    data-location="{{ json_encode($loc) }}"
-                                    class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition text-xs" title="拠点を編集">
-                                ✏️ 編集
-                            </button>
+                            <a href="{{ route('locations.show', $loc) }}"
+                               class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition text-xs font-bold" title="拠点詳細・利用枠">
+                                🔍 詳細・利用枠
+                            </a>
                         </div>
 
                         <!-- 貸切期間・終日利用表示 -->
@@ -533,91 +530,6 @@
         </div>
     @endif
 
-</div>
-
-<!-- ========================================================================= -->
-<!-- 拠点登録・編集モーダル (既存標準モーダルデザイン・CSP準拠) -->
-<!-- ========================================================================= -->
-<div id="modal-location-create" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-left space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 id="modal-location-title" class="text-sm sm:text-base font-bold text-slate-900 flex items-center space-x-2">
-                <span>📍</span>
-                <span>拠点の登録</span>
-            </h3>
-            <button type="button" data-action="close-location-modal" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">✕</button>
-        </div>
-
-        <form id="form-location" method="POST" action="{{ route('logistics-locations.store') }}" class="space-y-4">
-            @csrf
-            <div id="form-location-method"></div>
-
-            <div>
-                <label for="location_name" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">拠点名 <span class="text-rose-500">*</span></label>
-                <input type="text" id="location_name" name="name" required placeholder="例: 税務署前駐車場、北川駐車場、○○広場"
-                       class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label for="location_type" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">拠点種別</label>
-                    <select id="location_type" name="type" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="parking">駐車場</option>
-                        <option value="facility">施設・倉庫</option>
-                        <option value="open_space">空きスペース</option>
-                        <option value="other">その他</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="location_display_order" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">表示順</label>
-                    <input type="number" id="location_display_order" name="display_order" value="10" min="0"
-                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-            </div>
-
-            <!-- 終日利用可能チェックボックス -->
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                <label class="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" id="location_is_all_day" name="is_all_day" value="1"
-                           class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                    <span class="text-xs font-bold text-slate-800">終日使用可能（貸切期間の制限なし）</span>
-                </label>
-                <p class="text-[11px] text-slate-400 mt-1">番所地下倉庫やコミュニティルームなど常時利用できる場合はチェック</p>
-            </div>
-
-            <!-- 貸切期間設定（終日利用時は非活性） -->
-            <div id="availability-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-amber-50/50 border border-amber-200">
-                <div>
-                    <label for="location_available_from" class="block text-[11px] font-bold text-amber-900 mb-1">貸切開始日時</label>
-                    <input type="datetime-local" id="location_available_from" name="available_from"
-                           class="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
-                </div>
-                <div>
-                    <label for="location_available_to" class="block text-[11px] font-bold text-amber-900 mb-1">貸切終了日時</label>
-                    <input type="datetime-local" id="location_available_to" name="available_to"
-                           class="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
-                </div>
-            </div>
-
-            <div>
-                <label for="location_description" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">備考・注意事項</label>
-                <textarea id="location_description" name="description" rows="2" placeholder="例: 関係車両のみ13時より駐車可。鍵は事務室。"
-                          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed"></textarea>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                <button type="button" data-action="close-location-modal"
-                        class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
-                    キャンセル
-                </button>
-                <button type="submit"
-                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
-                    保存する
-                </button>
-            </div>
-        </form>
-    </div>
 </div>
 
 @vite(['resources/js/equipments.js'])

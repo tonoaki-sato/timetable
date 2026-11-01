@@ -6,7 +6,7 @@ use App\DTOs\ParkingLocationStatus;
 use App\DTOs\ParkingMonitoringContext;
 use App\Enums\ParkingConstraintStatus;
 use App\Models\EquipmentLogisticsPlan;
-use App\Models\LogisticsLocation;
+use App\Models\Location;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -19,19 +19,15 @@ class ParkingConstraintService
     public const int WARNING_THRESHOLD_MINUTES = 120;
 
     /**
-     * 駐車場利用時間制約監視コンテキストを取得
+     * 拠点・駐車場利用時間制約監視コンテキストを取得（デフォルトで全拠点対象）
      */
-    public function getMonitoringContext(?Carbon $now = null, bool $parkingOnly = true): ParkingMonitoringContext
+    public function getMonitoringContext(?Carbon $now = null, bool $parkingOnly = false): ParkingMonitoringContext
     {
         $now = $this->normalizeToTokyo($now ?? Carbon::now('Asia/Tokyo'));
 
-        $query = LogisticsLocation::active()->ordered();
+        $query = Location::active()->ordered()->with(['type', 'schedules']);
         if ($parkingOnly) {
-            $query->where('type', 'parking');
-        } else {
-            $query->where(function ($q) {
-                $q->where('type', 'parking')->orWhere('is_all_day', false);
-            });
+            $query->whereHas('type', fn ($q) => $q->where('name', 'parking'));
         }
 
         $locations = $query->get();
@@ -66,7 +62,7 @@ class ParkingConstraintService
     /**
      * 個別拠点の利用ステータス判定
      */
-    public function evaluateLocationStatus(LogisticsLocation $location, Carbon $now): ParkingLocationStatus
+    public function evaluateLocationStatus(Location $location, Carbon $now): ParkingLocationStatus
     {
         $now = $this->normalizeToTokyo($now);
 
@@ -89,14 +85,16 @@ class ParkingConstraintService
 
         // 終日利用可能拠点は時間制約なし
         if ($location->is_all_day) {
+            $storedCount = $this->countStoredEquipments($plansToLocation);
+
             return new ParkingLocationStatus(
                 location: $location,
                 status: ParkingConstraintStatus::InUse,
-                statusDetail: '終日利用可',
+                statusDetail: $storedCount > 0 ? '保管・稼働中' : '常時利用可',
                 periodLabel: $periodLabel,
                 countdownText: null,
                 activePlans: $plansToLocation,
-                storedEquipmentCount: $this->countStoredEquipments($plansToLocation),
+                storedEquipmentCount: $storedCount,
                 violations: [],
                 warnings: []
             );
@@ -197,23 +195,30 @@ class ParkingConstraintService
     /**
      * 該当拠点の期間ラベルを生成
      */
-    protected function formatPeriodLabel(LogisticsLocation $location): string
+    protected function formatPeriodLabel(Location $location): string
     {
         if ($location->is_all_day) {
             return '終日使用可能';
         }
 
-        $from = $this->normalizeToTokyo($location->available_from);
-        $to = $this->normalizeToTokyo($location->available_to);
+        $schedules = $location->relationLoaded('schedules')
+            ? $location->schedules
+            : $location->schedules()->get();
 
-        if (! $from && ! $to) {
-            return '期間指定なし';
+        if ($schedules->isEmpty()) {
+            return '利用枠未登録';
         }
 
-        $fromStr = $from ? $from->format('n/j H:i') : '開始制限なし';
-        $toStr = $to ? $to->format('n/j H:i') : '終了制限なし';
+        if ($schedules->count() === 1) {
+            $slot = $schedules->first();
 
-        return "{$fromStr} 〜 {$toStr}";
+            return "{$slot->start_at->format('n/j H:i')} 〜 {$slot->end_at->format('n/j H:i')}";
+        }
+
+        $from = $schedules->min('start_at');
+        $to = $schedules->max('end_at');
+
+        return Carbon::parse($from)->format('n/j H:i').' 〜 '.Carbon::parse($to)->format('n/j H:i')." (全{$schedules->count()}枠)";
     }
 
     /**

@@ -4,7 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPlan;
-use App\Models\LogisticsLocation;
+use App\Models\Location;
+use App\Models\LocationSchedule;
 use App\Models\Staff;
 use App\Models\Timetable;
 use App\Models\User;
@@ -18,13 +19,13 @@ class EquipmentLogisticsPlanTest extends TestCase
 
     private User $operator;
 
-    private LogisticsLocation $locationBansho;
+    private Location $locationBansho;
 
-    private LogisticsLocation $locationBanshoSpace;
+    private Location $locationBanshoSpace;
 
-    private LogisticsLocation $locationTaxOffice;
+    private Location $locationTaxOffice;
 
-    private LogisticsLocation $locationKitagawa;
+    private Location $locationKitagawa;
 
     private Staff $staff;
 
@@ -42,17 +43,30 @@ class EquipmentLogisticsPlanTest extends TestCase
         Timetable::factory()->create(['target_date' => '2026-10-11', 'name' => '宿場まつり 1日目']);
         Timetable::factory()->create(['target_date' => '2026-10-12', 'name' => '宿場まつり 2日目']);
 
-        $this->locationBansho = LogisticsLocation::factory()->allDay()->create(['name' => '番所地下倉庫']);
-        $this->locationBanshoSpace = LogisticsLocation::factory()->allDay()->create(['name' => '番所空きスペース']);
-        $this->locationTaxOffice = LogisticsLocation::factory()->create([
+        $this->locationBansho = Location::factory()->allDay()->create(['name' => '番所地下倉庫']);
+        $this->locationBanshoSpace = Location::factory()->allDay()->create(['name' => '番所空きスペース']);
+        $this->locationTaxOffice = Location::factory()->create([
             'name' => '税務署前駐車場',
-            'available_from' => '2026-10-10 12:00:00',
-            'available_to' => '2026-10-12 21:00:00',
+            'is_all_day' => false,
         ]);
-        $this->locationKitagawa = LogisticsLocation::factory()->create([
+        LocationSchedule::create([
+            'location_id' => $this->locationTaxOffice->id,
+            'start_at' => '2026-10-10 12:00:00',
+            'end_at' => '2026-10-12 21:00:00',
+            'application_status' => 'approved',
+            'title' => '貸切枠',
+        ]);
+
+        $this->locationKitagawa = Location::factory()->create([
             'name' => '北川駐車場',
-            'available_from' => '2026-10-10 13:00:00',
-            'available_to' => '2026-10-12 20:30:00',
+            'is_all_day' => false,
+        ]);
+        LocationSchedule::create([
+            'location_id' => $this->locationKitagawa->id,
+            'start_at' => '2026-10-10 13:00:00',
+            'end_at' => '2026-10-12 20:30:00',
+            'application_status' => 'approved',
+            'title' => '貸切枠',
         ]);
 
         $this->staff = Staff::factory()->create(['name' => '立会担当者']);
