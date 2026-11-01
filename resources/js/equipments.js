@@ -1,5 +1,5 @@
 /**
- * 資材・機材 搬出入動態管理スクリプト (CSP準拠・外部JavaScriptモジュール)
+ * 資材管理 & 搬出入動態管理スクリプト (CSP準拠・外部JavaScriptモジュール)
  */
 document.addEventListener('DOMContentLoaded', () => {
     initEquipmentForm();
@@ -8,11 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * 2. 資材新規作成・編集フォーム (equipments.create, equipments.edit)
+ * 1. 資材新規作成・編集フォーム (equipments.create, equipments.edit)
  */
 function initEquipmentForm() {
     const typeRadios = document.querySelectorAll('input[name="type"]');
-    const templateRadios = document.querySelectorAll('input[name="template_type"]');
     const commSec = document.getElementById('section-committee');
     const rentSec = document.getElementById('section-rental');
 
@@ -27,36 +26,10 @@ function initEquipmentForm() {
         }
     }
 
-    function toggleTemplateOptions(templateType) {
-        const box = document.getElementById('template-options-box');
-        const witnessBox = document.getElementById('witness-staff-select-box');
-        if (!box) return;
-
-        if (templateType === 'none' || templateType === 'pattern_c') {
-            box.classList.add('hidden');
-        } else {
-            box.classList.remove('hidden');
-            if (witnessBox) {
-                if (templateType === 'pattern_b') {
-                    witnessBox.classList.remove('hidden');
-                } else {
-                    witnessBox.classList.add('hidden');
-                }
-            }
-        }
-    }
-
     // 資材種別ラジオ切り替え
     typeRadios.forEach((radio) => {
         radio.addEventListener('change', (e) => {
             toggleEquipmentType(e.target.value);
-        });
-    });
-
-    // テンプレートラジオ切り替え
-    templateRadios.forEach((radio) => {
-        radio.addEventListener('change', (e) => {
-            toggleTemplateOptions(e.target.value);
         });
     });
 
@@ -75,14 +48,10 @@ function initEquipmentForm() {
     if (checkedType) {
         toggleEquipmentType(checkedType.value);
     }
-    const checkedTemplate = document.querySelector('input[name="template_type"]:checked');
-    if (checkedTemplate) {
-        toggleTemplateOptions(checkedTemplate.value);
-    }
 }
 
 /**
- * 3. 搬出入計画ステップ登録・編集モーダル (equipments.show)
+ * 2. 搬出入計画ステップ登録・編集モーダル (equipments.show)
  */
 function initStepModal() {
     const modal = document.getElementById('modal-step');
@@ -131,7 +100,7 @@ function initStepModal() {
                 }
                 try {
                     const plan = JSON.parse(btn.dataset.plan || '{}');
-                    form.action = `/equipment-plans/${plan.id}`;
+                    form.action = `/logistics/plans/${plan.id}`;
                     if (methodContainer) {
                         methodContainer.innerHTML = '<input type="hidden" name="_method" value="PUT">';
                     }
@@ -181,7 +150,7 @@ function initStepModal() {
 }
 
 /**
- * 4. テンプレート適用モーダル (equipments.show)
+ * 3. テンプレート適用モーダル (equipments.show)
  */
 function initApplyTemplateModal() {
     const modal = document.getElementById('modal-apply-template');
@@ -205,4 +174,3 @@ function initApplyTemplateModal() {
         }
     });
 }
-

@@ -34,7 +34,7 @@
                     <!-- 主要リンク（グループ化ドロップダウン） -->
                     @php
                         $isOperationActive = request()->routeIs('timetables.*') || request()->routeIs('timetable-tasks.*') || request()->routeIs('timetable.index') || request()->routeIs('lanes.*') || request()->routeIs('preparation-navigator.*');
-                        $isResourceActive = request()->routeIs('staff.*') || request()->routeIs('equipments.*') || request()->routeIs('locations.*') || request()->routeIs('location-types.*');
+                        $isResourceActive = request()->routeIs('staff.*') || request()->routeIs('equipments.*') || request()->routeIs('logistics.*') || request()->routeIs('locations.*') || request()->routeIs('location-types.*');
                         $isScheduleActive = request()->routeIs('calendar.*') || request()->routeIs('annual-schedules.*') || request()->routeIs('meetings.*');
                         $isSystemActive = request()->routeIs('users.*') || request()->routeIs('manual.*') || request()->routeIs('presentation.*');
                     @endphp
@@ -199,22 +199,30 @@
                                 </div>
                                 <div class="py-1 space-y-0.5">
                                     <a href="{{ route('equipments.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('equipments.*') && !request()->routeIs('equipments.print') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('equipments.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">📦</span>
                                         <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold">資材・搬出入計画</div>
-                                            <p class="text-[10px] {{ request()->routeIs('equipments.*') && !request()->routeIs('equipments.print') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">自前・レンタル資材の移動・中継・夜間保管管理</p>
+                                            <div class="text-xs font-bold">資材管理</div>
+                                            <p class="text-[10px] {{ request()->routeIs('equipments.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">保有備品・提携レンタル機材の台帳</p>
                                         </div>
                                     </a>
-                                    <a href="{{ route('equipments.print') }}" target="_blank"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('equipments.print') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                    <a href="{{ route('logistics.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">🚚</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold">搬出入計画</div>
+                                            <p class="text-[10px] {{ request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">6大フェーズ運行・チェックリスト・中継保管</p>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('logistics.print') }}" target="_blank"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('logistics.print') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🖨️</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold flex items-center space-x-1">
-                                                <span>資材搬出入計画の印刷</span>
+                                                <span>搬出入計画の印刷</span>
                                                 <span class="text-[9px] text-slate-400 font-normal">↗</span>
                                             </div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">搬出入指示書・チェックリストの印刷</p>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">搬出入指示書・チェックリストのA4印刷</p>
                                         </div>
                                     </a>
                                 </div>
@@ -544,18 +552,25 @@
                                     <span class="text-[10px] text-slate-400 block truncate">QR付きA4名札</span>
                                 </div>
                             </a>
-                            <a href="{{ route('equipments.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('equipments.*') && !request()->routeIs('equipments.print') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                            <a href="{{ route('equipments.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('equipments.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">📦</span>
                                 <div class="min-w-0">
-                                    <span class="font-bold block truncate">資材・搬出入計画</span>
-                                    <span class="text-[10px] text-slate-400 block truncate">移動・保管・機材台帳</span>
+                                    <span class="font-bold block truncate">資材管理</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">保有備品・提携レンタル台帳</span>
                                 </div>
                             </a>
-                            <a href="{{ route('equipments.print') }}" target="_blank" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('equipments.print') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                            <a href="{{ route('logistics.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                                <span class="text-base">🚚</span>
+                                <div class="min-w-0">
+                                    <span class="font-bold block truncate">搬出入計画</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">6大フェーズ運行・チェック</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('logistics.print') }}" target="_blank" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('logistics.print') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">🖨️</span>
                                 <div class="min-w-0">
                                     <div class="flex items-center space-x-1">
-                                        <span class="font-bold truncate">資材搬出入印刷</span>
+                                        <span class="font-bold truncate">搬出入印刷</span>
                                         <span class="text-[9px] text-slate-400">↗</span>
                                     </div>
                                     <span class="text-[10px] text-slate-400 block truncate">搬出入指示書A4</span>

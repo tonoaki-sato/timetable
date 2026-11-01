@@ -6,10 +6,8 @@ use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
 use App\Models\Timetable;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
 
 class EquipmentLogisticsService
 {
@@ -33,45 +31,6 @@ class EquipmentLogisticsService
             'day2' => $day2,
             'post_day' => $postDay,
         ];
-    }
-
-    /**
-     * 資材新規作成と同時にテンプレート適用
-     */
-    public function createEquipmentWithTemplate(array $data, ?User $user = null): Equipment
-    {
-        return DB::transaction(function () use ($data, $user) {
-            $templateType = $data['template_type'] ?? 'none';
-            $stagingLocationId = $data['staging_location_id'] ?? null;
-            $nightLocation1Id = $data['night_location_1_id'] ?? null;
-            $nightLocation2Id = $data['night_location_2_id'] ?? null;
-            $witnessStaffId = $data['witness_staff_id'] ?? null;
-
-            unset(
-                $data['template_type'],
-                $data['staging_location_id'],
-                $data['night_location_1_id'],
-                $data['night_location_2_id'],
-                $data['witness_staff_id']
-            );
-
-            if ($user && empty($data['created_by'])) {
-                $data['created_by'] = $user->id;
-            }
-
-            $equipment = Equipment::create($data);
-
-            if ($templateType && $templateType !== 'none') {
-                $this->applyTemplate($equipment, $templateType, [
-                    'staging_location_id' => $stagingLocationId,
-                    'night_location_1_id' => $nightLocation1Id,
-                    'night_location_2_id' => $nightLocation2Id,
-                    'witness_staff_id' => $witnessStaffId,
-                ]);
-            }
-
-            return $equipment;
-        });
     }
 
     /**

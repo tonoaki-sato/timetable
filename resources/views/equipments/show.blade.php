@@ -7,7 +7,7 @@
         :icon="$equipment->isCommittee() ? '🏛️' : '🏢'"
         :description="$equipment->isCommittee() ? '実行委員会管理機材（定常保管: ' . ($equipment->storage_location ?: '番所地下倉庫') . '）' : 'イベント会社レンタル（' . ($equipment->event_company_name ?: 'イベント会社') . '）'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('equipments.index') }}" class="hover:underline">資材一覧</a>
+            <a href="{{ route('equipments.index') }}" class="hover:underline">資材管理</a>
             <span>/</span>
             <span class="text-slate-800 font-bold">{{ $equipment->name }}</span>
         </x-slot:breadcrumbs>
@@ -112,7 +112,7 @@
 
                             <!-- ステータス切替 & 編集・削除 -->
                             <div class="flex items-center space-x-2 shrink-0 self-end sm:self-center">
-                                <form method="POST" action="{{ route('equipment-plans.update-status', $plan) }}" class="inline">
+                                <form method="POST" action="{{ route('logistics.plans.update-status', $plan) }}" class="inline">
                                     @csrf
                                     @method('PATCH')
                                     @if($plan->status === 'completed')
@@ -141,7 +141,7 @@
                                     ✏️
                                 </button>
 
-                                <form method="POST" action="{{ route('equipment-plans.destroy', $plan) }}" data-confirm="このステップを削除しますか？">
+                                <form method="POST" action="{{ route('logistics.plans.destroy', $plan) }}" data-confirm="このステップを削除しますか？">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition text-xs" title="ステップを削除">
@@ -235,7 +235,7 @@
             <button type="button" data-action="close-step-modal" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">✕</button>
         </div>
 
-        <form id="form-step" method="POST" action="{{ route('equipment-plans.store') }}" class="space-y-4">
+        <form id="form-step" method="POST" action="{{ route('logistics.plans.store') }}" class="space-y-4">
             @csrf
             <div id="form-step-method"></div>
             <input type="hidden" name="equipment_id" value="{{ $equipment->id }}">
@@ -374,7 +374,7 @@
             <button type="button" data-action="close-apply-template-modal" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">✕</button>
         </div>
 
-        <form method="POST" action="{{ route('equipments.apply-template', $equipment) }}" class="space-y-4">
+        <form method="POST" action="{{ route('logistics.apply-template', $equipment) }}" class="space-y-4">
             @csrf
 
             <div>

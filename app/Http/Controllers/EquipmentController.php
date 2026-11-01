@@ -8,7 +8,6 @@ use App\Models\Equipment;
 use App\Models\Lane;
 use App\Models\Location;
 use App\Models\Staff;
-use App\Services\EquipmentLogisticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,43 +15,47 @@ use Illuminate\View\View;
 
 class EquipmentController extends Controller
 {
-    public function __construct(
-        protected EquipmentLogisticsService $logisticsService
-    ) {}
-
     /**
-     * 資材・搬出入計画一覧画面の表示
+     * 資材管理（備品・機材台帳）一覧画面の表示
      */
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Equipment::class);
 
-        $tab = $request->query('tab', 'flow');
         $typeFilter = $request->query('type');
         $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
-        $phaseFilter = $request->query('phase');
+        $keyword = $request->query('keyword');
 
-        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter);
-        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter);
-        $locationsData = $this->logisticsService->getLocationsStatusData();
-        $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData();
+        $query = Equipment::query()
+            ->with(['lane', 'plans'])
+            ->when($typeFilter, fn ($q) => $q->where('type', $typeFilter))
+            ->when($laneFilter, fn ($q) => $q->where('lane_id', $laneFilter))
+            ->when($keyword, fn ($q) => $q->where(function ($sub) use ($keyword) {
+                $sub->where('name', 'like', "%{$keyword}%")
+                    ->orWhere('storage_location', 'like', "%{$keyword}%")
+                    ->orWhere('event_company_name', 'like', "%{$keyword}%")
+                    ->orWhere('description', 'like', "%{$keyword}%");
+            }))
+            ->ordered();
 
-        $locations = Location::active()->ordered()->get();
+        $equipments = $query->paginate(20)->withQueryString();
+
         $lanes = Lane::active()->ordered()->get();
-        $staffs = Staff::active()->orderBy('kana')->get();
+
+        // 統計カウント
+        $totalCount = Equipment::count();
+        $committeeCount = Equipment::where('type', 'committee')->count();
+        $rentalCount = Equipment::where('type', 'rental')->count();
 
         return view('equipments.index', compact(
-            'tab',
+            'equipments',
+            'lanes',
             'typeFilter',
             'laneFilter',
-            'phaseFilter',
-            'equipments',
-            'checklistPlans',
-            'locationsData',
-            'eventCompanyPlans',
-            'locations',
-            'lanes',
-            'staffs'
+            'keyword',
+            'totalCount',
+            'committeeCount',
+            'rentalCount'
         ));
     }
 
@@ -63,34 +66,39 @@ class EquipmentController extends Controller
     {
         $this->authorize('create', Equipment::class);
 
-        $locations = Location::active()->ordered()->get();
         $lanes = Lane::active()->ordered()->get();
-        $staffs = Staff::active()->orderBy('kana')->get();
 
-        return view('equipments.create', compact('locations', 'lanes', 'staffs'));
+        return view('equipments.create', compact('lanes'));
     }
 
     /**
-     * 資材新規登録処理（テンプレート適用含む）
+     * 資材新規登録処理
      */
     public function store(StoreEquipmentRequest $request): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Equipment::class);
 
-        $equipment = $this->logisticsService->createEquipmentWithTemplate(
-            $request->validated(),
-            $request->user()
-        );
+        $data = $request->validated();
+        if ($request->user() && empty($data['created_by'])) {
+            $data['created_by'] = $request->user()->id;
+        }
+
+        // 提携イベント会社（1社固定）のデフォルト補完
+        if (($data['type'] ?? '') === 'rental' && empty($data['event_company_name'])) {
+            $data['event_company_name'] = '東京イベントサプライ株式会社';
+        }
+
+        $equipment = Equipment::create($data);
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => "資材「{$equipment->name}」を登録しました。",
-                'equipment' => $equipment->load('plans'),
+                'equipment' => $equipment,
             ]);
         }
 
-        return redirect()->route('equipments.index')
+        return redirect()->route('equipments.show', $equipment)
             ->with('status', "資材「{$equipment->name}」を登録しました。");
     }
 
@@ -120,10 +128,9 @@ class EquipmentController extends Controller
     {
         $this->authorize('update', $equipment);
 
-        $locations = Location::active()->ordered()->get();
         $lanes = Lane::active()->ordered()->get();
 
-        return view('equipments.edit', compact('equipment', 'locations', 'lanes'));
+        return view('equipments.edit', compact('equipment', 'lanes'));
     }
 
     /**
@@ -133,7 +140,12 @@ class EquipmentController extends Controller
     {
         $this->authorize('update', $equipment);
 
-        $equipment->update($request->validated());
+        $data = $request->validated();
+        if (($data['type'] ?? '') === 'rental' && empty($data['event_company_name'])) {
+            $data['event_company_name'] = '東京イベントサプライ株式会社';
+        }
+
+        $equipment->update($data);
 
         if ($request->wantsJson()) {
             return response()->json([

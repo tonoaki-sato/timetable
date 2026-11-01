@@ -16,10 +16,6 @@ class EquipmentManagementTest extends TestCase
 
     private User $operator;
 
-    private Location $locationTaxOffice;
-
-    private Location $locationKitagawa;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,13 +27,10 @@ class EquipmentManagementTest extends TestCase
 
         Timetable::factory()->create(['target_date' => '2026-10-11', 'name' => '1日目']);
         Timetable::factory()->create(['target_date' => '2026-10-12', 'name' => '2日目']);
-
-        $this->locationTaxOffice = Location::factory()->create(['name' => '税務署前駐車場']);
-        $this->locationKitagawa = Location::factory()->create(['name' => '北川駐車場']);
     }
 
     /**
-     * 資材一覧画面が表示され、区分でフィルタできること
+     * 資材管理一覧画面が表示され、区分でフィルタできること
      */
     public function test_index_displays_and_filters_equipments(): void
     {
@@ -46,15 +39,36 @@ class EquipmentManagementTest extends TestCase
         $committeeItem = Equipment::factory()->committee()->create(['name' => 'カラーコーン']);
         $rentalItem = Equipment::factory()->rental()->create(['name' => 'パイプテント']);
 
-        $response = $this->get(route('equipments.index', ['tab' => 'flow']));
+        $response = $this->get(route('equipments.index'));
         $response->assertStatus(200);
+        $response->assertSee('資材管理');
         $response->assertSee('カラーコーン');
         $response->assertSee('パイプテント');
 
         // 委員会管理のみフィルタ
-        $committeeResponse = $this->get(route('equipments.index', ['tab' => 'flow', 'type' => 'committee']));
+        $committeeResponse = $this->get(route('equipments.index', ['type' => 'committee']));
         $committeeResponse->assertSee('カラーコーン');
         $committeeResponse->assertDontSee('パイプテント');
+
+        // レンタルのみフィルタ
+        $rentalResponse = $this->get(route('equipments.index', ['type' => 'rental']));
+        $rentalResponse->assertSee('パイプテント');
+        $rentalResponse->assertDontSee('カラーコーン');
+    }
+
+    /**
+     * キーワード検索で資材が絞り込めること
+     */
+    public function test_index_keyword_search(): void
+    {
+        $this->actingAs($this->operator);
+
+        Equipment::factory()->committee()->create(['name' => '特製カラーコーン', 'storage_location' => '番所地下倉庫']);
+        Equipment::factory()->rental()->create(['name' => '大型パイプテント', 'storage_location' => null]);
+
+        $searchRes = $this->get(route('equipments.index', ['keyword' => '特製']));
+        $searchRes->assertSee('特製カラーコーン');
+        $searchRes->assertDontSee('大型パイプテント');
     }
 
     /**
@@ -63,7 +77,7 @@ class EquipmentManagementTest extends TestCase
     public function test_store_creates_committee_equipment(): void
     {
         $this->actingAs($this->operator);
-        $lane = Lane::factory()->create(['name' => 'カラーコーン']);
+        $lane = Lane::factory()->create(['name' => 'カラーコーン班']);
 
         $response = $this->post(route('equipments.store'), [
             'name' => 'カラーコーン（バー付き）',
@@ -73,10 +87,11 @@ class EquipmentManagementTest extends TestCase
             'storage_location' => '番所地下倉庫',
             'lane_id' => $lane->id,
             'description' => '路上規制用コーン',
-            'template_type' => 'none',
         ]);
 
-        $response->assertRedirect(route('equipments.index'));
+        $equipment = Equipment::where('name', 'カラーコーン（バー付き）')->first();
+        $this->assertNotNull($equipment);
+        $response->assertRedirect(route('equipments.show', $equipment));
 
         $this->assertDatabaseHas('equipments', [
             'name' => 'カラーコーン（バー付き）',
@@ -87,9 +102,9 @@ class EquipmentManagementTest extends TestCase
     }
 
     /**
-     * イベント会社レンタル機材の新規登録ができること
+     * イベント会社レンタル機材の新規登録ができること（提携1社のデフォルト補完含む）
      */
-    public function test_store_creates_rental_equipment(): void
+    public function test_store_creates_rental_equipment_with_default_company(): void
     {
         $this->actingAs($this->operator);
 
@@ -98,49 +113,23 @@ class EquipmentManagementTest extends TestCase
             'type' => 'rental',
             'quantity' => 10,
             'unit' => '張',
-            'event_company_name' => '○○イベント企画',
-            'event_company_contact' => '03-9999-8888',
-            'template_type' => 'none',
+            'event_company_contact' => '03-3456-7890',
         ]);
 
-        $response->assertRedirect(route('equipments.index'));
+        $equipment = Equipment::where('name', 'パイプテント 2K×3K')->first();
+        $this->assertNotNull($equipment);
+        $response->assertRedirect(route('equipments.show', $equipment));
 
         $this->assertDatabaseHas('equipments', [
             'name' => 'パイプテント 2K×3K',
             'type' => 'rental',
             'quantity' => 10,
-            'event_company_name' => '○○イベント企画',
+            'event_company_name' => '東京イベントサプライ株式会社',
         ]);
     }
 
     /**
-     * 新規登録時にテンプレート（パターンA）を適用してステップが自動生成されること
-     */
-    public function test_store_with_template_creates_plans_automatically(): void
-    {
-        $this->actingAs($this->operator);
-
-        $response = $this->post(route('equipments.store'), [
-            'name' => 'カラーコーン（一括テンプレート）',
-            'type' => 'committee',
-            'quantity' => 40,
-            'unit' => '個',
-            'storage_location' => '番所地下倉庫',
-            'template_type' => 'pattern_a',
-            'staging_location_id' => $this->locationTaxOffice->id,
-            'night_location_1_id' => $this->locationTaxOffice->id,
-            'night_location_2_id' => $this->locationKitagawa->id,
-        ]);
-
-        $response->assertRedirect(route('equipments.index'));
-
-        $equipment = Equipment::where('name', 'カラーコーン（一括テンプレート）')->first();
-        $this->assertNotNull($equipment);
-        $this->assertGreaterThanOrEqual(5, $equipment->plans()->count());
-    }
-
-    /**
-     * 資材の更新と削除（関連ステップの連鎖削除）ができること
+     * 資材の更新と削除ができること
      */
     public function test_update_and_destroy_equipment(): void
     {
@@ -151,80 +140,46 @@ class EquipmentManagementTest extends TestCase
             'quantity' => 10,
         ]);
 
-        $updateResponse = $this->put(route('equipments.update', $equipment), [
+        // 更新
+        $updateRes = $this->put(route('equipments.update', $equipment), [
             'name' => '新・機材名',
             'type' => 'committee',
             'quantity' => 15,
-            'unit' => '個',
-            'storage_location' => 'コミュニティルーム',
+            'unit' => '台',
+            'storage_location' => '番所地下倉庫',
         ]);
 
-        $updateResponse->assertRedirect(route('equipments.show', $equipment));
+        $updateRes->assertRedirect(route('equipments.show', $equipment));
         $this->assertDatabaseHas('equipments', [
             'id' => $equipment->id,
             'name' => '新・機材名',
             'quantity' => 15,
-            'storage_location' => 'コミュニティルーム',
         ]);
 
-        // 削除テスト
-        $deleteResponse = $this->delete(route('equipments.destroy', $equipment));
-        $deleteResponse->assertRedirect(route('equipments.index'));
+        // 削除
+        $destroyRes = $this->delete(route('equipments.destroy', $equipment));
+        $destroyRes->assertRedirect(route('equipments.index'));
         $this->assertDatabaseMissing('equipments', ['id' => $equipment->id]);
     }
 
     /**
-     * 資材一覧の events タブおよび関連画面が CSP に準拠し、インラインスクリプトやインラインイベントハンドラを含まないこと
+     * 一般スタッフ（権限なし）は資材管理の登録・編集・削除ができないこと
      */
-    public function test_events_tab_and_equipments_views_comply_with_csp_without_inline_scripts_or_handlers(): void
+    public function test_unauthorized_user_cannot_manage_equipment(): void
     {
-        $this->actingAs($this->operator);
+        $regularUser = User::factory()->create([
+            'role' => 'staff',
+            'is_active' => true,
+        ]);
+        $this->actingAs($regularUser);
 
-        $equipment = Equipment::factory()->rental()->create([
-            'name' => 'パイプテント 2K×3K',
-            'event_company_name' => 'テストイベント企画',
+        $response = $this->post(route('equipments.store'), [
+            'name' => '不正登録',
+            'type' => 'committee',
+            'quantity' => 1,
+            'unit' => '個',
         ]);
 
-        $urls = [
-            route('equipments.index', ['tab' => 'events']),
-            route('equipments.index', ['tab' => 'flow']),
-            route('equipments.create'),
-            route('equipments.show', $equipment),
-            route('equipments.edit', $equipment),
-            route('equipments.print', ['format' => 'events']),
-        ];
-
-        foreach ($urls as $url) {
-            $response = $this->get($url);
-            $response->assertStatus(200);
-
-            $csp = $response->headers->get('Content-Security-Policy');
-            $this->assertNotNull($csp, "CSP header must be present on {$url}");
-            $this->assertStringContainsString("script-src 'self'", $csp);
-            $this->assertStringNotContainsString('unsafe-inline', $csp);
-
-            $content = $response->getContent();
-
-            // インライン <script>（src属性を持たないタグ）が存在しないこと
-            $this->assertDoesNotMatchRegularExpression(
-                '/<script(?![^>]*\bsrc=)[^>]*>/i',
-                $content,
-                "Inline <script> tag found on {$url}"
-            );
-
-            // インラインイベントハンドラ属性（onclick, onchange, onsubmit 等）が存在しないこと
-            $this->assertDoesNotMatchRegularExpression(
-                '/\s(on[a-z]+)\s*=/i',
-                $content,
-                "Inline event handler attribute found on {$url}"
-            );
-
-            // インライン <style> タグが存在しないこと
-            $this->assertDoesNotMatchRegularExpression(
-                '/<style\b[^>]*>/i',
-                $content,
-                "Inline <style> tag found on {$url}"
-            );
-        }
+        $response->assertForbidden();
     }
 }

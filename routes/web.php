@@ -5,8 +5,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\EquipmentLogisticsController;
 use App\Http\Controllers\EquipmentLogisticsPlanController;
-use App\Http\Controllers\EquipmentPrintController;
 use App\Http\Controllers\FeatureSettingController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LaneRequestController;
@@ -136,14 +136,21 @@ Route::middleware('auth')->group(function () {
     // タイムテーブル全体運行マトリクスビュー
     Route::get('/timetable', [TimetableMatrixController::class, 'index'])->name('timetable.index');
 
-    // 資材・機材 搬出入計画・拠点・印刷ルート
-    Route::get('equipments/print', [EquipmentPrintController::class, 'index'])->name('equipments.print');
+    // 1. 資材管理 (Equipment Management)
     Route::resource('equipments', EquipmentController::class);
-    Route::post('equipments/{equipment}/apply-template', [EquipmentLogisticsPlanController::class, 'applyTemplate'])->name('equipments.apply-template');
-    Route::post('equipment-plans', [EquipmentLogisticsPlanController::class, 'store'])->name('equipment-plans.store');
-    Route::put('equipment-plans/{plan}', [EquipmentLogisticsPlanController::class, 'update'])->name('equipment-plans.update');
-    Route::delete('equipment-plans/{plan}', [EquipmentLogisticsPlanController::class, 'destroy'])->name('equipment-plans.destroy');
-    Route::patch('equipment-plans/{plan}/status', [EquipmentLogisticsPlanController::class, 'updateStatus'])->name('equipment-plans.update-status');
+
+    // 2. 搬出入計画 (Logistics & Operations)
+    Route::prefix('logistics')->name('logistics.')->group(function () {
+        Route::get('/', [EquipmentLogisticsController::class, 'index'])->name('index');
+        Route::get('print', [EquipmentLogisticsController::class, 'print'])->name('print');
+        Route::post('{equipment}/apply-template', [EquipmentLogisticsPlanController::class, 'applyTemplate'])->name('apply-template');
+
+        // 搬出入計画ステップ操作
+        Route::post('plans', [EquipmentLogisticsPlanController::class, 'store'])->name('plans.store');
+        Route::put('plans/{plan}', [EquipmentLogisticsPlanController::class, 'update'])->name('plans.update');
+        Route::delete('plans/{plan}', [EquipmentLogisticsPlanController::class, 'destroy'])->name('plans.destroy');
+        Route::patch('plans/{plan}/status', [EquipmentLogisticsPlanController::class, 'updateStatus'])->name('plans.update-status');
+    });
 
     // 拠点管理・時間帯スケジュール・拠点タイプ管理
     Route::resource('locations', LocationController::class);

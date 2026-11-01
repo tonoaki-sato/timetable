@@ -912,7 +912,7 @@
                                     <span>🚚</span>
                                     <span>日別・拠点別の搬出入 &amp; 夜間保管計画</span>
                                 </h4>
-                                <span class="font-mono text-indigo-600 bg-white px-1.5 py-0.5 rounded border border-slate-200 text-[10px]">/equipment-plans</span>
+                                <span class="font-mono text-indigo-600 bg-white px-1.5 py-0.5 rounded border border-slate-200 text-[10px]">/logistics</span>
                             </div>
                             <p class="text-slate-600 leading-relaxed text-[11px]">
                                 「いつ、誰が、どの拠点へ搬入し、夜間はどこに保管し、いつ回収・返却するか」をタイムライン連動で計画します。
@@ -940,7 +940,7 @@
                                     <span>🖨️</span>
                                     <span>資材搬出入計画書・チェックリストのA4印刷</span>
                                 </h4>
-                                <span class="font-mono text-indigo-600 bg-white px-1.5 py-0.5 rounded border border-indigo-200 text-[10px]">/equipments/print</span>
+                                <span class="font-mono text-indigo-600 bg-white px-1.5 py-0.5 rounded border border-indigo-200 text-[10px]">/logistics/print</span>
                             </div>
                             <p class="text-indigo-900 leading-relaxed text-[11px]">
                                 運搬トラックの運転手や各神輿番所の資材受け取り担当者向けに、日時・拠点・機材名・数量・担当者を網羅した指示書兼チェックリストをA4横向きで印刷できます。
@@ -1236,7 +1236,7 @@
                                 <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
                             </summary>
                             <p class="mt-3 text-slate-600 leading-relaxed text-xs border-t border-slate-200 pt-3">
-                                現場ボランティア・班長はスマホのマイシフト画面から「応援要請（レーンリクエスト）」を送信してください。本部側では「資材・搬出入計画（`/equipments`）」の予備在庫状況を確認し、近隣の番所や本部倉庫から代替機材を運搬スタッフへ指示します。
+                                現場ボランティア・班長はスマホのマイシフト画面から「応援要請（レーンリクエスト）」を送信してください。本部側では「搬出入計画（`/logistics`）および資材管理（`/equipments`）」の予備在庫状況を確認し、近隣の番所や本部倉庫から代替機材を運搬スタッフへ指示します。
                             </p>
                         </details>
 

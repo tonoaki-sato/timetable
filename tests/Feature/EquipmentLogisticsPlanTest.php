@@ -197,7 +197,7 @@ class EquipmentLogisticsPlanTest extends TestCase
             'status' => 'planned',
         ]);
 
-        $response = $this->patch(route('equipment-plans.update-status', $plan), [
+        $response = $this->patch(route('logistics.plans.update-status', $plan), [
             'status' => 'completed',
         ]);
 

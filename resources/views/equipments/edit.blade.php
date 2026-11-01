@@ -7,7 +7,7 @@
         icon="✏️"
         :description="$equipment->name . ' の基本情報を更新します。'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('equipments.index') }}" class="hover:underline">資材一覧</a>
+            <a href="{{ route('equipments.index') }}" class="hover:underline">資材管理</a>
             <span>/</span>
             <a href="{{ route('equipments.show', $equipment) }}" class="hover:underline">{{ $equipment->name }}</a>
             <span>/</span>

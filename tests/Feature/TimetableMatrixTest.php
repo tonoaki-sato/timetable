@@ -369,9 +369,12 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('スタッフ名札印刷');
         $response->assertSee(route('staff.print-cards'));
         $response->assertSee('資材・機材物流');
+        $response->assertSee('資材管理');
         $response->assertSee(route('equipments.index'));
-        $response->assertSee('資材搬出入計画の印刷');
-        $response->assertSee(route('equipments.print'));
+        $response->assertSee('搬出入計画');
+        $response->assertSee(route('logistics.index'));
+        $response->assertSee('搬出入計画の印刷');
+        $response->assertSee(route('logistics.print'));
         $response->assertSee('拠点・会場管理');
         $response->assertSee(route('locations.index'));
         $response->assertSee(route('location-types.index'));

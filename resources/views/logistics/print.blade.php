@@ -20,7 +20,7 @@
         </div>
 
         <div class="flex items-center space-x-2">
-            <a href="{{ route('equipments.index') }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
+            <a href="{{ route('logistics.index') }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
                 ← 画面に戻る
             </a>
             <button type="button" data-action="print" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition flex items-center space-x-1 cursor-pointer">

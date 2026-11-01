@@ -98,7 +98,7 @@
             <span>拠点管理</span>
             <span class="transition group-hover:translate-x-0.5">→</span>
         </a>
-        <a href="{{ route('equipments.index', ['tab' => 'locations']) }}"
+        <a href="{{ route('logistics.index', ['tab' => 'locations']) }}"
            class="text-indigo-600 hover:text-indigo-800 flex items-center space-x-1 group">
             <span>拠点別 機材配備状況</span>
             <span class="transition group-hover:translate-x-0.5">→</span>

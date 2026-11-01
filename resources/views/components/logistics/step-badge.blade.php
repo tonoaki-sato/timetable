@@ -35,7 +35,7 @@
         </div>
 
         <!-- クイックステータス切替 -->
-        <form method="POST" action="{{ route('equipment-plans.update-status', $plan) }}" class="inline">
+        <form method="POST" action="{{ route('logistics.plans.update-status', $plan) }}" class="inline">
             @csrf
             @method('PATCH')
             @if($plan->status === 'completed')

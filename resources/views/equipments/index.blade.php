@@ -1,21 +1,27 @@
-<x-layouts.app title="資材・機材 搬出入計画">
+<x-layouts.app title="資材管理">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- 1. ヘッダーセクション -->
     <x-page-header
-        title="資材・機材 搬出入計画"
+        title="資材管理"
         icon="📦"
-        description="実行委員会管理機材・イベント会社レンタル機材の倉庫出し・中継・現場設置・夜間分散保管・最終撤収スケジュール">
+        description="宿場まつり運行に使用する自前保有備品および提携レンタル機材の台帳管理・スペック一覧">
         <x-slot:badges>
             <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                全 {{ $equipments->count() }} 資材
+                全 {{ $totalCount }} 品目
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                🏛️ 自前: {{ $committeeCount }}
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                🏢 レンタル: {{ $rentalCount }}
             </span>
         </x-slot:badges>
         <x-slot:actions>
-            <a href="{{ route('equipments.print', ['format' => $tab]) }}" target="_blank"
+            <a href="{{ route('logistics.index') }}"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
-                <span>🖨️</span>
-                <span>A4帳票印刷</span>
+                <span>🚚</span>
+                <span>搬出入計画を開く</span>
             </a>
             <a href="{{ route('equipments.create') }}"
                 class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
@@ -25,506 +31,200 @@
         </x-slot:actions>
     </x-page-header>
 
-    <!-- 2. ナビゲーションタブ -->
-    <div class="border-b border-slate-200">
-        <nav class="flex space-x-2 sm:space-x-4 overflow-x-auto pb-2 scrollbar-none" aria-label="Tabs">
-            <a href="{{ route('equipments.index', ['tab' => 'flow']) }}"
-               class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition flex items-center space-x-2 {{ $tab === 'flow' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
-                <span>📊</span>
-                <span>① 資材別フロー（全体俯瞰）</span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded-full {{ $tab === 'flow' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700' }}">{{ $equipments->count() }}</span>
+    <!-- 2. 検索・絞り込みフィルターバー -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <!-- 区分フィルター -->
+        <div class="flex items-center space-x-1.5 flex-wrap">
+            <span class="text-xs font-bold text-slate-500 mr-1">区分:</span>
+            <a href="{{ route('equipments.index', array_filter(['lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
+               class="px-3 py-1 rounded-lg text-xs font-bold transition {{ !$typeFilter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                すべて ({{ $totalCount }})
             </a>
+            <a href="{{ route('equipments.index', array_filter(['type' => 'committee', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
+               class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'committee' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200' }}">
+                🏛️ 実行委員会管理
+            </a>
+            <a href="{{ route('equipments.index', array_filter(['type' => 'rental', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
+               class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'rental' ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200' }}">
+                🏢 イベント会社レンタル
+            </a>
+        </div>
 
-            <a href="{{ route('equipments.index', ['tab' => 'checklist']) }}"
-               class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition flex items-center space-x-2 {{ $tab === 'checklist' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
-                <span>⏱️</span>
-                <span>② フェーズ別チェックリスト</span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded-full {{ $tab === 'checklist' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700' }}">{{ $checklistPlans->count() }}</span>
-            </a>
+        <!-- 所管班 & キーワード検索フォーム -->
+        <form method="GET" action="{{ route('equipments.index') }}" class="flex items-center space-x-2 flex-wrap gap-2">
+            @if($typeFilter)
+                <input type="hidden" name="type" value="{{ $typeFilter }}">
+            @endif
 
-            <a href="{{ route('equipments.index', ['tab' => 'locations']) }}"
-               class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition flex items-center space-x-2 {{ $tab === 'locations' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
-                <span>📍</span>
-                <span>③ 拠点別 保管 & 貸切スケジュール</span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded-full {{ $tab === 'locations' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700' }}">{{ count($locationsData) }}</span>
-            </a>
+            <!-- 所管班 -->
+            <select name="lane_id" data-auto-submit
+                    class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-8">
+                <option value="">全班表示</option>
+                @foreach($lanes as $lane)
+                    <option value="{{ $lane->id }}" {{ $laneFilter == $lane->id ? 'selected' : '' }}>
+                        {{ $lane->icon }} {{ $lane->name }}
+                    </option>
+                @endforeach
+            </select>
 
-            <a href="{{ route('equipments.index', ['tab' => 'events']) }}"
-               class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition flex items-center space-x-2 {{ $tab === 'events' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
-                <span>🏢</span>
-                <span>④ イベント会社スケジュール表</span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded-full {{ $tab === 'events' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700' }}">{{ $eventCompanyPlans->count() }}</span>
-            </a>
-        </nav>
+            <!-- キーワード入力 -->
+            <div class="relative">
+                <input type="text" name="keyword" value="{{ $keyword }}" placeholder="品名・保管場所・備考検索..."
+                       class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 w-48 sm:w-60">
+                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+            </div>
+
+            <button type="submit" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition cursor-pointer">
+                検索
+            </button>
+
+            @if($typeFilter || $laneFilter || $keyword)
+                <a href="{{ route('equipments.index') }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 underline">
+                    クリア
+                </a>
+            @endif
+        </form>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- タブ①: 資材別フロー（全体俯瞰） -->
-    <!-- ========================================================================= -->
-    @if($tab === 'flow')
-        <!-- 絞り込みバー -->
-        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center space-x-1.5 flex-wrap">
-                <span class="text-xs font-bold text-slate-500 mr-1">区分:</span>
-                <a href="{{ route('equipments.index', ['tab' => 'flow']) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-bold transition {{ !$typeFilter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
-                    すべて ({{ $equipments->count() }})
-                </a>
-                <a href="{{ route('equipments.index', ['tab' => 'flow', 'type' => 'committee', 'lane_id' => $laneFilter]) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'committee' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200' }}">
-                    🏛️ 実行委員会管理
-                </a>
-                <a href="{{ route('equipments.index', ['tab' => 'flow', 'type' => 'rental', 'lane_id' => $laneFilter]) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'rental' ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200' }}">
-                    🏢 イベント会社レンタル
-                </a>
-            </div>
-
-            <!-- 担当班選択 -->
-            <form method="GET" action="{{ route('equipments.index') }}" class="flex items-center space-x-2">
-                <input type="hidden" name="tab" value="flow">
-                @if($typeFilter)
-                    <input type="hidden" name="type" value="{{ $typeFilter }}">
-                @endif
-                <label for="lane-select" class="text-xs font-bold text-slate-500 whitespace-nowrap">担当班:</label>
-                <select id="lane-select" name="lane_id" data-auto-submit
-                        class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-8">
-                    <option value="">全班表示</option>
-                    @foreach($lanes as $lane)
-                        <option value="{{ $lane->id }}" {{ $laneFilter == $lane->id ? 'selected' : '' }}>
-                            {{ $lane->icon }} {{ $lane->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </form>
-        </div>
-
-        <!-- 資材カード一覧 -->
-        <div class="space-y-4">
-            @forelse($equipments as $item)
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 hover:border-slate-300 transition space-y-3">
-                    <!-- 資材基本情報行 -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                        <div class="flex items-center space-x-2.5 flex-wrap">
-                            <span class="text-xl">
-                                @if($item->isCommittee()) 🏛️ @else 🏢 @endif
-                            </span>
-                            <div>
-                                <div class="flex items-center space-x-2">
-                                    <a href="{{ route('equipments.show', $item) }}" class="font-bold text-slate-900 text-base hover:text-indigo-600 transition">
-                                        {{ $item->name }}
-                                    </a>
-                                    <span class="text-sm font-black font-mono px-2 py-0.5 rounded-full {{ $item->isCommittee() ? 'bg-emerald-100 text-emerald-800' : 'bg-sky-100 text-sky-800' }}">
-                                        {{ $item->quantity }} {{ $item->unit }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center space-x-2 text-xs text-slate-500 mt-0.5 flex-wrap">
-                                    <span class="font-bold {{ $item->isCommittee() ? 'text-emerald-700' : 'text-sky-700' }}">
-                                        {{ $item->type_label }}
-                                    </span>
-                                    <span>•</span>
-                                    @if($item->isCommittee())
-                                        <span>定常保管: <strong class="text-slate-700">{{ $item->storage_location ?: '番所地下倉庫' }}</strong></span>
-                                    @else
-                                        <span>業者: <strong class="text-slate-700">{{ $item->event_company_name ?: 'イベント会社' }}</strong></span>
-                                        @if($item->event_company_contact)
-                                            <span class="text-[11px] text-slate-400">({{ $item->event_company_contact }})</span>
-                                        @endif
-                                    @endif
-                                    @if($item->lane)
-                                        <span>•</span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
-                                            {{ $item->lane->icon }} {{ $item->lane->name }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 操作リンク -->
-                        <div class="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
-                            <a href="{{ route('equipments.edit', $item) }}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition inline-flex items-center space-x-1" title="資材情報を編集">
-                                <span>✏️</span>
-                                <span>編集</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- 搬出入ステップの水平フロー（タイムライン） -->
-                    <div>
-                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-                            <span>搬出入・中継・夜間保管フロー</span>
-                            <span class="text-[10px] font-normal text-slate-500 font-mono">
-                                完了進捗: {{ $item->plans->where('status', 'completed')->count() }} / {{ $item->plans->count() }}
-                            </span>
-                        </div>
-
-                        @if($item->plans->isEmpty())
-                            <div class="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-500 flex items-center justify-center space-x-2">
-                                <span>計画ステップがまだ登録されていません。</span>
-                                <a href="{{ route('equipments.show', $item) }}" class="text-indigo-600 font-bold hover:underline">
-                                    テンプレートを適用して自動生成 ➔
+    <!-- 3. 資材台帳一覧テーブル -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-3.5 px-4">資材名 / 仕様メモ</th>
+                        <th class="py-3.5 px-3">区分</th>
+                        <th class="py-3.5 px-3">総数量</th>
+                        <th class="py-3.5 px-4">定常保管元 / 提携業者</th>
+                        <th class="py-3.5 px-3">主担当班</th>
+                        <th class="py-3.5 px-3">搬出入計画配備</th>
+                        <th class="py-3.5 px-4 text-right">アクション</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($equipments as $item)
+                        <tr class="hover:bg-slate-50/70 transition">
+                            <!-- 資材名 -->
+                            <td class="py-3 px-4">
+                                <a href="{{ route('equipments.show', $item) }}" class="font-bold text-slate-900 text-sm hover:text-indigo-600 transition block">
+                                    {{ $item->name }}
                                 </a>
-                            </div>
-                        @else
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
-                                @foreach($item->plans as $plan)
-                                    <x-equipments.step-badge :plan="$plan" />
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @empty
-                <div class="p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-400 space-y-3">
-                    <span class="text-4xl block">📦</span>
-                    <p class="font-bold text-slate-700">登録されている資材はありません</p>
-                    <p class="text-xs text-slate-400">「新規資材を登録」から機材と搬出入計画を追加してください。</p>
-                    <a href="{{ route('equipments.create') }}" class="inline-block px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 transition">
-                        新規資材を登録する
-                    </a>
-                </div>
-            @endforelse
-        </div>
-    @endif
-
-    <!-- ========================================================================= -->
-    <!-- タブ②: フェーズ別チェックリスト（当日・前日運行用） -->
-    <!-- ========================================================================= -->
-    @if($tab === 'checklist')
-        <!-- フェーズ選択ピル -->
-        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center space-x-2 overflow-x-auto scrollbar-none">
-            <span class="text-xs font-bold text-slate-500 whitespace-nowrap mr-1">フェーズ:</span>
-            <a href="{{ route('equipments.index', ['tab' => 'checklist']) }}"
-               class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition {{ !$phaseFilter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
-                全フェーズ ({{ $checklistPlans->count() }})
-            </a>
-            @foreach(\App\Models\EquipmentLogisticsPlan::DAY_PHASES as $key => $label)
-                <a href="{{ route('equipments.index', ['tab' => 'checklist', 'phase' => $key]) }}"
-                   class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition {{ $phaseFilter === $key ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
-                    {{ $label }}
-                </a>
-            @endforeach
-        </div>
-
-        <!-- チェックリスト一覧 -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
-                    <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
-                        <tr>
-                            <th class="py-3 px-4">状態</th>
-                            <th class="py-3 px-3">フェーズ / 実施日</th>
-                            <th class="py-3 px-3">予定時刻</th>
-                            <th class="py-3 px-4">資材名・数量</th>
-                            <th class="py-3 px-4">アクション / タイトル</th>
-                            <th class="py-3 px-4">移動ルート (元 ➔ 先)</th>
-                            <th class="py-3 px-3">作業主体 / 立会</th>
-                            <th class="py-3 px-4">注意事項・申し送り</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse($checklistPlans as $plan)
-                            @php $warning = $plan->checkToLocationAvailability(); @endphp
-                            <tr class="hover:bg-slate-50/70 transition {{ $plan->isCompleted() ? 'bg-emerald-50/20 text-slate-500' : '' }}">
-                                <!-- 状態トグル -->
-                                <td class="py-3 px-4 whitespace-nowrap">
-                                    <form method="POST" action="{{ route('equipment-plans.update-status', $plan) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        @if($plan->status === 'completed')
-                                            <input type="hidden" name="status" value="planned">
-                                            <button type="submit" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200 cursor-pointer">
-                                                <span>✓ 完了</span>
-                                            </button>
-                                        @elseif($plan->status === 'in_progress')
-                                            <input type="hidden" name="status" value="completed">
-                                            <button type="submit" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 hover:bg-emerald-100 cursor-pointer">
-                                                <span>▶ 進行中</span>
-                                            </button>
-                                        @else
-                                            <input type="hidden" name="status" value="completed">
-                                            <button type="submit" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-300 hover:bg-emerald-100 hover:text-emerald-800 cursor-pointer">
-                                                <span>○ 未着手</span>
-                                            </button>
-                                        @endif
-                                    </form>
-                                </td>
-
-                                <td class="py-3 px-3 whitespace-nowrap">
-                                    <span class="font-bold text-slate-800">{{ $plan->phase_label }}</span>
-                                    @if($plan->target_date)
-                                        <div class="text-[10px] text-slate-400 font-mono">{{ $plan->target_date->format('m/d') }}</div>
-                                    @endif
-                                </td>
-
-                                <td class="py-3 px-3 whitespace-nowrap font-mono font-bold text-slate-700">
-                                    @if($plan->start_time)
-                                        {{ substr($plan->start_time, 0, 5) }}@if($plan->end_time)〜{{ substr($plan->end_time, 0, 5) }}@endif
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-
-                                <td class="py-3 px-4">
-                                    <div class="font-bold text-slate-900">
-                                        <a href="{{ route('equipments.show', $plan->equipment) }}" class="hover:underline">
-                                            {{ $plan->equipment->name }}
-                                        </a>
+                                @if($item->description)
+                                    <div class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                                        {{ $item->description }}
                                     </div>
-                                    <div class="text-[11px] text-slate-500">
-                                        @if($plan->quantity)
-                                            移動数量: <strong class="text-indigo-700 font-mono">{{ $plan->quantity }}{{ $plan->equipment->unit }}</strong>
-                                            (全体: {{ $plan->equipment->quantity }}{{ $plan->equipment->unit }})
-                                        @else
-                                            全体: {{ $plan->equipment->quantity }}{{ $plan->equipment->unit }}
-                                        @endif
-                                    </div>
-                                </td>
+                                @endif
+                            </td>
 
-                                <td class="py-3 px-4 font-medium text-slate-800">
-                                    <div>{{ $plan->title }}</div>
-                                    <span class="text-[10px] text-slate-400">({{ $plan->action_label }})</span>
-                                </td>
-
-                                <td class="py-3 px-4">
-                                    <div class="flex items-center space-x-1 text-slate-700">
-                                        <span class="text-slate-500">{{ $plan->from_location ?: '-' }}</span>
-                                        <span class="text-slate-400 font-bold">➔</span>
-                                        <span class="font-bold text-slate-900">{{ $plan->to_location ?: '-' }}</span>
-                                    </div>
-                                    @if($warning)
-                                        <div class="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded p-1 mt-1 font-bold">
-                                            ⚠️ {{ $warning['message'] }}
-                                        </div>
-                                    @endif
-                                </td>
-
-                                <td class="py-3 px-3 whitespace-nowrap">
-                                    @if($plan->operator_type === 'event_company')
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800">イベント会社</span>
-                                    @else
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700">委員会スタッフ</span>
-                                    @endif
-
-                                    @if($plan->witness_required)
-                                        <div class="mt-1 text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded px-1 py-0.2">
-                                            👁️ 立会: {{ $plan->witnessStaff?->name ?: '要立ち会い' }}
-                                        </div>
-                                    @endif
-                                </td>
-
-                                <td class="py-3 px-4 text-slate-600 max-w-xs">
-                                    {{ $plan->notes ?: '-' }}
-                                    @if($plan->contact_info)
-                                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">📞 {{ $plan->contact_info }}</div>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="p-8 text-center text-slate-400">該当フェーズの搬出入ステップはありません</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    @endif
-
-    <!-- ========================================================================= -->
-    <!-- タブ③: 拠点別 保管状況 & 貸切スケジュール -->
-    <!-- ========================================================================= -->
-    @if($tab === 'locations')
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            @foreach($locationsData as $locItem)
-                @php
-                    $loc = $locItem['location'];
-                    $nightPlans = $locItem['nightPlans'];
-                    $collectionPlans = $locItem['collectionPlans'];
-                @endphp
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 hover:border-slate-300 transition flex flex-col justify-between">
-                    <div class="space-y-3">
-                        <!-- 拠点ヘッダー -->
-                        <div class="flex items-start justify-between gap-2">
-                            <div>
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-xl">
-                                        @if($loc->type === 'parking') 🅿️
-                                        @elseif($loc->type === 'facility') 🏛️
-                                        @elseif($loc->type === 'open_space') 🎪
-                                        @else 📍 @endif
+                            <!-- 区分 -->
+                            <td class="py-3 px-3 whitespace-nowrap">
+                                @if($item->isCommittee())
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                        🏛️ 自前保有
                                     </span>
-                                    <h2 class="font-bold text-slate-900 text-base">{{ $loc->name }}</h2>
-                                </div>
-                                <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">
-                                    {{ $loc->type_label }}
-                                </span>
-                            </div>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-100 text-sky-800">
+                                        🏢 提携レンタル
+                                    </span>
+                                @endif
+                            </td>
 
-                            <a href="{{ route('locations.show', $loc) }}"
-                               class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition text-xs font-bold" title="拠点詳細・利用枠">
-                                🔍 詳細・利用枠
-                            </a>
-                        </div>
+                            <!-- 数量・単位 -->
+                            <td class="py-3 px-3 whitespace-nowrap">
+                                <span class="font-bold font-mono text-slate-900 text-sm">{{ number_format($item->quantity) }}</span>
+                                <span class="text-[11px] text-slate-500 ml-0.5">{{ $item->unit }}</span>
+                            </td>
 
-                        <!-- 貸切期間・終日利用表示 -->
-                        <div class="p-2.5 rounded-xl border text-xs {{ $loc->is_all_day ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-900' }}">
-                            <div class="font-bold flex items-center justify-between">
-                                <span>{{ $loc->is_all_day ? '🟢 終日使用可能' : '🟡 貸切・利用可能期間あり' }}</span>
-                            </div>
-                            @if(!$loc->is_all_day)
-                                <div class="mt-1 font-mono text-[11px] font-bold">
-                                    @if($loc->available_from)
-                                        {{ $loc->available_from->format('n/j (D) H:i') }}
-                                    @else
-                                        制限なし
-                                    @endif
-                                    〜
-                                    @if($loc->available_to)
-                                        {{ $loc->available_to->format('n/j (D) H:i') }}
-                                    @else
-                                        制限なし
-                                    @endif
-                                </div>
-                            @endif
-                            @if($loc->description)
-                                <p class="text-[10px] mt-1 text-slate-600 leading-tight">{{ $loc->description }}</p>
-                            @endif
-                        </div>
-
-                        <!-- 1日目夜の分散夜間保管機材 -->
-                        <div class="space-y-1.5">
-                            <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                                <span>🌙 1日目夜の夜間保管機材</span>
-                                <span class="font-mono text-indigo-700 font-bold">{{ $nightPlans->count() }}件</span>
-                            </div>
-                            @if($nightPlans->isEmpty())
-                                <p class="text-xs text-slate-400 italic bg-slate-50 p-2 rounded-lg">夜間保管機材の指定はありません</p>
-                            @else
-                                <div class="space-y-1">
-                                    @foreach($nightPlans as $np)
-                                        <div class="p-2 rounded-lg bg-indigo-50/60 border border-indigo-100 text-xs flex items-center justify-between">
-                                            <span class="font-bold text-indigo-950 truncate">{{ $np->equipment->name }}</span>
-                                            <span class="font-mono font-bold text-indigo-700 shrink-0 ml-1">
-                                                {{ $np->quantity ?: $np->equipment->quantity }}{{ $np->equipment->unit }}
-                                            </span>
+                            <!-- 保管場所 / 提携業者 -->
+                            <td class="py-3 px-4">
+                                @if($item->isCommittee())
+                                    <div class="font-medium text-slate-800 flex items-center space-x-1">
+                                        <span class="text-slate-400">📍</span>
+                                        <span>{{ $item->storage_location ?: '番所地下倉庫' }}</span>
+                                    </div>
+                                @else
+                                    <div class="text-slate-800 font-medium">
+                                        {{ $item->event_company_name ?: '東京イベントサプライ株式会社' }}
+                                    </div>
+                                    @if($item->event_company_contact)
+                                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">
+                                            {{ $item->event_company_contact }}
                                         </div>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
+                                    @endif
+                                @endif
+                            </td>
 
-                        <!-- 2日目夜〜翌日の業者回収待ち機材 -->
-                        @if($collectionPlans->isNotEmpty())
-                            <div class="space-y-1.5 pt-1">
-                                <div class="text-[11px] font-bold text-amber-700 uppercase tracking-wider flex items-center justify-between">
-                                    <span>📦 業者回収待ち一時保管</span>
-                                    <span class="font-mono font-bold text-amber-700">{{ $collectionPlans->count() }}件</span>
-                                </div>
-                                <div class="space-y-1">
-                                    @foreach($collectionPlans as $cp)
-                                        <div class="p-2 rounded-lg bg-amber-50 border border-amber-200 text-xs flex items-center justify-between">
-                                            <span class="font-bold text-amber-950 truncate">{{ $cp->equipment->name }}</span>
-                                            <span class="font-mono font-bold text-amber-800 shrink-0 ml-1">
-                                                {{ $cp->quantity ?: $cp->equipment->quantity }}{{ $cp->equipment->unit }}
-                                            </span>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    @endif
+                            <!-- 所管班 -->
+                            <td class="py-3 px-3 whitespace-nowrap">
+                                @if($item->lane)
+                                    <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-800 border border-slate-200">
+                                        <span>{{ $item->lane->icon }}</span>
+                                        <span>{{ $item->lane->name }}</span>
+                                    </span>
+                                @else
+                                    <span class="text-slate-400 text-[11px]">未設定</span>
+                                @endif
+                            </td>
 
-    <!-- ========================================================================= -->
-    <!-- タブ④: イベント会社スケジュール表 -->
-    <!-- ========================================================================= -->
-    @if($tab === 'events')
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-4">
-            <div>
-                <h2 class="text-base font-bold text-slate-900">イベント会社 事前搬入・設営・解体・搬出スケジュール</h2>
-                <p class="text-xs text-slate-500 mt-0.5">イベント会社が一任で実施するパイプテント等の設営・解体時刻、および給水設備等の受取・引渡立会時刻一覧</p>
-            </div>
+                            <!-- 搬出入計画配備状況 -->
+                            <td class="py-3 px-3 whitespace-nowrap">
+                                @php $planCount = $item->plans->count(); @endphp
+                                @if($planCount > 0)
+                                    <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                        <span>🚚</span>
+                                        <span>{{ $planCount }} ステップ設定済</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-400">
+                                        未配備
+                                    </span>
+                                @endif
+                            </td>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
-                    <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
-                        <tr>
-                            <th class="py-3 px-3">実施日 / 時刻</th>
-                            <th class="py-3 px-4">資材名・数量</th>
-                            <th class="py-3 px-4">作業区分 / タイトル</th>
-                            <th class="py-3 px-4">イベント会社名・担当連絡先</th>
-                            <th class="py-3 px-4">作業場所 / 移動ルート</th>
-                            <th class="py-3 px-3">幹事・スタッフ立会</th>
-                            <th class="py-3 px-4">申し送り・注意事項</th>
+                            <!-- アクション -->
+                            <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
+                                <a href="{{ route('logistics.index', ['tab' => 'flow', 'lane_id' => $item->lane_id]) }}"
+                                   class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1"
+                                   title="この資材の搬出入計画を確認">
+                                    <span>🚚</span>
+                                    <span class="hidden sm:inline">計画を確認</span>
+                                </a>
+                                <a href="{{ route('equipments.show', $item) }}"
+                                   class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition inline-flex items-center"
+                                   title="詳細表示">
+                                    詳細
+                                </a>
+                                <a href="{{ route('equipments.edit', $item) }}"
+                                   class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition inline-flex items-center"
+                                   title="編集">
+                                    編集
+                                </a>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse($eventCompanyPlans as $plan)
-                            <tr class="hover:bg-slate-50/70 transition">
-                                <td class="py-3 px-3 whitespace-nowrap font-mono font-bold text-slate-800">
-                                    <div>{{ $plan->target_date ? $plan->target_date->format('m/d (D)') : $plan->phase_label }}</div>
-                                    <div class="text-indigo-600">{{ substr($plan->start_time, 0, 5) }}@if($plan->end_time)〜{{ substr($plan->end_time, 0, 5) }}@endif</div>
-                                </td>
-
-                                <td class="py-3 px-4">
-                                    <div class="font-bold text-slate-900">{{ $plan->equipment->name }}</div>
-                                    <span class="text-xs font-mono font-bold text-slate-600">{{ $plan->quantity ?: $plan->equipment->quantity }}{{ $plan->equipment->unit }}</span>
-                                </td>
-
-                                <td class="py-3 px-4 font-bold text-slate-800">
-                                    {{ $plan->title }}
-                                    <div class="text-[10px] text-slate-400 font-normal">作業主体: {{ $plan->operator_label }}</div>
-                                </td>
-
-                                <td class="py-3 px-4 text-slate-700">
-                                    <div class="font-bold">{{ $plan->equipment->event_company_name ?: 'イベント会社' }}</div>
-                                    <div class="text-[11px] text-slate-500 font-mono">
-                                        {{ $plan->contact_info ?: ($plan->equipment->event_company_contact ?: '-') }}
-                                    </div>
-                                </td>
-
-                                <td class="py-3 px-4 text-slate-700">
-                                    <div class="flex items-center space-x-1">
-                                        <span>{{ $plan->from_location ?: '-' }}</span>
-                                        <span class="text-slate-400 font-bold">➔</span>
-                                        <span class="font-bold text-slate-900">{{ $plan->to_location ?: '-' }}</span>
-                                    </div>
-                                </td>
-
-                                <td class="py-3 px-3 whitespace-nowrap">
-                                    @if($plan->witness_required)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
-                                            👁️ 要立会い: {{ $plan->witnessStaff?->name ?: '幹事' }}
-                                        </span>
-                                    @else
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500">
-                                            立会不要（一任）
-                                        </span>
-                                    @endif
-                                </td>
-
-                                <td class="py-3 px-4 text-slate-600 max-w-xs">
-                                    {{ $plan->notes ?: '-' }}
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="p-8 text-center text-slate-400">イベント会社関連の計画はありません</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="py-12 text-center text-slate-400">
+                                <div class="text-3xl mb-2">📦</div>
+                                <div class="font-bold text-slate-700">登録されている資材がありません</div>
+                                <div class="text-xs text-slate-400 mt-1">「新規資材を登録」ボタンから自前備品や提携レンタル機材を登録してください。</div>
+                                <div class="mt-4">
+                                    <a href="{{ route('equipments.create') }}" class="inline-block px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 transition">
+                                        ＋ 新規資材を登録
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-    @endif
+
+        @if($equipments->hasPages())
+            <div class="p-4 border-t border-slate-200 bg-slate-50">
+                {{ $equipments->links() }}
+            </div>
+        @endif
+    </div>
 
 </div>
-
-@vite(['resources/js/equipments.js'])
 </x-layouts.app>
-
