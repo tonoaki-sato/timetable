@@ -568,5 +568,111 @@ class TimetableSeeder extends Seeder
 
         // 2日目のデフォルトレーン生成（登録済み初期順序）
         $timetableDay2->createDefaultLanes();
+
+        // =========================================================================
+        // 3. 幹事会反省会（デモ） - 2026-11-07 (土)
+        // =========================================================================
+        $timetableDay3 = Timetable::updateOrCreate(
+            ['target_date' => '2026-11-07'],
+            [
+                'name' => '幹事会反省会（デモ）',
+                'description' => '宿場まつりの反省会',
+                'start_time' => '19:00:00',
+                'end_time' => '23:00:00',
+                'status' => 'draft',
+                'road_periods' => null,
+                'festival_periods' => null,
+                'created_by' => $admin->id,
+            ]
+        );
+
+        $laneKanjikai = Lane::updateOrCreate(
+            [
+                'timetable_id' => $timetableDay3->id,
+                'name' => '幹事会',
+            ],
+            [
+                'color' => 'amber',
+                'icon' => '📋',
+                'lead_staff_id' => 24, // 寺井 智之
+                'is_core' => true,
+                'is_active' => true,
+                'display_order' => 10,
+                'description' => null,
+            ]
+        );
+
+        // 幹事会レーンの固定スタッフ登録（15名）
+        $kanjikaiStaffIds = [1, 30, 17, 24, 13, 5, 15, 26, 29, 2, 35, 22, 7, 8, 36];
+        $laneKanjikai->fixedStaff()->sync($kanjikaiStaffIds);
+
+        // タスク1: 反省会
+        $taskHanseikai = TimetableTask::updateOrCreate(
+            [
+                'timetable_id' => $timetableDay3->id,
+                'lane_id' => $laneKanjikai->id,
+                'title' => '反省会',
+            ],
+            [
+                'content' => '第34回保土ケ谷宿場まつりの反省まとめ',
+                'location' => '番所',
+                'start_time' => '19:00:00',
+                'end_time' => '21:00:00',
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'description' => null,
+                'is_critical' => true,
+                'requires_review' => false,
+                'status' => 'not_started',
+            ]
+        );
+
+        // タスク2: 飲み会
+        $taskNomikai = TimetableTask::updateOrCreate(
+            [
+                'timetable_id' => $timetableDay3->id,
+                'lane_id' => $laneKanjikai->id,
+                'title' => '飲み会',
+            ],
+            [
+                'content' => null,
+                'location' => null,
+                'start_time' => '21:00:00',
+                'end_time' => '23:00:00',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'description' => null,
+                'is_critical' => false,
+                'requires_review' => false,
+                'status' => 'not_started',
+            ]
+        );
+
+        // 反省会および飲み会へのスタッフアサイン（班長1名 + 固定スタッフ14名）
+        $tasksDay3 = [$taskHanseikai, $taskNomikai];
+        foreach ($tasksDay3 as $task) {
+            // 班長アサイン
+            $task->assignments()->updateOrCreate(
+                ['staff_id' => 24],
+                [
+                    'role_description' => '班長',
+                    'attendance_status' => 'assigned',
+                    'notes' => null,
+                ]
+            );
+
+            // 固定スタッフアサイン
+            $memberIds = [1, 30, 17, 13, 5, 15, 26, 29, 2, 35, 22, 7, 8, 36];
+            foreach ($memberIds as $mId) {
+                $task->assignments()->updateOrCreate(
+                    ['staff_id' => $mId],
+                    [
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                        'notes' => null,
+                    ]
+                );
+            }
+        }
     }
 }

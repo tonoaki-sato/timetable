@@ -43,9 +43,10 @@ class TimetableSeederTest extends TestCase
         $this->assertDatabaseHas('staff', ['name' => '漆原 拓也']);
         $this->assertDatabaseHas('staff', ['name' => '佐藤 秀樹']);
 
-        // 2. 運行日（Day 1: 宿場まつり 1日目, Day 2: 宿場まつり 2日目）が登録されていること
+        // 2. 運行日（Day 1: 宿場まつり 1日目, Day 2: 宿場まつり 2日目, Day 3: 幹事会反省会（デモ））が登録されていること
         $this->assertDatabaseHas('timetables', ['target_date' => '2026-10-11', 'name' => '宿場まつり 1日目']);
         $this->assertDatabaseHas('timetables', ['target_date' => '2026-10-12', 'name' => '宿場まつり 2日目']);
+        $this->assertDatabaseHas('timetables', ['target_date' => '2026-11-07', 'name' => '幹事会反省会（デモ）']);
 
         // 3. 各日のタスク・レーンが存在し、リレーションが機能していること
         $timetableDay1 = Timetable::where('target_date', '2026-10-11')->firstOrFail();
@@ -80,7 +81,10 @@ class TimetableSeederTest extends TestCase
         $this->assertNotNull($criticalTask);
 
         // レーンおよびステータスが定義に合致していること
-        $validLanes = collect(Lane::DEFAULT_LANES)->pluck('name')->toArray();
+        $validLanes = array_merge(
+            collect(Lane::DEFAULT_LANES)->pluck('name')->toArray(),
+            ['幹事会']
+        );
         $validStatuses = array_keys(TimetableTask::STATUSES);
 
         foreach (TimetableTask::all() as $task) {
