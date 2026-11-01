@@ -11,13 +11,6 @@
             <span>/</span>
             <span class="text-slate-800 font-bold">新規登録</span>
         </x-slot:breadcrumbs>
-
-        <x-slot:actions>
-            <a href="{{ route('equipments.index') }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition">
-                <span>← 一覧に戻る</span>
-            </a>
-        </x-slot:actions>
     </x-page-header>
 
     @if ($errors->any())

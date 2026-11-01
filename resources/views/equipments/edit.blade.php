@@ -15,10 +15,6 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('equipments.show', $equipment) }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition">
-                <span>← 詳細に戻る</span>
-            </a>
             <!-- 削除ボタンフォーム -->
             <form method="POST" action="{{ route('equipments.destroy', $equipment) }}" data-confirm="本当にこの資材を削除しますか？紐づくすべての搬出入計画ステップも削除されます。" class="inline">
                 @csrf

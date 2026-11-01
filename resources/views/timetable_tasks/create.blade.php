@@ -18,15 +18,6 @@
             <span>/</span>
             <span class="text-slate-700 font-bold">タスク追加</span>
         </x-slot:breadcrumbs>
-
-        <x-slot:actions>
-            <div class="flex items-center space-x-2">
-                <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
-                    <span>←</span>
-                    <span>タイムテーブル進行表に戻る</span>
-                </a>
-            </div>
-        </x-slot:actions>
     </x-page-header>
 
     <x-timetable-workflow-steps :current-step="3" :timetable="$timetable" />

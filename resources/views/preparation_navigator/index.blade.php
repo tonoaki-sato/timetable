@@ -58,12 +58,17 @@
                 </div>
 
                 <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <a href="{{ route('timetables.create') }}" class="text-indigo-600 hover:text-indigo-800 font-bold">
-                        ＋ 新規作成
+                    @if($totalCount === 0)
+                    <a href="{{ route('timetables.create') }}" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
+                        <span>＋ 新規作成へ</span>
+                        <span>→</span>
                     </a>
-                    <a href="{{ route('timetables.index') }}" class="text-slate-500 hover:text-slate-800 text-[11px]">
-                        一覧確認 →
+                    @else
+                    <a href="{{ route('timetables.index') }}" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
+                        <span>一覧確認へ</span>
+                        <span>→</span>
                     </a>
+                    @endif
                 </div>
             </div>
 
@@ -277,17 +282,12 @@
                             </a>
                         </div>
 
-                        <!-- アクションボタン -->
-                        <div class="flex items-center gap-2 shrink-0">
+                        <!-- アクションボタン（推奨アクション1つに集約） -->
+                        <div class="flex items-center shrink-0">
                             <a href="{{ $state['action_url'] }}"
                                class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-2xs transition flex items-center space-x-1 shrink-0">
                                 <span>{{ $state['action_btn_text'] }}</span>
                                 <span>→</span>
-                            </a>
-                            <a href="{{ route('timetable.index', ['timetable_id' => $tt->id]) }}"
-                               class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs transition shrink-0"
-                               title="タイムテーブル進行表を開く">
-                                ⏱️
                             </a>
                         </div>
                     </div>

@@ -28,10 +28,6 @@
         </x-slot:badges>
 
         <x-slot:actions>
-            <a href="{{ route('locations.index') }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition">
-                <span>← 一覧に戻る</span>
-            </a>
             <a href="{{ route('locations.edit', $location) }}"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition">
                 <span>✏️ 拠点を編集</span>

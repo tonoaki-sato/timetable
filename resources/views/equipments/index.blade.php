@@ -12,11 +12,6 @@
             </span>
         </x-slot:badges>
         <x-slot:actions>
-            <a href="{{ route('locations.create') }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
-                <span>📍</span>
-                <span>拠点を追加</span>
-            </a>
             <a href="{{ route('equipments.print', ['format' => $tab]) }}" target="_blank"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                 <span>🖨️</span>
@@ -148,11 +143,9 @@
 
                         <!-- 操作リンク -->
                         <div class="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
-                            <a href="{{ route('equipments.show', $item) }}" class="px-2.5 py-1 rounded-lg text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition">
-                                詳細・ステップ編集 ({{ $item->plans->count() }})
-                            </a>
-                            <a href="{{ route('equipments.edit', $item) }}" class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition" title="資材情報を編集">
-                                ✏️
+                            <a href="{{ route('equipments.edit', $item) }}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition inline-flex items-center space-x-1" title="資材情報を編集">
+                                <span>✏️</span>
+                                <span>編集</span>
                             </a>
                         </div>
                     </div>

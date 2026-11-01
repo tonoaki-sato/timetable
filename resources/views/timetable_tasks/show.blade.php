@@ -121,12 +121,6 @@
                 </button>
             </form>
             @endcan
-
-            <a href="{{ route('timetables.show', $task->timetable_id) }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
-                <span>←</span>
-                <span>「{{ $task->timetable?->name }}」に戻る</span>
-            </a>
         </x-slot:actions>
     </x-page-header>
 

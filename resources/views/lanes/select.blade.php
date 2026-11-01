@@ -94,17 +94,12 @@
                         </td>
 
                         <!-- 操作 -->
-                        <td class="px-4 py-3.5 text-right whitespace-nowrap space-x-1.5">
-                            <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
-                                class="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition inline-flex items-center space-x-1">
-                                <span>⏱️</span>
-                                <span>タイムテーブル</span>
-                            </a>
-
+                        <td class="px-4 py-3.5 text-right whitespace-nowrap">
                             <a href="{{ route('timetables.lanes.index', $timetable) }}"
-                                class="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition inline-flex items-center space-x-1">
+                                class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center space-x-1 shadow-2xs">
                                 <span>🏷️</span>
-                                <span>担当班一覧</span>
+                                <span>担当班を編成する</span>
+                                <span>→</span>
                             </a>
                         </td>
                     </tr>

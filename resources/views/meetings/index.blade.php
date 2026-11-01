@@ -171,11 +171,6 @@
                     <span>案内文コピー</span>
                 </button>
 
-                <a href="{{ route('meetings.show', $meeting) }}"
-                    class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition">
-                    詳細
-                </a>
-
                 @can('update', $meeting)
                 <a href="{{ route('meetings.edit', $meeting) }}"
                     class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition">

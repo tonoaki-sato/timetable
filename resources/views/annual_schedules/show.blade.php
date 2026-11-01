@@ -66,12 +66,6 @@
                 </button>
             </form>
             @endcan
-
-            <a href="{{ route('annual-schedules.index', ['year' => $schedule->target_year]) }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
-                <span>←</span>
-                <span>{{ $schedule->target_year }}年度 年間スケジュール一覧に戻る</span>
-            </a>
         </x-slot:actions>
     </x-page-header>
 

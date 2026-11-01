@@ -238,11 +238,6 @@
                                 📱 QR
                             </button>
 
-                            <a href="{{ route('staff.show', $staff) }}"
-                                class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium transition">
-                                詳細
-                            </a>
-
                             @can('update', $staff)
                             <a href="{{ route('staff.edit', $staff) }}"
                                 class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[11px] font-bold transition">

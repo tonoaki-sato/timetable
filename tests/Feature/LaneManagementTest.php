@@ -86,7 +86,7 @@ class LaneManagementTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('担当班（レーン）管理');
-        $response->assertSee('運行日別 担当班編成一覧に戻る');
+        $response->assertSee(route('lanes.index'));
         $response->assertDontSee('他日程からコピー');
         $response->assertDontSee('運行マトリクスを見る');
         $response->assertDontSee('copy-lane-modal');
@@ -550,8 +550,7 @@ class LaneManagementTest extends TestCase
         $response->assertDontSee('新規タイムテーブルを登録');
         $response->assertSee('運行日別 担当班編成一覧');
         $response->assertDontSee('全 2 日程');
-        $response->assertSee('タイムテーブル');
-        $response->assertSee('担当班一覧');
+        $response->assertSee('担当班を編成する');
         $response->assertDontSee('マトリクス');
         $response->assertDontSee('担当班を管理');
         $response->assertDontSee('編成レーン例');

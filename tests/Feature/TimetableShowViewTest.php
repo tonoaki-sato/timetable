@@ -70,8 +70,8 @@ class TimetableShowViewTest extends TestCase
         $response->assertDontSee('08:00 〜 18:00');
         $response->assertSee('パレード及びメインステージ周辺の運行計画');
 
-        // 残すアクションボタンが表示されていること
-        $response->assertSee('タイムテーブル一覧に戻る');
+        // アクションボタンが表示されていること（「タイムテーブル一覧に戻る」重複ボタンはパンくずに一本化され削除されていること）
+        $response->assertDontSee('タイムテーブル一覧に戻る');
         $response->assertSee(route('timetables.staff-timeline', $this->timetable));
         $response->assertSee('スタッフ稼働タイムライン');
         $response->assertSee(route('timetables.print-assignments', $this->timetable));

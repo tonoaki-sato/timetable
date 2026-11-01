@@ -14,13 +14,6 @@
             <span>/</span>
             <span class="text-slate-700 font-bold">新規登録</span>
         </x-slot:breadcrumbs>
-
-        <x-slot:actions>
-            <a href="{{ route('annual-schedules.index', ['year' => request('year', 2026)]) }}" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
-                <span>←</span>
-                <span>年間スケジュール一覧に戻る</span>
-            </a>
-        </x-slot:actions>
     </x-page-header>
 
     <!-- バリデーションエラーサマリー -->

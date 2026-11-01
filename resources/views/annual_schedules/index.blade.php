@@ -220,11 +220,6 @@
 
                         <!-- 操作 -->
                         <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
-                            <a href="{{ route('annual-schedules.show', $schedule) }}"
-                                class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium transition">
-                                詳細
-                            </a>
-
                             @can('update', $schedule)
                             <a href="{{ route('annual-schedules.edit', $schedule) }}"
                                 class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[11px] font-bold transition">
