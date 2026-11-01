@@ -24,15 +24,18 @@ class EquipmentController extends Controller
 
         $typeFilter = $request->query('type');
         $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
+        $categoryFilter = $request->query('category');
         $keyword = $request->query('keyword');
 
         $query = Equipment::query()
             ->with(['lane', 'plans'])
             ->when($typeFilter, fn ($q) => $q->where('type', $typeFilter))
             ->when($laneFilter, fn ($q) => $q->where('lane_id', $laneFilter))
+            ->when($categoryFilter, fn ($q) => $q->where('category', $categoryFilter))
             ->when($keyword, fn ($q) => $q->where(function ($sub) use ($keyword) {
                 $sub->where('name', 'like', "%{$keyword}%")
                     ->orWhere('storage_location', 'like', "%{$keyword}%")
+                    ->orWhere('storage_detail', 'like', "%{$keyword}%")
                     ->orWhere('event_company_name', 'like', "%{$keyword}%")
                     ->orWhere('description', 'like', "%{$keyword}%");
             }))
@@ -46,16 +49,21 @@ class EquipmentController extends Controller
         $totalCount = Equipment::count();
         $committeeCount = Equipment::where('type', 'committee')->count();
         $rentalCount = Equipment::where('type', 'rental')->count();
+        $carrierCount = Equipment::where('category', 'carrier')->count();
+        $toolConsumableCount = Equipment::where('category', 'tool_consumable')->count();
 
         return view('equipments.index', compact(
             'equipments',
             'lanes',
             'typeFilter',
             'laneFilter',
+            'categoryFilter',
             'keyword',
             'totalCount',
             'committeeCount',
-            'rentalCount'
+            'rentalCount',
+            'carrierCount',
+            'toolConsumableCount'
         ));
     }
 

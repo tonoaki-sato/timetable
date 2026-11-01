@@ -19,6 +19,21 @@
             <span class="px-2 py-0.5 rounded-full text-xs font-bold {{ $equipment->isCommittee() ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-sky-50 text-sky-700 border border-sky-200' }}">
                 {{ $equipment->type_label }}
             </span>
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                @if($equipment->isCarrier())
+                    🛒 {{ $equipment->category_label }}
+                @elseif($equipment->isToolConsumable())
+                    🧰 {{ $equipment->category_label }}
+                @else
+                    📦 {{ $equipment->category_label }}
+                @endif
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold
+                @if($equipment->checkout_rule === 'permission_required') bg-rose-50 text-rose-700 border border-rose-200
+                @elseif($equipment->checkout_rule === 'leader_only') bg-purple-50 text-purple-700 border border-purple-200
+                @else bg-slate-50 text-slate-600 border border-slate-200 @endif">
+                {{ $equipment->checkout_rule_label }}
+            </span>
             @if($equipment->lane)
                 <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     {{ $equipment->lane->icon }} {{ $equipment->lane->name }}
@@ -42,11 +57,29 @@
                 <span>✏️</span>
                 <span>基本情報編集</span>
             </a>
+            @can('delete', $equipment)
+                <form method="POST" action="{{ route('equipments.destroy', $equipment) }}" class="inline"
+                      data-confirm="資材「{{ $equipment->name }}」を削除しますか？&#10;紐づくすべての搬出入計画ステップも削除されます。">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
+                        <span>🗑️</span>
+                        <span>資材削除</span>
+                    </button>
+                </form>
+            @endcan
         </x-slot:actions>
     </x-page-header>
 
-    @if($equipment->description || $equipment->event_company_contact)
+    @if($equipment->description || $equipment->event_company_contact || $equipment->storage_detail)
         <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 space-y-2 text-xs">
+            @if($equipment->storage_detail)
+                <div class="text-slate-600 flex items-center space-x-2">
+                    <span class="font-bold text-slate-700">定位置詳細:</span>
+                    <span class="text-slate-900 font-medium bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">{{ $equipment->storage_detail }}</span>
+                </div>
+            @endif
             @if($equipment->event_company_contact)
                 <div class="text-slate-600 flex items-center space-x-2">
                     <span class="font-bold text-slate-700">業者連絡先:</span>
@@ -63,14 +96,31 @@
 
     <!-- 搬出入ステップタイムライン -->
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between flex-wrap gap-2">
             <h2 class="text-base font-bold text-slate-900 flex items-center space-x-2">
                 <span>⏱️</span>
                 <span>搬出入・中継・夜間保管計画ステップ一覧</span>
             </h2>
-            <span class="text-xs font-mono text-slate-500">
-                全 {{ $equipment->plans->count() }} ステップ (完了: {{ $equipment->plans->where('status', 'completed')->count() }})
-            </span>
+            <div class="flex items-center space-x-3">
+                <span class="text-xs font-mono text-slate-500">
+                    全 {{ $equipment->plans->count() }} ステップ (完了: {{ $equipment->plans->where('status', 'completed')->count() }})
+                </span>
+                @if($equipment->plans->isNotEmpty())
+                    @can('update', $equipment)
+                        <form method="POST" action="{{ route('logistics.plans.clear', $equipment) }}" class="inline"
+                              data-confirm="資材「{{ $equipment->name }}」の全ステップ（全{{ $equipment->plans->count() }}件）を削除しますか？&#10;※資材本体は削除されません。">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                    class="px-2.5 py-1 text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition cursor-pointer inline-flex items-center space-x-1"
+                                    title="全ステップを一括削除">
+                                <span>🗑️</span>
+                                <span>全ステップ一括クリア</span>
+                            </button>
+                        </form>
+                    @endcan
+                @endif
+            </div>
         </div>
 
         @if($equipment->plans->isEmpty())
@@ -376,6 +426,22 @@
 
         <form method="POST" action="{{ route('logistics.apply-template', $equipment) }}" class="space-y-4">
             @csrf
+
+            @if($equipment->plans->isNotEmpty())
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+                    <div class="font-bold flex items-center space-x-1">
+                        <span>⚠️</span>
+                        <span>既存ステップが {{ $equipment->plans->count() }} 件登録されています</span>
+                    </div>
+                    <p class="text-[11px] text-amber-800">
+                        テンプレート適用時に既存ステップをクリアして上書き再生成します。
+                    </p>
+                    <label class="flex items-center space-x-2 pt-1 font-bold cursor-pointer">
+                        <input type="checkbox" name="override_existing" value="1" checked class="rounded text-amber-600 focus:ring-amber-500">
+                        <span>既存ステップをすべて削除して上書き生成する（推奨）</span>
+                    </label>
+                </div>
+            @endif
 
             <div>
                 <label for="tpl_type" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">適用パターン</label>

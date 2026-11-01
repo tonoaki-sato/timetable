@@ -70,8 +70,35 @@
                 <div>
                     <label for="name" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">資材・機材名 <span class="text-rose-500">*</span></label>
                     <input type="text" id="name" name="name" value="{{ old('name') }}" required
-                           placeholder="例: カラーコーン一式（バー・錘含む）、足踏み式給水設備、パイプテント 2K×3K"
+                           placeholder="例: カラーコーン一式（バー・錘含む）、足踏み式給水設備、パイプテント 2K×3K、折りたたみ大型台車"
                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- カテゴリ & 持出ルール -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div>
+                        <label for="category" class="block text-[11px] font-bold text-slate-700 mb-1">備品・資材カテゴリ <span class="text-rose-500">*</span></label>
+                        <select id="category" name="category" required
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            @foreach(\App\Models\Equipment::CATEGORIES as $key => $label)
+                                <option value="{{ $key }}" {{ old('category', 'heavy_equipment') === $key ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="checkout_rule" class="block text-[11px] font-bold text-slate-700 mb-1">持出・利用ルール <span class="text-rose-500">*</span></label>
+                        <select id="checkout_rule" name="checkout_rule" required
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            @foreach(\App\Models\Equipment::CHECKOUT_RULES as $key => $label)
+                                <option value="{{ $key }}" {{ old('checkout_rule', 'free') === $key ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <!-- 数量 & 単位 & 担当班 -->
@@ -103,22 +130,33 @@
                 </div>
 
                 <!-- 自前機材用: 保管場所 -->
-                <div id="section-committee" class="space-y-2 p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200">
-                    <label for="storage_location" class="block text-[11px] sm:text-xs font-bold text-emerald-900">
-                        定常保管場所（自前機材）
-                    </label>
-                    <div class="flex items-center space-x-2">
-                        <input type="text" id="storage_location" name="storage_location" value="{{ old('storage_location', '番所地下倉庫') }}"
-                               placeholder="番所地下倉庫、コミュニティルーム等"
-                               class="flex-1 px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <button type="button" data-set-storage-location="番所地下倉庫"
-                                class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition cursor-pointer">
-                            番所地下倉庫
-                        </button>
-                        <button type="button" data-set-storage-location="コミュニティルーム"
-                                class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition cursor-pointer">
-                            コミュニティルーム
-                        </button>
+                <div id="section-committee" class="space-y-3 p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200">
+                    <div>
+                        <label for="storage_location" class="block text-[11px] sm:text-xs font-bold text-emerald-900 mb-1">
+                            定常保管場所（自前機材）
+                        </label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="storage_location" name="storage_location" value="{{ old('storage_location', '番所地下倉庫') }}"
+                                   placeholder="番所地下倉庫、コミュニティルーム等"
+                                   class="flex-1 px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <button type="button" data-set-storage-location="番所地下倉庫"
+                                    class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition cursor-pointer">
+                                番所地下倉庫
+                            </button>
+                            <button type="button" data-set-storage-location="コミュニティルーム"
+                                    class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition cursor-pointer">
+                                コミュニティルーム
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="storage_detail" class="block text-[11px] font-bold text-emerald-900 mb-1">
+                            定位置詳細・棚番メモ
+                        </label>
+                        <input type="text" id="storage_detail" name="storage_detail" value="{{ old('storage_detail') }}"
+                               placeholder="例: 地下倉庫入口右手・台車ラック、本陣受付裏 備品棚2段目"
+                               class="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
 

@@ -126,4 +126,24 @@ class EquipmentLogisticsPlanController extends Controller
 
         return back()->with('status', "{$count}件の計画ステップを生成しました。");
     }
+
+    /**
+     * 資材の搬出入ステップを一括削除（全クリア）
+     */
+    public function clear(Request $request, Equipment $equipment): RedirectResponse|JsonResponse
+    {
+        $this->authorize('update', $equipment);
+
+        $count = $equipment->plans()->count();
+        $equipment->plans()->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "資材「{$equipment->name}」の搬出入計画ステップ（全{$count}件）を削除しました。",
+            ]);
+        }
+
+        return back()->with('status', "資材「{$equipment->name}」の搬出入計画ステップ（全{$count}件）を削除しました。");
+    }
 }

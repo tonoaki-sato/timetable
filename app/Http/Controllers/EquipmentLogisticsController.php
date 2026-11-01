@@ -26,10 +26,11 @@ class EquipmentLogisticsController extends Controller
         $tab = $request->query('tab', 'flow');
         $typeFilter = $request->query('type');
         $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
+        $categoryFilter = $request->query('category');
         $phaseFilter = $request->query('phase');
 
-        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter);
-        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter);
+        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter, $categoryFilter);
+        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $categoryFilter);
         $locationsData = $this->logisticsService->getLocationsStatusData();
         $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData();
 
@@ -41,6 +42,7 @@ class EquipmentLogisticsController extends Controller
             'tab',
             'typeFilter',
             'laneFilter',
+            'categoryFilter',
             'phaseFilter',
             'equipments',
             'checklistPlans',
@@ -60,20 +62,30 @@ class EquipmentLogisticsController extends Controller
         $this->authorize('viewAny', Equipment::class);
 
         $format = $request->query('format', 'all');
+        $typeFilter = $request->query('type');
+        $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
+        $categoryFilter = $request->query('category');
+        $phaseFilter = $request->query('phase');
 
-        $equipments = $this->logisticsService->getEquipmentsFlowData();
-        $checklistPlans = $this->logisticsService->getPhaseChecklistData();
+        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter, $categoryFilter);
+        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $categoryFilter);
         $locationsData = $this->logisticsService->getLocationsStatusData();
         $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData();
         $festivalDates = $this->logisticsService->resolveFestivalDates();
+        $lanes = Lane::active()->ordered()->get();
 
         return view('logistics.print', compact(
             'format',
+            'typeFilter',
+            'laneFilter',
+            'categoryFilter',
+            'phaseFilter',
             'equipments',
             'checklistPlans',
             'locationsData',
             'eventCompanyPlans',
-            'festivalDates'
+            'festivalDates',
+            'lanes'
         ));
     }
 }

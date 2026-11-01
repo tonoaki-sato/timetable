@@ -144,6 +144,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [EquipmentLogisticsController::class, 'index'])->name('index');
         Route::get('print', [EquipmentLogisticsController::class, 'print'])->name('print');
         Route::post('{equipment}/apply-template', [EquipmentLogisticsPlanController::class, 'applyTemplate'])->name('apply-template');
+        Route::delete('{equipment}/plans/clear', [EquipmentLogisticsPlanController::class, 'clear'])->name('plans.clear');
 
         // 搬出入計画ステップ操作
         Route::post('plans', [EquipmentLogisticsPlanController::class, 'store'])->name('plans.store');

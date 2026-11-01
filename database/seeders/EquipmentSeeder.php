@@ -39,10 +39,13 @@ class EquipmentSeeder extends Seeder
         $equipmentColorCone = Equipment::updateOrCreate(
             ['name' => 'カラーコーン（バーセット含む）'],
             [
+                'category' => 'heavy_equipment',
+                'checkout_rule' => 'free',
                 'type' => 'committee',
                 'quantity' => 60,
                 'unit' => '本',
                 'storage_location' => '番所地下倉庫',
+                'storage_detail' => '地下倉庫奥 大型機材スペース',
                 'event_company_name' => null,
                 'event_company_contact' => null,
                 'lane_id' => $laneColorCone?->id,
@@ -191,10 +194,13 @@ class EquipmentSeeder extends Seeder
         $equipmentWater = Equipment::updateOrCreate(
             ['name' => '足踏み式給水設備'],
             [
+                'category' => 'heavy_equipment',
+                'checkout_rule' => 'permission_required',
                 'type' => 'rental',
                 'quantity' => 4,
                 'unit' => '台',
                 'storage_location' => null,
+                'storage_detail' => '前日番所スペース納品、夜間駐車場保管',
                 'event_company_name' => '東京イベントサプライ株式会社',
                 'event_company_contact' => '03-3456-7890 (配送担当直通: 090-1111-2222)',
                 'lane_id' => $laneWater?->id,
@@ -383,10 +389,13 @@ class EquipmentSeeder extends Seeder
         $equipmentTent = Equipment::updateOrCreate(
             ['name' => 'パイプテント（2K×3K）・天幕・ウェイトセット'],
             [
+                'category' => 'heavy_equipment',
+                'checkout_rule' => 'permission_required',
                 'type' => 'rental',
                 'quantity' => 12,
                 'unit' => '張',
                 'storage_location' => null,
+                'storage_detail' => 'イベント会社が直接会場各ブースへ搬入設営',
                 'event_company_name' => '東京イベントサプライ株式会社',
                 'event_company_contact' => '03-3456-7890 (現場責任者: 佐々木 090-3333-4444)',
                 'lane_id' => $laneHonjin?->id,
@@ -453,17 +462,86 @@ class EquipmentSeeder extends Seeder
         // 4. ござ市用テント (自前機材・パターンA)
         // =========================================================================
         Equipment::updateOrCreate(
-            ['name' => 'ござ市用テント・台車'],
+            ['name' => 'ござ市用テント'],
             [
+                'category' => 'heavy_equipment',
+                'checkout_rule' => 'free',
                 'type' => 'committee',
                 'quantity' => 6,
                 'unit' => '張',
                 'storage_location' => '番所地下倉庫',
+                'storage_detail' => '地下倉庫奥 テント置き場',
                 'event_company_name' => null,
                 'event_company_contact' => null,
                 'lane_id' => $laneGoza?->id,
                 'description' => 'ござ市エリアで使用する自前テントおよび敷物。番所地下倉庫保管。',
                 'display_order' => 40,
+                'created_by' => $adminId,
+            ]
+        );
+
+        // =========================================================================
+        // 5. 折りたたみ大型静音台車 (運搬具・勝手な持出禁止・本陣許可制)
+        // =========================================================================
+        Equipment::updateOrCreate(
+            ['name' => '折りたたみ大型静音台車（300kg積載）'],
+            [
+                'category' => 'carrier',
+                'checkout_rule' => 'permission_required',
+                'type' => 'committee',
+                'quantity' => 8,
+                'unit' => '台',
+                'storage_location' => '番所地下倉庫',
+                'storage_detail' => '地下倉庫入口右手・台車ラック（要本陣受付記帳）',
+                'event_company_name' => null,
+                'event_company_contact' => null,
+                'lane_id' => $laneHonjin?->id,
+                'description' => '会場設営・物資運搬用の台車。勝手な持ち出し厳禁。本陣裏での記帳確認後に持ち出し許可。',
+                'display_order' => 50,
+                'created_by' => $adminId,
+            ]
+        );
+
+        // =========================================================================
+        // 6. 交通整理用LED誘導棒 & ホイッスル (備品・班長限定)
+        // =========================================================================
+        Equipment::updateOrCreate(
+            ['name' => '交通整理用LED誘導棒 & 合図笛セット'],
+            [
+                'category' => 'tool_consumable',
+                'checkout_rule' => 'leader_only',
+                'type' => 'committee',
+                'quantity' => 20,
+                'unit' => '組',
+                'storage_location' => 'コミュニティルーム',
+                'storage_detail' => '本陣裏 スチールキャビネット3段目（黄色コンテナ）',
+                'event_company_name' => null,
+                'event_company_contact' => null,
+                'lane_id' => $laneColorCone?->id,
+                'description' => '交通規制・車両誘導班用。各ゲート担当班長が点呼時に受け取り、終了時に員数返却。',
+                'display_order' => 60,
+                'created_by' => $adminId,
+            ]
+        );
+
+        // =========================================================================
+        // 7. 結束バンド・養生ガムテープ・ニッパーセット (消耗品・自由持出可)
+        // =========================================================================
+        Equipment::updateOrCreate(
+            ['name' => '結束バンド・養生テープ・ニッパー箱'],
+            [
+                'category' => 'tool_consumable',
+                'checkout_rule' => 'free',
+                'type' => 'committee',
+                'quantity' => 15,
+                'unit' => 'セット',
+                'storage_location' => 'コミュニティルーム',
+                'storage_detail' => '本陣受付脇 消耗品フリーボックス',
+                'event_company_name' => null,
+                'event_company_contact' => null,
+                'lane_id' => $laneHonjin?->id,
+                'description' => '看板固定・配線養生等の共通消耗品。本陣裏に問い合わせることなく自由に補充・利用可能。',
+                'display_order' => 70,
                 'created_by' => $adminId,
             ]
         );

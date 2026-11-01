@@ -12,10 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'name',
+    'category',
+    'checkout_rule',
     'type',
     'quantity',
     'unit',
     'storage_location',
+    'storage_detail',
     'event_company_name',
     'event_company_contact',
     'lane_id',
@@ -43,6 +46,28 @@ class Equipment extends Model
     public const array TYPES = [
         'committee' => '実行委員会管理',
         'rental' => 'イベント会社レンタル',
+    ];
+
+    /**
+     * 資材・備品カテゴリ定義一覧
+     *
+     * @var array<string, string>
+     */
+    public const array CATEGORIES = [
+        'heavy_equipment' => '大型機材・設備（コーン・テント・給水設備等）',
+        'carrier' => '台車・運搬具（台車・ハンドトラック等）',
+        'tool_consumable' => '工具・消耗品・備品（誘導棒・ニッパー・テープ等）',
+    ];
+
+    /**
+     * 持ち出し・利用ルール定義一覧
+     *
+     * @var array<string, string>
+     */
+    public const array CHECKOUT_RULES = [
+        'free' => '自由持出可（使用後要返却）',
+        'permission_required' => '本陣許可制（勝手な持出禁止・要記帳）',
+        'leader_only' => '班長・特定担当者限定',
     ];
 
     /**
@@ -74,6 +99,38 @@ class Equipment extends Model
     public function getTypeLabelAttribute(): string
     {
         return self::TYPES[$this->type] ?? $this->type;
+    }
+
+    /**
+     * カテゴリラベルアクセサ
+     */
+    public function getCategoryLabelAttribute(): string
+    {
+        return self::CATEGORIES[$this->category] ?? $this->category;
+    }
+
+    /**
+     * 持出ルールラベルアクセサ
+     */
+    public function getCheckoutRuleLabelAttribute(): string
+    {
+        return self::CHECKOUT_RULES[$this->checkout_rule] ?? $this->checkout_rule;
+    }
+
+    /**
+     * 台車・運搬具か判定
+     */
+    public function isCarrier(): bool
+    {
+        return $this->category === 'carrier';
+    }
+
+    /**
+     * 工具・消耗品か判定
+     */
+    public function isToolConsumable(): bool
+    {
+        return $this->category === 'tool_consumable';
     }
 
     /**
@@ -130,6 +187,18 @@ class Equipment extends Model
     public function scopeRental(Builder $query): Builder
     {
         return $query->where('type', 'rental');
+    }
+
+    /**
+     * カテゴリで絞り込むスコープ
+     */
+    public function scopeCategory(Builder $query, ?string $category): Builder
+    {
+        if ($category) {
+            return $query->where('category', $category);
+        }
+
+        return $query;
     }
 
     /**

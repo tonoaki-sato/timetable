@@ -68,40 +68,66 @@
     <!-- ========================================================================= -->
     @if($tab === 'flow')
         <!-- 絞り込みバー -->
-        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center space-x-1.5 flex-wrap">
-                <span class="text-xs font-bold text-slate-500 mr-1">区分:</span>
-                <a href="{{ route('logistics.index', ['tab' => 'flow']) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-bold transition {{ !$typeFilter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
-                    すべて ({{ $equipments->count() }})
-                </a>
-                <a href="{{ route('logistics.index', ['tab' => 'flow', 'type' => 'committee', 'lane_id' => $laneFilter]) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'committee' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200' }}">
-                    🏛️ 実行委員会管理
-                </a>
-                <a href="{{ route('logistics.index', ['tab' => 'flow', 'type' => 'rental', 'lane_id' => $laneFilter]) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'rental' ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200' }}">
-                    🏢 イベント会社レンタル
-                </a>
+        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center space-x-1.5 flex-wrap">
+                    <span class="text-xs font-bold text-slate-500 mr-1">区分:</span>
+                    <a href="{{ route('logistics.index', array_filter(['tab' => 'flow', 'lane_id' => $laneFilter, 'category' => $categoryFilter])) }}"
+                       class="px-3 py-1 rounded-lg text-xs font-bold transition {{ !$typeFilter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                        すべて ({{ $equipments->count() }})
+                    </a>
+                    <a href="{{ route('logistics.index', array_filter(['tab' => 'flow', 'type' => 'committee', 'lane_id' => $laneFilter, 'category' => $categoryFilter])) }}"
+                       class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'committee' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200' }}">
+                        🏛️ 実行委員会管理
+                    </a>
+                    <a href="{{ route('logistics.index', array_filter(['tab' => 'flow', 'type' => 'rental', 'lane_id' => $laneFilter, 'category' => $categoryFilter])) }}"
+                       class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'rental' ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200' }}">
+                        🏢 イベント会社レンタル
+                    </a>
+                </div>
+
+                <!-- 担当班選択 -->
+                <form method="GET" action="{{ route('logistics.index') }}" class="flex items-center space-x-2">
+                    <input type="hidden" name="tab" value="flow">
+                    @if($typeFilter)
+                        <input type="hidden" name="type" value="{{ $typeFilter }}">
+                    @endif
+                    @if($categoryFilter)
+                        <input type="hidden" name="category" value="{{ $categoryFilter }}">
+                    @endif
+                    <label for="lane-select" class="text-xs font-bold text-slate-500 whitespace-nowrap">担当班:</label>
+                    <select id="lane-select" name="lane_id" data-auto-submit
+                            class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-8">
+                        <option value="">全班表示</option>
+                        @foreach($lanes as $lane)
+                            <option value="{{ $lane->id }}" {{ $laneFilter == $lane->id ? 'selected' : '' }}>
+                                {{ $lane->icon }} {{ $lane->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
             </div>
 
-            <!-- 担当班選択 -->
-            <form method="GET" action="{{ route('logistics.index') }}" class="flex items-center space-x-2">
-                <input type="hidden" name="tab" value="flow">
-                @if($typeFilter)
-                    <input type="hidden" name="type" value="{{ $typeFilter }}">
-                @endif
-                <label for="lane-select" class="text-xs font-bold text-slate-500 whitespace-nowrap">担当班:</label>
-                <select id="lane-select" name="lane_id" data-auto-submit
-                        class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-8">
-                    <option value="">全班表示</option>
-                    @foreach($lanes as $lane)
-                        <option value="{{ $lane->id }}" {{ $laneFilter == $lane->id ? 'selected' : '' }}>
-                            {{ $lane->icon }} {{ $lane->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </form>
+            <!-- カテゴリフィルタ -->
+            <div class="flex items-center space-x-1.5 border-t border-slate-100 pt-2 flex-wrap">
+                <span class="text-xs font-bold text-slate-500 mr-1">種別:</span>
+                <a href="{{ route('logistics.index', array_filter(['tab' => 'flow', 'type' => $typeFilter, 'lane_id' => $laneFilter])) }}"
+                   class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ !$categoryFilter ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                    全種別
+                </a>
+                <a href="{{ route('logistics.index', array_filter(['tab' => 'flow', 'category' => 'heavy_equipment', 'type' => $typeFilter, 'lane_id' => $laneFilter])) }}"
+                   class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $categoryFilter === 'heavy_equipment' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200' }}">
+                    📦 大型機材・設備
+                </a>
+                <a href="{{ route('logistics.index', array_filter(['tab' => 'flow', 'category' => 'carrier', 'type' => $typeFilter, 'lane_id' => $laneFilter])) }}"
+                   class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $categoryFilter === 'carrier' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200' }}">
+                    🛒 台車・運搬具
+                </a>
+                <a href="{{ route('logistics.index', array_filter(['tab' => 'flow', 'category' => 'tool_consumable', 'type' => $typeFilter, 'lane_id' => $laneFilter])) }}"
+                   class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $categoryFilter === 'tool_consumable' ? 'bg-teal-600 text-white' : 'bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200' }}">
+                    🧰 工具・消耗品
+                </a>
+            </div>
         </div>
 
         <!-- 資材カード一覧 -->
@@ -148,10 +174,23 @@
 
                         <!-- 操作リンク -->
                         <div class="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
+                            <a href="{{ route('equipments.show', $item) }}" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="詳細・計画設定">
+                                <span>詳細・計画</span>
+                            </a>
                             <a href="{{ route('equipments.edit', $item) }}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition inline-flex items-center space-x-1" title="資材情報を編集">
                                 <span>✏️</span>
                                 <span>編集</span>
                             </a>
+                            @can('delete', $item)
+                                <form method="POST" action="{{ route('equipments.destroy', $item) }}" class="inline"
+                                      data-confirm="資材「{{ $item->name }}」を削除しますか？&#10;紐づくすべての搬出入計画ステップも削除されます。">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="px-2 py-1 text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition cursor-pointer" title="資材を削除">
+                                        <span>🗑️</span>
+                                    </button>
+                                </form>
+                            @endcan
                         </div>
                     </div>
 
@@ -226,6 +265,7 @@
                             <th class="py-3 px-4">移動ルート (元 ➔ 先)</th>
                             <th class="py-3 px-3">作業主体 / 立会</th>
                             <th class="py-3 px-4">注意事項・申し送り</th>
+                            <th class="py-3 px-3 text-right">操作</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -325,10 +365,25 @@
                                         <div class="text-[10px] text-slate-400 font-mono mt-0.5">📞 {{ $plan->contact_info }}</div>
                                     @endif
                                 </td>
+
+                                <td class="py-3 px-3 text-right whitespace-nowrap">
+                                    @can('delete', $plan)
+                                        <form method="POST" action="{{ route('logistics.plans.destroy', $plan) }}" class="inline"
+                                              data-confirm="ステップ「{{ $plan->title }}」を削除しますか？">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="p-1 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
+                                                    title="ステップを削除">
+                                                🗑️
+                                            </button>
+                                        </form>
+                                    @endcan
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="p-8 text-center text-slate-400">該当フェーズの搬出入ステップはありません</td>
+                                <td colspan="9" class="p-8 text-center text-slate-400">該当フェーズの搬出入ステップはありません</td>
                             </tr>
                         @endforelse
                     </tbody>

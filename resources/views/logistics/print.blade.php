@@ -10,24 +10,59 @@
 <body class="bg-slate-100 text-slate-800 antialiased p-4 sm:p-6 print:p-0">
 
     <!-- 印刷コントロールバー（画面上のみ表示） -->
-    <div class="no-print max-w-7xl mx-auto mb-6 bg-slate-900 text-white rounded-2xl p-4 shadow-lg flex items-center justify-between flex-wrap gap-3">
-        <div class="flex items-center space-x-2">
-            <span class="text-xl">🖨️</span>
-            <div>
-                <div class="font-bold text-sm">資材搬出入計画書 印刷プレビュー</div>
-                <div class="text-[11px] text-slate-400">A4横向き印刷に最適化されています。ブラウザの「印刷」ダイアログから出力してください。</div>
+    <div class="no-print max-w-7xl mx-auto mb-6 bg-slate-900 text-white rounded-2xl p-4 shadow-lg space-y-3">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center space-x-2">
+                <span class="text-xl">🖨️</span>
+                <div>
+                    <div class="font-bold text-sm">資材搬出入計画書 印刷プレビュー</div>
+                    <div class="text-[11px] text-slate-400">A4横向き印刷に最適化されています。必要に応じて担当班や種別で絞り込んで現場配布用シートを出力してください。</div>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <a href="{{ route('logistics.index') }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
+                    ← 画面に戻る
+                </a>
+                <button type="button" data-action="print" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition flex items-center space-x-1 cursor-pointer">
+                    <span>🖨️</span>
+                    <span>今すぐ印刷 (Ctrl+P)</span>
+                </button>
             </div>
         </div>
 
-        <div class="flex items-center space-x-2">
-            <a href="{{ route('logistics.index') }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
-                ← 画面に戻る
-            </a>
-            <button type="button" data-action="print" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition flex items-center space-x-1 cursor-pointer">
-                <span>🖨️</span>
-                <span>今すぐ印刷 (Ctrl+P)</span>
-            </button>
-        </div>
+        <!-- 印刷絞り込みフィルタ（画面のみ） -->
+        <form method="GET" action="{{ route('logistics.print') }}" class="flex items-center space-x-3 pt-2 border-t border-slate-800 text-xs flex-wrap gap-y-2">
+            <span class="text-slate-400 font-bold">小分け印刷フィルタ:</span>
+
+            <select name="lane_id" data-auto-submit class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200">
+                <option value="">全班対象</option>
+                @foreach($lanes as $lane)
+                    <option value="{{ $lane->id }}" {{ $laneFilter == $lane->id ? 'selected' : '' }}>
+                        {{ $lane->icon }} {{ $lane->name }}
+                    </option>
+                @endforeach
+            </select>
+
+            <select name="category" data-auto-submit class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200">
+                <option value="">全カテゴリ</option>
+                @foreach(\App\Models\Equipment::CATEGORIES as $key => $label)
+                    <option value="{{ $key }}" {{ $categoryFilter === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+
+            <select name="type" data-auto-submit class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200">
+                <option value="">全区分</option>
+                <option value="committee" {{ $typeFilter === 'committee' ? 'selected' : '' }}>自前機材のみ</option>
+                <option value="rental" {{ $typeFilter === 'rental' ? 'selected' : '' }}>レンタル機材のみ</option>
+            </select>
+
+            @if($laneFilter || $categoryFilter || $typeFilter)
+                <a href="{{ route('logistics.print') }}" class="text-indigo-400 hover:underline">
+                    フィルタ解除
+                </a>
+            @endif
+        </form>
     </div>
 
     <!-- 印刷用メインシート (A4横) -->
@@ -36,7 +71,15 @@
         <!-- 帳票タイトルヘッダー -->
         <div class="border-b-2 border-slate-800 pb-3 flex items-end justify-between">
             <div>
-                <div class="text-[11px] font-bold tracking-widest text-slate-500 uppercase">宿場まつり 運行本部 公式帳票</div>
+                <div class="text-[11px] font-bold tracking-widest text-slate-500 uppercase flex items-center space-x-2">
+                    <span>宿場まつり 運行本部 公式帳票</span>
+                    @if($laneFilter && ($curLane = $lanes->firstWhere('id', $laneFilter)))
+                        <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">【{{ $curLane->name }} 担当分】</span>
+                    @endif
+                    @if($categoryFilter)
+                        <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">【{{ \App\Models\Equipment::CATEGORIES[$categoryFilter] ?? $categoryFilter }}】</span>
+                    @endif
+                </div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tight">資材・機材 搬出入・中継・夜間保管計画書</h1>
             </div>
 

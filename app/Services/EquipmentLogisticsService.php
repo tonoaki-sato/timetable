@@ -36,10 +36,19 @@ class EquipmentLogisticsService
     /**
      * 3大パターンのテンプレートからステップを一括生成
      *
-     * @param  array{staging_location_id?: ?int, night_location_1_id?: ?int, night_location_2_id?: ?int, witness_staff_id?: ?int}  $options
+     * @param  array{staging_location_id?: ?int, night_location_1_id?: ?int, night_location_2_id?: ?int, witness_staff_id?: ?int, override_existing?: ?bool}  $options
      */
     public function applyTemplate(Equipment $equipment, string $templateType, array $options = []): int
     {
+        // 既存ステップの上書き指定がある場合（または指定がない場合はデフォルトで上書きクリア）
+        $override = array_key_exists('override_existing', $options)
+            ? (bool) $options['override_existing']
+            : true;
+
+        if ($override) {
+            $equipment->plans()->delete();
+        }
+
         $dates = $this->resolveFestivalDates();
 
         // 拠点の取得
@@ -443,7 +452,7 @@ class EquipmentLogisticsService
      *
      * @return Collection<int, Equipment>
      */
-    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null): Collection
+    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?string $category = null): Collection
     {
         $query = Equipment::with([
             'lane',
@@ -458,6 +467,10 @@ class EquipmentLogisticsService
             $query->where('lane_id', $laneId);
         }
 
+        if ($category) {
+            $query->where('category', $category);
+        }
+
         return $query->get();
     }
 
@@ -466,7 +479,7 @@ class EquipmentLogisticsService
      *
      * @return Collection<int, EquipmentLogisticsPlan>
      */
-    public function getPhaseChecklistData(?string $dayPhase = null): Collection
+    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $category = null): Collection
     {
         $query = EquipmentLogisticsPlan::with([
             'equipment.lane',
@@ -480,6 +493,14 @@ class EquipmentLogisticsService
 
         if ($dayPhase) {
             $query->where('day_phase', $dayPhase);
+        }
+
+        if ($laneId) {
+            $query->whereHas('equipment', fn ($q) => $q->where('lane_id', $laneId));
+        }
+
+        if ($category) {
+            $query->whereHas('equipment', fn ($q) => $q->where('category', $category));
         }
 
         return $query->get();
