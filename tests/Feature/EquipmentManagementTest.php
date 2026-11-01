@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use App\Models\Lane;
-use App\Models\Location;
 use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

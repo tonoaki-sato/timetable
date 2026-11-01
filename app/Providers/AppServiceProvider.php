@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\FeatureSetting;
 use App\Models\Timetable;
 use App\Repositories\Contracts\AnnualScheduleRepositoryInterface;
 use App\Repositories\Contracts\FeatureSettingRepositoryInterface;
@@ -15,6 +16,7 @@ use App\Repositories\Eloquent\MeetingRepository;
 use App\Repositories\Eloquent\StaffRepository;
 use App\Repositories\Eloquent\TimetableRepository;
 use App\Repositories\Eloquent\TimetableTaskRepository;
+use App\Services\FeatureSettingService;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -66,7 +68,16 @@ class AppServiceProvider extends ServiceProvider
                 ->orderBy('target_date')
                 ->get();
 
-            $view->with('navTimetables', $navTimetables);
+            /** @var FeatureSettingService $featureService */
+            $featureService = app(FeatureSettingService::class);
+            $selfRegistrationSetting = $featureService->getFeature(FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION);
+            $selfRegistrationStatus = $featureService->getFeatureStatus(FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION);
+
+            $view->with([
+                'navTimetables' => $navTimetables,
+                'selfRegistrationSetting' => $selfRegistrationSetting,
+                'selfRegistrationStatus' => $selfRegistrationStatus,
+            ]);
         });
     }
 }

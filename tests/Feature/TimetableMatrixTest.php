@@ -269,7 +269,7 @@ class TimetableMatrixTest extends TestCase
     }
 
     /**
-     * まつり運行メニューが案A（目的別2セクション構造）で正常に描画されること
+     * 計画メニューが正常に描画されること
      */
     public function test_navigation_displays_redesigned_operation_menu_sections(): void
     {
@@ -294,11 +294,11 @@ class TimetableMatrixTest extends TestCase
         $response = $this->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // まつり運行グループ
-        $response->assertSee('まつり運行');
+        // 計画グループ
+        $response->assertSee('計画');
 
-        // セクション1: 進行表（日程別）
-        $response->assertSee('進行表（日程別）');
+        // セクション1: 進行表・当日運行
+        $response->assertSee('進行表・当日運行');
         $response->assertSee('本祭1日目');
         $response->assertSee('運行中');
         $response->assertSee(route('timetable.index', ['timetable_id' => $activeTimetable->id]));
@@ -308,16 +308,21 @@ class TimetableMatrixTest extends TestCase
         // 運行完了（completed）はプルダウンメニューに表示されないこと
         $response->assertDontSee(route('timetable.index', ['timetable_id' => $completedTimetable->id]));
 
-        // セクション2: 計画・編成・帳票出力
-        $response->assertSee('計画・編成・帳票出力');
+        // セクション2: 編成・業務計画
+        $response->assertSee('編成・業務計画');
         $response->assertSee('タイムテーブル管理');
-        $response->assertSee('担当班（レーン）管理');
-        $response->assertSee('人員配置表の印刷');
-        $response->assertSee(route('timetables.print-assignments', $activeTimetable));
-
-        // 各ルートへのリンクが含まれていること
+        $response->assertSee('搬出入計画');
         $response->assertSee(route('timetables.index'));
-        $response->assertSee(route('lanes.index'));
+        $response->assertSee(route('logistics.index'));
+
+        // セクション3: 日程・スケジュール
+        $response->assertSee('日程・スケジュール');
+        $response->assertSee('総合カレンダー');
+        $response->assertSee(route('calendar.index'));
+        $response->assertSee('年間スケジュール');
+        $response->assertSee(route('annual-schedules.index'));
+        $response->assertSee('会議・打ち合わせ');
+        $response->assertSee(route('meetings.index'));
     }
 
     /**
@@ -348,7 +353,7 @@ class TimetableMatrixTest extends TestCase
     }
 
     /**
-     * リソース・物流メニューおよび設定・資料メニューが正しく整理・表示されること
+     * マスター管理メニューおよびその他メニューが正しく整理・表示されること
      */
     public function test_navigation_displays_resource_and_system_menu_sections(): void
     {
@@ -362,35 +367,41 @@ class TimetableMatrixTest extends TestCase
         $response = $this->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // リソース・物流グループ
-        $response->assertSee('リソース・物流');
-        $response->assertSee('スタッフ体制');
+        // マスター管理グループ
+        $response->assertSee('マスター管理');
+        $response->assertSee('人員・組織マスター');
+        $response->assertSee('スタッフ名簿');
         $response->assertSee(route('staff.index'));
-        $response->assertSee('スタッフ名札印刷');
-        $response->assertSee(route('staff.print-cards'));
-        $response->assertSee('資材・機材物流');
+        $response->assertSee('担当班（レーン）管理');
+        $response->assertSee(route('lanes.index'));
+        $response->assertSee('資材・拠点マスター');
         $response->assertSee('資材管理');
         $response->assertSee(route('equipments.index'));
-        $response->assertSee('搬出入計画');
-        $response->assertSee(route('logistics.index'));
-        $response->assertSee('搬出入計画の印刷');
-        $response->assertSee(route('logistics.print'));
-        $response->assertSee('拠点・会場管理');
+        $response->assertSee('拠点管理');
         $response->assertSee(route('locations.index'));
+        $response->assertSee('拠点タイプ管理');
         $response->assertSee(route('location-types.index'));
 
-        // 日程・会議グループ
-        $response->assertSee('日程・会議');
-        $response->assertSee(route('calendar.index'));
-        $response->assertSee(route('annual-schedules.index'));
-        $response->assertSee(route('meetings.index'));
+        // その他グループ
+        $response->assertSee('その他');
+        $response->assertSee('帳票・印刷出力');
+        $response->assertSee('スタッフ名札印刷');
+        $response->assertSee(route('staff.print-cards'));
+        $response->assertSee('搬出入計画の印刷');
+        $response->assertSee(route('logistics.print'));
+        $response->assertSee('スタッフ名簿CSV出力');
+        $response->assertSee(route('staff.export-csv'));
 
-        // 設定・資料グループ
-        $response->assertSee('設定・資料');
+        $response->assertSee('ガイド・広報資料');
         $response->assertSee('操作マニュアル');
         $response->assertSee(route('manual.index'));
         $response->assertSee('幹事会プレゼン');
         $response->assertSee(route('presentation.index'));
+        $response->assertSee('スタッフセルフ登録フォーム');
+        $response->assertSee(route('staff.join'));
+
+        $response->assertSee('システム・管理');
+        $response->assertSee('Webセルフ登録受付');
         $response->assertSee('ユーザー管理');
         $response->assertSee(route('users.index'));
         $response->assertSee('アカウント情報');

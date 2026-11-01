@@ -73,6 +73,18 @@ function initGlobalEventHandlers() {
             if (selector) document.querySelector(selector)?.classList.add('hidden');
             return;
         }
+
+        // 7. 入力値クリア (data-clear-target="inputId")
+        const clearBtn = e.target.closest('[data-clear-target]');
+        if (clearBtn) {
+            const targetId = clearBtn.getAttribute('data-clear-target');
+            const targetInput = document.getElementById(targetId);
+            if (targetInput) {
+                targetInput.value = '';
+                targetInput.focus();
+            }
+            return;
+        }
     });
 }
 
