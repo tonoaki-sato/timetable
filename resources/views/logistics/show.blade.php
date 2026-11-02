@@ -11,9 +11,11 @@
                 ? '個人持ち込み私物（定常保管: ' . ($equipment->storage_location ?: '自宅') . '）'
                 : '実行委員会保有備品（定常保管: ' . ($equipment->storage_location ?: '番所地下倉庫') . '）')">
         <x-slot:breadcrumbs>
-            <a href="{{ route('logistics.index') }}" class="hover:underline">搬出入計画</a>
+            <a href="{{ route('equipments.index') }}" class="hover:underline">資材管理</a>
             <span>/</span>
-            <span class="text-slate-800 font-bold">{{ $equipment->name }}</span>
+            <a href="{{ route('equipments.show', $equipment) }}" class="hover:underline">{{ $equipment->name }}</a>
+            <span>/</span>
+            <span class="text-slate-800 font-bold">搬出入ステップ</span>
         </x-slot:breadcrumbs>
 
         <x-slot:badges>
@@ -59,10 +61,10 @@
                 <span>📦</span>
                 <span>資材台帳詳細</span>
             </a>
-            <a href="{{ route('logistics.index') }}"
+            <a href="{{ route('logistics.index', ['tab' => 'patterns']) }}"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition">
-                <span>←</span>
-                <span>計画一覧</span>
+                <span>🧩</span>
+                <span>パターン管理</span>
             </a>
         </x-slot:actions>
     </x-page-header>

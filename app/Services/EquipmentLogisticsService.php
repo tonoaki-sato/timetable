@@ -93,42 +93,10 @@ class EquipmentLogisticsService
         $order = 10;
 
         foreach ($pattern->steps as $step) {
-            // 夜間保管②のロールを持つステップで、分散先②が未指定の場合はスキップ
-            if (($step->to_location_role === 'night_parking_2' || $step->from_location_role === 'night_parking_2') && ! $hasSplitNight) {
-                continue;
-            }
-
-            [$fromLocId, $fromLocText] = $this->resolveLocationRole(
-                $step->from_location_role,
-                $step->from_location_id,
-                $step->from_location,
-                $storageLocationModel,
-                $storageLocationName,
-                $banshoSpace,
-                $stagingLocation,
-                $nightLocation1,
-                $nightLocation2
-            );
-
-            [$toLocId, $toLocText] = $this->resolveLocationRole(
-                $step->to_location_role,
-                $step->to_location_id,
-                $step->to_location,
-                $storageLocationModel,
-                $storageLocationName,
-                $banshoSpace,
-                $stagingLocation,
-                $nightLocation1,
-                $nightLocation2
-            );
-
-            $stepQuantity = match ($step->quantity_rule) {
-                'all' => $qty,
-                'half_1' => $hasSplitNight ? $qty1 : $qty,
-                'half_2' => $hasSplitNight ? $qty2 : null,
-                'custom' => null,
-                default => $qty,
-            };
+            $fromLocId = $step->from_location_id;
+            $fromLocText = $step->fromLocationModel?->name ?? $storageLocationName;
+            $toLocId = $step->to_location_id;
+            $toLocText = $step->toLocationModel?->name ?? '（未定）';
 
             $targetDate = match ($step->day_phase) {
                 'other' => $dates['other'],
@@ -141,7 +109,7 @@ class EquipmentLogisticsService
 
             $title = str_replace(
                 ['{from_location}', '{to_location}', '{storage_location}'],
-                [$fromLocText ?? '', $toLocText ?? '', $storageLocationName],
+                [$fromLocText, $toLocText, $storageLocationName],
                 $step->title
             );
 
@@ -150,10 +118,10 @@ class EquipmentLogisticsService
                 'day_phase' => $step->day_phase,
                 'action_type' => $step->action_type,
                 'title' => $title,
-                'quantity' => $stepQuantity,
-                'quantity_note' => $step->quantity_note,
-                'start_time' => $step->start_time,
-                'end_time' => $step->end_time,
+                'quantity' => $qty,
+                'quantity_note' => null,
+                'start_time' => null,
+                'end_time' => null,
                 'from_location' => $fromLocText,
                 'to_location' => $toLocText,
                 'from_location_id' => $fromLocId,
@@ -190,53 +158,15 @@ class EquipmentLogisticsService
             ]);
 
             $plans = $equipment->plans()->orderBy('display_order', 'asc')->orderBy('id', 'asc')->get();
-            $nightStorageIndex = 0;
             $order = 10;
 
             foreach ($plans as $plan) {
-                if ($plan->action_type === 'night_storage' && $plan->to_location_id) {
-                    $nightStorageIndex++;
-                }
-
-                [$fromRole, $fromId, $fromText] = $this->inferRoleFromPlanLocation(
-                    $plan->from_location_id,
-                    $plan->from_location,
-                    $equipment,
-                    $plan->action_type,
-                    'from',
-                    $nightStorageIndex
-                );
-
-                [$toRole, $toId, $toText] = $this->inferRoleFromPlanLocation(
-                    $plan->to_location_id,
-                    $plan->to_location,
-                    $equipment,
-                    $plan->action_type,
-                    'to',
-                    $nightStorageIndex
-                );
-
-                $quantityRule = 'all';
-                if ($plan->quantity === null) {
-                    $quantityRule = 'custom';
-                } elseif ($plan->action_type === 'night_storage' && $plan->quantity < $equipment->quantity) {
-                    $quantityRule = $nightStorageIndex <= 1 ? 'half_1' : 'half_2';
-                }
-
                 $pattern->steps()->create([
                     'day_phase' => $plan->day_phase,
                     'action_type' => $plan->action_type,
                     'title' => $plan->title,
-                    'quantity_rule' => $quantityRule,
-                    'quantity_note' => $plan->quantity_note,
-                    'start_time' => $plan->start_time,
-                    'end_time' => $plan->end_time,
-                    'from_location_role' => $fromRole,
-                    'to_location_role' => $toRole,
-                    'from_location_id' => $fromId,
-                    'to_location_id' => $toId,
-                    'from_location' => $fromText,
-                    'to_location' => $toText,
+                    'from_location_id' => $plan->from_location_id,
+                    'to_location_id' => $plan->to_location_id,
                     'operator_type' => $plan->operator_type,
                     'witness_required' => $plan->witness_required,
                     'notes' => $plan->notes,
@@ -248,70 +178,6 @@ class EquipmentLogisticsService
 
             return $pattern->load('steps');
         });
-    }
-
-    /**
-     * パターンステップのロール定義から拠点IDと表示テキストを解決
-     *
-     * @return array{0: ?int, 1: ?string}
-     */
-    protected function resolveLocationRole(
-        string $role,
-        ?int $fixedLocationId,
-        ?string $fallbackText,
-        ?Location $storageLocationModel,
-        string $storageLocationName,
-        ?Location $banshoSpace,
-        ?Location $stagingLocation,
-        ?Location $nightLocation1,
-        ?Location $nightLocation2
-    ): array {
-        return match ($role) {
-            'equipment_storage' => [$storageLocationModel?->id, $storageLocationModel?->name ?? $storageLocationName],
-            'bansho_space' => [$banshoSpace?->id, $banshoSpace?->name ?? '番所前スペース'],
-            'staging_parking' => [$stagingLocation?->id, $stagingLocation?->name ?? ($fallbackText ?: '貸切駐車場')],
-            'night_parking_1' => [$nightLocation1?->id, $nightLocation1?->name ?? ($fallbackText ?: '夜間保管場所①')],
-            'night_parking_2' => [$nightLocation2?->id, $nightLocation2?->name ?? ($fallbackText ?: '夜間保管場所②')],
-            'fixed' => [
-                $fixedLocationId,
-                ($fixedLocationId ? Location::find($fixedLocationId)?->name : null) ?? ($fallbackText ?: '未定'),
-            ],
-            default => [null, $fallbackText],
-        };
-    }
-
-    /**
-     * 既存ステップの移動元・移動先からパターン用のロールを推論
-     *
-     * @return array{0: string, 1: ?int, 2: ?string}
-     */
-    protected function inferRoleFromPlanLocation(
-        ?int $locationId,
-        ?string $locationText,
-        Equipment $equipment,
-        string $actionType,
-        string $direction,
-        int $nightStorageIndex
-    ): array {
-        $text = (string) $locationText;
-
-        if ($equipment->storage_location && $text === $equipment->storage_location) {
-            return ['equipment_storage', null, $text];
-        }
-
-        if (str_contains($text, '番所前') || str_contains($text, '番所空き')) {
-            return ['bansho_space', null, '番所前スペース'];
-        }
-
-        if ($direction === 'to' && $actionType === 'night_storage' && $locationId) {
-            return [$nightStorageIndex <= 1 ? 'night_parking_1' : 'night_parking_2', null, $text];
-        }
-
-        if ($locationId) {
-            return ['fixed', $locationId, $text];
-        }
-
-        return ['text', null, $locationText];
     }
 
     /**

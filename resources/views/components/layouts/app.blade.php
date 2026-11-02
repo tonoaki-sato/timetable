@@ -37,7 +37,6 @@
                             || request()->routeIs('timetable-tasks.*')
                             || request()->routeIs('timetable.index')
                             || request()->routeIs('preparation-navigator.*')
-                            || request()->routeIs('logistics.*')
                             || request()->routeIs('calendar.*')
                             || request()->routeIs('annual-schedules.*')
                             || request()->routeIs('meetings.*');
@@ -46,7 +45,8 @@
                             || request()->routeIs('lanes.*')
                             || request()->routeIs('equipments.*')
                             || request()->routeIs('locations.*')
-                            || request()->routeIs('location-types.*');
+                            || request()->routeIs('location-types.*')
+                            || (request()->routeIs('logistics.*') && !request()->routeIs('logistics.print'));
 
                         $isOthersActive = request()->routeIs('staff.print*')
                             || request()->routeIs('staff.export*')
@@ -140,14 +140,6 @@
                                         <div class="min-w-0">
                                             <div class="text-xs font-bold">タイムテーブル管理</div>
                                             <p class="text-[10px] {{ request()->routeIs('timetables.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">各日の日程枠登録・作業タスク台帳・アサイン</p>
-                                        </div>
-                                    </a>
-                                    <a href="{{ route('logistics.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">🚚</span>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold">搬出入計画</div>
-                                            <p class="text-[10px] {{ request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">6大フェーズ運行・現場配備・ステップ計画</p>
                                         </div>
                                     </a>
                                 </div>
@@ -252,6 +244,14 @@
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold">拠点タイプ管理</div>
                                             <p class="text-[10px] {{ request()->routeIs('location-types.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">拠点種別・アイコン・カラー設定</p>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('logistics.index', ['tab' => 'patterns']) }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">🧩</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold">搬出入パターン管理</div>
+                                            <p class="text-[10px] {{ request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">資材の共通搬出入ステップ・テンプレート</p>
                                         </div>
                                     </a>
                                 </div>
@@ -594,18 +594,11 @@
                                 </div>
                                 <span class="text-xs text-indigo-300 font-bold shrink-0 ml-2">開く →</span>
                             </a>
-                            <a href="{{ route('timetables.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('timetables.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                            <a href="{{ route('timetables.index') }}" class="col-span-2 p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('timetables.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">📋</span>
                                 <div class="min-w-0">
                                     <span class="font-bold block truncate">タイムテーブル管理</span>
                                     <span class="text-[10px] text-slate-400 block truncate">日程枠・タスク台帳</span>
-                                </div>
-                            </a>
-                            <a href="{{ route('logistics.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
-                                <span class="text-base">🚚</span>
-                                <div class="min-w-0">
-                                    <span class="font-bold block truncate">搬出入計画</span>
-                                    <span class="text-[10px] text-slate-400 block truncate">6大フェーズ運行・ステップ計画</span>
                                 </div>
                             </a>
                             <a href="{{ route('calendar.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('calendar.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
@@ -667,11 +660,18 @@
                                     <span class="text-[10px] text-slate-400 block truncate">番所・駐車場・会場</span>
                                 </div>
                             </a>
-                            <a href="{{ route('location-types.index') }}" class="col-span-2 p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('location-types.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                            <a href="{{ route('location-types.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('location-types.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">🏷️</span>
                                 <div class="min-w-0">
                                     <span class="font-bold block truncate">拠点タイプ管理</span>
-                                    <span class="text-[10px] text-slate-400 block truncate">拠点種別・アイコン・カラー設定</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">種別・カラー</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('logistics.index', ['tab' => 'patterns']) }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                                <span class="text-base">🧩</span>
+                                <div class="min-w-0">
+                                    <span class="font-bold block truncate">搬出入パターン</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">共通ステップ・テンプレート</span>
                                 </div>
                             </a>
                         </div>

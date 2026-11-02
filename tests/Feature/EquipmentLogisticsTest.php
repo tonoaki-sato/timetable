@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
-use App\Models\EquipmentLogisticsPlan;
 use App\Models\Lane;
 use App\Models\Location;
 use App\Models\Timetable;
@@ -51,11 +50,8 @@ class EquipmentLogisticsTest extends TestCase
                 'day_phase' => 'pre_day',
                 'action_type' => 'staging_move',
                 'title' => '前日倉庫出し',
-                'start_time' => '13:30',
-                'end_time' => '15:00',
-                'from_location_role' => 'equipment_storage',
-                'to_location_role' => 'staging_parking',
-                'quantity_rule' => 'all',
+                'from_location_id' => null,
+                'to_location_id' => $this->locationTaxOffice->id,
                 'operator_type' => 'committee',
                 'witness_required' => false,
             ],
@@ -64,12 +60,8 @@ class EquipmentLogisticsTest extends TestCase
                 'day_phase' => 'day1_evening',
                 'action_type' => 'night_storage',
                 'title' => '1日目夜間保管',
-                'start_time' => '17:00',
-                'end_time' => '18:00',
-                'from_location_role' => 'text',
-                'from_location' => '会場設置',
-                'to_location_role' => 'night_parking_1',
-                'quantity_rule' => 'all',
+                'from_location_id' => null,
+                'to_location_id' => $this->locationKitagawa->id,
                 'operator_type' => 'committee',
                 'witness_required' => false,
             ],
@@ -78,12 +70,8 @@ class EquipmentLogisticsTest extends TestCase
                 'day_phase' => 'day2_evening',
                 'action_type' => 'return_storage',
                 'title' => '2日目夜撤収格納',
-                'start_time' => '17:00',
-                'end_time' => '18:30',
-                'from_location_role' => 'text',
-                'from_location' => '会場設置',
-                'to_location_role' => 'equipment_storage',
-                'quantity_rule' => 'all',
+                'from_location_id' => $this->locationKitagawa->id,
+                'to_location_id' => null,
                 'operator_type' => 'committee',
                 'witness_required' => false,
             ],
@@ -91,86 +79,30 @@ class EquipmentLogisticsTest extends TestCase
     }
 
     /**
-     * 搬出入計画ダッシュボード画面が表示されること
+     * 搬出入パターン管理画面が表示されること
      */
     public function test_logistics_dashboard_displays_correctly(): void
     {
         $this->actingAs($this->operator);
 
-        $equipment = Equipment::factory()->committee()->create(['name' => 'カラーコーン']);
-        EquipmentLogisticsPlan::factory()->create([
-            'equipment_id' => $equipment->id,
-            'title' => '税務署前へ中継移動',
-            'day_phase' => 'pre_day',
-        ]);
-
         $response = $this->get(route('logistics.index'));
         $response->assertStatus(200);
-        $response->assertSee('資材・機材 搬出入計画');
-        $response->assertSee('カラーコーン');
-        $response->assertSee('税務署前へ中継移動');
+        $response->assertSee('搬出入パターン管理');
+        $response->assertSee('テスト標準パターンA');
+        $response->assertSee('前日倉庫出し');
     }
 
     /**
-     * 搬出入計画の全5タブ（フロー・チェックリスト・拠点保管・イベント会社・パターン管理）が表示されること
+     * 搬出入パターンの詳細情報が一覧に表示されること
      */
     public function test_logistics_tabs_display_correctly(): void
     {
         $this->actingAs($this->operator);
 
-        $equipment = Equipment::factory()->rental()->create([
-            'name' => '足踏み式給水設備',
-        ]);
-
-        EquipmentLogisticsPlan::factory()->create([
-            'equipment_id' => $equipment->id,
-            'title' => '給水設備 業者受取立会',
-            'day_phase' => 'pre_day',
-            'operator_type' => 'event_company',
-            'witness_required' => true,
-        ]);
-
-        // 現地・テント内夜間保管ステップ（to_location_id === null）
-        EquipmentLogisticsPlan::factory()->create([
-            'equipment_id' => $equipment->id,
-            'title' => 'テント内現地夜間保管',
-            'day_phase' => 'day1_evening',
-            'action_type' => 'night_storage',
-            'to_location_id' => null,
-            'to_location' => '会場そのまま（テント内保管）',
-        ]);
-
-        // 1. 資材別フロー
-        $flowRes = $this->get(route('logistics.index', ['tab' => 'flow']));
-        $flowRes->assertStatus(200);
-        $flowRes->assertSee('足踏み式給水設備');
-        $flowRes->assertSee(route('logistics.equipments.show', $equipment));
-        $flowRes->assertSee(route('equipments.show', $equipment));
-
-        // 2. フェーズ別チェックリスト
-        $chkRes = $this->get(route('logistics.index', ['tab' => 'checklist', 'phase' => 'pre_day']));
-        $chkRes->assertStatus(200);
-        $chkRes->assertSee('給水設備 業者受取立会');
-        $chkRes->assertSee(route('logistics.equipments.show', $equipment));
-
-        // 3. 拠点別保管 + 現地夜間保管カード
-        $locRes = $this->get(route('logistics.index', ['tab' => 'locations']));
-        $locRes->assertStatus(200);
-        $locRes->assertSee('税務署前駐車場');
-        $locRes->assertSee('現地・テント内夜間保管');
-        $locRes->assertSee('会場そのまま（テント内保管）');
-        $locRes->assertSee(route('logistics.equipments.show', $equipment));
-
-        // 4. イベント会社スケジュール
-        $evtRes = $this->get(route('logistics.index', ['tab' => 'events']));
-        $evtRes->assertStatus(200);
-        $evtRes->assertSee('給水設備 業者受取立会');
-        $evtRes->assertSee(route('logistics.equipments.show', $equipment));
-
-        // 5. 搬出入パターン管理
-        $patRes = $this->get(route('logistics.index', ['tab' => 'patterns']));
-        $patRes->assertStatus(200);
-        $patRes->assertSee('テスト標準パターンA');
+        $response = $this->get(route('logistics.index', ['tab' => 'patterns']));
+        $response->assertStatus(200);
+        $response->assertSee('テスト標準パターンA');
+        $response->assertSee('税務署前駐車場');
     }
 
     /**
@@ -189,13 +121,8 @@ class EquipmentLogisticsTest extends TestCase
                     'day_phase' => 'day1_morning',
                     'action_type' => 'setup',
                     'title' => 'イベント会社による搬入・設営',
-                    'start_time' => '07:30',
-                    'end_time' => '09:30',
-                    'from_location_role' => 'text',
-                    'from_location' => 'イベント会社配送',
-                    'to_location_role' => 'text',
-                    'to_location' => '各テント配置場所',
-                    'quantity_rule' => 'all',
+                    'from_location_id' => null,
+                    'to_location_id' => $this->locationTaxOffice->id,
                     'operator_type' => 'event_company',
                     'witness_required' => false,
                 ],
@@ -203,13 +130,8 @@ class EquipmentLogisticsTest extends TestCase
                     'day_phase' => 'day2_evening',
                     'action_type' => 'vendor_pickup',
                     'title' => 'イベント会社による解体・搬出',
-                    'start_time' => '17:00',
-                    'end_time' => '19:00',
-                    'from_location_role' => 'text',
-                    'from_location' => '各テント配置場所',
-                    'to_location_role' => 'text',
-                    'to_location' => 'イベント会社回収',
-                    'quantity_rule' => 'all',
+                    'from_location_id' => $this->locationTaxOffice->id,
+                    'to_location_id' => null,
                     'operator_type' => 'event_company',
                     'witness_required' => false,
                 ],
@@ -231,9 +153,8 @@ class EquipmentLogisticsTest extends TestCase
                     'day_phase' => 'day1_morning',
                     'action_type' => 'setup',
                     'title' => '搬入設営のみ',
-                    'from_location_role' => 'text',
-                    'to_location_role' => 'text',
-                    'quantity_rule' => 'all',
+                    'from_location_id' => null,
+                    'to_location_id' => $this->locationKitagawa->id,
                     'operator_type' => 'event_company',
                 ],
             ],
@@ -375,13 +296,10 @@ class EquipmentLogisticsTest extends TestCase
         Timetable::query()->delete();
         Equipment::query()->delete();
 
-        foreach (['flow', 'checklist', 'locations', 'event_company', 'patterns'] as $tab) {
-            $this->get(route('logistics.index', ['tab' => $tab]))
-                ->assertStatus(200);
-        }
-
-        $this->get(route('logistics.index', ['tab' => 'locations']))
-            ->assertSee('登録されている拠点がありません');
+        $this->get(route('logistics.index'))
+            ->assertStatus(200)
+            ->assertSee('搬出入パターン管理')
+            ->assertSee('登録されている搬出入パターンはありません');
 
         $this->get(route('logistics.print'))
             ->assertStatus(200)

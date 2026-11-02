@@ -80,4 +80,3 @@ class EquipmentLogisticsPattern extends Model
         return $query->orderBy('display_order', 'asc')->orderBy('id', 'asc');
     }
 }
-

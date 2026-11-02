@@ -27,4 +27,3 @@ class FeatureSettingSeeder extends Seeder
         );
     }
 }
-

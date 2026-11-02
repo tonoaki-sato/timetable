@@ -42,16 +42,8 @@ class EquipmentLogisticsPatternController extends Controller
                     'day_phase' => $stepData['day_phase'],
                     'action_type' => $stepData['action_type'],
                     'title' => $stepData['title'],
-                    'quantity_rule' => $stepData['quantity_rule'],
-                    'quantity_note' => $stepData['quantity_note'] ?? null,
-                    'start_time' => $stepData['start_time'] ?? null,
-                    'end_time' => $stepData['end_time'] ?? null,
-                    'from_location_role' => $stepData['from_location_role'],
-                    'to_location_role' => $stepData['to_location_role'],
                     'from_location_id' => $stepData['from_location_id'] ?? null,
                     'to_location_id' => $stepData['to_location_id'] ?? null,
-                    'from_location' => $stepData['from_location'] ?? null,
-                    'to_location' => $stepData['to_location'] ?? null,
                     'operator_type' => $stepData['operator_type'],
                     'witness_required' => (bool) ($stepData['witness_required'] ?? false),
                     'notes' => $stepData['notes'] ?? null,
@@ -98,16 +90,8 @@ class EquipmentLogisticsPatternController extends Controller
                     'day_phase' => $stepData['day_phase'],
                     'action_type' => $stepData['action_type'],
                     'title' => $stepData['title'],
-                    'quantity_rule' => $stepData['quantity_rule'],
-                    'quantity_note' => $stepData['quantity_note'] ?? null,
-                    'start_time' => $stepData['start_time'] ?? null,
-                    'end_time' => $stepData['end_time'] ?? null,
-                    'from_location_role' => $stepData['from_location_role'],
-                    'to_location_role' => $stepData['to_location_role'],
                     'from_location_id' => $stepData['from_location_id'] ?? null,
                     'to_location_id' => $stepData['to_location_id'] ?? null,
-                    'from_location' => $stepData['from_location'] ?? null,
-                    'to_location' => $stepData['to_location'] ?? null,
                     'operator_type' => $stepData['operator_type'],
                     'witness_required' => (bool) ($stepData['witness_required'] ?? false),
                     'notes' => $stepData['notes'] ?? null,
@@ -185,4 +169,3 @@ class EquipmentLogisticsPatternController extends Controller
         return back()->with('status', "現在のステップ構成を新しいパターン「{$pattern->name}」として保存しました。");
     }
 }
-

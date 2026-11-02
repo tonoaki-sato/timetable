@@ -111,11 +111,8 @@ class EquipmentLogisticsPlanTest extends TestCase
                 'day_phase' => 'pre_day',
                 'action_type' => 'staging_move',
                 'title' => '前日倉庫出し・中継拠点へ移動',
-                'start_time' => '13:30',
-                'end_time' => '15:00',
-                'from_location_role' => 'equipment_storage',
-                'to_location_role' => 'staging_parking',
-                'quantity_rule' => 'all',
+                'from_location_id' => $this->locationBansho->id,
+                'to_location_id' => $this->locationTaxOffice->id,
                 'operator_type' => 'committee',
                 'witness_required' => false,
             ],
@@ -124,56 +121,18 @@ class EquipmentLogisticsPlanTest extends TestCase
                 'day_phase' => 'day1_morning',
                 'action_type' => 'setup',
                 'title' => '1日目朝 現場設置',
-                'start_time' => '08:00',
-                'end_time' => '09:30',
-                'from_location_role' => 'staging_parking',
-                'to_location_role' => 'text',
-                'to_location' => '会場設置',
-                'quantity_rule' => 'all',
+                'from_location_id' => $this->locationTaxOffice->id,
+                'to_location_id' => $this->locationKitagawa->id,
                 'operator_type' => 'committee',
                 'witness_required' => false,
             ],
             [
                 'display_order' => 30,
-                'day_phase' => 'day1_evening',
-                'action_type' => 'night_storage',
-                'title' => '1日目夜 分散夜間保管①',
-                'start_time' => '17:00',
-                'end_time' => '18:00',
-                'from_location_role' => 'text',
-                'from_location' => '会場設置',
-                'to_location_role' => 'night_parking_1',
-                'quantity_rule' => 'half_1',
-                'quantity_note' => '西側・中央分',
-                'operator_type' => 'committee',
-                'witness_required' => false,
-            ],
-            [
-                'display_order' => 40,
-                'day_phase' => 'day1_evening',
-                'action_type' => 'night_storage',
-                'title' => '1日目夜 分散夜間保管②',
-                'start_time' => '17:00',
-                'end_time' => '18:00',
-                'from_location_role' => 'text',
-                'from_location' => '会場設置',
-                'to_location_role' => 'night_parking_2',
-                'quantity_rule' => 'half_2',
-                'quantity_note' => '東側分',
-                'operator_type' => 'committee',
-                'witness_required' => false,
-            ],
-            [
-                'display_order' => 50,
                 'day_phase' => 'day2_evening',
                 'action_type' => 'return_storage',
                 'title' => '2日目夜 撤収・元保管場所へ格納',
-                'start_time' => '17:00',
-                'end_time' => '18:30',
-                'from_location_role' => 'text',
-                'from_location' => '会場設置',
-                'to_location_role' => 'equipment_storage',
-                'quantity_rule' => 'all',
+                'from_location_id' => $this->locationKitagawa->id,
+                'to_location_id' => $this->locationBansho->id,
                 'operator_type' => 'committee',
                 'witness_required' => false,
             ],
@@ -192,23 +151,20 @@ class EquipmentLogisticsPlanTest extends TestCase
             'night_location_2_id' => $this->locationKitagawa->id,
         ]);
 
-        $this->assertEquals(5, $count);
+        $this->assertEquals(3, $count);
 
         $plans = $equipment->plans()->get();
         $this->assertEquals(0, $plans->where('witness_required', true)->count());
 
-        // 1日目夜に2拠点へ25個ずつ分散保管され、quantity_noteも反映されていること
-        $nightPlans = $plans->where('day_phase', 'day1_evening')->values();
-        $this->assertCount(2, $nightPlans);
-        $this->assertEquals($this->locationTaxOffice->id, $nightPlans[0]->to_location_id);
-        $this->assertEquals(25, $nightPlans[0]->quantity);
-        $this->assertEquals('西側・中央分', $nightPlans[0]->quantity_note);
-        $this->assertEquals('25個（西側・中央分）', $nightPlans[0]->formatted_quantity);
+        // 資材数量（50個）が各ステップに設定されること
+        $firstPlan = $plans->where('day_phase', 'pre_day')->first();
+        $this->assertNotNull($firstPlan);
+        $this->assertEquals($this->locationTaxOffice->id, $firstPlan->to_location_id);
+        $this->assertEquals(50, $firstPlan->quantity);
 
         // 2日目夜に番所地下倉庫へ格納されること
         $lastPlan = $plans->where('day_phase', 'day2_evening')->first();
         $this->assertNotNull($lastPlan);
-        $this->assertEquals('番所地下倉庫', $lastPlan->to_location);
         $this->assertEquals($this->locationBansho->id, $lastPlan->to_location_id);
     }
 
@@ -260,8 +216,8 @@ class EquipmentLogisticsPlanTest extends TestCase
         ]);
 
         $this->assertCount(2, $savedPattern->steps);
-        $this->assertEquals('bansho_space', $savedPattern->steps[0]->to_location_role);
-        $this->assertEquals('bansho_space', $savedPattern->steps[1]->from_location_role);
+        $this->assertEquals($this->locationBanshoSpace->id, $savedPattern->steps[0]->to_location_id);
+        $this->assertEquals($this->locationBanshoSpace->id, $savedPattern->steps[1]->from_location_id);
 
         // 別資材に適用
         $targetEquipment = Equipment::factory()->rental()->create([
