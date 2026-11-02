@@ -29,30 +29,40 @@ class EquipmentManagementTest extends TestCase
     }
 
     /**
-     * 資材管理一覧画面が表示され、区分でフィルタできること
+     * 資材管理一覧画面が表示され、3区分（committee / rental / personal）でフィルタできること
      */
     public function test_index_displays_and_filters_equipments(): void
     {
         $this->actingAs($this->operator);
 
-        $committeeItem = Equipment::factory()->committee()->create(['name' => 'カラーコーン']);
-        $rentalItem = Equipment::factory()->rental()->create(['name' => 'パイプテント']);
+        Equipment::factory()->committee()->create(['name' => '立て看板']);
+        Equipment::factory()->rental()->create(['name' => 'パイプテント']);
+        Equipment::factory()->personal()->create(['name' => '私物折りたたみ台車']);
 
         $response = $this->get(route('equipments.index'));
         $response->assertStatus(200);
         $response->assertSee('資材管理');
-        $response->assertSee('カラーコーン');
+        $response->assertSee('立て看板');
         $response->assertSee('パイプテント');
+        $response->assertSee('私物折りたたみ台車');
 
         // 委員会管理のみフィルタ
         $committeeResponse = $this->get(route('equipments.index', ['type' => 'committee']));
-        $committeeResponse->assertSee('カラーコーン');
+        $committeeResponse->assertSee('立て看板');
         $committeeResponse->assertDontSee('パイプテント');
+        $committeeResponse->assertDontSee('私物折りたたみ台車');
 
         // レンタルのみフィルタ
         $rentalResponse = $this->get(route('equipments.index', ['type' => 'rental']));
         $rentalResponse->assertSee('パイプテント');
-        $rentalResponse->assertDontSee('カラーコーン');
+        $rentalResponse->assertDontSee('立て看板');
+        $rentalResponse->assertDontSee('私物折りたたみ台車');
+
+        // 私物のみフィルタ
+        $personalResponse = $this->get(route('equipments.index', ['type' => 'personal']));
+        $personalResponse->assertSee('私物折りたたみ台車');
+        $personalResponse->assertDontSee('立て看板');
+        $personalResponse->assertDontSee('パイプテント');
     }
 
     /**
@@ -71,9 +81,9 @@ class EquipmentManagementTest extends TestCase
     }
 
     /**
-     * 委員会管理機材の新規登録ができること
+     * 委員会管理機材および概数管理フラグ付き資材の新規登録ができること
      */
-    public function test_store_creates_committee_equipment(): void
+    public function test_store_creates_committee_equipment_with_approximate_quantity(): void
     {
         $this->actingAs($this->operator);
         $lane = Lane::factory()->create(['name' => 'カラーコーン班']);
@@ -81,9 +91,10 @@ class EquipmentManagementTest extends TestCase
         $response = $this->post(route('equipments.store'), [
             'name' => 'カラーコーン（バー付き）',
             'type' => 'committee',
-            'quantity' => 50,
-            'unit' => '個',
-            'storage_location' => '番所地下倉庫',
+            'quantity' => 60,
+            'is_approximate_quantity' => '1',
+            'unit' => '本',
+            'storage_location' => '番所倉庫',
             'lane_id' => $lane->id,
             'description' => '路上規制用コーン',
         ]);
@@ -92,18 +103,22 @@ class EquipmentManagementTest extends TestCase
         $this->assertNotNull($equipment);
         $response->assertRedirect(route('equipments.show', $equipment));
 
+        $this->assertTrue($equipment->is_approximate_quantity);
+        $this->assertSame('約 60 本', $equipment->formatted_quantity);
+
         $this->assertDatabaseHas('equipments', [
             'name' => 'カラーコーン（バー付き）',
             'type' => 'committee',
-            'quantity' => 50,
-            'storage_location' => '番所地下倉庫',
+            'quantity' => 60,
+            'is_approximate_quantity' => 1,
+            'storage_location' => '番所倉庫',
         ]);
     }
 
     /**
-     * イベント会社レンタル機材の新規登録ができること（提携1社のデフォルト補完含む）
+     * イベント会社レンタル機材および私物機材の新規登録ができること
      */
-    public function test_store_creates_rental_equipment_with_default_company(): void
+    public function test_store_creates_rental_and_personal_equipment(): void
     {
         $this->actingAs($this->operator);
 
@@ -112,19 +127,28 @@ class EquipmentManagementTest extends TestCase
             'type' => 'rental',
             'quantity' => 10,
             'unit' => '張',
-            'event_company_contact' => '03-3456-7890',
         ]);
 
         $equipment = Equipment::where('name', 'パイプテント 2K×3K')->first();
         $this->assertNotNull($equipment);
         $response->assertRedirect(route('equipments.show', $equipment));
+        $this->assertNull($equipment->storage_location);
+        $this->assertSame('10 張', $equipment->formatted_quantity);
 
-        $this->assertDatabaseHas('equipments', [
-            'name' => 'パイプテント 2K×3K',
-            'type' => 'rental',
-            'quantity' => 10,
-            'event_company_name' => '東京イベントサプライ株式会社',
+        // 私物（個人持ち込み）
+        $personalRes = $this->post(route('equipments.store'), [
+            'name' => 'アルミ脚立（私物）',
+            'type' => 'personal',
+            'quantity' => 2,
+            'unit' => '台',
+            'storage_location' => '自宅',
         ]);
+
+        $personalEq = Equipment::where('name', 'アルミ脚立（私物）')->first();
+        $this->assertNotNull($personalEq);
+        $personalRes->assertRedirect(route('equipments.show', $personalEq));
+        $this->assertTrue($personalEq->isPersonal());
+        $this->assertSame('自宅', $personalEq->storage_location);
     }
 
     /**
@@ -144,6 +168,7 @@ class EquipmentManagementTest extends TestCase
             'name' => '新・機材名',
             'type' => 'committee',
             'quantity' => 15,
+            'is_approximate_quantity' => '1',
             'unit' => '台',
             'storage_location' => '番所地下倉庫',
         ]);
@@ -153,6 +178,7 @@ class EquipmentManagementTest extends TestCase
             'id' => $equipment->id,
             'name' => '新・機材名',
             'quantity' => 15,
+            'is_approximate_quantity' => 1,
         ]);
 
         // 削除
@@ -186,15 +212,14 @@ class EquipmentManagementTest extends TestCase
     }
 
     /**
-     * カテゴリおよび持出ルール付きで新規資材を登録できること
+     * 持出ルール付きで新規資材を登録し、持出ルールで台帳を絞り込みできること
      */
-    public function test_store_creates_equipment_with_category_and_checkout_rule(): void
+    public function test_store_and_filter_by_checkout_rule(): void
     {
         $this->actingAs($this->operator);
 
         $response = $this->post(route('equipments.store'), [
             'name' => '折りたたみ大型台車',
-            'category' => 'carrier',
             'checkout_rule' => 'permission_required',
             'type' => 'committee',
             'quantity' => 5,
@@ -206,43 +231,18 @@ class EquipmentManagementTest extends TestCase
         $equipment = Equipment::where('name', '折りたたみ大型台車')->first();
         $this->assertNotNull($equipment);
         $response->assertRedirect(route('equipments.show', $equipment));
-
-        $this->assertSame('carrier', $equipment->category);
         $this->assertSame('permission_required', $equipment->checkout_rule);
         $this->assertSame('地下倉庫入口右手・台車ラック', $equipment->storage_detail);
-        $this->assertTrue($equipment->isCarrier());
-    }
-
-    /**
-     * カテゴリで資材台帳を絞り込みできること
-     */
-    public function test_index_filters_by_category(): void
-    {
-        $this->actingAs($this->operator);
 
         Equipment::factory()->create([
-            'name' => '大型パイプテント',
-            'category' => 'heavy_equipment',
-        ]);
-        Equipment::factory()->create([
-            'name' => '運搬用リヤカー',
-            'category' => 'carrier',
-        ]);
-        Equipment::factory()->create([
-            'name' => '結束バンド黒',
-            'category' => 'tool_consumable',
+            'name' => '自由持出バケツ',
+            'checkout_rule' => 'free',
         ]);
 
-        $carrierResponse = $this->get(route('equipments.index', ['category' => 'carrier']));
-        $carrierResponse->assertStatus(200);
-        $carrierResponse->assertSee('運搬用リヤカー');
-        $carrierResponse->assertDontSee('大型パイプテント');
-        $carrierResponse->assertDontSee('結束バンド黒');
-
-        $toolResponse = $this->get(route('equipments.index', ['category' => 'tool_consumable']));
-        $toolResponse->assertStatus(200);
-        $toolResponse->assertSee('結束バンド黒');
-        $toolResponse->assertDontSee('運搬用リヤカー');
+        $permResponse = $this->get(route('equipments.index', ['checkout_rule' => 'permission_required']));
+        $permResponse->assertStatus(200);
+        $permResponse->assertSee('折りたたみ大型台車');
+        $permResponse->assertDontSee('自由持出バケツ');
     }
 
     /**

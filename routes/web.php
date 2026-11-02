@@ -6,6 +6,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentLogisticsController;
+use App\Http\Controllers\EquipmentLogisticsPatternController;
 use App\Http\Controllers\EquipmentLogisticsPlanController;
 use App\Http\Controllers\FeatureSettingController;
 use App\Http\Controllers\LaneController;
@@ -139,12 +140,18 @@ Route::middleware('auth')->group(function () {
     // 1. 資材管理 (Equipment Management)
     Route::resource('equipments', EquipmentController::class);
 
-    // 2. 搬出入計画 (Logistics & Operations)
+    // 2. 搬出入計画・カスタムパターン管理 (Logistics & Operations)
     Route::prefix('logistics')->name('logistics.')->group(function () {
         Route::get('/', [EquipmentLogisticsController::class, 'index'])->name('index');
         Route::get('print', [EquipmentLogisticsController::class, 'print'])->name('print');
         Route::post('{equipment}/apply-template', [EquipmentLogisticsPlanController::class, 'applyTemplate'])->name('apply-template');
+        Route::post('{equipment}/save-as-pattern', [EquipmentLogisticsPatternController::class, 'saveFromEquipment'])->name('save-as-pattern');
         Route::delete('{equipment}/plans/clear', [EquipmentLogisticsPlanController::class, 'clear'])->name('plans.clear');
+
+        // 搬出入パターン（テンプレート）CRUD操作
+        Route::post('patterns', [EquipmentLogisticsPatternController::class, 'store'])->name('patterns.store');
+        Route::put('patterns/{pattern}', [EquipmentLogisticsPatternController::class, 'update'])->name('patterns.update');
+        Route::delete('patterns/{pattern}', [EquipmentLogisticsPatternController::class, 'destroy'])->name('patterns.destroy');
 
         // 搬出入計画ステップ操作
         Route::post('plans', [EquipmentLogisticsPlanController::class, 'store'])->name('plans.store');

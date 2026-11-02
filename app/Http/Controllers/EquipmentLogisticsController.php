@@ -17,7 +17,7 @@ class EquipmentLogisticsController extends Controller
     ) {}
 
     /**
-     * 搬出入計画ダッシュボード画面の表示（4大タブ）
+     * 搬出入計画ダッシュボード画面の表示（4大ビュー＋パターン管理）
      */
     public function index(Request $request): View
     {
@@ -26,13 +26,14 @@ class EquipmentLogisticsController extends Controller
         $tab = $request->query('tab', 'flow');
         $typeFilter = $request->query('type');
         $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
-        $categoryFilter = $request->query('category');
         $phaseFilter = $request->query('phase');
 
-        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter, $categoryFilter);
-        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $categoryFilter);
+        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter);
+        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter);
         $locationsData = $this->logisticsService->getLocationsStatusData();
+        $onsiteNightPlans = $this->logisticsService->getOnsiteNightStoragePlans();
         $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData();
+        $patterns = $this->logisticsService->getPatternsData();
 
         $locations = Location::active()->ordered()->get();
         $lanes = Lane::active()->ordered()->get();
@@ -42,12 +43,13 @@ class EquipmentLogisticsController extends Controller
             'tab',
             'typeFilter',
             'laneFilter',
-            'categoryFilter',
             'phaseFilter',
             'equipments',
             'checklistPlans',
             'locationsData',
+            'onsiteNightPlans',
             'eventCompanyPlans',
+            'patterns',
             'locations',
             'lanes',
             'staffs'
@@ -64,12 +66,12 @@ class EquipmentLogisticsController extends Controller
         $format = $request->query('format', 'all');
         $typeFilter = $request->query('type');
         $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
-        $categoryFilter = $request->query('category');
         $phaseFilter = $request->query('phase');
 
-        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter, $categoryFilter);
-        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $categoryFilter);
+        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter);
+        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter);
         $locationsData = $this->logisticsService->getLocationsStatusData();
+        $onsiteNightPlans = $this->logisticsService->getOnsiteNightStoragePlans();
         $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData();
         $festivalDates = $this->logisticsService->resolveFestivalDates();
         $lanes = Lane::active()->ordered()->get();
@@ -78,11 +80,11 @@ class EquipmentLogisticsController extends Controller
             'format',
             'typeFilter',
             'laneFilter',
-            'categoryFilter',
             'phaseFilter',
             'equipments',
             'checklistPlans',
             'locationsData',
+            'onsiteNightPlans',
             'eventCompanyPlans',
             'festivalDates',
             'lanes'

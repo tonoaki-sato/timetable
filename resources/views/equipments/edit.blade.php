@@ -47,7 +47,7 @@
             <!-- 資材区分 -->
             <div>
                 <label class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">資材区分 <span class="text-rose-500">*</span></label>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <label class="p-3 rounded-xl border flex items-center space-x-2 cursor-pointer transition has-checked:border-emerald-600 has-checked:bg-emerald-50/40 border-slate-200">
                         <input type="radio" name="type" value="committee" {{ old('type', $equipment->type) === 'committee' ? 'checked' : '' }}
                                class="text-emerald-600 focus:ring-emerald-500">
@@ -57,6 +57,11 @@
                         <input type="radio" name="type" value="rental" {{ old('type', $equipment->type) === 'rental' ? 'checked' : '' }}
                                class="text-sky-600 focus:ring-sky-500">
                         <span class="text-xs font-bold text-slate-800">🏢 イベント会社レンタル</span>
+                    </label>
+                    <label class="p-3 rounded-xl border flex items-center space-x-2 cursor-pointer transition has-checked:border-amber-600 has-checked:bg-amber-50/40 border-slate-200">
+                        <input type="radio" name="type" value="personal" {{ old('type', $equipment->type) === 'personal' ? 'checked' : '' }}
+                               class="text-amber-600 focus:ring-amber-500">
+                        <span class="text-xs font-bold text-slate-800">🎒 私物（個人持ち込み）</span>
                     </label>
                 </div>
             </div>
@@ -68,20 +73,8 @@
                        class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
-            <!-- カテゴリ & 持出ルール -->
+            <!-- 持出ルール & 担当班 -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                <div>
-                    <label for="category" class="block text-[11px] font-bold text-slate-700 mb-1">備品・資材カテゴリ <span class="text-rose-500">*</span></label>
-                    <select id="category" name="category" required
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        @foreach(\App\Models\Equipment::CATEGORIES as $key => $label)
-                            <option value="{{ $key }}" {{ old('category', $equipment->category) === $key ? 'selected' : '' }}>
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
                 <div>
                     <label for="checkout_rule" class="block text-[11px] font-bold text-slate-700 mb-1">持出・利用ルール <span class="text-rose-500">*</span></label>
                     <select id="checkout_rule" name="checkout_rule" required
@@ -93,23 +86,10 @@
                         @endforeach
                     </select>
                 </div>
-            </div>
 
-            <!-- 数量 & 単位 & 担当班 -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                    <label for="quantity" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">総数量 <span class="text-rose-500">*</span></label>
-                    <input type="number" id="quantity" name="quantity" value="{{ old('quantity', $equipment->quantity) }}" min="1" required
-                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
-                </div>
-                <div>
-                    <label for="unit" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">単位 <span class="text-rose-500">*</span></label>
-                    <input type="text" id="unit" name="unit" value="{{ old('unit', $equipment->unit) }}" required
-                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label for="lane_id" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">担当班</label>
-                    <select id="lane_id" name="lane_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <label for="lane_id" class="block text-[11px] font-bold text-slate-700 mb-1">担当班</label>
+                    <select id="lane_id" name="lane_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <option value="">担当班なし</option>
                         @foreach($lanes as $lane)
                             <option value="{{ $lane->id }}" {{ old('lane_id', $equipment->lane_id) == $lane->id ? 'selected' : '' }}>
@@ -120,36 +100,54 @@
                 </div>
             </div>
 
-            <!-- 保管場所（自前） -->
-            <div id="section-committee" class="{{ $equipment->isCommittee() ? '' : 'hidden' }} space-y-3 p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200">
+            <!-- 数量 & 単位 & 概数フラグ -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
                 <div>
-                    <label for="storage_location" class="block text-[11px] sm:text-xs font-bold text-emerald-900 mb-1">定常保管場所（自前機材）</label>
-                    <input type="text" id="storage_location" name="storage_location" value="{{ old('storage_location', $equipment->storage_location) }}"
-                           placeholder="番所地下倉庫、コミュニティルーム等"
-                           class="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <label for="quantity" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">総数量 <span class="text-rose-500">*</span></label>
+                    <input type="number" id="quantity" name="quantity" value="{{ old('quantity', $equipment->quantity) }}" min="1" required
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+                </div>
+                <div>
+                    <label for="unit" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">単位 <span class="text-rose-500">*</span></label>
+                    <input type="text" id="unit" name="unit" value="{{ old('unit', $equipment->unit) }}" required
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="pb-2">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="is_approximate_quantity" value="1" {{ old('is_approximate_quantity', $equipment->is_approximate_quantity) ? 'checked' : '' }}
+                               class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-xs font-bold text-slate-700">概数管理（「約○個」として表示）</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 保管場所（自前・私物） -->
+            <div id="section-committee" class="{{ $equipment->isRental() ? 'hidden' : '' }} space-y-3 p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200">
+                <div>
+                    <label for="storage_location" class="block text-[11px] sm:text-xs font-bold text-emerald-900 mb-1">定常保管場所（自前機材・私物）</label>
+                    <div class="flex items-center space-x-2 flex-wrap gap-y-1.5">
+                        <input type="text" id="storage_location" name="storage_location" value="{{ old('storage_location', $equipment->storage_location) }}"
+                               placeholder="番所地下倉庫、番所倉庫、コミュニティルーム、自宅等"
+                               class="flex-1 min-w-[200px] px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <button type="button" data-set-storage-location="番所地下倉庫"
+                                class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition cursor-pointer">
+                            番所地下倉庫
+                        </button>
+                        <button type="button" data-set-storage-location="番所倉庫"
+                                class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition cursor-pointer">
+                            番所倉庫
+                        </button>
+                        <button type="button" data-set-storage-location="コミュニティルーム"
+                                class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition cursor-pointer">
+                            コミュニティルーム
+                        </button>
+                    </div>
                 </div>
                 <div>
                     <label for="storage_detail" class="block text-[11px] font-bold text-emerald-900 mb-1">定位置詳細・棚番メモ</label>
                     <input type="text" id="storage_detail" name="storage_detail" value="{{ old('storage_detail', $equipment->storage_detail) }}"
                            placeholder="例: 地下倉庫入口右手・台車ラック、本陣受付裏 備品棚2段目"
                            class="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-            </div>
-
-            <!-- イベント会社（レンタル） -->
-            <div id="section-rental" class="{{ $equipment->isRental() ? '' : 'hidden' }} space-y-3 p-3.5 rounded-xl bg-sky-50/50 border border-sky-200">
-                <div class="font-bold text-xs text-sky-900">イベント会社情報</div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label for="event_company_name" class="block text-[11px] font-bold text-slate-700 mb-1">イベント会社名</label>
-                        <input type="text" id="event_company_name" name="event_company_name" value="{{ old('event_company_name', $equipment->event_company_name) }}"
-                               class="w-full px-3 py-2 bg-white border border-sky-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                    </div>
-                    <div>
-                        <label for="event_company_contact" class="block text-[11px] font-bold text-slate-700 mb-1">連絡先・電話番号</label>
-                        <input type="text" id="event_company_contact" name="event_company_contact" value="{{ old('event_company_contact', $equipment->event_company_contact) }}"
-                               class="w-full px-3 py-2 bg-white border border-sky-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono">
-                    </div>
                 </div>
             </div>
 
@@ -176,4 +174,3 @@
 
 @vite(['resources/js/equipments.js'])
 </x-layouts.app>
-

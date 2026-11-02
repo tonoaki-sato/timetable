@@ -12,15 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'name',
-    'category',
-    'checkout_rule',
     'type',
+    'checkout_rule',
     'quantity',
+    'is_approximate_quantity',
     'unit',
     'storage_location',
     'storage_detail',
-    'event_company_name',
-    'event_company_contact',
     'lane_id',
     'description',
     'display_order',
@@ -46,17 +44,7 @@ class Equipment extends Model
     public const array TYPES = [
         'committee' => '実行委員会管理',
         'rental' => 'イベント会社レンタル',
-    ];
-
-    /**
-     * 資材・備品カテゴリ定義一覧
-     *
-     * @var array<string, string>
-     */
-    public const array CATEGORIES = [
-        'heavy_equipment' => '大型機材・設備（コーン・テント・給水設備等）',
-        'carrier' => '台車・運搬具（台車・ハンドトラック等）',
-        'tool_consumable' => '工具・消耗品・備品（誘導棒・ニッパー・テープ等）',
+        'personal' => '私物（個人持ち込み）',
     ];
 
     /**
@@ -77,6 +65,7 @@ class Equipment extends Model
      */
     public const array STORAGE_LOCATIONS = [
         '番所地下倉庫' => '番所地下倉庫',
+        '番所倉庫' => '番所倉庫',
         'コミュニティルーム' => 'コミュニティルーム',
     ];
 
@@ -89,6 +78,7 @@ class Equipment extends Model
     {
         return [
             'quantity' => 'integer',
+            'is_approximate_quantity' => 'boolean',
             'display_order' => 'integer',
         ];
     }
@@ -102,35 +92,21 @@ class Equipment extends Model
     }
 
     /**
-     * カテゴリラベルアクセサ
-     */
-    public function getCategoryLabelAttribute(): string
-    {
-        return self::CATEGORIES[$this->category] ?? $this->category;
-    }
-
-    /**
      * 持出ルールラベルアクセサ
      */
     public function getCheckoutRuleLabelAttribute(): string
     {
-        return self::CHECKOUT_RULES[$this->checkout_rule] ?? $this->checkout_rule;
+        return self::CHECKOUT_RULES[$this->checkout_rule] ?? $this->checkout_rule ?? '';
     }
 
     /**
-     * 台車・運搬具か判定
+     * フォーマット済み数量表示アクセサ（例: "約 60 本" または "5 台"）
      */
-    public function isCarrier(): bool
+    public function getFormattedQuantityAttribute(): string
     {
-        return $this->category === 'carrier';
-    }
+        $prefix = $this->is_approximate_quantity ? '約 ' : '';
 
-    /**
-     * 工具・消耗品か判定
-     */
-    public function isToolConsumable(): bool
-    {
-        return $this->category === 'tool_consumable';
+        return $prefix.number_format((int) $this->quantity).' '.$this->unit;
     }
 
     /**
@@ -147,6 +123,14 @@ class Equipment extends Model
     public function isRental(): bool
     {
         return $this->type === 'rental';
+    }
+
+    /**
+     * 私物（個人持ち込み）か判定
+     */
+    public function isPersonal(): bool
+    {
+        return $this->type === 'personal';
     }
 
     /**
@@ -190,15 +174,11 @@ class Equipment extends Model
     }
 
     /**
-     * カテゴリで絞り込むスコープ
+     * 私物資材のみ抽出するスコープ
      */
-    public function scopeCategory(Builder $query, ?string $category): Builder
+    public function scopePersonal(Builder $query): Builder
     {
-        if ($category) {
-            return $query->where('category', $category);
-        }
-
-        return $query;
+        return $query->where('type', 'personal');
     }
 
     /**

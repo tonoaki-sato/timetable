@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('location_schedules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('location_id')->constrained('locations')->cascadeOnDelete();
-            $table->dateTime('start_at')->comment('開始年月日時分');
-            $table->dateTime('end_at')->comment('終了年月日時分');
-            $table->string('application_status', 30)->default('unapplied')->comment('利用申請ステータス: unapplied, applying, approved, not_required, rejected');
-            $table->string('title')->nullable()->comment('枠名（例: 午前枠、夜間枠）');
-            $table->text('note')->nullable()->comment('枠メモ・申請特記事項');
+            $table->dateTime('start_at')->comment('利用可能開始日時');
+            $table->dateTime('end_at')->comment('利用可能終了日時');
+            $table->string('availability_status', 30)->default('available')->comment('確保ステータス: available(利用可・確保済), unavailable(未確保・調整中)');
+            $table->string('title')->nullable()->comment('枠タイトル（貸切枠・資材置場利用可能枠等）');
+            $table->text('note')->nullable()->comment('補足メモ');
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
         });

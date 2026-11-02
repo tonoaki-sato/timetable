@@ -16,7 +16,7 @@
                 <span class="text-xl">🖨️</span>
                 <div>
                     <div class="font-bold text-sm">資材搬出入計画書 印刷プレビュー</div>
-                    <div class="text-[11px] text-slate-400">A4横向き印刷に最適化されています。必要に応じて担当班や種別で絞り込んで現場配布用シートを出力してください。</div>
+                    <div class="text-[11px] text-slate-400">A4横向き印刷に最適化されています。必要に応じて担当班や区分で絞り込んで現場配布用シートを出力してください。</div>
                 </div>
             </div>
 
@@ -44,20 +44,14 @@
                 @endforeach
             </select>
 
-            <select name="category" data-auto-submit class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200">
-                <option value="">全カテゴリ</option>
-                @foreach(\App\Models\Equipment::CATEGORIES as $key => $label)
-                    <option value="{{ $key }}" {{ $categoryFilter === $key ? 'selected' : '' }}>{{ $label }}</option>
-                @endforeach
-            </select>
-
             <select name="type" data-auto-submit class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200">
                 <option value="">全区分</option>
                 <option value="committee" {{ $typeFilter === 'committee' ? 'selected' : '' }}>自前機材のみ</option>
                 <option value="rental" {{ $typeFilter === 'rental' ? 'selected' : '' }}>レンタル機材のみ</option>
+                <option value="personal" {{ $typeFilter === 'personal' ? 'selected' : '' }}>私物のみ</option>
             </select>
 
-            @if($laneFilter || $categoryFilter || $typeFilter)
+            @if($laneFilter || $typeFilter)
                 <a href="{{ route('logistics.print') }}" class="text-indigo-400 hover:underline">
                     フィルタ解除
                 </a>
@@ -76,9 +70,6 @@
                     @if($laneFilter && ($curLane = $lanes->firstWhere('id', $laneFilter)))
                         <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">【{{ $curLane->name }} 担当分】</span>
                     @endif
-                    @if($categoryFilter)
-                        <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">【{{ \App\Models\Equipment::CATEGORIES[$categoryFilter] ?? $categoryFilter }}】</span>
-                    @endif
                 </div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tight">資材・機材 搬出入・中継・夜間保管計画書</h1>
             </div>
@@ -93,7 +84,7 @@
         <div class="space-y-2">
             <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1">
                 <span>📍</span>
-                <span>主要中継拠点・保管場所 & 貸切可能時間一覧</span>
+                <span>主要中継拠点・保管場所 & 利用可能時間一覧</span>
             </h2>
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
                 @foreach($locationsData as $locItem)
@@ -103,8 +94,12 @@
                         <div class="text-[10px] font-mono mt-0.5 {{ $l->is_all_day ? 'text-emerald-700 font-bold' : 'text-amber-800' }}">
                             @if($l->is_all_day)
                                 終日常時使用可
+                            @elseif($l->schedules->isNotEmpty())
+                                @foreach($l->schedules as $s)
+                                    <div>{{ $s->start_at->format('n/j H:i') }}〜{{ $s->end_at->format($s->start_at->isSameDay($s->end_at) ? 'H:i' : 'n/j H:i') }}</div>
+                                @endforeach
                             @else
-                                貸切: {{ $l->available_from ? $l->available_from->format('n/j H:i') : '' }}〜{{ $l->available_to ? $l->available_to->format('n/j H:i') : '' }}
+                                利用枠未設定
                             @endif
                         </div>
                     </div>
@@ -124,19 +119,19 @@
                     <tr>
                         <th class="p-2 border-r border-slate-300 w-44">資材名・数量</th>
                         <th class="p-2 border-r border-slate-300 w-28">区分 / 担当班</th>
-                        <th class="p-2 border-r border-slate-300">前日 (準備・中継移動)</th>
+                        <th class="p-2 border-r border-slate-300">事前・前日 (準備・中継移動)</th>
                         <th class="p-2 border-r border-slate-300">1日目 朝 (設置)</th>
                         <th class="p-2 border-r border-slate-300">1日目 夜 (夜間分散保管)</th>
                         <th class="p-2 border-r border-slate-300">2日目 朝 (設置)</th>
                         <th class="p-2 border-r border-slate-300">2日目 夜 (撤収・格納・集約)</th>
-                        <th class="p-2">翌日 (業者回収)</th>
+                        <th class="p-2">翌日以降 (回収・片付け)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @foreach($equipments as $eq)
                         @php
                             $plans = $eq->plans;
-                            $preDayPlans = $plans->where('day_phase', 'pre_day');
+                            $preDayPlans = $plans->whereIn('day_phase', ['other', 'pre_day']);
                             $day1MPlans = $plans->where('day_phase', 'day1_morning');
                             $day1EPlans = $plans->where('day_phase', 'day1_evening');
                             $day2MPlans = $plans->where('day_phase', 'day2_morning');
@@ -148,7 +143,7 @@
                             <td class="p-2 border-r border-slate-300 font-bold text-slate-900">
                                 <div>{{ $eq->name }}</div>
                                 <div class="font-mono text-indigo-700 font-black mt-0.5">
-                                    {{ $eq->quantity }} {{ $eq->unit }}
+                                    {{ $eq->formatted_quantity }}
                                 </div>
                             </td>
 
@@ -158,12 +153,9 @@
                                 @if($eq->lane)
                                     <div class="text-[10px] text-slate-500 mt-0.5">{{ $eq->lane->name }}</div>
                                 @endif
-                                @if($eq->event_company_name)
-                                    <div class="text-[9px] text-slate-400 mt-0.5 truncate">{{ $eq->event_company_name }}</div>
-                                @endif
                             </td>
 
-                            <!-- 前日 -->
+                            <!-- 事前・前日 -->
                             <td class="p-2 border-r border-slate-300 space-y-1">
                                 @forelse($preDayPlans as $p)
                                     <div class="bg-slate-50 p-1.5 rounded border border-slate-200 leading-tight">
@@ -172,6 +164,9 @@
                                             {{ $p->start_time ? substr($p->start_time, 0, 5) : '' }}
                                             ({{ $p->from_location }}➔{{ $p->to_location }})
                                         </div>
+                                        @if($p->formatted_quantity !== '')
+                                            <div class="text-[9px] text-indigo-700 font-bold">{{ $p->formatted_quantity }}</div>
+                                        @endif
                                         @if($p->witness_required)
                                             <div class="text-[9px] text-rose-700 font-bold">👁️立会: {{ $p->witnessStaff?->name ?: '要' }}</div>
                                         @endif
@@ -190,6 +185,9 @@
                                             {{ $p->start_time ? substr($p->start_time, 0, 5) : '' }}
                                             ({{ $p->from_location }}➔{{ $p->to_location }})
                                         </div>
+                                        @if($p->formatted_quantity !== '')
+                                            <div class="text-[9px] text-indigo-700 font-bold">{{ $p->formatted_quantity }}</div>
+                                        @endif
                                     </div>
                                 @empty
                                     <span class="text-slate-300">-</span>
@@ -202,7 +200,7 @@
                                     <div class="bg-indigo-50/80 p-1.5 rounded border border-indigo-200 leading-tight">
                                         <div class="font-bold text-indigo-950">{{ $p->to_location }}</div>
                                         <div class="text-[10px] text-indigo-800 font-mono font-bold">
-                                            {{ $p->quantity ? $p->quantity . $eq->unit : '保管' }}
+                                            {{ $p->formatted_quantity !== '' ? $p->formatted_quantity : '全量保管' }}
                                             ({{ $p->start_time ? substr($p->start_time, 0, 5) : '' }})
                                         </div>
                                         @if($p->notes)
@@ -222,6 +220,9 @@
                                         <div class="text-[10px] text-slate-600 font-mono">
                                             {{ $p->start_time ? substr($p->start_time, 0, 5) : '' }}
                                         </div>
+                                        @if($p->formatted_quantity !== '')
+                                            <div class="text-[9px] text-indigo-700 font-bold">{{ $p->formatted_quantity }}</div>
+                                        @endif
                                     </div>
                                 @empty
                                     <span class="text-slate-300">-</span>
@@ -279,4 +280,3 @@
 
 </body>
 </html>
-

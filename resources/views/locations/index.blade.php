@@ -97,10 +97,10 @@
                                     @if($todaySlots->isNotEmpty())
                                         <div class="flex flex-wrap items-center gap-1">
                                             @foreach($todaySlots as $slot)
-                                                <span class="inline-flex items-center space-x-1 text-[10px] px-1.5 py-0.5 rounded border {{ $slot->application_status_badge_class }}"
+                                                <span class="inline-flex items-center space-x-1 text-[10px] px-1.5 py-0.5 rounded border {{ $slot->availability_status_badge_class }}"
                                                       title="{{ $slot->title ? $slot->title . ' / ' : '' }}{{ $slot->note }}">
                                                     <span class="font-mono font-bold">{{ $slot->start_at->format('H:i') }}-{{ $slot->end_at->format('H:i') }}</span>
-                                                    <span class="font-bold">[{{ $slot->application_status === 'unapplied' ? '未申請' : ($slot->application_status === 'approved' ? '承認済' : $slot->application_status_label) }}]</span>
+                                                    <span class="font-bold">[{{ $slot->availability_status_label }}]</span>
                                                 </span>
                                             @endforeach
                                         </div>

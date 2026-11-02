@@ -27,7 +27,7 @@ class StoreLocationScheduleRequest extends FormRequest
         return [
             'start_at' => ['required', 'date'],
             'end_at' => ['required', 'date', 'after:start_at'],
-            'application_status' => ['required', Rule::in(array_keys(LocationSchedule::APPLICATION_STATUSES))],
+            'availability_status' => ['required', Rule::in(array_keys(LocationSchedule::AVAILABILITY_STATUSES))],
             'title' => ['nullable', 'string', 'max:255'],
             'note' => ['nullable', 'string', 'max:1000'],
         ];

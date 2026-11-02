@@ -6,6 +6,7 @@ use App\Http\Requests\ApplyEquipmentTemplateRequest;
 use App\Http\Requests\StoreEquipmentLogisticsPlanRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPlanRequest;
 use App\Models\Equipment;
+use App\Models\EquipmentLogisticsPattern;
 use App\Models\EquipmentLogisticsPlan;
 use App\Services\EquipmentLogisticsService;
 use Illuminate\Http\JsonResponse;
@@ -103,28 +104,30 @@ class EquipmentLogisticsPlanController extends Controller
     }
 
     /**
-     * 既存資材へのテンプレート適用
+     * 資材へのカスタムパターン一括適用
      */
     public function applyTemplate(ApplyEquipmentTemplateRequest $request, Equipment $equipment): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $equipment);
 
         $validated = $request->validated();
-        $count = $this->logisticsService->applyTemplate(
+        $pattern = EquipmentLogisticsPattern::with('steps')->findOrFail($validated['pattern_id']);
+
+        $count = $this->logisticsService->applyPattern(
             $equipment,
-            $validated['template_type'],
+            $pattern,
             $validated
         );
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "{$count}件の計画ステップを生成しました。",
+                'message' => "パターン「{$pattern->name}」から{$count}件の計画ステップを生成しました。",
                 'equipment' => $equipment->load('plans'),
             ]);
         }
 
-        return back()->with('status', "{$count}件の計画ステップを生成しました。");
+        return back()->with('status', "パターン「{$pattern->name}」から{$count}件の計画ステップを生成しました。");
     }
 
     /**

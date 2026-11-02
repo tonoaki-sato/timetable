@@ -85,8 +85,8 @@
                         <tr>
                             <th class="py-2.5 px-4">利用可能日時 (年月日時分)</th>
                             <th class="py-2.5 px-4">枠名 / タイトル</th>
-                            <th class="py-2.5 px-4">利用申請ステータス</th>
-                            <th class="py-2.5 px-4">メモ / 申請特記事項</th>
+                            <th class="py-2.5 px-4">利用可否ステータス</th>
+                            <th class="py-2.5 px-4">メモ / 特記事項</th>
                             <th class="py-2.5 px-4 text-right">操作</th>
                         </tr>
                     </thead>
@@ -108,11 +108,11 @@
                                     <form method="POST" action="{{ route('locations.schedules.update-status', [$location, $schedule]) }}" class="inline-flex items-center space-x-1.5">
                                         @csrf
                                         @method('PATCH')
-                                        <select name="application_status"
+                                        <select name="availability_status"
                                                 data-action="auto-submit-status"
-                                                class="text-xs font-bold py-1 px-2 rounded-lg border focus:ring-1 focus:ring-indigo-500 cursor-pointer {{ $schedule->application_status_badge_class }}">
-                                            @foreach(\App\Models\LocationSchedule::APPLICATION_STATUSES as $statusKey => $statusLabel)
-                                                <option value="{{ $statusKey }}" {{ $schedule->application_status === $statusKey ? 'selected' : '' }}>
+                                                class="text-xs font-bold py-1 px-2 rounded-lg border focus:ring-1 focus:ring-indigo-500 cursor-pointer {{ $schedule->availability_status_badge_class }}">
+                                            @foreach(\App\Models\LocationSchedule::AVAILABILITY_STATUSES as $statusKey => $statusLabel)
+                                                <option value="{{ $statusKey }}" {{ $schedule->availability_status === $statusKey ? 'selected' : '' }}>
                                                     {{ $statusLabel }}
                                                 </option>
                                             @endforeach
@@ -179,16 +179,16 @@
             </div>
 
             <div>
-                <label for="modal_application_status" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">
-                    利用申請ステータス <span class="text-rose-500">*</span>
+                <label for="modal_availability_status" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">
+                    利用可否ステータス <span class="text-rose-500">*</span>
                 </label>
-                <select name="application_status" id="modal_application_status" required
+                <select name="availability_status" id="modal_availability_status" required
                         class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    @foreach(\App\Models\LocationSchedule::APPLICATION_STATUSES as $statusKey => $statusLabel)
+                    @foreach(\App\Models\LocationSchedule::AVAILABILITY_STATUSES as $statusKey => $statusLabel)
                         <option value="{{ $statusKey }}">{{ $statusLabel }}</option>
                     @endforeach
                 </select>
-                <p class="text-[11px] text-slate-500 mt-1">※「未申請」の場合は実行委員会として利用不可状態となります。</p>
+                <p class="text-[11px] text-slate-500 mt-1">※「利用不可」の場合は実行委員会として利用不可状態となります。</p>
             </div>
 
             <div>

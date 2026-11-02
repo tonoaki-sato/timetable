@@ -28,7 +28,7 @@ class LocationScheduleFactory extends Factory
             'location_id' => Location::factory(),
             'start_at' => $start,
             'end_at' => $end,
-            'application_status' => 'unapplied',
+            'availability_status' => 'available',
             'title' => '午前利用枠',
             'note' => fake()->sentence(),
         ];

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Equipment;
+use App\Models\EquipmentLogisticsPattern;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Lane;
 use App\Models\Location;
@@ -21,6 +22,8 @@ class EquipmentLogisticsTest extends TestCase
 
     private Location $locationKitagawa;
 
+    private EquipmentLogisticsPattern $pattern;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -34,7 +37,57 @@ class EquipmentLogisticsTest extends TestCase
         Timetable::factory()->create(['target_date' => '2026-10-12', 'name' => '2日目']);
 
         $this->locationTaxOffice = Location::factory()->create(['name' => '税務署前駐車場']);
-        $this->locationKitagawa = Location::factory()->create(['name' => '北川駐車場']);
+        $this->locationKitagawa = Location::factory()->create(['name' => '長島駐車場（旧北川駐車場）']);
+
+        $this->pattern = EquipmentLogisticsPattern::create([
+            'name' => 'テスト標準パターンA',
+            'target_type' => 'committee',
+            'description' => 'テスト用の搬出入パターン',
+        ]);
+
+        $this->pattern->steps()->createMany([
+            [
+                'display_order' => 10,
+                'day_phase' => 'pre_day',
+                'action_type' => 'staging_move',
+                'title' => '前日倉庫出し',
+                'start_time' => '13:30',
+                'end_time' => '15:00',
+                'from_location_role' => 'equipment_storage',
+                'to_location_role' => 'staging_parking',
+                'quantity_rule' => 'all',
+                'operator_type' => 'committee',
+                'witness_required' => false,
+            ],
+            [
+                'display_order' => 20,
+                'day_phase' => 'day1_evening',
+                'action_type' => 'night_storage',
+                'title' => '1日目夜間保管',
+                'start_time' => '17:00',
+                'end_time' => '18:00',
+                'from_location_role' => 'text',
+                'from_location' => '会場設置',
+                'to_location_role' => 'night_parking_1',
+                'quantity_rule' => 'all',
+                'operator_type' => 'committee',
+                'witness_required' => false,
+            ],
+            [
+                'display_order' => 30,
+                'day_phase' => 'day2_evening',
+                'action_type' => 'return_storage',
+                'title' => '2日目夜撤収格納',
+                'start_time' => '17:00',
+                'end_time' => '18:30',
+                'from_location_role' => 'text',
+                'from_location' => '会場設置',
+                'to_location_role' => 'equipment_storage',
+                'quantity_rule' => 'all',
+                'operator_type' => 'committee',
+                'witness_required' => false,
+            ],
+        ]);
     }
 
     /**
@@ -59,7 +112,7 @@ class EquipmentLogisticsTest extends TestCase
     }
 
     /**
-     * 搬出入計画の各タブ（フロー・チェックリスト・拠点保管・イベント会社）が表示されること
+     * 搬出入計画の全5タブ（フロー・チェックリスト・拠点保管・イベント会社・パターン管理）が表示されること
      */
     public function test_logistics_tabs_display_correctly(): void
     {
@@ -67,14 +120,24 @@ class EquipmentLogisticsTest extends TestCase
 
         $equipment = Equipment::factory()->rental()->create([
             'name' => '足踏み式給水設備',
-            'event_company_name' => '東京イベントサプライ株式会社',
         ]);
 
         EquipmentLogisticsPlan::factory()->create([
             'equipment_id' => $equipment->id,
             'title' => '給水設備 業者受取立会',
             'day_phase' => 'pre_day',
+            'operator_type' => 'event_company',
             'witness_required' => true,
+        ]);
+
+        // 現地・テント内夜間保管ステップ（to_location_id === null）
+        EquipmentLogisticsPlan::factory()->create([
+            'equipment_id' => $equipment->id,
+            'title' => 'テント内現地夜間保管',
+            'day_phase' => 'day1_evening',
+            'action_type' => 'night_storage',
+            'to_location_id' => null,
+            'to_location' => '会場そのまま（テント内保管）',
         ]);
 
         // 1. 資材別フロー
@@ -87,71 +150,132 @@ class EquipmentLogisticsTest extends TestCase
         $chkRes->assertStatus(200);
         $chkRes->assertSee('給水設備 業者受取立会');
 
-        // 3. 拠点別保管
+        // 3. 拠点別保管 + 現地夜間保管カード
         $locRes = $this->get(route('logistics.index', ['tab' => 'locations']));
         $locRes->assertStatus(200);
         $locRes->assertSee('税務署前駐車場');
+        $locRes->assertSee('現地・テント内夜間保管');
+        $locRes->assertSee('会場そのまま（テント内保管）');
 
         // 4. イベント会社スケジュール
         $evtRes = $this->get(route('logistics.index', ['tab' => 'events']));
         $evtRes->assertStatus(200);
-        $evtRes->assertSee('東京イベントサプライ株式会社');
+        $evtRes->assertSee('給水設備 業者受取立会');
+
+        // 5. 搬出入パターン管理
+        $patRes = $this->get(route('logistics.index', ['tab' => 'patterns']));
+        $patRes->assertStatus(200);
+        $patRes->assertSee('テスト標準パターンA');
     }
 
     /**
-     * テンプレート適用でステップが一括自動生成されること
+     * カスタム搬出入パターンの新規登録・更新・削除ができること
      */
-    public function test_apply_template_creates_plans_correctly(): void
+    public function test_can_create_update_and_delete_logistics_pattern(): void
+    {
+        $this->actingAs($this->operator);
+
+        $storeRes = $this->post(route('logistics.patterns.store'), [
+            'name' => 'パターンC: イベント会社設営一任',
+            'target_type' => 'rental',
+            'description' => 'パイプテント等の設営・解体',
+            'steps' => [
+                [
+                    'day_phase' => 'day1_morning',
+                    'action_type' => 'setup',
+                    'title' => 'イベント会社による搬入・設営',
+                    'start_time' => '07:30',
+                    'end_time' => '09:30',
+                    'from_location_role' => 'text',
+                    'from_location' => 'イベント会社配送',
+                    'to_location_role' => 'text',
+                    'to_location' => '各テント配置場所',
+                    'quantity_rule' => 'all',
+                    'operator_type' => 'event_company',
+                    'witness_required' => false,
+                ],
+                [
+                    'day_phase' => 'day2_evening',
+                    'action_type' => 'vendor_pickup',
+                    'title' => 'イベント会社による解体・搬出',
+                    'start_time' => '17:00',
+                    'end_time' => '19:00',
+                    'from_location_role' => 'text',
+                    'from_location' => '各テント配置場所',
+                    'to_location_role' => 'text',
+                    'to_location' => 'イベント会社回収',
+                    'quantity_rule' => 'all',
+                    'operator_type' => 'event_company',
+                    'witness_required' => false,
+                ],
+            ],
+        ]);
+
+        $storeRes->assertRedirect(route('logistics.index', ['tab' => 'patterns']));
+        $pattern = EquipmentLogisticsPattern::where('name', 'パターンC: イベント会社設営一任')->first();
+        $this->assertNotNull($pattern);
+        $this->assertCount(2, $pattern->steps);
+
+        // 更新
+        $updateRes = $this->put(route('logistics.patterns.update', $pattern), [
+            'name' => 'パターンC: 設営一任（改訂版）',
+            'target_type' => 'rental',
+            'description' => '更新された説明',
+            'steps' => [
+                [
+                    'day_phase' => 'day1_morning',
+                    'action_type' => 'setup',
+                    'title' => '搬入設営のみ',
+                    'from_location_role' => 'text',
+                    'to_location_role' => 'text',
+                    'quantity_rule' => 'all',
+                    'operator_type' => 'event_company',
+                ],
+            ],
+        ]);
+        $updateRes->assertRedirect(route('logistics.index', ['tab' => 'patterns']));
+        $pattern->refresh();
+        $this->assertSame('パターンC: 設営一任（改訂版）', $pattern->name);
+        $this->assertCount(1, $pattern->steps);
+
+        // 削除
+        $delRes = $this->delete(route('logistics.patterns.destroy', $pattern));
+        $delRes->assertRedirect(route('logistics.index', ['tab' => 'patterns']));
+        $this->assertDatabaseMissing('equipment_logistics_patterns', ['id' => $pattern->id]);
+    }
+
+    /**
+     * パターン適用でステップが一括自動生成され、再適用時に重複せず上書きされること
+     */
+    public function test_apply_pattern_creates_and_safely_overwrites_plans(): void
     {
         $this->actingAs($this->operator);
 
         $equipment = Equipment::factory()->committee()->create([
-            'name' => 'カラーコーン（テンプレートテスト）',
+            'name' => 'カラーコーン（パターンテスト）',
             'quantity' => 50,
             'storage_location' => '番所地下倉庫',
         ]);
 
+        // 1回目の適用
         $response = $this->post(route('logistics.apply-template', $equipment), [
-            'template_type' => 'pattern_a',
+            'pattern_id' => $this->pattern->id,
             'staging_location_id' => $this->locationTaxOffice->id,
             'night_location_1_id' => $this->locationTaxOffice->id,
-            'night_location_2_id' => $this->locationKitagawa->id,
         ]);
 
         $response->assertRedirect();
-        $this->assertGreaterThanOrEqual(5, $equipment->plans()->count());
-    }
-
-    /**
-     * テンプレート再適用時に既存ステップを安全に上書き（重複増殖防止）できること
-     */
-    public function test_apply_template_safely_overwrites_existing_plans(): void
-    {
-        $this->actingAs($this->operator);
-
-        $equipment = Equipment::factory()->committee()->create([
-            'name' => 'カラーコーン（上書き検証）',
-            'quantity' => 40,
-        ]);
-
-        // 1回目の適用
-        $this->post(route('logistics.apply-template', $equipment), [
-            'template_type' => 'pattern_a',
-            'staging_location_id' => $this->locationTaxOffice->id,
-            'night_location_1_id' => $this->locationTaxOffice->id,
-        ]);
         $firstCount = $equipment->plans()->count();
-        $this->assertGreaterThan(0, $firstCount);
+        $this->assertSame(3, $firstCount);
 
-        // 2回目の適用（上書きデフォルト）
+        // 2回目の適用（上書き）
         $this->post(route('logistics.apply-template', $equipment), [
-            'template_type' => 'pattern_a',
+            'pattern_id' => $this->pattern->id,
             'staging_location_id' => $this->locationTaxOffice->id,
             'night_location_1_id' => $this->locationTaxOffice->id,
             'override_existing' => true,
         ]);
 
-        // 重複して2倍にならず、同件数であること
         $this->assertSame($firstCount, $equipment->plans()->count());
     }
 
@@ -171,7 +295,6 @@ class EquipmentLogisticsTest extends TestCase
         $response = $this->delete(route('logistics.plans.clear', $equipment));
         $response->assertRedirect();
 
-        // 資材自体は残るが、計画ステップのみ0件になること
         $this->assertDatabaseHas('equipments', ['id' => $equipment->id]);
         $this->assertSame(0, $equipment->plans()->count());
     }
@@ -196,56 +319,42 @@ class EquipmentLogisticsTest extends TestCase
     }
 
     /**
-     * A4横 搬出入計画書・チェックリスト印刷画面が表示されること
+     * A4横 搬出入計画書印刷画面が表示され、担当班や区分による絞り込みができること
      */
-    public function test_logistics_print_displays_correctly(): void
-    {
-        $this->actingAs($this->operator);
-
-        Equipment::factory()->committee()->create([
-            'name' => 'カラーコーン（印刷検証）',
-            'quantity' => 30,
-        ]);
-
-        $response = $this->get(route('logistics.print'));
-        $response->assertStatus(200);
-        $response->assertSee('資材・機材 搬出入・中継・夜間保管計画書');
-        $response->assertSee('カラーコーン（印刷検証）');
-        $response->assertSee('税務署前駐車場');
-    }
-
-    /**
-     * 印刷画面で担当班やカテゴリによる絞り込みができること
-     */
-    public function test_logistics_print_supports_filtering(): void
+    public function test_logistics_print_displays_and_supports_filtering(): void
     {
         $this->actingAs($this->operator);
 
         $coneLane = Lane::factory()->create(['name' => '特設コーン班']);
         $tentLane = Lane::factory()->create(['name' => '特設テント班']);
 
-        Equipment::factory()->create([
+        Equipment::factory()->committee()->create([
             'name' => 'コーン班専用機材',
             'lane_id' => $coneLane->id,
-            'category' => 'heavy_equipment',
         ]);
 
-        Equipment::factory()->create([
-            'name' => 'テント班専用台車',
+        Equipment::factory()->personal()->create([
+            'name' => 'テント班私物台車',
             'lane_id' => $tentLane->id,
-            'category' => 'carrier',
         ]);
+
+        // 全体印刷表示
+        $response = $this->get(route('logistics.print'));
+        $response->assertStatus(200);
+        $response->assertSee('資材・機材 搬出入・中継・夜間保管計画書');
+        $response->assertSee('コーン班専用機材');
+        $response->assertSee('テント班私物台車');
 
         // 担当班で絞り込み
         $laneResponse = $this->get(route('logistics.print', ['lane_id' => $coneLane->id]));
         $laneResponse->assertStatus(200);
         $laneResponse->assertSee('コーン班専用機材');
-        $laneResponse->assertDontSee('テント班専用台車');
+        $laneResponse->assertDontSee('テント班私物台車');
 
-        // カテゴリで絞り込み
-        $catResponse = $this->get(route('logistics.print', ['category' => 'carrier']));
-        $catResponse->assertStatus(200);
-        $catResponse->assertSee('テント班専用台車');
-        $catResponse->assertDontSee('コーン班専用機材');
+        // 区分（personal）で絞り込み
+        $typeResponse = $this->get(route('logistics.print', ['type' => 'personal']));
+        $typeResponse->assertStatus(200);
+        $typeResponse->assertSee('テント班私物台車');
+        $typeResponse->assertDontSee('コーン班専用機材');
     }
 }

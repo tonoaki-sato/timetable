@@ -5,7 +5,7 @@
     <x-page-header
         title="資材管理"
         icon="📦"
-        description="宿場まつり運行に使用する自前保有備品および提携レンタル機材の台帳管理・スペック一覧">
+        description="宿場まつり運行に使用する自前保有備品・提携レンタル機材・個人持ち込み私物の台帳管理">
         <x-slot:badges>
             <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                 全 {{ $totalCount }} 品目
@@ -15,6 +15,9 @@
             </span>
             <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
                 🏢 レンタル: {{ $rentalCount }}
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                🎒 私物: {{ $personalCount }}
             </span>
         </x-slot:badges>
         <x-slot:actions>
@@ -33,21 +36,25 @@
 
     <!-- 2. 検索・絞り込みフィルターバー -->
     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-        <!-- 区分 & カテゴリフィルター -->
+        <!-- 区分フィルター -->
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
                 <span class="text-xs font-bold text-slate-500 mr-1">区分:</span>
-                <a href="{{ route('equipments.index', array_filter(['lane_id' => $laneFilter, 'category' => $categoryFilter, 'keyword' => $keyword])) }}"
+                <a href="{{ route('equipments.index', array_filter(['lane_id' => $laneFilter, 'checkout_rule' => $checkoutRuleFilter, 'keyword' => $keyword])) }}"
                    class="px-3 py-1 rounded-lg text-xs font-bold transition {{ !$typeFilter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                     すべて ({{ $totalCount }})
                 </a>
-                <a href="{{ route('equipments.index', array_filter(['type' => 'committee', 'lane_id' => $laneFilter, 'category' => $categoryFilter, 'keyword' => $keyword])) }}"
+                <a href="{{ route('equipments.index', array_filter(['type' => 'committee', 'lane_id' => $laneFilter, 'checkout_rule' => $checkoutRuleFilter, 'keyword' => $keyword])) }}"
                    class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'committee' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200' }}">
                     🏛️ 実行委員会 ({{ $committeeCount }})
                 </a>
-                <a href="{{ route('equipments.index', array_filter(['type' => 'rental', 'lane_id' => $laneFilter, 'category' => $categoryFilter, 'keyword' => $keyword])) }}"
+                <a href="{{ route('equipments.index', array_filter(['type' => 'rental', 'lane_id' => $laneFilter, 'checkout_rule' => $checkoutRuleFilter, 'keyword' => $keyword])) }}"
                    class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'rental' ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200' }}">
                     🏢 イベント会社 ({{ $rentalCount }})
+                </a>
+                <a href="{{ route('equipments.index', array_filter(['type' => 'personal', 'lane_id' => $laneFilter, 'checkout_rule' => $checkoutRuleFilter, 'keyword' => $keyword])) }}"
+                   class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'personal' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200' }}">
+                    🎒 私物 ({{ $personalCount }})
                 </a>
             </div>
 
@@ -56,8 +63,8 @@
                 @if($typeFilter)
                     <input type="hidden" name="type" value="{{ $typeFilter }}">
                 @endif
-                @if($categoryFilter)
-                    <input type="hidden" name="category" value="{{ $categoryFilter }}">
+                @if($checkoutRuleFilter)
+                    <input type="hidden" name="checkout_rule" value="{{ $checkoutRuleFilter }}">
                 @endif
 
                 <!-- 所管班 -->
@@ -82,7 +89,7 @@
                     検索
                 </button>
 
-                @if($typeFilter || $laneFilter || $categoryFilter || $keyword)
+                @if($typeFilter || $laneFilter || $checkoutRuleFilter || $keyword)
                     <a href="{{ route('equipments.index') }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 underline">
                         クリア
                     </a>
@@ -90,24 +97,24 @@
             </form>
         </div>
 
-        <!-- カテゴリ切り替えサブバー -->
+        <!-- 持出ルール切り替えサブバー -->
         <div class="flex items-center space-x-1.5 border-t border-slate-100 pt-2.5 flex-wrap">
-            <span class="text-xs font-bold text-slate-500 mr-1">種別:</span>
+            <span class="text-xs font-bold text-slate-500 mr-1">持出ルール:</span>
             <a href="{{ route('equipments.index', array_filter(['type' => $typeFilter, 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ !$categoryFilter ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                全種別
+               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ !$checkoutRuleFilter ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                すべて
             </a>
-            <a href="{{ route('equipments.index', array_filter(['category' => 'heavy_equipment', 'type' => $typeFilter, 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $categoryFilter === 'heavy_equipment' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200' }}">
-                📦 大型機材・設備
+            <a href="{{ route('equipments.index', array_filter(['checkout_rule' => 'free', 'type' => $typeFilter, 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
+               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $checkoutRuleFilter === 'free' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200' }}">
+                🟢 自由持出可
             </a>
-            <a href="{{ route('equipments.index', array_filter(['category' => 'carrier', 'type' => $typeFilter, 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $categoryFilter === 'carrier' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200' }}">
-                🛒 台車・運搬具 ({{ $carrierCount }})
+            <a href="{{ route('equipments.index', array_filter(['checkout_rule' => 'permission_required', 'type' => $typeFilter, 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
+               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $checkoutRuleFilter === 'permission_required' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200' }}">
+                ⚠️ 本陣許可制
             </a>
-            <a href="{{ route('equipments.index', array_filter(['category' => 'tool_consumable', 'type' => $typeFilter, 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $categoryFilter === 'tool_consumable' ? 'bg-teal-600 text-white' : 'bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200' }}">
-                🧰 工具・消耗品 ({{ $toolConsumableCount }})
+            <a href="{{ route('equipments.index', array_filter(['checkout_rule' => 'leader_only', 'type' => $typeFilter, 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
+               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $checkoutRuleFilter === 'leader_only' ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-800 hover:bg-purple-100 border border-purple-200' }}">
+                👑 班長限定
             </a>
         </div>
     </div>
@@ -121,7 +128,7 @@
                         <th class="py-3.5 px-4">資材名 / 仕様メモ</th>
                         <th class="py-3.5 px-3">区分</th>
                         <th class="py-3.5 px-3">総数量</th>
-                        <th class="py-3.5 px-4">定常保管元 / 提携業者</th>
+                        <th class="py-3.5 px-4">定常保管場所 / 調達区分</th>
                         <th class="py-3.5 px-3">主担当班</th>
                         <th class="py-3.5 px-3">搬出入計画配備</th>
                         <th class="py-3.5 px-4 text-right">アクション</th>
@@ -136,11 +143,6 @@
                                     <a href="{{ route('equipments.show', $item) }}" class="font-bold text-slate-900 text-sm hover:text-indigo-600 transition">
                                         {{ $item->name }}
                                     </a>
-                                    @if($item->isCarrier())
-                                        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">🛒 台車</span>
-                                    @elseif($item->isToolConsumable())
-                                        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-200">🧰 工具・消耗品</span>
-                                    @endif
                                     @if($item->checkout_rule === 'permission_required')
                                         <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">⚠️ 本陣許可制</span>
                                     @elseif($item->checkout_rule === 'leader_only')
@@ -160,38 +162,36 @@
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800">
                                         🏛️ 自前保有
                                     </span>
-                                @else
+                                @elseif($item->isRental())
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-100 text-sky-800">
                                         🏢 提携レンタル
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800">
+                                        🎒 私物
                                     </span>
                                 @endif
                             </td>
 
                             <!-- 数量・単位 -->
                             <td class="py-3 px-3 whitespace-nowrap">
-                                <span class="font-bold font-mono text-slate-900 text-sm">{{ number_format($item->quantity) }}</span>
-                                <span class="text-[11px] text-slate-500 ml-0.5">{{ $item->unit }}</span>
+                                <span class="font-bold font-mono text-slate-900 text-sm">{{ $item->formatted_quantity }}</span>
                             </td>
 
-                            <!-- 保管場所 / 提携業者 -->
+                            <!-- 保管場所 / 調達区分 -->
                             <td class="py-3 px-4">
-                                @if($item->isCommittee())
+                                @if($item->isRental())
+                                    <div class="text-slate-700 font-medium">
+                                        🏢 イベント会社手配
+                                    </div>
+                                @else
                                     <div class="font-medium text-slate-800 flex items-center space-x-1">
                                         <span class="text-slate-400">📍</span>
-                                        <span>{{ $item->storage_location ?: '番所地下倉庫' }}</span>
+                                        <span>{{ $item->storage_location ?: ($item->isPersonal() ? '自宅（個人保管）' : '番所地下倉庫') }}</span>
                                     </div>
                                     @if($item->storage_detail)
                                         <div class="text-[10px] text-slate-400 mt-0.5 line-clamp-1">
                                             {{ $item->storage_detail }}
-                                        </div>
-                                    @endif
-                                @else
-                                    <div class="text-slate-800 font-medium">
-                                        {{ $item->event_company_name ?: '東京イベントサプライ株式会社' }}
-                                    </div>
-                                    @if($item->event_company_contact)
-                                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">
-                                            {{ $item->event_company_contact }}
                                         </div>
                                     @endif
                                 @endif
@@ -262,7 +262,7 @@
                             <td colspan="7" class="py-12 text-center text-slate-400">
                                 <div class="text-3xl mb-2">📦</div>
                                 <div class="font-bold text-slate-700">登録されている資材がありません</div>
-                                <div class="text-xs text-slate-400 mt-1">「新規資材を登録」ボタンから自前備品や提携レンタル機材を登録してください。</div>
+                                <div class="text-xs text-slate-400 mt-1">「新規資材を登録」ボタンから自前備品や提携レンタル機材、私物を登録してください。</div>
                                 <div class="mt-4">
                                     <a href="{{ route('equipments.create') }}" class="inline-block px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 transition">
                                         ＋ 新規資材を登録

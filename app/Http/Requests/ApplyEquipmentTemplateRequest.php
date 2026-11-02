@@ -23,7 +23,7 @@ class ApplyEquipmentTemplateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'template_type' => ['required', 'string', 'in:pattern_a,pattern_b,pattern_c'],
+            'pattern_id' => ['required', 'integer', 'exists:equipment_logistics_patterns,id'],
             'override_existing' => ['nullable', 'boolean'],
             'staging_location_id' => ['nullable', 'exists:locations,id'],
             'night_location_1_id' => ['nullable', 'exists:locations,id'],

@@ -129,6 +129,10 @@ class Location extends Model
      */
     public function isAvailableAt(?DateTimeInterface $dateTime = null): bool
     {
+        if (! $this->is_active) {
+            return false;
+        }
+
         if ($this->is_all_day) {
             return true;
         }
@@ -147,9 +151,8 @@ class Location extends Model
 
         return $schedules->contains(function (LocationSchedule $schedule) use ($dateTime) {
             $inSlot = $schedule->start_at <= $dateTime && $dateTime <= $schedule->end_at;
-            $approved = in_array($schedule->application_status, ['approved', 'not_required'], true);
 
-            return $inSlot && $approved;
+            return $inSlot && $schedule->isAvailable();
         });
     }
 
@@ -211,33 +214,19 @@ class Location extends Model
         if ($matched) {
             $slotTitle = $matched->title ? "「{$matched->title}」" : $matched->start_at->format('H:i').'〜'.$matched->end_at->format('H:i');
 
-            return match ($matched->application_status) {
-                'unapplied' => new LocationStatusEvaluation(
-                    status: LocationCurrentStatus::UnavailableUnapplied,
-                    detail: "{$slotTitle}は実行委員会として未申請のため利用できません。",
-                    matchedSchedule: $matched
-                ),
-                'applying' => new LocationStatusEvaluation(
-                    status: LocationCurrentStatus::UnavailableApplying,
-                    detail: "{$slotTitle}は利用申請の審査中（許可待ち）です。",
-                    matchedSchedule: $matched
-                ),
-                'rejected' => new LocationStatusEvaluation(
-                    status: LocationCurrentStatus::UnavailableRejected,
-                    detail: "{$slotTitle}は申請が却下されたため利用できません。",
-                    matchedSchedule: $matched
-                ),
-                'approved', 'not_required' => new LocationStatusEvaluation(
+            if ($matched->isAvailable()) {
+                return new LocationStatusEvaluation(
                     status: LocationCurrentStatus::Available,
                     detail: "{$slotTitle}で利用可能です（{$matched->end_at->format('H:i')}まで）。",
                     matchedSchedule: $matched
-                ),
-                default => new LocationStatusEvaluation(
-                    status: LocationCurrentStatus::UnavailableOutOfHours,
-                    detail: "{$slotTitle}の申請ステータスが不正です。",
-                    matchedSchedule: $matched
-                ),
-            };
+                );
+            }
+
+            return new LocationStatusEvaluation(
+                status: LocationCurrentStatus::UnavailablePending,
+                detail: "{$slotTitle}は未確保（調整中）のため利用できません。",
+                matchedSchedule: $matched
+            );
         }
 
         // 枠外の場合

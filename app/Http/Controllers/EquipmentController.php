@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEquipmentRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
 use App\Models\Equipment;
+use App\Models\EquipmentLogisticsPattern;
 use App\Models\Lane;
 use App\Models\Location;
 use App\Models\Staff;
@@ -24,19 +25,18 @@ class EquipmentController extends Controller
 
         $typeFilter = $request->query('type');
         $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
-        $categoryFilter = $request->query('category');
+        $checkoutRuleFilter = $request->query('checkout_rule');
         $keyword = $request->query('keyword');
 
         $query = Equipment::query()
             ->with(['lane', 'plans'])
             ->when($typeFilter, fn ($q) => $q->where('type', $typeFilter))
             ->when($laneFilter, fn ($q) => $q->where('lane_id', $laneFilter))
-            ->when($categoryFilter, fn ($q) => $q->where('category', $categoryFilter))
+            ->when($checkoutRuleFilter, fn ($q) => $q->where('checkout_rule', $checkoutRuleFilter))
             ->when($keyword, fn ($q) => $q->where(function ($sub) use ($keyword) {
                 $sub->where('name', 'like', "%{$keyword}%")
                     ->orWhere('storage_location', 'like', "%{$keyword}%")
                     ->orWhere('storage_detail', 'like', "%{$keyword}%")
-                    ->orWhere('event_company_name', 'like', "%{$keyword}%")
                     ->orWhere('description', 'like', "%{$keyword}%");
             }))
             ->ordered();
@@ -49,21 +49,19 @@ class EquipmentController extends Controller
         $totalCount = Equipment::count();
         $committeeCount = Equipment::where('type', 'committee')->count();
         $rentalCount = Equipment::where('type', 'rental')->count();
-        $carrierCount = Equipment::where('category', 'carrier')->count();
-        $toolConsumableCount = Equipment::where('category', 'tool_consumable')->count();
+        $personalCount = Equipment::where('type', 'personal')->count();
 
         return view('equipments.index', compact(
             'equipments',
             'lanes',
             'typeFilter',
             'laneFilter',
-            'categoryFilter',
+            'checkoutRuleFilter',
             'keyword',
             'totalCount',
             'committeeCount',
             'rentalCount',
-            'carrierCount',
-            'toolConsumableCount'
+            'personalCount'
         ));
     }
 
@@ -91,11 +89,6 @@ class EquipmentController extends Controller
             $data['created_by'] = $request->user()->id;
         }
 
-        // 提携イベント会社（1社固定）のデフォルト補完
-        if (($data['type'] ?? '') === 'rental' && empty($data['event_company_name'])) {
-            $data['event_company_name'] = '東京イベントサプライ株式会社';
-        }
-
         $equipment = Equipment::create($data);
 
         if ($request->wantsJson()) {
@@ -120,13 +113,19 @@ class EquipmentController extends Controller
         $equipment->load([
             'lane',
             'creator',
-            'plans' => fn ($q) => $q->with(['fromLocationModel', 'toLocationModel', 'witnessStaff'])->orderBy('display_order')->orderBy('id'),
+            'plans' => fn ($q) => $q->with([
+                'equipment',
+                'fromLocationModel.schedules',
+                'toLocationModel.schedules',
+                'witnessStaff',
+            ])->orderBy('display_order')->orderBy('id'),
         ]);
 
         $locations = Location::active()->ordered()->get();
         $staffs = Staff::active()->orderBy('kana')->get();
+        $patterns = EquipmentLogisticsPattern::with('steps')->ordered()->get();
 
-        return view('equipments.show', compact('equipment', 'locations', 'staffs'));
+        return view('equipments.show', compact('equipment', 'locations', 'staffs', 'patterns'));
     }
 
     /**
@@ -148,12 +147,7 @@ class EquipmentController extends Controller
     {
         $this->authorize('update', $equipment);
 
-        $data = $request->validated();
-        if (($data['type'] ?? '') === 'rental' && empty($data['event_company_name'])) {
-            $data['event_company_name'] = '東京イベントサプライ株式会社';
-        }
-
-        $equipment->update($data);
+        $equipment->update($request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([

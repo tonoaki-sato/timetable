@@ -47,11 +47,11 @@ function initScheduleModal() {
 
                 const startInput = document.getElementById('modal_start_at');
                 const endInput = document.getElementById('modal_end_at');
-                const statusInput = document.getElementById('modal_application_status');
+                const statusInput = document.getElementById('modal_availability_status');
 
                 if (startInput) startInput.value = startStr;
                 if (endInput) endInput.value = endStr;
-                if (statusInput) statusInput.value = 'unapplied';
+                if (statusInput) statusInput.value = 'available';
             } else if (mode === 'edit') {
                 if (modalTitle) {
                     modalTitle.innerHTML = '<span>⏱️</span><span>利用時間帯の編集</span>';
@@ -65,7 +65,7 @@ function initScheduleModal() {
                     const schedule = JSON.parse(btn.dataset.schedule || '{}');
                     const startInput = document.getElementById('modal_start_at');
                     const endInput = document.getElementById('modal_end_at');
-                    const statusInput = document.getElementById('modal_application_status');
+                    const statusInput = document.getElementById('modal_availability_status');
                     const titleInput = document.getElementById('modal_title');
                     const noteInput = document.getElementById('modal_note');
 
@@ -76,7 +76,7 @@ function initScheduleModal() {
                         endInput.value = schedule.end_at.slice(0, 16);
                     }
                     if (statusInput) {
-                        statusInput.value = schedule.application_status || 'unapplied';
+                        statusInput.value = schedule.availability_status || 'available';
                     }
                     if (titleInput) {
                         titleInput.value = schedule.title || '';

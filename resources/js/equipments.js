@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initEquipmentForm();
     initStepModal();
     initApplyTemplateModal();
+    initSavePatternModal();
+    initPatternModal();
 });
 
 /**
@@ -13,16 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
 function initEquipmentForm() {
     const typeRadios = document.querySelectorAll('input[name="type"]');
     const commSec = document.getElementById('section-committee');
-    const rentSec = document.getElementById('section-rental');
 
     function toggleEquipmentType(type) {
-        if (!commSec && !rentSec) return;
-        if (type === 'committee') {
-            if (commSec) commSec.classList.remove('hidden');
-            if (rentSec) rentSec.classList.add('hidden');
+        if (!commSec) return;
+        if (type === 'rental') {
+            commSec.classList.add('hidden');
         } else {
-            if (commSec) commSec.classList.add('hidden');
-            if (rentSec) rentSec.classList.remove('hidden');
+            commSec.classList.remove('hidden');
         }
     }
 
@@ -58,6 +57,7 @@ function initStepModal() {
     const form = document.getElementById('form-step');
     const modalTitle = document.getElementById('modal-step-title');
     const methodContainer = document.getElementById('form-step-method');
+    const fromLocationSelect = document.getElementById('step_from_location_id');
     const toLocationSelect = document.getElementById('step_to_location_id');
 
     if (!modal || !form) {
@@ -66,7 +66,18 @@ function initStepModal() {
 
     const defaultAction = form.action;
 
-    // 場所セレクト変更時にテキスト入力も同期
+    // 移動元セレクト変更時にテキスト入力も同期
+    if (fromLocationSelect) {
+        fromLocationSelect.addEventListener('change', () => {
+            const selected = fromLocationSelect.options[fromLocationSelect.selectedIndex];
+            const fromLocationInput = document.getElementById('step_from_location');
+            if (selected && selected.dataset.name && fromLocationInput) {
+                fromLocationInput.value = selected.dataset.name;
+            }
+        });
+    }
+
+    // 移動先セレクト変更時にテキスト入力も同期
     if (toLocationSelect) {
         toLocationSelect.addEventListener('change', () => {
             const selected = toLocationSelect.options[toLocationSelect.selectedIndex];
@@ -116,10 +127,12 @@ function initStepModal() {
                     setValue('step_target_date', plan.target_date ? plan.target_date.substring(0, 10) : '');
                     setValue('step_start_time', plan.start_time ? plan.start_time.substring(0, 5) : '');
                     setValue('step_end_time', plan.end_time ? plan.end_time.substring(0, 5) : '');
+                    setValue('step_from_location_id', plan.from_location_id);
                     setValue('step_from_location', plan.from_location);
-                    setValue('step_to_location', plan.to_location);
                     setValue('step_to_location_id', plan.to_location_id);
+                    setValue('step_to_location', plan.to_location);
                     setValue('step_quantity', plan.quantity);
+                    setValue('step_quantity_note', plan.quantity_note);
                     setValue('step_operator_type', plan.operator_type || 'committee');
                     setValue('step_witness_staff_id', plan.witness_staff_id);
                     setValue('step_notes', plan.notes);
@@ -150,7 +163,7 @@ function initStepModal() {
 }
 
 /**
- * 3. テンプレート適用モーダル (equipments.show)
+ * 3. パターン適用モーダル (equipments.show)
  */
 function initApplyTemplateModal() {
     const modal = document.getElementById('modal-apply-template');
@@ -163,6 +176,175 @@ function initApplyTemplateModal() {
     });
 
     document.querySelectorAll('[data-action="close-apply-template-modal"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+}
+
+/**
+ * 4. 現在のステップ構成をパターンとして保存するモーダル (equipments.show)
+ */
+function initSavePatternModal() {
+    const modal = document.getElementById('modal-save-pattern');
+    if (!modal) return;
+
+    document.querySelectorAll('[data-action="open-save-pattern-modal"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
+    });
+
+    document.querySelectorAll('[data-action="close-save-pattern-modal"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+}
+
+/**
+ * 5. カスタム搬出入パターン新規作成・編集モーダル (logistics.index ?tab=patterns)
+ */
+function initPatternModal() {
+    const modal = document.getElementById('modal-pattern');
+    const form = document.getElementById('form-pattern');
+    const modalTitle = document.getElementById('modal-pattern-title');
+    const methodContainer = document.getElementById('form-pattern-method');
+    const stepsContainer = document.getElementById('pattern-steps-container');
+    const stepTemplate = document.getElementById('tpl-pattern-step-row');
+
+    if (!modal || !form || !stepsContainer || !stepTemplate) {
+        return;
+    }
+
+    const defaultAction = form.action;
+
+    function reindexStepRows() {
+        const rows = stepsContainer.querySelectorAll('.pattern-step-row');
+        rows.forEach((row, index) => {
+            const numLabel = row.querySelector('.step-row-number');
+            if (numLabel) {
+                numLabel.textContent = `ステップ #${index + 1}`;
+            }
+            row.querySelectorAll('[data-field]').forEach((field) => {
+                const fieldName = field.dataset.field;
+                field.name = `steps[${index}][${fieldName}]`;
+            });
+            const removeBtn = row.querySelector('[data-action="remove-pattern-step"]');
+            if (removeBtn) {
+                removeBtn.classList.toggle('hidden', rows.length <= 1);
+            }
+        });
+    }
+
+    function addStepRow(stepData = null) {
+        const clone = stepTemplate.content.cloneNode(true);
+        const row = clone.querySelector('.pattern-step-row');
+
+        if (stepData) {
+            const setField = (name, val) => {
+                const el = row.querySelector(`[data-field="${name}"]`);
+                if (!el) return;
+                if (el.type === 'checkbox') {
+                    el.checked = Boolean(val);
+                } else {
+                    el.value = val ?? '';
+                }
+            };
+            setField('day_phase', stepData.day_phase || 'pre_day');
+            setField('action_type', stepData.action_type || 'staging_move');
+            setField('start_time', stepData.start_time ? stepData.start_time.substring(0, 5) : '');
+            setField('end_time', stepData.end_time ? stepData.end_time.substring(0, 5) : '');
+            setField('title', stepData.title || '');
+            setField('operator_type', stepData.operator_type || 'committee');
+            setField('from_location_role', stepData.from_location_role || 'text');
+            setField('from_location', stepData.from_location || '');
+            setField('to_location_role', stepData.to_location_role || 'text');
+            setField('to_location', stepData.to_location || '');
+            setField('quantity_rule', stepData.quantity_rule || 'all');
+            setField('quantity_note', stepData.quantity_note || '');
+            setField('witness_required', stepData.witness_required);
+            setField('notes', stepData.notes || '');
+        }
+
+        const removeBtn = row.querySelector('[data-action="remove-pattern-step"]');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                row.remove();
+                reindexStepRows();
+            });
+        }
+
+        stepsContainer.appendChild(row);
+        reindexStepRows();
+    }
+
+    document.querySelectorAll('[data-action="add-pattern-step"]').forEach((btn) => {
+        btn.addEventListener('click', () => addStepRow());
+    });
+
+    document.querySelectorAll('[data-action="open-pattern-modal"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            stepsContainer.innerHTML = '';
+
+            if (mode === 'create') {
+                if (modalTitle) {
+                    modalTitle.innerHTML = '<span>🧩</span><span>新規パターンの作成</span>';
+                }
+                form.action = defaultAction;
+                if (methodContainer) {
+                    methodContainer.innerHTML = '';
+                }
+                form.reset();
+                addStepRow();
+            } else if (mode === 'edit') {
+                if (modalTitle) {
+                    modalTitle.innerHTML = '<span>🧩</span><span>パターンの編集</span>';
+                }
+                try {
+                    const pattern = JSON.parse(btn.dataset.pattern || '{}');
+                    form.action = `/logistics/patterns/${pattern.id}`;
+                    if (methodContainer) {
+                        methodContainer.innerHTML = '<input type="hidden" name="_method" value="PUT">';
+                    }
+
+                    const nameEl = document.getElementById('pattern_name');
+                    const typeEl = document.getElementById('pattern_target_type');
+                    const descEl = document.getElementById('pattern_description');
+
+                    if (nameEl) nameEl.value = pattern.name || '';
+                    if (typeEl) typeEl.value = pattern.target_type || 'committee';
+                    if (descEl) descEl.value = pattern.description || '';
+
+                    if (Array.isArray(pattern.steps) && pattern.steps.length > 0) {
+                        pattern.steps.forEach((step) => addStepRow(step));
+                    } else {
+                        addStepRow();
+                    }
+                } catch (e) {
+                    console.error('Failed to parse pattern data', e);
+                    addStepRow();
+                }
+            }
+
+            modal.classList.remove('hidden');
+        });
+    });
+
+    document.querySelectorAll('[data-action="close-pattern-modal"]').forEach((btn) => {
         btn.addEventListener('click', () => {
             modal.classList.add('hidden');
         });

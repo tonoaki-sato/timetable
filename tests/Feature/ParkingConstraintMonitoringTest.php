@@ -41,7 +41,7 @@ class ParkingConstraintMonitoringTest extends TestCase
                 'location_id' => $location->id,
                 'start_at' => $startAt,
                 'end_at' => $endAt,
-                'application_status' => 'approved',
+                'availability_status' => 'available',
                 'title' => '貸切枠',
             ]);
         }
@@ -228,7 +228,7 @@ class ParkingConstraintMonitoringTest extends TestCase
         Carbon::setTestNow(Carbon::create(2026, 10, 11, 14, 0, 0, 'Asia/Tokyo'));
 
         $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
-        $parking = $this->createParkingLocation(
+        $this->createParkingLocation(
             ['name' => '税務署前駐車場'],
             '2026-10-10 12:00:00',
             '2026-10-12 21:00:00'

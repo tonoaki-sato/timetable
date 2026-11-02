@@ -7,6 +7,7 @@ use App\DTOs\ParkingMonitoringContext;
 use App\Enums\ParkingConstraintStatus;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
+use App\Models\LocationSchedule;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -100,21 +101,37 @@ class ParkingConstraintService
             );
         }
 
+        $schedules = $location->relationLoaded('schedules')
+            ? $location->schedules
+            : $location->schedules()->orderBy('start_at', 'asc')->get();
+
         $from = $this->normalizeToTokyo($location->available_from);
         $to = $this->normalizeToTokyo($location->available_to);
 
-        // 1. スケジュール上の計画違反チェック
+        // 1. スケジュール上の計画違反チェック（個別スロット包含判定）
         foreach ($plansToLocation as $plan) {
             $scheduledTime = $this->resolvePlanDateTime($plan);
             if (! $scheduledTime) {
                 continue;
             }
 
-            if ($from && $scheduledTime < $from) {
-                $violations[] = "{$plan->equipment?->name}: 貸切開始（{$from->format('n/j H:i')}）前の搬入計画（{$scheduledTime->format('n/j H:i')}）";
-            }
-            if ($to && $scheduledTime > $to) {
-                $violations[] = "{$plan->equipment?->name}: 貸切終了（{$to->format('n/j H:i')}）超過の配置計画（{$scheduledTime->format('n/j H:i')}）";
+            $matchedSlot = $schedules->first(function (LocationSchedule $slot) use ($scheduledTime) {
+                $slotStart = $this->normalizeToTokyo($slot->start_at);
+                $slotEnd = $this->normalizeToTokyo($slot->end_at);
+
+                return $slotStart && $slotEnd && $slotStart <= $scheduledTime && $scheduledTime <= $slotEnd;
+            });
+
+            if (! $matchedSlot) {
+                if ($from && $scheduledTime < $from) {
+                    $violations[] = "{$plan->equipment?->name}: 貸切開始（{$from->format('n/j H:i')}）前の搬入計画（{$scheduledTime->format('n/j H:i')}）";
+                } elseif ($to && $scheduledTime > $to) {
+                    $violations[] = "{$plan->equipment?->name}: 貸切終了（{$to->format('n/j H:i')}）超過の配置計画（{$scheduledTime->format('n/j H:i')}）";
+                } else {
+                    $violations[] = "{$plan->equipment?->name}: 利用可能時間外（中抜け時間帯）の搬入計画（{$scheduledTime->format('n/j H:i')}）";
+                }
+            } elseif (! $matchedSlot->isAvailable()) {
+                $violations[] = "{$plan->equipment?->name}: 未確保枠への搬入計画（{$scheduledTime->format('n/j H:i')}）";
             }
         }
 
@@ -123,6 +140,14 @@ class ParkingConstraintService
         $countdownText = null;
         $status = ParkingConstraintStatus::Standby;
         $statusDetail = '待機中';
+
+        // 現在時刻がどのスロットに含まれるか確認
+        $activeSlot = $schedules->first(function (LocationSchedule $slot) use ($now) {
+            $slotStart = $this->normalizeToTokyo($slot->start_at);
+            $slotEnd = $this->normalizeToTokyo($slot->end_at);
+
+            return $slotStart && $slotEnd && $slotStart <= $now && $now <= $slotEnd && $slot->isAvailable();
+        });
 
         if ($from && $now < $from) {
             // 貸切開始前
@@ -141,7 +166,7 @@ class ParkingConstraintService
                 $statusDetail = '貸切前 (待機)';
             }
         } elseif ($to && $now > $to) {
-            // 貸切終了時刻超過後
+            // 全貸切終了時刻超過後
             $minutesOver = (int) $to->diffInMinutes($now, false);
             $countdownText = '返却期限超過 (+'.$this->formatDuration($minutesOver).')';
 
@@ -156,26 +181,33 @@ class ParkingConstraintService
                 $status = ParkingConstraintStatus::Standby;
                 $statusDetail = '返還完了 (原状復帰済)';
             }
-        } else {
-            // 貸切期間中 ($from <= $now <= $to)
-            $minutesRemaining = $to ? (int) $now->diffInMinutes($to, false) : 9999;
-            if ($to) {
+        } elseif ($activeSlot) {
+            // 利用可能枠内
+            $slotEnd = $this->normalizeToTokyo($activeSlot->end_at);
+            $minutesRemaining = $slotEnd ? (int) $now->diffInMinutes($slotEnd, false) : 9999;
+            if ($slotEnd) {
                 $countdownText = '返却期限まであと '.$this->formatDuration($minutesRemaining);
             }
 
             if (! empty($violations)) {
                 $status = ParkingConstraintStatus::Violation;
                 $statusDetail = '制約違反あり';
-            } elseif ($to && $minutesRemaining <= self::WARNING_THRESHOLD_MINUTES && $hasRemainingEquipment) {
-                $warnings[] = "貸切終了（{$to->format('H:i')}）まであと{$this->formatDuration($minutesRemaining)}です。資材の撤収・原状復帰を完了させてください。";
+            } elseif ($slotEnd && $minutesRemaining <= self::WARNING_THRESHOLD_MINUTES && $hasRemainingEquipment) {
+                $warnings[] = "貸切終了（{$slotEnd->format('H:i')}）まであと{$this->formatDuration($minutesRemaining)}です。資材の撤収・原状復帰を完了させてください。";
                 $status = ParkingConstraintStatus::Warning;
-                $statusDetail = "本日{$to->format('H:i')}返却必須 (撤収未完了)";
-            } elseif ($hasRemainingEquipment || $plansToLocation->isNotEmpty()) {
-                $status = ParkingConstraintStatus::InUse;
-                $statusDetail = '利用中 (適正)';
+                $statusDetail = "本日{$slotEnd->format('H:i')}返却必須 (撤収未完了)";
             } else {
                 $status = ParkingConstraintStatus::InUse;
                 $statusDetail = '利用中 (適正)';
+            }
+        } else {
+            // 中抜け時間帯（複数スロット間）または未確保枠
+            if (! empty($violations)) {
+                $status = ParkingConstraintStatus::Violation;
+                $statusDetail = '制約違反あり';
+            } else {
+                $status = ParkingConstraintStatus::Standby;
+                $statusDetail = '利用時間外 (待機)';
             }
         }
 

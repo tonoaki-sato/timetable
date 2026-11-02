@@ -24,47 +24,19 @@ class EquipmentFactory extends Factory
         $isCommittee = fake()->boolean(60);
 
         return [
-            'name' => fake()->randomElement(['カラーコーン', '足踏み式給水設備', 'パイプテント 2K×3K', 'ござ市用テント', '折りたたみ長テーブル', 'パイプ椅子']),
-            'category' => 'heavy_equipment',
-            'checkout_rule' => 'free',
+            'name' => fake()->randomElement(['カラーコーン', '足踏み式給水設備', 'パイプテント 2K×3K', 'ござ市用テント', '折りたたみ大型台車', '放送設備一式']),
             'type' => $isCommittee ? 'committee' : 'rental',
-            'quantity' => fake()->numberBetween(2, 50),
-            'unit' => fake()->randomElement(['個', '張', '台', '脚', '組']),
-            'storage_location' => $isCommittee ? fake()->randomElement(['番所地下倉庫', 'コミュニティルーム']) : null,
+            'checkout_rule' => 'free',
+            'quantity' => fake()->numberBetween(2, 60),
+            'is_approximate_quantity' => false,
+            'unit' => fake()->randomElement(['個', '本', '張', '台', '組', '式']),
+            'storage_location' => $isCommittee ? fake()->randomElement(['番所地下倉庫', '番所倉庫', 'コミュニティルーム']) : null,
             'storage_detail' => null,
-            'event_company_name' => $isCommittee ? null : '○○イベント企画株式会社',
-            'event_company_contact' => $isCommittee ? null : fake()->phoneNumber(),
             'lane_id' => Lane::factory(),
             'description' => fake()->optional()->sentence(),
             'display_order' => fake()->numberBetween(1, 100),
             'created_by' => User::factory(),
         ];
-    }
-
-    /**
-     * 台車・運搬具
-     */
-    public function carrier(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'category' => 'carrier',
-            'checkout_rule' => 'permission_required',
-            'storage_location' => '番所地下倉庫',
-            'storage_detail' => '地下倉庫入口右手・台車置き場',
-        ]);
-    }
-
-    /**
-     * 工具・消耗品
-     */
-    public function toolConsumable(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'category' => 'tool_consumable',
-            'checkout_rule' => 'free',
-            'storage_location' => 'コミュニティルーム',
-            'storage_detail' => '本陣受付裏 備品棚2段目',
-        ]);
     }
 
     /**
@@ -75,8 +47,6 @@ class EquipmentFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'type' => 'committee',
             'storage_location' => '番所地下倉庫',
-            'event_company_name' => null,
-            'event_company_contact' => null,
         ]);
     }
 
@@ -88,8 +58,29 @@ class EquipmentFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'type' => 'rental',
             'storage_location' => null,
-            'event_company_name' => '○○イベント企画株式会社',
-            'event_company_contact' => '03-1234-5678 (担当: 田中)',
+        ]);
+    }
+
+    /**
+     * 私物（個人持ち込み）資材
+     */
+    public function personal(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'personal',
+            'storage_location' => null,
+            'storage_detail' => '所有者: 実行委員（2日目終了時持ち帰り）',
+            'checkout_rule' => 'leader_only',
+        ]);
+    }
+
+    /**
+     * 概数管理資材
+     */
+    public function approximate(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_approximate_quantity' => true,
         ]);
     }
 }

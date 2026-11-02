@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'location_id',
     'start_at',
     'end_at',
-    'application_status',
+    'availability_status',
     'title',
     'note',
 ])]
@@ -23,16 +23,13 @@ class LocationSchedule extends Model
     use HasFactory;
 
     /**
-     * 申請ステータス一覧
+     * 拠点確保ステータス一覧（シンプルな2択）
      *
      * @var array<string, string>
      */
-    public const array APPLICATION_STATUSES = [
-        'unapplied' => '未申請（利用不可）',
-        'applying' => '申請中（利用不可）',
-        'approved' => '承認済（利用可能）',
-        'not_required' => '申請不要（利用可能）',
-        'rejected' => '却下（利用不可）',
+    public const array AVAILABILITY_STATUSES = [
+        'available' => '利用可（確保済）',
+        'unavailable' => '未確保（調整中）',
     ];
 
     /**
@@ -59,32 +56,29 @@ class LocationSchedule extends Model
     }
 
     /**
-     * 申請ステータスの日本語ラベル
+     * 確保ステータスの日本語ラベル
      */
-    public function getApplicationStatusLabelAttribute(): string
+    public function getAvailabilityStatusLabelAttribute(): string
     {
-        return self::APPLICATION_STATUSES[$this->application_status] ?? $this->application_status;
+        return self::AVAILABILITY_STATUSES[$this->availability_status] ?? $this->availability_status;
     }
 
     /**
-     * 申請が利用可能な状態（承認済または申請不要）か
+     * 利用可（確保済）状態か判定
      */
-    public function isPermitted(): bool
+    public function isAvailable(): bool
     {
-        return in_array($this->application_status, ['approved', 'not_required'], true);
+        return $this->availability_status === 'available';
     }
 
     /**
-     * 申請ステータスのバッジCSSクラス
+     * 確保ステータスのバッジCSSクラス
      */
-    public function getApplicationStatusBadgeClassAttribute(): string
+    public function getAvailabilityStatusBadgeClassAttribute(): string
     {
-        return match ($this->application_status) {
-            'approved' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
-            'not_required' => 'bg-blue-100 text-blue-800 border-blue-300',
-            'unapplied' => 'bg-rose-100 text-rose-800 border-rose-300',
-            'applying' => 'bg-amber-100 text-amber-800 border-amber-300',
-            'rejected' => 'bg-red-100 text-red-900 border-red-300',
+        return match ($this->availability_status) {
+            'available' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
+            'unavailable' => 'bg-amber-100 text-amber-800 border-amber-300',
             default => 'bg-slate-100 text-slate-700 border-slate-300',
         };
     }

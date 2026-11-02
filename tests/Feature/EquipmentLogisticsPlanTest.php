@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Equipment;
+use App\Models\EquipmentLogisticsPattern;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
 use App\Models\LocationSchedule;
@@ -44,7 +45,27 @@ class EquipmentLogisticsPlanTest extends TestCase
         Timetable::factory()->create(['target_date' => '2026-10-12', 'name' => '宿場まつり 2日目']);
 
         $this->locationBansho = Location::factory()->allDay()->create(['name' => '番所地下倉庫']);
-        $this->locationBanshoSpace = Location::factory()->allDay()->create(['name' => '番所空きスペース']);
+
+        // 番所前スペースは当日昼間が模擬店使用のため、前日枠と翌日枠に分割
+        $this->locationBanshoSpace = Location::factory()->create([
+            'name' => '番所前スペース',
+            'is_all_day' => false,
+        ]);
+        LocationSchedule::create([
+            'location_id' => $this->locationBanshoSpace->id,
+            'start_at' => '2026-10-09 09:00:00',
+            'end_at' => '2026-10-10 18:00:00',
+            'availability_status' => 'available',
+            'title' => '前日搬入受取枠',
+        ]);
+        LocationSchedule::create([
+            'location_id' => $this->locationBanshoSpace->id,
+            'start_at' => '2026-10-12 18:00:00',
+            'end_at' => '2026-10-14 17:00:00',
+            'availability_status' => 'available',
+            'title' => '撤収後回収待ち枠',
+        ]);
+
         $this->locationTaxOffice = Location::factory()->create([
             'name' => '税務署前駐車場',
             'is_all_day' => false,
@@ -53,19 +74,19 @@ class EquipmentLogisticsPlanTest extends TestCase
             'location_id' => $this->locationTaxOffice->id,
             'start_at' => '2026-10-10 12:00:00',
             'end_at' => '2026-10-12 21:00:00',
-            'application_status' => 'approved',
+            'availability_status' => 'available',
             'title' => '貸切枠',
         ]);
 
         $this->locationKitagawa = Location::factory()->create([
-            'name' => '北川駐車場',
+            'name' => '長島駐車場（旧北川駐車場）',
             'is_all_day' => false,
         ]);
         LocationSchedule::create([
             'location_id' => $this->locationKitagawa->id,
             'start_at' => '2026-10-10 13:00:00',
             'end_at' => '2026-10-12 20:30:00',
-            'application_status' => 'approved',
+            'availability_status' => 'available',
             'title' => '貸切枠',
         ]);
 
@@ -74,114 +95,211 @@ class EquipmentLogisticsPlanTest extends TestCase
     }
 
     /**
-     * パターンA（自前機材: カラーコーン型）テンプレート生成の検証
-     * - 立会不要
-     * - 2日目夜に自前保管場所へ格納
-     * - 1日目夜は指定された複数近隣拠点へ分散保管
+     * カスタムパターン（自前備品型）からの計画ステップ生成の検証
      */
-    public function test_pattern_a_template_generation(): void
+    public function test_custom_pattern_committee_generation(): void
     {
+        $pattern = EquipmentLogisticsPattern::create([
+            'name' => 'パターンA: 自前備品標準',
+            'target_type' => 'committee',
+            'description' => '自前備品の標準移動パターン',
+        ]);
+
+        $pattern->steps()->createMany([
+            [
+                'display_order' => 10,
+                'day_phase' => 'pre_day',
+                'action_type' => 'staging_move',
+                'title' => '前日倉庫出し・中継拠点へ移動',
+                'start_time' => '13:30',
+                'end_time' => '15:00',
+                'from_location_role' => 'equipment_storage',
+                'to_location_role' => 'staging_parking',
+                'quantity_rule' => 'all',
+                'operator_type' => 'committee',
+                'witness_required' => false,
+            ],
+            [
+                'display_order' => 20,
+                'day_phase' => 'day1_morning',
+                'action_type' => 'setup',
+                'title' => '1日目朝 現場設置',
+                'start_time' => '08:00',
+                'end_time' => '09:30',
+                'from_location_role' => 'staging_parking',
+                'to_location_role' => 'text',
+                'to_location' => '会場設置',
+                'quantity_rule' => 'all',
+                'operator_type' => 'committee',
+                'witness_required' => false,
+            ],
+            [
+                'display_order' => 30,
+                'day_phase' => 'day1_evening',
+                'action_type' => 'night_storage',
+                'title' => '1日目夜 分散夜間保管①',
+                'start_time' => '17:00',
+                'end_time' => '18:00',
+                'from_location_role' => 'text',
+                'from_location' => '会場設置',
+                'to_location_role' => 'night_parking_1',
+                'quantity_rule' => 'half_1',
+                'quantity_note' => '西側・中央分',
+                'operator_type' => 'committee',
+                'witness_required' => false,
+            ],
+            [
+                'display_order' => 40,
+                'day_phase' => 'day1_evening',
+                'action_type' => 'night_storage',
+                'title' => '1日目夜 分散夜間保管②',
+                'start_time' => '17:00',
+                'end_time' => '18:00',
+                'from_location_role' => 'text',
+                'from_location' => '会場設置',
+                'to_location_role' => 'night_parking_2',
+                'quantity_rule' => 'half_2',
+                'quantity_note' => '東側分',
+                'operator_type' => 'committee',
+                'witness_required' => false,
+            ],
+            [
+                'display_order' => 50,
+                'day_phase' => 'day2_evening',
+                'action_type' => 'return_storage',
+                'title' => '2日目夜 撤収・元保管場所へ格納',
+                'start_time' => '17:00',
+                'end_time' => '18:30',
+                'from_location_role' => 'text',
+                'from_location' => '会場設置',
+                'to_location_role' => 'equipment_storage',
+                'quantity_rule' => 'all',
+                'operator_type' => 'committee',
+                'witness_required' => false,
+            ],
+        ]);
+
         $equipment = Equipment::factory()->committee()->create([
-            'name' => 'カラーコーン（50本）',
+            'name' => '立て看板',
             'quantity' => 50,
+            'unit' => '個',
             'storage_location' => '番所地下倉庫',
         ]);
 
-        $count = $this->service->applyTemplate($equipment, 'pattern_a', [
+        $count = $this->service->applyPattern($equipment, $pattern, [
             'staging_location_id' => $this->locationTaxOffice->id,
             'night_location_1_id' => $this->locationTaxOffice->id,
             'night_location_2_id' => $this->locationKitagawa->id,
         ]);
 
-        $this->assertEquals(6, $count);
+        $this->assertEquals(5, $count);
 
         $plans = $equipment->plans()->get();
-
-        // すべて立会不要であること
         $this->assertEquals(0, $plans->where('witness_required', true)->count());
 
-        // すべて作業主体は委員会スタッフであること
-        $this->assertEquals(6, $plans->where('operator_type', 'committee')->count());
-
-        // 1日目夜に2拠点（税務署前Pと北川P）へ分散保管されていること
-        $nightPlans = $plans->where('day_phase', 'day1_evening');
-        $this->assertEquals(2, $nightPlans->count());
-        $this->assertTrue($nightPlans->contains('to_location_id', $this->locationTaxOffice->id));
-        $this->assertTrue($nightPlans->contains('to_location_id', $this->locationKitagawa->id));
+        // 1日目夜に2拠点へ25個ずつ分散保管され、quantity_noteも反映されていること
+        $nightPlans = $plans->where('day_phase', 'day1_evening')->values();
+        $this->assertCount(2, $nightPlans);
+        $this->assertEquals($this->locationTaxOffice->id, $nightPlans[0]->to_location_id);
+        $this->assertEquals(25, $nightPlans[0]->quantity);
+        $this->assertEquals('西側・中央分', $nightPlans[0]->quantity_note);
+        $this->assertEquals('25個（西側・中央分）', $nightPlans[0]->formatted_quantity);
 
         // 2日目夜に番所地下倉庫へ格納されること
         $lastPlan = $plans->where('day_phase', 'day2_evening')->first();
         $this->assertNotNull($lastPlan);
-        $this->assertEquals('return_storage', $lastPlan->action_type);
         $this->assertEquals('番所地下倉庫', $lastPlan->to_location);
+        $this->assertEquals($this->locationBansho->id, $lastPlan->to_location_id);
     }
 
     /**
-     * パターンB（イベント会社受取・自前設置: 給水設備型）テンプレート生成の検証
-     * - 前日受取と翌日回収のみ立会必須
-     * - 2日目夜に番所空きスペースへ集約
-     * - 翌日に業者回収
+     * 資材の既存ステップ構成を新しいカスタムパターンとして保存し、別資材へ再利用できること
      */
-    public function test_pattern_b_template_generation(): void
+    public function test_save_equipment_plans_as_pattern_and_reuse(): void
     {
-        $equipment = Equipment::factory()->rental()->create([
+        $sourceEquipment = Equipment::factory()->rental()->create([
             'name' => '足踏み式給水設備',
             'quantity' => 4,
-            'event_company_name' => '東京イベントサプライ',
-            'event_company_contact' => '03-1111-2222',
+            'unit' => '台',
         ]);
 
-        $count = $this->service->applyTemplate($equipment, 'pattern_b', [
-            'staging_location_id' => $this->locationTaxOffice->id,
-            'night_location_1_id' => $this->locationTaxOffice->id,
-            'night_location_2_id' => $this->locationKitagawa->id,
+        $sourceEquipment->plans()->create([
+            'day_phase' => 'pre_day',
+            'action_type' => 'vendor_receive',
+            'title' => '前日 イベント会社納品・受取立会',
+            'start_time' => '10:00',
+            'end_time' => '11:00',
+            'from_location' => 'イベント会社配送',
+            'to_location' => '番所前スペース',
+            'to_location_id' => $this->locationBanshoSpace->id,
+            'quantity' => 4,
+            'operator_type' => 'committee',
+            'witness_required' => true,
+            'display_order' => 1,
+        ]);
+
+        $sourceEquipment->plans()->create([
+            'day_phase' => 'post_day',
+            'action_type' => 'vendor_pickup',
+            'title' => '翌日 イベント会社回収・引渡立会',
+            'start_time' => '10:00',
+            'end_time' => '11:30',
+            'from_location' => '番所前スペース',
+            'from_location_id' => $this->locationBanshoSpace->id,
+            'to_location' => 'イベント会社回収',
+            'quantity' => 4,
+            'operator_type' => 'committee',
+            'witness_required' => true,
+            'display_order' => 2,
+        ]);
+
+        $savedPattern = $this->service->saveEquipmentPlansAsPattern($sourceEquipment, [
+            'name' => 'レンタル標準受取・回収パターン',
+            'target_type' => 'rental',
+            'description' => '番所前スペースでの受取・回収',
+        ]);
+
+        $this->assertCount(2, $savedPattern->steps);
+        $this->assertEquals('bansho_space', $savedPattern->steps[0]->to_location_role);
+        $this->assertEquals('bansho_space', $savedPattern->steps[1]->from_location_role);
+
+        // 別資材に適用
+        $targetEquipment = Equipment::factory()->rental()->create([
+            'name' => '折りたたみ長机',
+            'quantity' => 20,
+            'unit' => '脚',
+        ]);
+
+        $appliedCount = $this->service->applyPattern($targetEquipment, $savedPattern, [
             'witness_staff_id' => $this->staff->id,
         ]);
 
-        $this->assertEquals(8, $count);
-
-        $plans = $equipment->plans()->get();
-
-        // 前日受取と翌日回収の2件のみ立会必須であること
-        $witnessPlans = $plans->where('witness_required', true);
-        $this->assertEquals(2, $witnessPlans->count());
-        $this->assertTrue($witnessPlans->contains('action_type', 'vendor_receive'));
-        $this->assertTrue($witnessPlans->contains('action_type', 'vendor_pickup'));
-        $this->assertEquals($this->staff->id, $witnessPlans->first()->witness_staff_id);
-
-        // 2日目夜に番所空きスペースへ回収待ち集約されること
-        $stagingReturnPlan = $plans->where('action_type', 'collection_staging')->first();
-        $this->assertNotNull($stagingReturnPlan);
-        $this->assertEquals('番所空きスペース', $stagingReturnPlan->to_location);
-
-        // 翌日に番所空きスペースから回収されること
-        $pickupPlan = $plans->where('day_phase', 'post_day')->first();
-        $this->assertNotNull($pickupPlan);
-        $this->assertEquals('番所空きスペース', $pickupPlan->from_location);
+        $this->assertEquals(2, $appliedCount);
+        $targetPlans = $targetEquipment->plans()->get();
+        $this->assertEquals(20, $targetPlans[0]->quantity);
+        $this->assertEquals($this->locationBanshoSpace->id, $targetPlans[0]->to_location_id);
+        $this->assertEquals($this->staff->id, $targetPlans[0]->witness_staff_id);
     }
 
     /**
-     * パターンC（イベント会社設営・解体型: パイプテント等）テンプレート生成の検証
-     * - イベント会社に一任（立会不要）
-     * - 作業主体がイベント会社であること
+     * 数量がnullでquantity_noteのみ設定されている場合のフォーマット表示検証
      */
-    public function test_pattern_c_template_generation(): void
+    public function test_plan_formatted_quantity_with_note_only(): void
     {
         $equipment = Equipment::factory()->rental()->create([
-            'name' => 'パイプテント一式',
-            'quantity' => 12,
+            'name' => 'カラーコーン一式',
+            'quantity' => 60,
+            'is_approximate_quantity' => true,
+            'unit' => '本',
         ]);
 
-        $count = $this->service->applyTemplate($equipment, 'pattern_c');
-        $this->assertEquals(2, $count);
+        $plan = EquipmentLogisticsPlan::factory()->create([
+            'equipment_id' => $equipment->id,
+            'quantity' => null,
+            'quantity_note' => '通行止め用分',
+        ]);
 
-        $plans = $equipment->plans()->get();
-
-        // 立会不要であること
-        $this->assertEquals(0, $plans->where('witness_required', true)->count());
-
-        // 作業主体がイベント会社であること
-        $this->assertEquals(2, $plans->where('operator_type', 'event_company')->count());
+        $this->assertSame('通行止め用分', $plan->formatted_quantity);
     }
 
     /**
@@ -209,13 +327,13 @@ class EquipmentLogisticsPlanTest extends TestCase
     }
 
     /**
-     * 貸切期間外の移動予定に対する警告判定の検証
+     * 個別スロット単位での利用可能期間外の警告判定（開始前・終了後・中抜け時間帯・移動元）の検証
      */
-    public function test_plan_location_availability_warning(): void
+    public function test_plan_location_availability_warning_including_middle_gap(): void
     {
         $equipment = Equipment::factory()->create();
 
-        // 貸切開始（10/10 12:00）より前（10/10 09:00）に移動予定を設定
+        // 1. 貸切開始（10/10 12:00）より前（10/10 09:00）に移動予定を設定
         $planEarly = EquipmentLogisticsPlan::factory()->create([
             'equipment_id' => $equipment->id,
             'target_date' => '2026-10-10',
@@ -226,9 +344,9 @@ class EquipmentLogisticsPlanTest extends TestCase
         $warning = $planEarly->checkToLocationAvailability();
         $this->assertNotNull($warning);
         $this->assertEquals('warning', $warning['level']);
-        $this->assertStringContainsString('貸切開始', $warning['message']);
+        $this->assertStringContainsString('利用開始', $warning['message']);
 
-        // 貸切期間内（10/10 14:00）は警告なし
+        // 2. 貸切期間内（10/10 14:00）は警告なし
         $planValid = EquipmentLogisticsPlan::factory()->create([
             'equipment_id' => $equipment->id,
             'target_date' => '2026-10-10',
@@ -236,5 +354,16 @@ class EquipmentLogisticsPlanTest extends TestCase
             'to_location_id' => $this->locationTaxOffice->id,
         ]);
         $this->assertNull($planValid->checkToLocationAvailability());
+
+        // 3. 番所前スペースの中抜け時間帯（10/11 12:00：模擬店使用中）に移動予定を設定すると警告が出ること
+        $planMiddleGap = EquipmentLogisticsPlan::factory()->create([
+            'equipment_id' => $equipment->id,
+            'target_date' => '2026-10-11',
+            'start_time' => '12:00',
+            'to_location_id' => $this->locationBanshoSpace->id,
+        ]);
+        $gapWarning = $planMiddleGap->checkToLocationAvailability();
+        $this->assertNotNull($gapWarning);
+        $this->assertStringContainsString('利用可能時間外（またはイベントブース使用時間帯）', $gapWarning['message']);
     }
 }

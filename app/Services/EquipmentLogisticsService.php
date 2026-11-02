@@ -3,18 +3,20 @@
 namespace App\Services;
 
 use App\Models\Equipment;
+use App\Models\EquipmentLogisticsPattern;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
 use App\Models\Timetable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class EquipmentLogisticsService
 {
     /**
-     * まつりの代表日程（前日、1日目、2日目、翌日）を取得
+     * まつりの代表日程（事前準備、前日、1日目、2日目、翌日）を取得
      *
-     * @return array{pre_day: ?string, day1: ?string, day2: ?string, post_day: ?string}
+     * @return array{other: ?string, pre_day: ?string, day1: ?string, day2: ?string, post_day: ?string}
      */
     public function resolveFestivalDates(): array
     {
@@ -23,9 +25,11 @@ class EquipmentLogisticsService
         $day2 = $timetables->skip(1)->first()?->target_date?->format('Y-m-d') ?? '2026-10-12';
 
         $preDay = Carbon::parse($day1)->subDay()->format('Y-m-d');
+        $otherDay = Carbon::parse($day1)->subDays(2)->format('Y-m-d');
         $postDay = Carbon::parse($day2)->addDay()->format('Y-m-d');
 
         return [
+            'other' => $otherDay,
             'pre_day' => $preDay,
             'day1' => $day1,
             'day2' => $day2,
@@ -34,13 +38,12 @@ class EquipmentLogisticsService
     }
 
     /**
-     * 3大パターンのテンプレートからステップを一括生成
+     * カスタム搬出入パターン（EquipmentLogisticsPattern）を対象資材に適用してステップを一括生成
      *
      * @param  array{staging_location_id?: ?int, night_location_1_id?: ?int, night_location_2_id?: ?int, witness_staff_id?: ?int, override_existing?: ?bool}  $options
      */
-    public function applyTemplate(Equipment $equipment, string $templateType, array $options = []): int
+    public function applyPattern(Equipment $equipment, EquipmentLogisticsPattern $pattern, array $options = []): int
     {
-        // 既存ステップの上書き指定がある場合（または指定がない場合はデフォルトで上書きクリア）
         $override = array_key_exists('override_existing', $options)
             ? (bool) $options['override_existing']
             : true;
@@ -51,7 +54,6 @@ class EquipmentLogisticsService
 
         $dates = $this->resolveFestivalDates();
 
-        // 拠点の取得
         $stagingLocation = ! empty($options['staging_location_id'])
             ? Location::find($options['staging_location_id'])
             : Location::where('name', 'like', '%税務署%')->first();
@@ -62,389 +64,254 @@ class EquipmentLogisticsService
 
         $nightLocation2 = ! empty($options['night_location_2_id'])
             ? Location::find($options['night_location_2_id'])
-            : Location::where('name', 'like', '%北川%')->first();
+            : null;
 
-        $storageLocationName = $equipment->storage_location ?: '番所地下倉庫';
-        $storageLocationModel = Location::where('name', $storageLocationName)->first()
-            ?? Location::where('name', 'like', '%番所地下%')->first();
+        $hasSplitNight = $nightLocation2 !== null && $nightLocation2->id !== $nightLocation1?->id;
 
-        $banshoSpace = Location::where('name', 'like', '%番所%スペース%')->first()
-            ?? Location::where('name', 'like', '%番所前%')->first()
-            ?? Location::where('name', 'like', '%番所空き%')->first()
-            ?? Location::where('name', 'like', '%番所%')->first();
+        $storageLocationName = $equipment->isPersonal()
+            ? ($equipment->storage_detail ?: '所有者（個人持ち込み・持ち帰り）')
+            : ($equipment->storage_location ?: '番所地下倉庫');
+
+        $storageLocationModel = $equipment->isPersonal()
+            ? null
+            : (Location::where('name', $storageLocationName)->first()
+                ?? Location::where('name', 'like', '%番所地下%')->first());
+
+        $banshoSpace = Location::where('name', '番所前スペース')->first()
+            ?? Location::where('name', 'like', '%番所%スペース%')->first()
+            ?? Location::where('name', 'like', '%番所前%')->first();
 
         $witnessStaffId = $options['witness_staff_id'] ?? null;
 
-        $plans = [];
+        $qty = (int) $equipment->quantity;
+        $qty1 = (int) ceil($qty / 2);
+        $qty2 = max(0, $qty - $qty1);
 
-        if ($templateType === 'pattern_a') {
-            // =========================================================================
-            // パターンA: 実行委員会管理機材（2日間設置サイクル・立会不要）
-            // =========================================================================
-            $qty = $equipment->quantity;
-            $qty1 = (int) ceil($qty / 2);
-            $qty2 = $qty - $qty1;
-
-            $plans = [
-                [
-                    'target_date' => $dates['pre_day'],
-                    'day_phase' => 'pre_day',
-                    'action_type' => 'storage_out',
-                    'title' => '前日倉庫出し・中継移動',
-                    'quantity' => $qty,
-                    'start_time' => '13:00',
-                    'end_time' => '14:30',
-                    'from_location' => $storageLocationName,
-                    'to_location' => $stagingLocation?->name ?? '税務署前駐車場',
-                    'from_location_id' => $storageLocationModel?->id,
-                    'to_location_id' => $stagingLocation?->id,
-                    'operator_type' => 'committee',
-                    'witness_required' => false,
-                    'witness_staff_id' => null,
-                    'contact_info' => null,
-                    'status' => 'planned',
-                    'notes' => '台車等で保管場所から中継拠点へ移動・集約。',
-                    'display_order' => 10,
-                ],
-                [
-                    'target_date' => $dates['day1'],
-                    'day_phase' => 'day1_morning',
-                    'action_type' => 'setup',
-                    'title' => '1日目朝 会場各所へ設置',
-                    'quantity' => $qty,
-                    'start_time' => '07:30',
-                    'end_time' => '09:00',
-                    'from_location' => $stagingLocation?->name ?? '税務署前駐車場',
-                    'to_location' => '会場設置',
-                    'from_location_id' => $stagingLocation?->id,
-                    'to_location_id' => null,
-                    'operator_type' => 'committee',
-                    'witness_required' => false,
-                    'witness_staff_id' => null,
-                    'contact_info' => null,
-                    'status' => 'planned',
-                    'notes' => '中継場所から各担当箇所の設置位置へ運搬・配置。',
-                    'display_order' => 20,
-                ],
-                [
-                    'target_date' => $dates['day1'],
-                    'day_phase' => 'day1_evening',
-                    'action_type' => 'night_storage',
-                    'title' => '1日目夜 分散夜間保管（'.$nightLocation1?->name.'）',
-                    'quantity' => $nightLocation2 ? $qty1 : $qty,
-                    'start_time' => '18:00',
-                    'end_time' => '19:00',
-                    'from_location' => '会場設置',
-                    'to_location' => $nightLocation1?->name ?? '税務署前駐車場',
-                    'from_location_id' => null,
-                    'to_location_id' => $nightLocation1?->id,
-                    'operator_type' => 'committee',
-                    'witness_required' => false,
-                    'witness_staff_id' => null,
-                    'contact_info' => null,
-                    'status' => 'planned',
-                    'notes' => '2日目設置位置に近い拠点へ移動・夜間保管。',
-                    'display_order' => 30,
-                ],
-            ];
-
-            if ($nightLocation2 && $nightLocation2->id !== $nightLocation1?->id) {
-                $plans[] = [
-                    'target_date' => $dates['day1'],
-                    'day_phase' => 'day1_evening',
-                    'action_type' => 'night_storage',
-                    'title' => '1日目夜 分散夜間保管（'.$nightLocation2->name.'）',
-                    'quantity' => $qty2,
-                    'start_time' => '18:00',
-                    'end_time' => '19:00',
-                    'from_location' => '会場設置',
-                    'to_location' => $nightLocation2->name,
-                    'from_location_id' => null,
-                    'to_location_id' => $nightLocation2->id,
-                    'operator_type' => 'committee',
-                    'witness_required' => false,
-                    'witness_staff_id' => null,
-                    'contact_info' => null,
-                    'status' => 'planned',
-                    'notes' => '2日目設置位置に近い拠点へ移動・夜間保管。',
-                    'display_order' => 40,
-                ];
-            }
-
-            $plans[] = [
-                'target_date' => $dates['day2'],
-                'day_phase' => 'day2_morning',
-                'action_type' => 'setup',
-                'title' => '2日目朝 会場各所へ再設置',
-                'quantity' => $qty,
-                'start_time' => '08:00',
-                'end_time' => '09:00',
-                'from_location' => '各夜間保管拠点',
-                'to_location' => '会場設置',
-                'from_location_id' => null,
-                'to_location_id' => null,
-                'operator_type' => 'committee',
-                'witness_required' => false,
-                'witness_staff_id' => null,
-                'contact_info' => null,
-                'status' => 'planned',
-                'notes' => '各夜間保管場所から各箇所へ再配置。',
-                'display_order' => 50,
-            ];
-
-            $plans[] = [
-                'target_date' => $dates['day2'],
-                'day_phase' => 'day2_evening',
-                'action_type' => 'return_storage',
-                'title' => '2日目夜 撤収・'.$storageLocationName.'へ格納',
-                'quantity' => $qty,
-                'start_time' => '18:30',
-                'end_time' => '20:00',
-                'from_location' => '会場設置',
-                'to_location' => $storageLocationName,
-                'from_location_id' => null,
-                'to_location_id' => $storageLocationModel?->id,
-                'operator_type' => 'committee',
-                'witness_required' => false,
-                'witness_staff_id' => null,
-                'contact_info' => null,
-                'status' => 'planned',
-                'notes' => '清掃・員数確認の上、元通り保管場所へ格納。',
-                'display_order' => 60,
-            ];
-        } elseif ($templateType === 'pattern_b') {
-            // =========================================================================
-            // パターンB: イベント会社レンタル・自前設置（受取・回収のみ立会要）
-            // =========================================================================
-            $qty = $equipment->quantity;
-            $qty1 = (int) ceil($qty / 2);
-            $qty2 = $qty - $qty1;
-
-            $plans = [
-                [
-                    'target_date' => $dates['pre_day'],
-                    'day_phase' => 'pre_day',
-                    'action_type' => 'vendor_receive',
-                    'title' => '前日午前 業者受取・立会',
-                    'quantity' => $qty,
-                    'start_time' => '10:30',
-                    'end_time' => '11:15',
-                    'from_location' => 'イベント会社車両',
-                    'to_location' => $banshoSpace?->name ?? '番所空きスペース',
-                    'from_location_id' => null,
-                    'to_location_id' => $banshoSpace?->id,
-                    'operator_type' => 'committee',
-                    'witness_required' => true,
-                    'witness_staff_id' => $witnessStaffId,
-                    'contact_info' => $equipment->event_company_contact,
-                    'status' => 'planned',
-                    'notes' => '外観・動作・付属品員数の確認の上、受取サイン。',
-                    'display_order' => 10,
-                ],
-                [
-                    'target_date' => $dates['pre_day'],
-                    'day_phase' => 'pre_day',
-                    'action_type' => 'staging_move',
-                    'title' => '前日午後 中継拠点貸切後に移動',
-                    'quantity' => $qty,
-                    'start_time' => '13:00',
-                    'end_time' => '13:45',
-                    'from_location' => $banshoSpace?->name ?? '番所空きスペース',
-                    'to_location' => $stagingLocation?->name ?? '税務署前駐車場',
-                    'from_location_id' => $banshoSpace?->id,
-                    'to_location_id' => $stagingLocation?->id,
-                    'operator_type' => 'committee',
-                    'witness_required' => false,
-                    'witness_staff_id' => null,
-                    'contact_info' => null,
-                    'status' => 'planned',
-                    'notes' => ($stagingLocation?->name ?? '中継拠点').'の貸切開始（使用可能状態）を確認後に移動。',
-                    'display_order' => 20,
-                ],
-                [
-                    'target_date' => $dates['day1'],
-                    'day_phase' => 'day1_morning',
-                    'action_type' => 'setup',
-                    'title' => '1日目朝 会場各所へ設置',
-                    'quantity' => $qty,
-                    'start_time' => '08:00',
-                    'end_time' => '09:30',
-                    'from_location' => $stagingLocation?->name ?? '税務署前駐車場',
-                    'to_location' => '会場設置',
-                    'from_location_id' => $stagingLocation?->id,
-                    'to_location_id' => null,
-                    'operator_type' => 'committee',
-                    'witness_required' => false,
-                    'witness_staff_id' => null,
-                    'contact_info' => null,
-                    'status' => 'planned',
-                    'notes' => '会場内の各指定ポイントへ配置。',
-                    'display_order' => 30,
-                ],
-                [
-                    'target_date' => $dates['day1'],
-                    'day_phase' => 'day1_evening',
-                    'action_type' => 'night_storage',
-                    'title' => '1日目夜 分散夜間保管（'.$nightLocation1?->name.'）',
-                    'quantity' => $nightLocation2 ? $qty1 : $qty,
-                    'start_time' => '17:30',
-                    'end_time' => '18:15',
-                    'from_location' => '会場設置',
-                    'to_location' => $nightLocation1?->name ?? '税務署前駐車場',
-                    'from_location_id' => null,
-                    'to_location_id' => $nightLocation1?->id,
-                    'operator_type' => 'committee',
-                    'witness_required' => false,
-                    'witness_staff_id' => null,
-                    'contact_info' => null,
-                    'status' => 'planned',
-                    'notes' => '設置位置の近い機材を移動して夜間保管。',
-                    'display_order' => 40,
-                ],
-            ];
-
-            if ($nightLocation2 && $nightLocation2->id !== $nightLocation1?->id) {
-                $plans[] = [
-                    'target_date' => $dates['day1'],
-                    'day_phase' => 'day1_evening',
-                    'action_type' => 'night_storage',
-                    'title' => '1日目夜 分散夜間保管（'.$nightLocation2->name.'）',
-                    'quantity' => $qty2,
-                    'start_time' => '17:30',
-                    'end_time' => '18:15',
-                    'from_location' => '会場設置',
-                    'to_location' => $nightLocation2->name,
-                    'from_location_id' => null,
-                    'to_location_id' => $nightLocation2->id,
-                    'operator_type' => 'committee',
-                    'witness_required' => false,
-                    'witness_staff_id' => null,
-                    'contact_info' => null,
-                    'status' => 'planned',
-                    'notes' => '設置位置の近い機材を移動して夜間保管。',
-                    'display_order' => 50,
-                ];
-            }
-
-            $plans[] = [
-                'target_date' => $dates['day2'],
-                'day_phase' => 'day2_morning',
-                'action_type' => 'setup',
-                'title' => '2日目朝 会場各所へ再設置',
-                'quantity' => $qty,
-                'start_time' => '08:00',
-                'end_time' => '09:00',
-                'from_location' => '各夜間保管拠点',
-                'to_location' => '会場設置',
-                'from_location_id' => null,
-                'to_location_id' => null,
-                'operator_type' => 'committee',
-                'witness_required' => false,
-                'witness_staff_id' => null,
-                'contact_info' => null,
-                'status' => 'planned',
-                'notes' => '各ポイントへ再配置。',
-                'display_order' => 60,
-            ];
-
-            $plans[] = [
-                'target_date' => $dates['day2'],
-                'day_phase' => 'day2_evening',
-                'action_type' => 'collection_staging',
-                'title' => '2日目夜 番所空きスペースへ集約・保管',
-                'quantity' => $qty,
-                'start_time' => '18:00',
-                'end_time' => '19:00',
-                'from_location' => '会場設置',
-                'to_location' => $banshoSpace?->name ?? '番所空きスペース',
-                'from_location_id' => null,
-                'to_location_id' => $banshoSpace?->id,
-                'operator_type' => 'committee',
-                'witness_required' => false,
-                'witness_staff_id' => null,
-                'contact_info' => null,
-                'status' => 'planned',
-                'notes' => '乾燥・清掃の上、番所空きスペースへ施錠保管。翌日の業者回収待ち。',
-                'display_order' => 70,
-            ];
-
-            $plans[] = [
-                'target_date' => $dates['post_day'],
-                'day_phase' => 'post_day',
-                'action_type' => 'vendor_pickup',
-                'title' => '翌日午前 業者回収・引渡立会',
-                'quantity' => $qty,
-                'start_time' => '10:00',
-                'end_time' => '10:45',
-                'from_location' => $banshoSpace?->name ?? '番所空きスペース',
-                'to_location' => 'イベント会社車両',
-                'from_location_id' => $banshoSpace?->id,
-                'to_location_id' => null,
-                'operator_type' => 'committee',
-                'witness_required' => true,
-                'witness_staff_id' => $witnessStaffId,
-                'contact_info' => $equipment->event_company_contact,
-                'status' => 'planned',
-                'notes' => '業者トラック積み込み立ち会い、返却サイン。',
-                'display_order' => 80,
-            ];
-        } elseif ($templateType === 'pattern_c') {
-            // =========================================================================
-            // パターンC: イベント会社設営・解体型（立会不要・幹事時刻把握用）
-            // =========================================================================
-            $qty = $equipment->quantity;
-
-            $plans = [
-                [
-                    'target_date' => $dates['day1'],
-                    'day_phase' => 'day1_morning',
-                    'action_type' => 'vendor_setup',
-                    'title' => 'イベント会社 搬入・設営',
-                    'quantity' => $qty,
-                    'start_time' => '06:30',
-                    'end_time' => '08:30',
-                    'from_location' => 'イベント会社車両',
-                    'to_location' => '会場各ブース',
-                    'from_location_id' => null,
-                    'to_location_id' => null,
-                    'operator_type' => 'event_company',
-                    'witness_required' => false,
-                    'witness_staff_id' => null,
-                    'contact_info' => $equipment->event_company_contact,
-                    'status' => 'planned',
-                    'notes' => '設営はイベント会社が実施。幹事は開始・完了状況を把握。',
-                    'display_order' => 10,
-                ],
-                [
-                    'target_date' => $dates['day2'],
-                    'day_phase' => 'day2_evening',
-                    'action_type' => 'vendor_pickup',
-                    'title' => 'イベント会社 解体・搬出',
-                    'quantity' => $qty,
-                    'start_time' => '18:00',
-                    'end_time' => '20:30',
-                    'from_location' => '会場各ブース',
-                    'to_location' => 'イベント会社車両',
-                    'from_location_id' => null,
-                    'to_location_id' => null,
-                    'operator_type' => 'event_company',
-                    'witness_required' => false,
-                    'witness_staff_id' => null,
-                    'contact_info' => $equipment->event_company_contact,
-                    'status' => 'planned',
-                    'notes' => '解体・搬出はイベント会社が実施。歩行者規制解除までにトラック完全退場。',
-                    'display_order' => 20,
-                ],
-            ];
-        }
+        $pattern->loadMissing(['steps.fromLocationModel', 'steps.toLocationModel']);
 
         $createdCount = 0;
-        foreach ($plans as $planData) {
-            $equipment->plans()->create($planData);
+        $order = 10;
+
+        foreach ($pattern->steps as $step) {
+            // 夜間保管②のロールを持つステップで、分散先②が未指定の場合はスキップ
+            if (($step->to_location_role === 'night_parking_2' || $step->from_location_role === 'night_parking_2') && ! $hasSplitNight) {
+                continue;
+            }
+
+            [$fromLocId, $fromLocText] = $this->resolveLocationRole(
+                $step->from_location_role,
+                $step->from_location_id,
+                $step->from_location,
+                $storageLocationModel,
+                $storageLocationName,
+                $banshoSpace,
+                $stagingLocation,
+                $nightLocation1,
+                $nightLocation2
+            );
+
+            [$toLocId, $toLocText] = $this->resolveLocationRole(
+                $step->to_location_role,
+                $step->to_location_id,
+                $step->to_location,
+                $storageLocationModel,
+                $storageLocationName,
+                $banshoSpace,
+                $stagingLocation,
+                $nightLocation1,
+                $nightLocation2
+            );
+
+            $stepQuantity = match ($step->quantity_rule) {
+                'all' => $qty,
+                'half_1' => $hasSplitNight ? $qty1 : $qty,
+                'half_2' => $hasSplitNight ? $qty2 : null,
+                'custom' => null,
+                default => $qty,
+            };
+
+            $targetDate = match ($step->day_phase) {
+                'other' => $dates['other'],
+                'pre_day' => $dates['pre_day'],
+                'day1_morning', 'day1_evening' => $dates['day1'],
+                'day2_morning', 'day2_evening' => $dates['day2'],
+                'post_day' => $dates['post_day'],
+                default => $dates['day1'],
+            };
+
+            $title = str_replace(
+                ['{from_location}', '{to_location}', '{storage_location}'],
+                [$fromLocText ?? '', $toLocText ?? '', $storageLocationName],
+                $step->title
+            );
+
+            $equipment->plans()->create([
+                'target_date' => $targetDate,
+                'day_phase' => $step->day_phase,
+                'action_type' => $step->action_type,
+                'title' => $title,
+                'quantity' => $stepQuantity,
+                'quantity_note' => $step->quantity_note,
+                'start_time' => $step->start_time,
+                'end_time' => $step->end_time,
+                'from_location' => $fromLocText,
+                'to_location' => $toLocText,
+                'from_location_id' => $fromLocId,
+                'to_location_id' => $toLocId,
+                'operator_type' => $step->operator_type,
+                'witness_required' => $step->witness_required,
+                'witness_staff_id' => $step->witness_required ? $witnessStaffId : null,
+                'status' => 'planned',
+                'notes' => $step->notes,
+                'display_order' => $step->display_order ?: $order,
+            ]);
+
             $createdCount++;
+            $order += 10;
         }
 
         return $createdCount;
+    }
+
+    /**
+     * 資材に登録済みの計画ステップ群を新しい搬出入パターンとして保存
+     *
+     * @param  array{name: string, target_type?: ?string, description?: ?string}  $data
+     */
+    public function saveEquipmentPlansAsPattern(Equipment $equipment, array $data, ?int $userId = null): EquipmentLogisticsPattern
+    {
+        return DB::transaction(function () use ($equipment, $data, $userId) {
+            $pattern = EquipmentLogisticsPattern::create([
+                'name' => $data['name'],
+                'target_type' => $data['target_type'] ?: $equipment->type,
+                'description' => $data['description'] ?? "{$equipment->name} の搬出入ステップから作成されたパターン",
+                'display_order' => (int) EquipmentLogisticsPattern::max('display_order') + 10,
+                'created_by' => $userId,
+            ]);
+
+            $plans = $equipment->plans()->orderBy('display_order', 'asc')->orderBy('id', 'asc')->get();
+            $nightStorageIndex = 0;
+            $order = 10;
+
+            foreach ($plans as $plan) {
+                if ($plan->action_type === 'night_storage' && $plan->to_location_id) {
+                    $nightStorageIndex++;
+                }
+
+                [$fromRole, $fromId, $fromText] = $this->inferRoleFromPlanLocation(
+                    $plan->from_location_id,
+                    $plan->from_location,
+                    $equipment,
+                    $plan->action_type,
+                    'from',
+                    $nightStorageIndex
+                );
+
+                [$toRole, $toId, $toText] = $this->inferRoleFromPlanLocation(
+                    $plan->to_location_id,
+                    $plan->to_location,
+                    $equipment,
+                    $plan->action_type,
+                    'to',
+                    $nightStorageIndex
+                );
+
+                $quantityRule = 'all';
+                if ($plan->quantity === null) {
+                    $quantityRule = 'custom';
+                } elseif ($plan->action_type === 'night_storage' && $plan->quantity < $equipment->quantity) {
+                    $quantityRule = $nightStorageIndex <= 1 ? 'half_1' : 'half_2';
+                }
+
+                $pattern->steps()->create([
+                    'day_phase' => $plan->day_phase,
+                    'action_type' => $plan->action_type,
+                    'title' => $plan->title,
+                    'quantity_rule' => $quantityRule,
+                    'quantity_note' => $plan->quantity_note,
+                    'start_time' => $plan->start_time,
+                    'end_time' => $plan->end_time,
+                    'from_location_role' => $fromRole,
+                    'to_location_role' => $toRole,
+                    'from_location_id' => $fromId,
+                    'to_location_id' => $toId,
+                    'from_location' => $fromText,
+                    'to_location' => $toText,
+                    'operator_type' => $plan->operator_type,
+                    'witness_required' => $plan->witness_required,
+                    'notes' => $plan->notes,
+                    'display_order' => $order,
+                ]);
+
+                $order += 10;
+            }
+
+            return $pattern->load('steps');
+        });
+    }
+
+    /**
+     * パターンステップのロール定義から拠点IDと表示テキストを解決
+     *
+     * @return array{0: ?int, 1: ?string}
+     */
+    protected function resolveLocationRole(
+        string $role,
+        ?int $fixedLocationId,
+        ?string $fallbackText,
+        ?Location $storageLocationModel,
+        string $storageLocationName,
+        ?Location $banshoSpace,
+        ?Location $stagingLocation,
+        ?Location $nightLocation1,
+        ?Location $nightLocation2
+    ): array {
+        return match ($role) {
+            'equipment_storage' => [$storageLocationModel?->id, $storageLocationModel?->name ?? $storageLocationName],
+            'bansho_space' => [$banshoSpace?->id, $banshoSpace?->name ?? '番所前スペース'],
+            'staging_parking' => [$stagingLocation?->id, $stagingLocation?->name ?? ($fallbackText ?: '貸切駐車場')],
+            'night_parking_1' => [$nightLocation1?->id, $nightLocation1?->name ?? ($fallbackText ?: '夜間保管場所①')],
+            'night_parking_2' => [$nightLocation2?->id, $nightLocation2?->name ?? ($fallbackText ?: '夜間保管場所②')],
+            'fixed' => [
+                $fixedLocationId,
+                $fixedLocationId ? (Location::find($fixedLocationId)?->name ?? $fallbackText) : $fallbackText,
+            ],
+            default => [null, $fallbackText],
+        };
+    }
+
+    /**
+     * 既存ステップの移動元・移動先からパターン用のロールを推論
+     *
+     * @return array{0: string, 1: ?int, 2: ?string}
+     */
+    protected function inferRoleFromPlanLocation(
+        ?int $locationId,
+        ?string $locationText,
+        Equipment $equipment,
+        string $actionType,
+        string $direction,
+        int $nightStorageIndex
+    ): array {
+        $text = (string) $locationText;
+
+        if ($equipment->storage_location && $text === $equipment->storage_location) {
+            return ['equipment_storage', null, $text];
+        }
+
+        if (str_contains($text, '番所前') || str_contains($text, '番所空き')) {
+            return ['bansho_space', null, '番所前スペース'];
+        }
+
+        if ($direction === 'to' && $actionType === 'night_storage' && $locationId) {
+            return [$nightStorageIndex <= 1 ? 'night_parking_1' : 'night_parking_2', null, $text];
+        }
+
+        if ($locationId) {
+            return ['fixed', $locationId, $text];
+        }
+
+        return ['text', null, $locationText];
     }
 
     /**
@@ -452,11 +319,16 @@ class EquipmentLogisticsService
      *
      * @return Collection<int, Equipment>
      */
-    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?string $category = null): Collection
+    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null): Collection
     {
         $query = Equipment::with([
             'lane',
-            'plans' => fn ($q) => $q->with(['fromLocationModel', 'toLocationModel', 'witnessStaff'])->orderBy('display_order')->orderBy('id'),
+            'plans' => fn ($q) => $q->with([
+                'equipment',
+                'fromLocationModel.schedules',
+                'toLocationModel.schedules',
+                'witnessStaff',
+            ])->orderBy('display_order')->orderBy('id'),
         ])->ordered();
 
         if ($type) {
@@ -467,10 +339,6 @@ class EquipmentLogisticsService
             $query->where('lane_id', $laneId);
         }
 
-        if ($category) {
-            $query->where('category', $category);
-        }
-
         return $query->get();
     }
 
@@ -479,12 +347,12 @@ class EquipmentLogisticsService
      *
      * @return Collection<int, EquipmentLogisticsPlan>
      */
-    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $category = null): Collection
+    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null): Collection
     {
         $query = EquipmentLogisticsPlan::with([
             'equipment.lane',
-            'fromLocationModel',
-            'toLocationModel',
+            'fromLocationModel.schedules',
+            'toLocationModel.schedules',
             'witnessStaff',
         ])
             ->orderBy('target_date', 'asc')
@@ -499,8 +367,8 @@ class EquipmentLogisticsService
             $query->whereHas('equipment', fn ($q) => $q->where('lane_id', $laneId));
         }
 
-        if ($category) {
-            $query->whereHas('equipment', fn ($q) => $q->where('category', $category));
+        if ($type) {
+            $query->whereHas('equipment', fn ($q) => $q->where('type', $type));
         }
 
         return $query->get();
@@ -509,7 +377,7 @@ class EquipmentLogisticsService
     /**
      * 拠点別 保管状況 & 貸切スケジュール一覧用のデータ取得
      *
-     * @return array<int, array{location: Location, nightPlans: Collection<int, EquipmentLogisticsPlan>, currentPlans: Collection<int, EquipmentLogisticsPlan>}>
+     * @return array<int, array{location: Location, plans: Collection<int, EquipmentLogisticsPlan>, nightPlans: Collection<int, EquipmentLogisticsPlan>, collectionPlans: Collection<int, EquipmentLogisticsPlan>}>
      */
     public function getLocationsStatusData(): array
     {
@@ -538,13 +406,29 @@ class EquipmentLogisticsService
     }
 
     /**
-     * イベント会社スケジュール表用のデータ取得
+     * 会場内現地据置・テント内夜間保管（action_type = 'night_storage' かつ to_location_id = null）のデータ取得
+     *
+     * @return Collection<int, EquipmentLogisticsPlan>
+     */
+    public function getOnsiteNightStoragePlans(): Collection
+    {
+        return EquipmentLogisticsPlan::with(['equipment.lane', 'witnessStaff'])
+            ->where('action_type', 'night_storage')
+            ->whereNull('to_location_id')
+            ->orderBy('target_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->orderBy('display_order', 'asc')
+            ->get();
+    }
+
+    /**
+     * イベント会社・立会スケジュール表用のデータ取得
      *
      * @return Collection<int, EquipmentLogisticsPlan>
      */
     public function getEventCompanyScheduleData(): Collection
     {
-        return EquipmentLogisticsPlan::with(['equipment.lane', 'witnessStaff', 'toLocationModel'])
+        return EquipmentLogisticsPlan::with(['equipment.lane', 'witnessStaff', 'fromLocationModel', 'toLocationModel'])
             ->where(function ($q) {
                 $q->where('operator_type', 'event_company')
                     ->orWhere('witness_required', true)
@@ -552,6 +436,19 @@ class EquipmentLogisticsService
             })
             ->orderBy('target_date', 'asc')
             ->orderBy('start_time', 'asc')
+            ->orderBy('display_order', 'asc')
+            ->get();
+    }
+
+    /**
+     * カスタム搬出入パターン一覧の取得
+     *
+     * @return Collection<int, EquipmentLogisticsPattern>
+     */
+    public function getPatternsData(): Collection
+    {
+        return EquipmentLogisticsPattern::with(['steps.fromLocationModel', 'steps.toLocationModel', 'creator'])
+            ->ordered()
             ->get();
     }
 }

@@ -167,53 +167,53 @@ class LocationManagementTest extends TestCase
     {
         $location = Location::factory()->create([
             'location_type_id' => $this->type->id,
-            'name' => '番所',
+            'name' => '番所前スペース',
         ]);
 
-        // 午前スロット（承認済）
+        // 午前スロット（利用可能）
         $response1 = $this->actingAs($this->admin)->post(route('locations.schedules.store', $location), [
             'start_at' => '2026-10-10 09:00:00',
             'end_at' => '2026-10-10 12:00:00',
-            'application_status' => 'approved',
+            'availability_status' => 'available',
             'title' => '午前準備枠',
-            'note' => '区役所申請番号: 101',
+            'note' => '搬入受取用',
         ]);
         $response1->assertRedirect(route('locations.show', $location));
 
-        // 夜間スロット（未申請）
+        // 夜間スロット（利用不可）
         $response2 = $this->actingAs($this->admin)->post(route('locations.schedules.store', $location), [
             'start_at' => '2026-10-10 18:00:00',
             'end_at' => '2026-10-10 21:00:00',
-            'application_status' => 'unapplied',
-            'title' => '夜間撤収枠',
-            'note' => '未申請のため至急申請要',
+            'availability_status' => 'unavailable',
+            'title' => '夜間枠',
+            'note' => '模擬店準備のため利用不可',
         ]);
         $response2->assertRedirect(route('locations.show', $location));
 
         $this->assertCount(2, $location->schedules);
         $schedules = $location->schedules()->orderBy('start_at')->get();
-        $this->assertEquals('approved', $schedules[0]->application_status);
-        $this->assertEquals('unapplied', $schedules[1]->application_status);
+        $this->assertEquals('available', $schedules[0]->availability_status);
+        $this->assertEquals('unavailable', $schedules[1]->availability_status);
     }
 
-    public function test_can_update_schedule_application_status_quickly(): void
+    public function test_can_update_schedule_availability_status_quickly(): void
     {
         $location = Location::factory()->create(['location_type_id' => $this->type->id]);
         $schedule = LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => '2026-10-10 09:00:00',
             'end_at' => '2026-10-10 12:00:00',
-            'application_status' => 'unapplied',
+            'availability_status' => 'unavailable',
             'title' => '午前枠',
         ]);
 
         $response = $this->actingAs($this->admin)->patch(route('locations.schedules.update-status', [$location, $schedule]), [
-            'application_status' => 'approved',
+            'availability_status' => 'available',
         ]);
 
         $response->assertRedirect(route('locations.show', $location));
         $schedule->refresh();
-        $this->assertEquals('approved', $schedule->application_status);
+        $this->assertEquals('available', $schedule->availability_status);
     }
 
     public function test_evaluate_status_at_specific_times(): void
@@ -224,25 +224,25 @@ class LocationManagementTest extends TestCase
             'is_active' => true,
         ]);
 
-        // 午前枠: 09:00 - 12:00 (承認済)
+        // 午前枠: 09:00 - 12:00 (利用可能)
         LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => Carbon::parse('2026-10-10 09:00:00'),
             'end_at' => Carbon::parse('2026-10-10 12:00:00'),
-            'application_status' => 'approved',
+            'availability_status' => 'available',
             'title' => '午前枠',
         ]);
 
-        // 夜間枠: 18:00 - 21:00 (未申請)
+        // 夜間枠: 18:00 - 21:00 (利用不可)
         LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => Carbon::parse('2026-10-10 18:00:00'),
             'end_at' => Carbon::parse('2026-10-10 21:00:00'),
-            'application_status' => 'unapplied',
+            'availability_status' => 'unavailable',
             'title' => '夜間枠',
         ]);
 
-        // 1. 午前枠内（10:00）: 承認済みのため利用可能
+        // 1. 午前枠内（10:00）: 利用可能
         $evalMorning = $location->evaluateStatusAt(Carbon::parse('2026-10-10 10:00:00'));
         $this->assertEquals(LocationCurrentStatus::Available, $evalMorning->status);
 
@@ -250,10 +250,10 @@ class LocationManagementTest extends TestCase
         $evalAfternoon = $location->evaluateStatusAt(Carbon::parse('2026-10-10 14:00:00'));
         $this->assertEquals(LocationCurrentStatus::UnavailableOutOfHours, $evalAfternoon->status);
 
-        // 3. 夜間枠内（19:00）: 未申請のため利用不可！
+        // 3. 夜間枠内（19:00）: 利用不可設定のため利用不可
         $evalNight = $location->evaluateStatusAt(Carbon::parse('2026-10-10 19:00:00'));
-        $this->assertEquals(LocationCurrentStatus::UnavailableUnapplied, $evalNight->status);
-        $this->assertStringContainsString('未申請のため利用できません', $evalNight->detail);
+        $this->assertEquals(LocationCurrentStatus::UnavailablePending, $evalNight->status);
+        $this->assertStringContainsString('未確保（調整中）のため利用できません', $evalNight->detail);
 
         // 4. 全期間終了後（10/11 00:00）: 利用期間終了
         $evalEnded = $location->evaluateStatusAt(Carbon::parse('2026-10-11 00:00:00'));

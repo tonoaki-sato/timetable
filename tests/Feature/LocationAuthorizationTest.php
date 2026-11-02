@@ -88,7 +88,7 @@ class LocationAuthorizationTest extends TestCase
         $schedRes = $this->post(route('locations.schedules.store', $location), [
             'start_at' => now()->addHour()->toDateTimeString(),
             'end_at' => now()->addHours(2)->toDateTimeString(),
-            'application_status' => 'approved',
+            'availability_status' => 'available',
         ]);
         $schedRes->assertRedirect();
 
@@ -96,9 +96,9 @@ class LocationAuthorizationTest extends TestCase
 
         // スケジュールステータス更新
         $this->patch(route('locations.schedules.update-status', [$location, $schedule]), [
-            'application_status' => 'rejected',
+            'availability_status' => 'unavailable',
         ])->assertRedirect();
-        $this->assertDatabaseHas('location_schedules', ['id' => $schedule->id, 'application_status' => 'rejected']);
+        $this->assertDatabaseHas('location_schedules', ['id' => $schedule->id, 'availability_status' => 'unavailable']);
 
         // スケジュール削除
         $this->delete(route('locations.schedules.destroy', [$location, $schedule]))->assertRedirect();

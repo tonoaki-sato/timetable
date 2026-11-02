@@ -1,7 +1,7 @@
 @props(['plan', 'compact' => false])
 
 @php
-    $warning = $plan->checkToLocationAvailability();
+    $warnings = $plan->location_warnings;
     $statusColors = [
         'planned' => 'bg-slate-100 text-slate-700 border-slate-300',
         'in_progress' => 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse',
@@ -10,13 +10,13 @@
     ];
 
     $phaseColors = [
+        'other' => 'bg-slate-50 text-slate-700 border-slate-200',
         'pre_day' => 'bg-purple-50 text-purple-700 border-purple-200',
         'day1_morning' => 'bg-sky-50 text-sky-700 border-sky-200',
         'day1_evening' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
         'day2_morning' => 'bg-teal-50 text-teal-700 border-teal-200',
         'day2_evening' => 'bg-amber-50 text-amber-700 border-amber-200',
         'post_day' => 'bg-rose-50 text-rose-700 border-rose-200',
-        'other' => 'bg-slate-50 text-slate-700 border-slate-200',
     ];
 @endphp
 
@@ -58,11 +58,11 @@
     </div>
 
     <!-- タイトル & 数量 -->
-    <div class="font-bold text-slate-800 text-xs flex items-center justify-between">
+    <div class="font-bold text-slate-800 text-xs flex items-center justify-between gap-1">
         <span>{{ $plan->title }}</span>
-        @if($plan->quantity)
+        @if($plan->formatted_quantity !== '')
             <span class="text-[11px] font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded shrink-0 ml-1">
-                {{ $plan->quantity }}{{ $plan->equipment->unit ?? '個' }}
+                {{ $plan->formatted_quantity }}
             </span>
         @endif
     </div>
@@ -77,12 +77,12 @@
     </div>
 
     <!-- 貸切期間・整合性アラート（該当時） -->
-    @if($warning)
+    @foreach($warnings as $warning)
         <div class="p-1.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-[10px] flex items-start space-x-1.5">
             <span class="shrink-0 text-amber-600 font-bold">⚠️</span>
             <span class="leading-tight">{{ $warning['message'] }}</span>
         </div>
-    @endif
+    @endforeach
 
     <!-- フッター情報: 作業主体、立会、申し送り -->
     <div class="flex items-center justify-between gap-1 pt-1 border-t border-slate-100 text-[10px] text-slate-500">
@@ -110,4 +110,3 @@
         @endif
     </div>
 </div>
-

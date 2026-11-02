@@ -24,18 +24,27 @@ class StoreEquipmentRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'category' => ['nullable', 'string', 'in:heavy_equipment,carrier,tool_consumable'],
+            'type' => ['required', 'string', 'in:committee,rental,personal'],
             'checkout_rule' => ['nullable', 'string', 'in:free,permission_required,leader_only'],
-            'type' => ['required', 'string', 'in:committee,rental'],
             'quantity' => ['required', 'integer', 'min:1'],
+            'is_approximate_quantity' => ['boolean'],
             'unit' => ['required', 'string', 'max:20'],
             'storage_location' => ['nullable', 'string', 'max:255'],
             'storage_detail' => ['nullable', 'string', 'max:255'],
-            'event_company_name' => ['nullable', 'string', 'max:255'],
-            'event_company_contact' => ['nullable', 'string', 'max:255'],
             'lane_id' => ['nullable', 'exists:lanes,id'],
             'description' => ['nullable', 'string', 'max:2000'],
             'display_order' => ['nullable', 'integer', 'min:0'],
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'is_approximate_quantity' => $this->boolean('is_approximate_quantity'),
+            'checkout_rule' => $this->input('checkout_rule', 'free') ?: 'free',
+        ]);
     }
 }

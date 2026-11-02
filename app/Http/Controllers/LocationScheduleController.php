@@ -60,7 +60,7 @@ class LocationScheduleController extends Controller
     }
 
     /**
-     * 申請ステータスの簡易更新（ワンクリック切り替え用）
+     * 確保ステータスの簡易更新（ワンクリック切り替え用）
      */
     public function updateStatus(Request $request, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
     {
@@ -68,23 +68,23 @@ class LocationScheduleController extends Controller
         $this->authorize('update', $schedule);
 
         $validated = $request->validate([
-            'application_status' => ['required', Rule::in(array_keys(LocationSchedule::APPLICATION_STATUSES))],
+            'availability_status' => ['required', Rule::in(array_keys(LocationSchedule::AVAILABILITY_STATUSES))],
         ]);
 
-        $schedule->update(['application_status' => $validated['application_status']]);
+        $schedule->update(['availability_status' => $validated['availability_status']]);
 
-        $label = $schedule->application_status_label;
+        $label = $schedule->availability_status_label;
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "申請ステータスを「{$label}」に更新しました。",
+                'message' => "確保ステータスを「{$label}」に更新しました。",
                 'schedule' => $schedule,
             ]);
         }
 
         return redirect()->route('locations.show', $location)
-            ->with('status', "申請ステータスを「{$label}」に更新しました。");
+            ->with('status', "確保ステータスを「{$label}」に更新しました。");
     }
 
     /**

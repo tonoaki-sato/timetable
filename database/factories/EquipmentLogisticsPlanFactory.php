@@ -29,6 +29,7 @@ class EquipmentLogisticsPlanFactory extends Factory
             'action_type' => 'staging_move',
             'title' => fake()->randomElement(['倉庫出し・中継移動', '業者受取・立会', '現場設置', '夜間保管移動', '倉庫返還・格納', 'イベント会社搬入設営']),
             'quantity' => fake()->numberBetween(1, 20),
+            'quantity_note' => null,
             'start_time' => '13:00',
             'end_time' => '14:00',
             'from_location' => '番所地下倉庫',
@@ -38,7 +39,6 @@ class EquipmentLogisticsPlanFactory extends Factory
             'operator_type' => 'committee',
             'witness_required' => false,
             'witness_staff_id' => null,
-            'contact_info' => null,
             'status' => 'planned',
             'notes' => fake()->optional()->sentence(),
             'display_order' => fake()->numberBetween(1, 10),
@@ -53,7 +53,6 @@ class EquipmentLogisticsPlanFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'witness_required' => true,
             'witness_staff_id' => Staff::factory(),
-            'contact_info' => '090-0000-0000 (ドライバー連絡先)',
         ]);
     }
 
