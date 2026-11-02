@@ -357,4 +357,56 @@ class EquipmentLogisticsTest extends TestCase
         $typeResponse->assertSee('テント班私物台車');
         $typeResponse->assertDontSee('コーン班専用機材');
     }
+
+    /**
+     * 初期データが一切ない状態でも搬出入計画の全タブおよび印刷画面がエラーなく表示されること
+     */
+    public function test_logistics_views_and_print_render_cleanly_when_initial_data_is_empty(): void
+    {
+        $this->actingAs($this->operator);
+
+        EquipmentLogisticsPattern::query()->delete();
+        Location::query()->delete();
+        Timetable::query()->delete();
+        Equipment::query()->delete();
+
+        foreach (['flow', 'checklist', 'locations', 'event_company', 'patterns'] as $tab) {
+            $this->get(route('logistics.index', ['tab' => $tab]))
+                ->assertStatus(200);
+        }
+
+        $this->get(route('logistics.index', ['tab' => 'locations']))
+            ->assertSee('登録されている拠点がありません');
+
+        $this->get(route('logistics.print'))
+            ->assertStatus(200)
+            ->assertSee('登録されている拠点はありません')
+            ->assertSee('該当する資材または搬出入計画データはありません');
+    }
+
+    /**
+     * 拠点が未登録（0件）の状態でもパターン一括適用がエラーなく動作すること
+     */
+    public function test_apply_pattern_works_when_no_locations_exist(): void
+    {
+        $this->actingAs($this->operator);
+
+        Location::query()->delete();
+
+        $equipment = Equipment::factory()->committee()->create([
+            'name' => '拠点なし検証資材',
+            'quantity' => 10,
+            'storage_location' => '番所地下倉庫',
+        ]);
+
+        $response = $this->post(route('logistics.apply-template', $equipment), [
+            'pattern_id' => $this->pattern->id,
+            'staging_location_id' => '',
+            'night_location_1_id' => '',
+            'night_location_2_id' => '',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertSame(3, $equipment->plans()->count());
+    }
 }

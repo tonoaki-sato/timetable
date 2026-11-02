@@ -25,7 +25,8 @@ return new class extends Migration
             $table->text('description')->nullable()->comment('仕様・備考メモ');
             $table->integer('display_order')->default(0)->comment('表示順序');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamps();
+            $table->dateTime('created_at')->nullable();
+            $table->dateTime('updated_at')->nullable();
         });
     }
 

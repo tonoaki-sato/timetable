@@ -488,6 +488,7 @@
                     <div>
                         <label for="tpl_staging_location_id" class="block text-[11px] font-bold text-slate-700 mb-1">中継拠点（ロール: staging）</label>
                         <select id="tpl_staging_location_id" name="staging_location_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">（未指定）</option>
                             @foreach($locations as $loc)
                                 <option value="{{ $loc->id }}" {{ str_contains($loc->name, '税務署') ? 'selected' : '' }}>{{ $loc->name }}</option>
                             @endforeach
@@ -497,6 +498,7 @@
                     <div>
                         <label for="tpl_night_location_1_id" class="block text-[11px] font-bold text-slate-700 mb-1">夜間保管拠点①（ロール: night_storage_1）</label>
                         <select id="tpl_night_location_1_id" name="night_location_1_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">（未指定）</option>
                             @foreach($locations as $loc)
                                 <option value="{{ $loc->id }}" {{ str_contains($loc->name, '税務署') ? 'selected' : '' }}>{{ $loc->name }}</option>
                             @endforeach

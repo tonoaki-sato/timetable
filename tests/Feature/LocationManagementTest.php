@@ -272,4 +272,19 @@ class LocationManagementTest extends TestCase
         $this->assertEquals(LocationCurrentStatus::Available, $eval->status);
         $this->assertStringContainsString('終日利用可能', $eval->detail);
     }
+
+    public function test_location_create_and_type_index_render_cleanly_when_no_location_types_exist(): void
+    {
+        LocationType::query()->delete();
+
+        $this->actingAs($this->admin)
+            ->get(route('locations.create'))
+            ->assertOk()
+            ->assertSee('拠点タイプ（種別マスタ）がまだ登録されていません');
+
+        $this->actingAs($this->admin)
+            ->get(route('location-types.index'))
+            ->assertOk()
+            ->assertSee('登録されている拠点タイプがありません');
+    }
 }

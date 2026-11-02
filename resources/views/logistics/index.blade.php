@@ -391,110 +391,127 @@
     @if($tab === 'locations')
         <div class="space-y-6">
             <!-- 拠点一覧グリッド -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                @foreach($locationsData as $locItem)
-                    @php
-                        $loc = $locItem['location'];
-                        $nightPlans = $locItem['nightPlans'];
-                        $collectionPlans = $locItem['collectionPlans'];
-                    @endphp
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 hover:border-slate-300 transition flex flex-col justify-between">
-                        <div class="space-y-3">
-                            <!-- 拠点ヘッダー -->
-                            <div class="flex items-start justify-between gap-2">
-                                <div>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-xl">📍</span>
-                                        <h2 class="font-bold text-slate-900 text-base">{{ $loc->name }}</h2>
+            @if(empty($locationsData))
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-10 text-center space-y-3">
+                    <div class="text-3xl">📍</div>
+                    <div class="text-sm font-bold text-slate-800">登録されている拠点がありません</div>
+                    <p class="text-xs text-slate-500">
+                        拠点管理画面から保管場所・中継駐車場・コミュニティスペース等の拠点を登録してください。
+                    </p>
+                    <div>
+                        <a href="{{ route('locations.create') }}"
+                           class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                            <span>➕</span>
+                            <span>拠点を新規登録する</span>
+                        </a>
+                    </div>
+                </div>
+            @else
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    @foreach($locationsData as $locItem)
+                        @php
+                            $loc = $locItem['location'];
+                            $nightPlans = $locItem['nightPlans'];
+                            $collectionPlans = $locItem['collectionPlans'];
+                        @endphp
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 hover:border-slate-300 transition flex flex-col justify-between">
+                            <div class="space-y-3">
+                                <!-- 拠点ヘッダー -->
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xl">📍</span>
+                                            <h2 class="font-bold text-slate-900 text-base">{{ $loc->name }}</h2>
+                                        </div>
+                                        <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">
+                                            {{ $loc->type?->label ?? '未分類' }}
+                                        </span>
                                     </div>
-                                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">
-                                        {{ $loc->type?->label ?? '未分類' }}
-                                    </span>
+
+                                    <a href="{{ route('locations.show', $loc) }}"
+                                       class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition text-xs font-bold" title="拠点詳細・利用枠">
+                                        🔍 詳細・利用枠
+                                    </a>
                                 </div>
 
-                                <a href="{{ route('locations.show', $loc) }}"
-                                   class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition text-xs font-bold" title="拠点詳細・利用枠">
-                                    🔍 詳細・利用枠
-                                </a>
-                            </div>
-
-                            <!-- 貸切期間・終日利用表示 -->
-                            <div class="p-2.5 rounded-xl border text-xs {{ $loc->is_all_day ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-900' }}">
-                                <div class="font-bold flex items-center justify-between">
-                                    <span>{{ $loc->is_all_day ? '🟢 終日常時利用可能' : '🟡 個別時間帯枠での管理' }}</span>
+                                <!-- 貸切期間・終日利用表示 -->
+                                <div class="p-2.5 rounded-xl border text-xs {{ $loc->is_all_day ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-900' }}">
+                                    <div class="font-bold flex items-center justify-between">
+                                        <span>{{ $loc->is_all_day ? '🟢 終日常時利用可能' : '🟡 個別時間帯枠での管理' }}</span>
+                                    </div>
+                                    @if(!$loc->is_all_day)
+                                        @if($loc->schedules->isNotEmpty())
+                                            <div class="mt-1.5 space-y-1">
+                                                @foreach($loc->schedules as $slot)
+                                                    <div class="flex items-center justify-between text-[11px] bg-white/80 px-2 py-1 rounded border border-amber-200/70">
+                                                        <span class="font-mono font-bold text-slate-800">
+                                                            {{ $slot->start_at->format('n/j H:i') }}〜{{ $slot->end_at->format($slot->start_at->isSameDay($slot->end_at) ? 'H:i' : 'n/j H:i') }}
+                                                        </span>
+                                                        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold border {{ $slot->availability_status_badge_class }}">
+                                                            {{ $slot->availability_status_label }}
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <div class="mt-1 text-[11px] text-rose-700 font-bold">利用可能時間帯枠が未登録です</div>
+                                        @endif
+                                    @endif
+                                    @if($loc->notes)
+                                        <p class="text-[10px] mt-1.5 text-slate-600 leading-tight line-clamp-2">{{ $loc->notes }}</p>
+                                    @endif
                                 </div>
-                                @if(!$loc->is_all_day)
-                                    @if($loc->schedules->isNotEmpty())
-                                        <div class="mt-1.5 space-y-1">
-                                            @foreach($loc->schedules as $slot)
-                                                <div class="flex items-center justify-between text-[11px] bg-white/80 px-2 py-1 rounded border border-amber-200/70">
-                                                    <span class="font-mono font-bold text-slate-800">
-                                                        {{ $slot->start_at->format('n/j H:i') }}〜{{ $slot->end_at->format($slot->start_at->isSameDay($slot->end_at) ? 'H:i' : 'n/j H:i') }}
-                                                    </span>
-                                                    <span class="px-1.5 py-0.2 rounded text-[10px] font-bold border {{ $slot->availability_status_badge_class }}">
-                                                        {{ $slot->availability_status_label }}
+
+                                <!-- 1日目夜の分散夜間保管機材 -->
+                                <div class="space-y-1.5">
+                                    <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                                        <span>🌙 1日目夜の夜間保管機材</span>
+                                        <span class="font-mono text-indigo-700 font-bold">{{ $nightPlans->count() }}件</span>
+                                    </div>
+                                    @if($nightPlans->isEmpty())
+                                        <p class="text-xs text-slate-400 italic bg-slate-50 p-2 rounded-lg">夜間保管機材の指定はありません</p>
+                                    @else
+                                        <div class="space-y-1">
+                                            @foreach($nightPlans as $np)
+                                                <div class="p-2 rounded-lg bg-indigo-50/60 border border-indigo-100 text-xs flex items-center justify-between gap-2">
+                                                    <a href="{{ route('equipments.show', $np->equipment) }}" class="font-bold text-indigo-950 hover:underline truncate">
+                                                        {{ $np->equipment->name }}
+                                                    </a>
+                                                    <span class="font-mono font-bold text-indigo-700 shrink-0">
+                                                        {{ $np->formatted_quantity !== '' ? $np->formatted_quantity : $np->equipment->formatted_quantity }}
                                                     </span>
                                                 </div>
                                             @endforeach
                                         </div>
-                                    @else
-                                        <div class="mt-1 text-[11px] text-rose-700 font-bold">利用可能時間帯枠が未登録です</div>
                                     @endif
-                                @endif
-                                @if($loc->notes)
-                                    <p class="text-[10px] mt-1.5 text-slate-600 leading-tight line-clamp-2">{{ $loc->notes }}</p>
-                                @endif
-                            </div>
-
-                            <!-- 1日目夜の分散夜間保管機材 -->
-                            <div class="space-y-1.5">
-                                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                                    <span>🌙 1日目夜の夜間保管機材</span>
-                                    <span class="font-mono text-indigo-700 font-bold">{{ $nightPlans->count() }}件</span>
                                 </div>
-                                @if($nightPlans->isEmpty())
-                                    <p class="text-xs text-slate-400 italic bg-slate-50 p-2 rounded-lg">夜間保管機材の指定はありません</p>
-                                @else
-                                    <div class="space-y-1">
-                                        @foreach($nightPlans as $np)
-                                            <div class="p-2 rounded-lg bg-indigo-50/60 border border-indigo-100 text-xs flex items-center justify-between gap-2">
-                                                <a href="{{ route('equipments.show', $np->equipment) }}" class="font-bold text-indigo-950 hover:underline truncate">
-                                                    {{ $np->equipment->name }}
-                                                </a>
-                                                <span class="font-mono font-bold text-indigo-700 shrink-0">
-                                                    {{ $np->formatted_quantity !== '' ? $np->formatted_quantity : $np->equipment->formatted_quantity }}
-                                                </span>
-                                            </div>
-                                        @endforeach
+
+                                <!-- 2日目夜〜翌日の業者回収待ち機材 -->
+                                @if($collectionPlans->isNotEmpty())
+                                    <div class="space-y-1.5 pt-1">
+                                        <div class="text-[11px] font-bold text-amber-700 uppercase tracking-wider flex items-center justify-between">
+                                            <span>📦 業者回収待ち・撤収後保管</span>
+                                            <span class="font-mono font-bold text-amber-700">{{ $collectionPlans->count() }}件</span>
+                                        </div>
+                                        <div class="space-y-1">
+                                            @foreach($collectionPlans as $cp)
+                                                <div class="p-2 rounded-lg bg-amber-50 border border-amber-200 text-xs flex items-center justify-between gap-2">
+                                                    <a href="{{ route('equipments.show', $cp->equipment) }}" class="font-bold text-amber-950 hover:underline truncate">
+                                                        {{ $cp->equipment->name }}
+                                                    </a>
+                                                    <span class="font-mono font-bold text-amber-800 shrink-0">
+                                                        {{ $cp->formatted_quantity !== '' ? $cp->formatted_quantity : $cp->equipment->formatted_quantity }}
+                                                    </span>
+                                                </div>
+                                            @endforeach
+                                        </div>
                                     </div>
                                 @endif
                             </div>
-
-                            <!-- 2日目夜〜翌日の業者回収待ち機材 -->
-                            @if($collectionPlans->isNotEmpty())
-                                <div class="space-y-1.5 pt-1">
-                                    <div class="text-[11px] font-bold text-amber-700 uppercase tracking-wider flex items-center justify-between">
-                                        <span>📦 業者回収待ち・撤収後保管</span>
-                                        <span class="font-mono font-bold text-amber-700">{{ $collectionPlans->count() }}件</span>
-                                    </div>
-                                    <div class="space-y-1">
-                                        @foreach($collectionPlans as $cp)
-                                            <div class="p-2 rounded-lg bg-amber-50 border border-amber-200 text-xs flex items-center justify-between gap-2">
-                                                <a href="{{ route('equipments.show', $cp->equipment) }}" class="font-bold text-amber-950 hover:underline truncate">
-                                                    {{ $cp->equipment->name }}
-                                                </a>
-                                                <span class="font-mono font-bold text-amber-800 shrink-0">
-                                                    {{ $cp->formatted_quantity !== '' ? $cp->formatted_quantity : $cp->equipment->formatted_quantity }}
-                                                </span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
                         </div>
-                    </div>
-                @endforeach
-            </div>
+                    @endforeach
+                </div>
+            @endif
 
             <!-- ⛺ 現地・テント内夜間保管（要防犯・荒天時退避確認） -->
             <div class="bg-white rounded-2xl border border-amber-300 shadow-sm p-5 space-y-3">
@@ -886,6 +903,12 @@
                         <option value="{{ $key }}">{{ $lbl }}</option>
                     @endforeach
                 </select>
+                <select data-field="from_location_id" class="hidden w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs">
+                    <option value="">固定拠点を選択（未指定時はテキスト参照）</option>
+                    @foreach($locations as $loc)
+                        <option value="{{ $loc->id }}" data-name="{{ $loc->name }}">{{ $loc->name }}</option>
+                    @endforeach
+                </select>
                 <input type="text" data-field="from_location" placeholder="移動元テキスト（任意）"
                        class="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs">
             </div>
@@ -894,6 +917,12 @@
                 <select data-field="to_location_role" required class="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs font-bold">
                     @foreach(\App\Models\EquipmentLogisticsPatternStep::LOCATION_ROLES as $key => $lbl)
                         <option value="{{ $key }}">{{ $lbl }}</option>
+                    @endforeach
+                </select>
+                <select data-field="to_location_id" class="hidden w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs">
+                    <option value="">固定拠点を選択（未指定時はテキスト参照）</option>
+                    @foreach($locations as $loc)
+                        <option value="{{ $loc->id }}" data-name="{{ $loc->name }}">{{ $loc->name }}</option>
                     @endforeach
                 </select>
                 <input type="text" data-field="to_location" placeholder="移動先テキスト（任意）"

@@ -87,7 +87,7 @@
                 <span>主要中継拠点・保管場所 & 利用可能時間一覧</span>
             </h2>
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-                @foreach($locationsData as $locItem)
+                @forelse($locationsData as $locItem)
                     @php $l = $locItem['location']; @endphp
                     <div class="p-2 rounded-lg border border-slate-200 bg-slate-50">
                         <div class="font-bold text-slate-900 truncate">{{ $l->name }}</div>
@@ -103,7 +103,11 @@
                             @endif
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="col-span-full p-3 rounded-lg border border-slate-200 bg-slate-50 text-center text-slate-500">
+                        登録されている拠点はありません。
+                    </div>
+                @endforelse
             </div>
         </div>
 
@@ -128,7 +132,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
-                    @foreach($equipments as $eq)
+                    @forelse($equipments as $eq)
                         @php
                             $plans = $eq->plans;
                             $preDayPlans = $plans->whereIn('day_phase', ['other', 'pre_day']);
@@ -260,7 +264,13 @@
                                 @endforelse
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="8" class="p-6 text-center text-slate-500">
+                                該当する資材または搬出入計画データはありません。
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

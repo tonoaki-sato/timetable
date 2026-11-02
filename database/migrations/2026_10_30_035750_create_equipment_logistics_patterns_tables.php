@@ -18,7 +18,8 @@ return new class extends Migration
             $table->text('description')->nullable()->comment('パターンの説明・対象資材例メモ');
             $table->integer('display_order')->default(0)->comment('表示順序');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamps();
+            $table->dateTime('created_at')->nullable();
+            $table->dateTime('updated_at')->nullable();
         });
 
         Schema::create('equipment_logistics_pattern_steps', function (Blueprint $table) {
@@ -41,7 +42,8 @@ return new class extends Migration
             $table->boolean('witness_required')->default(false)->comment('立会要否フラグ');
             $table->text('notes')->nullable()->comment('注意事項テンプレート');
             $table->integer('display_order')->default(0)->comment('ステップ順序');
-            $table->timestamps();
+            $table->dateTime('created_at')->nullable();
+            $table->dateTime('updated_at')->nullable();
         });
     }
 
@@ -54,4 +56,3 @@ return new class extends Migration
         Schema::dropIfExists('equipment_logistics_patterns');
     }
 };
-

@@ -265,4 +265,78 @@ class EquipmentManagementTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    /**
+     * レンタル機材（type=rental）登録・更新時に、フォーム初期値の保管場所が送信されてもnullに正規化されること
+     */
+    public function test_rental_equipment_clears_default_storage_location_and_detail(): void
+    {
+        $this->actingAs($this->operator);
+
+        $response = $this->post(route('equipments.store'), [
+            'name' => '足踏み式給水設備',
+            'type' => 'rental',
+            'checkout_rule' => 'leader_only',
+            'quantity' => 5,
+            'unit' => '台',
+            'storage_location' => '番所地下倉庫',
+            'storage_detail' => '不要な詳細',
+        ]);
+
+        $equipment = Equipment::where('name', '足踏み式給水設備')->first();
+        $this->assertNotNull($equipment);
+        $response->assertRedirect(route('equipments.show', $equipment));
+        $this->assertNull($equipment->storage_location);
+        $this->assertNull($equipment->storage_detail);
+
+        // 委員会管理からレンタルへ更新した場合もクリアされること
+        $committeeEq = Equipment::factory()->committee()->create([
+            'storage_location' => '番所地下倉庫',
+            'storage_detail' => '地下1階',
+        ]);
+
+        $this->put(route('equipments.update', $committeeEq), [
+            'name' => $committeeEq->name,
+            'type' => 'rental',
+            'quantity' => 3,
+            'unit' => '台',
+            'storage_location' => '番所地下倉庫',
+            'storage_detail' => '地下1階',
+        ])->assertRedirect(route('equipments.show', $committeeEq));
+
+        $committeeEq->refresh();
+        $this->assertNull($committeeEq->storage_location);
+        $this->assertNull($committeeEq->storage_detail);
+    }
+
+    /**
+     * 初期データが一切ない状態でも資材一覧・新規作成・詳細画面がエラーなく表示されること
+     */
+    public function test_empty_initial_data_renders_equipment_views_cleanly(): void
+    {
+        $this->actingAs($this->operator);
+        Timetable::query()->delete();
+
+        $this->get(route('equipments.index'))
+            ->assertStatus(200)
+            ->assertSee('登録されている資材がありません');
+
+        $this->get(route('equipments.create'))
+            ->assertStatus(200)
+            ->assertSee('新規資材の登録');
+
+        $this->post(route('equipments.store'), [
+            'name' => '初回登録資材',
+            'type' => 'committee',
+            'quantity' => 1,
+            'unit' => '個',
+        ])->assertRedirect();
+
+        $firstEquipment = Equipment::firstOrFail();
+
+        $this->get(route('equipments.show', $firstEquipment))
+            ->assertStatus(200)
+            ->assertSee('初回登録資材')
+            ->assertSee('搬出入パターンがまだ登録されていません');
+    }
 }

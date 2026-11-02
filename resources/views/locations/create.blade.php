@@ -23,6 +23,25 @@
         </div>
     @endif
 
+    @if($types->isEmpty())
+        <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1">
+                <div class="font-bold flex items-center space-x-1.5">
+                    <span>⚠️</span>
+                    <span>拠点タイプ（種別マスタ）がまだ登録されていません</span>
+                </div>
+                <p class="text-[11px] text-amber-800">
+                    拠点を登録するには、先に「タイプマスタ管理」画面から拠点タイプ（駐車場・保管倉庫・コミュニティスペース等）を追加してください。
+                </p>
+            </div>
+            <a href="{{ route('location-types.index') }}"
+               class="inline-flex items-center space-x-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-xs transition shrink-0">
+                <span>🏷️</span>
+                <span>タイプマスタ管理へ移動</span>
+            </a>
+        </div>
+    @endif
+
     <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6">
         <form method="POST" action="{{ route('locations.store') }}" class="space-y-5">
             @csrf
@@ -99,8 +118,8 @@
                     class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                     キャンセル
                 </a>
-                <button type="submit"
-                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                <button type="submit" @disabled($types->isEmpty())
+                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
                     登録して利用時間帯を設定する
                 </button>
             </div>

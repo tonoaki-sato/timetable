@@ -18,10 +18,16 @@ function initEquipmentForm() {
 
     function toggleEquipmentType(type) {
         if (!commSec) return;
+        const storageInput = document.getElementById('storage_location');
+        const detailInput = document.getElementById('storage_detail');
         if (type === 'rental') {
             commSec.classList.add('hidden');
+            if (storageInput) storageInput.disabled = true;
+            if (detailInput) detailInput.disabled = true;
         } else {
             commSec.classList.remove('hidden');
+            if (storageInput) storageInput.disabled = false;
+            if (detailInput) detailInput.disabled = false;
         }
     }
 
@@ -270,14 +276,47 @@ function initPatternModal() {
             setField('title', stepData.title || '');
             setField('operator_type', stepData.operator_type || 'committee');
             setField('from_location_role', stepData.from_location_role || 'text');
+            setField('from_location_id', stepData.from_location_id || '');
             setField('from_location', stepData.from_location || '');
             setField('to_location_role', stepData.to_location_role || 'text');
+            setField('to_location_id', stepData.to_location_id || '');
             setField('to_location', stepData.to_location || '');
             setField('quantity_rule', stepData.quantity_rule || 'all');
             setField('quantity_note', stepData.quantity_note || '');
             setField('witness_required', stepData.witness_required);
             setField('notes', stepData.notes || '');
         }
+
+        const bindLocationRoleToggle = (roleField, idField, textField) => {
+            const roleSelect = row.querySelector(`[data-field="${roleField}"]`);
+            const idSelect = row.querySelector(`[data-field="${idField}"]`);
+            const textInput = row.querySelector(`[data-field="${textField}"]`);
+            if (!roleSelect || !idSelect) return;
+
+            const syncRoleUI = () => {
+                if (roleSelect.value === 'fixed') {
+                    idSelect.classList.remove('hidden');
+                    idSelect.disabled = false;
+                } else {
+                    idSelect.classList.add('hidden');
+                    idSelect.disabled = true;
+                    idSelect.value = '';
+                }
+            };
+
+            roleSelect.addEventListener('change', syncRoleUI);
+            idSelect.addEventListener('change', () => {
+                const selected = idSelect.options[idSelect.selectedIndex];
+                if (selected && selected.dataset.name && textInput && !textInput.value) {
+                    textInput.value = selected.dataset.name;
+                }
+            });
+
+            syncRoleUI();
+        };
+
+        bindLocationRoleToggle('from_location_role', 'from_location_id', 'from_location');
+        bindLocationRoleToggle('to_location_role', 'to_location_id', 'to_location');
 
         const removeBtn = row.querySelector('[data-action="remove-pattern-step"]');
         if (removeBtn) {

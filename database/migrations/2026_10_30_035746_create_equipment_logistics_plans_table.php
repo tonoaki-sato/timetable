@@ -32,7 +32,8 @@ return new class extends Migration
             $table->string('status', 30)->default('planned')->comment('ステータス: planned, in_progress, completed, cancelled');
             $table->text('notes')->nullable()->comment('条件・注意事項メモ');
             $table->integer('display_order')->default(0)->comment('表示順序');
-            $table->timestamps();
+            $table->dateTime('created_at')->nullable();
+            $table->dateTime('updated_at')->nullable();
         });
     }
 

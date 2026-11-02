@@ -54,7 +54,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    @foreach($types as $type)
+                    @forelse($types as $type)
                         <tr class="hover:bg-slate-50/70 transition">
                             <td class="py-2.5 px-4 font-bold text-slate-900 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200">
@@ -107,7 +107,13 @@
                                 @endif
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="7" class="py-8 px-4 text-center text-slate-500">
+                                登録されている拠点タイプがありません。右上の「新しいタイプを追加」ボタンから登録してください。
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

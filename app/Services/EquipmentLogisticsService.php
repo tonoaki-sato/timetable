@@ -274,7 +274,7 @@ class EquipmentLogisticsService
             'night_parking_2' => [$nightLocation2?->id, $nightLocation2?->name ?? ($fallbackText ?: '夜間保管場所②')],
             'fixed' => [
                 $fixedLocationId,
-                $fixedLocationId ? (Location::find($fixedLocationId)?->name ?? $fallbackText) : $fallbackText,
+                ($fixedLocationId ? Location::find($fixedLocationId)?->name : null) ?? ($fallbackText ?: '未定'),
             ],
             default => [null, $fallbackText],
         };

@@ -42,9 +42,16 @@ class StoreEquipmentRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        $this->merge([
+        $merged = [
             'is_approximate_quantity' => $this->boolean('is_approximate_quantity'),
             'checkout_rule' => $this->input('checkout_rule', 'free') ?: 'free',
-        ]);
+        ];
+
+        if ($this->input('type') === 'rental') {
+            $merged['storage_location'] = null;
+            $merged['storage_detail'] = null;
+        }
+
+        $this->merge($merged);
     }
 }
