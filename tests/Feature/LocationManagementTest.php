@@ -255,9 +255,10 @@ class LocationManagementTest extends TestCase
         $this->assertEquals(LocationCurrentStatus::UnavailablePending, $evalNight->status);
         $this->assertStringContainsString('未確保（調整中）のため利用できません', $evalNight->detail);
 
-        // 4. 全期間終了後（10/11 00:00）: 利用期間終了
+        // 4. 全期間終了後（10/11 00:00）: 枠未登録（利用期間終了後）
         $evalEnded = $location->evaluateStatusAt(Carbon::parse('2026-10-11 00:00:00'));
-        $this->assertEquals(LocationCurrentStatus::Completed, $evalEnded->status);
+        $this->assertEquals(LocationCurrentStatus::NoSchedule, $evalEnded->status);
+        $this->assertStringContainsString('すべての利用可能期間が終了しました', $evalEnded->detail);
     }
 
     public function test_all_day_location_is_always_available(): void

@@ -233,7 +233,7 @@ class Location extends Model
         $latestEnd = $schedules->max('end_at');
         if ($latestEnd && $dateTime > $latestEnd) {
             return new LocationStatusEvaluation(
-                status: LocationCurrentStatus::Completed,
+                status: LocationCurrentStatus::NoSchedule,
                 detail: 'すべての利用可能期間が終了しました。'
             );
         }

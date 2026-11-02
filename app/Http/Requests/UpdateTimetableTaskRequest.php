@@ -70,7 +70,7 @@ class UpdateTimetableTaskRequest extends FormRequest
             'is_at_least' => ['required', 'boolean'],
             'is_critical' => ['required', 'boolean'],
             'requires_review' => ['required', 'boolean'],
-            'status' => ['required', 'string', 'in:' . implode(',', array_keys(TimetableTask::STATUSES))],
+            'status' => ['required', 'string', 'in:'.implode(',', array_keys(TimetableTask::STATUSES))],
         ];
     }
 
