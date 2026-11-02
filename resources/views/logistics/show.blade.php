@@ -207,19 +207,16 @@
                                             'day_phase' => $plan->day_phase,
                                             'action_type' => $plan->action_type,
                                             'title' => $plan->title,
+                                            'target_date' => $plan->target_date?->format('Y-m-d'),
                                             'start_time' => $plan->start_time ? substr($plan->start_time, 0, 5) : '',
                                             'end_time' => $plan->end_time ? substr($plan->end_time, 0, 5) : '',
-                                            'from_location_role' => $plan->from_location_role,
                                             'from_location_id' => $plan->from_location_id,
                                             'from_location' => $plan->from_location,
-                                            'to_location_role' => $plan->to_location_role,
                                             'to_location_id' => $plan->to_location_id,
                                             'to_location' => $plan->to_location,
-                                            'quantity_rule' => $plan->quantity_rule,
-                                            'custom_quantity' => $plan->custom_quantity,
+                                            'quantity' => $plan->quantity,
+                                            'quantity_note' => $plan->quantity_note,
                                             'operator_type' => $plan->operator_type,
-                                            'contractor_name' => $plan->contractor_name,
-                                            'assigned_lane_id' => $plan->assigned_lane_id,
                                             'witness_required' => $plan->witness_required ? 1 : 0,
                                             'witness_staff_id' => $plan->witness_staff_id,
                                             'notes' => $plan->notes,
@@ -246,17 +243,11 @@
                                 <div class="flex items-center space-x-1.5 min-w-0">
                                     <span class="text-slate-400 font-bold">発:</span>
                                     <span class="font-bold text-slate-800 truncate">{{ $plan->resolved_from_location }}</span>
-                                    @if($plan->from_location_role)
-                                        <span class="text-[10px] text-slate-500 font-mono">({{ $plan->from_location_role }})</span>
-                                    @endif
                                 </div>
                                 <span class="text-indigo-500 font-bold px-1">➔</span>
                                 <div class="flex items-center space-x-1.5 min-w-0">
                                     <span class="text-slate-400 font-bold">着:</span>
                                     <span class="font-bold text-slate-900 truncate">{{ $plan->resolved_to_location }}</span>
-                                    @if($plan->to_location_role)
-                                        <span class="text-[10px] text-slate-500 font-mono">({{ $plan->to_location_role }})</span>
-                                    @endif
                                 </div>
                             </div>
 
@@ -268,7 +259,7 @@
                                 </div>
                                 <div class="font-bold text-slate-800">
                                     <span class="text-slate-400">📦</span>
-                                    <span>{{ $plan->quantity_rule === 'all' ? '全数量' : ($plan->custom_quantity ? $plan->custom_quantity . ($equipment->unit ?: '個') : '一部') }}</span>
+                                    <span>{{ $plan->formatted_quantity ?: '数量指定なし' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -305,7 +296,7 @@
                                 @foreach($warnings as $warn)
                                     <div class="flex items-center space-x-1.5 font-bold">
                                         <span>⚠️</span>
-                                        <span>{{ $warn }}</span>
+                                        <span>{{ is_array($warn) ? ($warn['message'] ?? '') : $warn }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -372,8 +363,14 @@
                 </div>
             </div>
 
-            <!-- 時間帯 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- 実施日 & 時間帯 -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label for="step_target_date" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">実施予定日</label>
+                    <input type="date" id="step_target_date" name="target_date"
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
                 <div>
                     <label for="step_start_time" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">開始時刻</label>
                     <input type="time" id="step_start_time" name="start_time"
@@ -417,14 +414,11 @@
             <!-- 数量・担当・立会い -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-slate-100 pt-3">
                 <div>
-                    <label for="step_quantity_rule" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">運搬数量ルール</label>
-                    <select id="step_quantity_rule" name="quantity_rule" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="all">全数（{{ $equipment->formatted_quantity }}）</option>
-                        <option value="custom">数量指定</option>
-                        <option value="unspecified">指定なし</option>
-                    </select>
-                    <input type="number" id="step_custom_quantity" name="custom_quantity" placeholder="数量" min="1"
-                           class="w-full mt-1.5 px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 hidden">
+                    <label for="step_quantity" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">運搬数量</label>
+                    <input type="number" id="step_quantity" name="quantity" min="1" placeholder="数量 (例: {{ $equipment->quantity }})"
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="step_quantity_note" name="quantity_note" placeholder="数量補足（例: 通行止め用、西側分）"
+                           class="w-full mt-1.5 px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
                 <div>
@@ -434,8 +428,6 @@
                             <option value="{{ $key }}" {{ $equipment->isRental() && $key === 'event_company' ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
-                    <input type="text" id="step_contractor_name" name="contractor_name" placeholder="委託先・業者名"
-                           class="w-full mt-1.5 px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 {{ $equipment->isRental() ? '' : 'hidden' }}">
                 </div>
 
                 <div>

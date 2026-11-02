@@ -359,4 +359,38 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertSee(route('equipments.show', $equipment));
         $response->assertSee(route('logistics.index'));
     }
+
+    /**
+     * 拠点制約警告が存在する場合でも搬出入詳細画面がエラーなく正常に描画されること
+     */
+    public function test_equipment_logistics_show_renders_correctly_with_location_warnings(): void
+    {
+        $this->actingAs($this->operator);
+
+        $equipment = Equipment::factory()->rental()->create([
+            'name' => '足踏み式給水設備（警告テスト）',
+        ]);
+
+        // スケジュール未登録の拠点を移動先に指定することで警告（location_warnings）を発生させる
+        $locationWithoutSchedule = Location::factory()->create([
+            'name' => '未登録駐車場',
+            'is_all_day' => false,
+            'is_active' => true,
+        ]);
+
+        $equipment->plans()->create([
+            'title' => '給水設備受取・移動',
+            'target_date' => '2026-10-10',
+            'day_phase' => 'pre_day',
+            'action_type' => 'staging_move',
+            'to_location_id' => $locationWithoutSchedule->id,
+            'to_location' => $locationWithoutSchedule->name,
+        ]);
+
+        $response = $this->get(route('logistics.equipments.show', $equipment));
+        $response->assertStatus(200);
+        $response->assertSee('足踏み式給水設備（警告テスト）');
+        $response->assertSee('給水設備受取・移動');
+        $response->assertSee('利用可能時間帯が登録されていません');
+    }
 }
