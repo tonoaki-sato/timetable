@@ -70,7 +70,7 @@ class UpdateTimetableTaskRequest extends FormRequest
             'is_at_least' => ['required', 'boolean'],
             'is_critical' => ['required', 'boolean'],
             'requires_review' => ['required', 'boolean'],
-            'status' => ['required', 'string', 'in:'.implode(',', array_keys(TimetableTask::STATUSES))],
+            'status' => ['required', 'string', 'in:' . implode(',', array_keys(TimetableTask::STATUSES))],
         ];
     }
 
@@ -85,7 +85,7 @@ class UpdateTimetableTaskRequest extends FormRequest
             'timetable_id' => '対象タイムテーブル',
             'title' => '作業タスク名',
             'content' => '作業内容・手順指示',
-            'lane' => '担当班（レーン）',
+            'lane' => '担当班',
             'location' => '実施場所',
             'start_time' => '開始時刻',
             'end_time' => '終了時刻',

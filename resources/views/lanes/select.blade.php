@@ -1,15 +1,15 @@
-<x-layouts.app title="担当班（レーン）管理 - タイムテーブルの選択">
+<x-layouts.app title="担当班管理 - タイムテーブルの選択">
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
-        title="担当班（レーン）管理"
+        title="担当班管理"
         icon="🏷️"
         description="班編成や現場リーダー設定を行うタイムテーブル（日程）を選択してください。">
         <x-slot:breadcrumbs>
             <span>🏮 まつり運行</span>
             <span>/</span>
-            <span class="text-slate-700 font-bold">担当班（レーン）管理</span>
+            <span class="text-slate-700 font-bold">担当班管理</span>
         </x-slot:breadcrumbs>
     </x-page-header>
 

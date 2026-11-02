@@ -56,7 +56,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="lane_id" class="block text-xs font-bold text-slate-700 mb-1">
-                        担当班（レーン） <span class="text-red-500">*</span>
+                        担当班 <span class="text-red-500">*</span>
                     </label>
                     <select id="lane_id" name="lane_id" required
                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">

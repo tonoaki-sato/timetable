@@ -85,7 +85,7 @@ class LaneManagementTest extends TestCase
             ->get(route('timetables.lanes.index', $this->timetable));
 
         $response->assertStatus(200);
-        $response->assertSee('担当班（レーン）管理');
+        $response->assertSee('担当班管理');
         $response->assertSee(route('lanes.index'));
         $response->assertDontSee('他日程からコピー');
         $response->assertDontSee('運行マトリクスを見る');
@@ -545,7 +545,7 @@ class LaneManagementTest extends TestCase
             ->get(route('lanes.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('担当班（レーン）管理');
+        $response->assertSee('担当班管理');
         $response->assertSee('班編成や現場リーダー設定を行うタイムテーブル（日程）を選択してください。');
         $response->assertDontSee('新規タイムテーブルを登録');
         $response->assertSee('運行日別 担当班編成一覧');

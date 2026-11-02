@@ -1,15 +1,15 @@
-<x-layouts.app :title="'担当班（レーン）管理 - ' . $timetable->name">
+<x-layouts.app :title="'担当班管理 - ' . $timetable->name">
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
-        title="担当班（レーン）管理"
+        title="担当班管理"
         icon="🏷️"
         :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）のレーン編成と、現場を率いる班長および固定スタッフを設定・管理します。'">
         <x-slot:breadcrumbs>
             <a href="{{ route('lanes.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
                 <span>🏷️</span>
-                <span>担当班（レーン）管理</span>
+                <span>担当班管理</span>
             </a>
             <span>/</span>
             <span class="text-slate-700 font-bold">📅 {{ $timetable->name }}</span>
@@ -58,7 +58,7 @@
         <summary class="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/70 transition font-bold text-sm text-slate-800 select-none">
             <div class="flex items-center space-x-2">
                 <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-base">➕</span>
-                <span>新しい担当班（レーン）を追加する</span>
+                <span>新しい担当班を追加する</span>
             </div>
             <span class="text-xs text-indigo-600 font-medium group-open:hidden">クリックして開く ↓</span>
             <span class="text-xs text-slate-400 font-medium hidden group-open:inline">閉じる ↑</span>

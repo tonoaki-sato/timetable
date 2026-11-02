@@ -75,7 +75,7 @@ class NextTasksCard extends Component
     }
 
     /**
-     * 担当班（レーン）の表示文字列（アイコン＋班名＋主担当名）
+     * 担当班の表示文字列（アイコン＋班名＋主担当名）
      */
     public function formatLaneDisplay(TimetableTask $task): string
     {

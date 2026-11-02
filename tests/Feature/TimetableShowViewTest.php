@@ -106,7 +106,7 @@ class TimetableShowViewTest extends TestCase
         $response->assertDontSee('copyAssignmentsModal');
         $response->assertDontSee('open-copy-modal');
 
-        // 2. 担当班（レーン）管理 ボタン
+        // 2. 担当班管理 ボタン
         $response->assertDontSee(route('timetables.lanes.index', $this->timetable));
 
         // 3. 全体マトリクス ボタン（showページのアクションボタンから削除されていること）

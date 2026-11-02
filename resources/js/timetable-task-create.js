@@ -35,7 +35,7 @@ function getDurationMinutes(startTime, endTime) {
 }
 
 /**
- * 1. 担当班（レーン）変更時の主担当スタッフ表示・推奨開始時刻連動
+ * 1. 担当班変更時の主担当スタッフ表示・推奨開始時刻連動
  */
 function initLaneSelectorSync() {
     const laneSelect = document.getElementById('lane_id');

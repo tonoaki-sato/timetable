@@ -116,8 +116,8 @@ class StoreTimetableTaskRequest extends FormRequest
     {
         return [
             'timetable_id' => '対象タイムテーブル',
-            'lane_id' => '担当班（レーン）',
-            'lane' => '担当班（レーン）',
+            'lane_id' => '担当班',
+            'lane' => '担当班',
             'tasks' => '作業タスクリスト',
             'tasks.*.title' => '作業タスク名',
             'tasks.*.content' => '作業内容・手順指示',

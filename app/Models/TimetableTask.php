@@ -67,7 +67,7 @@ class TimetableTask extends Model
     }
 
     /**
-     * 紐づく担当班（レーン）とのリレーション
+     * 紐づく担当班とのリレーション
      */
     public function lane(): BelongsTo
     {
@@ -75,7 +75,7 @@ class TimetableTask extends Model
     }
 
     /**
-     * 紐づく担当班（レーン）とのリレーション（後方互換）
+     * 紐づく担当班とのリレーション（後方互換）
      */
     public function laneRelation(): BelongsTo
     {

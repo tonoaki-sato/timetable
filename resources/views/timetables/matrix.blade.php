@@ -123,7 +123,7 @@
     </div>
     @else
 
-    <!-- 3. 担当班（レーン）随時追加対応: 絞り込みフィルターバー & 横スクロールナビゲーション -->
+    <!-- 3. 担当班随時追加対応: 絞り込みフィルターバー & 横スクロールナビゲーション -->
     <div class="print:hidden bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
         <!-- プリセット切り替え & 班チップ -->
         <div class="flex flex-wrap items-center gap-2">
@@ -239,7 +239,7 @@
                         まつり
                     </th>
 
-                    <!-- 5. 各担当班（レーン）列ヘッダー -->
+                    <!-- 5. 各担当班列ヘッダー -->
                     @foreach($lanes as $lane)
                     @php
                         $leadStaff = $lane->leadStaff;
@@ -311,7 +311,7 @@
                         {{ $slot['festival']['label'] }}
                     </td>
 
-                    <!-- 5. 各担当班（レーン）のセル -->
+                    <!-- 5. 各担当班のセル -->
                     @foreach($lanes as $lane)
                     @php
                         $cell = $grid[$sIdx][$lane->id] ?? ['type' => 'empty', 'rowspan' => 1];
@@ -439,14 +439,14 @@
         </table>
     </div>
 
-    <!-- 5. 担当班（レーン）クイック追加モーダル（Vanilla JS） -->
+    <!-- 5. 担当班クイック追加モーダル（Vanilla JS） -->
     <div id="laneModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-150">
             <!-- モーダルヘッダー -->
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
                 <div class="flex items-center space-x-2">
                     <span class="text-lg">🏷️</span>
-                    <h3 class="font-bold text-sm">新規担当班（レーン）を追加</h3>
+                    <h3 class="font-bold text-sm">新規担当班を追加</h3>
                 </div>
                 <button type="button" data-action="close-lane-modal"
                     class="text-slate-400 hover:text-white text-lg font-bold transition">

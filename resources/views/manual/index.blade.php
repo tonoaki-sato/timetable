@@ -59,7 +59,7 @@
                     </a>
                     <a href="#sec-staff" class="manual-nav-link flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/70 font-medium transition">
                         <span class="text-slate-400 font-mono text-[10px]">第6章</span>
-                        <span class="truncate">スタッフ名簿 &amp; Webセルフ登録</span>
+                        <span class="truncate">スタッフ管理 &amp; Webセルフ登録</span>
                     </a>
                     <a href="#sec-logistics" class="manual-nav-link flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/70 font-medium transition">
                         <span class="text-slate-400 font-mono text-[10px]">第7章</span>
@@ -352,7 +352,7 @@
                             <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                                 <div class="font-bold text-slate-900 flex items-center space-x-1.5 text-sm">
                                     <span>🎯</span>
-                                    <span>会議と担当班（レーン）の連動</span>
+                                    <span>会議と担当班の連動</span>
                                 </div>
                                 <p class="text-slate-600 leading-relaxed text-[11px]">
                                     会議ごとに対象となる班（警備班、衛生班、総務班等）を指定できるため、出席義務のある役員・班長へ確実に要請できます。終了後は決定事項メモを記入しておくことで、次年度への引き継ぎ台帳としても機能します。
@@ -373,7 +373,7 @@
                     </div>
                     <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">第4章 運行タイムテーブルマトリクス表示</h2>
                     <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
-                        運行本部の大型ディスプレイに投影して使用する中心的な画面です。<strong>横軸に担当班（レーン）、縦軸に時間スロット（15分単位）</strong>を配置し、全体の業務進捗・人員配置・優先順位を俯瞰できます。
+                        運行本部の大型ディスプレイに投影して使用する中心的な画面です。<strong>横軸に担当班、縦軸に時間スロット（15分単位）</strong>を配置し、全体の業務進捗・人員配置・優先順位を俯瞰できます。
                     </p>
 
                     <!-- 実際の画面画像: タイムテーブルマトリクス -->
@@ -452,7 +452,7 @@
                     </div>
                     <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">第5章 運行準備ナビゲーター &amp; 台帳・担当班編成・人員アサイン</h2>
                     <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
-                        まつり本番に先立ち、迷わず準備を進められる4ステップの「準備ナビゲーター」、日程枠台帳、担当班（レーン）編成、作業タスク登録、および重複検知付き人員アサインを行う手順です。
+                        まつり本番に先立ち、迷わず準備を進められる4ステップの「準備ナビゲーター」、日程枠台帳、担当班編成、作業タスク登録、および重複検知付き人員アサインを行う手順です。
                     </p>
 
                     <!-- 新機能: まつり運行準備ナビゲーター -->
@@ -484,7 +484,7 @@
                             <div class="p-3.5 bg-white rounded-xl border border-indigo-100 shadow-2xs space-y-1.5">
                                 <div class="font-bold text-indigo-950 flex items-center space-x-1.5">
                                     <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">2</span>
-                                    <span>担当班（レーン）編成</span>
+                                    <span>担当班編成</span>
                                 </div>
                                 <p class="text-slate-600 text-[11px] leading-relaxed">
                                     道路警備班、衛生班、設営班などを登録し、テーマカラーの設定と班長（現場主担当）を任命します。
@@ -537,14 +537,14 @@
                                 <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
-                                <span class="ml-2">【実画面】担当班（レーン）管理 (/lanes)</span>
+                                <span class="ml-2">【実画面】担当班管理 (/lanes)</span>
                             </span>
                             <span class="text-[10px] text-slate-400">クリックで拡大</span>
                         </div>
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/07_lanes.png') }}"
                                 alt="担当班管理画面の実画面キャプチャ"
-                                data-modal-image data-caption="担当班（レーン）管理画面"
+                                data-modal-image data-caption="担当班管理画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -706,21 +706,21 @@
                         ボランティアの公募・セルフ登録から、本部側での受付設定、前年度名簿のCSV一括取り込み、スマート名寄せ、QRコード付き名札印刷、および紛失時のトークン再発行に至るスタッフ管理の中核機能です。
                     </p>
 
-                    <!-- 実際の画面画像: スタッフ名簿 -->
+                    <!-- 実際の画面画像: スタッフ管理 -->
                     <div class="mt-6 border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-slate-900">
                         <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 flex items-center justify-between text-xs">
                             <span class="flex items-center space-x-2 text-slate-300 font-mono">
                                 <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
-                                <span class="ml-2">【実画面】スタッフ名簿一覧・管理 (/staff)</span>
+                                <span class="ml-2">【実画面】スタッフ管理一覧 (/staff)</span>
                             </span>
                             <span class="text-[10px] text-slate-400">クリックで拡大</span>
                         </div>
                         <div class="p-2 sm:p-4 bg-slate-950/40">
                             <img src="{{ asset('images/manual/08_staff_index.png') }}"
-                                alt="スタッフ名簿一覧画面の実画面キャプチャ"
-                                data-modal-image data-caption="スタッフ名簿一覧画面"
+                                alt="スタッフ管理画面の実画面キャプチャ"
+                                data-modal-image data-caption="スタッフ管理画面"
                                 class="w-full rounded-xl border border-slate-700/80 shadow-md cursor-zoom-in hover:opacity-95 transition">
                         </div>
                     </div>
@@ -759,7 +759,7 @@
                                     <span>受付開始/終了トグル</span>
                                 </h5>
                                 <p class="text-slate-600 text-[11px] leading-relaxed">
-                                    スタッフ名簿画面右上のトグルスイッチにより、ボランティア受付を即座に「受付中 / 受付終了」に切り替えられます。
+                                    スタッフ管理画面右上のトグルスイッチにより、ボランティア受付を即座に「受付中 / 受付終了」に切り替えられます。
                                 </p>
                             </div>
                             <div class="p-3.5 bg-white rounded-xl border border-emerald-200 space-y-1.5">

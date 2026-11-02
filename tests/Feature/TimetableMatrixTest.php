@@ -90,7 +90,7 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('matrix-live-clock');
         $response->assertSee('matrix-current-time-line');
         $response->assertSee('A4横 印刷 / PDF保存');
-        $response->assertDontSee('担当班管理</span>', false);
+        $response->assertDontSee('<span>担当班管理</span>', false);
 
         // クイックアサインモーダルの統合ヘッダー要素が含まれていること
         $response->assertSee('quickAssignModal');
@@ -177,7 +177,7 @@ class TimetableMatrixTest extends TestCase
     }
 
     /**
-     * 随時追加された新しい担当班（レーン）がグリッドに動的に反映されること
+     * 随時追加された新しい担当班がグリッドに動的に反映されること
      */
     public function test_matrix_supports_dynamically_added_lanes(): void
     {
@@ -353,7 +353,7 @@ class TimetableMatrixTest extends TestCase
     }
 
     /**
-     * マスター管理メニューおよびその他メニューが正しく整理・表示されること
+     * マスター管理、帳票・印刷、システム管理メニューが正しく整理・表示されること
      */
     public function test_navigation_displays_resource_and_system_menu_sections(): void
     {
@@ -367,13 +367,20 @@ class TimetableMatrixTest extends TestCase
         $response = $this->get(route('dashboard'));
         $response->assertStatus(200);
 
+        // ナビゲーションバーから「本部ダッシュボード」ボタン、「その他」、「アカウント情報」が削除されていること
+        $response->assertDontSee('本部ダッシュボード');
+        $response->assertDontSee('その他');
+        $response->assertDontSee('アカウント情報');
+
         // マスター管理グループ
         $response->assertSee('マスター管理');
         $response->assertSee('人員・組織マスター');
-        $response->assertSee('スタッフ名簿');
+        $response->assertSee('スタッフ管理');
         $response->assertSee(route('staff.index'));
-        $response->assertSee('担当班（レーン）管理');
+        $response->assertSee('担当班管理');
         $response->assertSee(route('lanes.index'));
+        $response->assertSee('ユーザー管理');
+        $response->assertSee(route('users.index'));
         $response->assertSee('資材・拠点マスター');
         $response->assertSee('資材管理');
         $response->assertSee(route('equipments.index'));
@@ -382,16 +389,18 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('拠点タイプ管理');
         $response->assertSee(route('location-types.index'));
 
-        // その他グループ
-        $response->assertSee('その他');
+        // 帳票・印刷グループ
+        $response->assertSee('帳票・印刷');
         $response->assertSee('帳票・印刷出力');
         $response->assertSee('スタッフ名札印刷');
         $response->assertSee(route('staff.print-cards'));
         $response->assertSee('搬出入計画の印刷');
         $response->assertSee(route('logistics.print'));
-        $response->assertSee('スタッフ名簿CSV出力');
+        $response->assertSee('スタッフCSV出力');
         $response->assertSee(route('staff.export-csv'));
 
+        // システム管理グループ（マニュアル・資料 ＆ システム設定）
+        $response->assertSee('システム管理');
         $response->assertSee('ガイド・広報資料');
         $response->assertSee('操作マニュアル');
         $response->assertSee(route('manual.index'));
@@ -400,11 +409,10 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('スタッフセルフ登録フォーム');
         $response->assertSee(route('staff.join'));
 
-        $response->assertSee('システム・管理');
+        $response->assertSee('システム設定');
         $response->assertSee('Webセルフ登録受付');
-        $response->assertSee('ユーザー管理');
-        $response->assertSee(route('users.index'));
-        $response->assertSee('アカウント情報');
+
+        // 右上のプロフィールアイコンリンクは維持されていること
         $response->assertSee(route('profile'));
     }
 }

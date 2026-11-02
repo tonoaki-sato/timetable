@@ -142,7 +142,7 @@ class Equipment extends Model
     }
 
     /**
-     * 主担当班（レーン）とのリレーション
+     * 主担当班とのリレーション
      */
     public function lane(): BelongsTo
     {

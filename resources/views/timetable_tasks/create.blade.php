@@ -5,7 +5,7 @@
     <x-page-header
         title="新規作業タスク登録（一括登録対応）"
         icon="➕"
-        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y/m/d') . '）の担当班（レーン）を選択し、1件または複数の作業タスクをまとめて登録できます。'">
+        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y/m/d') . '）の担当班を選択し、1件または複数の作業タスクをまとめて登録できます。'">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
                 <span>⏱️</span>
@@ -68,12 +68,12 @@
         @csrf
         <input type="hidden" name="timetable_id" value="{{ $timetable->id }}">
 
-        <!-- ステップ1: 担当班（レーン）＆ 主担当設定 -->
+        <!-- ステップ1: 担当班 ＆ 主担当設定 -->
         <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center space-x-2">
                     <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">1</span>
-                    <h2 class="text-sm font-bold text-slate-900">登録先の担当班（レーン）を選択</h2>
+                    <h2 class="text-sm font-bold text-slate-900">登録先の担当班を選択</h2>
                 </div>
                 <span class="text-[11px] text-slate-500">選択した班に対して下のタスクリストが一括登録されます</span>
             </div>
@@ -81,7 +81,7 @@
             <div class="space-y-3">
                 <div>
                     <label for="lane_id" class="block text-xs font-bold text-slate-700 mb-1">
-                        担当班（レーン） <span class="text-red-500">*</span>
+                        担当班 <span class="text-red-500">*</span>
                     </label>
                     <select id="lane_id" name="lane_id" required
                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">

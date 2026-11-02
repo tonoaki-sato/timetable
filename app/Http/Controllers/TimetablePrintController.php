@@ -14,7 +14,7 @@ class TimetablePrintController extends Controller
     {
         $this->authorize('view', $timetable);
 
-        // 担当班（レーン）およびタスク、配置スタッフを時系列順にロード
+        // 担当班およびタスク、配置スタッフを時系列順にロード
         $timetable->load([
             'lanes' => function ($query) {
                 $query->orderBy('display_order')->orderBy('id');

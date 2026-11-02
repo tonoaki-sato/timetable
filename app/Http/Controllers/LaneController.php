@@ -90,11 +90,11 @@ class LaneController extends Controller
 
         if ($request->input('redirect_to') === 'matrix') {
             return redirect()->route('timetable.index', ['timetable_id' => $timetable->id])
-                ->with('success', "新しい担当班（レーン）「{$lane->name}」を追加しました。");
+                ->with('success', "新しい担当班「{$lane->name}」を追加しました。");
         }
 
         return redirect()->route('timetables.lanes.index', $timetable)
-            ->with('success', "担当班（レーン）「{$lane->name}」を追加しました。");
+            ->with('success', "担当班「{$lane->name}」を追加しました。");
     }
 
     /**
@@ -124,13 +124,13 @@ class LaneController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "担当班（レーン）「{$lane->name}」を更新しました。",
+                'message' => "担当班「{$lane->name}」を更新しました。",
                 'lane' => $lane->fresh(['leadStaff', 'fixedStaff']),
             ]);
         }
 
         return redirect()->route('timetables.lanes.index', $timetable)
-            ->with('success', "担当班（レーン）「{$lane->name}」を更新しました。");
+            ->with('success', "担当班「{$lane->name}」を更新しました。");
     }
 
     /**
@@ -239,6 +239,6 @@ class LaneController extends Controller
         $lane->delete();
 
         return redirect()->route('timetables.lanes.index', $timetable)
-            ->with('success', "担当班（レーン）「{$name}」を削除しました。");
+            ->with('success', "担当班「{$name}」を削除しました。");
     }
 }

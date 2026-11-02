@@ -155,7 +155,7 @@ class StaffShiftController extends Controller
     }
 
     /**
-     * 班長による担当班（レーン）タスクの全体ステータス更新
+     * 班長による担当班タスクの全体ステータス更新
      */
     public function updateLaneTaskStatus(Request $request, string $token, TimetableTask $task): JsonResponse|RedirectResponse
     {

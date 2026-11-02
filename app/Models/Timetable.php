@@ -164,7 +164,7 @@ class Timetable extends Model
     }
 
     /**
-     * 紐づく担当班（レーン）一覧とのリレーション
+     * 紐づく担当班一覧とのリレーション
      */
     public function lanes(): HasMany
     {

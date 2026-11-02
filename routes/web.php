@@ -95,7 +95,7 @@ Route::middleware('auth')->group(function () {
     Route::get('timetables/{timetable}/staff-timeline', [StaffTimelineController::class, 'index'])->name('timetables.staff-timeline');
     Route::resource('timetables', TimetableController::class);
 
-    // 担当班（レーン）管理
+    // 担当班管理
     Route::get('/lanes', [LaneController::class, 'select'])->name('lanes.index');
     Route::scopeBindings()->group(function () {
         Route::get('timetables/{timetable}/lanes', [LaneController::class, 'index'])->name('timetables.lanes.index');
