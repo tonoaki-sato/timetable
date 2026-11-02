@@ -96,6 +96,13 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('quickAssignModal');
         $response->assertSee('quickAssignHeaderStatus');
         $response->assertSee('quickAssignHeaderPoolBtn');
+
+        // ステップガイド、人員配置状況サマリー、表示班プリセットボタンが削除されていること
+        $response->assertDontSee('まつり運行準備ステップガイド');
+        $response->assertDontSee('人員配置状況サマリー');
+        $response->assertDontSee('全表示');
+        $response->assertDontSee('主要5班（PDF準拠）');
+        $response->assertDontSee('マイ担当班');
     }
 
     /**
@@ -200,7 +207,8 @@ class TimetableMatrixTest extends TestCase
         $response = $this->get(route('timetable.index', ['timetable_id' => $timetable->id]));
         $response->assertStatus(200);
         $response->assertSee('ドローン空撮班');
-        $response->assertSee('全表示');
+        $response->assertSee('表示班:');
+        $response->assertDontSee('全表示');
     }
 
     /**

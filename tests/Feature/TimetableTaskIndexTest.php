@@ -100,4 +100,3 @@ class TimetableTaskIndexTest extends TestCase
         $responseWithoutId->assertRedirect(route('timetables.tasks.index', $this->timetable));
     }
 }
-

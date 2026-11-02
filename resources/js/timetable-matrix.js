@@ -145,16 +145,6 @@ function initLaneFilters() {
             toggleLaneColumn(laneId);
         }
     });
-
-    // プリセットボタン
-    document.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-lane-preset]');
-        if (!btn) return;
-        const preset = btn.getAttribute('data-lane-preset');
-        if (preset) {
-            filterLanesPreset(preset);
-        }
-    });
 }
 
 function toggleLaneColumn(laneId) {
@@ -179,60 +169,6 @@ function toggleLaneColumn(laneId) {
     }
 
     updateVisibleCount();
-    resetPresetButtons();
-}
-
-function filterLanesPreset(preset) {
-    const chips = document.querySelectorAll('.lane-chip');
-
-    chips.forEach(chip => {
-        const laneId = chip.getAttribute('data-lane-id');
-        const isCore = chip.getAttribute('data-is-core') === '1';
-        const leadId = chip.getAttribute('data-lead-id');
-        const elements = document.querySelectorAll('.lane-col-' + laneId);
-
-        let shouldShow = false;
-
-        if (preset === 'all') {
-            shouldShow = true;
-        } else if (preset === 'core') {
-            shouldShow = isCore;
-        } else if (preset === 'mine') {
-            shouldShow = leadId !== '';
-        }
-
-        if (shouldShow) {
-            elements.forEach(el => el.classList.remove('hidden'));
-            chip.classList.remove('opacity-40', 'bg-slate-100');
-            const check = chip.querySelector('span:first-child');
-            if (check) check.textContent = '✔';
-        } else {
-            elements.forEach(el => el.classList.add('hidden'));
-            chip.classList.add('opacity-40', 'bg-slate-100');
-            const check = chip.querySelector('span:first-child');
-            if (check) check.textContent = '✕';
-        }
-    });
-
-    // プリセットボタンスタイル更新
-    document.querySelectorAll('[data-lane-preset]').forEach(btn => {
-        btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
-        btn.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
-    });
-    const activeBtn = document.querySelector(`[data-lane-preset="${preset}"]`);
-    if (activeBtn) {
-        activeBtn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
-        activeBtn.classList.remove('bg-white', 'text-slate-700', 'border-slate-300');
-    }
-
-    updateVisibleCount();
-}
-
-function resetPresetButtons() {
-    document.querySelectorAll('[data-lane-preset]').forEach(btn => {
-        btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
-        btn.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
-    });
 }
 
 function updateVisibleCount() {

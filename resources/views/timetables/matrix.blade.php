@@ -55,61 +55,6 @@
         @endif
     </div>
 
-    @if($selectedTimetable)
-    <x-timetable-workflow-steps :current-step="4" :timetable="$selectedTimetable" />
-
-    <!-- 2. 人員充足状況 & 人員不足タスク即時アサインサマリーバー (Step 4) -->
-    <div class="print:hidden bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-center space-x-3">
-                <span class="w-8 h-8 rounded-xl {{ $shortageTasks->isNotEmpty() ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }} flex items-center justify-center text-lg font-bold">
-                    {{ $shortageTasks->isNotEmpty() ? '⚠️' : '✔' }}
-                </span>
-                <div>
-                    <div class="flex items-center space-x-2">
-                        <h2 class="text-xs sm:text-sm font-bold text-slate-900">
-                            人員配置状況サマリー (Step 4: 過不足調整)
-                        </h2>
-                        @if($shortageTasks->isNotEmpty())
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                            未充足 {{ $shortageTasks->count() }} 件
-                        </span>
-                        @else
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                            全タスク充足
-                        </span>
-                        @endif
-                    </div>
-                    <p class="text-[11px] text-slate-500 mt-0.5">
-                        全タスク必要人数: <strong class="text-slate-800 font-mono">{{ $totalRequired }}</strong> 名 / 現在配置済: <strong class="text-slate-800 font-mono">{{ $totalAssigned }}</strong> 名
-                        @if($shortageTasks->isNotEmpty())
-                            （※下のボタンをクリックして、空きスタッフや他班の余剰スタッフをワンクリックで割り当てられます）
-                        @endif
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        @if($shortageTasks->isNotEmpty())
-        <!-- 人員不足タスククイックジャンプリスト -->
-        <div class="pt-3 border-t border-slate-100">
-            <span class="text-[11px] font-bold text-amber-900 block mb-2">👇 人員不足のタスク（クリックすると即座にアサインモーダルが開きます）:</span>
-            <div class="flex flex-wrap gap-2">
-                @foreach($shortageTasks as $sTask)
-                <button type="button" data-action="open-quick-assign" data-task-id="{{ $sTask->id }}"
-                    class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 hover:border-amber-400 rounded-xl text-xs font-bold transition flex items-center space-x-2 cursor-pointer shadow-2xs">
-                    <span class="font-mono text-[10px] bg-amber-200/60 px-1 rounded">{{ substr($sTask->start_time, 0, 5) }}</span>
-                    <span>[{{ $sTask->lane ?: '班未設定' }}]</span>
-                    <span class="truncate max-w-[140px]">{{ $sTask->title }}</span>
-                    <span class="px-1.5 py-0.2 rounded text-[10px] bg-rose-100 text-rose-700 font-mono">不足{{ $sTask->shortage_count }}名</span>
-                </button>
-                @endforeach
-            </div>
-        </div>
-        @endif
-    </div>
-    @endif
-
     @if(!$selectedTimetable)
     <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 shadow-sm">
         <span class="text-4xl block mb-3">📅</span>
@@ -130,25 +75,6 @@
             <span class="text-xs font-bold text-slate-700 flex items-center mr-1">
                 <span>🔍 表示班:</span>
             </span>
-
-            <!-- プリセットボタン -->
-            <button type="button" data-lane-preset="all"
-                id="btn-preset-all"
-                class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white border border-indigo-600 shadow-2xs transition">
-                全表示 ({{ $lanes->count() }})
-            </button>
-            <button type="button" data-lane-preset="core"
-                id="btn-preset-core"
-                class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 transition">
-                主要5班（PDF準拠）
-            </button>
-            <button type="button" data-lane-preset="mine"
-                id="btn-preset-mine"
-                class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 transition">
-                マイ担当班
-            </button>
-
-            <span class="h-4 w-px bg-slate-300 mx-1"></span>
 
             <!-- 各班のチップ（ON/OFF トグル） -->
             <div class="flex flex-wrap items-center gap-1.5" id="lane-filter-chips">
