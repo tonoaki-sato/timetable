@@ -59,12 +59,7 @@
             <a href="{{ route('equipments.show', $equipment) }}"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition">
                 <span>📦</span>
-                <span>資材台帳詳細</span>
-            </a>
-            <a href="{{ route('logistics.index', ['tab' => 'patterns']) }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition">
-                <span>🧩</span>
-                <span>パターン管理</span>
+                <span>詳細</span>
             </a>
         </x-slot:actions>
     </x-page-header>
@@ -93,10 +88,6 @@
                     <span>📦</span>
                     <span>資材マスター基本情報</span>
                 </div>
-                <a href="{{ route('equipments.show', $equipment) }}" class="text-indigo-600 hover:underline font-bold text-[11px] inline-flex items-center space-x-1">
-                    <span>マスター台帳を確認・編集</span>
-                    <span>➔</span>
-                </a>
             </div>
             @if($equipment->storage_location)
                 <div class="text-slate-600 flex items-center space-x-2">
@@ -330,8 +321,8 @@
 <!-- ========================================================================= -->
 <!-- 搬出入ステップ登録・編集モーダル (CSP準拠) -->
 <!-- ========================================================================= -->
-<div id="modal-step" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-left space-y-4">
+<div id="modal-step" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-left space-y-4 my-auto max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 id="modal-step-title" class="text-sm sm:text-base font-bold text-slate-900 flex items-center space-x-2">
                 <span>➕</span>
