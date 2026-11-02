@@ -6,20 +6,6 @@
         title="資材管理"
         icon="📦"
         description="宿場まつり運行に使用する自前保有備品・提携レンタル機材・個人持ち込み私物の台帳管理">
-        <x-slot:badges>
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                全 {{ $totalCount }} 品目
-            </span>
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                🏛️ 自前: {{ $committeeCount }}
-            </span>
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
-                🏢 レンタル: {{ $rentalCount }}
-            </span>
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                🎒 私物: {{ $personalCount }}
-            </span>
-        </x-slot:badges>
         <x-slot:actions>
             <a href="{{ route('equipments.create') }}"
                 class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
@@ -30,24 +16,24 @@
     </x-page-header>
 
     <!-- 2. 検索・絞り込みフィルターバー -->
-    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
         <!-- 区分フィルター -->
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
                 <span class="text-xs font-bold text-slate-500 mr-1">区分:</span>
-                <a href="{{ route('equipments.index', array_filter(['lane_id' => $laneFilter, 'checkout_rule' => $checkoutRuleFilter, 'keyword' => $keyword])) }}"
+                <a href="{{ route('equipments.index', array_filter(['lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
                    class="px-3 py-1 rounded-lg text-xs font-bold transition {{ !$typeFilter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                     すべて ({{ $totalCount }})
                 </a>
-                <a href="{{ route('equipments.index', array_filter(['type' => 'committee', 'lane_id' => $laneFilter, 'checkout_rule' => $checkoutRuleFilter, 'keyword' => $keyword])) }}"
+                <a href="{{ route('equipments.index', array_filter(['type' => 'committee', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
                    class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'committee' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200' }}">
                     🏛️ 実行委員会 ({{ $committeeCount }})
                 </a>
-                <a href="{{ route('equipments.index', array_filter(['type' => 'rental', 'lane_id' => $laneFilter, 'checkout_rule' => $checkoutRuleFilter, 'keyword' => $keyword])) }}"
+                <a href="{{ route('equipments.index', array_filter(['type' => 'rental', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
                    class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'rental' ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200' }}">
                     🏢 イベント会社 ({{ $rentalCount }})
                 </a>
-                <a href="{{ route('equipments.index', array_filter(['type' => 'personal', 'lane_id' => $laneFilter, 'checkout_rule' => $checkoutRuleFilter, 'keyword' => $keyword])) }}"
+                <a href="{{ route('equipments.index', array_filter(['type' => 'personal', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
                    class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'personal' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200' }}">
                     🎒 私物 ({{ $personalCount }})
                 </a>
@@ -57,9 +43,6 @@
             <form method="GET" action="{{ route('equipments.index') }}" class="flex items-center space-x-2 flex-wrap gap-2">
                 @if($typeFilter)
                     <input type="hidden" name="type" value="{{ $typeFilter }}">
-                @endif
-                @if($checkoutRuleFilter)
-                    <input type="hidden" name="checkout_rule" value="{{ $checkoutRuleFilter }}">
                 @endif
 
                 <!-- 所管班 -->
@@ -84,33 +67,12 @@
                     検索
                 </button>
 
-                @if($typeFilter || $laneFilter || $checkoutRuleFilter || $keyword)
+                @if($typeFilter || $laneFilter || $keyword)
                     <a href="{{ route('equipments.index') }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 underline">
                         クリア
                     </a>
                 @endif
             </form>
-        </div>
-
-        <!-- 持出ルール切り替えサブバー -->
-        <div class="flex items-center space-x-1.5 border-t border-slate-100 pt-2.5 flex-wrap">
-            <span class="text-xs font-bold text-slate-500 mr-1">持出ルール:</span>
-            <a href="{{ route('equipments.index', array_filter(['type' => $typeFilter, 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ !$checkoutRuleFilter ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                すべて
-            </a>
-            <a href="{{ route('equipments.index', array_filter(['checkout_rule' => 'free', 'type' => $typeFilter, 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $checkoutRuleFilter === 'free' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200' }}">
-                🟢 自由持出可
-            </a>
-            <a href="{{ route('equipments.index', array_filter(['checkout_rule' => 'permission_required', 'type' => $typeFilter, 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $checkoutRuleFilter === 'permission_required' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200' }}">
-                ⚠️ 本陣許可制
-            </a>
-            <a href="{{ route('equipments.index', array_filter(['checkout_rule' => 'leader_only', 'type' => $typeFilter, 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition {{ $checkoutRuleFilter === 'leader_only' ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-800 hover:bg-purple-100 border border-purple-200' }}">
-                👑 班長限定
-            </a>
         </div>
     </div>
 
