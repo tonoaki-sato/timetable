@@ -50,17 +50,19 @@
                     <tr class="hover:bg-slate-50/70 transition">
                         <!-- 運行日 -->
                         <td class="px-4 py-3 whitespace-nowrap">
-                            <span class="font-mono font-bold text-slate-800 text-xs block">
-                                {{ $timetable->target_date?->format('Y/m/d') }}
-                            </span>
-                            @php
-                                $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
-                                $weekday = $timetable->target_date ? $weekdayNames[$timetable->target_date->dayOfWeek] : '';
-                                $isWeekend = in_array($timetable->target_date?->dayOfWeek, [0, 6], true);
-                            @endphp
-                            <span class="text-[11px] font-bold {{ $isWeekend ? 'text-rose-600' : 'text-slate-500' }}">
-                                ({{ $weekday }})
-                            </span>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="font-mono font-bold text-slate-800 text-xs">
+                                    {{ $timetable->target_date?->format('Y/m/d') }}
+                                </span>
+                                @php
+                                    $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                                    $weekday = $timetable->target_date ? $weekdayNames[$timetable->target_date->dayOfWeek] : '';
+                                    $isWeekend = in_array($timetable->target_date?->dayOfWeek, [0, 6], true);
+                                @endphp
+                                <span class="text-[11px] font-bold {{ $isWeekend ? 'text-rose-600' : 'text-slate-500' }}">
+                                    ({{ $weekday }})
+                                </span>
+                            </div>
                         </td>
 
                         <!-- タイムテーブル名 / 概要 -->
@@ -104,20 +106,22 @@
                         </td>
 
                         <!-- 操作 -->
-                        <td class="px-4 py-3 text-right whitespace-nowrap space-x-1">
+                        <td class="px-4 py-3 text-right whitespace-nowrap space-x-1.5">
+                            <!-- タイムテーブルリンク -->
+                            <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
+                                class="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition">
+                                <span>⏱️</span>
+                                <span>タイムテーブル</span>
+                            </a>
+
+                            <!-- タスク一覧リンク -->
                             <a href="{{ route('timetables.show', $timetable) }}"
-                                class="inline-flex items-center space-x-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-bold transition shadow-2xs">
-                                <span>タスク・人員台帳</span>
-                                <span>→</span>
+                                class="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition">
+                                <span>📋</span>
+                                <span>タスク一覧</span>
                             </a>
 
-                            @can('update', $timetable)
-                            <a href="{{ route('timetables.edit', $timetable) }}"
-                                class="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 transition">
-                                編集
-                            </a>
-                            @endcan
-
+                            <!-- 削除ボタン -->
                             @can('delete', $timetable)
                             <form action="{{ route('timetables.destroy', $timetable) }}" method="POST" class="inline"
                                 data-confirm="タイムテーブル「{{ $timetable->name }}」を削除しますか？&#10;（関連するすべての作業タスクも削除されます）">

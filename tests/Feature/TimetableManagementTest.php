@@ -72,7 +72,10 @@ class TimetableManagementTest extends TestCase
         $response->assertSee('1日目 本祭運行');
         $response->assertSee('前日 設営運行');
         $response->assertSee(route('timetables.show', $timetableA));
-        $response->assertSee('タスク・人員台帳');
+        $response->assertSee(route('timetable.index', ['timetable_id' => $timetableA->id]));
+        $response->assertSee('タイムテーブル');
+        $response->assertSee('タスク一覧');
+        $response->assertDontSee('タスク・人員台帳');
         $response->assertSee('運行時間枠');
         $response->assertSee('登録タスク');
 
