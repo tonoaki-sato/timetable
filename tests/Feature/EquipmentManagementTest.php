@@ -323,7 +323,9 @@ class EquipmentManagementTest extends TestCase
 
         $this->get(route('equipments.create'))
             ->assertStatus(200)
-            ->assertSee('新規資材の登録');
+            ->assertSee('新規資材の登録')
+            ->assertSee('資材管理に戻る')
+            ->assertSee('<select id="type" name="type"', false);
 
         $this->post(route('equipments.store'), [
             'name' => '初回登録資材',
@@ -333,6 +335,10 @@ class EquipmentManagementTest extends TestCase
         ])->assertRedirect();
 
         $firstEquipment = Equipment::firstOrFail();
+
+        $this->get(route('equipments.edit', $firstEquipment))
+            ->assertStatus(200)
+            ->assertSee('<select id="type" name="type"', false);
 
         $this->get(route('equipments.show', $firstEquipment))
             ->assertStatus(200)

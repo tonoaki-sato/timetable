@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
  * 1. 資材新規作成・編集フォーム (equipments.create, equipments.edit)
  */
 function initEquipmentForm() {
-    const typeRadios = document.querySelectorAll('input[name="type"]');
+    const typeSelect = document.querySelector('select[name="type"]');
     const commSec = document.getElementById('section-committee');
 
     function toggleEquipmentType(type) {
@@ -31,12 +31,12 @@ function initEquipmentForm() {
         }
     }
 
-    // 資材種別ラジオ切り替え
-    typeRadios.forEach((radio) => {
-        radio.addEventListener('change', (e) => {
+    // 資材種別セレクト切り替え
+    if (typeSelect) {
+        typeSelect.addEventListener('change', (e) => {
             toggleEquipmentType(e.target.value);
         });
-    });
+    }
 
     // 定常保管場所のクイック設定ボタン
     document.querySelectorAll('[data-set-storage-location]').forEach((btn) => {
@@ -49,9 +49,8 @@ function initEquipmentForm() {
     });
 
     // 初期状態反映
-    const checkedType = document.querySelector('input[name="type"]:checked');
-    if (checkedType) {
-        toggleEquipmentType(checkedType.value);
+    if (typeSelect) {
+        toggleEquipmentType(typeSelect.value);
     }
 }
 

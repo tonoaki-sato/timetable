@@ -13,7 +13,7 @@
         </x-slot:breadcrumbs>
         <x-slot:actions>
             <a href="{{ route('equipments.index') }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs transition">
-                ← 台帳に戻る
+                ← 資材管理に戻る
             </a>
         </x-slot:actions>
     </x-page-header>
@@ -38,44 +38,15 @@
             <div class="space-y-4">
                 <!-- 資材区分（自前 / レンタル / 私物） -->
                 <div>
-                    <label class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-2">資材区分 <span class="text-rose-500">*</span></label>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <label class="p-3.5 rounded-xl border-2 flex items-center space-x-3 cursor-pointer transition has-checked:border-emerald-600 has-checked:bg-emerald-50/40 border-slate-200 hover:border-slate-300">
-                            <input type="radio" name="type" value="committee" {{ old('type', 'committee') === 'committee' ? 'checked' : '' }}
-                                   class="text-emerald-600 focus:ring-emerald-500">
-                            <div>
-                                <div class="font-bold text-slate-800 text-xs sm:text-sm flex items-center space-x-1">
-                                    <span>🏛️</span>
-                                    <span>実行委員会管理</span>
-                                </div>
-                                <p class="text-[11px] text-slate-500 mt-0.5">看板、机、トランシーバー等</p>
-                            </div>
-                        </label>
-
-                        <label class="p-3.5 rounded-xl border-2 flex items-center space-x-3 cursor-pointer transition has-checked:border-sky-600 has-checked:bg-sky-50/40 border-slate-200 hover:border-slate-300">
-                            <input type="radio" name="type" value="rental" {{ old('type') === 'rental' ? 'checked' : '' }}
-                                   class="text-sky-600 focus:ring-sky-500">
-                            <div>
-                                <div class="font-bold text-slate-800 text-xs sm:text-sm flex items-center space-x-1">
-                                    <span>🏢</span>
-                                    <span>イベント会社レンタル</span>
-                                </div>
-                                <p class="text-[11px] text-slate-500 mt-0.5">カラーコーン、給水、テント等</p>
-                            </div>
-                        </label>
-
-                        <label class="p-3.5 rounded-xl border-2 flex items-center space-x-3 cursor-pointer transition has-checked:border-amber-600 has-checked:bg-amber-50/40 border-slate-200 hover:border-slate-300">
-                            <input type="radio" name="type" value="personal" {{ old('type') === 'personal' ? 'checked' : '' }}
-                                   class="text-amber-600 focus:ring-amber-500">
-                            <div>
-                                <div class="font-bold text-slate-800 text-xs sm:text-sm flex items-center space-x-1">
-                                    <span>🎒</span>
-                                    <span>私物（個人持ち込み）</span>
-                                </div>
-                                <p class="text-[11px] text-slate-500 mt-0.5">個人所有の台車、工具、備品等</p>
-                            </div>
-                        </label>
-                    </div>
+                    <label for="type" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">資材区分 <span class="text-rose-500">*</span></label>
+                    <select id="type" name="type" required
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        @foreach(\App\Models\Equipment::TYPES as $key => $label)
+                            <option value="{{ $key }}" {{ old('type', 'committee') === $key ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <!-- 資材名 -->
@@ -181,15 +152,15 @@
             </div>
 
             <!-- 送信ボタン -->
-            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+            <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <span class="text-[11px] text-slate-400">※登録完了後、資材詳細画面から搬出入計画（パターン一括適用・個別ステップ）を設定できます。</span>
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-3 shrink-0 self-end sm:self-auto">
                     <a href="{{ route('equipments.index') }}"
-                       class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+                       class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition whitespace-nowrap shrink-0">
                         キャンセル
                     </a>
                     <button type="submit"
-                            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
+                            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0">
                         <span>💾</span>
                         <span>資材を登録する</span>
                     </button>
