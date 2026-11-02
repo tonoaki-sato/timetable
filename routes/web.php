@@ -144,6 +144,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('logistics')->name('logistics.')->group(function () {
         Route::get('/', [EquipmentLogisticsController::class, 'index'])->name('index');
         Route::get('print', [EquipmentLogisticsController::class, 'print'])->name('print');
+        Route::get('equipments/{equipment}', [EquipmentLogisticsController::class, 'show'])->name('equipments.show');
         Route::post('{equipment}/apply-template', [EquipmentLogisticsPlanController::class, 'applyTemplate'])->name('apply-template');
         Route::post('{equipment}/save-as-pattern', [EquipmentLogisticsPatternController::class, 'saveFromEquipment'])->name('save-as-pattern');
         Route::delete('{equipment}/plans/clear', [EquipmentLogisticsPlanController::class, 'clear'])->name('plans.clear');

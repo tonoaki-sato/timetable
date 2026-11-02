@@ -343,6 +343,15 @@ class EquipmentManagementTest extends TestCase
         $this->get(route('equipments.show', $firstEquipment))
             ->assertStatus(200)
             ->assertSee('初回登録資材')
-            ->assertSee('搬出入パターンがまだ登録されていません');
+            ->assertSee('資材基本台帳情報')
+            ->assertSee('搬出入計画・現場配備状況')
+            ->assertSee(route('logistics.equipments.show', $firstEquipment));
+
+        // 計画画面への導線および計画画面の初期表示検証
+        $this->get(route('logistics.equipments.show', $firstEquipment))
+            ->assertStatus(200)
+            ->assertSee('初回登録資材')
+            ->assertSee('搬出入パターンがまだ登録されていません')
+            ->assertSee(route('equipments.show', $firstEquipment));
     }
 }

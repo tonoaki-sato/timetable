@@ -24,7 +24,7 @@
             <a href="{{ route('logistics.index') }}"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                 <span>🚚</span>
-                <span>搬出入計画を開く</span>
+                <span>搬出入計画へ</span>
             </a>
             <a href="{{ route('equipments.create') }}"
                 class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
@@ -213,32 +213,30 @@
                             <td class="py-3 px-3 whitespace-nowrap">
                                 @php $planCount = $item->plans->count(); @endphp
                                 @if($planCount > 0)
-                                    <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                    <a href="{{ route('logistics.equipments.show', $item) }}"
+                                       class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition"
+                                       title="この資材の搬出入計画を設定・確認">
                                         <span>🚚</span>
-                                        <span>{{ $planCount }} ステップ設定済</span>
-                                    </span>
+                                        <span>{{ $planCount }} ステップ</span>
+                                    </a>
                                 @else
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-400">
-                                        未配備
-                                    </span>
+                                    <a href="{{ route('logistics.equipments.show', $item) }}"
+                                       class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition"
+                                       title="搬出入計画を設定">
+                                        未設定
+                                    </a>
                                 @endif
                             </td>
 
                             <!-- アクション -->
                             <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
-                                <a href="{{ route('logistics.index', ['tab' => 'flow', 'lane_id' => $item->lane_id]) }}"
-                                   class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1"
-                                   title="この資材の搬出入計画を確認">
-                                    <span>🚚</span>
-                                    <span class="hidden sm:inline">計画を確認</span>
-                                </a>
                                 <a href="{{ route('equipments.show', $item) }}"
-                                   class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition inline-flex items-center"
+                                   class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition inline-flex items-center"
                                    title="詳細表示">
                                     詳細
                                 </a>
                                 <a href="{{ route('equipments.edit', $item) }}"
-                                   class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition inline-flex items-center"
+                                   class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition inline-flex items-center"
                                    title="編集">
                                     編集
                                 </a>

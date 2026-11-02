@@ -18,7 +18,7 @@
             <a href="{{ route('equipments.index') }}"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                 <span>📦</span>
-                <span>資材管理を開く</span>
+                <span>資材マスターを開く</span>
             </a>
             <a href="{{ route('logistics.print', ['format' => $tab]) }}" target="_blank"
                 class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
@@ -143,7 +143,7 @@
                             </span>
                             <div>
                                 <div class="flex items-center space-x-2">
-                                    <a href="{{ route('equipments.show', $item) }}" class="font-bold text-slate-900 text-base hover:text-indigo-600 transition">
+                                    <a href="{{ route('logistics.equipments.show', $item) }}" class="font-bold text-slate-900 text-base hover:text-indigo-600 transition">
                                         {{ $item->name }}
                                     </a>
                                     <span class="text-sm font-black font-mono px-2 py-0.5 rounded-full {{ $item->isCommittee() ? 'bg-emerald-100 text-emerald-800' : ($item->isRental() ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-800') }}">
@@ -170,23 +170,14 @@
 
                         <!-- 操作リンク -->
                         <div class="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
-                            <a href="{{ route('equipments.show', $item) }}" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="詳細・計画設定">
-                                <span>詳細・計画</span>
+                            <a href="{{ route('logistics.equipments.show', $item) }}" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition inline-flex items-center space-x-1 shadow-2xs cursor-pointer" title="搬出入ステップ・パターン設定">
+                                <span>🚚</span>
+                                <span>計画を編集</span>
                             </a>
-                            <a href="{{ route('equipments.edit', $item) }}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition inline-flex items-center space-x-1" title="資材情報を編集">
-                                <span>✏️</span>
-                                <span>編集</span>
+                            <a href="{{ route('equipments.show', $item) }}" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition inline-flex items-center space-x-1" title="資材マスター台帳を確認">
+                                <span>📦</span>
+                                <span>台帳</span>
                             </a>
-                            @can('delete', $item)
-                                <form method="POST" action="{{ route('equipments.destroy', $item) }}" class="inline"
-                                      data-confirm="資材「{{ $item->name }}」を削除しますか？&#10;紐づくすべての搬出入計画ステップも削除されます。">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="px-2 py-1 text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition cursor-pointer" title="資材を削除">
-                                        <span>🗑️</span>
-                                    </button>
-                                </form>
-                            @endcan
                         </div>
                     </div>
 
@@ -202,7 +193,7 @@
                         @if($item->plans->isEmpty())
                             <div class="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-500 flex items-center justify-center space-x-2">
                                 <span>計画ステップがまだ登録されていません。</span>
-                                <a href="{{ route('equipments.show', $item) }}" class="text-indigo-600 font-bold hover:underline">
+                                <a href="{{ route('logistics.equipments.show', $item) }}" class="text-indigo-600 font-bold hover:underline">
                                     パターンを適用して一括生成 ➔
                                 </a>
                             </div>
@@ -309,7 +300,7 @@
 
                                 <td class="py-3 px-4">
                                     <div class="font-bold text-slate-900">
-                                        <a href="{{ route('equipments.show', $plan->equipment) }}" class="hover:underline">
+                                        <a href="{{ route('logistics.equipments.show', $plan->equipment) }}" class="hover:underline">
                                             {{ $plan->equipment->name }}
                                         </a>
                                     </div>
@@ -474,7 +465,7 @@
                                         <div class="space-y-1">
                                             @foreach($nightPlans as $np)
                                                 <div class="p-2 rounded-lg bg-indigo-50/60 border border-indigo-100 text-xs flex items-center justify-between gap-2">
-                                                    <a href="{{ route('equipments.show', $np->equipment) }}" class="font-bold text-indigo-950 hover:underline truncate">
+                                                    <a href="{{ route('logistics.equipments.show', $np->equipment) }}" class="font-bold text-indigo-950 hover:underline truncate">
                                                         {{ $np->equipment->name }}
                                                     </a>
                                                     <span class="font-mono font-bold text-indigo-700 shrink-0">
@@ -496,7 +487,7 @@
                                         <div class="space-y-1">
                                             @foreach($collectionPlans as $cp)
                                                 <div class="p-2 rounded-lg bg-amber-50 border border-amber-200 text-xs flex items-center justify-between gap-2">
-                                                    <a href="{{ route('equipments.show', $cp->equipment) }}" class="font-bold text-amber-950 hover:underline truncate">
+                                                    <a href="{{ route('logistics.equipments.show', $cp->equipment) }}" class="font-bold text-amber-950 hover:underline truncate">
                                                         {{ $cp->equipment->name }}
                                                     </a>
                                                     <span class="font-mono font-bold text-amber-800 shrink-0">
@@ -537,7 +528,7 @@
                         @foreach($onsiteNightPlans as $op)
                             <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200 text-xs space-y-1">
                                 <div class="flex items-center justify-between gap-2">
-                                    <a href="{{ route('equipments.show', $op->equipment) }}" class="font-bold text-slate-900 hover:text-indigo-600 truncate">
+                                    <a href="{{ route('logistics.equipments.show', $op->equipment) }}" class="font-bold text-slate-900 hover:text-indigo-600 truncate">
                                         {{ $op->equipment->name }}
                                     </a>
                                     <span class="font-mono font-bold text-amber-800 shrink-0">
@@ -596,7 +587,7 @@
 
                                 <td class="py-3 px-4">
                                     <div class="font-bold text-slate-900">
-                                        <a href="{{ route('equipments.show', $plan->equipment) }}" class="hover:underline">
+                                        <a href="{{ route('logistics.equipments.show', $plan->equipment) }}" class="hover:underline">
                                             {{ $plan->equipment->name }}
                                         </a>
                                     </div>

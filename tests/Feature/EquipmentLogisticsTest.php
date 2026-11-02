@@ -144,11 +144,14 @@ class EquipmentLogisticsTest extends TestCase
         $flowRes = $this->get(route('logistics.index', ['tab' => 'flow']));
         $flowRes->assertStatus(200);
         $flowRes->assertSee('足踏み式給水設備');
+        $flowRes->assertSee(route('logistics.equipments.show', $equipment));
+        $flowRes->assertSee(route('equipments.show', $equipment));
 
         // 2. フェーズ別チェックリスト
         $chkRes = $this->get(route('logistics.index', ['tab' => 'checklist', 'phase' => 'pre_day']));
         $chkRes->assertStatus(200);
         $chkRes->assertSee('給水設備 業者受取立会');
+        $chkRes->assertSee(route('logistics.equipments.show', $equipment));
 
         // 3. 拠点別保管 + 現地夜間保管カード
         $locRes = $this->get(route('logistics.index', ['tab' => 'locations']));
@@ -156,11 +159,13 @@ class EquipmentLogisticsTest extends TestCase
         $locRes->assertSee('税務署前駐車場');
         $locRes->assertSee('現地・テント内夜間保管');
         $locRes->assertSee('会場そのまま（テント内保管）');
+        $locRes->assertSee(route('logistics.equipments.show', $equipment));
 
         // 4. イベント会社スケジュール
         $evtRes = $this->get(route('logistics.index', ['tab' => 'events']));
         $evtRes->assertStatus(200);
         $evtRes->assertSee('給水設備 業者受取立会');
+        $evtRes->assertSee(route('logistics.equipments.show', $equipment));
 
         // 5. 搬出入パターン管理
         $patRes = $this->get(route('logistics.index', ['tab' => 'patterns']));
@@ -408,5 +413,32 @@ class EquipmentLogisticsTest extends TestCase
 
         $response->assertRedirect();
         $this->assertSame(3, $equipment->plans()->count());
+    }
+
+    /**
+     * 個別資材の搬出入計画画面が表示され、マスター詳細および計画一覧への導線が存在すること
+     */
+    public function test_equipment_logistics_show_displays_plans_and_navigation(): void
+    {
+        $this->actingAs($this->operator);
+
+        $equipment = Equipment::factory()->committee()->create([
+            'name' => 'カラーコーン（個別計画検証）',
+            'storage_location' => '番所地下倉庫',
+        ]);
+
+        $equipment->plans()->create([
+            'title' => '前日13時 中継駐車場へ運搬',
+            'day_phase' => 'pre_day',
+            'action_type' => 'staging_move',
+        ]);
+
+        $response = $this->get(route('logistics.equipments.show', $equipment));
+        $response->assertStatus(200);
+        $response->assertSee('カラーコーン（個別計画検証）');
+        $response->assertSee('前日13時 中継駐車場へ運搬');
+        $response->assertSee('搬出入・中継・夜間保管計画ステップ一覧');
+        $response->assertSee(route('equipments.show', $equipment));
+        $response->assertSee(route('logistics.index'));
     }
 }

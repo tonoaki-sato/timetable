@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Equipment;
+use App\Models\EquipmentLogisticsPattern;
 use App\Models\Lane;
 use App\Models\Location;
 use App\Models\Staff;
@@ -89,5 +90,30 @@ class EquipmentLogisticsController extends Controller
             'festivalDates',
             'lanes'
         ));
+    }
+
+    /**
+     * 個別資材の搬出入計画・ステップ設定画面の表示
+     */
+    public function show(Equipment $equipment): View
+    {
+        $this->authorize('view', $equipment);
+
+        $equipment->load([
+            'lane',
+            'creator',
+            'plans' => fn ($q) => $q->with([
+                'equipment',
+                'fromLocationModel.schedules',
+                'toLocationModel.schedules',
+                'witnessStaff',
+            ])->orderBy('display_order')->orderBy('id'),
+        ]);
+
+        $locations = Location::active()->ordered()->get();
+        $staffs = Staff::active()->orderBy('kana')->get();
+        $patterns = EquipmentLogisticsPattern::with('steps')->ordered()->get();
+
+        return view('logistics.show', compact('equipment', 'locations', 'staffs', 'patterns'));
     }
 }

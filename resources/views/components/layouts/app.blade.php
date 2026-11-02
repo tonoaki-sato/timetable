@@ -147,7 +147,7 @@
                                         <span class="text-base shrink-0">🚚</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold">搬出入計画</div>
-                                            <p class="text-[10px] {{ request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">6大フェーズ運行・資材配備回収チェック</p>
+                                            <p class="text-[10px] {{ request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">6大フェーズ運行・現場配備・ステップ計画</p>
                                         </div>
                                     </a>
                                 </div>
@@ -235,7 +235,7 @@
                                         <span class="text-base shrink-0">📦</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold">資材管理</div>
-                                            <p class="text-[10px] {{ request()->routeIs('equipments.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">保有備品・提携レンタル機材の台帳</p>
+                                            <p class="text-[10px] {{ request()->routeIs('equipments.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">保有備品・外部レンタル・私物の基本台帳</p>
                                         </div>
                                     </a>
                                     <a href="{{ route('locations.index') }}"
@@ -605,7 +605,7 @@
                                 <span class="text-base">🚚</span>
                                 <div class="min-w-0">
                                     <span class="font-bold block truncate">搬出入計画</span>
-                                    <span class="text-[10px] text-slate-400 block truncate">6大フェーズ運行</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">6大フェーズ運行・ステップ計画</span>
                                 </div>
                             </a>
                             <a href="{{ route('calendar.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('calendar.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">

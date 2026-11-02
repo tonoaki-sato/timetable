@@ -5,10 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEquipmentRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
 use App\Models\Equipment;
-use App\Models\EquipmentLogisticsPattern;
 use App\Models\Lane;
-use App\Models\Location;
-use App\Models\Staff;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -104,7 +101,7 @@ class EquipmentController extends Controller
     }
 
     /**
-     * 資材詳細画面の表示
+     * 資材マスター詳細画面の表示
      */
     public function show(Equipment $equipment): View
     {
@@ -113,19 +110,10 @@ class EquipmentController extends Controller
         $equipment->load([
             'lane',
             'creator',
-            'plans' => fn ($q) => $q->with([
-                'equipment',
-                'fromLocationModel.schedules',
-                'toLocationModel.schedules',
-                'witnessStaff',
-            ])->orderBy('display_order')->orderBy('id'),
+            'plans' => fn ($q) => $q->orderBy('display_order')->orderBy('id'),
         ]);
 
-        $locations = Location::active()->ordered()->get();
-        $staffs = Staff::active()->orderBy('kana')->get();
-        $patterns = EquipmentLogisticsPattern::with('steps')->ordered()->get();
-
-        return view('equipments.show', compact('equipment', 'locations', 'staffs', 'patterns'));
+        return view('equipments.show', compact('equipment'));
     }
 
     /**
