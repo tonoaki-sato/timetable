@@ -26,29 +26,18 @@
                 </span>
             @endif
         </x-slot:badges>
-
-        <x-slot:actions>
-            <a href="{{ route('locations.edit', $location) }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition">
-                <span>✏️ 拠点を編集</span>
-            </a>
-        </x-slot:actions>
     </x-page-header>
 
-    <!-- 2. メモ欄カード（フリーテキスト） -->
-    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 space-y-2">
-        <h2 class="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
-            <span>📝</span>
-            <span>拠点メモ（管理連絡先・鍵情報・注意事項など）</span>
-        </h2>
-        @if($location->notes)
-            <div class="p-3.5 bg-slate-50 rounded-xl text-xs text-slate-700 whitespace-pre-wrap leading-relaxed border border-slate-100 font-sans">
-                {{ $location->notes }}
+    <!-- 2. メモ欄（スリム化） -->
+    @if($location->notes)
+        <div class="bg-white rounded-xl shadow-xs border border-slate-200 px-4 py-3 flex items-start space-x-3 text-xs">
+            <span class="text-sm mt-0.5 shrink-0">📝</span>
+            <div class="min-w-0 flex-1">
+                <span class="font-bold text-slate-700 text-[11px] block mb-0.5">拠点メモ</span>
+                <div class="text-slate-600 whitespace-pre-wrap leading-relaxed text-xs font-sans">{{ $location->notes }}</div>
             </div>
-        @else
-            <p class="text-xs text-slate-400 italic">メモは登録されていません。</p>
-        @endif
-    </div>
+        </div>
+    @endif
 
     <!-- 3. 利用可能時間帯スロット一覧カード -->
     <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">

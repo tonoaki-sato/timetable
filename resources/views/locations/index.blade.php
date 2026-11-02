@@ -108,6 +108,10 @@
 
                                 <!-- 列4: 操作 -->
                                 <td class="py-2.5 px-4 align-middle text-right space-x-1 whitespace-nowrap">
+                                    <a href="{{ route('locations.show', $loc) }}"
+                                        class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[11px] font-medium transition inline-block">
+                                        詳細
+                                    </a>
                                     <a href="{{ route('locations.edit', $loc) }}"
                                         class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium transition inline-block">
                                         編集

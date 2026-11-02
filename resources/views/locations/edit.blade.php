@@ -94,7 +94,7 @@
             </div>
 
             <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
-                <a href="{{ route('locations.show', $location) }}"
+                <a href="{{ route('locations.index') }}"
                     class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                     キャンセル
                 </a>

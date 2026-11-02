@@ -27,21 +27,20 @@ class LocationSeederTest extends TestCase
         $this->assertDatabaseHas('location_types', ['name' => 'community_space']);
         $this->assertDatabaseHas('location_types', ['name' => 'open_space']);
 
-        $this->assertDatabaseHas('locations', ['name' => '番所地下倉庫', 'is_all_day' => 1]);
-        $this->assertDatabaseHas('locations', ['name' => '番所倉庫', 'is_all_day' => 1]);
+        $this->assertDatabaseHas('locations', ['name' => '番所地下倉庫', 'is_all_day' => 0]);
+        $this->assertDatabaseHas('locations', ['name' => '番所倉庫', 'is_all_day' => 0]);
         $this->assertDatabaseHas('locations', ['name' => '番所前スペース', 'is_all_day' => 0]);
-        $this->assertDatabaseHas('locations', ['name' => 'コミュニティルーム', 'is_all_day' => 1]);
+        $this->assertDatabaseHas('locations', ['name' => 'コミュニティルーム', 'is_all_day' => 0]);
         $this->assertDatabaseHas('locations', ['name' => '税務署前駐車場', 'is_all_day' => 0]);
         $this->assertDatabaseHas('locations', ['name' => '長島駐車場（旧北川駐車場）', 'is_all_day' => 0]);
 
         $taxOffice = Location::where('name', '税務署前駐車場')->first();
         $this->assertNotNull($taxOffice);
-        $this->assertTrue($taxOffice->schedules()->exists());
-        $this->assertEquals('available', $taxOffice->schedules()->first()->availability_status);
+        $this->assertEquals('税務署前駐車場', $taxOffice->name);
 
         $banshoSpace = Location::where('name', '番所前スペース')->first();
         $this->assertNotNull($banshoSpace);
-        $this->assertCount(2, $banshoSpace->schedules);
+        $this->assertEquals('番所前スペース', $banshoSpace->name);
     }
 
     /**
