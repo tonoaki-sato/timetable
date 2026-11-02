@@ -115,7 +115,7 @@
                             </a>
 
                             <!-- タスク一覧リンク -->
-                            <a href="{{ route('timetables.show', $timetable) }}"
+                            <a href="{{ route('timetables.tasks.index', $timetable) }}"
                                 class="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition">
                                 <span>📋</span>
                                 <span>タスク一覧</span>

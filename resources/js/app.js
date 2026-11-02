@@ -366,7 +366,7 @@ function initTimetablePeriodsForm() {
     // 道路時間帯追加
     document.getElementById('btn-add-road-row')?.addEventListener('click', function () {
         if (!roadContainer) return;
-        const nextIndex = roadContainer.querySelectorAll('.period-row').length;
+        const nextIndex = Date.now();
         roadContainer.appendChild(createRow('road', nextIndex, '10:00', '18:00', '通行止め', 'closed'));
     });
 
@@ -380,7 +380,7 @@ function initTimetablePeriodsForm() {
     // まつり時間帯追加
     document.getElementById('btn-add-festival-row')?.addEventListener('click', function () {
         if (!festivalContainer) return;
-        const nextIndex = festivalContainer.querySelectorAll('.period-row').length;
+        const nextIndex = Date.now();
         festivalContainer.appendChild(createRow('festival', nextIndex, '11:00', '17:00', '開催中', 'active'));
     });
 

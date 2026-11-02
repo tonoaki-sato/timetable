@@ -5,7 +5,7 @@
     <x-page-header
         :title="$timetable->name"
         icon="⏱️"
-        :description="$timetable->description ?: '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）のタイムテーブル詳細および作業タスク一覧です。'">
+        :description="$timetable->description ?: '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）の運行基本情報・規制時間帯および担当班サマリーです。'">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
                 <span>⏱️</span>
@@ -15,256 +15,343 @@
             <span class="text-slate-700 font-bold">📅 {{ $timetable->name }}</span>
         </x-slot:breadcrumbs>
 
-        @if(!empty($timetable->road_periods) || !empty($timetable->festival_periods))
-        <x-slot:badges>
-            @if(!empty($timetable->road_periods))
-                @foreach($timetable->road_periods as $rp)
-                <span class="px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-rose-50 text-rose-700 border border-rose-200">
-                    🚧 {{ substr($rp['start_time'] ?? '', 0, 5) }}〜{{ substr($rp['end_time'] ?? '', 0, 5) }} {{ $rp['label'] ?? '通行止め' }}
-                </span>
-                @endforeach
-            @endif
-            @if(!empty($timetable->festival_periods))
-                @foreach($timetable->festival_periods as $fp)
-                <span class="px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    🏮 {{ substr($fp['start_time'] ?? '', 0, 5) }}〜{{ substr($fp['end_time'] ?? '', 0, 5) }} {{ $fp['label'] ?? '開催中' }}
-                </span>
-                @endforeach
-            @endif
-        </x-slot:badges>
-        @endif
-
         <x-slot:actions>
-            <a href="{{ route('timetables.staff-timeline', $timetable) }}"
-                class="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
-                <span>👥</span>
-                <span>スタッフ稼働タイムライン</span>
-            </a>
-
-            <a href="{{ route('timetables.print-assignments', $timetable) }}" target="_blank"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
-                <span>🖨️</span>
-                <span>人員配置表印刷</span>
-            </a>
-
-            @can('create', App\Models\TimetableTask::class)
-            <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
-                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1">
-                <span>➕</span>
-                <span>作業タスクを追加</span>
+            <!-- タイムテーブル基本情報編集 -->
+            @can('update', $timetable)
+            <a href="{{ route('timetables.edit', $timetable) }}"
+                class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
+                <span>✏️</span>
+                <span>基本情報を編集</span>
             </a>
             @endcan
+
+            <!-- タスク一覧・管理画面へ -->
+            <a href="{{ route('timetables.tasks.index', $timetable) }}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
+                <span>📋</span>
+                <span>作業タスク管理</span>
+            </a>
+
+            <!-- 進行表マトリクスへ -->
+            <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
+                <span>⏱️</span>
+                <span>マトリクス進行表</span>
+            </a>
+
+            <!-- 担当班編成へ -->
+            <a href="{{ route('timetables.lanes.index', $timetable) }}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
+                <span>🏷️</span>
+                <span>担当班編成</span>
+            </a>
         </x-slot:actions>
     </x-page-header>
 
-    <!-- アラートメッセージ -->
-    @if(session('success'))
-    <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>✅</span>
-        <span>{{ session('success') }}</span>
-    </div>
-    @endif
+    @php
+        $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
+        $weekday = $timetable->target_date ? $weekdayNames[$timetable->target_date->dayOfWeek] : '';
+        $isWeekend = in_array($timetable->target_date?->dayOfWeek, [0, 6], true);
 
-    @if(session('error'))
-    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>⚠️</span>
-        <span>{{ session('error') }}</span>
-    </div>
-    @endif
+        // 運行時間計算
+        $startCarbon = \Carbon\Carbon::createFromFormat('H:i:s', strlen($timetable->start_time) === 5 ? $timetable->start_time . ':00' : $timetable->start_time);
+        $endCarbon = \Carbon\Carbon::createFromFormat('H:i:s', strlen($timetable->end_time) === 5 ? $timetable->end_time . ':00' : $timetable->end_time);
+        $diffMinutes = $startCarbon && $endCarbon ? $startCarbon->diffInMinutes($endCarbon) : 0;
+        $hours = floor($diffMinutes / 60);
+        $mins = $diffMinutes % 60;
+        $durationLabel = $hours . '時間' . ($mins > 0 ? " {$mins}分" : '');
 
-    <!-- 作業タスク一覧セクション -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h2 class="font-bold text-base text-slate-900 flex items-center space-x-2">
-                <span>📋</span>
-                <span>運行作業タスク一覧 (時系列)</span>
-            </h2>
+        // タスク集計
+        $totalTasks = $timetable->tasks->count();
+        $satisfiedTasks = $timetable->tasks->filter(fn($t) => $t->is_satisfied)->count();
+        $shortageTasks = $totalTasks - $satisfiedTasks;
+        $totalRequired = $timetable->tasks->sum('required_people_count');
+        $totalAssigned = $timetable->tasks->sum(fn($t) => $t->assigned_count);
+    @endphp
 
-            <div class="flex items-center space-x-4 text-xs">
-                @php
-                    $satisfiedCount = $timetable->tasks->filter(fn($t) => $t->is_satisfied)->count();
-                    $totalTasks = $timetable->tasks->count();
-                @endphp
-                <div class="flex items-center space-x-1 text-slate-600">
-                    <span>登録タスク:</span>
-                    <strong class="text-slate-900 font-mono text-sm">{{ $totalTasks }}</strong>
-                    <span>件</span>
+    <!-- 1. 運行基本枠カード -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-7 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+            <div class="flex items-center space-x-2.5">
+                <span class="text-xl">📅</span>
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">運行基本情報</h2>
+                    <p class="text-xs text-slate-500">まつり開催日の基本的な運用枠と設定ステータスです。</p>
                 </div>
-                <span class="text-slate-300">|</span>
-                <div class="flex items-center space-x-1 text-slate-600">
-                    <span>人員充足:</span>
-                    <strong class="font-mono text-sm {{ $satisfiedCount === $totalTasks && $totalTasks > 0 ? 'text-emerald-600' : 'text-amber-600' }}">
-                        {{ $satisfiedCount }} / {{ $totalTasks }}
-                    </strong>
-                    <span>タスク</span>
+            </div>
+            <div>
+                @php
+                    $statusBadge = match($timetable->status) {
+                        'active' => 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold',
+                        'completed' => 'bg-slate-100 text-slate-600 border-slate-300',
+                        default => 'bg-blue-50 text-blue-700 border-blue-300',
+                    };
+                @endphp
+                <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border {{ $statusBadge }}">
+                    <span class="w-2 h-2 rounded-full mr-1.5 {{ $timetable->status === 'active' ? 'bg-emerald-500 animate-pulse' : ($timetable->status === 'completed' ? 'bg-slate-400' : 'bg-blue-500') }}"></span>
+                    {{ $timetable->status_label }}
+                </span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- 開催日 -->
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span class="text-[11px] font-bold text-slate-500">開催年月日</span>
+                <div class="flex items-baseline space-x-1.5">
+                    <span class="font-mono font-bold text-slate-900 text-base">
+                        {{ $timetable->target_date?->format('Y年m月d日') }}
+                    </span>
+                    <span class="text-xs font-bold {{ $isWeekend ? 'text-rose-600' : 'text-slate-600' }}">
+                        ({{ $weekday }})
+                    </span>
+                </div>
+            </div>
+
+            <!-- 運行時間帯 -->
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span class="text-[11px] font-bold text-slate-500">運行時間帯 (予定)</span>
+                <div class="flex items-baseline space-x-1.5">
+                    <span class="font-mono font-bold text-slate-900 text-base">
+                        {{ substr($timetable->start_time, 0, 5) }} 〜 {{ substr($timetable->end_time, 0, 5) }}
+                    </span>
+                    <span class="text-[11px] text-slate-500 font-mono">
+                        ({{ $durationLabel }})
+                    </span>
+                </div>
+            </div>
+
+            <!-- 登録担当班数 -->
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span class="text-[11px] font-bold text-slate-500">編成担当班数</span>
+                <div>
+                    <span class="font-mono font-bold text-slate-900 text-base">
+                        {{ $timetable->lanes->count() }}
+                    </span>
+                    <span class="text-xs text-slate-600">班</span>
+                    <span class="text-[11px] text-slate-400 ml-1">
+                        (班長設定済: {{ $timetable->lanes->filter(fn($l) => $l->lead_staff_id !== null)->count() }}班)
+                    </span>
+                </div>
+            </div>
+
+            <!-- 登録者・日時 -->
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span class="text-[11px] font-bold text-slate-500">作成者・作成日時</span>
+                <div class="text-xs text-slate-700 truncate">
+                    👤 {{ $timetable->creator?->name ?? 'システム管理者' }}
+                </div>
+                <div class="text-[11px] text-slate-400 font-mono">
+                    {{ $timetable->created_at?->format('Y/m/d H:i') }}
                 </div>
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full border-collapse text-left text-xs">
-                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 select-none">
-                    <tr>
-                        <th class="px-4 py-3 font-bold">時間帯</th>
-                        <th class="px-4 py-3 font-bold">担当班</th>
-                        <th class="px-4 py-3 font-bold">作業名・作業内容</th>
-                        <th class="px-4 py-3 font-bold">場所</th>
-                        <th class="px-4 py-3 font-bold">必要人員 & 充足状況</th>
-                        <th class="px-4 py-3 font-bold">アサイン中スタッフ</th>
-                        <th class="px-4 py-3 font-bold">状態</th>
-                        <th class="px-4 py-3 font-bold text-right">操作</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse($timetable->tasks as $task)
-                    <tr class="hover:bg-slate-50/70 transition">
-                        <!-- 時間帯 -->
-                        <td class="px-4 py-3 font-mono text-slate-800 whitespace-nowrap">
-                            <span class="font-bold">{{ substr($task->start_time, 0, 5) }}</span>
-                            <span class="text-slate-400">〜</span>
-                            <span>{{ substr($task->end_time, 0, 5) }}</span>
-                            @if($task->is_critical)
-                            <span class="ml-1 text-[9px] px-1 py-0.5 rounded font-bold bg-red-100 text-red-700 block text-center mt-0.5">
-                                最優先
-                            </span>
-                            @endif
-                        </td>
+        @if($timetable->description)
+        <div class="pt-2">
+            <span class="text-xs font-bold text-slate-700 block mb-1">概要・全体連絡事項</span>
+            <div class="p-4 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+                {{ $timetable->description }}
+            </div>
+        </div>
+        @endif
+    </div>
 
-                        <!-- 担当班 -->
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            @php
-                                $laneRel = $task->laneRelation;
-                                $badgeClass = $laneRel ? $laneRel->color_classes['badge'] : match($task->lane) {
-                                    'カラーコーン', 'カラーコーン班' => 'bg-amber-100 text-amber-800 border-amber-300',
-                                    '給水設備', '給水設備班' => 'bg-sky-100 text-sky-800 border-sky-300',
-                                    '衛生', '衛生班' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
-                                    '巡回', '誘導・警備班' => 'bg-purple-100 text-purple-800 border-purple-300',
-                                    'キッズ村' => 'bg-pink-100 text-pink-800 border-pink-300',
-                                    'ちょうちん' => 'bg-rose-100 text-rose-800 border-rose-300',
-                                    'ござ市' => 'bg-orange-100 text-orange-800 border-orange-300',
-                                    '本陣', '本部連絡班' => 'bg-indigo-100 text-indigo-800 border-indigo-300',
-                                    '道路清掃' => 'bg-teal-100 text-teal-800 border-teal-300',
-                                    'ステカン' => 'bg-yellow-100 text-yellow-800 border-yellow-300',
-                                    default => 'bg-slate-100 text-slate-800 border-slate-200',
-                                };
-                                $laneIcon = $laneRel ? ($laneRel->icon ?: '📋') : '📋';
-                            @endphp
-                            <div class="space-y-0.5">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border {{ $badgeClass }}">
-                                    <span class="mr-1">{{ $laneIcon }}</span>
-                                    <span>{{ $task->lane }}</span>
-                                </span>
-                                @if($laneRel && $laneRel->leadStaff)
-                                <div class="text-[9px] text-slate-500 font-medium">
-                                    👤 {{ $laneRel->leadStaff->name }}
-                                </div>
-                                @endif
-                            </div>
-                        </td>
+    <!-- 2. 運行状況・規制時間帯カード (2カラム) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- 道路の状況 -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
+                    <span>🚧</span>
+                    <span>道路の状況（交通規制・通行止め）</span>
+                </h3>
+                <span class="text-[11px] px-2 py-0.5 rounded font-mono font-bold {{ !empty($timetable->road_periods) ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-500' }}">
+                    {{ !empty($timetable->road_periods) ? count($timetable->road_periods) . '件の設定' : '終日規制なし' }}
+                </span>
+            </div>
 
-                        <!-- 作業名・作業内容 -->
-                        <td class="px-4 py-3 max-w-xs">
-                            <a href="{{ route('timetable-tasks.show', $task) }}"
-                                class="font-bold text-slate-900 hover:text-indigo-600 transition inline-flex items-center space-x-1">
-                                <span>{{ $task->title }}</span>
-                                <span class="text-[10px] text-indigo-500 font-normal">→</span>
-                            </a>
-                            @if($task->content)
-                            <p class="text-[11px] text-slate-600 line-clamp-2 mt-0.5 leading-snug">
-                                {{ $task->content }}
-                            </p>
-                            @endif
-                        </td>
+            @if(!empty($timetable->road_periods))
+            <div class="space-y-2">
+                @foreach($timetable->road_periods as $rp)
+                <div class="flex items-center justify-between p-3 bg-rose-50/50 rounded-xl border border-rose-100 text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-0.5 rounded font-mono font-bold bg-rose-100 text-rose-800 text-[11px]">
+                            {{ substr($rp['start_time'] ?? '', 0, 5) }} 〜 {{ substr($rp['end_time'] ?? '', 0, 5) }}
+                        </span>
+                        <strong class="text-rose-950 font-bold">{{ $rp['label'] ?? '通行止め' }}</strong>
+                    </div>
+                    <span class="text-[10px] text-rose-600 font-bold bg-white px-2 py-0.5 rounded border border-rose-200">
+                        {{ ($rp['status'] ?? 'closed') === 'closed' ? '車両通行止め' : $rp['status'] }}
+                    </span>
+                </div>
+                @endforeach
+            </div>
+            @else
+            <div class="py-6 text-center text-slate-400 text-xs">
+                <span>終日、車両通行止め規制はありません（通常交通）。</span>
+            </div>
+            @endif
+        </div>
 
-                        <!-- 場所 -->
-                        <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
-                            {{ $task->location ?: '-' }}
-                        </td>
+        <!-- まつりの状況 -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
+                    <span>🏮</span>
+                    <span>まつりの状況（イベント進行状況）</span>
+                </h3>
+                <span class="text-[11px] px-2 py-0.5 rounded font-mono font-bold {{ !empty($timetable->festival_periods) ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500' }}">
+                    {{ !empty($timetable->festival_periods) ? count($timetable->festival_periods) . '件の設定' : '終日準備・待機' }}
+                </span>
+            </div>
 
-                        <!-- 必要人員 & 充足状況 -->
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            @if($task->is_satisfied)
-                            <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                ✔ {{ $task->assigned_count }} / {{ $task->required_people_label }} (充足)
-                            </span>
-                            @else
-                            <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
-                                ⚠️ {{ $task->assigned_count }} / {{ $task->required_people_label }} (不足 {{ $task->shortage_count }}名)
-                            </span>
-                            @endif
-                        </td>
-
-                        <!-- アサイン中スタッフ -->
-                        <td class="px-4 py-3">
-                            <div class="flex flex-wrap gap-1 max-w-xs">
-                                @forelse($task->assignments as $assignment)
-                                <a href="{{ route('staff.show', $assignment->staff_id) }}"
-                                    class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-700 border border-slate-200 transition"
-                                    title="{{ $assignment->staff?->name }} ({{ $assignment->role_description ?: '担当' }})">
-                                    {{ $assignment->staff?->name }}
-                                </a>
-                                @empty
-                                <span class="text-slate-400 text-[10px]">未アサイン</span>
-                                @endforelse
-                            </div>
-                        </td>
-
-                        <!-- 状態 -->
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            @php
-                                $taskStatusClass = match($task->status) {
-                                    'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                    'in_progress' => 'bg-amber-50 text-amber-800 border-amber-300 font-bold',
-                                    'cancelled' => 'bg-slate-100 text-slate-400 border-slate-200 line-through',
-                                    default => 'bg-slate-50 text-slate-600 border-slate-200',
-                                };
-                            @endphp
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] border {{ $taskStatusClass }}">
-                                {{ $task->status_label }}
-                            </span>
-                        </td>
-
-                        <!-- 操作 -->
-                        <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
-                            <a href="{{ route('timetable-tasks.show', $task) }}"
-                                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-bold transition">
-                                👥 人員管理
-                            </a>
-
-                            @can('update', $task)
-                            <a href="{{ route('timetable-tasks.edit', $task) }}"
-                                class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[11px] font-bold transition">
-                                編集
-                            </a>
-                            @endcan
-
-                            @can('delete', $task)
-                            <form action="{{ route('timetable-tasks.destroy', $task) }}" method="POST" class="inline"
-                                data-confirm="作業タスク「{{ $task->title }}」を削除しますか？">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                    class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[11px] font-medium transition cursor-pointer">
-                                    削除
-                                </button>
-                            </form>
-                            @endcan
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="px-4 py-12 text-center text-slate-400">
-                            <span class="text-3xl block mb-2">📋</span>
-                            この運行日にはまだ作業タスクが登録されていません。<br>
-                            右上の「作業タスクを追加」ボタンから登録してください。
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+            @if(!empty($timetable->festival_periods))
+            <div class="space-y-2">
+                @foreach($timetable->festival_periods as $fp)
+                <div class="flex items-center justify-between p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-0.5 rounded font-mono font-bold bg-emerald-100 text-emerald-800 text-[11px]">
+                            {{ substr($fp['start_time'] ?? '', 0, 5) }} 〜 {{ substr($fp['end_time'] ?? '', 0, 5) }}
+                        </span>
+                        <strong class="text-emerald-950 font-bold">{{ $fp['label'] ?? '開催中' }}</strong>
+                    </div>
+                    <span class="text-[10px] text-emerald-700 font-bold bg-white px-2 py-0.5 rounded border border-emerald-200">
+                        {{ ($fp['status'] ?? 'active') === 'active' ? 'イベント進行中' : $fp['status'] }}
+                    </span>
+                </div>
+                @endforeach
+            </div>
+            @else
+            <div class="py-6 text-center text-slate-400 text-xs">
+                <span>終日、まつり本祭運行はありません（準備・片付け日等）。</span>
+            </div>
+            @endif
         </div>
     </div>
 
+    <!-- 3. 編成 & タスクサマリーカード (2カラム) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- 担当班（レーン）編成サマリー -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
+                        <span>🏷️</span>
+                        <span>担当班（10レーン）編成状況</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-500 mt-0.5">班長および固定配置スタッフの編成状態です。</p>
+                </div>
+                <a href="{{ route('timetables.lanes.index', $timetable) }}"
+                    class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                    <span>編成を開く</span>
+                    <span>→</span>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+                @forelse($timetable->lanes as $lane)
+                <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50/70 space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center text-xs font-bold text-slate-800">
+                            <span class="mr-1">{{ $lane->icon ?: '📋' }}</span>
+                            <span class="truncate">{{ $lane->name }}</span>
+                        </span>
+                        <span class="text-[10px] font-mono text-slate-500">
+                            {{ $lane->fixedStaff->count() }}名固定
+                        </span>
+                    </div>
+                    <div class="text-[11px] text-slate-600 truncate flex items-center space-x-1">
+                        <span class="text-slate-400 text-[10px]">班長:</span>
+                        <strong class="font-medium {{ $lane->leadStaff ? 'text-indigo-700' : 'text-slate-400' }}">
+                            {{ $lane->leadStaff ? $lane->leadStaff->name : '未設定' }}
+                        </strong>
+                    </div>
+                </div>
+                @empty
+                <div class="col-span-2 py-6 text-center text-slate-400 text-xs">
+                    担当班が登録されていません。「編成を開く」から標準10班を作成してください。
+                </div>
+                @endforelse
+            </div>
+        </div>
+
+        <!-- タスク進捗 & 人員充足サマリー -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
+                        <span>📋</span>
+                        <span>作業タスク・人員充足サマリー</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-500 mt-0.5">登録作業タスクの人員アサイン状況です。</p>
+                </div>
+                <a href="{{ route('timetables.tasks.index', $timetable) }}"
+                    class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                    <span>タスク管理へ</span>
+                    <span>→</span>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span class="text-[10px] font-bold text-slate-500 block">登録タスク総数</span>
+                    <strong class="text-xl font-bold font-mono text-slate-900">{{ $totalTasks }}</strong>
+                    <span class="text-xs text-slate-500 ml-0.5">件</span>
+                </div>
+
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span class="text-[10px] font-bold text-slate-500 block">人員充足タスク</span>
+                    <strong class="text-xl font-bold font-mono {{ $shortageTasks === 0 && $totalTasks > 0 ? 'text-emerald-600' : 'text-amber-600' }}">
+                        {{ $satisfiedTasks }} / {{ $totalTasks }}
+                    </strong>
+                    <span class="text-xs text-slate-500 ml-0.5">充足</span>
+                </div>
+
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span class="text-[10px] font-bold text-slate-500 block">必要人員数 (延べ)</span>
+                    <strong class="text-xl font-bold font-mono text-slate-800">{{ $totalRequired }}</strong>
+                    <span class="text-xs text-slate-500 ml-0.5">人</span>
+                </div>
+
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span class="text-[10px] font-bold text-slate-500 block">アサイン済人員数 (延べ)</span>
+                    <strong class="text-xl font-bold font-mono text-indigo-700">{{ $totalAssigned }}</strong>
+                    <span class="text-xs text-slate-500 ml-0.5">人</span>
+                </div>
+            </div>
+
+            @if($shortageTasks > 0)
+            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-center justify-between">
+                <span class="font-bold flex items-center space-x-1">
+                    <span>⚠️</span>
+                    <span>{{ $shortageTasks }}件のタスクで人員が不足しています</span>
+                </span>
+                <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}" class="text-indigo-700 font-bold underline">
+                    進行表で配置 →
+                </a>
+            </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- 4. フッターエリア（削除等の管理者操作） -->
+    @can('delete', $timetable)
+    <div class="pt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        <div>
+            <span>この運行タイムテーブルを削除すると、紐づくすべての作業タスクおよびレーン編成も削除されます。</span>
+        </div>
+        <form action="{{ route('timetables.destroy', $timetable) }}" method="POST"
+            data-confirm="タイムテーブル「{{ $timetable->name }}」を削除しますか？&#10;（関連するすべての作業タスク、アサイン、レーンも削除されます）">
+            @csrf
+            @method('DELETE')
+            <button type="submit"
+                class="px-4 py-2 bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-xs font-bold transition cursor-pointer">
+                🗑️ このタイムテーブルを削除する
+            </button>
+        </form>
+    </div>
+    @endcan
+
 </div>
 </x-layouts.app>
-

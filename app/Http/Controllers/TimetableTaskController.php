@@ -28,11 +28,47 @@ class TimetableTaskController extends Controller
     ) {}
 
     /**
-     * タスク一覧（親タイムテーブル一覧へリダイレクト）
+     * タスク一覧
      */
-    public function index(): RedirectResponse
+    public function index(Request $request): View|RedirectResponse
     {
+        if ($request->filled('timetable_id')) {
+            $timetable = Timetable::findOrFail($request->integer('timetable_id'));
+
+            return $this->indexByTimetable($timetable);
+        }
+
+        $currentTimetable = Timetable::where('status', 'active')->orderBy('target_date')->first()
+            ?? Timetable::orderBy('target_date')->first();
+
+        if ($currentTimetable) {
+            return redirect()->route('timetables.tasks.index', $currentTimetable);
+        }
+
         return redirect()->route('timetables.index');
+    }
+
+    /**
+     * 運行日別 作業タスク一覧画面の表示（タスク管理専用画面）
+     */
+    public function indexByTimetable(Timetable $timetable): View
+    {
+        $this->authorize('viewAny', TimetableTask::class);
+
+        $timetable->load([
+            'lanes' => function ($q) {
+                $q->orderBy('display_order')->with('leadStaff');
+            },
+            'tasks' => function ($q) {
+                $q->orderBy('start_time', 'asc')
+                    ->with(['assignments.staff', 'laneRelation.leadStaff']);
+            },
+        ]);
+
+        return view('timetable_tasks.index', [
+            'timetable' => $timetable,
+            'tasks' => $timetable->tasks,
+        ]);
     }
 
     /**

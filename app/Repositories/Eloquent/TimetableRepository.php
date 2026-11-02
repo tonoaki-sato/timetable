@@ -2,9 +2,12 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Models\LaneRequest;
+use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class TimetableRepository implements TimetableRepositoryInterface
 {
@@ -43,6 +46,9 @@ class TimetableRepository implements TimetableRepositoryInterface
     {
         return Timetable::with([
             'creator',
+            'lanes' => function ($q) {
+                $q->orderBy('display_order', 'asc')->with(['leadStaff', 'fixedStaff']);
+            },
             'tasks' => function ($q) {
                 $q->orderBy('start_time', 'asc')
                     ->with(['assignments.staff']);
@@ -79,11 +85,32 @@ class TimetableRepository implements TimetableRepositoryInterface
     }
 
     /**
-     * 削除
+     * 削除（関連するタスク、アサイン、レーン等を安全にカスケード削除）
      */
     public function delete(Timetable $timetable): bool
     {
-        return (bool) $timetable->delete();
+        return DB::transaction(function () use ($timetable) {
+            $taskIds = $timetable->tasks()->pluck('id');
+
+            if ($taskIds->isNotEmpty()) {
+                TaskStaffAssignment::whereIn('timetable_task_id', $taskIds)->delete();
+            }
+
+            // タスクを削除（これにより lanes.id への RESTRICT 外部キー制約が解除される）
+            $timetable->tasks()->delete();
+
+            // レーンの固定スタッフ紐付けおよびレーン本体を削除
+            foreach ($timetable->lanes as $lane) {
+                $lane->fixedStaff()->detach();
+                $lane->delete();
+            }
+
+            // レーンリクエストを削除
+            LaneRequest::where('timetable_id', $timetable->id)->delete();
+
+            // タイムテーブル本体を削除
+            return (bool) $timetable->delete();
+        });
     }
 
     /**

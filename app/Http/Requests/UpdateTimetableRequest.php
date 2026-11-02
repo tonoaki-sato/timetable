@@ -28,14 +28,14 @@ class UpdateTimetableRequest extends FormRequest
     {
         if ($this->has('road_periods') && is_array($this->road_periods)) {
             $filtered = array_values(array_filter($this->road_periods, function ($item) {
-                return ! empty($item['start_time']) && ! empty($item['end_time']);
+                return ! empty($item['start_time']) || ! empty($item['end_time']) || ! empty($item['label']);
             }));
             $this->merge(['road_periods' => empty($filtered) ? null : $filtered]);
         }
 
         if ($this->has('festival_periods') && is_array($this->festival_periods)) {
             $filtered = array_values(array_filter($this->festival_periods, function ($item) {
-                return ! empty($item['start_time']) && ! empty($item['end_time']);
+                return ! empty($item['start_time']) || ! empty($item['end_time']) || ! empty($item['label']);
             }));
             $this->merge(['festival_periods' => empty($filtered) ? null : $filtered]);
         }
@@ -62,13 +62,13 @@ class UpdateTimetableRequest extends FormRequest
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'status' => ['required', 'string', 'in:'.implode(',', array_keys(Timetable::STATUSES))],
             'road_periods' => ['nullable', 'array'],
-            'road_periods.*.start_time' => ['required_with:road_periods', 'string'],
-            'road_periods.*.end_time' => ['required_with:road_periods', 'string'],
+            'road_periods.*.start_time' => ['required_with:road_periods', 'date_format:H:i'],
+            'road_periods.*.end_time' => ['required_with:road_periods', 'date_format:H:i', 'after:road_periods.*.start_time'],
             'road_periods.*.label' => ['required_with:road_periods', 'string', 'max:50'],
             'road_periods.*.status' => ['nullable', 'string', 'max:30'],
             'festival_periods' => ['nullable', 'array'],
-            'festival_periods.*.start_time' => ['required_with:festival_periods', 'string'],
-            'festival_periods.*.end_time' => ['required_with:festival_periods', 'string'],
+            'festival_periods.*.start_time' => ['required_with:festival_periods', 'date_format:H:i'],
+            'festival_periods.*.end_time' => ['required_with:festival_periods', 'date_format:H:i', 'after:festival_periods.*.start_time'],
             'festival_periods.*.label' => ['required_with:festival_periods', 'string', 'max:50'],
             'festival_periods.*.status' => ['nullable', 'string', 'max:30'],
         ];
@@ -89,7 +89,13 @@ class UpdateTimetableRequest extends FormRequest
             'end_time' => '運行終了時刻',
             'status' => 'ステータス',
             'road_periods' => '道路状況設定',
+            'road_periods.*.start_time' => '道路規制の開始時刻',
+            'road_periods.*.end_time' => '道路規制の終了時刻',
+            'road_periods.*.label' => '道路規制の表示文言',
             'festival_periods' => 'まつり状況設定',
+            'festival_periods.*.start_time' => 'まつり状況の開始時刻',
+            'festival_periods.*.end_time' => 'まつり状況の終了時刻',
+            'festival_periods.*.label' => 'まつり状況の表示文言',
         ];
     }
 }

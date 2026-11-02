@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lane;
 use App\Models\Timetable;
+use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -73,6 +74,7 @@ class TimetableManagementTest extends TestCase
         $response->assertSee('前日 設営運行');
         $response->assertSee(route('timetables.show', $timetableA));
         $response->assertSee(route('timetable.index', ['timetable_id' => $timetableA->id]));
+        $response->assertSee(route('timetables.tasks.index', $timetableA));
         $response->assertSee('タイムテーブル');
         $response->assertSee('タスク一覧');
         $response->assertDontSee('タスク・人員台帳');
@@ -251,5 +253,55 @@ class TimetableManagementTest extends TestCase
         $response->assertRedirect(route('timetables.index'));
 
         $this->assertDatabaseMissing('timetables', ['id' => $timetable->id]);
+    }
+
+    /**
+     * レーンやタスクが紐付いたタイムテーブルでも外部キー制約エラーを起こさず安全に削除できること
+     */
+    public function test_can_delete_timetable_with_associated_tasks_and_lanes(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create(['name' => 'タスク付き運行']);
+        $timetable->createDefaultLanes();
+
+        $lane = $timetable->lanes->first();
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '削除テスト用タスク',
+        ]);
+
+        $response = $this->delete(route('timetables.destroy', $timetable));
+        $response->assertRedirect(route('timetables.index'));
+
+        $this->assertDatabaseMissing('timetables', ['id' => $timetable->id]);
+        $this->assertDatabaseMissing('timetable_tasks', ['id' => $task->id]);
+        $this->assertDatabaseMissing('lanes', ['timetable_id' => $timetable->id]);
+    }
+
+    /**
+     * 道路状況・まつり状況の終了時刻が開始時刻より前の場合にバリデーションエラーとなること
+     */
+    public function test_validation_rejects_inverted_period_times(): void
+    {
+        $this->actingAs($this->operator);
+
+        $response = $this->post(route('timetables.store'), [
+            'target_date' => '2026-10-28',
+            'name' => '不正時間運行',
+            'start_time' => '08:00',
+            'end_time' => '18:00',
+            'status' => 'draft',
+            'road_periods' => [
+                [
+                    'start_time' => '15:00',
+                    'end_time' => '10:00',
+                    'label' => '逆転時間',
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors(['road_periods.0.end_time']);
     }
 }

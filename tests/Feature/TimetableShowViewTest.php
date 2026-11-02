@@ -15,6 +15,8 @@ class TimetableShowViewTest extends TestCase
 
     private User $operator;
 
+    private User $viewer;
+
     private Timetable $timetable;
 
     protected function setUp(): void
@@ -26,6 +28,11 @@ class TimetableShowViewTest extends TestCase
             'is_active' => true,
         ]);
 
+        $this->viewer = User::factory()->create([
+            'role' => 'viewer',
+            'is_active' => true,
+        ]);
+
         $this->timetable = Timetable::factory()->create([
             'name' => '1日目 本祭運行',
             'target_date' => '2026-10-17',
@@ -33,6 +40,22 @@ class TimetableShowViewTest extends TestCase
             'end_time' => '18:00:00',
             'status' => 'active',
             'description' => 'パレード及びメインステージ周辺の運行計画',
+            'road_periods' => [
+                [
+                    'start_time' => '10:00',
+                    'end_time' => '18:00',
+                    'label' => '車両通行止め',
+                    'status' => 'closed',
+                ],
+            ],
+            'festival_periods' => [
+                [
+                    'start_time' => '11:00',
+                    'end_time' => '17:00',
+                    'label' => '本祭開催中',
+                    'status' => 'active',
+                ],
+            ],
         ]);
 
         $lane = Lane::factory()->create([
@@ -51,9 +74,9 @@ class TimetableShowViewTest extends TestCase
     }
 
     /**
-     * タイムテーブル詳細画面が新デザインのヘッダーで正常に表示されること
+     * タイムテーブル詳細画面で基本情報・規制時間帯・サマリーが正常に表示されること
      */
-    public function test_show_view_renders_new_header_design(): void
+    public function test_show_view_renders_basic_information_and_summaries(): void
     {
         $this->actingAs($this->operator);
 
@@ -65,72 +88,54 @@ class TimetableShowViewTest extends TestCase
         $response->assertSee('タイムテーブル一覧');
         $response->assertSee(route('timetables.index'));
 
-        // タイトル & 説明（タイトル横の日付・時間帯バッジは削除されていること）
+        // タイトル & 説明
         $response->assertSee('1日目 本祭運行');
-        $response->assertDontSee('08:00 〜 18:00');
         $response->assertSee('パレード及びメインステージ周辺の運行計画');
 
-        // アクションボタンが表示されていること（「タイムテーブル一覧に戻る」重複ボタンはパンくずに一本化され削除されていること）
-        $response->assertDontSee('タイムテーブル一覧に戻る');
-        $response->assertSee(route('timetables.staff-timeline', $this->timetable));
-        $response->assertSee('スタッフ稼働タイムライン');
-        $response->assertSee(route('timetables.print-assignments', $this->timetable));
-        $response->assertSee('人員配置表印刷');
-        $response->assertSee(route('timetable-tasks.create', ['timetable_id' => $this->timetable->id]));
-        $response->assertSee('作業タスクを追加');
+        // 運行基本枠カード
+        $response->assertSee('運行基本情報');
+        $response->assertSee('2026年10月17日');
+        $response->assertSee('08:00 〜 18:00');
+        $response->assertSee('運行中');
 
-        // タスク一覧ヘッダーのサマリー統計
-        $response->assertSee('登録タスク:');
-        $response->assertSee('人員充足:');
+        // アクションボタン
+        $response->assertSee(route('timetables.edit', $this->timetable));
+        $response->assertSee('基本情報を編集');
+        $response->assertSee(route('timetables.tasks.index', $this->timetable));
+        $response->assertSee('作業タスク管理');
+        $response->assertSee(route('timetable.index', ['timetable_id' => $this->timetable->id]));
+        $response->assertSee('マトリクス進行表');
+        $response->assertSee(route('timetables.lanes.index', $this->timetable));
+        $response->assertSee('担当班編成');
+
+        // 道路規制・まつり状況カード
+        $response->assertSee('道路の状況（交通規制・通行止め）');
+        $response->assertSee('車両通行止め');
+        $response->assertSee('まつりの状況（イベント進行状況）');
+        $response->assertSee('本祭開催中');
+
+        // 担当班編成・タスクサマリーカード
+        $response->assertSee('担当班（10レーン）編成状況');
+        $response->assertSee('警備班');
+        $response->assertSee('作業タスク・人員充足サマリー');
+        $response->assertSee('登録タスク総数');
+
+        // 削除ボタン
+        $response->assertSee('このタイムテーブルを削除する');
     }
 
     /**
-     * 指定された削除対象のボタン・モーダルが表示されないこと
+     * 閲覧者ロール（viewer）は編集・削除ボタンが表示されないこと
      */
-    public function test_removed_buttons_and_modals_are_not_present(): void
+    public function test_viewer_does_not_see_edit_or_delete_actions_on_show(): void
     {
-        $this->actingAs($this->operator);
-
-        // 別の日程を作成（他日程アサインコピーの条件を満たす状況）
-        Timetable::factory()->create([
-            'name' => '前日 設営運行',
-            'target_date' => '2026-10-16',
-        ]);
+        $this->actingAs($this->viewer);
 
         $response = $this->get(route('timetables.show', $this->timetable));
 
         $response->assertStatus(200);
-
-        // 1. 他日程からアサインコピー
-        $response->assertDontSee('他日程からアサインコピー');
-        $response->assertDontSee('copyAssignmentsModal');
-        $response->assertDontSee('open-copy-modal');
-
-        // 2. 担当班管理 ボタン
-        $response->assertDontSee(route('timetables.lanes.index', $this->timetable));
-
-        // 3. 全体マトリクス ボタン（showページのアクションボタンから削除されていること）
-        $response->assertDontSee('全体マトリクス');
-
-        // 4. 運行枠編集 ボタン
         $response->assertDontSee(route('timetables.edit', $this->timetable));
-        $response->assertDontSee('運行枠編集');
-
-        // 5. 運行枠削除 ボタン
-        $response->assertDontSee("タイムテーブル「{$this->timetable->name}」を削除しますか？");
-    }
-
-    /**
-     * 他日程からアサインコピーのルートが削除されていること
-     */
-    public function test_copy_assignments_from_route_is_removed(): void
-    {
-        $this->actingAs($this->operator);
-
-        $response = $this->post("/timetables/{$this->timetable->id}/copy-assignments-from", [
-            'source_timetable_id' => 999,
-        ]);
-
-        $response->assertStatus(404);
+        $response->assertDontSee('基本情報を編集');
+        $response->assertDontSee('このタイムテーブルを削除する');
     }
 }
