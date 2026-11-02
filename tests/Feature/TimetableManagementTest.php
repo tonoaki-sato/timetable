@@ -73,6 +73,8 @@ class TimetableManagementTest extends TestCase
         $response->assertSee('前日 設営運行');
         $response->assertSee(route('timetables.show', $timetableA));
         $response->assertSee('タスク・人員台帳');
+        $response->assertSee('運行時間枠');
+        $response->assertSee('登録タスク');
 
         // active のみ絞り込み
         $filterResponse = $this->get(route('timetables.index', ['status' => 'active']));

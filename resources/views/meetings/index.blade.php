@@ -75,129 +75,140 @@
         </form>
     </div>
 
-    <!-- 4. 会議一覧カード -->
-    <div class="space-y-3">
-        @forelse($meetings as $meeting)
-        <div class="bg-white rounded-xl border border-slate-200 shadow-xs hover:border-slate-300 transition p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <!-- 4. 会議一覧テーブル -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-left text-xs">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 select-none">
+                    <tr>
+                        <th class="px-4 py-3 font-bold whitespace-nowrap">開催日時</th>
+                        <th class="px-4 py-3 font-bold">会議名・議題</th>
+                        <th class="px-4 py-3 font-bold whitespace-nowrap">開催場所</th>
+                        <th class="px-4 py-3 font-bold whitespace-nowrap">主催者</th>
+                        <th class="px-4 py-3 font-bold text-right whitespace-nowrap">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($meetings as $meeting)
+                    <tr class="hover:bg-slate-50/70 transition">
+                        <!-- 開催日時 -->
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-mono font-bold text-slate-900 text-xs">
+                                    {{ $meeting->meeting_date?->format('Y/m/d') }}
+                                </span>
+                                @php
+                                    $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                                    $weekday = $meeting->meeting_date ? $weekdayNames[$meeting->meeting_date->dayOfWeek] : '';
+                                    $isWeekend = in_array($meeting->meeting_date?->dayOfWeek, [0, 6], true);
+                                @endphp
+                                <span class="text-[11px] font-bold {{ $isWeekend ? 'text-rose-600' : 'text-slate-500' }}">
+                                    ({{ $weekday }})
+                                </span>
+                            </div>
+                            <div class="font-mono text-slate-600 text-[11px] mt-0.5">
+                                🕒 {{ $meeting->formatted_time_range }}
+                            </div>
+                        </td>
 
-            <!-- 左側: 日時・タイトル・場所・主催者・議題 -->
-            <div class="flex items-start space-x-4 min-w-0">
-                <!-- 日付バッジ -->
-                <div class="shrink-0 text-center w-16 sm:w-20 bg-slate-50 border border-slate-200 rounded-xl p-2">
-                    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        {{ $meeting->meeting_date?->format('Y年') }}
-                    </span>
-                    <span class="block text-base sm:text-lg font-black text-slate-900 leading-tight">
-                        {{ $meeting->meeting_date?->format('m/d') }}
-                    </span>
-                    @php
-                        $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
-                        $weekday = $meeting->meeting_date ? $weekdayNames[$meeting->meeting_date->dayOfWeek] : '';
-                        $isWeekend = in_array($meeting->meeting_date?->dayOfWeek, [0, 6], true);
-                    @endphp
-                    <span class="block text-[11px] font-bold {{ $isWeekend ? 'text-red-600' : 'text-slate-600' }}">
-                        ({{ $weekday }})
-                    </span>
-                </div>
-
-                <!-- 会議情報メイン -->
-                <div class="space-y-1.5 min-w-0">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <a href="{{ route('meetings.show', $meeting) }}"
-                            class="text-base font-bold text-slate-900 hover:text-indigo-600 transition">
-                            {{ $meeting->title }}
-                        </a>
-
-                        @if($meeting->is_upcoming)
-                            @if($meeting->meeting_date?->isToday())
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                今日開催
-                            </span>
-                            @elseif($meeting->meeting_date?->diffInDays(now()) <= 3)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                まもなく開催
-                            </span>
+                        <!-- 会議名・議題 -->
+                        <td class="px-4 py-3 min-w-[220px]">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <a href="{{ route('meetings.show', $meeting) }}" class="font-bold text-slate-900 text-sm hover:text-indigo-600 transition">
+                                    {{ $meeting->title }}
+                                </a>
+                                @if($meeting->is_upcoming)
+                                    @if($meeting->meeting_date?->isToday())
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                        今日開催
+                                    </span>
+                                    @elseif($meeting->meeting_date?->diffInDays(now()) <= 3)
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                        まもなく開催
+                                    </span>
+                                    @endif
+                                @else
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500">
+                                        終了
+                                    </span>
+                                @endif
+                            </div>
+                            @if($meeting->description)
+                            <div class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                                <span class="font-bold text-slate-600">議題:</span> {{ $meeting->description }}
+                            </div>
                             @endif
-                        @else
-                            <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500">
-                                終了
+                        </td>
+
+                        <!-- 開催場所 -->
+                        <td class="px-4 py-3 text-slate-700 whitespace-nowrap">
+                            <span class="inline-flex items-center space-x-1">
+                                <span>📍</span>
+                                <span>{{ $meeting->location }}</span>
                             </span>
-                        @endif
-                    </div>
+                        </td>
 
-                    <!-- メタ情報行 -->
-                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
-                        <span class="inline-flex items-center space-x-1">
-                            <span>🕒</span>
-                            <span class="font-mono font-bold">{{ $meeting->formatted_time_range }}</span>
-                        </span>
-
-                        <span class="inline-flex items-center space-x-1">
-                            <span>📍</span>
-                            <span>{{ $meeting->location }}</span>
-                        </span>
-
-                        <span class="inline-flex items-center space-x-1">
-                            <span>👤 主催:</span>
+                        <!-- 主催者 -->
+                        <td class="px-4 py-3 whitespace-nowrap">
                             @if($meeting->host)
                             <span class="font-bold text-slate-800">{{ $meeting->host->name }}</span>
                             @if($meeting->host->affiliation)
                             <span class="text-slate-400 text-[11px]">({{ $meeting->host->affiliation }})</span>
                             @endif
                             @else
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">主催者未定（後から設定可）</span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">主催者未定</span>
                             @endif
-                        </span>
-                    </div>
+                        </td>
 
-                    <!-- 議題プレビュー -->
-                    @if($meeting->description)
-                    <p class="text-xs text-slate-500 line-clamp-1 pt-0.5">
-                        <span class="font-bold text-slate-600">議題:</span> {{ $meeting->description }}
-                    </p>
-                    @endif
-                </div>
-            </div>
+                        <!-- 操作 -->
+                        <td class="px-4 py-3 text-right whitespace-nowrap space-x-1">
+                            <button type="button"
+                                data-action="copy-meeting-line"
+                                data-line-text="{{ $meeting->share_text }}"
+                                title="共有用の告知テキストをクリップボードにコピー"
+                                class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold transition inline-flex items-center space-x-1 cursor-pointer">
+                                <span>📋</span>
+                                <span>案内文コピー</span>
+                            </button>
 
-            <!-- 右側: アクションボタン群（LINEコピー、詳細、編集） -->
-            <div class="flex items-center space-x-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 justify-end">
-                <!-- 告知テキストクイックコピーボタン -->
-                <button type="button"
-                    data-action="copy-meeting-line"
-                    data-line-text="{{ $meeting->share_text }}"
-                    title="共有用の告知テキストをクリップボードにコピー"
-                    class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
-                    <span>📋</span>
-                    <span>案内文コピー</span>
-                </button>
+                            <a href="{{ route('meetings.show', $meeting) }}"
+                                class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition">
+                                詳細
+                            </a>
 
-                @can('update', $meeting)
-                <a href="{{ route('meetings.edit', $meeting) }}"
-                    class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition">
-                    編集
-                </a>
-                @endcan
-            </div>
+                            @can('update', $meeting)
+                            <a href="{{ route('meetings.edit', $meeting) }}"
+                                class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-[11px] font-bold transition">
+                                編集
+                            </a>
+                            @endcan
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-4 py-12 text-center text-slate-400">
+                            <span class="text-3xl block mb-2">🤝</span>
+                            <div class="font-bold text-slate-700 mb-1">
+                                {{ $currentTab === 'upcoming' ? '開催予定の会議はありません' : '過去の会議記録はありません' }}
+                            </div>
+                            <div class="text-[11px] text-slate-400 max-w-sm mx-auto">
+                                {{ $currentTab === 'upcoming' ? '新しい会議や打ち合わせ日程が決まったら登録しましょう。' : '過去の会議アーカイブはここに表示されます。' }}
+                            </div>
+                            @can('create', App\Models\Meeting::class)
+                            <div class="mt-3">
+                                <a href="{{ route('meetings.create') }}"
+                                    class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition">
+                                    <span>➕</span>
+                                    <span>新しい会議を登録する</span>
+                                </a>
+                            </div>
+                            @endcan
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-        @empty
-        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-xs">
-            <span class="text-4xl block mb-2">🤝</span>
-            <h3 class="text-base font-bold text-slate-800">
-                {{ $currentTab === 'upcoming' ? '開催予定の会議はありません' : '過去の会議記録はありません' }}
-            </h3>
-            <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                {{ $currentTab === 'upcoming' ? '新しい会議や打ち合わせ日程が決まったら登録しましょう。' : '過去の会議アーカイブはここに表示されます。' }}
-            </p>
-            @can('create', App\Models\Meeting::class)
-            <div class="mt-4">
-                <a href="{{ route('meetings.create') }}"
-                    class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition">
-                    新しい会議を登録する
-                </a>
-            </div>
-            @endcan
-        </div>
-        @endforelse
     </div>
 
     <!-- 5. ページネーション -->

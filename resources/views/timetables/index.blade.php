@@ -31,95 +31,117 @@
         @endforeach
     </div>
 
-    <!-- 運行日カード・一覧グリッド -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @forelse($timetables as $timetable)
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:border-indigo-300 transition group">
-            <!-- カードヘッダー -->
-            <div class="p-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-mono font-bold text-indigo-600 block">
-                        📅 {{ $timetable->target_date?->format('Y年m月d日') }}
-                    </span>
-                    <h3 class="font-bold text-base text-slate-900 mt-0.5 group-hover:text-indigo-600 transition">
-                        <a href="{{ route('timetables.show', $timetable) }}">
-                            {{ $timetable->name }}
-                        </a>
-                    </h3>
-                </div>
+    <!-- 運行日一覧テーブル -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-left text-xs">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 select-none">
+                    <tr>
+                        <th class="px-4 py-3 font-bold whitespace-nowrap">運行日</th>
+                        <th class="px-4 py-3 font-bold">タイムテーブル名 / 概要</th>
+                        <th class="px-4 py-3 font-bold whitespace-nowrap">運行時間枠</th>
+                        <th class="px-4 py-3 font-bold whitespace-nowrap text-center">登録タスク</th>
+                        <th class="px-4 py-3 font-bold whitespace-nowrap text-center">状態</th>
+                        <th class="px-4 py-3 font-bold text-right whitespace-nowrap">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($timetables as $timetable)
+                    <tr class="hover:bg-slate-50/70 transition">
+                        <!-- 運行日 -->
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="font-mono font-bold text-slate-800 text-xs block">
+                                {{ $timetable->target_date?->format('Y/m/d') }}
+                            </span>
+                            @php
+                                $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                                $weekday = $timetable->target_date ? $weekdayNames[$timetable->target_date->dayOfWeek] : '';
+                                $isWeekend = in_array($timetable->target_date?->dayOfWeek, [0, 6], true);
+                            @endphp
+                            <span class="text-[11px] font-bold {{ $isWeekend ? 'text-rose-600' : 'text-slate-500' }}">
+                                ({{ $weekday }})
+                            </span>
+                        </td>
 
-                @php
-                    $statusBadge = match($timetable->status) {
-                        'active' => 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold animate-pulse',
-                        'completed' => 'bg-slate-100 text-slate-600 border-slate-200',
-                        default => 'bg-blue-50 text-blue-700 border-blue-200',
-                    };
-                @endphp
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] border {{ $statusBadge }}">
-                    {{ $timetable->status_label }}
-                </span>
-            </div>
+                        <!-- タイムテーブル名 / 概要 -->
+                        <td class="px-4 py-3 min-w-[200px]">
+                            <div class="font-bold text-slate-900 text-sm">
+                                <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition">
+                                    {{ $timetable->name }}
+                                </a>
+                            </div>
+                            @if($timetable->description)
+                            <div class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                                {{ $timetable->description }}
+                            </div>
+                            @endif
+                        </td>
 
-            <!-- カードボディ -->
-            <div class="p-5 flex-1 space-y-4">
-                <div class="flex items-center justify-between text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <div>
-                        <span class="text-[10px] text-slate-400 block font-bold">運行時間枠</span>
-                        <span class="font-mono font-bold text-slate-800">
+                        <!-- 運行時間枠 -->
+                        <td class="px-4 py-3 font-mono text-slate-700 whitespace-nowrap">
                             {{ substr($timetable->start_time, 0, 5) }} 〜 {{ substr($timetable->end_time, 0, 5) }}
-                        </span>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-[10px] text-slate-400 block font-bold">登録タスク</span>
-                        <span class="font-mono font-bold text-indigo-600 text-sm">
-                            {{ $timetable->tasks_count ?? 0 }} <span class="text-xs font-normal text-slate-500">件</span>
-                        </span>
-                    </div>
-                </div>
+                        </td>
 
-                @if($timetable->description)
-                <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                    {{ $timetable->description }}
-                </p>
-                @endif
-            </div>
+                        <!-- 登録タスク数 -->
+                        <td class="px-4 py-3 text-center whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                {{ $timetable->tasks_count ?? 0 }} 件
+                            </span>
+                        </td>
 
-            <!-- カードフッター / アクション -->
-            <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
-                <a href="{{ route('timetables.show', $timetable) }}"
-                    class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-2xs">
-                    <span>タスク・人員台帳</span>
-                    <span>→</span>
-                </a>
+                        <!-- 状態 -->
+                        <td class="px-4 py-3 text-center whitespace-nowrap">
+                            @php
+                                $statusBadge = match($timetable->status) {
+                                    'active' => 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold animate-pulse',
+                                    'completed' => 'bg-slate-100 text-slate-600 border-slate-200',
+                                    default => 'bg-blue-50 text-blue-700 border-blue-200',
+                                };
+                            @endphp
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] border {{ $statusBadge }}">
+                                {{ $timetable->status_label }}
+                            </span>
+                        </td>
 
-                <div class="space-x-1">
-                    @can('update', $timetable)
-                    <a href="{{ route('timetables.edit', $timetable) }}"
-                        class="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded text-[11px] font-medium text-slate-700 transition">
-                        編集
-                    </a>
-                    @endcan
+                        <!-- 操作 -->
+                        <td class="px-4 py-3 text-right whitespace-nowrap space-x-1">
+                            <a href="{{ route('timetables.show', $timetable) }}"
+                                class="inline-flex items-center space-x-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-bold transition shadow-2xs">
+                                <span>タスク・人員台帳</span>
+                                <span>→</span>
+                            </a>
 
-                    @can('delete', $timetable)
-                    <form action="{{ route('timetables.destroy', $timetable) }}" method="POST" class="inline"
-                        data-confirm="タイムテーブル「{{ $timetable->name }}」を削除しますか？&#10;（関連するすべての作業タスクも削除されます）">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                            class="px-2.5 py-1 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 text-red-600 rounded text-[11px] font-medium transition cursor-pointer">
-                            削除
-                        </button>
-                    </form>
-                    @endcan
-                </div>
-            </div>
+                            @can('update', $timetable)
+                            <a href="{{ route('timetables.edit', $timetable) }}"
+                                class="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 transition">
+                                編集
+                            </a>
+                            @endcan
+
+                            @can('delete', $timetable)
+                            <form action="{{ route('timetables.destroy', $timetable) }}" method="POST" class="inline"
+                                data-confirm="タイムテーブル「{{ $timetable->name }}」を削除しますか？&#10;（関連するすべての作業タスクも削除されます）">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                    class="px-2.5 py-1 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-rose-600 rounded-lg text-[11px] font-medium transition cursor-pointer">
+                                    削除
+                                </button>
+                            </form>
+                            @endcan
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="px-4 py-12 text-center text-slate-400">
+                            <span class="text-3xl block mb-2">⏱️</span>
+                            登録されている運行タイムテーブルはありません。
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-        @empty
-        <div class="col-span-full bg-white p-12 rounded-2xl border border-slate-200 text-center text-slate-400">
-            <span class="text-3xl block mb-2">⏱️</span>
-            登録されている運行タイムテーブルはありません。
-        </div>
-        @endforelse
     </div>
 
 </div>

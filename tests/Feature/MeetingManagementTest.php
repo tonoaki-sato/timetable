@@ -54,6 +54,9 @@ class MeetingManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('未来の定例幹事会');
         $response->assertDontSee('過去の反省会');
+        $response->assertSee('開催日時');
+        $response->assertSee('開催場所');
+        $response->assertSee('案内文コピー');
     }
 
     /**
