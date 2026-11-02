@@ -69,6 +69,23 @@
         </x-slot:actions>
     </x-page-header>
 
+    @if (session('status'))
+        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between">
+            <span>{{ session('status') }}</span>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-1">
+            <div class="font-bold">入力内容に不備があります：</div>
+            <ul class="list-disc list-inside space-y-0.5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @if($equipment->description || $equipment->storage_detail || $equipment->storage_location)
         <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 space-y-2 text-xs">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
@@ -204,6 +221,7 @@
                                         data-mode="edit"
                                         data-plan="{{ json_encode([
                                             'id' => $plan->id,
+                                            'status' => $plan->status,
                                             'day_phase' => $plan->day_phase,
                                             'action_type' => $plan->action_type,
                                             'title' => $plan->title,
@@ -327,8 +345,8 @@
             <div id="form-step-method"></div>
             <input type="hidden" name="equipment_id" value="{{ $equipment->id }}">
 
-            <!-- フェーズ & アクション種別 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- フェーズ & アクション種別 & 進捗ステータス -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                     <label for="step_day_phase" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">実施フェーズ <span class="text-rose-500">*</span></label>
                     <select id="step_day_phase" name="day_phase" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -342,6 +360,15 @@
                     <label for="step_action_type" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">動作アクション種別 <span class="text-rose-500">*</span></label>
                     <select id="step_action_type" name="action_type" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         @foreach(\App\Models\EquipmentLogisticsPlan::ACTION_TYPES as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="step_status" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">進捗ステータス <span class="text-rose-500">*</span></label>
+                    <select id="step_status" name="status" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        @foreach(\App\Models\EquipmentLogisticsPlan::STATUSES as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
                     </select>

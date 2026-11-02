@@ -101,6 +101,11 @@ function initStepModal() {
     document.querySelectorAll('[data-action="open-step-modal"]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const mode = btn.dataset.mode;
+            const setValue = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val ?? '';
+            };
+
             if (mode === 'create') {
                 if (modalTitle) {
                     modalTitle.innerHTML = '<span>⏱️</span><span>ステップの追加</span>';
@@ -110,6 +115,8 @@ function initStepModal() {
                     methodContainer.innerHTML = '';
                 }
                 form.reset();
+                setValue('step_status', 'planned');
+                setValue('step_display_order', 10);
             } else if (mode === 'edit') {
                 if (modalTitle) {
                     modalTitle.innerHTML = '<span>⏱️</span><span>ステップの編集</span>';
@@ -121,14 +128,11 @@ function initStepModal() {
                         methodContainer.innerHTML = '<input type="hidden" name="_method" value="PUT">';
                     }
 
-                    const setValue = (id, val) => {
-                        const el = document.getElementById(id);
-                        if (el) el.value = val ?? '';
-                    };
-
                     setValue('step_title', plan.title);
                     setValue('step_day_phase', plan.day_phase || 'pre_day');
                     setValue('step_action_type', plan.action_type || 'staging_move');
+                    setValue('step_status', plan.status || 'planned');
+                    setValue('step_display_order', plan.display_order ?? 10);
                     setValue('step_target_date', plan.target_date ? plan.target_date.substring(0, 10) : '');
                     setValue('step_start_time', plan.start_time ? plan.start_time.substring(0, 5) : '');
                     setValue('step_end_time', plan.end_time ? plan.end_time.substring(0, 5) : '');

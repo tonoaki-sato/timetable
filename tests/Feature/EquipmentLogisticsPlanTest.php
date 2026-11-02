@@ -259,6 +259,100 @@ class EquipmentLogisticsPlanTest extends TestCase
     }
 
     /**
+     * 計画ステップの編集更新（タイトル・日時・拠点・数量・表示順・ステータス等）の動作検証
+     */
+    public function test_plan_can_be_updated_successfully(): void
+    {
+        $this->actingAs($this->operator);
+
+        $equipment = Equipment::factory()->create();
+        $plan = EquipmentLogisticsPlan::factory()->create([
+            'equipment_id' => $equipment->id,
+            'title' => '初期ステップ名',
+            'day_phase' => 'pre_day',
+            'action_type' => 'staging_move',
+            'operator_type' => 'committee',
+            'status' => 'planned',
+            'display_order' => 10,
+        ]);
+
+        $response = $this->put(route('logistics.plans.update', $plan), [
+            'equipment_id' => $equipment->id,
+            'title' => '更新後のステップ名',
+            'day_phase' => 'day1_morning',
+            'action_type' => 'setup',
+            'operator_type' => 'event_company',
+            'status' => 'in_progress',
+            'target_date' => '2026-10-11',
+            'start_time' => '08:30',
+            'end_time' => '09:00',
+            'from_location_id' => $this->locationBansho->id,
+            'to_location_id' => $this->locationTaxOffice->id,
+            'quantity' => 20,
+            'quantity_note' => '本部テント前分',
+            'display_order' => 25,
+            'witness_required' => '1',
+            'witness_staff_id' => $this->staff->id,
+            'notes' => '雨天時はブルーシート養生必須',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('status');
+
+        $this->assertDatabaseHas('equipment_logistics_plans', [
+            'id' => $plan->id,
+            'title' => '更新後のステップ名',
+            'day_phase' => 'day1_morning',
+            'action_type' => 'setup',
+            'operator_type' => 'event_company',
+            'status' => 'in_progress',
+            'target_date' => '2026-10-11 00:00:00',
+            'start_time' => '08:30',
+            'end_time' => '09:00',
+            'from_location_id' => $this->locationBansho->id,
+            'to_location_id' => $this->locationTaxOffice->id,
+            'quantity' => 20,
+            'quantity_note' => '本部テント前分',
+            'display_order' => 25,
+            'witness_required' => true,
+            'witness_staff_id' => $this->staff->id,
+            'notes' => '雨天時はブルーシート養生必須',
+        ]);
+    }
+
+    /**
+     * status項目がリクエストに含まれない場合でも、既存のステータスを維持して更新できることの検証
+     */
+    public function test_plan_can_be_updated_without_status_field(): void
+    {
+        $this->actingAs($this->operator);
+
+        $equipment = Equipment::factory()->create();
+        $plan = EquipmentLogisticsPlan::factory()->create([
+            'equipment_id' => $equipment->id,
+            'title' => '更新前',
+            'day_phase' => 'pre_day',
+            'action_type' => 'staging_move',
+            'operator_type' => 'committee',
+            'status' => 'completed',
+        ]);
+
+        $response = $this->put(route('logistics.plans.update', $plan), [
+            'title' => '更新後タイトル',
+            'day_phase' => 'day2_evening',
+            'action_type' => 'return_storage',
+            'operator_type' => 'committee',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('equipment_logistics_plans', [
+            'id' => $plan->id,
+            'title' => '更新後タイトル',
+            'status' => 'completed',
+        ]);
+    }
+
+    /**
      * ステータス更新（計画中 ➔ 進行中 ➔ 完了）の動作検証
      */
     public function test_plan_status_update(): void

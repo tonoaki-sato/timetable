@@ -38,7 +38,7 @@ class UpdateEquipmentLogisticsPlanRequest extends FormRequest
             'operator_type' => ['required', 'string', 'in:committee,event_company'],
             'witness_required' => ['boolean'],
             'witness_staff_id' => ['nullable', 'exists:staff,id'],
-            'status' => ['required', 'string', 'in:planned,in_progress,completed,cancelled'],
+            'status' => ['sometimes', 'required', 'string', 'in:planned,in_progress,completed,cancelled'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'display_order' => ['nullable', 'integer', 'min:0'],
         ];
