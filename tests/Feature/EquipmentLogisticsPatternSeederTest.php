@@ -36,13 +36,13 @@ class EquipmentLogisticsPatternSeederTest extends TestCase
     }
 
     /**
-     * Seederが全6パターンおよびステップを正常に投入できること
+     * Seederが全7パターンおよびステップを正常に投入できること
      */
-    public function test_seeder_creates_all_six_patterns_with_steps(): void
+    public function test_seeder_creates_all_patterns_with_steps(): void
     {
         $this->seed(EquipmentLogisticsPatternSeeder::class);
 
-        $this->assertSame(6, EquipmentLogisticsPattern::count());
+        $this->assertSame(7, EquipmentLogisticsPattern::count());
 
         $expectedPatterns = [
             'カラーコーン型（交通規制連動・9ステップ）' => ['steps' => 9, 'target_type' => 'committee'],
@@ -51,6 +51,7 @@ class EquipmentLogisticsPatternSeederTest extends TestCase
             'レンタル機材・委員会設置（受取・回収立会要）' => ['steps' => 7, 'target_type' => 'rental'],
             'イベント会社一任型（設営・解体搬出）' => ['steps' => 2, 'target_type' => 'rental'],
             '放送設備型（事前配線・現地テント内保管）' => ['steps' => 5, 'target_type' => 'rental'],
+            '足踏み式給水設備型パターン' => ['steps' => 7, 'target_type' => 'rental'],
         ];
 
         foreach ($expectedPatterns as $name => $meta) {

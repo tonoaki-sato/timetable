@@ -97,7 +97,7 @@ class TimetableSeeder extends Seeder
                 'color' => 'red',
                 'icon' => '🏮',
                 'display_order' => 80,
-                'lead_staff_id' => 37, // 森 和成
+                'lead_staff_id' => 35, // 森 和成
                 'description' => '提灯取付・配線点検・点灯確認・翌日回収',
                 'is_core' => false,
                 'is_active' => true,

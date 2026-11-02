@@ -33,7 +33,10 @@ class DatabaseSeeder extends Seeder
         // 7. 搬出入パターン初期データ
         $this->call(EquipmentLogisticsPatternSeeder::class);
 
-        // 8. 機能設定初期データ
+        // 8. 機材および搬出入計画初期データ
+        $this->call(EquipmentSeeder::class);
+
+        // 9. 機能設定初期データ
         $this->call(FeatureSettingSeeder::class);
     }
 }
