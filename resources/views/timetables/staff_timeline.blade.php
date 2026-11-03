@@ -232,6 +232,7 @@
                         data-staff-id="{{ $staff->id }}"
                         data-staff-name="{{ $staff->name }}"
                         data-slot-time="{{ $slot['time'] }}"
+                        data-is-leader="{{ $isLeader ? '1' : '0' }}"
                         class="p-1 border-r border-slate-200 text-center align-middle hover:bg-indigo-50/70 group cursor-pointer transition relative"
                         title="クリックしてこの時間枠（{{ $slot['time'] }}）にタスクを配置">
                         <span class="text-slate-300 font-mono text-[10px] group-hover:hidden select-none">-</span>
@@ -263,14 +264,15 @@
                 <button type="button" data-action="close-timeline-modal" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">×</button>
             </div>
 
-            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between">
-                <div>
-                    <span class="text-slate-500 block">対象スタッフ:</span>
-                    <strong id="timelineStaffName" class="text-slate-800 text-sm"></strong>
+            <div class="px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 min-w-0">
+                    <span class="text-slate-500 shrink-0">対象スタッフ:</span>
+                    <span id="timelineStaffBadge" class="shrink-0"></span>
+                    <strong id="timelineStaffName" class="text-slate-900 font-bold truncate"></strong>
                 </div>
-                <div class="text-right">
-                    <span class="text-slate-500 block">対象時間枠:</span>
-                    <span id="timelineSlotTime" class="font-mono font-bold text-indigo-600 text-sm"></span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <span class="text-slate-500">時間枠:</span>
+                    <span id="timelineSlotTime" class="font-mono font-bold text-indigo-600"></span>
                 </div>
             </div>
 

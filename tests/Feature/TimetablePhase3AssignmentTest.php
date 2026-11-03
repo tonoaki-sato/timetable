@@ -107,9 +107,10 @@ class TimetablePhase3AssignmentTest extends TestCase
         $response->assertSee('id="timeline-leader-filter"', false);
         $response->assertSee('班長を表示');
 
-        // クイックアサインモーダルから担当役割フォームが削除されていること
+        // クイックアサインモーダルから担当役割フォームが削除され、対象スタッフバッジ要素が新設されていること
         $response->assertDontSee('timelineRoleInput');
         $response->assertDontSee('担当役割（任意）');
+        $response->assertSee('id="timelineStaffBadge"', false);
 
         // staff1 には班長属性とバッジ（👑アイコンなし）、staff2 には非班長属性と一般バッジが出力されていること
         $response->assertSee('data-is-leader="1"', false);

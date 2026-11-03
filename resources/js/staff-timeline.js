@@ -125,6 +125,7 @@ function initStaffTimelineQuickAssign() {
     }
 
     const staffNameEl = document.getElementById('timelineStaffName');
+    const staffBadgeEl = document.getElementById('timelineStaffBadge');
     const slotTimeEl = document.getElementById('timelineSlotTime');
     const taskListContainer = document.getElementById('timelineTaskList');
     const submitBtn = document.getElementById('timelineSubmitBtn');
@@ -135,13 +136,22 @@ function initStaffTimelineQuickAssign() {
     let selectedTaskId = null;
     let isSubmitting = false;
 
-    function openModal(staffId, staffName, slotTime) {
+    function openModal(staffId, staffName, slotTime, isLeader) {
         currentStaffId = staffId;
         currentSlotTime = slotTime;
         selectedTaskId = null;
         isSubmitting = false;
 
         if (staffNameEl) staffNameEl.textContent = staffName;
+        if (staffBadgeEl) {
+            if (isLeader) {
+                staffBadgeEl.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0';
+                staffBadgeEl.textContent = '班長';
+            } else {
+                staffBadgeEl.className = 'px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0';
+                staffBadgeEl.textContent = '一般';
+            }
+        }
         if (slotTimeEl) slotTimeEl.textContent = slotTime;
         if (errorEl) {
             errorEl.textContent = '';
@@ -225,8 +235,9 @@ function initStaffTimelineQuickAssign() {
             const staffId = parseInt(slotCell.dataset.staffId, 10);
             const staffName = slotCell.dataset.staffName || '';
             const slotTime = slotCell.dataset.slotTime || '';
+            const isLeader = slotCell.dataset.isLeader === '1';
             if (staffId && slotTime) {
-                openModal(staffId, staffName, slotTime);
+                openModal(staffId, staffName, slotTime, isLeader);
             }
             return;
         }
