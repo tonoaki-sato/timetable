@@ -352,13 +352,13 @@ class TimetableManagementTest extends TestCase
         $this->assertStringStartsWith('07:30', $syncedSchedule->start_time);
         $this->assertStringStartsWith('20:30', $syncedSchedule->end_time);
 
-        // スケジュール一覧画面にバッジ付きで表示されることを検証
+        // スケジュール一覧画面にアイコン付きで表示されることを検証（運行枠・進行表リンクは一覧から削除済み）
         $listResponse = $this->get(route('schedules.index'));
         $listResponse->assertStatus(200);
         $listResponse->assertSee('Day 1 本番運行スケジュール');
         $listResponse->assertSee('運行スケジュール');
-        $listResponse->assertSee(route('timetables.show', $timetable));
-        $listResponse->assertSee(route('timetable.index', ['timetable_id' => $timetable->id]));
+        $listResponse->assertDontSee('運行枠');
+        $listResponse->assertDontSee('現場進行マトリクスへ');
     }
 
     /**

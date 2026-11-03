@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Schedule;
 use App\Models\Staff;
+use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -62,6 +63,29 @@ class ScheduleManagementTest extends TestCase
         $catResponse->assertStatus(200);
         $catResponse->assertSee('定例幹事会ミーティング');
         $catResponse->assertDontSee('本祭パレード設営');
+
+        // 運行スケジュール（timetable）での絞り込み
+        $timetable = Timetable::factory()->create([
+            'name' => '宵宮運行タイムテーブル',
+        ]);
+        $timetableSchedule = Schedule::factory()->create([
+            'title' => '宵宮運行タイムテーブル',
+            'category' => 'operation',
+            'timetable_id' => $timetable->id,
+            'start_date' => '2027-10-11',
+        ]);
+        $timetableCatResponse = $this->get(route('schedules.index', ['category' => 'timetable']));
+        $timetableCatResponse->assertStatus(200);
+        $timetableCatResponse->assertSee('宵宮運行タイムテーブル');
+        $timetableCatResponse->assertDontSee('定例幹事会ミーティング');
+        $timetableCatResponse->assertDontSee('本祭パレード設営');
+
+        // 新規登録文言・操作列文言（編集・削除）の表示確認、および詳細ボタン・PKIサマリー非表示の確認
+        $indexResponse = $this->get(route('schedules.index'));
+        $indexResponse->assertSee('新規スケジュールを登録');
+        $indexResponse->assertSee('編集');
+        $indexResponse->assertSee('削除');
+        $indexResponse->assertDontSee('総登録件数');
 
         // キーワード検索
         $searchResponse = $this->get(route('schedules.index', ['search' => 'パレード']));
@@ -228,4 +252,3 @@ class ScheduleManagementTest extends TestCase
         ]);
     }
 }
-

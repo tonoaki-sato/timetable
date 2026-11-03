@@ -120,6 +120,24 @@ class Schedule extends Model
     }
 
     /**
+     * カテゴリ・種別の絵文字アイコン
+     */
+    public function getCategoryIconAttribute(): string
+    {
+        if ($this->is_linked_to_timetable) {
+            return '🏮';
+        }
+
+        return match ($this->category) {
+            'committee' => '🤝',
+            'permit' => '📑',
+            'briefing' => '📢',
+            'operation' => '🎪',
+            default => '📌',
+        };
+    }
+
+    /**
      * ステータスの日本語表示
      */
     public function getStatusLabelAttribute(): string
@@ -294,8 +312,12 @@ class Schedule extends Model
      */
     public function scopeCategory(Builder $query, ?string $category): Builder
     {
+        if ($category === 'timetable') {
+            return $query->whereNotNull('timetable_id');
+        }
+
         if ($category) {
-            return $query->where('category', $category);
+            return $query->where('category', $category)->whereNull('timetable_id');
         }
 
         return $query;

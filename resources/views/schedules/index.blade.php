@@ -11,7 +11,7 @@
             <a href="{{ route('schedules.create') }}"
                 class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
                 <span>➕</span>
-                <span>新規登録</span>
+                <span>新規スケジュールを登録</span>
             </a>
         </x-slot:actions>
         @endcan
@@ -31,43 +31,23 @@
     </div>
     @endif
 
-    <!-- 2. サマリーステータスカード -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <div class="bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-600">総登録件数</span>
-            <span class="text-base font-bold font-mono text-slate-900">{{ $statusSummary['total'] }}<span class="text-[11px] font-normal text-slate-400 ml-0.5">件</span></span>
-        </div>
-        <div class="bg-white px-3 py-2 rounded-lg border border-blue-200 shadow-2xs flex items-center justify-between">
-            <span class="text-xs font-bold text-blue-700">予定</span>
-            <span class="text-base font-bold font-mono text-blue-700">{{ $statusSummary['planned'] }}<span class="text-[11px] font-normal text-blue-400 ml-0.5">件</span></span>
-        </div>
-        <div class="bg-white px-3 py-2 rounded-lg border border-amber-200 shadow-2xs flex items-center justify-between">
-            <span class="text-xs font-bold text-amber-700">進行中</span>
-            <span class="text-base font-bold font-mono text-amber-700">{{ $statusSummary['in_progress'] }}<span class="text-[11px] font-normal text-amber-400 ml-0.5">件</span></span>
-        </div>
-        <div class="bg-white px-3 py-2 rounded-lg border border-emerald-200 shadow-2xs flex items-center justify-between">
-            <span class="text-xs font-bold text-emerald-700">完了</span>
-            <span class="text-base font-bold font-mono text-emerald-700">{{ $statusSummary['completed'] }}<span class="text-[11px] font-normal text-emerald-400 ml-0.5">件</span></span>
-        </div>
-    </div>
-
-    <!-- 3. タブ切り替え（全期間 / 直近予定 / 過去ログ） -->
-    <div class="flex items-center space-x-2 border-b border-slate-200">
+    <!-- 2. タブ切り替え（全期間 / 直近予定 / 過去ログ） -->
+    <div class="flex items-center space-x-2 border-b border-slate-200 pb-2">
         <a href="{{ route('schedules.index', array_merge(request()->except('page', 'tab'), [])) }}"
-            class="px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center space-x-2 {{ empty($currentTab) ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
+            class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ empty($currentTab) ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
             <span>📋 すべての期間</span>
         </a>
         <a href="{{ route('schedules.index', array_merge(request()->except('page'), ['tab' => 'upcoming'])) }}"
-            class="px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center space-x-2 {{ $currentTab === 'upcoming' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
+            class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ $currentTab === 'upcoming' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
             <span>📅 今後の予定</span>
         </a>
         <a href="{{ route('schedules.index', array_merge(request()->except('page'), ['tab' => 'past'])) }}"
-            class="px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center space-x-2 {{ $currentTab === 'past' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
+            class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ $currentTab === 'past' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
             <span>📁 過去の記録</span>
         </a>
     </div>
 
-    <!-- 4. 検索・絞り込みフォーム & カテゴリクイックフィルター -->
+    <!-- 3. 検索・絞り込みフォーム & カテゴリクイックフィルター -->
     <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
         <!-- カテゴリクイックボタン -->
         <div class="flex items-center space-x-2 border-b border-slate-100 pb-3 overflow-x-auto">
@@ -75,6 +55,11 @@
             <a href="{{ route('schedules.index', array_merge(request()->except('page', 'category'), [])) }}"
                 class="px-3 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap {{ empty($currentCategory) ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
                 すべて
+            </a>
+            <a href="{{ route('schedules.index', array_merge(request()->except('page'), ['category' => 'timetable'])) }}"
+                class="px-3 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center space-x-1 {{ $currentCategory === 'timetable' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                <span>🏮</span>
+                <span>運行スケジュール</span>
             </a>
             @foreach($categories as $key => $label)
             @php
@@ -146,118 +131,60 @@
         </form>
     </div>
 
-    <!-- 5. スケジュール一覧テーブル -->
+    <!-- 4. スケジュール一覧テーブル -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full border-collapse text-left text-xs">
                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 select-none">
                     <tr>
-                        <th class="px-4 py-3 font-bold whitespace-nowrap">開催日・期間</th>
-                        <th class="px-4 py-3 font-bold whitespace-nowrap">区分</th>
-                        <th class="px-4 py-3 font-bold">タイトル・議題</th>
-                        <th class="px-4 py-3 font-bold whitespace-nowrap">場所</th>
-                        <th class="px-4 py-3 font-bold whitespace-nowrap">担当・主催</th>
-                        <th class="px-4 py-3 font-bold whitespace-nowrap">状態</th>
-                        <th class="px-4 py-3 font-bold text-right whitespace-nowrap">操作</th>
+                        <th class="px-4 py-2.5 font-bold whitespace-nowrap">開催日・期間</th>
+                        <th class="px-4 py-2.5 font-bold">タイトル・議題</th>
+                        <th class="px-4 py-2.5 font-bold whitespace-nowrap">場所</th>
+                        <th class="px-4 py-2.5 font-bold whitespace-nowrap">担当・主催</th>
+                        <th class="px-4 py-2.5 font-bold whitespace-nowrap text-center">状態</th>
+                        <th class="px-4 py-2.5 font-bold text-right whitespace-nowrap">操作</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($schedules as $schedule)
                     <tr class="hover:bg-slate-50/70 transition">
                         <!-- 日時 -->
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <div class="space-y-0.5">
-                                <div class="font-mono font-bold text-slate-900 text-xs flex items-center space-x-1.5">
-                                    <span>{{ $schedule->start_date?->format('Y/m/d') }}</span>
-                                    @if($schedule->end_date && $schedule->end_date->ne($schedule->start_date))
-                                    <span class="text-slate-400 font-normal">〜 {{ $schedule->end_date->format('Y/m/d') }}</span>
-                                    @endif
-                                </div>
+                        <td class="px-4 py-2.5 whitespace-nowrap">
+                            <div class="flex items-center space-x-1.5 font-mono text-xs">
+                                <span class="font-bold text-slate-900">{{ $schedule->start_date?->format('Y/m/d') }}</span>
+                                @if($schedule->end_date && $schedule->end_date->ne($schedule->start_date))
+                                <span class="text-slate-400 font-normal">〜 {{ $schedule->end_date->format('Y/m/d') }}</span>
+                                @endif
                                 @if($schedule->formatted_time_range)
-                                <div class="text-[11px] font-mono text-indigo-600 font-medium">
-                                    ⏰ {{ $schedule->formatted_time_range }}
-                                </div>
+                                <span class="text-indigo-600 font-medium text-[11px] ml-1">⏰ {{ $schedule->formatted_time_range }}</span>
                                 @endif
                                 @if($schedule->is_today)
-                                <span class="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">本日</span>
+                                <span class="ml-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">本日</span>
                                 @endif
                             </div>
                         </td>
 
-                        <!-- 区分 -->
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            @if($schedule->is_linked_to_timetable)
-                            <span class="px-2 py-0.5 rounded text-[11px] font-bold border flex items-center space-x-1 w-max bg-rose-50 text-rose-700 border-rose-200">
-                                <span>🏮</span>
-                                <span>運行スケジュール</span>
-                            </span>
-                            @else
-                            @php
-                                $badgeMeta = match($schedule->category) {
-                                    'committee' => ['icon' => '🤝', 'class' => 'bg-indigo-50 text-indigo-700 border-indigo-200'],
-                                    'permit' => ['icon' => '📑', 'class' => 'bg-amber-50 text-amber-700 border-amber-200'],
-                                    'briefing' => ['icon' => '📢', 'class' => 'bg-sky-50 text-sky-700 border-sky-200'],
-                                    'operation' => ['icon' => '🎪', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200'],
-                                    default => ['icon' => '📌', 'class' => 'bg-slate-100 text-slate-700 border-slate-200'],
-                                };
-                            @endphp
-                            <span class="px-2 py-0.5 rounded text-[11px] font-bold border flex items-center space-x-1 w-max {{ $badgeMeta['class'] }}">
-                                <span>{{ $badgeMeta['icon'] }}</span>
-                                <span>{{ $schedule->category_label }}</span>
-                            </span>
-                            @endif
-                        </td>
-
-                        <!-- タイトル・議題 -->
-                        <td class="px-4 py-3">
-                            <div class="space-y-1 max-w-md">
-                                <div class="flex items-center space-x-1.5 flex-wrap">
-                                    <a href="{{ route('schedules.show', $schedule) }}" class="font-bold text-slate-900 hover:text-indigo-600 transition">
-                                        {{ $schedule->title }}
-                                    </a>
-                                    @if($schedule->timetable_id)
-                                    <a href="{{ route('timetables.show', $schedule->timetable_id) }}"
-                                        class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 inline-flex items-center space-x-0.5 transition"
-                                        title="タイムテーブル詳細へ">
-                                        <span>⏱️</span>
-                                        <span>運行枠</span>
-                                    </a>
-                                    <a href="{{ route('timetable.index', ['timetable_id' => $schedule->timetable_id]) }}"
-                                        class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 inline-flex items-center space-x-0.5 transition"
-                                        title="現場進行マトリクスへ">
-                                        <span>📊</span>
-                                        <span>進行表</span>
-                                    </a>
-                                    @endif
-                                </div>
-                                @if($schedule->description)
-                                <p class="text-[11px] text-slate-500 line-clamp-1 leading-relaxed">
-                                    {{ $schedule->description }}
-                                </p>
-                                @endif
-                                @if($schedule->notice_note)
-                                <p class="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60 line-clamp-1">
-                                    📌 {{ $schedule->notice_note }}
-                                </p>
-                                @endif
+                        <!-- タイトル・議題 (タイトルの前に個々のアイコンを表示) -->
+                        <td class="px-4 py-2.5">
+                            <div class="flex items-center space-x-1.5 min-w-[200px]">
+                                <span class="text-sm shrink-0" title="{{ $schedule->is_linked_to_timetable ? '運行スケジュール' : $schedule->category_label }}">{{ $schedule->category_icon }}</span>
+                                <a href="{{ route('schedules.show', $schedule) }}" class="font-bold text-slate-900 hover:text-indigo-600 transition truncate">
+                                    {{ $schedule->title }}
+                                </a>
                             </div>
                         </td>
 
                         <!-- 場所 -->
-                        <td class="px-4 py-3 whitespace-nowrap text-slate-600">
+                        <td class="px-4 py-2.5 whitespace-nowrap text-slate-600">
                             {{ $schedule->location ?: '-' }}
                         </td>
 
                         <!-- 担当・主催 -->
-                        <td class="px-4 py-3 whitespace-nowrap">
+                        <td class="px-4 py-2.5 whitespace-nowrap text-xs">
                             @if($schedule->assignee)
-                            <div class="font-medium text-slate-900">
-                                {{ $schedule->assignee->name }}
-                            </div>
+                            <span class="font-medium text-slate-900">{{ $schedule->assignee->name }}</span>
                             @if($schedule->assignee->affiliation)
-                            <div class="text-[10px] text-slate-400">
-                                {{ $schedule->assignee->affiliation }}
-                            </div>
+                            <span class="text-[11px] text-slate-400 ml-1">({{ $schedule->assignee->affiliation }})</span>
                             @endif
                             @else
                             <span class="text-slate-400 italic">未定</span>
@@ -265,7 +192,7 @@
                         </td>
 
                         <!-- 状態 -->
-                        <td class="px-4 py-3 whitespace-nowrap">
+                        <td class="px-4 py-2.5 whitespace-nowrap text-center">
                             @php
                                 $statusClass = match($schedule->status) {
                                     'planned' => 'bg-blue-50 text-blue-700 border-blue-200',
@@ -281,20 +208,14 @@
                         </td>
 
                         <!-- 操作 -->
-                        <td class="px-4 py-3 whitespace-nowrap text-right">
+                        <td class="px-4 py-2.5 whitespace-nowrap text-right">
                             <div class="flex items-center justify-end space-x-1.5">
-                                <a href="{{ route('schedules.show', $schedule) }}"
-                                    class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center space-x-1"
-                                    title="詳細・LINE告知文">
-                                    <span>👁️</span>
-                                    <span>詳細</span>
-                                </a>
-
                                 @can('update', $schedule)
                                 <a href="{{ route('schedules.edit', $schedule) }}"
-                                    class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition"
+                                    class="inline-flex items-center space-x-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition"
                                     title="編集">
-                                    ✏️
+                                    <span>✏️</span>
+                                    <span>編集</span>
                                 </a>
                                 @endcan
 
@@ -304,9 +225,10 @@
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
-                                        class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                                        class="inline-flex items-center space-x-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition cursor-pointer"
                                         title="削除">
-                                        🗑️
+                                        <span>🗑️</span>
+                                        <span>削除</span>
                                     </button>
                                 </form>
                                 @endcan
@@ -315,7 +237,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-slate-400">
+                        <td colspan="6" class="px-4 py-8 text-center text-slate-400">
                             <span class="text-2xl block mb-2">📋</span>
                             条件に一致するスケジュールはありません。
                         </td>
@@ -334,4 +256,3 @@
 
 </div>
 </x-layouts.app>
-
