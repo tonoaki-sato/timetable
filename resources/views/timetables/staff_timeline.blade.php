@@ -1,92 +1,84 @@
-<x-layouts.app :title="$timetable->name . ' - スタッフ別リソースタイムライン'">
-<div class="max-w-[1700px] mx-auto px-2 sm:px-4 lg:px-6 py-4 space-y-4">
+<x-layouts.app :title="$timetable->name . ' - 人員配置（スタッフ稼働タイムライン）'">
+<div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- ナビゲーション & アクションバー -->
-    <div class="flex flex-wrap items-center justify-between gap-3 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-2xs print:hidden">
-        <div class="flex items-center space-x-2 text-xs text-slate-500">
+    <!-- ナビゲーション & ヘッダー (共通 x-page-header) -->
+    <x-page-header
+        :title="$timetable->name . ' 人員配置'"
+        icon="👥"
+        description="全スタッフの稼働状況と空き枠を時系列で俯瞰し、空き枠からの即時配置や過不足調整を行います。">
+        <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
                 <span>⏱️</span>
                 <span>タイムテーブル一覧</span>
             </a>
             <span>/</span>
-            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition">
-                <span>📅 {{ $timetable->name }}</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+                <span>📅</span>
+                <span>{{ $timetable->name }}</span>
             </a>
             <span>/</span>
-            <span class="text-slate-700 font-bold">👥 人員配置（スタッフタイムライン）</span>
-        </div>
+            <span class="text-slate-700 font-bold">👥 人員配置</span>
+        </x-slot:breadcrumbs>
 
-        <div class="flex items-center space-x-2">
+        <x-slot:badges>
+            <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                Step 4 人員配置
+            </span>
+            <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                📅 {{ $timetable->target_date?->format('Y年m月d日') }}
+            </span>
+            <span class="px-2.5 py-0.5 rounded text-xs font-mono text-slate-600 bg-slate-100 border border-slate-200">
+                ⏱️ {{ substr($timetable->start_time, 0, 5) }} 〜 {{ substr($timetable->end_time, 0, 5) }}
+            </span>
+        </x-slot:badges>
+
+        <x-slot:actions>
             <a href="{{ route('preparation-navigator.index') }}"
-                class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
                 <span>🚀</span>
                 <span>運行準備ナビ</span>
             </a>
 
             <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
-                class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
                 <span>⏱️</span>
-                <span>全体マトリクス進行表へ</span>
+                <span>全体マトリクス進行表</span>
             </a>
 
             <button type="button" data-action="print"
-                class="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs">
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs">
                 <span>🖨️</span>
                 <span>A4横 印刷</span>
             </button>
 
             <a href="{{ route('timetables.show', $timetable) }}"
-                class="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
-                <span>←</span>
-                <span>タイムテーブル詳細へ戻る</span>
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>📅</span>
+                <span>運行日詳細</span>
             </a>
+        </x-slot:actions>
+    </x-page-header>
+
+    <!-- まつり運行準備ステップガイド (Step 4 人員配置) -->
+    <x-timetable-workflow-steps :current-step="4" :timetable="$timetable" />
+
+    <!-- 統計サマリーステータスカード (コンパクト横型) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 print:hidden">
+        <div class="bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-600">全スタッフ</span>
+            <span class="text-base font-bold font-mono text-slate-900">{{ $totalStaffCount }}<span class="text-[11px] font-normal text-slate-400 ml-0.5">名</span></span>
         </div>
-    </div>
-
-    <!-- ヘッダーカード -->
-    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-5 text-white shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/40">
-                    Step 4 人員配置
-                </span>
-                <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-                    📅 {{ $timetable->target_date?->format('Y年m月d日') }}
-                </span>
-                <span class="px-2.5 py-0.5 rounded text-xs font-mono text-slate-300 bg-slate-800 border border-slate-700">
-                    ⏱️ {{ substr($timetable->start_time, 0, 5) }} 〜 {{ substr($timetable->end_time, 0, 5) }}
-                </span>
-                <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-400/30">
-                    👥 スタッフ稼働ガントチャート
-                </span>
-            </div>
-
-            <h1 class="text-xl sm:text-2xl font-bold tracking-tight">
-                {{ $timetable->name }} - スタッフ稼働タイムライン
-            </h1>
-            <p class="text-xs text-slate-300 mt-1">
-                全スタッフのタスク配置状況と空き枠を時系列で俯瞰できます。空き枠をクリックすると不足タスクへ直接アサインできます。
-            </p>
+        <div class="bg-white px-3.5 py-2 rounded-xl border border-emerald-200 shadow-2xs flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-700">稼働配置中</span>
+            <span class="text-base font-bold font-mono text-emerald-700">{{ $assignedStaffCount }}<span class="text-[11px] font-normal text-emerald-500 ml-0.5">名</span></span>
         </div>
-
-        <!-- 統計サマリーウィジェット -->
-        <div class="grid grid-cols-4 gap-2 shrink-0">
-            <div class="bg-slate-800/80 backdrop-blur p-2.5 rounded-xl border border-slate-700 text-center min-w-[70px]">
-                <span class="text-[10px] text-slate-400 block font-bold">全スタッフ</span>
-                <span class="text-lg font-bold font-mono text-white">{{ $totalStaffCount }}</span>
-            </div>
-            <div class="bg-slate-800/80 backdrop-blur p-2.5 rounded-xl border border-slate-700 text-center min-w-[70px]">
-                <span class="text-[10px] text-emerald-400 block font-bold">稼働配置中</span>
-                <span class="text-lg font-bold font-mono text-emerald-400">{{ $assignedStaffCount }}</span>
-            </div>
-            <div class="bg-slate-800/80 backdrop-blur p-2.5 rounded-xl border border-slate-700 text-center min-w-[70px]">
-                <span class="text-[10px] text-amber-400 block font-bold">待機・未配置</span>
-                <span class="text-lg font-bold font-mono text-amber-400">{{ $unassignedStaffCount }}</span>
-            </div>
-            <div class="bg-slate-800/80 backdrop-blur p-2.5 rounded-xl border border-slate-700 text-center min-w-[70px]">
-                <span class="text-[10px] text-sky-400 block font-bold">現場受付済</span>
-                <span class="text-lg font-bold font-mono text-sky-400">{{ $checkedInCount }}</span>
-            </div>
+        <div class="bg-white px-3.5 py-2 rounded-xl border border-amber-200 shadow-2xs flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-700">待機・未配置</span>
+            <span class="text-base font-bold font-mono text-amber-700">{{ $unassignedStaffCount }}<span class="text-[11px] font-normal text-amber-500 ml-0.5">名</span></span>
+        </div>
+        <div class="bg-white px-3.5 py-2 rounded-xl border border-sky-200 shadow-2xs flex items-center justify-between">
+            <span class="text-xs font-bold text-sky-700">現場受付済</span>
+            <span class="text-base font-bold font-mono text-sky-700">{{ $checkedInCount }}<span class="text-[11px] font-normal text-sky-500 ml-0.5">名</span></span>
         </div>
     </div>
 

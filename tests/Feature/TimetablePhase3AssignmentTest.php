@@ -89,7 +89,8 @@ class TimetablePhase3AssignmentTest extends TestCase
         $this->actingAs($this->operator);
         $response = $this->get(route('timetables.staff-timeline', $this->timetable));
         $response->assertStatus(200);
-        $response->assertSee('まつり運行 タイムライン検証 - スタッフ稼働タイムライン');
+        $response->assertSee('まつり運行 タイムライン検証 人員配置');
+        $response->assertSee('スタッフ稼働タイムライン');
         $response->assertSee('山下 達也');
         $response->assertSee('佐藤 健太');
         $response->assertSee('神輿先導警備');
