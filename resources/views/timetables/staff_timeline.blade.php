@@ -62,26 +62,6 @@
     <!-- まつり運行準備ステップガイド (Step 4 人員配置) -->
     <x-timetable-workflow-steps :current-step="4" :timetable="$timetable" />
 
-    <!-- 統計サマリーステータスカード (コンパクト横型) -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 print:hidden">
-        <div class="bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-600">全スタッフ</span>
-            <span class="text-base font-bold font-mono text-slate-900">{{ $totalStaffCount }}<span class="text-[11px] font-normal text-slate-400 ml-0.5">名</span></span>
-        </div>
-        <div class="bg-white px-3.5 py-2 rounded-xl border border-emerald-200 shadow-2xs flex items-center justify-between">
-            <span class="text-xs font-bold text-emerald-700">稼働配置中</span>
-            <span class="text-base font-bold font-mono text-emerald-700">{{ $assignedStaffCount }}<span class="text-[11px] font-normal text-emerald-500 ml-0.5">名</span></span>
-        </div>
-        <div class="bg-white px-3.5 py-2 rounded-xl border border-amber-200 shadow-2xs flex items-center justify-between">
-            <span class="text-xs font-bold text-amber-700">待機・未配置</span>
-            <span class="text-base font-bold font-mono text-amber-700">{{ $unassignedStaffCount }}<span class="text-[11px] font-normal text-amber-500 ml-0.5">名</span></span>
-        </div>
-        <div class="bg-white px-3.5 py-2 rounded-xl border border-sky-200 shadow-2xs flex items-center justify-between">
-            <span class="text-xs font-bold text-sky-700">現場受付済</span>
-            <span class="text-base font-bold font-mono text-sky-700">{{ $checkedInCount }}<span class="text-[11px] font-normal text-sky-500 ml-0.5">名</span></span>
-        </div>
-    </div>
-
     <!-- フィルターバー -->
     <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3 print:hidden">
         <div class="flex flex-wrap items-center gap-2 flex-1">
