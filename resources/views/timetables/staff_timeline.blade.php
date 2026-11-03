@@ -283,12 +283,6 @@
                 </div>
             </div>
 
-            <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-700">担当役割（任意）:</label>
-                <input type="text" id="timelineRoleInput" placeholder="例: 一般担当、案内、チーフ" value="担当"
-                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
-            </div>
-
             <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
                 <button type="button" data-action="close-timeline-modal"
                     class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition cursor-pointer">

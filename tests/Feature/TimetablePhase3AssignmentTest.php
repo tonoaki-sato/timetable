@@ -107,6 +107,10 @@ class TimetablePhase3AssignmentTest extends TestCase
         $response->assertSee('id="timeline-leader-filter"', false);
         $response->assertSee('班長を表示');
 
+        // クイックアサインモーダルから担当役割フォームが削除されていること
+        $response->assertDontSee('timelineRoleInput');
+        $response->assertDontSee('担当役割（任意）');
+
         // staff1 には班長属性とバッジ（👑アイコンなし）、staff2 には非班長属性と一般バッジが出力されていること
         $response->assertSee('data-is-leader="1"', false);
         $response->assertSee('data-is-leader="0"', false);
@@ -366,6 +370,37 @@ class TimetablePhase3AssignmentTest extends TestCase
         $responseNotAssigned->assertJson([
             'success' => false,
             'message' => '交代対象のスタッフはこのタスクにアサインされていません。',
+        ]);
+    }
+
+    /**
+     * クイックアサインモーダルからの配置（role_description省略時）が正常に完了すること
+     */
+    public function test_can_quick_assign_staff_without_role_description(): void
+    {
+        $this->actingAs($this->operator);
+
+        $staff = Staff::factory()->create([
+            'name' => '配置テスト スタッフ',
+            'is_active' => true,
+        ]);
+
+        $response = $this->postJson(route('timetable-tasks.assign-bulk', $this->task), [
+            'staff_ids' => [$staff->id],
+            'force' => 0,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'assigned_count' => 1,
+        ]);
+
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $this->task->id,
+            'staff_id' => $staff->id,
+            'role_description' => null,
+            'attendance_status' => 'assigned',
         ]);
     }
 }

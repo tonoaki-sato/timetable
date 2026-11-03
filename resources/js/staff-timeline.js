@@ -127,7 +127,6 @@ function initStaffTimelineQuickAssign() {
     const staffNameEl = document.getElementById('timelineStaffName');
     const slotTimeEl = document.getElementById('timelineSlotTime');
     const taskListContainer = document.getElementById('timelineTaskList');
-    const roleInput = document.getElementById('timelineRoleInput');
     const submitBtn = document.getElementById('timelineSubmitBtn');
     const errorEl = document.getElementById('timelineErrorMessage');
 
@@ -144,7 +143,6 @@ function initStaffTimelineQuickAssign() {
 
         if (staffNameEl) staffNameEl.textContent = staffName;
         if (slotTimeEl) slotTimeEl.textContent = slotTime;
-        if (roleInput) roleInput.value = '担当';
         if (errorEl) {
             errorEl.textContent = '';
             errorEl.classList.add('hidden');
@@ -189,9 +187,13 @@ function initStaffTimelineQuickAssign() {
                     <input type="radio" name="timeline_task_id" value="${t.id}" ${selectedTaskId === t.id ? 'checked' : ''}
                         class="timeline-task-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
                     <div class="truncate">
-                        <div class="text-slate-900 font-bold">${escapeHtml(t.title)}</div>
-                        <div class="text-[10px] text-slate-500">
-                            <span>${escapeHtml(t.lane)}</span> ｜ <span class="font-mono">${escapeHtml(t.start_time)} 〜 ${escapeHtml(t.end_time)}</span>
+                        <div class="text-slate-900 font-bold flex items-center gap-1.5">
+                            <span>${escapeHtml(t.lane)}</span>
+                            <span class="text-slate-400 font-normal">｜</span>
+                            <span class="font-mono">${escapeHtml(t.start_time)} 〜 ${escapeHtml(t.end_time)}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">
+                            ${escapeHtml(t.title)}
                         </div>
                     </div>
                 </div>
@@ -266,7 +268,6 @@ function initStaffTimelineQuickAssign() {
 
             try {
                 const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-                const role = roleInput ? roleInput.value : '担当';
 
                 const res = await fetch(`/timetable-tasks/${selectedTaskId}/assign-bulk`, {
                     method: 'POST',
@@ -277,7 +278,6 @@ function initStaffTimelineQuickAssign() {
                     },
                     body: JSON.stringify({
                         staff_ids: [currentStaffId],
-                        role_description: role,
                         force: 0
                     })
                 });
