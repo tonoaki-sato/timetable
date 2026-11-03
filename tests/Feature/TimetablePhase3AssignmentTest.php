@@ -84,6 +84,27 @@ class TimetablePhase3AssignmentTest extends TestCase
         // 班長設定（staff1 を神輿誘導班の班長に任命）
         $this->lane->update(['lead_staff_id' => $staff1->id]);
 
+        // 班長未設定のレーンとタスクを作成し、staff2にアサイン
+        $laneWithoutLead = Lane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'name' => '道路清掃班',
+            'lead_staff_id' => null,
+        ]);
+        $taskWithoutLead = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $laneWithoutLead->id,
+            'title' => '路面清掃',
+            'start_time' => '13:00:00',
+            'end_time' => '14:00:00',
+            'required_people_count' => 1,
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $taskWithoutLead->id,
+            'staff_id' => $staff2->id,
+            'role_description' => '清掃員',
+            'attendance_status' => 'assigned',
+        ]);
+
         // 未ログイン時はログイン画面へリダイレクト
         $response = $this->get(route('timetables.staff-timeline', $this->timetable));
         $response->assertRedirect(route('login'));
@@ -97,17 +118,21 @@ class TimetablePhase3AssignmentTest extends TestCase
         $response->assertSee('山下 達也');
         $response->assertSee('佐藤 健太');
         $response->assertSee('神輿先導警備');
-        $response->assertSee('先導誘導チーフ');
+        // タスク枠からはロール（先導誘導チーフ等の班長・担当）が削除され、代わりに当該タスクの班長名（未設定時は班長未定）が表示されること
+        $response->assertDontSee('先導誘導チーフ');
+        $response->assertSee('班長: 山下 達也');
+        $response->assertSee('班長未定');
 
         // 所属団体セレクトボックスは削除され、班長表示切り替えチェックボックスが存在すること
         $response->assertDontSee('timeline-affiliation-select');
         $response->assertSee('id="timeline-leader-filter"', false);
-        $response->assertSee('👑 班長を表示');
+        $response->assertSee('班長を表示');
 
-        // staff1 には班長属性とバッジ、staff2 には非班長属性と一般バッジが出力されていること
+        // staff1 には班長属性とバッジ（👑アイコンなし）、staff2 には非班長属性と一般バッジが出力されていること
         $response->assertSee('data-is-leader="1"', false);
         $response->assertSee('data-is-leader="0"', false);
         $response->assertSee('班長（担当班: 神輿誘導班）');
+        $response->assertDontSee('<span>👑</span>', false);
         $response->assertSee('一般スタッフ');
         $response->assertSee('title="神輿誘導班"', false);
         $response->assertSee('title="ボランティアA"', false);

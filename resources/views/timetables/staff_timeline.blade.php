@@ -93,7 +93,7 @@
             <label class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer select-none transition">
                 <input type="checkbox" id="timeline-leader-filter" checked
                     class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                <span>👑 班長を表示</span>
+                <span>班長を表示</span>
                 <span class="text-[11px] font-normal text-slate-500">({{ count($leadStaffIds) }})</span>
             </label>
         </div>
@@ -151,9 +151,8 @@
                         <div class="flex items-center justify-between gap-1.5">
                             <div class="flex items-center gap-1.5 min-w-0">
                                 @if($isLeader)
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0 inline-flex items-center gap-0.5" title="班長（担当班: {{ $laneNamesByLeadStaff[$staff->id] ?? '' }}）">
-                                    <span>👑</span>
-                                    <span>班長</span>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0" title="班長（担当班: {{ $laneNamesByLeadStaff[$staff->id] ?? '' }}）">
+                                    班長
                                 </span>
                                 @else
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0" title="一般スタッフ">
@@ -192,6 +191,7 @@
                         $task = $cell['task'];
                         $assignment = $cell['assignment'];
                         $laneRel = $task->laneRelation;
+                        $taskLeaderName = $laneRel?->leadStaff?->name;
                         $badgeBg = match($laneRel?->color ?? 'indigo') {
                             'amber' => 'bg-amber-100 border-amber-300 text-amber-900',
                             'sky' => 'bg-sky-100 border-sky-300 text-sky-900',
@@ -215,9 +215,11 @@
                                     {{ substr($task->start_time, 0, 5) }}〜{{ substr($task->end_time, 0, 5) }}
                                 </span>
                             </div>
-                            <div class="text-[10px] flex items-center justify-between opacity-80">
-                                <span>{{ $task->lane }}</span>
-                                <span class="font-medium">{{ $assignment->role_description ?: '担当' }}</span>
+                            <div class="text-[10px] flex items-center justify-between gap-1 opacity-80">
+                                <span class="truncate">{{ $task->lane }}</span>
+                                <span class="font-medium truncate shrink-0" title="班長: {{ $taskLeaderName ?: '未定' }}">
+                                    {{ $taskLeaderName ? '班長: ' . $taskLeaderName : '班長未定' }}
+                                </span>
                             </div>
                         </div>
                     </td>

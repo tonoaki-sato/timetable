@@ -27,7 +27,7 @@ class StaffTimelineController extends Controller
         $staffIds = $activeStaff->pluck('id')->all();
 
         // 当該運行日の全タスクとアサイン情報を取得
-        $tasks = TimetableTask::with(['laneRelation', 'assignments.staff'])
+        $tasks = TimetableTask::with(['laneRelation.leadStaff', 'assignments.staff'])
             ->where('timetable_id', $timetable->id)
             ->orderBy('start_time')
             ->get();
