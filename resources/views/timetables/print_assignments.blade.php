@@ -98,7 +98,7 @@
                             @endforelse
                         </td>
                         <td class="col-notes">
-                            {{ $task->description ?: '-' }}
+                            {{ $task->content ?: '-' }}
                         </td>
                     </tr>
                     @empty

@@ -241,7 +241,7 @@
                                     @elseif($plan->day_phase === 'day2_morning') bg-teal-100 text-teal-800
                                     @elseif($plan->day_phase === 'day2_evening') bg-amber-100 text-amber-800
                                     @else bg-slate-100 text-slate-700 @endif">
-                                    {{ $plan->day_phase_label }}
+                                    {{ $plan->phase_label }}
                                 </span>
                                 <span class="text-[10px] font-bold {{ $plan->isCompleted() ? 'text-emerald-700' : 'text-slate-500' }}">
                                     {{ $plan->status_label }}

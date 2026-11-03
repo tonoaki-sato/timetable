@@ -165,11 +165,11 @@
                                     @elseif($plan->day_phase === 'day2_morning') bg-teal-50 text-teal-700 border-teal-200
                                     @elseif($plan->day_phase === 'day2_evening') bg-amber-50 text-amber-700 border-amber-200
                                     @else bg-slate-50 text-slate-700 border-slate-200 @endif">
-                                    {{ $plan->day_phase_label }}
+                                    {{ $plan->phase_label }}
                                 </span>
                                 <span class="font-bold text-sm text-slate-900">{{ $plan->title }}</span>
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                    {{ $plan->action_type_label }}
+                                    {{ $plan->action_label }}
                                 </span>
                                 @if($plan->witness_required)
                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
@@ -278,7 +278,7 @@
                             <div class="flex items-center space-x-3 flex-wrap gap-y-1">
                                 <div class="flex items-center space-x-1">
                                     <span class="text-slate-400">担当:</span>
-                                    <span class="font-bold text-slate-800">{{ $plan->operator_type_label }}</span>
+                                    <span class="font-bold text-slate-800">{{ $plan->operator_label }}</span>
                                     @if($plan->operator_type === 'event_company' && $plan->contractor_name)
                                         <span class="text-sky-700 font-bold font-mono">({{ $plan->contractor_name }})</span>
                                     @endif

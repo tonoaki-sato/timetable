@@ -215,7 +215,7 @@
                     $isNext = ($nextTask && $assignment->id === $nextTask->id);
                     $isCompleted = ($assignment->attendance_status === 'completed');
                     $laneLeadStaff = $task?->laneRelation?->leadStaff;
-                    $hasDetails = !empty($task?->content) || !empty($task?->description) || !empty($task?->equipment);
+                    $hasDetails = !empty($task?->content);
                 @endphp
 
                 @if($currentDateHeader !== $dateStr)
@@ -324,18 +324,6 @@
                             <div class="flex items-start space-x-1.5">
                                 <span class="text-indigo-400 font-bold shrink-0">詳細:</span>
                                 <span class="text-slate-200 whitespace-pre-line leading-relaxed">{{ $task->content }}</span>
-                            </div>
-                            @endif
-                            @if($task?->description)
-                            <div class="flex items-start space-x-1.5 {{ $task?->content ? 'pt-1 border-t border-slate-800/60' : '' }}">
-                                <span class="text-indigo-400 font-bold shrink-0">備考:</span>
-                                <span class="text-slate-300 whitespace-pre-line leading-relaxed">{{ $task->description }}</span>
-                            </div>
-                            @endif
-                            @if($task?->equipment)
-                            <div class="flex items-start space-x-1.5 {{ ($task?->content || $task?->description) ? 'pt-1 border-t border-slate-800/60' : '' }}">
-                                <span class="text-indigo-400 font-bold shrink-0">機材:</span>
-                                <span class="text-slate-200">🧰 {{ $task->equipment }}</span>
                             </div>
                             @endif
                         </div>

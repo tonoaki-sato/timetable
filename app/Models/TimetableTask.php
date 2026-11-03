@@ -21,7 +21,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'end_time',
     'required_people_count',
     'is_at_least',
-    'description',
     'is_critical',
     'requires_review',
     'status',

@@ -22,7 +22,6 @@ return new class extends Migration
             $table->time('end_time');
             $table->unsignedSmallInteger('required_people_count')->default(1);
             $table->boolean('is_at_least')->default(false); // 「〇〇名以上」フラグ
-            $table->text('description')->nullable(); // 備考・特記事項
             $table->boolean('is_critical')->default(false);
             $table->boolean('requires_review')->default(false);
             $table->string('status', 30)->default('not_started')->index();

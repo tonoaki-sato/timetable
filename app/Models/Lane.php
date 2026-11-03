@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'timetable_id',
     'name',
-    'code',
     'color',
     'icon',
     'lead_staff_id',

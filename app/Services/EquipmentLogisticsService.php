@@ -248,14 +248,19 @@ class EquipmentLogisticsService
     public function getLocationsStatusData(): array
     {
         $locations = Location::active()->ordered()->with(['type', 'schedules'])->get();
+        $locationIds = $locations->pluck('id')->all();
+
+        $allPlans = EquipmentLogisticsPlan::with(['equipment.lane'])
+            ->whereIn('to_location_id', $locationIds)
+            ->orderBy('target_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->get()
+            ->groupBy('to_location_id');
+
         $result = [];
 
         foreach ($locations as $loc) {
-            $plansToLocation = EquipmentLogisticsPlan::with(['equipment.lane'])
-                ->where('to_location_id', $loc->id)
-                ->orderBy('target_date', 'asc')
-                ->orderBy('start_time', 'asc')
-                ->get();
+            $plansToLocation = $allPlans->get($loc->id, collect());
 
             $nightPlans = $plansToLocation->where('action_type', 'night_storage');
             $collectionPlans = $plansToLocation->where('action_type', 'collection_staging');

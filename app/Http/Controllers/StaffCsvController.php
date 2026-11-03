@@ -3,17 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Staff;
-use App\Services\StaffService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StaffCsvController extends Controller
 {
-    public function __construct(
-        protected StaffService $staffService
-    ) {}
-
     /**
      * スタッフ名簿のCSVエクスポート（UTF-8 with BOM）
      */

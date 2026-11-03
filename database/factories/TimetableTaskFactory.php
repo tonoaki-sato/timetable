@@ -38,7 +38,6 @@ class TimetableTaskFactory extends Factory
             'end_time' => '10:45:00',
             'required_people_count' => fake()->numberBetween(2, 4),
             'is_at_least' => false,
-            'description' => fake()->realText(40),
             'is_critical' => false,
             'requires_review' => false,
             'status' => 'not_started',

@@ -70,10 +70,10 @@
     <!-- ルート: 移動元 ➔ 移動先 -->
     <div class="flex items-center space-x-1.5 text-[11px] text-slate-600 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
         <span class="text-slate-500 shrink-0">🛫</span>
-        <span class="font-medium truncate text-slate-700">{{ $plan->from_location ?: '（指定なし）' }}</span>
+        <span class="font-medium truncate text-slate-700">{{ $plan->resolved_from_location }}</span>
         <span class="text-slate-400 font-bold shrink-0">➔</span>
         <span class="text-slate-500 shrink-0">🛬</span>
-        <span class="font-bold truncate text-slate-900">{{ $plan->to_location ?: '（指定なし）' }}</span>
+        <span class="font-bold truncate text-slate-900">{{ $plan->resolved_to_location }}</span>
     </div>
 
     <!-- 貸切期間・整合性アラート（該当時） -->

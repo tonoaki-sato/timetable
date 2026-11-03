@@ -36,7 +36,6 @@ class StoreLaneRequest extends FormRequest
                 'max:100',
                 Rule::unique('lanes')->where('timetable_id', $timetableId),
             ],
-            'code' => ['nullable', 'string', 'max:50'],
             'color' => [
                 'required',
                 'string',

@@ -133,7 +133,6 @@ class ContentSecurityPolicyTest extends TestCase
             'start_time' => now()->subMinute()->format('H:i:s'),
             'end_time' => now()->addHour()->format('H:i:s'),
             'content' => 'テントフレーム組み立ておよびウェイト固定。',
-            'description' => '風速注意。',
         ]);
 
         TaskStaffAssignment::factory()->create([

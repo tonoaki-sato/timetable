@@ -277,15 +277,13 @@ class MeetingManagementTest extends TestCase
     /**
      * hostおよびassigneeリレーションが正しく動作すること
      */
-    public function test_host_and_assignee_relationships(): void
+    public function test_host_relationship(): void
     {
         $meeting = Meeting::factory()->create([
             'staff_id' => $this->staff->id,
         ]);
 
         $this->assertSame($this->staff->id, $meeting->host?->id);
-        $this->assertSame($this->staff->id, $meeting->assignee?->id);
-        $this->assertSame($this->staff->id, $meeting->staff?->id);
         $this->assertSame($this->staff->id, $meeting->staff_id);
     }
 

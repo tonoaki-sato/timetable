@@ -41,7 +41,6 @@ class UpdateLaneRequest extends FormRequest
                 'max:100',
                 Rule::unique('lanes')->where('timetable_id', $timetableId)->ignore($lane?->id),
             ],
-            'code' => ['nullable', 'string', 'max:50'],
             'color' => [
                 'required',
                 'string',

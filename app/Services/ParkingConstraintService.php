@@ -32,6 +32,21 @@ class ParkingConstraintService
         }
 
         $locations = $query->get();
+        $locationIds = $locations->pluck('id')->all();
+
+        $allPlansTo = EquipmentLogisticsPlan::with(['equipment.lane'])
+            ->whereIn('to_location_id', $locationIds)
+            ->orderBy('target_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->get()
+            ->groupBy('to_location_id');
+
+        $allPlansFrom = EquipmentLogisticsPlan::with(['equipment.lane'])
+            ->whereIn('from_location_id', $locationIds)
+            ->orderBy('target_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->get()
+            ->groupBy('from_location_id');
 
         $locationStatuses = collect();
         $violationCount = 0;
@@ -39,7 +54,9 @@ class ParkingConstraintService
         $inUseCount = 0;
 
         foreach ($locations as $location) {
-            $status = $this->evaluateLocationStatus($location, $now);
+            $plansTo = $allPlansTo->get($location->id, new EloquentCollection);
+            $plansFrom = $allPlansFrom->get($location->id, new EloquentCollection);
+            $status = $this->evaluateLocationStatus($location, $now, $plansTo, $plansFrom);
             $locationStatuses->push($status);
 
             if ($status->status === ParkingConstraintStatus::Violation) {
@@ -63,18 +80,22 @@ class ParkingConstraintService
     /**
      * 個別拠点の利用ステータス判定
      */
-    public function evaluateLocationStatus(Location $location, Carbon $now): ParkingLocationStatus
-    {
+    public function evaluateLocationStatus(
+        Location $location,
+        Carbon $now,
+        ?EloquentCollection $prefetchedPlansTo = null,
+        ?EloquentCollection $prefetchedPlansFrom = null
+    ): ParkingLocationStatus {
         $now = $this->normalizeToTokyo($now);
 
         // 当該拠点に関わる資材計画（搬入・保管先、または搬出元）を取得
-        $plansToLocation = EquipmentLogisticsPlan::with(['equipment.lane'])
+        $plansToLocation = $prefetchedPlansTo ?? EquipmentLogisticsPlan::with(['equipment.lane'])
             ->where('to_location_id', $location->id)
             ->orderBy('target_date', 'asc')
             ->orderBy('start_time', 'asc')
             ->get();
 
-        $plansFromLocation = EquipmentLogisticsPlan::with(['equipment.lane'])
+        $plansFromLocation = $prefetchedPlansFrom ?? EquipmentLogisticsPlan::with(['equipment.lane'])
             ->where('from_location_id', $location->id)
             ->orderBy('target_date', 'asc')
             ->orderBy('start_time', 'asc')

@@ -27,6 +27,7 @@ use App\Http\Controllers\StaffTimelineController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TimetableMatrixController;
 use App\Http\Controllers\TimetablePrintController;
+use App\Http\Controllers\TimetableTaskAssignmentController;
 use App\Http\Controllers\TimetableTaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
@@ -112,13 +113,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('timetable-tasks', TimetableTaskController::class)->parameters(['timetable-tasks' => 'task']);
 
     // スタッフアサイン・出欠管理
-    Route::get('timetable-tasks/{task}/assign-modal-data', [TimetableTaskController::class, 'getAssignModalData'])->name('timetable-tasks.assign-modal-data');
-    Route::post('timetable-tasks/{task}/assign', [TimetableTaskController::class, 'assignStaff'])->name('timetable-tasks.assign');
-    Route::post('timetable-tasks/{task}/assign-bulk', [TimetableTaskController::class, 'bulkAssignStaff'])->name('timetable-tasks.assign-bulk');
-    Route::post('timetable-tasks/{task}/assign-lane-pool', [TimetableTaskController::class, 'assignLanePool'])->name('timetable-tasks.assign-lane-pool');
-    Route::post('timetable-tasks/{task}/swap-staff', [TimetableTaskController::class, 'swapStaff'])->name('timetable-tasks.swap-staff');
-    Route::delete('timetable-tasks/{task}/staff/{staff}', [TimetableTaskController::class, 'removeStaff'])->name('timetable-tasks.remove-staff');
-    Route::patch('timetable-tasks/{task}/assignments/{assignment}', [TimetableTaskController::class, 'updateAttendance'])->name('timetable-tasks.update-attendance');
+    Route::get('timetable-tasks/{task}/assign-modal-data', [TimetableTaskAssignmentController::class, 'getAssignModalData'])->name('timetable-tasks.assign-modal-data');
+    Route::post('timetable-tasks/{task}/assign', [TimetableTaskAssignmentController::class, 'assignStaff'])->name('timetable-tasks.assign');
+    Route::post('timetable-tasks/{task}/assign-bulk', [TimetableTaskAssignmentController::class, 'bulkAssignStaff'])->name('timetable-tasks.assign-bulk');
+    Route::post('timetable-tasks/{task}/assign-lane-pool', [TimetableTaskAssignmentController::class, 'assignLanePool'])->name('timetable-tasks.assign-lane-pool');
+    Route::post('timetable-tasks/{task}/swap-staff', [TimetableTaskAssignmentController::class, 'swapStaff'])->name('timetable-tasks.swap-staff');
+    Route::delete('timetable-tasks/{task}/staff/{staff}', [TimetableTaskAssignmentController::class, 'removeStaff'])->name('timetable-tasks.remove-staff');
+    Route::patch('timetable-tasks/{task}/assignments/{assignment}', [TimetableTaskAssignmentController::class, 'updateAttendance'])->name('timetable-tasks.update-attendance');
 
     // 自身のプロフィールへのショートカット
     Route::get('/profile', function () {

@@ -48,22 +48,6 @@ class Meeting extends Model
     }
 
     /**
-     * 担当スタッフとのリレーション（AnnualScheduleと同一仕様）
-     */
-    public function assignee(): BelongsTo
-    {
-        return $this->belongsTo(Staff::class, 'staff_id');
-    }
-
-    /**
-     * 担当スタッフとのリレーション
-     */
-    public function staff(): BelongsTo
-    {
-        return $this->belongsTo(Staff::class, 'staff_id');
-    }
-
-    /**
      * 登録ユーザーとのリレーション
      */
     public function creator(): BelongsTo

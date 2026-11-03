@@ -147,27 +147,11 @@ class EquipmentLogisticsPlan extends Model
     }
 
     /**
-     * フェーズラベルアクセサ（エイリアス）
-     */
-    public function getDayPhaseLabelAttribute(): string
-    {
-        return $this->phase_label;
-    }
-
-    /**
      * アクションラベルアクセサ
      */
     public function getActionLabelAttribute(): string
     {
         return self::ACTION_TYPES[$this->action_type] ?? $this->action_type;
-    }
-
-    /**
-     * アクションラベルアクセサ（エイリアス）
-     */
-    public function getActionTypeLabelAttribute(): string
-    {
-        return $this->action_label;
     }
 
     /**
@@ -184,14 +168,6 @@ class EquipmentLogisticsPlan extends Model
     public function getOperatorLabelAttribute(): string
     {
         return self::OPERATOR_TYPES[$this->operator_type] ?? $this->operator_type;
-    }
-
-    /**
-     * 作業主体ラベルアクセサ（エイリアス）
-     */
-    public function getOperatorTypeLabelAttribute(): string
-    {
-        return $this->operator_label;
     }
 
     /**

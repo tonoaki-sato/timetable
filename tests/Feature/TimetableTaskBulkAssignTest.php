@@ -8,7 +8,7 @@ use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
-use App\Services\ConflictDetectionService;
+use App\Services\StaffAllocationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -218,8 +218,8 @@ class TimetableTaskBulkAssignTest extends TestCase
      */
     public function test_prioritizes_staff_correctly(): void
     {
-        /** @var ConflictDetectionService $service */
-        $service = app(ConflictDetectionService::class);
+        /** @var StaffAllocationService $service */
+        $service = app(StaffAllocationService::class);
 
         // スタッフ1: 同班所属・空き（最優先 Tier 1）
         $staff1 = Staff::factory()->create([

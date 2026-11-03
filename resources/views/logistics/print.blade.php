@@ -166,7 +166,7 @@
                                         <div class="font-bold text-slate-800">{{ $p->title }}</div>
                                         <div class="text-[10px] text-slate-600 font-mono">
                                             {{ $p->start_time ? substr($p->start_time, 0, 5) : '' }}
-                                            ({{ $p->from_location }}➔{{ $p->to_location }})
+                                            ({{ $p->resolved_from_location }}➔{{ $p->resolved_to_location }})
                                         </div>
                                         @if($p->formatted_quantity !== '')
                                             <div class="text-[9px] text-indigo-700 font-bold">{{ $p->formatted_quantity }}</div>
@@ -187,7 +187,7 @@
                                         <div class="font-bold text-slate-800">{{ $p->title }}</div>
                                         <div class="text-[10px] text-slate-600 font-mono">
                                             {{ $p->start_time ? substr($p->start_time, 0, 5) : '' }}
-                                            ({{ $p->from_location }}➔{{ $p->to_location }})
+                                            ({{ $p->resolved_from_location }}➔{{ $p->resolved_to_location }})
                                         </div>
                                         @if($p->formatted_quantity !== '')
                                             <div class="text-[9px] text-indigo-700 font-bold">{{ $p->formatted_quantity }}</div>

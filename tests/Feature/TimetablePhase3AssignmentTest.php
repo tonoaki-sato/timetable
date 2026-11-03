@@ -8,7 +8,7 @@ use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
-use App\Services\ConflictDetectionService;
+use App\Services\StaffAllocationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -122,8 +122,8 @@ class TimetablePhase3AssignmentTest extends TestCase
             'checked_in_at' => now(),
         ]);
 
-        /** @var ConflictDetectionService $service */
-        $service = app(ConflictDetectionService::class);
+        /** @var StaffAllocationService $service */
+        $service = app(StaffAllocationService::class);
         $prioritized = $service->getPrioritizedStaffForTask($this->task, collect([$staffNotCheckedIn, $staffCheckedIn]));
 
         $this->assertCount(2, $prioritized);

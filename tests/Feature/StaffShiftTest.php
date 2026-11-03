@@ -393,7 +393,6 @@ class StaffShiftTest extends TestCase
             'title' => 'テント設営と安全確認',
             'location' => '中央広場ステージ前',
             'content' => '大型パイプテント4張りの組み立てとペグ打ち固定作業。',
-            'description' => '風速5mを超える場合は作業を一時中断すること。',
         ]);
 
         TaskStaffAssignment::factory()->create([
@@ -411,9 +410,8 @@ class StaffShiftTest extends TestCase
         $response->assertSee('佐藤 班長');
         $response->assertSee('設営班');
 
-        // アコーディオン内に作業詳細（content）と備考（description）が表示されていること
+        // アコーディオン内に作業詳細（content）が表示されていること
         $response->assertSee('大型パイプテント4張りの組み立てとペグ打ち固定作業。');
-        $response->assertSee('風速5mを超える場合は作業を一時中断すること。');
 
         // アコーディオン内に旧フォーマットの項目が存在しないこと
         $response->assertDontSee('<span class="text-indigo-400 font-bold shrink-0">役割:</span>', false);

@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
             $table->string('name', 100);
-            $table->string('code', 50)->nullable();
             $table->string('color', 30)->default('slate');
             $table->string('icon', 50)->nullable();
             $table->foreignId('lead_staff_id')->nullable()->constrained('staff')->nullOnDelete();

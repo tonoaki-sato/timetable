@@ -89,7 +89,7 @@ class NowTasksCard extends Component
      */
     public function formatContentSummary(TimetableTask $task): ?string
     {
-        $raw = $task->content ?: $task->description;
+        $raw = $task->content;
         if ($raw === null || trim($raw) === '') {
             return null;
         }
