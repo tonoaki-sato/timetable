@@ -62,9 +62,9 @@ class PreparationNavigatorTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('まつり運行準備ステップガイド');
         $response->assertSee('Step 1: タイムテーブル作成');
-        $response->assertSee('Step 2: 担当班・スタッフ編成');
-        $response->assertSee('Step 3: 作業タスク登録');
-        $response->assertSee('Step 4: 人員不足・過不足調整');
+        $response->assertSee('Step 2: 担当班編成');
+        $response->assertSee('Step 3: タスク登録');
+        $response->assertSee('Step 4: 人員配置');
         $response->assertDontSee('ログイン・運行状況確認');
     }
 
@@ -100,7 +100,7 @@ class PreparationNavigatorTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('preparation-navigator.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('担当班の編成・班長・固定スタッフを登録しましょう');
+        $response->assertSee('担当班を編成しましょう');
         $response->assertSee(route('timetables.lanes.index', $timetable));
     }
 
@@ -123,7 +123,7 @@ class PreparationNavigatorTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('preparation-navigator.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('作業タスクを登録しましょう');
+        $response->assertSee('タスクを登録しましょう');
         $response->assertSee(route('timetable-tasks.create', ['timetable_id' => $timetable->id]));
     }
 
@@ -153,8 +153,8 @@ class PreparationNavigatorTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('preparation-navigator.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('余剰スタッフを配置しましょう');
-        $response->assertSee(route('timetable.index', ['timetable_id' => $timetable->id]));
+        $response->assertSee('スタッフを配置しましょう');
+        $response->assertSee(route('timetables.staff-timeline', $timetable));
     }
 
     /**

@@ -80,13 +80,13 @@
                             2
                         </span>
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                            班長・スタッフ編成
+                            担当班編成
                         </span>
                     </div>
                     <div>
                         <h4 class="text-xs font-bold text-slate-900 flex items-center space-x-1.5">
                             <span>🏷️</span>
-                            <span>Step 2: 担当班・スタッフ編成</span>
+                            <span>Step 2: 担当班編成</span>
                         </h4>
                         <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
                             各班（カラーコーン、給水など）に現場班長や専任スタッフを設定します。
@@ -115,7 +115,7 @@
                     <div>
                         <h4 class="text-xs font-bold text-slate-900 flex items-center space-x-1.5">
                             <span>📝</span>
-                            <span>Step 3: 作業タスク登録</span>
+                            <span>Step 3: タスク登録</span>
                         </h4>
                         <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
                             時間帯別の作業タスクを登録します。設定済みの班員は自動配置されます。
@@ -138,24 +138,33 @@
                             4
                         </span>
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                            過不足調整
+                            人員配置
                         </span>
                     </div>
                     <div>
                         <h4 class="text-xs font-bold text-slate-900 flex items-center space-x-1.5">
-                            <span>⚡</span>
-                            <span>Step 4: 人員不足・過不足調整</span>
+                            <span>👥</span>
+                            <span>Step 4: 人員配置</span>
                         </h4>
                         <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                            マトリクス進行表で過不足を確認し、他班の余剰スタッフを割り当てます。
+                            スタッフ稼働タイムラインで空き枠を確認し、不足タスクへ割り当てます。
                         </p>
                     </div>
                 </div>
 
                 <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <a href="{{ route('timetable.index') }}" class="text-indigo-600 hover:text-indigo-800 font-bold">
-                        進行表（マトリクス）へ →
+                    @php
+                        $firstActiveTt = $activeTimetableStates->first()['timetable'] ?? null;
+                    @endphp
+                    @if($firstActiveTt)
+                    <a href="{{ route('timetables.staff-timeline', $firstActiveTt) }}" class="text-indigo-600 hover:text-indigo-800 font-bold">
+                        スタッフタイムラインへ →
                     </a>
+                    @else
+                    <a href="{{ route('timetables.index') }}" class="text-indigo-600 hover:text-indigo-800 font-bold">
+                        日程一覧から選択 →
+                    </a>
+                    @endif
                 </div>
             </div>
 
@@ -265,16 +274,16 @@
                                 </span>
                             </a>
 
-                            <!-- Step 4: 配置 -->
+                            <!-- Step 4: 人員配置 -->
                             @php
                                 $s4Done = ($state['total_tasks_count'] > 0 && $state['shortage_tasks_count'] === 0);
                                 $s4Active = ($state['current_step'] === 4);
                             @endphp
-                            <a href="{{ route('timetable.index', ['timetable_id' => $tt->id]) }}"
+                            <a href="{{ route('timetables.staff-timeline', $tt) }}"
                                class="px-2 py-1 rounded-lg border flex items-center justify-between transition {{ $s4Active && !$s4Done ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-2xs ring-1 ring-amber-300' : ($s4Done ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200') }}">
                                 <span class="font-bold flex items-center space-x-1 truncate">
                                     <span class="text-[10px] font-mono {{ $s4Active && !$s4Done ? 'text-amber-800' : 'text-slate-500' }}">4.</span>
-                                    <span>配置</span>
+                                    <span>人員配置</span>
                                 </span>
                                 <span class="text-[10px] font-mono shrink-0">
                                     {{ $s4Done ? '✔' : ($state['shortage_tasks_count'] > 0 ? '不足'.$state['shortage_tasks_count'] : '待機') }}

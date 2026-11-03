@@ -13,10 +13,16 @@
                 <span>📅 {{ $timetable->name }}</span>
             </a>
             <span>/</span>
-            <span class="text-slate-700 font-bold">👥 スタッフ稼働タイムライン</span>
+            <span class="text-slate-700 font-bold">👥 人員配置（スタッフタイムライン）</span>
         </div>
 
         <div class="flex items-center space-x-2">
+            <a href="{{ route('preparation-navigator.index') }}"
+                class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>🚀</span>
+                <span>運行準備ナビ</span>
+            </a>
+
             <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
                 class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
                 <span>⏱️</span>
@@ -41,6 +47,9 @@
     <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-5 text-white shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/40">
+                    Step 4 人員配置
+                </span>
                 <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
                     📅 {{ $timetable->target_date?->format('Y年m月d日') }}
                 </span>

@@ -135,28 +135,28 @@ class PreparationNavigatorService
             $isSatisfied = true;
         } elseif ($lanesCount === 0 || $leadConfiguredCount === 0) {
             $currentStep = 2;
-            $actionTitle = '担当班の編成・班長・固定スタッフを登録しましょう';
+            $actionTitle = '担当班を編成しましょう';
             $actionDesc = "「{$timetable->name}」の各班（カラーコーン、給水など）に班長および固定スタッフを設定します。";
             $actionUrl = route('timetables.lanes.index', $timetable);
-            $actionBtnText = '担当班・スタッフを編成する (Step 2)';
+            $actionBtnText = '担当班を編成する (Step 2)';
         } elseif ($totalTasksCount === 0) {
             $currentStep = 3;
-            $actionTitle = '作業タスクを登録しましょう';
+            $actionTitle = 'タスクを登録しましょう';
             $actionDesc = '各班のタイムテーブル作業タスクを登録します。設定済みの班長・固定スタッフは自動配置されます。';
             $actionUrl = route('timetable-tasks.create', ['timetable_id' => $timetable->id]);
-            $actionBtnText = '作業タスクを登録する (Step 3)';
+            $actionBtnText = 'タスクを登録する (Step 3)';
         } elseif ($shortageTasksCount > 0) {
             $currentStep = 4;
-            $actionTitle = "人員不足タスク（{$shortageTasksCount}件）に余剰スタッフを配置しましょう";
-            $actionDesc = 'タイムテーブル進行表で過不足を確認し、他班の余剰スタッフや空きメンバーを割り当てます。';
-            $actionUrl = route('timetable.index', ['timetable_id' => $timetable->id]);
-            $actionBtnText = 'タイムテーブル進行表で人員を配置する (Step 4)';
+            $actionTitle = "人員不足タスク（{$shortageTasksCount}件）にスタッフを配置しましょう";
+            $actionDesc = 'スタッフ稼働タイムラインで空き時間や待機スタッフを確認し、不足タスクへ割り当てます。';
+            $actionUrl = route('timetables.staff-timeline', $timetable);
+            $actionBtnText = 'スタッフタイムラインで人員配置する (Step 4)';
         } else {
             $currentStep = 4;
             $actionTitle = '全タスクの人員配置が充足しています！';
-            $actionDesc = '当日のタイムテーブル運行マトリクス、または人員配置表印刷から最終確認を行えます。';
-            $actionUrl = route('timetable.index', ['timetable_id' => $timetable->id]);
-            $actionBtnText = 'タイムテーブル進行表を確認 (Step 4)';
+            $actionDesc = 'スタッフ稼働タイムライン、または人員配置表印刷から最終確認を行えます。';
+            $actionUrl = route('timetables.staff-timeline', $timetable);
+            $actionBtnText = 'スタッフタイムラインを確認 (Step 4)';
         }
 
         return [
