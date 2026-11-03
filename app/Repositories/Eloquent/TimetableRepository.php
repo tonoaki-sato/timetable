@@ -12,14 +12,13 @@ use Illuminate\Support\Facades\DB;
 class TimetableRepository implements TimetableRepositoryInterface
 {
     /**
-     * 全タイムテーブル一覧の取得（タスク数カウント付き・日付順）
+     * 全タイムテーブル一覧の取得（日付順）
      *
      * @return Collection<int, Timetable>
      */
     public function getAll(): Collection
     {
-        return Timetable::withCount('tasks')
-            ->orderBy('target_date', 'asc')
+        return Timetable::orderBy('target_date', 'asc')
             ->get();
     }
 
@@ -30,7 +29,7 @@ class TimetableRepository implements TimetableRepositoryInterface
      */
     public function getFiltered(?string $status = null): Collection
     {
-        $query = Timetable::withCount('tasks')->orderBy('target_date', 'asc');
+        $query = Timetable::query()->orderBy('target_date', 'asc');
 
         if ($status) {
             $query->status($status);

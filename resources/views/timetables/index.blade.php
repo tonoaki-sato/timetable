@@ -37,10 +37,9 @@
             <table class="w-full border-collapse text-left text-xs">
                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 select-none">
                     <tr>
-                        <th class="px-4 py-3 font-bold whitespace-nowrap">運行日</th>
                         <th class="px-4 py-3 font-bold">タイムテーブル名 / 概要</th>
+                        <th class="px-4 py-3 font-bold whitespace-nowrap">運行日</th>
                         <th class="px-4 py-3 font-bold whitespace-nowrap">運行時間枠</th>
-                        <th class="px-4 py-3 font-bold whitespace-nowrap text-center">登録タスク</th>
                         <th class="px-4 py-3 font-bold whitespace-nowrap text-center">状態</th>
                         <th class="px-4 py-3 font-bold text-right whitespace-nowrap">操作</th>
                     </tr>
@@ -48,6 +47,20 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($timetables as $timetable)
                     <tr class="hover:bg-slate-50/70 transition">
+                        <!-- タイムテーブル名 / 概要 -->
+                        <td class="px-4 py-3 min-w-[200px]">
+                            <div class="font-bold text-slate-900 text-sm">
+                                <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition">
+                                    {{ $timetable->name }}
+                                </a>
+                            </div>
+                            @if($timetable->description)
+                            <div class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                                {{ $timetable->description }}
+                            </div>
+                            @endif
+                        </td>
+
                         <!-- 運行日 -->
                         <td class="px-4 py-3 whitespace-nowrap">
                             <div class="flex items-center space-x-1.5">
@@ -65,30 +78,9 @@
                             </div>
                         </td>
 
-                        <!-- タイムテーブル名 / 概要 -->
-                        <td class="px-4 py-3 min-w-[200px]">
-                            <div class="font-bold text-slate-900 text-sm">
-                                <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition">
-                                    {{ $timetable->name }}
-                                </a>
-                            </div>
-                            @if($timetable->description)
-                            <div class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
-                                {{ $timetable->description }}
-                            </div>
-                            @endif
-                        </td>
-
                         <!-- 運行時間枠 -->
                         <td class="px-4 py-3 font-mono text-slate-700 whitespace-nowrap">
                             {{ substr($timetable->start_time, 0, 5) }} 〜 {{ substr($timetable->end_time, 0, 5) }}
-                        </td>
-
-                        <!-- 登録タスク数 -->
-                        <td class="px-4 py-3 text-center whitespace-nowrap">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                {{ $timetable->tasks_count ?? 0 }} 件
-                            </span>
                         </td>
 
                         <!-- 状態 -->
@@ -151,7 +143,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-4 py-12 text-center text-slate-400">
+                        <td colspan="5" class="px-4 py-12 text-center text-slate-400">
                             <span class="text-3xl block mb-2">⏱️</span>
                             登録されている運行タイムテーブルはありません。
                         </td>
