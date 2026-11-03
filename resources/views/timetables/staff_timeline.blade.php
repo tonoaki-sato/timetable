@@ -89,14 +89,13 @@
                 現場受付済 ({{ $checkedInCount }})
             </button>
 
-            <!-- 所属フィルター -->
-            <select id="timeline-affiliation-select"
-                class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                <option value="">すべての所属団体</option>
-                @foreach($affiliations as $aff)
-                <option value="{{ $aff }}">{{ $aff }}</option>
-                @endforeach
-            </select>
+            <!-- 班長表示切り替えチェックボックス（初期値: 含める） -->
+            <label class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer select-none transition">
+                <input type="checkbox" id="timeline-leader-filter" checked
+                    class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                <span>👑 班長を表示</span>
+                <span class="text-[11px] font-normal text-slate-500">({{ count($leadStaffIds) }})</span>
+            </label>
         </div>
     </div>
 
@@ -125,6 +124,7 @@
                     $assignedCount = $staffAssignments->count();
                     $isCheckedIn = (bool) $staff->is_checked_in;
                     $staffGrid = $timelineGrid[$staff->id] ?? [];
+                    $isLeader = in_array($staff->id, $leadStaffIds, true);
 
                     // 当日累計稼働時間の算出
                     $totalMinutes = 0;
@@ -143,15 +143,24 @@
                     data-staff-kana="{{ $staff->kana ?? '' }}"
                     data-staff-affiliation="{{ $staff->affiliation ?? '' }}"
                     data-assigned-count="{{ $assignedCount }}"
-                    data-checked-in="{{ $isCheckedIn ? '1' : '0' }}">
+                    data-checked-in="{{ $isCheckedIn ? '1' : '0' }}"
+                    data-is-leader="{{ $isLeader ? '1' : '0' }}">
 
                     <!-- スタッフ情報セル (Sticky) -->
                     <td class="sticky left-0 z-10 bg-white border-r border-slate-300 p-2.5 align-middle shadow-xs">
                         <div class="space-y-0.5">
                             <div class="flex items-center justify-between">
-                                <a href="{{ route('staff.show', $staff) }}" class="font-bold text-slate-900 hover:text-indigo-600 transition truncate max-w-[130px]" title="{{ $staff->name }}">
-                                    {{ $staff->name }}
-                                </a>
+                                <div class="flex items-center space-x-1 min-w-0">
+                                    <a href="{{ route('staff.show', $staff) }}" class="font-bold text-slate-900 hover:text-indigo-600 transition truncate max-w-[110px]" title="{{ $staff->name }}">
+                                        {{ $staff->name }}
+                                    </a>
+                                    @if($isLeader)
+                                    <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0 flex items-center space-x-0.5" title="班長（担当班: {{ $laneNamesByLeadStaff[$staff->id] ?? '' }}）">
+                                        <span>👑</span>
+                                        <span>班長</span>
+                                    </span>
+                                    @endif
+                                </div>
                                 @if($isCheckedIn)
                                 <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-100 text-sky-800 border border-sky-300 shrink-0" title="現場到着受付済み">
                                     着

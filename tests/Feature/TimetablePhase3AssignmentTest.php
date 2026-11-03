@@ -81,6 +81,9 @@ class TimetablePhase3AssignmentTest extends TestCase
             'attendance_status' => 'assigned',
         ]);
 
+        // 班長設定（staff1 を神輿誘導班の班長に任命）
+        $this->lane->update(['lead_staff_id' => $staff1->id]);
+
         // 未ログイン時はログイン画面へリダイレクト
         $response = $this->get(route('timetables.staff-timeline', $this->timetable));
         $response->assertRedirect(route('login'));
@@ -96,8 +99,20 @@ class TimetablePhase3AssignmentTest extends TestCase
         $response->assertSee('神輿先導警備');
         $response->assertSee('先導誘導チーフ');
 
-        // ビュー変数に tasksWithShortage が含まれていること
+        // 所属団体セレクトボックスは削除され、班長表示切り替えチェックボックスが存在すること
+        $response->assertDontSee('timeline-affiliation-select');
+        $response->assertSee('id="timeline-leader-filter"', false);
+        $response->assertSee('👑 班長を表示');
+
+        // staff1 には班長属性とバッジ、staff2 には非班長属性が出力されていること
+        $response->assertSee('data-is-leader="1"', false);
+        $response->assertSee('data-is-leader="0"', false);
+        $response->assertSee('班長（担当班: 神輿誘導班）');
+
+        // ビュー変数に tasksWithShortage, leadStaffIds が含まれていること
         $response->assertViewHas('tasksWithShortage');
+        $response->assertViewHas('leadStaffIds', [$staff1->id]);
+        $response->assertViewHas('laneNamesByLeadStaff', [$staff1->id => '神輿誘導班']);
         $tasksWithShortage = $response->viewData('tasksWithShortage');
         $this->assertCount(1, $tasksWithShortage);
         $this->assertSame($this->task->id, $tasksWithShortage[0]['id']);

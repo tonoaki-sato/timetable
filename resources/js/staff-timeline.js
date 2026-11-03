@@ -17,18 +17,18 @@ function escapeHtml(str) {
 }
 
 /**
- * スタッフ行の絞り込みフィルター（名前・所属・ステータス）
+ * スタッフ行の絞り込みフィルター（名前・所属検索、班長表示切り替え、ステータス）
  */
 function initStaffTimelineFilter() {
     const searchInput = document.getElementById('timeline-search-input');
-    const affiliationSelect = document.getElementById('timeline-affiliation-select');
+    const leaderCheckbox = document.getElementById('timeline-leader-filter');
     const filterButtons = document.querySelectorAll('[data-filter-status]');
     const rows = document.querySelectorAll('tr.staff-row');
 
     if (rows.length === 0) return;
 
     let currentSearch = '';
-    let currentAffiliation = '';
+    let includeLeaders = leaderCheckbox ? leaderCheckbox.checked : true;
     let currentStatus = 'all';
 
     function applyFilter() {
@@ -37,15 +37,16 @@ function initStaffTimelineFilter() {
         rows.forEach(row => {
             const name = (row.dataset.staffName || '').toLowerCase();
             const kana = (row.dataset.staffKana || '').toLowerCase();
-            const affiliation = row.dataset.staffAffiliation || '';
+            const affiliation = (row.dataset.staffAffiliation || '').toLowerCase();
             const assignedCount = parseInt(row.dataset.assignedCount, 10) || 0;
             const isCheckedIn = row.dataset.checkedIn === '1';
+            const isLeader = row.dataset.isLeader === '1';
 
-            // 1. 検索マッチ
-            const matchSearch = !q || name.includes(q) || kana.includes(q) || affiliation.toLowerCase().includes(q);
+            // 1. 検索マッチ（氏名・カナ・所属テキスト）
+            const matchSearch = !q || name.includes(q) || kana.includes(q) || affiliation.includes(q);
 
-            // 2. 所属マッチ
-            const matchAff = !currentAffiliation || affiliation === currentAffiliation;
+            // 2. 班長表示マッチ（チェックONなら全員、チェックOFFなら班長除外）
+            const matchLeader = includeLeaders ? true : !isLeader;
 
             // 3. ステータスマッチ
             let matchStatus = true;
@@ -57,7 +58,7 @@ function initStaffTimelineFilter() {
                 matchStatus = isCheckedIn;
             }
 
-            if (matchSearch && matchAff && matchStatus) {
+            if (matchSearch && matchLeader && matchStatus) {
                 row.classList.remove('hidden');
             } else {
                 row.classList.add('hidden');
@@ -72,9 +73,9 @@ function initStaffTimelineFilter() {
         });
     }
 
-    if (affiliationSelect) {
-        affiliationSelect.addEventListener('change', (e) => {
-            currentAffiliation = e.target.value;
+    if (leaderCheckbox) {
+        leaderCheckbox.addEventListener('change', (e) => {
+            includeLeaders = e.target.checked;
             applyFilter();
         });
     }

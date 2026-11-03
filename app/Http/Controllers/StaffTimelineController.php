@@ -74,8 +74,12 @@ class StaffTimelineController extends Controller
             ];
         })->values();
 
-        // 所属一覧
-        $affiliations = $activeStaff->pluck('affiliation')->filter()->unique()->values();
+        // 当該タイムテーブルで班長を務めるスタッフID一覧および担当班名
+        $leadLanes = $timetable->lanes()->whereNotNull('lead_staff_id')->get(['name', 'lead_staff_id']);
+        $leadStaffIds = $leadLanes->pluck('lead_staff_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $laneNamesByLeadStaff = $leadLanes->groupBy('lead_staff_id')
+            ->map(fn ($lanes) => $lanes->pluck('name')->join('・'))
+            ->all();
 
         return view('timetables.staff_timeline', [
             'timetable' => $timetable,
@@ -88,7 +92,8 @@ class StaffTimelineController extends Controller
             'assignedStaffCount' => $assignedStaffCount,
             'unassignedStaffCount' => $unassignedStaffCount,
             'checkedInCount' => $checkedInCount,
-            'affiliations' => $affiliations,
+            'leadStaffIds' => $leadStaffIds,
+            'laneNamesByLeadStaff' => $laneNamesByLeadStaff,
             'colorOptions' => Lane::COLOR_OPTIONS,
         ]);
     }
