@@ -105,7 +105,7 @@
             <thead>
                 <tr class="bg-slate-800 text-white select-none">
                     <!-- スタッフ情報列（固定） -->
-                    <th scope="col" class="sticky left-0 z-20 bg-slate-900 border-r border-slate-700 p-2.5 w-[220px] min-w-[220px]">
+                    <th scope="col" class="sticky left-0 z-20 bg-slate-900 border-r border-slate-700 p-2.5 w-[240px] min-w-[240px]">
                         スタッフ情報
                     </th>
 
@@ -147,32 +147,34 @@
                     data-is-leader="{{ $isLeader ? '1' : '0' }}">
 
                     <!-- スタッフ情報セル (Sticky) -->
-                    <td class="sticky left-0 z-10 bg-white border-r border-slate-300 p-2.5 align-middle shadow-xs">
-                        <div class="space-y-0.5">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-1 min-w-0">
-                                    <a href="{{ route('staff.show', $staff) }}" class="font-bold text-slate-900 hover:text-indigo-600 transition truncate max-w-[110px]" title="{{ $staff->name }}">
-                                        {{ $staff->name }}
-                                    </a>
-                                    @if($isLeader)
-                                    <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0 flex items-center space-x-0.5" title="班長（担当班: {{ $laneNamesByLeadStaff[$staff->id] ?? '' }}）">
-                                        <span>👑</span>
-                                        <span>班長</span>
-                                    </span>
-                                    @endif
-                                </div>
+                    <td class="sticky left-0 z-10 bg-white border-r border-slate-300 px-2.5 py-2 align-middle shadow-xs">
+                        <div class="flex items-center justify-between gap-1.5">
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                @if($isLeader)
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0 inline-flex items-center gap-0.5" title="班長（担当班: {{ $laneNamesByLeadStaff[$staff->id] ?? '' }}）">
+                                    <span>👑</span>
+                                    <span>班長</span>
+                                </span>
+                                @else
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0" title="一般スタッフ">
+                                    一般
+                                </span>
+                                @endif
+
+                                <a href="{{ route('staff.show', $staff) }}"
+                                   class="font-bold text-slate-900 hover:text-indigo-600 transition truncate"
+                                   title="{{ $staff->affiliation ?: '所属なし' }}">
+                                    {{ $staff->name }}
+                                </a>
+                            </div>
+
+                            <div class="flex items-center gap-1.5 shrink-0 ml-1">
                                 @if($isCheckedIn)
-                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-100 text-sky-800 border border-sky-300 shrink-0" title="現場到着受付済み">
+                                <span class="px-1 py-0.2 rounded text-[9px] font-bold bg-sky-100 text-sky-800 border border-sky-300 shrink-0" title="現場到着受付済み">
                                     着
                                 </span>
                                 @endif
-                            </div>
-
-                            <div class="flex items-center justify-between text-[10px] text-slate-500">
-                                <span class="truncate max-w-[120px]" title="{{ $staff->affiliation }}">
-                                    {{ $staff->affiliation ?: '所属なし' }}
-                                </span>
-                                <span class="font-mono text-slate-600 shrink-0 font-medium">
+                                <span class="font-mono text-slate-600 text-[11px] font-medium shrink-0" title="当日累計稼働時間: {{ $totalHoursFormatted }}">
                                     {{ $totalHoursFormatted }}
                                 </span>
                             </div>

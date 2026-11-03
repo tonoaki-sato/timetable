@@ -104,10 +104,13 @@ class TimetablePhase3AssignmentTest extends TestCase
         $response->assertSee('id="timeline-leader-filter"', false);
         $response->assertSee('👑 班長を表示');
 
-        // staff1 には班長属性とバッジ、staff2 には非班長属性が出力されていること
+        // staff1 には班長属性とバッジ、staff2 には非班長属性と一般バッジが出力されていること
         $response->assertSee('data-is-leader="1"', false);
         $response->assertSee('data-is-leader="0"', false);
         $response->assertSee('班長（担当班: 神輿誘導班）');
+        $response->assertSee('一般スタッフ');
+        $response->assertSee('title="神輿誘導班"', false);
+        $response->assertSee('title="ボランティアA"', false);
 
         // ビュー変数に tasksWithShortage, leadStaffIds が含まれていること
         $response->assertViewHas('tasksWithShortage');
