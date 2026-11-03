@@ -2,17 +2,16 @@
 
 namespace App\Services;
 
-use App\Models\AnnualSchedule;
-use App\Models\Meeting;
+use App\Models\Schedule;
 use App\Models\Staff;
 use App\Models\Timetable;
-use App\Repositories\Contracts\AnnualScheduleRepositoryInterface;
+use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use Illuminate\Support\Carbon;
 
 class CalendarService
 {
     public function __construct(
-        protected AnnualScheduleRepositoryInterface $scheduleRepository
+        protected ScheduleRepositoryInterface $scheduleRepository
     ) {}
 
     /**
@@ -36,23 +35,10 @@ class CalendarService
         $gridStart = $firstDay->copy()->subDays($startDayOfWeek);
         $totalCells = (int) (ceil(($startDayOfWeek + $daysInMonth) / 7) * 7);
 
-        // 1. 指定月の年間スケジュール取得
+        // 1. 指定月のスケジュール取得（会議・協議・説明会・設営等すべて含む）
         $schedules = $this->scheduleRepository->getForMonth($year, $month, $category, $status, $staffId, $search);
 
-        // 2. 指定月の会議・打合せ取得
-        $meetingQuery = Meeting::with(['host', 'creator'])
-            ->whereYear('meeting_date', $year)
-            ->whereMonth('meeting_date', $month);
-
-        if ($search) {
-            $meetingQuery->search($search);
-        }
-        if ($staffId) {
-            $meetingQuery->host($staffId);
-        }
-        $meetings = $meetingQuery->orderBy('meeting_date')->orderBy('start_time')->get();
-
-        // 3. 指定月の本番運行日（タイムテーブル）取得
+        // 2. 指定月の本番運行日（タイムテーブル）取得
         $timetableQuery = Timetable::whereYear('target_date', $year)
             ->whereMonth('target_date', $month);
         if ($search) {
@@ -106,40 +92,7 @@ class CalendarService
                 }
             }
 
-            // B. 会議イベントをマッピング
-            foreach ($meetings as $meeting) {
-                if ($meeting->meeting_date?->toDateString() === $dateStr) {
-                    $dayEvents[] = [
-                        'id' => $meeting->id,
-                        'source' => 'meeting',
-                        'title' => $meeting->title,
-                        'category' => 'committee',
-                        'category_label' => '会議・打合せ',
-                        'icon' => '🤝',
-                        'badge_class' => 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100',
-                        'time' => $meeting->formatted_time_range,
-                        'start_time' => substr($meeting->start_time ?? '', 0, 5),
-                        'end_time' => $meeting->end_time ? substr($meeting->end_time, 0, 5) : null,
-                        'location' => $meeting->location,
-                        'staff_id' => $meeting->staff_id,
-                        'staff_name' => $meeting->host?->name,
-                        'has_unassigned_host' => $meeting->staff_id === null,
-                        'is_period' => false,
-                        'date' => $dateStr,
-                        'start_date' => $dateStr,
-                        'end_date' => null,
-                        'status' => $meeting->is_upcoming ? 'planned' : 'completed',
-                        'status_label' => $meeting->is_upcoming ? '予定' : '終了',
-                        'description' => $meeting->description,
-                        'notice_note' => $meeting->notice_note,
-                        'share_text' => $meeting->share_text,
-                        'show_url' => route('meetings.show', $meeting),
-                        'edit_url' => route('meetings.edit', $meeting),
-                    ];
-                }
-            }
-
-            // C. 年間スケジュールイベントをマッピング
+            // B. スケジュールイベント（会議含む）をマッピング
             foreach ($schedules as $schedule) {
                 $startStr = $schedule->start_date?->toDateString();
                 $endStr = $schedule->end_date?->toDateString() ?? $startStr;
@@ -158,13 +111,15 @@ class CalendarService
 
                     $dayEvents[] = [
                         'id' => $schedule->id,
-                        'source' => 'annual_schedule',
+                        'source' => 'schedule',
                         'title' => $schedule->title,
                         'category' => $schedule->category,
                         'category_label' => $meta['label'],
                         'icon' => $meta['icon'],
                         'badge_class' => $meta['class'],
-                        'time' => null,
+                        'time' => $schedule->formatted_time_range,
+                        'start_time' => $schedule->start_time ? substr($schedule->start_time, 0, 5) : null,
+                        'end_time' => $schedule->end_time ? substr($schedule->end_time, 0, 5) : null,
                         'location' => $schedule->location,
                         'staff_id' => $schedule->staff_id,
                         'staff_name' => $schedule->assignee?->name,
@@ -177,10 +132,10 @@ class CalendarService
                         'status' => $schedule->status,
                         'status_label' => $schedule->status_label,
                         'description' => $schedule->description,
-                        'notice_note' => null,
-                        'share_text' => null,
-                        'show_url' => route('annual-schedules.show', $schedule),
-                        'edit_url' => route('annual-schedules.edit', $schedule),
+                        'notice_note' => $schedule->notice_note,
+                        'share_text' => $schedule->share_text,
+                        'show_url' => route('schedules.show', $schedule),
+                        'edit_url' => route('schedules.edit', $schedule),
                     ];
                 }
             }
@@ -238,9 +193,9 @@ class CalendarService
             'nextYear' => $nextCarbon->year,
             'nextMonth' => $nextCarbon->month,
             'categoryOptions' => $categoryOptions,
-            'availableYears' => $this->scheduleRepository->getAvailableYears(),
-            'categories' => AnnualSchedule::CATEGORIES,
-            'statuses' => AnnualSchedule::STATUSES,
+            'availableYears' => range($year - 2, $year + 2),
+            'categories' => Schedule::CATEGORIES,
+            'statuses' => Schedule::STATUSES,
             'staffs' => Staff::active()->orderBy('kana')->get(),
         ];
     }

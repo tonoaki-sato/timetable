@@ -11,7 +11,7 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/timetable-matrix.js',
                 'resources/js/calendar.js',
-                'resources/js/meetings.js',
+                'resources/js/schedules.js',
                 'resources/js/lanes.js',
                 'resources/js/staff-timeline.js',
                 'resources/js/timetable-task-create.js',

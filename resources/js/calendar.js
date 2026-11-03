@@ -161,27 +161,19 @@ function initCalendar() {
         };
         if (modalIcon) modalIcon.textContent = icons[category] || '📅';
 
-        const meetingsStoreUrl = newEventModal.getAttribute('data-meetings-store-url');
-        const annualSchedulesStoreUrl = newEventModal.getAttribute('data-annual-schedules-store-url');
+        const storeUrl = newEventModal.getAttribute('data-schedules-store-url');
+        if (storeUrl) newEventForm.action = storeUrl;
+
+        if (eventDate) eventDate.name = 'start_date';
+        if (eventStaffId) eventStaffId.name = 'staff_id';
 
         if (category === 'committee') {
-            if (meetingsStoreUrl) newEventForm.action = meetingsStoreUrl;
             noticeContainer?.classList.remove('hidden');
             timeFields?.classList.remove('hidden');
-            switchDateMode('single');
-            modeSwitchContainer?.classList.add('hidden');
-            statusFieldContainer?.classList.add('hidden');
             if (hostLabel) hostLabel.innerHTML = '主催者（スタッフ） <span class="text-slate-400 font-normal">（任意・未定可）</span>';
-            if (eventStaffId) eventStaffId.name = 'staff_id';
-            if (eventDate) eventDate.name = 'meeting_date';
         } else {
-            if (annualSchedulesStoreUrl) newEventForm.action = annualSchedulesStoreUrl;
             noticeContainer?.classList.add('hidden');
             if (hostLabel) hostLabel.innerHTML = '担当スタッフ <span class="text-slate-400 font-normal">（任意・未定可）</span>';
-            if (eventStaffId) eventStaffId.name = 'staff_id';
-            if (eventDate) eventDate.name = 'start_date';
-            modeSwitchContainer?.classList.remove('hidden');
-            statusFieldContainer?.classList.remove('hidden');
         }
     }
 
@@ -228,7 +220,7 @@ function initCalendar() {
         if (detailDescription) detailDescription.textContent = event.description || '詳細内容の登録はありません。';
 
         if (lineSection && detailLineText) {
-            if (event.source === 'meeting' && event.share_text) {
+            if (event.share_text) {
                 lineSection.classList.remove('hidden');
                 detailLineText.textContent = event.share_text;
             } else {
@@ -256,30 +248,22 @@ function initCalendar() {
             return;
         }
 
-        const isMeeting = currentDetailEvent.source === 'meeting';
-        const url = isMeeting
-            ? currentDetailEvent.edit_url.replace('/edit', '')
-            : currentDetailEvent.edit_url.replace('/edit', '');
+        const url = currentDetailEvent.edit_url.replace('/edit', '');
 
-        showToast('主催者を更新中...', '⏳');
+        showToast('担当・主催者を更新中...', '⏳');
 
-        const payload = isMeeting
-            ? {
-                _method: 'PUT',
-                staff_id: staffId,
-                title: currentDetailEvent.title,
-                meeting_date: currentDetailEvent.start_date,
-                start_time: currentDetailEvent.start_time,
-                location: currentDetailEvent.location,
-            }
-            : {
-                _method: 'PUT',
-                staff_id: staffId,
-                title: currentDetailEvent.title,
-                start_date: currentDetailEvent.start_date,
-                category: currentDetailEvent.category,
-                status: currentDetailEvent.status,
-            };
+        const payload = {
+            _method: 'PUT',
+            staff_id: staffId,
+            title: currentDetailEvent.title,
+            start_date: currentDetailEvent.start_date,
+            end_date: currentDetailEvent.end_date,
+            start_time: currentDetailEvent.start_time,
+            end_time: currentDetailEvent.end_time,
+            category: currentDetailEvent.category,
+            status: currentDetailEvent.status,
+            location: currentDetailEvent.location,
+        };
 
         fetch(url, {
             method: 'POST',

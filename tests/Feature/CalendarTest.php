@@ -2,8 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\AnnualSchedule;
-use App\Models\Meeting;
+use App\Models\Schedule;
 use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,24 +34,24 @@ class CalendarTest extends TestCase
     }
 
     /**
-     * カレンダー画面が表示され、年間スケジュール・会議・本番運行日が表示されること
+     * カレンダー画面が表示され、予定・会議・本番運行日が表示されること
      */
     public function test_calendar_displays_monthly_grid_and_events(): void
     {
         $this->actingAs($this->user);
 
-        // 1. 年間スケジュール
-        AnnualSchedule::factory()->create([
-            'target_year' => 2026,
+        // 1. 協議予定
+        Schedule::factory()->create([
             'title' => '警察署協議（4月）',
             'category' => 'permit',
             'start_date' => '2026-04-15',
         ]);
 
         // 2. 会議（主催未定）
-        Meeting::factory()->create([
+        Schedule::factory()->create([
             'title' => '第1回幹事会（4月）',
-            'meeting_date' => '2026-04-20',
+            'category' => 'committee',
+            'start_date' => '2026-04-20',
             'start_time' => '18:00',
             'staff_id' => null,
         ]);
@@ -91,15 +90,13 @@ class CalendarTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        AnnualSchedule::factory()->create([
-            'target_year' => 2026,
+        Schedule::factory()->create([
             'title' => '出店者募集説明会',
             'category' => 'briefing',
             'start_date' => '2026-04-10',
         ]);
 
-        AnnualSchedule::factory()->create([
-            'target_year' => 2026,
+        Schedule::factory()->create([
             'title' => '交通管理者現地視察',
             'category' => 'permit',
             'start_date' => '2026-04-12',

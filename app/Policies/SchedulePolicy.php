@@ -2,13 +2,13 @@
 
 namespace App\Policies;
 
-use App\Models\Meeting;
+use App\Models\Schedule;
 use App\Models\User;
 
-class MeetingPolicy
+class SchedulePolicy
 {
     /**
-     * 会議一覧の閲覧権限
+     * スケジュール一覧の閲覧権限
      */
     public function viewAny(User $user): bool
     {
@@ -16,15 +16,15 @@ class MeetingPolicy
     }
 
     /**
-     * 会議詳細の閲覧権限
+     * スケジュール詳細の閲覧権限
      */
-    public function view(User $user, Meeting $meeting): bool
+    public function view(User $user, Schedule $schedule): bool
     {
         return $user->is_active;
     }
 
     /**
-     * 会議の新規作成権限（admin, operator同等）
+     * スケジュールの新規作成権限（admin, operator同等）
      */
     public function create(User $user): bool
     {
@@ -32,17 +32,17 @@ class MeetingPolicy
     }
 
     /**
-     * 会議の編集・更新権限（admin, operator同等）
+     * スケジュールの編集・更新権限（admin, operator同等）
      */
-    public function update(User $user, Meeting $meeting): bool
+    public function update(User $user, Schedule $schedule): bool
     {
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }
 
     /**
-     * 会議の削除権限（admin, operator同等）
+     * スケジュールの削除権限（admin, operator同等）
      */
-    public function delete(User $user, Meeting $meeting): bool
+    public function delete(User $user, Schedule $schedule): bool
     {
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }

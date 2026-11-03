@@ -38,8 +38,7 @@
                             || request()->routeIs('timetable.index')
                             || request()->routeIs('preparation-navigator.*')
                             || request()->routeIs('calendar.*')
-                            || request()->routeIs('annual-schedules.*')
-                            || request()->routeIs('meetings.*');
+                            || request()->routeIs('schedules.*');
 
                         $isMasterActive = (request()->routeIs('staff.*') && !request()->routeIs('staff.print*') && !request()->routeIs('staff.export*') && !request()->routeIs('staff.import*'))
                             || request()->routeIs('lanes.*')
@@ -156,20 +155,12 @@
                                             <p class="text-[10px] {{ request()->routeIs('calendar.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">月間グリッドで予定・会議・運行日を俯瞰</p>
                                         </div>
                                     </a>
-                                    <a href="{{ route('annual-schedules.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('annual-schedules.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                    <a href="{{ route('schedules.index') }}"
+                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('schedules.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">📋</span>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold">年間スケジュール</div>
-                                            <p class="text-[10px] {{ request()->routeIs('annual-schedules.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">年次マイルストーン・準備工程管理</p>
-                                        </div>
-                                    </a>
-                                    <a href="{{ route('meetings.index') }}"
-                                        class="flex items-start space-x-2.5 p-2 rounded-xl transition {{ request()->routeIs('meetings.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">🤝</span>
-                                        <div class="min-w-0">
-                                            <div class="text-xs font-bold">会議・打ち合わせ</div>
-                                            <p class="text-[10px] {{ request()->routeIs('meetings.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">幹事会・総会・LINE告知テキスト生成</p>
+                                            <div class="text-xs font-bold">スケジュール管理</div>
+                                            <p class="text-[10px] {{ request()->routeIs('schedules.*') ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">会議・協議・説明会・設営等の予定管理</p>
                                         </div>
                                     </a>
                                 </div>
@@ -600,18 +591,11 @@
                                     <span class="text-[10px] text-slate-400 block truncate">月間予定・俯瞰</span>
                                 </div>
                             </a>
-                            <a href="{{ route('annual-schedules.index') }}" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('annual-schedules.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
+                            <a href="{{ route('schedules.index') }}" class="col-span-2 p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('schedules.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
                                 <span class="text-base">📋</span>
                                 <div class="min-w-0">
-                                    <span class="font-bold block truncate">年間スケジュール</span>
-                                    <span class="text-[10px] text-slate-400 block truncate">マイルストーン</span>
-                                </div>
-                            </a>
-                            <a href="{{ route('meetings.index') }}" class="col-span-2 p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl flex items-center space-x-2 text-slate-200 {{ request()->routeIs('meetings.*') ? 'ring-1 ring-indigo-500 bg-slate-800' : '' }}">
-                                <span class="text-base">🤝</span>
-                                <div class="min-w-0">
-                                    <span class="font-bold block truncate">会議・打ち合わせ</span>
-                                    <span class="text-[10px] text-slate-400 block truncate">幹事会・総会・LINE告知テキスト生成</span>
+                                    <span class="font-bold block truncate">スケジュール管理</span>
+                                    <span class="text-[10px] text-slate-400 block truncate">会議・打合せ・準備工程・LINE告知文生成</span>
                                 </div>
                             </a>
                         </div>

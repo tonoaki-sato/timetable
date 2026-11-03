@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AnnualSchedule;
+use App\Models\Schedule;
 use App\Services\CalendarService;
 use DateTimeImmutable;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ class CalendarController extends Controller
      */
     public function index(Request $request): View
     {
-        $this->authorize('viewAny', AnnualSchedule::class);
+        $this->authorize('viewAny', Schedule::class);
 
         $now = new DateTimeImmutable;
         $year = (int) $request->input('year', $now->format('Y'));

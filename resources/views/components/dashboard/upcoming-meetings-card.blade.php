@@ -10,7 +10,7 @@
             </span>
             @endif
         </div>
-        <a href="{{ route('meetings.index') }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center space-x-0.5">
+        <a href="{{ route('schedules.index', ['category' => 'committee']) }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center space-x-0.5">
             <span>一覧</span>
             <span class="text-[10px]">→</span>
         </a>
@@ -25,7 +25,7 @@
                 <!-- 日付ブロック -->
                 <div class="shrink-0 text-center w-12 bg-white border border-slate-200 rounded-lg py-1 px-1 shadow-2xs">
                     <span class="block text-xs font-black text-slate-900 leading-none">
-                        {{ $meeting->meeting_date?->format('n/j') }}
+                        {{ $meeting->start_date?->format('n/j') }}
                     </span>
                     <span class="block text-[10px] font-bold {{ $isWeekend($meeting) ? 'text-red-600' : 'text-slate-500' }} leading-tight mt-0.5">
                         ({{ $weekdayText($meeting) }})
@@ -35,7 +35,7 @@
                 <!-- 会議情報メイン -->
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-1.5 flex-wrap">
-                        <a href="{{ route('meetings.show', $meeting) }}" class="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition truncate">
+                        <a href="{{ route('schedules.show', $meeting) }}" class="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition truncate">
                             {{ $meeting->title }}
                         </a>
                         @if($badge = $badgeInfo($meeting))
@@ -47,10 +47,12 @@
 
                     <!-- メタ情報（時間・場所） -->
                     <div class="flex items-center gap-x-2 text-[11px] text-slate-500 mt-1 flex-wrap">
+                        @if($meeting->formatted_time_range)
                         <span class="inline-flex items-center space-x-0.5 font-mono">
                             <span>🕒</span>
                             <span>{{ $meeting->formatted_time_range }}</span>
                         </span>
+                        @endif
                         @if($meeting->location)
                         <span class="inline-flex items-center space-x-0.5">
                             <span>📍</span>
@@ -65,9 +67,9 @@
             <div class="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-200/60 text-slate-500">
                 <span class="inline-flex items-center space-x-1">
                     <span>👤</span>
-                    <span>主催: <strong class="text-slate-700 font-medium">{{ $meeting->host?->name ?? '未定' }}</strong></span>
+                    <span>担当: <strong class="text-slate-700 font-medium">{{ $meeting->assignee?->name ?? '未定' }}</strong></span>
                 </span>
-                <a href="{{ route('meetings.show', $meeting) }}" class="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold transition">
+                <a href="{{ route('schedules.show', $meeting) }}" class="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold transition">
                     詳細 →
                 </a>
             </div>
@@ -75,9 +77,9 @@
         @endforeach
     </div>
 
-    @can('create', App\Models\Meeting::class)
+    @can('create', App\Models\Schedule::class)
     <div class="pt-1 text-right">
-        <a href="{{ route('meetings.create') }}" class="inline-flex items-center space-x-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">
+        <a href="{{ route('schedules.create', ['category' => 'committee']) }}" class="inline-flex items-center space-x-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">
             <span>➕</span>
             <span>新しい会議を登録</span>
         </a>
@@ -90,8 +92,8 @@
         <span class="text-2xl block mb-1">📅</span>
         <p class="text-xs font-bold text-slate-700">予定されている会議はありません</p>
         <p class="text-[11px] text-slate-400 mt-0.5">定例幹事会や部会打ち合わせを登録できます</p>
-        @can('create', App\Models\Meeting::class)
-        <a href="{{ route('meetings.create') }}" class="inline-flex items-center space-x-1 mt-3 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition shadow-xs">
+        @can('create', App\Models\Schedule::class)
+        <a href="{{ route('schedules.create', ['category' => 'committee']) }}" class="inline-flex items-center space-x-1 mt-3 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition shadow-xs">
             <span>➕</span>
             <span>新しい会議を登録</span>
         </a>

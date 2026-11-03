@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\DTOs\PhaseContext;
 use App\Enums\AnnualPhase;
-use App\Models\AnnualSchedule;
+use App\Models\Schedule;
 use App\Models\Timetable;
 use Carbon\Carbon;
 
@@ -30,11 +30,10 @@ class PhaseService
             );
         }
 
-        // 2. 平時（年間準備フェーズ）の各データを取得
-        $targetYear = $now->year;
+        // 2. 平時（準備・計画フェーズ）の各データを取得
         $phase = AnnualPhase::fromMonth($now->month);
-        $nextTask = $this->getNextUpcomingTask($targetYear, $now->toDateString());
-        $pendingCount = $this->countPendingTasksInPhase($phase, $targetYear);
+        $nextTask = $this->getNextUpcomingTask($now->toDateString());
+        $pendingCount = $this->countPendingTasksInPhase($phase, $now);
 
         return new PhaseContext(
             phase: $phase,
@@ -58,12 +57,11 @@ class PhaseService
     }
 
     /**
-     * 該当年または直近の未完了年間タスクを取得
+     * 直近の未完了タスク・予定を取得
      */
-    private function getNextUpcomingTask(int $targetYear, string $todayStr): ?AnnualSchedule
+    private function getNextUpcomingTask(string $todayStr): ?Schedule
     {
-        return AnnualSchedule::where('target_year', $targetYear)
-            ->where('start_date', '>=', $todayStr)
+        return Schedule::where('start_date', '>=', $todayStr)
             ->where('status', '!=', 'completed')
             ->orderBy('start_date', 'asc')
             ->first();
@@ -72,16 +70,16 @@ class PhaseService
     /**
      * 該当フェーズの対象月における未完了タスク数を集計
      */
-    private function countPendingTasksInPhase(AnnualPhase $phase, int $targetYear): int
+    private function countPendingTasksInPhase(AnnualPhase $phase, Carbon $now): int
     {
         $phaseMonths = $phase->months();
 
-        return AnnualSchedule::where('target_year', $targetYear)
-            ->where(function ($query) use ($phaseMonths) {
-                foreach ($phaseMonths as $m) {
-                    $query->orWhereMonth('start_date', $m);
-                }
-            })
+        return Schedule::where(function ($query) use ($phaseMonths) {
+            foreach ($phaseMonths as $m) {
+                $query->orWhereMonth('start_date', $m);
+            }
+        })
+            ->whereYear('start_date', $now->year)
             ->where('status', '!=', 'completed')
             ->count();
     }

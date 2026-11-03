@@ -2,28 +2,28 @@
 
 namespace App\Repositories\Contracts;
 
-use App\Models\AnnualSchedule;
+use App\Models\Schedule;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
-interface AnnualScheduleRepositoryInterface
+interface ScheduleRepositoryInterface
 {
     /**
-     * 条件付き年間スケジュール一覧の取得
+     * 条件付きスケジュール一覧の取得
      */
     public function paginateFiltered(
-        int $year,
         ?string $category = null,
         ?string $status = null,
         ?string $search = null,
         ?int $staffId = null,
+        ?string $tab = null,
         int $perPage = 15
     ): LengthAwarePaginator;
 
     /**
-     * 指定月のスケジュール一覧の取得
+     * 指定月のスケジュール一覧の取得（カレンダー用）
      *
-     * @return Collection<int, AnnualSchedule>
+     * @return Collection<int, Schedule>
      */
     public function getForMonth(
         int $year,
@@ -35,35 +35,35 @@ interface AnnualScheduleRepositoryInterface
     ): Collection;
 
     /**
-     * 登録済み対象年度一覧の取得
+     * 直近の会議・打ち合わせ一覧を取得
      *
-     * @return array<int, int>
+     * @return Collection<int, Schedule>
      */
-    public function getAvailableYears(): array;
+    public function getUpcomingMeetings(int $limit = 3): Collection;
 
     /**
-     * 指定年度のステータス別集計の取得
+     * 全体のステータス別集計の取得
      *
      * @return array{total: int, planned: int, in_progress: int, completed: int}
      */
-    public function getYearStatusSummary(int $year): array;
+    public function getStatusSummary(): array;
 
     /**
      * 新規スケジュールの永続化
      *
      * @param  array<string, mixed>  $attributes
      */
-    public function create(array $attributes): AnnualSchedule;
+    public function create(array $attributes): Schedule;
 
     /**
      * スケジュールの更新
      *
      * @param  array<string, mixed>  $attributes
      */
-    public function update(AnnualSchedule $schedule, array $attributes): bool;
+    public function update(Schedule $schedule, array $attributes): bool;
 
     /**
      * スケジュールの削除
      */
-    public function delete(AnnualSchedule $schedule): bool;
+    public function delete(Schedule $schedule): bool;
 }

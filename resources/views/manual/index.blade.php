@@ -306,7 +306,7 @@
                                 <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
-                                <span class="ml-2">【実画面】年間スケジュール一覧 (/annual-schedules)</span>
+                                <span class="ml-2">【実画面】スケジュール管理一覧 (/schedules)</span>
                             </span>
                             <span class="text-[10px] text-slate-400">クリックで拡大</span>
                         </div>
@@ -325,7 +325,7 @@
                                 <span>🤝</span>
                                 <span>会議・打ち合わせ管理 &amp; LINE告知文ワンクリック生成</span>
                             </h3>
-                            <span class="text-xs font-mono text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">/meetings</span>
+                            <span class="text-xs font-mono text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">/schedules</span>
                         </div>
                         <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
                             まつり実行委員会、総会、幹事会、町内会連絡会、現場リーダーミーティングの日程、開催場所、議題（アジェンダ）、決定事項メモを一元管理します。

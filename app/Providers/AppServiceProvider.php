@@ -4,15 +4,13 @@ namespace App\Providers;
 
 use App\Models\FeatureSetting;
 use App\Models\Timetable;
-use App\Repositories\Contracts\AnnualScheduleRepositoryInterface;
 use App\Repositories\Contracts\FeatureSettingRepositoryInterface;
-use App\Repositories\Contracts\MeetingRepositoryInterface;
+use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
-use App\Repositories\Eloquent\AnnualScheduleRepository;
 use App\Repositories\Eloquent\FeatureSettingRepository;
-use App\Repositories\Eloquent\MeetingRepository;
+use App\Repositories\Eloquent\ScheduleRepository;
 use App\Repositories\Eloquent\StaffRepository;
 use App\Repositories\Eloquent\TimetableRepository;
 use App\Repositories\Eloquent\TimetableTaskRepository;
@@ -28,8 +26,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(
-            AnnualScheduleRepositoryInterface::class,
-            AnnualScheduleRepository::class
+            ScheduleRepositoryInterface::class,
+            ScheduleRepository::class
         );
 
         $this->app->bind(
@@ -45,11 +43,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             TimetableTaskRepositoryInterface::class,
             TimetableTaskRepository::class
-        );
-
-        $this->app->bind(
-            MeetingRepositoryInterface::class,
-            MeetingRepository::class
         );
 
         $this->app->bind(

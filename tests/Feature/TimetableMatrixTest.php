@@ -327,10 +327,8 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('日程・スケジュール');
         $response->assertSee('総合カレンダー');
         $response->assertSee(route('calendar.index'));
-        $response->assertSee('年間スケジュール');
-        $response->assertSee(route('annual-schedules.index'));
-        $response->assertSee('会議・打ち合わせ');
-        $response->assertSee(route('meetings.index'));
+        $response->assertSee('スケジュール管理');
+        $response->assertSee(route('schedules.index'));
     }
 
     /**

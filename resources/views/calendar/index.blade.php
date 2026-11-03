@@ -6,7 +6,7 @@
         title="総合カレンダー"
         icon="📅"
         description="行政締切、準備タスク、定例会議、まつり本番運行日のすべてをカレンダー上で俯瞰・調整できます。">
-        @can('create', App\Models\AnnualSchedule::class)
+        @can('create', App\Models\Schedule::class)
         <x-slot:actions>
             <button type="button" data-action="open-new-event-modal"
                 class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
@@ -204,8 +204,7 @@
 <!-- 6. 新規予定登録モーダル (New Event Modal)   -->
 <!-- ========================================== -->
 <div id="newEventModal"
-    data-meetings-store-url="{{ route('meetings.store') }}"
-    data-annual-schedules-store-url="{{ route('annual-schedules.store') }}"
+    data-schedules-store-url="{{ route('schedules.store') }}"
     data-default-date="{{ $currentYear }}-{{ sprintf('%02d', $currentMonth) }}-01"
     class="hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" data-action="close-new-event-modal"></div>
@@ -222,9 +221,8 @@
             </div>
 
             <!-- フォーム本体 -->
-            <form id="newEventForm" method="POST" action="{{ route('annual-schedules.store') }}" class="p-6 space-y-4">
+            <form id="newEventForm" method="POST" action="{{ route('schedules.store') }}" class="p-6 space-y-4">
                 @csrf
-                <input type="hidden" name="target_year" id="formTargetYear" value="{{ $selectedYear }}">
 
                 <!-- 種別（カテゴリ）選択 -->
                 <div>

@@ -2,8 +2,8 @@
 
 namespace App\View\Components\Dashboard;
 
-use App\Models\Meeting;
-use App\Services\MeetingService;
+use App\Models\Schedule;
+use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
@@ -11,7 +11,7 @@ use Illuminate\View\Component;
 
 class UpcomingMeetingsCard extends Component
 {
-    /** @var Collection<int, Meeting> */
+    /** @var Collection<int, Schedule> */
     public readonly Collection $meetings;
 
     public readonly int $limit;
@@ -21,17 +21,17 @@ class UpcomingMeetingsCard extends Component
     /**
      * Create a new component instance.
      *
-     * @param  Collection<int, Meeting>|null  $meetings
+     * @param  Collection<int, Schedule>|null  $meetings
      */
     public function __construct(
-        protected MeetingService $meetingService,
+        protected ScheduleService $scheduleService,
         int $limit = 3,
         ?Collection $meetings = null,
         ?Carbon $now = null
     ) {
         $this->limit = $limit;
         $this->now = $now ?? Carbon::now('Asia/Tokyo');
-        $this->meetings = $meetings ?? $this->meetingService->getUpcomingMeetings($this->limit);
+        $this->meetings = $meetings ?? $this->scheduleService->getUpcomingMeetings($this->limit);
     }
 
     /**
@@ -45,13 +45,13 @@ class UpcomingMeetingsCard extends Component
     /**
      * 開催日までの残り日数を取得
      */
-    public function daysUntil(Meeting $meeting): ?int
+    public function daysUntil(Schedule $meeting): ?int
     {
-        if (! $meeting->meeting_date) {
+        if (! $meeting->start_date) {
             return null;
         }
 
-        return (int) $this->now->copy()->startOfDay()->diffInDays($meeting->meeting_date->copy()->startOfDay(), false);
+        return (int) $this->now->copy()->startOfDay()->diffInDays($meeting->start_date->copy()->startOfDay(), false);
     }
 
     /**
@@ -59,13 +59,13 @@ class UpcomingMeetingsCard extends Component
      *
      * @return array{text: string, class: string}|null
      */
-    public function badgeInfo(Meeting $meeting): ?array
+    public function badgeInfo(Schedule $meeting): ?array
     {
-        if (! $meeting->meeting_date) {
+        if (! $meeting->start_date) {
             return null;
         }
 
-        if ($meeting->meeting_date->isSameDay($this->now)) {
+        if ($meeting->start_date->isSameDay($this->now)) {
             return [
                 'text' => '本日開催',
                 'class' => 'bg-rose-50 text-rose-700 border-rose-200',
@@ -86,23 +86,23 @@ class UpcomingMeetingsCard extends Component
     /**
      * 曜日の日本語表記を取得
      */
-    public function weekdayText(Meeting $meeting): string
+    public function weekdayText(Schedule $meeting): string
     {
-        if (! $meeting->meeting_date) {
+        if (! $meeting->start_date) {
             return '';
         }
 
         $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
-        return $weekdayNames[$meeting->meeting_date->dayOfWeek] ?? '';
+        return $weekdayNames[$meeting->start_date->dayOfWeek] ?? '';
     }
 
     /**
      * 土日かどうか判定
      */
-    public function isWeekend(Meeting $meeting): bool
+    public function isWeekend(Schedule $meeting): bool
     {
-        return in_array($meeting->meeting_date?->dayOfWeek, [0, 6], true);
+        return in_array($meeting->start_date?->dayOfWeek, [0, 6], true);
     }
 
     /**

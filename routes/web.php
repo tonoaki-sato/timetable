@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AnnualScheduleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
@@ -15,9 +14,9 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\LocationScheduleController;
 use App\Http\Controllers\LocationTypeController;
 use App\Http\Controllers\ManualController;
-use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\PreparationNavigatorController;
 use App\Http\Controllers\PresentationController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffCsvController;
 use App\Http\Controllers\StaffJoinController;
@@ -73,11 +72,8 @@ Route::middleware('auth')->group(function () {
     // ユーザー管理リソースルート
     Route::resource('users', UserController::class);
 
-    // 年間スケジュール管理リソースルート
-    Route::resource('annual-schedules', AnnualScheduleController::class);
-
-    // 会議・打ち合わせ専用スケジュール管理リソースルート
-    Route::resource('meetings', MeetingController::class);
+    // スケジュール管理リソースルート
+    Route::resource('schedules', ScheduleController::class);
 
     // 現場スタッフ（ボランティア）管理・印刷・CSVルート
     Route::get('staff/export-csv', [StaffCsvController::class, 'export'])->name('staff.export-csv');

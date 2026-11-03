@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Meeting;
+use App\Models\Schedule;
 use App\Models\Staff;
 use App\Models\User;
 use Carbon\Carbon;
@@ -40,33 +40,33 @@ class DashboardUpcomingMeetingCardTest extends TestCase
         $this->actingAs($this->user);
 
         // 4件の未来会議を作成
-        $meeting1 = Meeting::factory()->create([
+        Schedule::factory()->asMeeting()->create([
             'title' => '第1回 幹事会',
-            'meeting_date' => Carbon::now('Asia/Tokyo')->addDays(1)->toDateString(),
+            'start_date' => Carbon::now('Asia/Tokyo')->addDays(1)->toDateString(),
             'start_time' => '18:00:00',
             'staff_id' => $this->staff->id,
             'location' => '商工会議所',
         ]);
 
-        $meeting2 = Meeting::factory()->create([
+        Schedule::factory()->asMeeting()->create([
             'title' => '第2回 幹事会',
-            'meeting_date' => Carbon::now('Asia/Tokyo')->addDays(3)->toDateString(),
+            'start_date' => Carbon::now('Asia/Tokyo')->addDays(3)->toDateString(),
             'start_time' => '19:00:00',
             'staff_id' => $this->staff->id,
             'location' => '本部テント',
         ]);
 
-        $meeting3 = Meeting::factory()->create([
+        Schedule::factory()->asMeeting()->create([
             'title' => '第3回 幹事会',
-            'meeting_date' => Carbon::now('Asia/Tokyo')->addDays(5)->toDateString(),
+            'start_date' => Carbon::now('Asia/Tokyo')->addDays(5)->toDateString(),
             'start_time' => '14:00:00',
             'staff_id' => $this->staff->id,
             'location' => '公民館',
         ]);
 
-        $meeting4 = Meeting::factory()->create([
+        Schedule::factory()->asMeeting()->create([
             'title' => '第4回 幹事会（遠い未来）',
-            'meeting_date' => Carbon::now('Asia/Tokyo')->addDays(10)->toDateString(),
+            'start_date' => Carbon::now('Asia/Tokyo')->addDays(10)->toDateString(),
             'start_time' => '15:00:00',
             'staff_id' => $this->staff->id,
             'location' => '市民ホール',
@@ -93,15 +93,15 @@ class DashboardUpcomingMeetingCardTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        $pastMeeting = Meeting::factory()->create([
+        Schedule::factory()->asMeeting()->create([
             'title' => '先週の反省会',
-            'meeting_date' => Carbon::now('Asia/Tokyo')->subDays(3)->toDateString(),
+            'start_date' => Carbon::now('Asia/Tokyo')->subDays(3)->toDateString(),
             'staff_id' => $this->staff->id,
         ]);
 
-        $upcomingMeeting = Meeting::factory()->create([
+        Schedule::factory()->asMeeting()->create([
             'title' => '明日の打合せ',
-            'meeting_date' => Carbon::now('Asia/Tokyo')->addDays(1)->toDateString(),
+            'start_date' => Carbon::now('Asia/Tokyo')->addDays(1)->toDateString(),
             'staff_id' => $this->staff->id,
         ]);
 
@@ -134,9 +134,9 @@ class DashboardUpcomingMeetingCardTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        Meeting::factory()->create([
+        Schedule::factory()->asMeeting()->create([
             'title' => '本日の緊急調整会議',
-            'meeting_date' => Carbon::now('Asia/Tokyo')->toDateString(),
+            'start_date' => Carbon::now('Asia/Tokyo')->toDateString(),
             'staff_id' => $this->staff->id,
         ]);
 
@@ -154,9 +154,9 @@ class DashboardUpcomingMeetingCardTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        Meeting::factory()->create([
+        Schedule::factory()->asMeeting()->create([
             'title' => '2日後の準備会',
-            'meeting_date' => Carbon::now('Asia/Tokyo')->addDays(2)->toDateString(),
+            'start_date' => Carbon::now('Asia/Tokyo')->addDays(2)->toDateString(),
             'staff_id' => $this->staff->id,
         ]);
 

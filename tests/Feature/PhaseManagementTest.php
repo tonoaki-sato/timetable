@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\AnnualPhase;
-use App\Models\AnnualSchedule;
+use App\Models\Schedule;
 use App\Models\Timetable;
 use App\Models\User;
 use App\Services\PhaseService;
@@ -28,15 +28,17 @@ class PhaseManagementTest extends TestCase
     }
 
     /**
-     * 月数値から正しい年間フェーズEnumが解決されること
+     * 年間フェーズのEnumが各月と正しくマッピングされていること
      */
     public function test_annual_phase_enum_resolves_correct_months(): void
     {
         $this->assertSame(AnnualPhase::Preparation, AnnualPhase::fromMonth(1));
         $this->assertSame(AnnualPhase::Preparation, AnnualPhase::fromMonth(2));
         $this->assertSame(AnnualPhase::Planning, AnnualPhase::fromMonth(3));
+        $this->assertSame(AnnualPhase::Planning, AnnualPhase::fromMonth(4));
         $this->assertSame(AnnualPhase::Planning, AnnualPhase::fromMonth(5));
         $this->assertSame(AnnualPhase::Arrangement, AnnualPhase::fromMonth(6));
+        $this->assertSame(AnnualPhase::Arrangement, AnnualPhase::fromMonth(7));
         $this->assertSame(AnnualPhase::Arrangement, AnnualPhase::fromMonth(8));
         $this->assertSame(AnnualPhase::Execution, AnnualPhase::fromMonth(9));
         $this->assertSame(AnnualPhase::Execution, AnnualPhase::fromMonth(10));
@@ -45,14 +47,13 @@ class PhaseManagementTest extends TestCase
     }
 
     /**
-     * 通常期において直近の年間スケジュールを反映したフェーズ情報が取得できること
+     * 通常期において直近のスケジュールを反映したフェーズ情報が取得できること
      */
     public function test_phase_service_resolves_preparation_phase_with_upcoming_task(): void
     {
         $simulatedDate = Carbon::parse('2026-05-15 10:00:00', 'Asia/Tokyo');
 
-        AnnualSchedule::factory()->create([
-            'target_year' => 2026,
+        Schedule::factory()->create([
             'title' => '第3回幹事会・予算案確定',
             'start_date' => '2026-05-20',
             'status' => 'planned',
@@ -90,18 +91,16 @@ class PhaseManagementTest extends TestCase
     }
 
     /**
-     * AnnualSchedule モデルのフェーズアクセサおよびスコープが正しく動作すること
+     * Schedule モデルのフェーズアクセサおよびスコープが正しく動作すること
      */
-    public function test_annual_schedule_model_phase_accessor_and_scope(): void
+    public function test_schedule_model_phase_accessor_and_scope(): void
     {
-        $schedule1 = AnnualSchedule::factory()->create([
-            'target_year' => 2026,
+        $schedule1 = Schedule::factory()->create([
             'title' => '第1回総会',
             'start_date' => '2026-02-15',
         ]);
 
-        $schedule2 = AnnualSchedule::factory()->create([
-            'target_year' => 2026,
+        $schedule2 = Schedule::factory()->create([
             'title' => '警察協議・道路使用許可申請',
             'start_date' => '2026-07-20',
         ]);
@@ -109,17 +108,16 @@ class PhaseManagementTest extends TestCase
         $this->assertSame(AnnualPhase::Preparation, $schedule1->phase);
         $this->assertSame(AnnualPhase::Arrangement, $schedule2->phase);
 
-        $arrangementCount = AnnualSchedule::phase(AnnualPhase::Arrangement)->count();
+        $arrangementCount = Schedule::phase(AnnualPhase::Arrangement)->count();
         $this->assertSame(1, $arrangementCount);
     }
 
     /**
      * ダッシュボード画面でフェーズ管理情報が正常に描画されること
      */
-    public function test_dashboard_renders_phase_card_with_annual_schedule(): void
+    public function test_dashboard_renders_phase_card_with_schedule(): void
     {
-        AnnualSchedule::factory()->create([
-            'target_year' => Carbon::now('Asia/Tokyo')->year,
+        Schedule::factory()->create([
             'title' => '保土ケ谷宿場まつり実行委員会 総会',
             'start_date' => Carbon::now('Asia/Tokyo')->addDays(3)->toDateString(),
             'status' => 'planned',
@@ -130,7 +128,6 @@ class PhaseManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('準備フェーズ');
         $response->assertSee('保土ケ谷宿場まつり実行委員会 総会');
-        $response->assertDontSee('href="'.route('annual-schedules.index', ['year' => Carbon::now('Asia/Tokyo')->year]).'"', false);
     }
 
     /**
@@ -163,7 +160,7 @@ class PhaseManagementTest extends TestCase
     }
 
     /**
-     * 年間スケジュールが0件の場合にフォールバック表示が正しく機能すること
+     * スケジュールが0件の場合にフォールバック表示が正しく機能すること
      */
     public function test_phase_service_handles_empty_schedules(): void
     {
@@ -179,7 +176,7 @@ class PhaseManagementTest extends TestCase
     }
 
     /**
-     * 年間スケジュールが0件でもダッシュボードが正常に表示されること
+     * スケジュールが0件でもダッシュボードが正常に表示されること
      */
     public function test_dashboard_renders_cleanly_when_no_schedules_exist(): void
     {

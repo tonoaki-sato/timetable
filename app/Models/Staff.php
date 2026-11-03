@@ -141,19 +141,11 @@ class Staff extends Model
     }
 
     /**
-     * 担当する年間スケジュール一覧とのリレーション
+     * 担当・主催するスケジュール一覧とのリレーション
      */
-    public function annualSchedules(): HasMany
+    public function schedules(): HasMany
     {
-        return $this->hasMany(AnnualSchedule::class, 'staff_id');
-    }
-
-    /**
-     * 主催する会議・打ち合わせ一覧とのリレーション
-     */
-    public function meetings(): HasMany
-    {
-        return $this->hasMany(Meeting::class, 'staff_id');
+        return $this->hasMany(Schedule::class, 'staff_id');
     }
 
     /**

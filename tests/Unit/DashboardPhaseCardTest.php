@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\DTOs\PhaseContext;
 use App\Enums\AnnualPhase;
-use App\Models\AnnualSchedule;
+use App\Models\Schedule;
 use App\Models\Timetable;
 use App\Services\PhaseService;
 use App\View\Components\Dashboard\PhaseCard;
@@ -67,7 +67,7 @@ class DashboardPhaseCardTest extends TestCase
     public function test_preparation_phase_today_task_formatting(): void
     {
         $now = Carbon::parse('2026-05-15 10:00:00', 'Asia/Tokyo');
-        $task = AnnualSchedule::factory()->make([
+        $task = Schedule::factory()->make([
             'title' => '第1回実行委員会',
             'start_date' => Carbon::parse('2026-05-15', 'Asia/Tokyo'),
         ]);
@@ -77,7 +77,7 @@ class DashboardPhaseCardTest extends TestCase
             isMainEventDay: false,
             nextTask: $task,
             pendingTaskCount: 2,
-            actionUrl: 'http://localhost/annual-schedules'
+            actionUrl: 'http://localhost/schedules'
         );
 
         $phaseService = Mockery::mock(PhaseService::class);
@@ -96,7 +96,7 @@ class DashboardPhaseCardTest extends TestCase
     public function test_preparation_phase_future_task_formatting(): void
     {
         $now = Carbon::parse('2026-05-15 10:00:00', 'Asia/Tokyo');
-        $task = AnnualSchedule::factory()->make([
+        $task = Schedule::factory()->make([
             'title' => '第3回幹事会・予算案確定',
             'start_date' => Carbon::parse('2026-05-20', 'Asia/Tokyo'),
         ]);
@@ -106,7 +106,7 @@ class DashboardPhaseCardTest extends TestCase
             isMainEventDay: false,
             nextTask: $task,
             pendingTaskCount: 3,
-            actionUrl: 'http://localhost/annual-schedules'
+            actionUrl: 'http://localhost/schedules'
         );
 
         $phaseService = Mockery::mock(PhaseService::class);
@@ -187,7 +187,7 @@ class DashboardPhaseCardTest extends TestCase
     public function test_component_renders_blade_view_cleanly(): void
     {
         $now = Carbon::parse('2026-06-01 10:00:00', 'Asia/Tokyo');
-        $task = AnnualSchedule::factory()->make([
+        $task = Schedule::factory()->make([
             'title' => '看板・横断幕発注',
             'start_date' => Carbon::parse('2026-06-10', 'Asia/Tokyo'),
         ]);

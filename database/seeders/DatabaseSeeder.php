@@ -17,14 +17,11 @@ class DatabaseSeeder extends Seeder
         // 2. スタッフ（現場ボランティア・幹事）初期データ
         $this->call(StaffSeeder::class);
 
-        // 3. 年間スケジュール初期データ
-        $this->call(AnnualScheduleSeeder::class);
+        // 3. スケジュール初期データ
+        $this->call(ScheduleSeeder::class);
 
         // 4. タイムテーブル＆タスク初期データ
         $this->call(TimetableSeeder::class);
-
-        // 5. 会議・打ち合わせ初期データ
-        $this->call(MeetingSeeder::class);
 
         // 6. 拠点種別および拠点・利用枠初期データ
         $this->call(LocationTypeSeeder::class);
