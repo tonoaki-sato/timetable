@@ -92,8 +92,12 @@ class CalendarService
                 }
             }
 
-            // B. スケジュールイベント（会議含む）をマッピング
+            // B. スケジュールイベント（会議含む、タイムテーブル連動はAで優先表示済みのためスキップ）をマッピング
             foreach ($schedules as $schedule) {
+                if ($schedule->timetable_id !== null) {
+                    continue;
+                }
+
                 $startStr = $schedule->start_date?->toDateString();
                 $endStr = $schedule->end_date?->toDateString() ?? $startStr;
 

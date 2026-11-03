@@ -77,6 +77,37 @@
         </x-slot:actions>
     </x-page-header>
 
+    @if($schedule->is_linked_to_timetable)
+    <div class="bg-gradient-to-r from-rose-50 to-indigo-50 border border-rose-200/80 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start space-x-3">
+            <span class="text-2xl p-2 bg-white rounded-xl shadow-2xs border border-rose-200 shrink-0">🏮</span>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h3 class="text-sm font-bold text-slate-900">まつり運行スケジュール（タイムテーブル）連動</h3>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">公式運行枠</span>
+                </div>
+                <p class="text-xs text-slate-600 mt-0.5">
+                    この予定はタイムテーブル管理・現場進行表と自動同期されています。班編成・作業タスク・人員配置はタイムテーブルから確認・調整できます。
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2 shrink-0">
+            @if($schedule->timetable_id)
+            <a href="{{ route('timetables.show', $schedule->timetable_id) }}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition shadow-2xs flex items-center space-x-1.5">
+                <span>⏱️</span>
+                <span>運行タイムテーブル</span>
+            </a>
+            <a href="{{ route('timetable.index', ['timetable_id' => $schedule->timetable_id]) }}"
+                class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5">
+                <span>📊</span>
+                <span>現場進行マトリクス</span>
+            </a>
+            @endif
+        </div>
+    </div>
+    @endif
+
     <!-- 1. メイン情報カード -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-6 sm:p-8 space-y-6">

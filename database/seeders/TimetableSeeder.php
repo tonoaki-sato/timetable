@@ -7,6 +7,7 @@ use App\Models\Staff;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
+use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use Illuminate\Database\Seeder;
 
 class TimetableSeeder extends Seeder
@@ -646,6 +647,12 @@ class TimetableSeeder extends Seeder
                     ]
                 );
             }
+        }
+
+        // シードされた全タイムテーブルをスケジュール管理（schedules）へ自動同期
+        $scheduleRepository = app(ScheduleRepositoryInterface::class);
+        foreach (Timetable::all() as $timetable) {
+            $scheduleRepository->syncForTimetable($timetable);
         }
     }
 }

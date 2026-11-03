@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
+    'timetable_id',
     'title',
     'category',
     'start_date',
@@ -62,11 +63,28 @@ class Schedule extends Model
     protected function casts(): array
     {
         return [
+            'timetable_id' => 'integer',
             'staff_id' => 'integer',
             'created_by' => 'integer',
             'start_date' => 'date',
             'end_date' => 'date',
         ];
+    }
+
+    /**
+     * 連動する運行スケジュール（タイムテーブル）とのリレーション
+     */
+    public function timetable(): BelongsTo
+    {
+        return $this->belongsTo(Timetable::class, 'timetable_id');
+    }
+
+    /**
+     * 運行スケジュール（タイムテーブル）連動レコードかどうか
+     */
+    public function getIsLinkedToTimetableAttribute(): bool
+    {
+        return $this->timetable_id !== null;
     }
 
     /**

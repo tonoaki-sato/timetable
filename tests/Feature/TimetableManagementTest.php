@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Lane;
+use App\Models\Schedule;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
@@ -314,5 +315,112 @@ class TimetableManagementTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['road_periods.0.end_time']);
+    }
+
+    /**
+     * 運行スケジュール（タイムテーブル）新規作成時にスケジュール管理へ自動同期されること
+     */
+    public function test_creating_timetable_automatically_syncs_to_schedules(): void
+    {
+        $this->actingAs($this->operator);
+
+        $response = $this->post(route('timetables.store'), [
+            'target_date' => '2026-10-20',
+            'name' => 'Day 1 本番運行スケジュール',
+            'description' => '宿場まつり本番運行の全体タイムライン',
+            'start_time' => '07:30',
+            'end_time' => '20:30',
+            'status' => 'active',
+            'create_default_lanes' => 1,
+        ]);
+
+        $timetable = Timetable::where('name', 'Day 1 本番運行スケジュール')->firstOrFail();
+        $response->assertRedirect(route('timetables.lanes.index', $timetable));
+
+        // schedules テーブルに同期されていることを検証
+        $this->assertDatabaseHas('schedules', [
+            'timetable_id' => $timetable->id,
+            'title' => 'Day 1 本番運行スケジュール',
+            'category' => 'operation',
+            'location' => '会場一帯',
+            'status' => 'in_progress', // active -> in_progress
+            'created_by' => $this->operator->id,
+        ]);
+
+        $syncedSchedule = Schedule::where('timetable_id', $timetable->id)->firstOrFail();
+        $this->assertSame('2026-10-20', $syncedSchedule->start_date->format('Y-m-d'));
+        $this->assertStringStartsWith('07:30', $syncedSchedule->start_time);
+        $this->assertStringStartsWith('20:30', $syncedSchedule->end_time);
+
+        // スケジュール一覧画面にバッジ付きで表示されることを検証
+        $listResponse = $this->get(route('schedules.index'));
+        $listResponse->assertStatus(200);
+        $listResponse->assertSee('Day 1 本番運行スケジュール');
+        $listResponse->assertSee('運行スケジュール');
+        $listResponse->assertSee(route('timetables.show', $timetable));
+        $listResponse->assertSee(route('timetable.index', ['timetable_id' => $timetable->id]));
+    }
+
+    /**
+     * タイムテーブル更新時に連動スケジュールも同期されること
+     */
+    public function test_updating_timetable_updates_synced_schedule(): void
+    {
+        $this->actingAs($this->operator);
+
+        $this->post(route('timetables.store'), [
+            'target_date' => '2026-10-21',
+            'name' => '同期前運行名称',
+            'start_time' => '08:00',
+            'end_time' => '17:00',
+            'status' => 'draft',
+        ]);
+
+        $timetable = Timetable::where('name', '同期前運行名称')->firstOrFail();
+
+        $this->put(route('timetables.update', $timetable), [
+            'target_date' => '2026-10-22',
+            'name' => '同期後運行名称',
+            'description' => '更新後の説明',
+            'start_time' => '09:00',
+            'end_time' => '18:00',
+            'status' => 'completed',
+        ]);
+
+        $this->assertDatabaseHas('schedules', [
+            'timetable_id' => $timetable->id,
+            'title' => '同期後運行名称',
+            'status' => 'completed', // completed -> completed
+        ]);
+
+        $updatedSchedule = Schedule::where('timetable_id', $timetable->id)->firstOrFail();
+        $this->assertSame('2026-10-22', $updatedSchedule->start_date->format('Y-m-d'));
+        $this->assertStringStartsWith('09:00', $updatedSchedule->start_time);
+        $this->assertStringStartsWith('18:00', $updatedSchedule->end_time);
+    }
+
+    /**
+     * タイムテーブル削除時に連動スケジュールも削除されること
+     */
+    public function test_deleting_timetable_deletes_synced_schedule(): void
+    {
+        $this->actingAs($this->operator);
+
+        $this->post(route('timetables.store'), [
+            'target_date' => '2026-10-23',
+            'name' => '削除連動テスト運行',
+            'start_time' => '08:00',
+            'end_time' => '17:00',
+            'status' => 'draft',
+        ]);
+
+        $timetable = Timetable::where('name', '削除連動テスト運行')->firstOrFail();
+
+        $this->assertDatabaseHas('schedules', ['timetable_id' => $timetable->id]);
+
+        $this->delete(route('timetables.destroy', $timetable));
+
+        $this->assertDatabaseMissing('timetables', ['id' => $timetable->id]);
+        $this->assertDatabaseMissing('schedules', ['timetable_id' => $timetable->id]);
     }
 }

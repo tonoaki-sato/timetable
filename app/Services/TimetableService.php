@@ -4,13 +4,15 @@ namespace App\Services;
 
 use App\Models\Timetable;
 use App\Models\User;
+use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class TimetableService
 {
     public function __construct(
-        protected TimetableRepositoryInterface $timetableRepository
+        protected TimetableRepositoryInterface $timetableRepository,
+        protected ScheduleRepositoryInterface $scheduleRepository
     ) {}
 
     /**
@@ -61,6 +63,8 @@ class TimetableService
             $timetable->createDefaultLanes();
         }
 
+        $this->scheduleRepository->syncForTimetable($timetable);
+
         return $timetable;
     }
 
@@ -71,7 +75,12 @@ class TimetableService
      */
     public function updateTimetable(Timetable $timetable, array $data): bool
     {
-        return $this->timetableRepository->update($timetable, $data);
+        $updated = $this->timetableRepository->update($timetable, $data);
+        if ($updated) {
+            $this->scheduleRepository->syncForTimetable($timetable->fresh());
+        }
+
+        return $updated;
     }
 
     /**
@@ -79,6 +88,8 @@ class TimetableService
      */
     public function deleteTimetable(Timetable $timetable): bool
     {
+        $this->scheduleRepository->deleteForTimetable($timetable->id);
+
         return $this->timetableRepository->delete($timetable);
     }
 }

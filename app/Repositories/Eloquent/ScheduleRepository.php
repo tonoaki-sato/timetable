@@ -3,6 +3,7 @@
 namespace App\Repositories\Eloquent;
 
 use App\Models\Schedule;
+use App\Models\Timetable;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -20,7 +21,7 @@ class ScheduleRepository implements ScheduleRepositoryInterface
         ?string $tab = null,
         int $perPage = 15
     ): LengthAwarePaginator {
-        $query = Schedule::with(['assignee', 'creator']);
+        $query = Schedule::with(['assignee', 'creator', 'timetable']);
 
         if ($tab === 'upcoming') {
             $query->upcoming();
@@ -145,5 +146,45 @@ class ScheduleRepository implements ScheduleRepositoryInterface
     public function delete(Schedule $schedule): bool
     {
         return (bool) $schedule->delete();
+    }
+
+    /**
+     * 運行スケジュール（タイムテーブル）に対応するスケジュールを同期
+     */
+    public function syncForTimetable(Timetable $timetable): Schedule
+    {
+        $statusMap = [
+            'draft' => 'planned',
+            'active' => 'in_progress',
+            'completed' => 'completed',
+        ];
+
+        $targetDate = $timetable->target_date instanceof \DateTimeInterface
+            ? $timetable->target_date->format('Y-m-d')
+            : (is_string($timetable->target_date) ? substr($timetable->target_date, 0, 10) : null);
+
+        return Schedule::updateOrCreate(
+            ['timetable_id' => $timetable->id],
+            [
+                'title' => $timetable->name,
+                'category' => 'operation',
+                'start_date' => $targetDate,
+                'end_date' => $targetDate,
+                'start_time' => $timetable->start_time,
+                'end_time' => $timetable->end_time,
+                'location' => '会場一帯',
+                'status' => $statusMap[$timetable->status] ?? 'planned',
+                'description' => $timetable->description,
+                'created_by' => $timetable->created_by,
+            ]
+        );
+    }
+
+    /**
+     * 運行スケジュール（タイムテーブル）に紐づくスケジュールを削除
+     */
+    public function deleteForTimetable(int $timetableId): bool
+    {
+        return (bool) Schedule::where('timetable_id', $timetableId)->delete();
     }
 }

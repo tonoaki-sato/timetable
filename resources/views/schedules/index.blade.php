@@ -186,6 +186,12 @@
 
                         <!-- 区分 -->
                         <td class="px-4 py-3 whitespace-nowrap">
+                            @if($schedule->is_linked_to_timetable)
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold border flex items-center space-x-1 w-max bg-rose-50 text-rose-700 border-rose-200">
+                                <span>🏮</span>
+                                <span>運行スケジュール</span>
+                            </span>
+                            @else
                             @php
                                 $badgeMeta = match($schedule->category) {
                                     'committee' => ['icon' => '🤝', 'class' => 'bg-indigo-50 text-indigo-700 border-indigo-200'],
@@ -199,14 +205,31 @@
                                 <span>{{ $badgeMeta['icon'] }}</span>
                                 <span>{{ $schedule->category_label }}</span>
                             </span>
+                            @endif
                         </td>
 
                         <!-- タイトル・議題 -->
                         <td class="px-4 py-3">
                             <div class="space-y-1 max-w-md">
-                                <a href="{{ route('schedules.show', $schedule) }}" class="font-bold text-slate-900 hover:text-indigo-600 transition flex items-center space-x-1">
-                                    <span>{{ $schedule->title }}</span>
-                                </a>
+                                <div class="flex items-center space-x-1.5 flex-wrap">
+                                    <a href="{{ route('schedules.show', $schedule) }}" class="font-bold text-slate-900 hover:text-indigo-600 transition">
+                                        {{ $schedule->title }}
+                                    </a>
+                                    @if($schedule->timetable_id)
+                                    <a href="{{ route('timetables.show', $schedule->timetable_id) }}"
+                                        class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 inline-flex items-center space-x-0.5 transition"
+                                        title="タイムテーブル詳細へ">
+                                        <span>⏱️</span>
+                                        <span>運行枠</span>
+                                    </a>
+                                    <a href="{{ route('timetable.index', ['timetable_id' => $schedule->timetable_id]) }}"
+                                        class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 inline-flex items-center space-x-0.5 transition"
+                                        title="現場進行マトリクスへ">
+                                        <span>📊</span>
+                                        <span>進行表</span>
+                                    </a>
+                                    @endif
+                                </div>
                                 @if($schedule->description)
                                 <p class="text-[11px] text-slate-500 line-clamp-1 leading-relaxed">
                                     {{ $schedule->description }}

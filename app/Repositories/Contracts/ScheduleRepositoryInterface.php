@@ -3,6 +3,7 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\Schedule;
+use App\Models\Timetable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -66,4 +67,14 @@ interface ScheduleRepositoryInterface
      * スケジュールの削除
      */
     public function delete(Schedule $schedule): bool;
+
+    /**
+     * 運行スケジュール（タイムテーブル）に対応するスケジュールを同期
+     */
+    public function syncForTimetable(Timetable $timetable): Schedule;
+
+    /**
+     * 運行スケジュール（タイムテーブル）に紐づくスケジュールを削除
+     */
+    public function deleteForTimetable(int $timetableId): bool;
 }

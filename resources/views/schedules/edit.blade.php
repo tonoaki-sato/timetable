@@ -34,6 +34,27 @@
     </div>
     @endif
 
+    @if($schedule->is_linked_to_timetable)
+    <div class="p-4 sm:p-5 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start space-x-3">
+            <span class="text-2xl p-2 bg-white rounded-xl shadow-2xs border border-amber-200 shrink-0">🏮</span>
+            <div>
+                <h3 class="text-xs sm:text-sm font-bold text-amber-900">この予定は運行スケジュール（タイムテーブル）と自動連動しています</h3>
+                <p class="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                    運行日・開催時間枠・名称などは「タイムテーブル編集画面」で変更すると、本スケジュールへ自動的に反映されます。
+                </p>
+            </div>
+        </div>
+        @if($schedule->timetable_id)
+        <a href="{{ route('timetables.edit', $schedule->timetable_id) }}"
+            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5 shrink-0 whitespace-nowrap">
+            <span>⏱️</span>
+            <span>運行タイムテーブルを編集</span>
+        </a>
+        @endif
+    </div>
+    @endif
+
     <!-- 入力フォーム -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
         <form action="{{ route('schedules.update', $schedule) }}" method="POST" class="space-y-6">

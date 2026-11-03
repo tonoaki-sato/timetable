@@ -89,7 +89,7 @@ class ScheduleController extends Controller
     {
         $this->authorize('view', $schedule);
 
-        $schedule->load(['creator', 'assignee']);
+        $schedule->load(['creator', 'assignee', 'timetable']);
 
         return view('schedules.show', [
             'schedule' => $schedule,
