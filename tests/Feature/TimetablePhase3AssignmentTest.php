@@ -84,27 +84,6 @@ class TimetablePhase3AssignmentTest extends TestCase
         // 班長設定（staff1 を神輿誘導班の班長に任命）
         $this->lane->update(['lead_staff_id' => $staff1->id]);
 
-        // 班長未設定のレーンとタスクを作成し、staff2にアサイン
-        $laneWithoutLead = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
-            'name' => '道路清掃班',
-            'lead_staff_id' => null,
-        ]);
-        $taskWithoutLead = TimetableTask::factory()->create([
-            'timetable_id' => $this->timetable->id,
-            'lane_id' => $laneWithoutLead->id,
-            'title' => '路面清掃',
-            'start_time' => '13:00:00',
-            'end_time' => '14:00:00',
-            'required_people_count' => 1,
-        ]);
-        TaskStaffAssignment::factory()->create([
-            'timetable_task_id' => $taskWithoutLead->id,
-            'staff_id' => $staff2->id,
-            'role_description' => '清掃員',
-            'attendance_status' => 'assigned',
-        ]);
-
         // 未ログイン時はログイン画面へリダイレクト
         $response = $this->get(route('timetables.staff-timeline', $this->timetable));
         $response->assertRedirect(route('login'));
@@ -118,10 +97,10 @@ class TimetablePhase3AssignmentTest extends TestCase
         $response->assertSee('山下 達也');
         $response->assertSee('佐藤 健太');
         $response->assertSee('神輿先導警備');
-        // タスク枠からはロール（先導誘導チーフ等の班長・担当）が削除され、代わりに当該タスクの班長名（未設定時は班長未定）が表示されること
+        // タスク枠からはロール（先導誘導チーフ等の班長・担当）が削除されること
         $response->assertDontSee('先導誘導チーフ');
-        $response->assertSee('班長: 山下 達也');
-        $response->assertSee('班長未定');
+        // staff1自身が神輿誘導班の班長のため、タスク枠内の班長名表示は非表示であること
+        $response->assertDontSee('班長: 山下 達也');
 
         // 所属団体セレクトボックスは削除され、班長表示切り替えチェックボックスが存在すること
         $response->assertDontSee('timeline-affiliation-select');
@@ -144,6 +123,76 @@ class TimetablePhase3AssignmentTest extends TestCase
         $tasksWithShortage = $response->viewData('tasksWithShortage');
         $this->assertCount(1, $tasksWithShortage);
         $this->assertSame($this->task->id, $tasksWithShortage[0]['id']);
+    }
+
+    /**
+     * 自身がそのタスクの班長の場合はタスク枠の班長名が非表示になり、一般スタッフや他班応援時には表示されること
+     */
+    public function test_task_leader_is_hidden_when_self_is_leader_and_shown_for_other_staff(): void
+    {
+        $leader = Staff::factory()->create([
+            'name' => 'リーダー 太郎',
+            'affiliation' => '神輿班',
+            'is_active' => true,
+        ]);
+        $general = Staff::factory()->create([
+            'name' => '一般 次郎',
+            'affiliation' => 'ボランティア',
+            'is_active' => true,
+        ]);
+
+        $this->lane->update(['lead_staff_id' => $leader->id]);
+
+        // 班長と一般スタッフの両方を同じ神輿タスクにアサイン
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $this->task->id,
+            'staff_id' => $leader->id,
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $this->task->id,
+            'staff_id' => $general->id,
+        ]);
+
+        // 班長未設定レーンのタスクも作成し一般スタッフにアサイン
+        $laneWithoutLead = Lane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'name' => '清掃班',
+            'lead_staff_id' => null,
+        ]);
+        $taskWithoutLead = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $laneWithoutLead->id,
+            'title' => '清掃作業',
+            'start_time' => '13:00:00',
+            'end_time' => '14:00:00',
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $taskWithoutLead->id,
+            'staff_id' => $general->id,
+        ]);
+
+        $this->actingAs($this->operator);
+        $response = $this->get(route('timetables.staff-timeline', $this->timetable));
+        $response->assertStatus(200);
+
+        // 一般スタッフの行では「班長: リーダー 太郎」が表示されること
+        $response->assertSee('班長: リーダー 太郎');
+        // 班長未設定タスクでは「班長未定」が表示されること
+        $response->assertSee('班長未定');
+
+        $content = $response->getContent();
+
+        // リーダー太郎の行（data-staff-name="リーダー 太郎"）のHTMLブロック内には "班長: リーダー 太郎" が含まれないこと
+        preg_match('/<tr[^>]*data-staff-name="リーダー 太郎"[^>]*>(.*?)<\/tr>/s', $content, $leaderRowMatches);
+        $this->assertNotEmpty($leaderRowMatches);
+        $leaderRowHtml = $leaderRowMatches[1];
+        $this->assertStringNotContainsString('班長: リーダー 太郎', $leaderRowHtml);
+
+        // 一般次郎の行（data-staff-name="一般 次郎"）のHTMLブロック内には "班長: リーダー 太郎" が含まれること
+        preg_match('/<tr[^>]*data-staff-name="一般 次郎"[^>]*>(.*?)<\/tr>/s', $content, $generalRowMatches);
+        $this->assertNotEmpty($generalRowMatches);
+        $generalRowHtml = $generalRowMatches[1];
+        $this->assertStringContainsString('班長: リーダー 太郎', $generalRowHtml);
     }
 
     /**

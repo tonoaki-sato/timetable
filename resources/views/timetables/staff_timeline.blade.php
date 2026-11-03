@@ -192,6 +192,7 @@
                         $assignment = $cell['assignment'];
                         $laneRel = $task->laneRelation;
                         $taskLeaderName = $laneRel?->leadStaff?->name;
+                        $isSelfTaskLeader = $laneRel && (int) $laneRel->lead_staff_id === (int) $staff->id;
                         $badgeBg = match($laneRel?->color ?? 'indigo') {
                             'amber' => 'bg-amber-100 border-amber-300 text-amber-900',
                             'sky' => 'bg-sky-100 border-sky-300 text-sky-900',
@@ -217,9 +218,11 @@
                             </div>
                             <div class="text-[10px] flex items-center justify-between gap-1 opacity-80">
                                 <span class="truncate">{{ $task->lane }}</span>
+                                @if(! $isSelfTaskLeader)
                                 <span class="font-medium truncate shrink-0" title="班長: {{ $taskLeaderName ?: '未定' }}">
                                     {{ $taskLeaderName ? '班長: ' . $taskLeaderName : '班長未定' }}
                                 </span>
+                                @endif
                             </div>
                         </div>
                     </td>
