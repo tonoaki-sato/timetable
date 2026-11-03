@@ -74,9 +74,13 @@ class TimetableManagementTest extends TestCase
         $response->assertSee('前日 設営運行');
         $response->assertSee(route('timetables.show', $timetableA));
         $response->assertSee(route('timetable.index', ['timetable_id' => $timetableA->id]));
+        $response->assertSee(route('timetables.lanes.index', $timetableA));
         $response->assertSee(route('timetables.tasks.index', $timetableA));
+        $response->assertSee(route('timetables.staff-timeline', $timetableA));
         $response->assertSee('タイムテーブル');
+        $response->assertSee('班一覧');
         $response->assertSee('タスク一覧');
+        $response->assertSee('人員一覧');
         $response->assertDontSee('タスク・人員台帳');
         $response->assertSee('運行時間枠');
         $response->assertSee('登録タスク');

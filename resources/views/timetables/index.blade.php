@@ -114,11 +114,25 @@
                                 <span>タイムテーブル</span>
                             </a>
 
+                            <!-- 班一覧リンク -->
+                            <a href="{{ route('timetables.lanes.index', $timetable) }}"
+                                class="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition">
+                                <span>🏷️</span>
+                                <span>班一覧</span>
+                            </a>
+
                             <!-- タスク一覧リンク -->
                             <a href="{{ route('timetables.tasks.index', $timetable) }}"
                                 class="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition">
                                 <span>📋</span>
                                 <span>タスク一覧</span>
+                            </a>
+
+                            <!-- 人員一覧リンク -->
+                            <a href="{{ route('timetables.staff-timeline', $timetable) }}"
+                                class="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition">
+                                <span>👥</span>
+                                <span>人員一覧</span>
                             </a>
 
                             <!-- 削除ボタン -->
