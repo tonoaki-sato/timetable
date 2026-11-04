@@ -508,7 +508,7 @@
                                 data-confirm="ログアウトしますか？"
                                 class="px-2 py-1 bg-slate-800 hover:bg-red-600 hover:text-white text-slate-300 text-xs font-medium rounded-lg border border-slate-700 hover:border-red-600 transition flex items-center space-x-1 cursor-pointer whitespace-nowrap shrink-0">
                                 <span>🚪</span>
-                                <span class="hidden xl:inline whitespace-nowrap">ログアウト</span>
+                                <span class="hidden lg:inline whitespace-nowrap">ログアウト</span>
                             </button>
                         </form>
                     </div>
