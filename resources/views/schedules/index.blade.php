@@ -219,6 +219,13 @@
                                 </a>
                                 @endcan
 
+                                @if($schedule->is_linked_to_timetable)
+                                <span class="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-xs font-bold cursor-not-allowed select-none"
+                                    title="運行スケジュールはタイムテーブル管理画面から削除してください">
+                                    <span>🔒</span>
+                                    <span>連動中</span>
+                                </span>
+                                @else
                                 @can('delete', $schedule)
                                 <form action="{{ route('schedules.destroy', $schedule) }}" method="POST" class="inline"
                                     data-confirm="予定「{{ $schedule->title }}」を削除しますか？">
@@ -232,6 +239,7 @@
                                     </button>
                                 </form>
                                 @endcan
+                                @endif
                             </div>
                         </td>
                     </tr>

@@ -251,4 +251,45 @@ class ScheduleManagementTest extends TestCase
             'id' => $schedule->id,
         ]);
     }
+
+    /**
+     * 運行スケジュール（タイムテーブル連動）はスケジュール管理画面から削除できないこと
+     */
+    public function test_cannot_delete_linked_timetable_schedule_from_schedules_screen(): void
+    {
+        $this->actingAs($this->user);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '本宮本番運行',
+        ]);
+
+        $schedule = Schedule::factory()->create([
+            'title' => '本宮本番運行',
+            'category' => 'operation',
+            'timetable_id' => $timetable->id,
+        ]);
+
+        // 一覧画面で削除ボタンではなく「連動中」バッジが表示されていること
+        $listResponse = $this->get(route('schedules.index'));
+        $listResponse->assertStatus(200);
+        $listResponse->assertSee('連動中');
+
+        // 詳細画面でも削除ボタンが表示されないこと
+        $showResponse = $this->get(route('schedules.show', $schedule));
+        $showResponse->assertStatus(200);
+        $showResponse->assertDontSee('予定「本宮本番運行」を削除しますか？');
+
+        // DELETE リクエストを送信しても削除が拒否され、エラーメッセージでリダイレクトされること
+        $deleteResponse = $this->delete(route('schedules.destroy', $schedule));
+        $deleteResponse->assertRedirect(route('schedules.index'));
+        $deleteResponse->assertSessionHas('error');
+
+        // DB 上で schedule も timetable も削除されずに残っていること
+        $this->assertDatabaseHas('schedules', [
+            'id' => $schedule->id,
+        ]);
+        $this->assertDatabaseHas('timetables', [
+            'id' => $timetable->id,
+        ]);
+    }
 }

@@ -62,6 +62,7 @@
             </a>
             @endcan
 
+            @if(! $schedule->is_linked_to_timetable)
             @can('delete', $schedule)
             <form action="{{ route('schedules.destroy', $schedule) }}" method="POST" class="inline"
                 data-confirm="予定「{{ $schedule->title }}」を削除しますか？&#10;この操作は取り消せません。">
@@ -74,6 +75,7 @@
                 </button>
             </form>
             @endcan
+            @endif
         </x-slot:actions>
     </x-page-header>
 
@@ -87,7 +89,7 @@
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">公式運行枠</span>
                 </div>
                 <p class="text-xs text-slate-600 mt-0.5">
-                    この予定はタイムテーブル管理・現場進行表と自動同期されています。班編成・作業タスク・人員配置はタイムテーブルから確認・調整できます。
+                    この予定はタイムテーブル管理・現場進行表と自動同期されています。班編成・作業タスク・人員配置の確認や予定の削除はタイムテーブル側から行えます。
                 </p>
             </div>
         </div>
