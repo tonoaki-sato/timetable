@@ -21,7 +21,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'location',
     'status',
     'description',
-    'notice_note',
     'staff_id',
     'created_by',
 ])]
@@ -218,12 +217,6 @@ class Schedule extends Model
             $lines[] = $this->description;
         }
 
-        if ($this->notice_note) {
-            $lines[] = '';
-            $lines[] = '📌 連絡事項：';
-            $lines[] = $this->notice_note;
-        }
-
         $lines[] = '--------------------------------';
         $lines[] = 'ご参加・ご確認よろしくお願いいたします！';
 
@@ -326,7 +319,6 @@ class Schedule extends Model
                 $q->where('title', 'like', "%{$search}%")
                     ->orWhere('location', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('notice_note', 'like', "%{$search}%")
                     ->orWhereHas('assignee', function (Builder $sq) use ($search) {
                         $sq->where('name', 'like', "%{$search}%")
                             ->orWhere('kana', 'like', "%{$search}%");

@@ -340,14 +340,6 @@
                         class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
                 </div>
 
-                <!-- LINE特記メモ（会議選択時用） -->
-                <div id="noticeNoteContainer">
-                    <label for="eventNoticeNote" class="block text-xs font-bold text-slate-700 mb-1">LINE告知用特記メモ <span class="text-slate-400 font-normal">（任意・返信期日など）</span></label>
-                    <input type="text" id="eventNoticeNote" name="notice_note"
-                        placeholder="出欠は開催2日前までにご返信ください。"
-                        class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-
                 <!-- モーダルフッター操作 -->
                 <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
                     <button type="button" data-action="close-new-event-modal"

@@ -22,7 +22,6 @@ return new class extends Migration
             $table->string('location')->nullable()->comment('開催場所・実施場所');
             $table->string('status', 30)->default('planned')->index()->comment('ステータス（planned, in_progress, completed, cancelled）');
             $table->text('description')->nullable()->comment('説明・議題・内容・アジェンダ');
-            $table->text('notice_note')->nullable()->comment('LINE等共有告知用特記メモ（返信期日・持ち物等）');
             $table->foreignId('timetable_id')->nullable()->unique()->constrained('timetables')->cascadeOnDelete()->comment('連動する運行スケジュールID（タイムテーブル）');
             $table->foreignId('staff_id')->nullable()->constrained('staff')->nullOnDelete()->comment('担当スタッフ／主催スタッフ');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->comment('登録ユーザー');

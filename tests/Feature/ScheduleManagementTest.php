@@ -141,7 +141,6 @@ class ScheduleManagementTest extends TestCase
             'location' => '第1倉庫',
             'status' => 'planned',
             'description' => '関係者一同参列のこと。',
-            'notice_note' => '軍手を持参してください。',
             'staff_id' => $this->staff->id,
         ]);
 
@@ -151,7 +150,6 @@ class ScheduleManagementTest extends TestCase
             'location' => '第1倉庫',
             'start_time' => '10:00',
             'end_time' => '12:00',
-            'notice_note' => '軍手を持参してください。',
             'staff_id' => $this->staff->id,
             'created_by' => $this->user->id,
         ]);
@@ -190,7 +188,6 @@ class ScheduleManagementTest extends TestCase
             'location' => 'コミュニティルーム',
             'staff_id' => $this->staff->id,
             'description' => '年間スケジュール案の策定',
-            'notice_note' => '返信は前日までにお願いします。',
         ]);
 
         $response = $this->get(route('schedules.show', $schedule));

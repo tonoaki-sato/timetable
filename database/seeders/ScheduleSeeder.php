@@ -30,7 +30,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => null,
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -44,7 +43,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '各部門の反省・総括報告、次年度への申し送り事項まとめ、各スタッフで洗濯・乾燥した陣羽織の回収・点検。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -58,7 +56,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '年間会議日程案（幹事会・総会・各部会）の策定、前年度運営課題の整理および申し送り事項の確認。決算取り決め。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -72,7 +69,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '第1回総会に向けた議案整理、新年度役職（正副委員長・議長・書記・会計・顧問）選出案および各部門担当の仮決め協議。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -86,7 +82,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '前年度実行委員会の解散宣言および新年度発足宣言。新幹事・役職の選出と承認、前年度会計報告の承認、部門担当の仮決めと業務内容周知。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -100,7 +95,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '各部門（ござ市、イベント、キッズ村、衛生、企画、記録、警備、広報等）の担当本決めに向けた調整、第2回総会議案の整理。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -114,7 +108,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '各部門担当責任者の正式決定、今年度まつり開催日程（10月第2日曜・翌月曜祝日）の通達と共有。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -128,7 +121,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => 'キャッチフレーズ事前募集状況の集約、タブロイド新聞および広告募集チラシの構成案検討。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -142,7 +134,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '投票結果に基づく今年度キャッチフレーズの決定、確定キャッチフレーズを反映したポスター・チラシ制作依頼の承認。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -156,7 +147,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '各イベント・企画内容の検討、新聞広告募集の目標枠数設定および担当割り振り案の策定。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -170,7 +160,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '各イベント・企画内容の全体周知、宿場まつり新聞広告募集の説明および各部会・幹事への営業担当割り振り。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -184,7 +173,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '各部門の必要資機材の洗い出し、企画詳細の精査、中間予算配分の確認。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -198,7 +186,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '抽出された必要資機材のリスト確認、各企画の実施詳細および中間予算の全体承認。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -212,7 +199,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => 'レンタル機材・購入備品の概算費用確認、地域自治会長等の来賓招待および連携方針の協議。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -226,7 +212,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '必要資機材の概算見積確認、地域自治会長等の招待リスト確定、新聞広告募集の締切直前進捗共有。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -240,7 +225,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '各部門進捗確認、レンタル機材（給水・テント等）および自前資材の最終決定、宿場まつり新聞掲載原稿・協賛名一覧の確認。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -254,7 +238,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '各部門の準備進捗確認、必要資機材の最終手配リスト決定、ボランティア応募状況の共有。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -268,7 +251,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '各部門の最終確認、通行止め予告チラシのポスティング（1回目）、道路沿い捨て看板の設置、告知ポスターの張り替え作業。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -282,7 +264,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '各部門最終確認、スタッフ用陣羽織の仕分け準備、夕刻の保土ケ谷駅前での宿場まつり新聞街頭配布。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -296,7 +277,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '各部門の反省・総括報告、次年度への申し送り事項まとめ、各スタッフで洗濯・乾燥した陣羽織の回収・点検。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
 
@@ -314,7 +294,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '前年度会計の年度末締め（3/31締め）処理完了、次年度繰越金の確定と口座管理手続き。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -328,7 +307,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => 'Googleフォーム等を活用したキャッチフレーズの事前募集と投票実施、タブロイド新聞・広告募集チラシの版下準備。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -342,7 +320,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '宿場まつり新聞の広告枠（1枠1万円）・協賛金（1口5,000円）の近隣企業・商店街募集を開始。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -356,7 +333,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '運行ガイドライン・安全マニュアルの改訂作業、必要に応じた警察署・区役所・消防署への早期事前相談の実施。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -370,7 +346,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '横浜市「商店街にぎわい促進事業補助金」および保土ケ谷区イベント活性化助成の交付申請書提出、行政・関係団体への後援名義使用申請。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -384,7 +359,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '公式ポスター原案の最終確認と印刷会社への入稿（6月下旬納品）、レクリエーション賠償責任保険の見積・プラン検討。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -398,7 +372,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '街路灯パンフレット掲示およびWebサイトでの「ござ市」出店者公募開始（飲食・物販出店規約周知、7/31締切）。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -412,7 +385,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '税務署前ステージ・各会場での出演団体および名物カラオケ大会の一般参加者募集受付。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -426,7 +398,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '地区連合町内会長会議（7/25頃）での配布に向け、地域自治会掲示板用ポスター（A4版約750部）を保土ケ谷区役所へ納品。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -440,7 +411,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '宿場まつり新聞広告の申込受付締め切り、本番時機材・スタッフ用臨時駐車場（タイムズ等）の貸切申込手続き完了。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -454,7 +424,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '横浜市「商店街にぎわい促進事業補助金」の交付決定通知を受領、助成額および対象経費の確認。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -468,7 +437,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '新聞掲載原稿・協賛者名簿の最終締切（8/7〜8/20頃）。最終校正、印刷代支払、印刷会社への正式入稿完了。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -482,7 +450,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => 'まつり当日の運営スタッフ・ボランティア（衛生・誘導・給水・ステージ補助）のWeb募集告知および受付開始。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -496,7 +463,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '保土ケ谷区長、保土ケ谷警察署長、保土ケ谷消防署長への表敬訪問と開催概要説明・協力要請挨拶。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -510,7 +476,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => 'タブロイド新聞納品受領。保土ケ谷区内近隣小中学校（約25校）および地区センター等の地域公共施設へ配布。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -524,7 +489,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '保土ケ谷警察署へ道路使用許可申請書（通行止め規制図・ござ市出店者名簿・配置図）を本提出。保健所へござ市食品販売および給水設備図面の届出・衛生協議。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -538,7 +502,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '悪天候時のポスティング予備日および室内作業（スタッフ名札作成、案内資料袋詰め、資機材点検）。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -552,7 +515,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => 'ござ市出店者への小間位置決定連絡・出店許可証の送付、出店者用代替駐車場の割り当て・案内完了。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -566,7 +528,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '保土ケ谷警察署から道路使用許可証を受領。イベント施工会社（OverCom等）との最終搬入施工スケジュールの確認と確定。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -580,7 +541,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '09:00〜 イコット広場草刈り（キッズ村会場整備、アネゴ依頼）、17:00〜 保土ケ谷駅前新聞配布、通行止めチラシのポスティング（2回目）。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -594,7 +554,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '直前新聞折込（読売・朝日・毎日等約2万部折込）、神奈川新聞地域版イベント告知記事掲載。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -608,7 +567,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '日中〜夕方 新聞駅配布、17:00〜 コミュニティルーム集合、前日設営・道路位置出し（隅出し）・足踏み式給水設備・カラーコーン等資機材の搬入および駐車場への仮設置。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -622,7 +580,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '06:00 実施判断、07:00 本陣集合・全体ミーティング、10:00〜18:00 車両通行止め（直後にゴミ箱30個+イコット6個・給水設備5台・カラーコーン88個設置）、11:00〜17:00 まつり本番（ござ市・税務署ステージ・キッズ村・企業ブース、衛生・給水・巡回警備）、17:00〜 一部機材撤収・北川駐車場等へ仮保管。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -636,7 +593,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '06:00 実施判断、08:00 本陣集合、10:00〜18:00 通行止め・再配置、11:00〜17:00 本番運行、17:00〜 完全撤収・ポスター剥がし・捨て看板外し・資機材番所地下格納、18:00 通行止め解除・清掃、19:00 ゴミ回収車積み込み、19:30〜 当日打ち上げ（吉祥楼等）。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -650,7 +606,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => 'レンタル機材（OverCom等）の回収立ち合い、まつり期間中の拾得物の保土ケ谷警察署届出、区役所・警察署・消防署への無事終了御礼連絡、警備費支払。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -664,7 +619,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => '保土ケ谷区「商店街活性化イベント助成事業」実績報告書および収支報告書の提出（11/10頃締切）。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
             [
@@ -678,7 +632,6 @@ class ScheduleSeeder extends Seeder
                 'status' => 'planned',
                 'staff_id' => null,
                 'description' => 'イベント施工会社、ゴミ収集処分業者、印刷会社等への最終請求書精算および支払処理の完了。',
-                'notice_note' => null,
                 'created_by' => $admin->id,
             ],
         ];

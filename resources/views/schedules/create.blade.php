@@ -158,16 +158,6 @@
                     class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ old('description') }}</textarea>
             </div>
 
-            <!-- LINE告知特記メモ -->
-            <div>
-                <label for="notice_note" class="block text-xs font-bold text-slate-700 mb-1">
-                    共有告知特記メモ <span class="text-slate-400 font-normal">（出欠返信期日や注意事項など、LINE共有テキストに反映されます）</span>
-                </label>
-                <textarea id="notice_note" name="notice_note" rows="2"
-                    placeholder="例: 出欠のご連絡は前日17時までにお願いいたします。"
-                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ old('notice_note') }}</textarea>
-            </div>
-
             <!-- 送信ボタン -->
             <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
                 <a href="{{ route('schedules.index') }}"

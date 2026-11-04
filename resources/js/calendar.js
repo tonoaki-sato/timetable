@@ -143,7 +143,6 @@ function initCalendar() {
 
     function handleCategoryChange(category) {
         if (!newEventForm || !newEventModal) return;
-        const noticeContainer = document.getElementById('noticeNoteContainer');
         const timeFields = document.getElementById('timeFields');
         const hostLabel = document.getElementById('hostFieldLabel');
         const modalIcon = document.getElementById('modalCategoryIcon');
@@ -168,11 +167,9 @@ function initCalendar() {
         if (eventStaffId) eventStaffId.name = 'staff_id';
 
         if (category === 'committee') {
-            noticeContainer?.classList.remove('hidden');
             timeFields?.classList.remove('hidden');
             if (hostLabel) hostLabel.innerHTML = '主催者（スタッフ） <span class="text-slate-400 font-normal">（任意・未定可）</span>';
         } else {
-            noticeContainer?.classList.add('hidden');
             if (hostLabel) hostLabel.innerHTML = '担当スタッフ <span class="text-slate-400 font-normal">（任意・未定可）</span>';
         }
     }

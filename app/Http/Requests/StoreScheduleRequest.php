@@ -33,7 +33,6 @@ class StoreScheduleRequest extends FormRequest
             'location' => ['nullable', 'string', 'max:255'],
             'status' => ['required', 'string', 'in:'.implode(',', array_keys(Schedule::STATUSES))],
             'description' => ['nullable', 'string'],
-            'notice_note' => ['nullable', 'string'],
             'staff_id' => ['nullable', 'integer', 'exists:staff,id'],
         ];
     }
@@ -55,7 +54,6 @@ class StoreScheduleRequest extends FormRequest
             'location' => '場所',
             'status' => 'ステータス',
             'description' => '詳細説明・議題',
-            'notice_note' => '共有告知特記メモ',
             'staff_id' => '担当・主催スタッフ',
         ];
     }

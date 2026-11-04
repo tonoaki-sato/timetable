@@ -42,7 +42,6 @@ class ScheduleFactory extends Factory
             'location' => fake()->randomElement(['市民会館 大ホール', 'まつり運行本部', '市役所第2会議室', 'コミュニティルーム']),
             'status' => 'planned',
             'description' => fake()->realText(80),
-            'notice_note' => null,
             'staff_id' => null,
             'created_by' => User::factory(),
         ];
@@ -75,7 +74,6 @@ class ScheduleFactory extends Factory
             'category' => 'committee',
             'start_time' => '18:00',
             'end_time' => '20:00',
-            'notice_note' => '出欠のご連絡は前日17時までにお願いいたします。',
         ]);
     }
 
