@@ -55,4 +55,3 @@ class TimetableTest extends TestCase
         $this->assertTrue($timetable->hasFestivalPeriods());
     }
 }
-

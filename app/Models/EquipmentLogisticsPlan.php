@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+use App\Services\LocationAvailabilityService;
 use Database\Factories\EquipmentLogisticsPlanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -247,64 +247,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function checkToLocationAvailability(): ?array
     {
-        $location = $this->toLocationModel;
-        if (! $location || $location->is_all_day || ! $this->target_date) {
-            return null;
-        }
-
-        if (! $location->is_active) {
-            return [
-                'level' => 'warning',
-                'message' => "拠点「{$location->name}」は現在無効か、利用可能時間帯が登録されていません。",
-            ];
-        }
-
-        $schedules = $location->relationLoaded('schedules')
-            ? $location->schedules
-            : $location->schedules()->orderBy('start_at', 'asc')->get();
-
-        if ($schedules->isEmpty()) {
-            return [
-                'level' => 'warning',
-                'message' => "拠点「{$location->name}」は現在無効か、利用可能時間帯が登録されていません。",
-            ];
-        }
-
-        [$startDateTime, $endDateTime] = $this->resolveStepDateTimeRange();
-        if (! $startDateTime || ! $endDateTime) {
-            return null;
-        }
-
-        // 実施時間帯を完全に包含するスロットを検索
-        $matched = $schedules->first(function (LocationSchedule $schedule) use ($startDateTime, $endDateTime) {
-            return $schedule->start_at <= $startDateTime && $endDateTime <= $schedule->end_at;
-        });
-
-        if ($matched) {
-            if (! $matched->isAvailable()) {
-                return [
-                    'level' => 'warning',
-                    'message' => "拠点「{$location->name}」の該当時間帯はまだ利用確保（利用可）になっていません。",
-                ];
-            }
-
-            return null;
-        }
-
-        $minStart = Carbon::parse($schedules->min('start_at'));
-        if ($startDateTime < $minStart) {
-            $fromStr = $minStart->format('n/j H:i');
-
-            return [
-                'level' => 'warning',
-                'message' => "移動先「{$location->name}」の利用開始（{$fromStr}）前です。利用可能になってから搬入してください。",
-            ];
-        }
-
-        return [
-            'level' => 'warning',
-            'message' => "移動先「{$location->name}」の利用可能時間外（またはイベントブース使用時間帯）です。利用可能枠を確認してください。",
-        ];
+        return app(LocationAvailabilityService::class)->checkToLocationAvailability($this);
     }
 
     /**
@@ -314,53 +257,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function checkFromLocationAvailability(): ?array
     {
-        $location = $this->fromLocationModel;
-        if (! $location || $location->is_all_day || ! $this->target_date) {
-            return null;
-        }
-
-        if (! $location->is_active) {
-            return [
-                'level' => 'warning',
-                'message' => "拠点「{$location->name}」は現在無効か、利用可能時間帯が登録されていません。",
-            ];
-        }
-
-        $schedules = $location->relationLoaded('schedules')
-            ? $location->schedules
-            : $location->schedules()->orderBy('start_at', 'asc')->get();
-
-        if ($schedules->isEmpty()) {
-            return [
-                'level' => 'warning',
-                'message' => "拠点「{$location->name}」は現在無効か、利用可能時間帯が登録されていません。",
-            ];
-        }
-
-        [$startDateTime, $endDateTime] = $this->resolveStepDateTimeRange();
-        if (! $startDateTime || ! $endDateTime) {
-            return null;
-        }
-
-        $matched = $schedules->first(function (LocationSchedule $schedule) use ($startDateTime, $endDateTime) {
-            return $schedule->start_at <= $startDateTime && $endDateTime <= $schedule->end_at;
-        });
-
-        if ($matched) {
-            if (! $matched->isAvailable()) {
-                return [
-                    'level' => 'warning',
-                    'message' => "拠点「{$location->name}」の該当時間帯はまだ利用確保（利用可）になっていません。",
-                ];
-            }
-
-            return null;
-        }
-
-        return [
-            'level' => 'warning',
-            'message' => "移動元「{$location->name}」の利用終了時刻を超過、またはイベントブース使用時間帯に入っています。利用可能時間内に搬出を完了してください。",
-        ];
+        return app(LocationAvailabilityService::class)->checkFromLocationAvailability($this);
     }
 
     /**
@@ -370,38 +267,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function getLocationWarningsAttribute(): array
     {
-        return array_values(array_filter([
-            $this->checkToLocationAvailability(),
-            $this->checkFromLocationAvailability(),
-        ]));
-    }
-
-    /**
-     * ステップの開始・終了予定日時を解決
-     *
-     * @return array{0: ?Carbon, 1: ?Carbon}
-     */
-    protected function resolveStepDateTimeRange(): array
-    {
-        if (! $this->target_date) {
-            return [null, null];
-        }
-
-        $dateStr = $this->target_date->format('Y-m-d');
-        $startTimeStr = $this->start_time ?: '12:00';
-        $endTimeStr = $this->end_time ?: $startTimeStr;
-
-        try {
-            $start = Carbon::parse($dateStr.' '.$startTimeStr);
-            $end = Carbon::parse($dateStr.' '.$endTimeStr);
-            if ($end < $start) {
-                $end = $start->copy();
-            }
-
-            return [$start, $end];
-        } catch (\Throwable) {
-            return [null, null];
-        }
+        return app(LocationAvailabilityService::class)->getLocationWarnings($this);
     }
 
     /**

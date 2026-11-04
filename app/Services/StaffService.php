@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\Staff;
+use App\Models\TaskStaffAssignment;
 use App\Repositories\Contracts\StaffRepositoryInterface;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
@@ -191,5 +193,54 @@ class StaffService
     public function findByNameAndKana(string $name, string $kana)
     {
         return $this->staffRepository->findByNameAndKana($name, $kana);
+    }
+
+    /**
+     * スタッフのアサイン情報一覧から現在時刻に基づく Now & Next タスクを判定
+     *
+     * @param  iterable<TaskStaffAssignment>  $assignments
+     * @return array{
+     *     current_task: ?TaskStaffAssignment,
+     *     next_task: ?TaskStaffAssignment
+     * }
+     */
+    public function resolveNowAndNextTasks(iterable $assignments, ?Carbon $now = null): array
+    {
+        $now = $now ?? now();
+        $todayDate = $now->format('Y-m-d');
+        $currentTime = $now->format('H:i:s');
+
+        $currentTask = null;
+        $nextTask = null;
+
+        foreach ($assignments as $assignment) {
+            $task = $assignment->task;
+            if (! $task || ! $task->timetable) {
+                continue;
+            }
+
+            $taskDate = $task->timetable->target_date?->format('Y-m-d');
+
+            // 当日のタスクまたは直近のタスクを対象に判定
+            if ($taskDate === $todayDate) {
+                if ($task->start_time <= $currentTime && ($task->end_time === null || $task->end_time >= $currentTime)) {
+                    if (! $currentTask) {
+                        $currentTask = $assignment;
+                    }
+                } elseif ($task->start_time > $currentTime) {
+                    if (! $nextTask) {
+                        $nextTask = $assignment;
+                    }
+                }
+            } elseif ($taskDate > $todayDate && ! $currentTask && ! $nextTask) {
+                // 当日にタスクがなく未来日のタスクがある場合、最初のタスクを次の予定とする
+                $nextTask = $assignment;
+            }
+        }
+
+        return [
+            'current_task' => $currentTask,
+            'next_task' => $nextTask,
+        ];
     }
 }

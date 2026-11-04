@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,13 +26,10 @@ class LoginController extends Controller
     /**
      * ログイン認証処理
      */
-    public function login(Request $request): RedirectResponse
+    public function login(LoginRequest $request): RedirectResponse
     {
         // 1. 入力バリデーション
-        $credentials = $request->validate([
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+        $credentials = $request->safe()->only(['email', 'password']);
 
         // レートリミット判定（メールアドレス+IP単位、1分間に5回まで）
         $throttleKey = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());

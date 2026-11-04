@@ -305,4 +305,51 @@ class TimetableTaskService
     {
         return Staff::active()->orderBy('kana')->get();
     }
+
+    /**
+     * レーン別および選択レーンに基づく候補開始・終了時刻を算出
+     *
+     * @param  \Illuminate\Support\Collection<int, Lane>  $timetableLanes
+     * @return array{
+     *     suggested_start_time: string,
+     *     suggested_end_time: string,
+     *     lane_suggested_start_times: array<int, string>
+     * }
+     */
+    public function calculateSuggestedTimeRange(
+        $timetableLanes,
+        ?Lane $selectedLane = null,
+        ?string $requestedStartTime = null
+    ): array {
+        $laneSuggestedStartTimes = [];
+        foreach ($timetableLanes as $laneItem) {
+            $latest = $laneItem->tasks->sortByDesc('end_time')->first();
+            $laneSuggestedStartTimes[$laneItem->id] = $latest ? substr($latest->end_time, 0, 5) : '08:00';
+        }
+
+        if (is_string($requestedStartTime) && preg_match('/^\d{2}:\d{2}$/', $requestedStartTime)) {
+            $suggestedStartTime = $requestedStartTime;
+        } elseif ($selectedLane && isset($laneSuggestedStartTimes[$selectedLane->id])) {
+            $suggestedStartTime = $laneSuggestedStartTimes[$selectedLane->id];
+        } else {
+            $suggestedStartTime = '08:00';
+        }
+
+        // 初期終了時刻の算出（開始時刻の60分後、または08:00なら09:30）
+        $suggestedEndTime = '09:30';
+        if (preg_match('/^(\d{2}):(\d{2})$/', $suggestedStartTime, $matches)) {
+            $startMinutes = ((int) $matches[1]) * 60 + ((int) $matches[2]);
+            $endMinutes = min(23 * 60 + 59, $startMinutes + ($suggestedStartTime === '08:00' && ! $requestedStartTime ? 90 : 60));
+            if ($endMinutes <= $startMinutes) {
+                $endMinutes = min(23 * 60 + 59, $startMinutes + 30);
+            }
+            $suggestedEndTime = sprintf('%02d:%02d', intdiv($endMinutes, 60), $endMinutes % 60);
+        }
+
+        return [
+            'suggested_start_time' => $suggestedStartTime,
+            'suggested_end_time' => $suggestedEndTime,
+            'lane_suggested_start_times' => $laneSuggestedStartTimes,
+        ];
+    }
 }

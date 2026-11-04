@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DestroyLaneRequest;
+use App\Http\Requests\ReorderLanesRequest;
 use App\Http\Requests\StoreLaneRequest;
 use App\Http\Requests\UpdateLaneLeadStaffRequest;
 use App\Http\Requests\UpdateLaneRequest;
@@ -11,7 +13,6 @@ use App\Models\Timetable;
 use App\Services\TimetableTaskService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -162,14 +163,11 @@ class LaneController extends Controller
     /**
      * レーンの表示順一括更新（ドラッグ＆ドロップ用）
      */
-    public function reorder(Request $request, Timetable $timetable): JsonResponse
+    public function reorder(ReorderLanesRequest $request, Timetable $timetable): JsonResponse
     {
         $this->authorize('update', Lane::class);
 
-        $validated = $request->validate([
-            'lane_ids' => ['required', 'array'],
-            'lane_ids.*' => ['integer', 'exists:lanes,id'],
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $timetable) {
             $order = 10;
@@ -190,7 +188,7 @@ class LaneController extends Controller
     /**
      * レーン削除処理（タスクが存在する場合は別レーン移行または確認後削除）
      */
-    public function destroy(Request $request, Timetable $timetable, Lane $lane): JsonResponse|RedirectResponse
+    public function destroy(DestroyLaneRequest $request, Timetable $timetable, Lane $lane): JsonResponse|RedirectResponse
     {
         $this->authorize('delete', $lane);
 
@@ -198,7 +196,7 @@ class LaneController extends Controller
 
         // タスク移行先が指定されている場合
         if ($request->filled('migrate_to_lane_id')) {
-            $migrateToLaneId = (int) $request->input('migrate_to_lane_id');
+            $migrateToLaneId = (int) $request->validated('migrate_to_lane_id');
             $targetLane = $timetable->lanes()->where('id', $migrateToLaneId)->first();
 
             if (! $targetLane || $targetLane->id === $lane->id) {

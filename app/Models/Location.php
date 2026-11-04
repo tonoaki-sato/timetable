@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\DTOs\LocationStatusEvaluation;
-use App\Enums\LocationCurrentStatus;
+use App\Services\LocationAvailabilityService;
 use Carbon\Carbon;
 use Database\Factories\LocationFactory;
 use DateTimeInterface;
@@ -177,80 +177,6 @@ class Location extends Model
      */
     public function evaluateStatusAt(?DateTimeInterface $dateTime = null): LocationStatusEvaluation
     {
-        $dateTime = $dateTime
-            ? Carbon::parse($dateTime)->timezone('Asia/Tokyo')
-            : Carbon::now('Asia/Tokyo');
-
-        if (! $this->is_active) {
-            return new LocationStatusEvaluation(
-                status: LocationCurrentStatus::Inactive,
-                detail: '拠点は現在無効（非稼働）に設定されています。'
-            );
-        }
-
-        if ($this->is_all_day) {
-            return new LocationStatusEvaluation(
-                status: LocationCurrentStatus::Available,
-                detail: '終日利用可能です。'
-            );
-        }
-
-        $schedules = $this->relationLoaded('schedules')
-            ? $this->schedules
-            : $this->schedules()->orderBy('start_at', 'asc')->get();
-
-        if ($schedules->isEmpty()) {
-            return new LocationStatusEvaluation(
-                status: LocationCurrentStatus::NoSchedule,
-                detail: '利用可能時間帯がまだ登録されていません。'
-            );
-        }
-
-        // 指定日時を含むスロットを検索
-        $matched = $schedules->first(function (LocationSchedule $schedule) use ($dateTime) {
-            return $schedule->start_at <= $dateTime && $dateTime <= $schedule->end_at;
-        });
-
-        if ($matched) {
-            $slotTitle = $matched->title ? "「{$matched->title}」" : $matched->start_at->format('H:i').'〜'.$matched->end_at->format('H:i');
-
-            if ($matched->isAvailable()) {
-                return new LocationStatusEvaluation(
-                    status: LocationCurrentStatus::Available,
-                    detail: "{$slotTitle}で利用可能です（{$matched->end_at->format('H:i')}まで）。",
-                    matchedSchedule: $matched
-                );
-            }
-
-            return new LocationStatusEvaluation(
-                status: LocationCurrentStatus::UnavailablePending,
-                detail: "{$slotTitle}は未確保（調整中）のため利用できません。",
-                matchedSchedule: $matched
-            );
-        }
-
-        // 枠外の場合
-        $latestEnd = $schedules->max('end_at');
-        if ($latestEnd && $dateTime > $latestEnd) {
-            return new LocationStatusEvaluation(
-                status: LocationCurrentStatus::NoSchedule,
-                detail: 'すべての利用可能期間が終了しました。'
-            );
-        }
-
-        // 次の利用可能枠を検索
-        $next = $schedules->first(function (LocationSchedule $schedule) use ($dateTime) {
-            return $schedule->start_at > $dateTime;
-        });
-
-        $nextDetail = $next
-            ? '次回利用可能枠: '.$next->start_at->format('n/j H:i').'〜'.$next->end_at->format('H:i')
-            : '現在利用時間外です。';
-
-        return new LocationStatusEvaluation(
-            status: LocationCurrentStatus::UnavailableOutOfHours,
-            detail: $nextDetail,
-            nextSchedule: $next
-        );
+        return app(LocationAvailabilityService::class)->evaluateLocationStatus($this, $dateTime);
     }
 }

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLaneRequestFromShiftRequest;
+use App\Http\Requests\UpdateLaneTaskStatusRequest;
+use App\Http\Requests\UpdateStaffAssignmentStatusRequest;
 use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\TaskStaffAssignment;
@@ -46,37 +49,9 @@ class StaffShiftController extends Controller
         ]);
 
         // 現在時刻に基づく Now & Next タスクの判定
-        $now = now();
-        $todayDate = $now->format('Y-m-d');
-        $currentTime = $now->format('H:i:s');
-
-        $currentTask = null;
-        $nextTask = null;
-
-        foreach ($assignments as $assignment) {
-            $task = $assignment->task;
-            if (! $task || ! $task->timetable) {
-                continue;
-            }
-
-            $taskDate = $task->timetable->target_date?->format('Y-m-d');
-
-            // 当日のタスクまたは直近のタスクを対象に判定
-            if ($taskDate === $todayDate) {
-                if ($task->start_time <= $currentTime && ($task->end_time === null || $task->end_time >= $currentTime)) {
-                    if (! $currentTask) {
-                        $currentTask = $assignment;
-                    }
-                } elseif ($task->start_time > $currentTime) {
-                    if (! $nextTask) {
-                        $nextTask = $assignment;
-                    }
-                }
-            } elseif ($taskDate > $todayDate && ! $currentTask && ! $nextTask) {
-                // 当日にタスクがなく未来日のタスクがある場合、最初のタスクを次の予定とする
-                $nextTask = $assignment;
-            }
-        }
+        $resolvedTasks = $this->staffService->resolveNowAndNextTasks($assignments);
+        $currentTask = $resolvedTasks['current_task'];
+        $nextTask = $resolvedTasks['next_task'];
 
         $ledLanes = $staff->ledLanes()
             ->with([
@@ -123,7 +98,7 @@ class StaffShiftController extends Controller
     /**
      * 現場スタッフによる自身のタスク進捗更新（着手・完了報告）
      */
-    public function updateAssignmentStatus(Request $request, string $token, TaskStaffAssignment $assignment): JsonResponse|RedirectResponse
+    public function updateAssignmentStatus(UpdateStaffAssignmentStatusRequest $request, string $token, TaskStaffAssignment $assignment): JsonResponse|RedirectResponse
     {
         $staff = $this->staffService->getStaffByToken($token);
 
@@ -135,11 +110,7 @@ class StaffShiftController extends Controller
             abort(403, 'ご自身の担当タスクのみ進捗を報告できます。');
         }
 
-        $request->validate([
-            'status' => ['required', 'string', 'in:assigned,checked_in,in_progress,completed,absent'],
-        ]);
-
-        $status = $request->string('status')->toString();
+        $status = $request->validated('status');
         $this->staffService->updateStaffAssignmentStatus($staff, $assignment->id, $status);
 
         if ($request->wantsJson()) {
@@ -157,7 +128,7 @@ class StaffShiftController extends Controller
     /**
      * 班長による担当班タスクの全体ステータス更新
      */
-    public function updateLaneTaskStatus(Request $request, string $token, TimetableTask $task): JsonResponse|RedirectResponse
+    public function updateLaneTaskStatus(UpdateLaneTaskStatusRequest $request, string $token, TimetableTask $task): JsonResponse|RedirectResponse
     {
         $staff = $this->staffService->getStaffByToken($token);
 
@@ -170,9 +141,7 @@ class StaffShiftController extends Controller
             abort(403, '担当する班の班長のみタスク全体の進捗を更新できます。');
         }
 
-        $validated = $request->validate([
-            'status' => ['required', 'string', 'in:not_started,in_progress,completed,cancelled'],
-        ]);
+        $validated = $request->validated();
 
         $task->update([
             'status' => $validated['status'],
@@ -193,7 +162,7 @@ class StaffShiftController extends Controller
     /**
      * 班長による管理者（本部）への人員不足要請・必要機材申請の送信
      */
-    public function storeLaneRequest(Request $request, string $token, Lane $lane): JsonResponse|RedirectResponse
+    public function storeLaneRequest(StoreLaneRequestFromShiftRequest $request, string $token, Lane $lane): JsonResponse|RedirectResponse
     {
         $staff = $this->staffService->getStaffByToken($token);
 
@@ -205,13 +174,7 @@ class StaffShiftController extends Controller
             abort(403, '担当する班の班長のみ管理者への要請・申請を行えます。');
         }
 
-        $validated = $request->validate([
-            'request_type' => ['required', 'string', 'in:staffing,equipment'],
-            'timetable_task_id' => ['nullable', 'integer', 'exists:timetable_tasks,id'],
-            'requested_count' => ['required', 'integer', 'min:1', 'max:100'],
-            'equipment_name' => ['required_if:request_type,equipment', 'nullable', 'string', 'max:255'],
-            'reason' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
         $laneRequest = LaneRequest::create([
             'timetable_id' => $lane->timetable_id,

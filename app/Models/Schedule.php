@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AnnualPhase;
+use App\Presenters\SchedulePresenter;
 use Database\Factories\ScheduleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -123,17 +124,7 @@ class Schedule extends Model
      */
     public function getCategoryIconAttribute(): string
     {
-        if ($this->is_linked_to_timetable) {
-            return '🏮';
-        }
-
-        return match ($this->category) {
-            'committee' => '🤝',
-            'permit' => '📑',
-            'briefing' => '📢',
-            'operation' => '🎪',
-            default => '📌',
-        };
+        return (new SchedulePresenter($this))->categoryIcon();
     }
 
     /**
@@ -149,18 +140,7 @@ class Schedule extends Model
      */
     public function getFormattedTimeRangeAttribute(): ?string
     {
-        if (! $this->start_time) {
-            return null;
-        }
-
-        $start = substr($this->start_time, 0, 5);
-        if ($this->end_time) {
-            $end = substr($this->end_time, 0, 5);
-
-            return "{$start} 〜 {$end}";
-        }
-
-        return "{$start} 〜";
+        return (new SchedulePresenter($this))->formattedTimeRange();
     }
 
     /**
@@ -168,26 +148,7 @@ class Schedule extends Model
      */
     public function getFormattedDatetimeAttribute(): string
     {
-        if (! $this->start_date) {
-            return '';
-        }
-
-        $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
-        $weekday = $weekdayNames[$this->start_date->dayOfWeek] ?? '';
-        $dateStr = $this->start_date->format('Y年n月j日')."({$weekday})";
-
-        if ($this->end_date && $this->end_date->ne($this->start_date)) {
-            $endWeekday = $weekdayNames[$this->end_date->dayOfWeek] ?? '';
-            $endDateStr = $this->end_date->format('Y年n月j日')."({$endWeekday})";
-
-            return "{$dateStr} 〜 {$endDateStr}";
-        }
-
-        if ($this->formatted_time_range) {
-            return "{$dateStr} {$this->formatted_time_range}";
-        }
-
-        return $dateStr;
+        return (new SchedulePresenter($this))->formattedDatetime();
     }
 
     /**
@@ -195,32 +156,7 @@ class Schedule extends Model
      */
     public function getShareTextAttribute(): string
     {
-        $datetime = $this->formatted_datetime;
-        $hostName = $this->assignee?->name ?? '未定（後から設定）';
-        $location = $this->location ?: '未定';
-        $title = $this->title;
-
-        $header = $this->category === 'committee' ? '【会議開催のお知らせ】' : "【{$this->category_label}開催のお知らせ】";
-
-        $lines = [
-            $header,
-            "「{$title}」の開催日程が決まりました。",
-            '',
-            "📅 日時：{$datetime}",
-            "📍 場所：{$location}",
-            "👤 担当：{$hostName}",
-        ];
-
-        if ($this->description) {
-            $lines[] = '';
-            $lines[] = '📝 議題・内容：';
-            $lines[] = $this->description;
-        }
-
-        $lines[] = '--------------------------------';
-        $lines[] = 'ご参加・ご確認よろしくお願いいたします！';
-
-        return implode("\n", $lines);
+        return (new SchedulePresenter($this))->shareText();
     }
 
     /**

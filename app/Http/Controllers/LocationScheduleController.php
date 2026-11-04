@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLocationScheduleRequest;
 use App\Http\Requests\UpdateLocationScheduleRequest;
+use App\Http\Requests\UpdateLocationScheduleStatusRequest;
 use App\Models\Location;
 use App\Models\LocationSchedule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class LocationScheduleController extends Controller
 {
@@ -62,14 +62,12 @@ class LocationScheduleController extends Controller
     /**
      * 確保ステータスの簡易更新（ワンクリック切り替え用）
      */
-    public function updateStatus(Request $request, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
+    public function updateStatus(UpdateLocationScheduleStatusRequest $request, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
     {
         abort_if($schedule->location_id !== $location->id, 404);
         $this->authorize('update', $schedule);
 
-        $validated = $request->validate([
-            'availability_status' => ['required', Rule::in(array_keys(LocationSchedule::AVAILABILITY_STATUSES))],
-        ]);
+        $validated = $request->validated();
 
         $schedule->update(['availability_status' => $validated['availability_status']]);
 

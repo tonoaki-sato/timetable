@@ -2,24 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateLaneRequestStatusRequest;
 use App\Models\Lane;
 use App\Models\LaneRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 class LaneRequestController extends Controller
 {
     /**
      * 班長からの人員応援要請・必要機材申請の対応ステータス更新（管理者・本部オペレーター用）
      */
-    public function updateStatus(Request $request, LaneRequest $laneRequest): JsonResponse|RedirectResponse
+    public function updateStatus(UpdateLaneRequestStatusRequest $request, LaneRequest $laneRequest): JsonResponse|RedirectResponse
     {
         $this->authorize('update', $laneRequest->lane ?? Lane::class);
 
-        $validated = $request->validate([
-            'status' => ['required', 'string', 'in:pending,approved,resolved,rejected'],
-        ]);
+        $validated = $request->validated();
 
         $status = $validated['status'];
         $laneRequest->update([

@@ -88,39 +88,19 @@ class TimetableTaskController extends Controller
             ? $timetableLanes->firstWhere('id', $selectedLaneId)
             : $timetableLanes->first();
 
-        $laneSuggestedStartTimes = [];
-        foreach ($timetableLanes as $laneItem) {
-            $latest = $laneItem->tasks->sortByDesc('end_time')->first();
-            $laneSuggestedStartTimes[$laneItem->id] = $latest ? substr($latest->end_time, 0, 5) : '08:00';
-        }
-
-        $requestedStartTime = $request->query('start_time');
-        if (is_string($requestedStartTime) && preg_match('/^\d{2}:\d{2}$/', $requestedStartTime)) {
-            $suggestedStartTime = $requestedStartTime;
-        } elseif ($selectedLane && isset($laneSuggestedStartTimes[$selectedLane->id])) {
-            $suggestedStartTime = $laneSuggestedStartTimes[$selectedLane->id];
-        } else {
-            $suggestedStartTime = '08:00';
-        }
-
-        // 初期終了時刻の算出（開始時刻の60分後、または08:00なら09:30）
-        $suggestedEndTime = '09:30';
-        if (preg_match('/^(\d{2}):(\d{2})$/', $suggestedStartTime, $matches)) {
-            $startMinutes = ((int) $matches[1]) * 60 + ((int) $matches[2]);
-            $endMinutes = min(23 * 60 + 59, $startMinutes + ($suggestedStartTime === '08:00' && ! $requestedStartTime ? 90 : 60));
-            if ($endMinutes <= $startMinutes) {
-                $endMinutes = min(23 * 60 + 59, $startMinutes + 30);
-            }
-            $suggestedEndTime = sprintf('%02d:%02d', intdiv($endMinutes, 60), $endMinutes % 60);
-        }
+        $suggestedRange = $this->taskService->calculateSuggestedTimeRange(
+            $timetableLanes,
+            $selectedLane,
+            $request->query('start_time')
+        );
 
         return view('timetable_tasks.create', [
             'timetable' => $timetable,
             'timetableLanes' => $timetableLanes,
             'selectedLane' => $selectedLane,
-            'suggestedStartTime' => $suggestedStartTime,
-            'suggestedEndTime' => $suggestedEndTime,
-            'laneSuggestedStartTimes' => $laneSuggestedStartTimes,
+            'suggestedStartTime' => $suggestedRange['suggested_start_time'],
+            'suggestedEndTime' => $suggestedRange['suggested_end_time'],
+            'laneSuggestedStartTimes' => $suggestedRange['lane_suggested_start_times'],
             'lanes' => $timetableLanes->pluck('name', 'name')->all(),
             'statuses' => TimetableTask::STATUSES,
         ]);

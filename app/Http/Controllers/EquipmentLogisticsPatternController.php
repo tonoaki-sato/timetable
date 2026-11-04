@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SaveEquipmentPatternRequest;
 use App\Http\Requests\StoreEquipmentLogisticsPatternRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPatternRequest;
 use App\Models\Equipment;
@@ -11,7 +12,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class EquipmentLogisticsPatternController extends Controller
 {
@@ -138,15 +138,11 @@ class EquipmentLogisticsPatternController extends Controller
     /**
      * 資材に登録済みのステップ群を新しい搬出入パターンとして保存
      */
-    public function saveFromEquipment(Request $request, Equipment $equipment): RedirectResponse|JsonResponse
+    public function saveFromEquipment(SaveEquipmentPatternRequest $request, Equipment $equipment): RedirectResponse|JsonResponse
     {
         $this->authorize('create', EquipmentLogisticsPattern::class);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'target_type' => ['nullable', 'string', Rule::in(array_keys(EquipmentLogisticsPattern::TARGET_TYPES))],
-            'description' => ['nullable', 'string', 'max:2000'],
-        ]);
+        $validated = $request->validated();
 
         if ($equipment->plans()->count() === 0) {
             return back()->withErrors(['name' => '保存する搬出入ステップが登録されていません。']);

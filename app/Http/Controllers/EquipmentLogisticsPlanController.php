@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ApplyEquipmentTemplateRequest;
 use App\Http\Requests\StoreEquipmentLogisticsPlanRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPlanRequest;
+use App\Http\Requests\UpdateEquipmentLogisticsPlanStatusRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
 use App\Models\EquipmentLogisticsPlan;
@@ -82,13 +83,11 @@ class EquipmentLogisticsPlanController extends Controller
     /**
      * ステータス更新（計画中 ➔ 進行中 ➔ 完了）
      */
-    public function updateStatus(Request $request, EquipmentLogisticsPlan $plan): RedirectResponse|JsonResponse
+    public function updateStatus(UpdateEquipmentLogisticsPlanStatusRequest $request, EquipmentLogisticsPlan $plan): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $plan);
 
-        $validated = $request->validate([
-            'status' => ['required', 'string', 'in:planned,in_progress,completed,cancelled'],
-        ]);
+        $validated = $request->validated();
 
         $plan->update(['status' => $validated['status']]);
 
