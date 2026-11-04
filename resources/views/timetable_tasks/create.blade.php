@@ -20,8 +20,6 @@
         </x-slot:breadcrumbs>
     </x-page-header>
 
-    <x-timetable-workflow-steps :current-step="3" :timetable="$timetable" />
-
     <!-- エラーサマリー -->
     @if ($errors->any())
     <div class="p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl space-y-1">

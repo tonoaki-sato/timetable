@@ -154,16 +154,16 @@ class TimetableManagementTest extends TestCase
     }
 
     /**
-     * 新規作成画面にゆとりあるコンテナ幅、ステップガイド、およびデフォルト班自動生成のhidden inputが存在すること
+     * 新規作成画面にゆとりあるコンテナ幅、およびデフォルト班自動生成のhidden inputが存在すること（ステップガイドは非表示）
      */
-    public function test_create_view_displays_workflow_steps_with_expanded_width_and_hidden_input(): void
+    public function test_create_view_displays_expanded_width_and_hidden_input(): void
     {
         $this->actingAs($this->operator);
 
         $response = $this->get(route('timetables.create'));
         $response->assertStatus(200);
         $response->assertSee('max-w-5xl');
-        $response->assertSee('まつり運行準備ステップガイド');
+        $response->assertDontSee('まつり運行準備ステップガイド');
         $response->assertSee('<input type="hidden" name="create_default_lanes" value="0">', false);
         $response->assertSee('まつり標準10班（カラーコーン・給水・衛生・巡回・キッズ村など）を自動生成する（推奨）');
     }

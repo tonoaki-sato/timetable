@@ -56,9 +56,6 @@
     <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
     <x-timetable-context-bar :timetable="$timetable" active="timeline" />
 
-    <!-- まつり運行準備ステップガイド (Step 4 人員配置) -->
-    <x-timetable-workflow-steps :current-step="4" :timetable="$timetable" />
-
     <!-- フィルターバー -->
     <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3 print:hidden">
         <div class="flex flex-wrap items-center gap-2 flex-1">

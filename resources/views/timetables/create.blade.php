@@ -17,8 +17,6 @@
     </x-page-header>
 
     <div class="max-w-5xl mx-auto space-y-3.5">
-        <x-timetable-workflow-steps :current-step="1" />
-
         <!-- バリデーションエラーサマリー -->
         @if ($errors->any())
         <div class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl space-y-1">

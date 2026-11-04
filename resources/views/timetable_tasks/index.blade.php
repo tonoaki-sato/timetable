@@ -46,8 +46,6 @@
     <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
     <x-timetable-context-bar :timetable="$timetable" active="tasks" />
 
-    <x-timetable-workflow-steps :current-step="3" :timetable="$timetable" />
-
     <!-- 作業タスク一覧セクション -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         <div class="p-3 sm:p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">

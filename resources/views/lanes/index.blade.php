@@ -27,8 +27,6 @@
     <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
     <x-timetable-context-bar :timetable="$timetable" active="lanes" />
 
-    <x-timetable-workflow-steps :current-step="2" :timetable="$timetable" />
-
     <!-- アラートメッセージ -->
     @if(session('success'))
     <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center space-x-2">
