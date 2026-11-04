@@ -32,6 +32,16 @@ class StaffManagementTest extends TestCase
     }
 
     /**
+     * 認証済みユーザーはスタッフ新規登録画面を正常に表示できること
+     */
+    public function test_create_page_can_be_rendered_for_authenticated_users(): void
+    {
+        $response = $this->actingAs($this->operator)->get(route('staff.create'));
+        $response->assertStatus(200);
+        $response->assertSee('新規スタッフ登録');
+    }
+
+    /**
      * 停止中ユーザーは403 Forbiddenとなること
      */
     public function test_inactive_users_are_forbidden(): void

@@ -1,5 +1,5 @@
 <x-layouts.app :title="$equipment->name . ' - 搬出入計画'">
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ヘッダーエリア -->
     <x-page-header
@@ -11,15 +11,15 @@
                 ? '個人持ち込み私物（定常保管: ' . ($equipment->storage_location ?: '自宅') . '）'
                 : '実行委員会保有備品（定常保管: ' . ($equipment->storage_location ?: '番所地下倉庫') . '）')">
         <x-slot:breadcrumbs>
-            <a href="{{ route('equipments.index') }}" class="hover:underline">資材管理</a>
-            <span>/</span>
-            <a href="{{ route('equipments.show', $equipment) }}" class="hover:underline">{{ $equipment->name }}</a>
-            <span>/</span>
-            <span class="text-slate-800 font-bold">搬出入ステップ</span>
+            <a href="{{ route('equipments.index') }}" class="hover:underline shrink-0">資材管理</a>
+            <span class="shrink-0 text-slate-300">/</span>
+            <a href="{{ route('equipments.show', $equipment) }}" class="hover:underline truncate max-w-[160px]">{{ $equipment->name }}</a>
+            <span class="shrink-0 text-slate-300">/</span>
+            <span class="text-slate-800 font-bold shrink-0">搬出入ステップ</span>
         </x-slot:breadcrumbs>
 
         <x-slot:badges>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono {{ $equipment->isCommittee() ? 'bg-emerald-100 text-emerald-800' : ($equipment->isRental() ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-800') }}">
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold font-mono {{ $equipment->isCommittee() ? 'bg-emerald-100 text-emerald-800' : ($equipment->isRental() ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-800') }}">
                 {{ $equipment->formatted_quantity }}
             </span>
             <span class="px-2 py-0.5 rounded-full text-xs font-bold {{ $equipment->isCommittee() ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : ($equipment->isRental() ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-amber-50 text-amber-700 border border-amber-200') }}">
@@ -40,24 +40,24 @@
 
         <x-slot:actions>
             <button type="button" data-action="open-apply-template-modal"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
+                class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
                 <span>⚡</span>
                 <span>パターン適用</span>
             </button>
             @if($equipment->plans->isNotEmpty())
                 <button type="button" data-action="open-save-pattern-modal"
-                    class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
+                    class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
                     <span>🧩</span>
-                    <span>パターンとして保存</span>
+                    <span>パターン保存</span>
                 </button>
             @endif
             <button type="button" data-action="open-step-modal" data-mode="create"
-                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer whitespace-nowrap shrink-0">
                 <span>➕</span>
                 <span>ステップ追加</span>
             </button>
             <a href="{{ route('equipments.show', $equipment) }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition">
+                class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">
                 <span>📦</span>
                 <span>詳細</span>
             </a>
@@ -65,7 +65,7 @@
     </x-page-header>
 
     @if (session('status'))
-        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between">
+        <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between">
             <span>{{ session('status') }}</span>
         </div>
     @endif

@@ -61,13 +61,20 @@ class ContentSecurityPolicyTest extends TestCase
             'is_active' => true,
         ]);
 
+        $timetable = Timetable::factory()->create();
+
         $routesToTest = [
             route('dashboard'),
             route('manual.index'),
             route('calendar.index'),
             route('schedules.index'),
             route('timetables.index'),
+            route('timetable.index', ['timetable_id' => $timetable->id]),
+            route('timetables.tasks.index', $timetable),
+            route('timetables.lanes.index', $timetable),
+            route('timetables.staff-timeline', $timetable),
             route('staff.index'),
+            route('staff.create'),
             route('staff.myshift', ['token' => $staff->access_token]),
             route('staff.join'),
             route('users.index'),

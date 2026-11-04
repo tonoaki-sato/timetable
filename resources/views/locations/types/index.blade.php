@@ -1,5 +1,5 @@
 <x-layouts.app title="拠点タイプマスタ管理">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ヘッダーエリア -->
     <x-page-header
@@ -7,21 +7,21 @@
         icon="🏷️"
         description="「コミュニティスペース」「駐車場」など、拠点の種別を追加・編集・整理できます。">
         <x-slot:breadcrumbs>
-            <a href="{{ route('locations.index') }}" class="hover:underline">拠点管理</a>
-            <span>/</span>
-            <span class="text-slate-800 font-bold">タイプマスタ管理</span>
+            <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-800 font-bold truncate">タイプマスタ管理</span>
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
             <a href="{{ route('locations.index') }}"
-                class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition">
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
                 <span>← 拠点一覧に戻る</span>
             </a>
             <button type="button"
                     data-action="open-type-modal"
                     data-mode="create"
                     data-store-url="{{ route('location-types.store') }}"
-                    class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                    class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
                 <span>➕</span>
                 <span>新しいタイプを追加</span>
             </button>

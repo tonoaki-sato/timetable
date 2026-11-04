@@ -1,10 +1,10 @@
 <x-layouts.app title="本部運行ダッシュボード">
 <div id="dashboard-realtime-root"
      data-realtime-url="{{ route('dashboard.realtime') }}"
-     class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+     class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 space-y-3.5 sm:space-y-4">
 
     <!-- 1. 最上部: 本部運行サマリーヘッダー (1行幅コンパクトレイアウト) -->
-    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl px-4 sm:px-5 py-3 text-white shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl px-4 py-2.5 sm:px-5 sm:py-3 text-white shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-2.5">
         <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
             <h1 class="text-lg sm:text-xl font-bold tracking-tight flex items-center space-x-2">
                 <span>📊</span>

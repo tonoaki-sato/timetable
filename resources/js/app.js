@@ -33,11 +33,14 @@ function initGlobalEventHandlers() {
         }
     });
 
-    // 3. select変更時の自動フォーム送信 (data-auto-submit)
+    // 3. select変更時の自動フォーム送信 (data-auto-submit) & ページ遷移 (data-action="navigate-on-change")
     document.addEventListener('change', (e) => {
         const target = e.target;
         if (target && target.hasAttribute('data-auto-submit')) {
             target.form?.submit();
+        }
+        if (target && target.matches('select[data-action="navigate-on-change"]') && target.value) {
+            window.location.href = target.value;
         }
     });
 

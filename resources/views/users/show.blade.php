@@ -1,5 +1,5 @@
 <x-layouts.app title="ユーザー詳細">
-<div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
@@ -7,19 +7,16 @@
         icon="👥"
         :description="'ID: #' . $user->id . ' のアカウント情報（' . $user->email . '）'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('users.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
-                <span>👥</span>
-                <span>ユーザー一覧</span>
-            </a>
-            <span>/</span>
-            <span class="text-slate-700 font-bold">{{ $user->name }}</span>
+            <a href="{{ route('users.index') }}" class="hover:underline shrink-0">ユーザー管理</a>
+            <span class="shrink-0 text-slate-300">/</span>
+            <span class="text-slate-800 font-bold shrink-0 truncate max-w-[160px]">{{ $user->name }}</span>
         </x-slot:breadcrumbs>
 
         <x-slot:badges>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold {{ $user->isAdmin() ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700 border border-slate-200' }}">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold shrink-0 {{ $user->isAdmin() ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700 border border-slate-200' }}">
                 {{ $user->role_label }}
             </span>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold {{ $user->is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200' }}">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold shrink-0 {{ $user->is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200' }}">
                 {{ $user->is_active ? '有効' : '停止中' }}
             </span>
         </x-slot:badges>
@@ -27,9 +24,9 @@
         <x-slot:actions>
             @can('update', $user)
             <a href="{{ route('users.edit', $user) }}"
-                class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
                 <span>✏️</span>
-                <span>編集する</span>
+                <span>編集</span>
             </a>
             @endcan
         </x-slot:actions>
@@ -37,7 +34,7 @@
 
     <!-- 成功通知メッセージ -->
     @if(session('success'))
-    <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl font-medium">
+    <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-lg font-medium">
         ✔ {{ session('success') }}
     </div>
     @endif

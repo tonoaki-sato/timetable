@@ -1,25 +1,27 @@
 <x-layouts.app title="まつり運行準備ナビゲーター">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
-    <!-- ページヘッダー (スリム版) -->
-    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 sm:p-5 text-white shadow-md border border-slate-800 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <span class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center text-lg shrink-0">
-                🚀
+    <!-- ページヘッダー -->
+    <x-page-header
+        title="まつり運行準備ナビゲーター"
+        icon="🚀"
+        description="タイムテーブル作成から班編成・タスク登録・余剰スタッフ配置まで、本番運行に向けた準備手順をガイドします。">
+        <x-slot:breadcrumbs>
+            <span class="text-slate-800 font-bold shrink-0">運行準備ナビ</span>
+        </x-slot:breadcrumbs>
+        <x-slot:badges>
+            <span class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+                Step 1〜4
             </span>
-            <div>
-                <h1 class="text-base sm:text-lg font-black tracking-tight flex items-center space-x-2">
-                    <span>まつり運行準備ナビゲーター</span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                        Step 1〜4
-                    </span>
-                </h1>
-                <p class="text-[11px] text-slate-300 mt-0.5">
-                    タイムテーブル作成から班編成・タスク登録・余剰スタッフ配置まで、本番運行に向けた準備手順をガイドします。
-                </p>
-            </div>
-        </div>
-    </div>
+        </x-slot:badges>
+        <x-slot:actions>
+            <a href="{{ route('timetable.index') }}"
+               class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition whitespace-nowrap shrink-0">
+                <span>⏱️</span>
+                <span>進行表へ</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- 1. 運行準備 4つのステップ詳細 (最上部に配置) -->
     <div class="space-y-3">

@@ -1,5 +1,5 @@
 <x-layouts.app :title="$timetable->name . ' - 人員配置（スタッフ稼働タイムライン）'">
-<div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー (共通 x-page-header) -->
     <x-page-header
@@ -7,57 +7,54 @@
         icon="👥"
         description="全スタッフの稼働状況と空き枠を時系列で俯瞰し、空き枠からの即時配置や過不足調整を行います。">
         <x-slot:breadcrumbs>
-            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
                 <span>タイムテーブル一覧</span>
             </a>
-            <span>/</span>
-            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+            <span class="text-slate-300">/</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>📅</span>
                 <span>{{ $timetable->name }}</span>
             </a>
-            <span>/</span>
-            <span class="text-slate-700 font-bold">👥 人員配置</span>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">👥 人員配置</span>
         </x-slot:breadcrumbs>
 
         <x-slot:badges>
-            <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <span class="px-2 py-0.5 rounded text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">
                 Step 4 人員配置
             </span>
-            <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            <span class="px-2 py-0.5 rounded text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
                 📅 {{ $timetable->target_date?->format('Y年m月d日') }}
             </span>
-            <span class="px-2.5 py-0.5 rounded text-xs font-mono text-slate-600 bg-slate-100 border border-slate-200">
-                ⏱️ {{ substr($timetable->start_time, 0, 5) }} 〜 {{ substr($timetable->end_time, 0, 5) }}
+            <span class="px-2 py-0.5 rounded text-xs font-mono text-slate-600 bg-slate-100 border border-slate-200 whitespace-nowrap">
+                ⏱️ {{ substr($timetable->start_time, 0, 5) }}〜{{ substr($timetable->end_time, 0, 5) }}
             </span>
         </x-slot:badges>
 
         <x-slot:actions>
             <a href="{{ route('preparation-navigator.index') }}"
-                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
                 <span>🚀</span>
-                <span>運行準備ナビ</span>
-            </a>
-
-            <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
-                class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
-                <span>⏱️</span>
-                <span>全体マトリクス進行表</span>
+                <span>準備ナビ</span>
             </a>
 
             <button type="button" data-action="print"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs">
+                class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer shadow-2xs whitespace-nowrap shrink-0">
                 <span>🖨️</span>
                 <span>A4横 印刷</span>
             </button>
 
             <a href="{{ route('timetables.show', $timetable) }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
                 <span>📅</span>
                 <span>運行日詳細</span>
             </a>
         </x-slot:actions>
     </x-page-header>
+
+    <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
+    <x-timetable-context-bar :timetable="$timetable" active="timeline" />
 
     <!-- まつり運行準備ステップガイド (Step 4 人員配置) -->
     <x-timetable-workflow-steps :current-step="4" :timetable="$timetable" />

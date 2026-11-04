@@ -1,19 +1,28 @@
 <x-layouts.app title="拠点管理">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- 1. ヘッダーエリア -->
     <x-page-header
         title="拠点管理"
         icon="📍"
         description="番所・駐車場・コミュニティスペース等の基本情報と、年月日時分単位の利用可能時間帯・申請状況を一元管理します。">
+        <x-slot:breadcrumbs>
+            <span class="text-slate-700 font-bold truncate">📍 拠点管理</span>
+        </x-slot:breadcrumbs>
+
         <x-slot:badges>
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
                 全 {{ $locationsWithStatus->count() }} 拠点
             </span>
         </x-slot:badges>
         <x-slot:actions>
+            <a href="{{ route('location-types.index') }}"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
+                <span>🏷️</span>
+                <span>拠点タイプマスタ</span>
+            </a>
             <a href="{{ route('locations.create') }}"
-                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">
                 <span>➕</span>
                 <span>拠点を新規登録</span>
             </a>

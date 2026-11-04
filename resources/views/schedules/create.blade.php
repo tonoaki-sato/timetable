@@ -1,5 +1,5 @@
 <x-layouts.app title="スケジュール新規登録">
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ヘッダー -->
     <x-page-header
@@ -7,31 +7,32 @@
         icon="➕"
         description="会議・行政協議・出店募集・会場設営等の予定を登録します。">
         <x-slot:breadcrumbs>
-            <a href="{{ route('schedules.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+            <a href="{{ route('schedules.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>📅</span>
-                <span>スケジュール管理一覧</span>
+                <span>スケジュール一覧</span>
             </a>
-            <span>/</span>
-            <span class="text-slate-700 font-bold">新規登録</span>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">新規登録</span>
         </x-slot:breadcrumbs>
     </x-page-header>
 
-    @if($errors->any())
-    <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-medium">
-        <div class="font-bold mb-1 flex items-center space-x-1">
-            <span>⚠️</span>
-            <span>入力内容にエラーがあります</span>
+    <div class="max-w-4xl mx-auto space-y-3.5">
+        @if($errors->any())
+        <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-medium">
+            <div class="font-bold mb-1 flex items-center space-x-1">
+                <span>⚠️</span>
+                <span>入力内容にエラーがあります</span>
+            </div>
+            <ul class="list-disc list-inside space-y-0.5">
+                @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
-        <ul class="list-disc list-inside space-y-0.5">
-            @foreach($errors->all() as $error)
-            <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-    @endif
+        @endif
 
-    <!-- 入力フォーム -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+        <!-- 入力フォーム -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-2xs p-5 sm:p-6">
         <form action="{{ route('schedules.store') }}" method="POST" class="space-y-6">
             @csrf
 
@@ -159,17 +160,18 @@
             </div>
 
             <!-- 送信ボタン -->
-            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+            <div class="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100">
                 <a href="{{ route('schedules.index') }}"
-                    class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition">
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition">
                     キャンセル
                 </a>
                 <button type="submit"
-                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer">
+                    class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
                     登録を完了する
                 </button>
             </div>
         </form>
+    </div>
     </div>
 
 </div>

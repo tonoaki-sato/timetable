@@ -1,24 +1,33 @@
 <x-layouts.app title="総合カレンダー">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- 1. ヘッダーエリア -->
     <x-page-header
         title="総合カレンダー"
         icon="📅"
         description="行政締切、準備タスク、定例会議、まつり本番運行日のすべてをカレンダー上で俯瞰・調整できます。">
-        @can('create', App\Models\Schedule::class)
+        <x-slot:breadcrumbs>
+            <span class="text-slate-700 font-bold truncate">📅 総合カレンダー</span>
+        </x-slot:breadcrumbs>
+
         <x-slot:actions>
+            <a href="{{ route('schedules.index') }}"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
+                <span>📋</span>
+                <span>リスト表示に切替</span>
+            </a>
+            @can('create', App\Models\Schedule::class)
             <button type="button" data-action="open-new-event-modal"
-                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
                 <span>➕</span>
                 <span>新規予定を登録</span>
             </button>
+            @endcan
         </x-slot:actions>
-        @endcan
     </x-page-header>
 
     <!-- 2. 検索・絞り込みフォーム -->
-    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+    <div class="bg-white p-3 sm:p-3.5 rounded-xl border border-slate-200 shadow-2xs">
         <form method="GET" action="{{ route('calendar.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <input type="hidden" name="year" value="{{ $selectedYear }}">
             <input type="hidden" name="month" value="{{ $currentMonth ?? 4 }}">

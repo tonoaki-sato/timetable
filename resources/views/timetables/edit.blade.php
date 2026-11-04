@@ -1,5 +1,5 @@
 <x-layouts.app title="タイムテーブル編集">
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
@@ -7,34 +7,35 @@
         icon="✏️"
         :description="'「' . $timetable->name . '」の運行基本設定を更新します。'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
                 <span>タイムテーブル一覧</span>
             </a>
-            <span>/</span>
-            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition">
+            <span class="text-slate-300">/</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition shrink-0">
                 <span>📅 {{ $timetable->name }}</span>
             </a>
-            <span>/</span>
-            <span class="text-slate-700 font-bold">編集</span>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">編集</span>
         </x-slot:breadcrumbs>
     </x-page-header>
 
-    <!-- バリデーションエラーサマリー -->
-    @if ($errors->any())
-    <div class="p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl space-y-1">
-        <div class="font-bold flex items-center space-x-1">
-            <span>⚠️</span>
-            <span>入力内容を確認してください</span>
+    <div class="max-w-4xl mx-auto space-y-3.5">
+        <!-- バリデーションエラーサマリー -->
+        @if ($errors->any())
+        <div class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl space-y-1">
+            <div class="font-bold flex items-center space-x-1">
+                <span>⚠️</span>
+                <span>入力内容を確認してください</span>
+            </div>
+            @foreach ($errors->all() as $error)
+            <div>・{{ $error }}</div>
+            @endforeach
         </div>
-        @foreach ($errors->all() as $error)
-        <div>・{{ $error }}</div>
-        @endforeach
-    </div>
-    @endif
+        @endif
 
-    <!-- 入力フォーム -->
-    <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
+        <!-- 入力フォーム -->
+        <div class="bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-2xs">
         <form action="{{ route('timetables.update', $timetable) }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
@@ -112,16 +113,17 @@
             <!-- ボタンエリア -->
             <div class="pt-4 border-t border-slate-200 flex items-center justify-between">
                 <a href="{{ route('timetables.show', $timetable) }}"
-                    class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition">
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition">
                     キャンセル
                 </a>
                 <button type="submit"
-                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer">
+                    class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
                     変更内容を保存する
                 </button>
             </div>
 
         </form>
+    </div>
     </div>
 
 </div>

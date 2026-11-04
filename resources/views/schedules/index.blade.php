@@ -1,54 +1,49 @@
 <x-layouts.app title="スケジュール管理">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- 1. ヘッダーエリア -->
     <x-page-header
         title="スケジュール管理"
         icon="📅"
         description="会議・打ち合わせ・行政協議・出店募集・会場設営などのスケジュールを一元管理します。">
-        @can('create', App\Models\Schedule::class)
+        <x-slot:breadcrumbs>
+            <span class="text-slate-700 font-bold truncate">📋 スケジュール管理</span>
+        </x-slot:breadcrumbs>
+
         <x-slot:actions>
+            <a href="{{ route('calendar.index') }}"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
+                <span>📅</span>
+                <span>カレンダー表示に切替</span>
+            </a>
+            @can('create', App\Models\Schedule::class)
             <a href="{{ route('schedules.create') }}"
-                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
                 <span>➕</span>
                 <span>新規スケジュールを登録</span>
             </a>
+            @endcan
         </x-slot:actions>
-        @endcan
     </x-page-header>
 
-    <!-- 成功・エラーメッセージ表示 -->
-    @if(session('success'))
-    <div class="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-bold flex items-center space-x-2">
-        <span>✔</span>
-        <span>{{ session('success') }}</span>
-    </div>
-    @endif
-    @if(session('error'))
-    <div class="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-bold flex items-center space-x-2">
-        <span>⚠️</span>
-        <span>{{ session('error') }}</span>
-    </div>
-    @endif
-
     <!-- 2. タブ切り替え（全期間 / 直近予定 / 過去ログ） -->
-    <div class="flex items-center space-x-2 border-b border-slate-200 pb-2">
+    <div class="flex items-center space-x-1.5 border-b border-slate-200 pb-1.5 overflow-x-auto scrollbar-none flex-nowrap">
         <a href="{{ route('schedules.index', array_merge(request()->except('page', 'tab'), [])) }}"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ empty($currentTab) ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ empty($currentTab) ? 'bg-slate-900 text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
             <span>📋 すべての期間</span>
         </a>
         <a href="{{ route('schedules.index', array_merge(request()->except('page'), ['tab' => 'upcoming'])) }}"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ $currentTab === 'upcoming' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $currentTab === 'upcoming' ? 'bg-slate-900 text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
             <span>📅 今後の予定</span>
         </a>
         <a href="{{ route('schedules.index', array_merge(request()->except('page'), ['tab' => 'past'])) }}"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 {{ $currentTab === 'past' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $currentTab === 'past' ? 'bg-slate-900 text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
             <span>📁 過去の記録</span>
         </a>
     </div>
 
     <!-- 3. 検索・絞り込みフォーム & カテゴリクイックフィルター -->
-    <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+    <div class="bg-white p-3 sm:p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-3">
         <!-- カテゴリクイックボタン -->
         <div class="flex items-center space-x-2 border-b border-slate-100 pb-3 overflow-x-auto">
             <span class="text-xs font-bold text-slate-500 whitespace-nowrap">区分:</span>

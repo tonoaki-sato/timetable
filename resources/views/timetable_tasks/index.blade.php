@@ -1,5 +1,5 @@
 <x-layouts.app :title="$timetable->name . ' - 作業タスク一覧'">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
@@ -7,41 +7,35 @@
         icon="📋"
         :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）の作業タスク台帳およびスタッフ配置管理です。'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
                 <span>タイムテーブル一覧</span>
             </a>
-            <span>/</span>
-            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+            <span class="text-slate-300">/</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>📅</span>
                 <span>{{ $timetable->name }}</span>
             </a>
-            <span>/</span>
-            <span class="text-slate-700 font-bold">📋 タスク一覧</span>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">📋 タスク一覧</span>
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.show', $timetable) }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
-                <span>📅</span>
-                <span>運行日基本情報</span>
-            </a>
-
             <a href="{{ route('timetables.staff-timeline', $timetable) }}"
-                class="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
+                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
                 <span>👥</span>
                 <span>スタッフ稼働タイムライン</span>
             </a>
 
             <a href="{{ route('timetables.print-assignments', $timetable) }}" target="_blank"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
                 <span>🖨️</span>
                 <span>人員配置表印刷</span>
             </a>
 
             @can('create', App\Models\TimetableTask::class)
             <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
-                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1">
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>➕</span>
                 <span>作業タスクを追加</span>
             </a>
@@ -49,12 +43,15 @@
         </x-slot:actions>
     </x-page-header>
 
+    <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
+    <x-timetable-context-bar :timetable="$timetable" active="tasks" />
+
     <x-timetable-workflow-steps :current-step="3" :timetable="$timetable" />
 
     <!-- 作業タスク一覧セクション -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h2 class="font-bold text-base text-slate-900 flex items-center space-x-2">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="p-3 sm:p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <h2 class="font-bold text-sm sm:text-base text-slate-900 flex items-center space-x-2">
                 <span>📋</span>
                 <span>運行作業タスク一覧 (時系列)</span>
             </h2>
@@ -82,23 +79,23 @@
 
         <div class="overflow-x-auto">
             <table class="w-full border-collapse text-left text-xs">
-                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 select-none">
+                <thead class="bg-slate-50/90 border-b border-slate-200 text-slate-500 font-bold text-[11px] select-none">
                     <tr>
-                        <th class="px-4 py-3 font-bold">時間帯</th>
-                        <th class="px-4 py-3 font-bold">担当班</th>
-                        <th class="px-4 py-3 font-bold">作業名・作業内容</th>
-                        <th class="px-4 py-3 font-bold">場所</th>
-                        <th class="px-4 py-3 font-bold">必要人員 & 充足状況</th>
-                        <th class="px-4 py-3 font-bold">アサイン中スタッフ</th>
-                        <th class="px-4 py-3 font-bold">状態</th>
-                        <th class="px-4 py-3 font-bold text-right">操作</th>
+                        <th class="px-3.5 py-2 whitespace-nowrap">時間帯</th>
+                        <th class="px-3.5 py-2 whitespace-nowrap">担当班</th>
+                        <th class="px-3.5 py-2 min-w-[180px]">作業名・作業内容</th>
+                        <th class="px-3.5 py-2 min-w-[120px]">場所</th>
+                        <th class="px-3.5 py-2 whitespace-nowrap">必要人員 & 充足状況</th>
+                        <th class="px-3.5 py-2 min-w-[140px]">アサイン中スタッフ</th>
+                        <th class="px-3.5 py-2 whitespace-nowrap">状態</th>
+                        <th class="px-3.5 py-2 font-bold text-right whitespace-nowrap">操作</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($tasks as $task)
                     <tr class="hover:bg-slate-50/70 transition">
                         <!-- 時間帯 -->
-                        <td class="px-4 py-3 font-mono text-slate-800 whitespace-nowrap">
+                        <td class="px-3.5 py-2 font-mono text-slate-800 whitespace-nowrap">
                             <span class="font-bold">{{ substr($task->start_time, 0, 5) }}</span>
                             <span class="text-slate-400">〜</span>
                             <span>{{ substr($task->end_time, 0, 5) }}</span>

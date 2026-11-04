@@ -1,5 +1,5 @@
 <x-layouts.app :title="'新規作業タスク登録 - ' . $timetable->name">
-<div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
@@ -7,16 +7,16 @@
         icon="➕"
         :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y/m/d') . '）の担当班を選択し、1件または複数の作業タスクをまとめて登録できます。'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
                 <span>タイムテーブル一覧</span>
             </a>
-            <span>/</span>
-            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition">
+            <span class="text-slate-300">/</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition shrink-0">
                 <span>📅 {{ $timetable->name }}</span>
             </a>
-            <span>/</span>
-            <span class="text-slate-700 font-bold">タスク追加</span>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">タスク追加</span>
         </x-slot:breadcrumbs>
     </x-page-header>
 

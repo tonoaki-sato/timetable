@@ -1,5 +1,5 @@
 <x-layouts.app title="{{ $location->name }} - 拠点詳細">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- 1. ヘッダーエリア -->
     <x-page-header
@@ -7,9 +7,9 @@
         icon="📍"
         description="{{ $evaluation->detail }}">
         <x-slot:breadcrumbs>
-            <a href="{{ route('locations.index') }}" class="hover:underline">拠点管理</a>
-            <span>/</span>
-            <span class="text-slate-800 font-bold">{{ $location->name }}</span>
+            <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-800 font-bold truncate">{{ $location->name }}</span>
         </x-slot:breadcrumbs>
 
         <x-slot:badges>

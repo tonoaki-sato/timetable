@@ -1,33 +1,53 @@
 <x-layouts.app title="搬出入パターン管理">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- 1. ヘッダーセクション -->
     <x-page-header
         title="搬出入パターン管理"
         icon="🧩"
-        description="よく使う搬出入・中継・夜間保管のステップ構成をパターン（テンプレート）として登録・管理します。登録したパターンは各資材詳細画面から一括適用できます。">
+        description="よく使う搬出入・中継・夜間保管のステップ構成をパターン（テンプレート）として登録・管理します。">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('equipments.index') }}" class="hover:underline shrink-0">資材管理</a>
+            <span class="shrink-0 text-slate-300">/</span>
+            <span class="text-slate-800 font-bold shrink-0">搬出入パターン管理</span>
+        </x-slot:breadcrumbs>
         <x-slot:badges>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                全 {{ $patterns->count() }} パターン登録済み
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+                全 {{ $patterns->count() }} パターン
             </span>
         </x-slot:badges>
         <x-slot:actions>
             <button type="button" data-action="open-pattern-modal" data-mode="create"
-                    class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                    class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer whitespace-nowrap shrink-0">
                 <span>➕</span>
-                <span>新規パターンを作成</span>
+                <span>新規パターン</span>
             </button>
         </x-slot:actions>
     </x-page-header>
 
+    <!-- タブ切り替え（相互リンク） -->
+    <div class="flex items-center space-x-2 border-b border-slate-200 pb-2 overflow-x-auto flex-nowrap text-xs">
+        <a href="{{ route('equipments.index') }}"
+           class="px-3 py-1.5 rounded-lg font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition whitespace-nowrap shrink-0">
+            📦 資材一覧
+        </a>
+        <span class="px-3 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-2xs whitespace-nowrap shrink-0">
+            🧩 搬出入パターン管理 ({{ $patterns->count() }})
+        </span>
+        <a href="{{ route('logistics.print') }}"
+           class="px-3 py-1.5 rounded-lg font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition whitespace-nowrap shrink-0">
+            🖨️ 搬出入指示書印刷
+        </a>
+    </div>
+
     @if (session('status'))
-        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between">
+        <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between">
             <span>{{ session('status') }}</span>
         </div>
     @endif
 
     @if ($errors->any())
-        <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-1">
+        <div class="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-1">
             <div class="font-bold">入力内容に不備があります：</div>
             <ul class="list-disc list-inside space-y-0.5">
                 @foreach ($errors->all() as $error)

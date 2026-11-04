@@ -1,5 +1,5 @@
 <x-layouts.app :title="'担当班管理 - ' . $timetable->name">
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
@@ -7,22 +7,25 @@
         icon="🏷️"
         :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）のレーン編成と、現場を率いる班長および固定スタッフを設定・管理します。'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('lanes.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+            <a href="{{ route('lanes.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>🏷️</span>
                 <span>担当班管理</span>
             </a>
-            <span>/</span>
-            <span class="text-slate-700 font-bold">📅 {{ $timetable->name }}</span>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">📅 {{ $timetable->name }}</span>
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
             <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
-                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5">
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>タスク登録へ進む (Step 3へ)</span>
                 <span>→</span>
             </a>
         </x-slot:actions>
     </x-page-header>
+
+    <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
+    <x-timetable-context-bar :timetable="$timetable" active="lanes" />
 
     <x-timetable-workflow-steps :current-step="2" :timetable="$timetable" />
 

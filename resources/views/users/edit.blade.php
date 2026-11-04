@@ -1,128 +1,125 @@
 <x-layouts.app title="ユーザー編集">
-<div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
-    <!-- ナビゲーション & ヘッダー -->
-    <x-page-header
-        title="ユーザー情報編集"
-        icon="✏️"
-        :description="'「' . $user->name . '」のアカウント情報や権限を更新します。'">
-        <x-slot:breadcrumbs>
-            <a href="{{ route('users.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
-                <span>👥</span>
-                <span>ユーザー一覧</span>
-            </a>
-            <span>/</span>
-            <a href="{{ route('users.show', $user) }}" class="hover:text-indigo-600 transition">
-                <span>{{ $user->name }}</span>
-            </a>
-            <span>/</span>
-            <span class="text-slate-700 font-bold">編集</span>
-        </x-slot:breadcrumbs>
-    </x-page-header>
+    <div class="max-w-4xl mx-auto space-y-3.5">
+        <!-- ナビゲーション & ヘッダー -->
+        <x-page-header
+            title="ユーザー情報編集"
+            icon="✏️"
+            :description="'「' . $user->name . '」のアカウント情報や権限を更新します。'">
+            <x-slot:breadcrumbs>
+                <a href="{{ route('users.index') }}" class="hover:underline shrink-0">ユーザー管理</a>
+                <span class="shrink-0 text-slate-300">/</span>
+                <a href="{{ route('users.show', $user) }}" class="hover:underline truncate max-w-[160px]">{{ $user->name }}</a>
+                <span class="shrink-0 text-slate-300">/</span>
+                <span class="text-slate-800 font-bold shrink-0">編集</span>
+            </x-slot:breadcrumbs>
+        </x-page-header>
 
-    <!-- エラー表示 -->
-    @if ($errors->any())
-    <div class="p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl space-y-1">
-        <div class="font-bold">⚠️ 入力内容を確認してください</div>
-        @foreach ($errors->all() as $error)
-        <div>・{{ $error }}</div>
-        @endforeach
-    </div>
-    @endif
+        <!-- エラー表示 -->
+        @if ($errors->any())
+        <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg space-y-1">
+            <div class="font-bold">⚠️ 入力内容を確認してください</div>
+            @foreach ($errors->all() as $error)
+            <div>・{{ $error }}</div>
+            @endforeach
+        </div>
+        @endif
 
-    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <form action="{{ route('users.update', $user) }}" method="POST" class="space-y-5">
-            @csrf
-            @method('PUT')
+        <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-xs">
+            <form action="{{ route('users.update', $user) }}" method="POST" class="space-y-4">
+                @csrf
+                @method('PUT')
 
-            <!-- 氏名 -->
-            <div>
-                <label for="name" class="block text-xs font-bold text-slate-700 mb-1">氏名 <span class="text-red-500">*</span></label>
-                <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" required
-                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-
-            <!-- メールアドレス -->
-            <div>
-                <label for="email" class="block text-xs font-bold text-slate-700 mb-1">メールアドレス <span class="text-red-500">*</span></label>
-                <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required
-                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-
-            <!-- 権限ロール (adminのみ変更可能、本人は表示のみ) -->
-            @if(auth()->user()->isAdmin())
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-2">権限ロール <span class="text-red-500">*</span></label>
-                <div class="grid grid-cols-2 gap-3">
-                    <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-slate-200">
-                        <input type="radio" name="role" value="operator" {{ old('role', $user->role) === 'operator' ? 'checked' : '' }}
-                            {{ $user->id === auth()->id() ? 'disabled' : '' }} class="text-indigo-600 focus:ring-indigo-500">
-                        <div class="ml-2.5">
-                            <span class="block text-xs font-bold text-slate-800">本部オペレーター</span>
-                            <span class="block text-[11px] text-slate-500">タイムテーブル・機材管理・閲覧</span>
-                        </div>
-                    </label>
-
-                    <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-slate-200">
-                        <input type="radio" name="role" value="admin" {{ old('role', $user->role) === 'admin' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500">
-                        <div class="ml-2.5">
-                            <span class="block text-xs font-bold text-slate-800">システム管理者</span>
-                            <span class="block text-[11px] text-slate-500">全権限</span>
-                        </div>
-                    </label>
-                </div>
-                @if($user->id === auth()->id())
-                <p class="text-[11px] text-amber-600 mt-1">※自分自身のアカウントのロールを降格することはできません。</p>
-                @endif
-            </div>
-
-            <!-- アカウント有効化トグル -->
-            <div>
-                <label class="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $user->is_active) ? 'checked' : '' }}
-                        {{ $user->id === auth()->id() ? 'disabled' : '' }} class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                    <span class="text-xs font-bold text-slate-700">アカウントを有効にする</span>
-                </label>
-                @if($user->id === auth()->id())
-                <p class="text-[11px] text-amber-600 mt-1">※自分自身のアカウントを停止することはできません。</p>
-                @endif
-            </div>
-            @else
-            <!-- operatorによる自身の編集時はロールを読み取り専用表示 -->
-            <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1">
-                <span class="font-bold text-slate-500">現在の権限ロール:</span>
-                <span class="font-bold text-slate-800 ml-2">本部オペレーター (operator)</span>
-                <p class="text-[11px] text-slate-400">※ロールの変更はシステム管理者にお問い合わせください。</p>
-            </div>
-            @endif
-
-            <!-- パスワード変更 (任意) -->
-            <div class="pt-4 border-t border-slate-100 space-y-3">
-                <span class="block text-xs font-bold text-slate-800">パスワード変更（変更する場合のみ入力）</span>
+                <!-- 氏名 -->
                 <div>
-                    <label for="password" class="block text-[11px] font-bold text-slate-600 mb-1">新しいパスワード (8文字以上)</label>
-                    <input type="password" id="password" name="password"
-                        class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="変更しない場合は空欄">
+                    <label for="name" class="block text-xs font-bold text-slate-700 mb-1">氏名 <span class="text-rose-500">*</span></label>
+                    <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" required
+                        class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
-                <div>
-                    <label for="password_confirmation" class="block text-[11px] font-bold text-slate-600 mb-1">新しいパスワード（確認用）</label>
-                    <input type="password" id="password_confirmation" name="password_confirmation"
-                        class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="変更しない場合は空欄">
-                </div>
-            </div>
 
-            <!-- 送信ボタン -->
-            <div class="pt-4 flex items-center justify-end space-x-3 border-t border-slate-100">
-                <a href="{{ route('users.show', $user) }}" class="px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-50 transition">
-                    キャンセル
-                </a>
-                <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition">
-                    更新を保存する
-                </button>
-            </div>
-        </form>
+                <!-- メールアドレス -->
+                <div>
+                    <label for="email" class="block text-xs font-bold text-slate-700 mb-1">メールアドレス <span class="text-rose-500">*</span></label>
+                    <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required
+                        class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- 権限ロール (adminのみ変更可能、本人は表示のみ) -->
+                @if(auth()->user()->isAdmin())
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">権限ロール <span class="text-rose-500">*</span></label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <label class="flex items-center p-2.5 border rounded-lg cursor-pointer hover:bg-slate-50 transition border-slate-200">
+                            <input type="radio" name="role" value="operator" {{ old('role', $user->role) === 'operator' ? 'checked' : '' }}
+                                {{ $user->id === auth()->id() ? 'disabled' : '' }} class="text-indigo-600 focus:ring-indigo-500">
+                            <div class="ml-2">
+                                <span class="block text-xs font-bold text-slate-800">本部オペレーター</span>
+                                <span class="block text-[11px] text-slate-500">タイムテーブル・機材管理・閲覧</span>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center p-2.5 border rounded-lg cursor-pointer hover:bg-slate-50 transition border-slate-200">
+                            <input type="radio" name="role" value="admin" {{ old('role', $user->role) === 'admin' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500">
+                            <div class="ml-2">
+                                <span class="block text-xs font-bold text-slate-800">システム管理者</span>
+                                <span class="block text-[11px] text-slate-500">全権限</span>
+                            </div>
+                        </label>
+                    </div>
+                    @if($user->id === auth()->id())
+                    <p class="text-[11px] text-amber-600 mt-1">※自分自身のアカウントのロールを降格することはできません。</p>
+                    @endif
+                </div>
+
+                <!-- アカウント有効化トグル -->
+                <div>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', $user->is_active) ? 'checked' : '' }}
+                            {{ $user->id === auth()->id() ? 'disabled' : '' }} class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-xs font-bold text-slate-700">アカウントを有効にする</span>
+                    </label>
+                    @if($user->id === auth()->id())
+                    <p class="text-[11px] text-amber-600 mt-0.5">※自分自身のアカウントを停止することはできません。</p>
+                    @endif
+                </div>
+                @else
+                <!-- operatorによる自身の編集時はロールを読み取り専用表示 -->
+                <div class="p-3 bg-slate-50 rounded-lg text-xs space-y-1">
+                    <span class="font-bold text-slate-500">現在の権限ロール:</span>
+                    <span class="font-bold text-slate-800 ml-2">本部オペレーター (operator)</span>
+                    <p class="text-[11px] text-slate-400">※ロールの変更はシステム管理者にお問い合わせください。</p>
+                </div>
+                @endif
+
+                <!-- パスワード変更 (任意) -->
+                <div class="pt-3 border-t border-slate-100 space-y-2.5">
+                    <span class="block text-xs font-bold text-slate-800">パスワード変更（変更する場合のみ入力）</span>
+                    <div>
+                        <label for="password" class="block text-[11px] font-bold text-slate-600 mb-1">新しいパスワード (8文字以上)</label>
+                        <input type="password" id="password" name="password"
+                            class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="変更しない場合は空欄">
+                    </div>
+                    <div>
+                        <label for="password_confirmation" class="block text-[11px] font-bold text-slate-600 mb-1">新しいパスワード（確認用）</label>
+                        <input type="password" id="password_confirmation" name="password_confirmation"
+                            class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="変更しない場合は空欄">
+                    </div>
+                </div>
+
+                <!-- 送信ボタン -->
+                <div class="pt-3 flex items-center justify-end space-x-2 border-t border-slate-100">
+                    <a href="{{ route('users.show', $user) }}" class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-2xs transition whitespace-nowrap shrink-0">
+                        キャンセル
+                    </a>
+                    <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-xs transition whitespace-nowrap shrink-0">
+                        更新を保存する
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
 </div>

@@ -1,5 +1,5 @@
 <x-layouts.app :title="$schedule->title . ' - スケジュール詳細'">
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 space-y-3 sm:space-y-4">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
@@ -7,11 +7,11 @@
         icon="📅"
         :description="$schedule->formatted_datetime . ($schedule->location ? ' ｜ 場所: ' . $schedule->location : '')">
         <x-slot:breadcrumbs>
-            <a href="{{ route('schedules.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+            <a href="{{ route('schedules.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>📅</span>
-                <span>スケジュール管理一覧</span>
+                <span>スケジュール一覧</span>
             </a>
-            <span>/</span>
+            <span class="text-slate-300">/</span>
             <span class="text-slate-700 font-bold truncate max-w-xs">{{ $schedule->title }}</span>
         </x-slot:breadcrumbs>
 

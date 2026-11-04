@@ -1,14 +1,29 @@
 <x-layouts.app title="資材管理">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- 1. ヘッダーセクション -->
     <x-page-header
         title="資材管理"
         icon="📦"
         description="宿場まつり運行に使用する自前保有備品・提携レンタル機材・個人持ち込み私物の台帳管理">
+        <x-slot:breadcrumbs>
+            <span class="text-slate-700 font-bold truncate">📦 資材管理</span>
+        </x-slot:breadcrumbs>
+
         <x-slot:actions>
+            <a href="{{ route('logistics.index', ['tab' => 'patterns']) }}"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
+                <span>🧩</span>
+                <span>搬出入パターン</span>
+            </a>
+            <a href="{{ route('logistics.print') }}" target="_blank"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
+                <span>🚚</span>
+                <span>搬出入指示書</span>
+                <span class="text-[10px] opacity-60">↗</span>
+            </a>
             <a href="{{ route('equipments.create') }}"
-                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">
                 <span>➕</span>
                 <span>新規資材を登録</span>
             </a>
@@ -16,25 +31,25 @@
     </x-page-header>
 
     <!-- 2. 検索・絞り込みフィルターバー -->
-    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+    <div class="bg-white p-3 sm:p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-3">
         <!-- 区分フィルター -->
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                <span class="text-xs font-bold text-slate-500 mr-1">区分:</span>
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+            <div class="flex items-center space-x-1.5 overflow-x-auto scrollbar-none flex-nowrap py-0.5">
+                <span class="text-xs font-bold text-slate-500 mr-1 whitespace-nowrap shrink-0">区分:</span>
                 <a href="{{ route('equipments.index', array_filter(['lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-bold transition {{ !$typeFilter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                   class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ !$typeFilter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                     すべて ({{ $totalCount }})
                 </a>
                 <a href="{{ route('equipments.index', array_filter(['type' => 'committee', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'committee' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200' }}">
+                   class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'committee' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200' }}">
                     🏛️ 実行委員会 ({{ $committeeCount }})
                 </a>
                 <a href="{{ route('equipments.index', array_filter(['type' => 'rental', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'rental' ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200' }}">
+                   class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'rental' ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200' }}">
                     🏢 イベント会社 ({{ $rentalCount }})
                 </a>
                 <a href="{{ route('equipments.index', array_filter(['type' => 'personal', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-bold transition {{ $typeFilter === 'personal' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200' }}">
+                   class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'personal' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200' }}">
                     🎒 私物 ({{ $personalCount }})
                 </a>
             </div>

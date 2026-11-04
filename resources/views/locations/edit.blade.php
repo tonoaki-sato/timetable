@@ -1,5 +1,5 @@
 <x-layouts.app title="拠点の編集 - {{ $location->name }}">
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ヘッダーエリア -->
     <x-page-header
@@ -7,17 +7,18 @@
         icon="📍"
         description="拠点「{{ $location->name }}」の基本情報を編集します。">
         <x-slot:breadcrumbs>
-            <a href="{{ route('locations.index') }}" class="hover:underline">拠点管理</a>
-            <span>/</span>
-            <a href="{{ route('locations.show', $location) }}" class="hover:underline">{{ $location->name }}</a>
-            <span>/</span>
-            <span class="text-slate-800 font-bold">編集</span>
+            <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
+            <span class="text-slate-300">/</span>
+            <a href="{{ route('locations.show', $location) }}" class="hover:text-indigo-600 transition shrink-0">{{ $location->name }}</a>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-800 font-bold truncate">編集</span>
         </x-slot:breadcrumbs>
     </x-page-header>
 
+    <div class="max-w-4xl mx-auto space-y-3.5">
     @if($errors->any())
-        <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl">
-            <ul class="list-disc list-inside space-y-1">
+        <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl">
+            <ul class="list-disc list-inside space-y-0.5">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -93,17 +94,18 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+            <div class="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100">
                 <a href="{{ route('locations.index') }}"
-                    class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
+                    class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
                     キャンセル
                 </a>
                 <button type="submit"
-                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
                     更新する
                 </button>
             </div>
         </form>
+    </div>
     </div>
 
 </div>

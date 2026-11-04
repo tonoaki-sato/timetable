@@ -1,5 +1,5 @@
 <x-layouts.app :title="$timetable->name . ' - タイムテーブル詳細'">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
@@ -7,46 +7,49 @@
         icon="⏱️"
         :description="$timetable->description ?: '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）の運行基本情報・規制時間帯および担当班サマリーです。'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
                 <span>タイムテーブル一覧</span>
             </a>
-            <span>/</span>
-            <span class="text-slate-700 font-bold">📅 {{ $timetable->name }}</span>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">📅 {{ $timetable->name }}</span>
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
             <!-- タイムテーブル基本情報編集 -->
             @can('update', $timetable)
             <a href="{{ route('timetables.edit', $timetable) }}"
-                class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
+                class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
                 <span>✏️</span>
                 <span>基本情報を編集</span>
             </a>
             @endcan
 
-            <!-- タスク一覧・管理画面へ -->
-            <a href="{{ route('timetables.tasks.index', $timetable) }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
-                <span>📋</span>
-                <span>作業タスク管理</span>
-            </a>
-
             <!-- 進行表マトリクスへ -->
             <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
+                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
                 <span>⏱️</span>
                 <span>マトリクス進行表</span>
             </a>
 
             <!-- 担当班編成へ -->
             <a href="{{ route('timetables.lanes.index', $timetable) }}"
-                class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs">
+                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
                 <span>🏷️</span>
                 <span>担当班編成</span>
             </a>
+
+            <!-- 作業タスク管理へ -->
+            <a href="{{ route('timetables.tasks.index', $timetable) }}"
+                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
+                <span>📋</span>
+                <span>作業タスク管理</span>
+            </a>
         </x-slot:actions>
     </x-page-header>
+
+    <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
+    <x-timetable-context-bar :timetable="$timetable" active="show" />
 
     @php
         $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
@@ -70,8 +73,8 @@
     @endphp
 
     <!-- 1. 運行基本枠カード -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-7 space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-2xs p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
             <div class="flex items-center space-x-2.5">
                 <span class="text-xl">📅</span>
                 <div>

@@ -1,5 +1,25 @@
 <x-layouts.app title="タイムテーブル">
-<div class="max-w-[1700px] mx-auto px-2 sm:px-4 lg:px-6 py-4 space-y-4">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
+
+    <!-- パンくずリスト -->
+    <div class="print:hidden flex items-center space-x-1.5 text-[11px] text-slate-500 overflow-hidden text-ellipsis whitespace-nowrap">
+        <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+            <span>🏮</span><span>ホーム</span>
+        </a>
+        <span class="text-slate-300">/</span>
+        <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition shrink-0">
+            <span>タイムテーブル管理</span>
+        </a>
+        <span class="text-slate-300">/</span>
+        <span class="text-slate-700 font-bold truncate">⏱️ {{ $selectedTimetable?->name ?? '進行表' }}</span>
+    </div>
+
+    @if($selectedTimetable)
+    <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
+    <div class="print:hidden">
+        <x-timetable-context-bar :timetable="$selectedTimetable" active="matrix" />
+    </div>
+    @endif
 
     <!-- 印刷用ヘッダー（印刷時のみ表示） -->
     <div class="hidden print:block text-center pb-2 border-b-2 border-black mb-2">
@@ -16,12 +36,12 @@
     </div>
 
     <!-- 1. ヘッダー（タイトル ＆ アクションを1行に集約） -->
-    <div class="print:hidden bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl px-4 py-3 sm:px-5 sm:py-3 text-white shadow-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="print:hidden bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl px-4 py-2.5 sm:px-5 sm:py-3 text-white shadow-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 min-w-0">
             <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 shrink-0">
                 ⏱️ タイムテーブル
             </span>
-            <h1 class="text-base sm:text-lg font-bold tracking-tight truncate">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight break-words">
                 {{ $selectedTimetable?->name ?? '運行タイムテーブル' }}
             </h1>
             <span class="h-4 w-px bg-slate-700 hidden sm:inline-block shrink-0"></span>
@@ -37,19 +57,19 @@
 
         <!-- 右側: コンパクトなアクションボタン（A4横印刷のみ） -->
         @if($selectedTimetable)
-        <div class="flex items-center gap-2 shrink-0">
+        <div class="flex flex-wrap items-center gap-1.5 shrink-0 self-start sm:self-center">
             <!-- スタッフタイムラインボタン -->
             <a href="{{ route('timetables.staff-timeline', $selectedTimetable) }}"
-                class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-400/30 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs">
+                class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-400/30 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs whitespace-nowrap shrink-0">
                 <span>👥</span>
                 <span>スタッフタイムライン</span>
             </a>
 
             <!-- A4横 印刷 / PDF保存ボタン -->
             <button type="button" data-action="print"
-                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5 cursor-pointer">
+                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0">
                 <span>🖨️</span>
-                <span>A4横 印刷 / PDF保存</span>
+                <span>A4横 印刷 / PDF</span>
             </button>
         </div>
         @endif
@@ -89,7 +109,7 @@
                     data-lane-name="{{ $lane->name }}"
                     data-is-core="{{ $isCoreLane ? '1' : '0' }}"
                     data-lead-id="{{ $lane->lead_staff_id ?? '' }}"
-                    class="lane-chip inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border transition bg-white text-slate-800 border-slate-300 hover:border-indigo-400">
+                    class="lane-chip inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border transition bg-white text-slate-800 border-slate-300 hover:border-indigo-400 whitespace-nowrap shrink-0">
                     <span class="mr-1 text-[10px] text-emerald-600 font-bold">✔</span>
                     <span>{{ $lane->name }}</span>
                     @if($leadName)
