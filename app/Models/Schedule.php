@@ -231,45 +231,6 @@ class Schedule extends Model
     }
 
     /**
-     * 前日リマインド用の全体共有テキスト
-     */
-    public function getRemindTextAttribute(): string
-    {
-        $datetime = $this->formatted_datetime;
-        $hostName = $this->assignee?->name ?? '未定（後から設定）';
-        $location = $this->location ?: '未定';
-        $title = $this->title;
-
-        $header = $this->category === 'committee' ? '【リマインド】明日開催の会議案内' : "【リマインド】明日開催の{$this->category_label}案内";
-
-        $lines = [
-            $header,
-            "明日、「{$title}」が開催されます。",
-            '',
-            "📅 日時：{$datetime}",
-            "📍 場所：{$location}",
-            "👤 担当：{$hostName}",
-        ];
-
-        if ($this->description) {
-            $lines[] = '';
-            $lines[] = '📝 議題・内容：';
-            $lines[] = $this->description;
-        }
-
-        if ($this->notice_note) {
-            $lines[] = '';
-            $lines[] = '📌 連絡事項：';
-            $lines[] = $this->notice_note;
-        }
-
-        $lines[] = '--------------------------------';
-        $lines[] = 'お忘れなきよう、よろしくお願いいたします！';
-
-        return implode("\n", $lines);
-    }
-
-    /**
      * 開催予定かどうか
      */
     public function getIsUpcomingAttribute(): bool

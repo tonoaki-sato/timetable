@@ -1,49 +1,12 @@
 /**
- * スケジュール管理（タブ切替・文面コピー）スクリプト
+ * スケジュール管理（文面コピー）スクリプト
  */
 document.addEventListener('DOMContentLoaded', () => {
-    initScheduleShowTabs();
     initScheduleCopyButtons();
 });
 
-let currentMode = 'share';
-
 /**
- * 1. スケジュール詳細画面: タブ切り替え（開催案内 / リマインド）
- */
-function initScheduleShowTabs() {
-    const shareTemplate = document.getElementById('shareTextTemplate');
-    const remindTemplate = document.getElementById('remindTextTemplate');
-    if (!shareTemplate || !remindTemplate) return;
-
-    const shareText = shareTemplate.textContent;
-    const remindText = remindTemplate.textContent;
-
-    document.addEventListener('click', (e) => {
-        const tabBtn = e.target.closest('[data-schedule-tab]');
-        if (!tabBtn) return;
-
-        const mode = tabBtn.getAttribute('data-schedule-tab');
-        currentMode = mode;
-
-        const textBox = document.getElementById('lineTextBox');
-        const tabShare = document.getElementById('tabBtnShare');
-        const tabRemind = document.getElementById('tabBtnRemind');
-
-        if (mode === 'share') {
-            if (textBox) textBox.textContent = shareText;
-            if (tabShare) tabShare.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-xs cursor-pointer';
-            if (tabRemind) tabRemind.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer';
-        } else {
-            if (textBox) textBox.textContent = remindText;
-            if (tabRemind) tabRemind.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-xs cursor-pointer';
-            if (tabShare) tabShare.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer';
-        }
-    });
-}
-
-/**
- * 2. 文面コピーボタン（一覧画面 & 詳細画面）
+ * 文面コピーボタン（一覧画面 & 詳細画面）
  */
 function initScheduleCopyButtons() {
     // 一覧画面でのコピーボタン (data-action="copy-schedule-line")
@@ -67,16 +30,14 @@ function initScheduleCopyButtons() {
         });
     });
 
-    // 詳細画面でのアクティブ文面コピー (data-action="copy-current-line")
+    // 詳細画面での文面コピー (data-action="copy-current-line")
     document.addEventListener('click', (e) => {
         const button = e.target.closest('[data-action="copy-current-line"]');
         if (!button) return;
 
-        const shareTemplate = document.getElementById('shareTextTemplate');
-        const remindTemplate = document.getElementById('remindTextTemplate');
-        if (!shareTemplate || !remindTemplate) return;
-
-        const text = currentMode === 'share' ? shareTemplate.textContent : remindTemplate.textContent;
+        const textBox = document.getElementById('lineTextBox');
+        const text = textBox ? textBox.textContent : '';
+        if (!text) return;
 
         navigator.clipboard.writeText(text).then(() => {
             const label = document.getElementById('copyBtnLabel');
@@ -95,4 +56,3 @@ function initScheduleCopyButtons() {
         });
     });
 }
-
