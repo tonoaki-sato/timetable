@@ -120,7 +120,7 @@
                 <div class="p-4 sm:p-5 space-y-3.5">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                         <!-- 日時・期間 -->
-                        <div class="bg-slate-50 p-2.5 sm:p-3 rounded-lg border border-slate-100">
+                        <div class="bg-slate-50 px-2.5 py-2 rounded-lg border border-slate-100">
                             <span class="text-[11px] font-bold text-slate-500 block mb-0.5">📅 開催日時・期間</span>
                             <div class="text-xs sm:text-sm font-bold text-slate-900 font-mono">
                                 {{ $schedule->formatted_datetime }}
@@ -128,7 +128,7 @@
                         </div>
 
                         <!-- 場所 -->
-                        <div class="bg-slate-50 p-2.5 sm:p-3 rounded-lg border border-slate-100">
+                        <div class="bg-slate-50 px-2.5 py-2 rounded-lg border border-slate-100">
                             <span class="text-[11px] font-bold text-slate-500 block mb-0.5">📍 開催場所</span>
                             <div class="text-xs sm:text-sm font-bold text-slate-900 truncate">
                                 {{ $schedule->location ?: '未定' }}
@@ -136,7 +136,7 @@
                         </div>
 
                         <!-- 担当スタッフ -->
-                        <div class="bg-slate-50 p-2.5 sm:p-3 rounded-lg border border-slate-100 flex flex-col justify-between">
+                        <div class="bg-slate-50 px-2.5 py-2 rounded-lg border border-slate-100 flex flex-col justify-between">
                             <div>
                                 <span class="text-[11px] font-bold text-slate-500 block mb-0.5">👤 担当・主催スタッフ</span>
                                 @if($schedule->assignee)
@@ -161,7 +161,7 @@
                     <!-- 議題・内容 -->
                     <div>
                         <h3 class="text-xs font-bold text-slate-700 mb-1">📝 詳細説明・議題・アジェンダ</h3>
-                        <div class="p-3 bg-slate-50/70 border border-slate-200 rounded-lg text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
+                        <div class="px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-lg text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
                             {{ $schedule->description ?: '詳細説明の登録はありません。' }}
                         </div>
                     </div>
@@ -204,7 +204,7 @@
                 </div>
 
                 <div class="p-3.5 sm:p-4">
-                    <div class="bg-slate-950/90 p-3 sm:p-3.5 rounded-lg border border-slate-800/80 font-mono text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed select-all" id="lineTextBox">{{ $schedule->share_text }}</div>
+                    <div class="bg-slate-950/90 px-3 py-2.5 rounded-lg border border-slate-800/80 font-mono text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed select-all" id="lineTextBox">{{ $schedule->share_text }}</div>
                     <p class="text-[11px] text-slate-400 mt-2 flex items-center space-x-1">
                         <span>💡</span>
                         <span>文面をクリックで全選択、または右上のボタンでコピーできます</span>

@@ -150,7 +150,7 @@
         @if($timetable->description)
         <div class="pt-2">
             <span class="text-xs font-bold text-slate-700 block mb-1">概要・全体連絡事項</span>
-            <div class="p-4 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+            <div class="px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
                 {{ $timetable->description }}
             </div>
         </div>
