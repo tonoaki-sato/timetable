@@ -88,6 +88,11 @@
     </div>
     @else
 
+    @php
+        $hasRoad = $selectedTimetable?->hasRoadPeriods() ?? false;
+        $hasFestival = $selectedTimetable?->hasFestivalPeriods() ?? false;
+    @endphp
+
     <!-- 3. 担当班随時追加対応: 絞り込みフィルターバー & 横スクロールナビゲーション -->
     <div class="print:hidden bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
         <!-- プリセット切り替え & 班チップ -->
@@ -169,21 +174,25 @@
 
                     <!-- 2. 時間列（固定） -->
                     <th scope="col"
-                        class="sticky left-[65px] z-40 bg-slate-200 border-r border-b-2 border-slate-800 p-2 text-center font-bold w-[65px] min-w-[65px] print:static print:w-[55px] print:border-black">
+                        class="sticky left-[65px] z-40 bg-slate-200 {{ !$hasRoad && !$hasFestival ? 'border-r-2 border-b-2 border-slate-800 shadow-xs print:border-r-2 print:border-black' : 'border-r border-b-2 border-slate-800 print:border-black' }} p-2 text-center font-bold w-[65px] min-w-[65px] print:static print:w-[55px]">
                         時間
                     </th>
 
+                    @if($hasRoad)
                     <!-- 3. 道路列（固定） -->
                     <th scope="col"
-                        class="sticky left-[130px] z-40 bg-slate-200 border-r border-b-2 border-slate-800 p-2 text-center font-bold w-[75px] min-w-[75px] print:static print:w-[65px] print:border-black">
+                        class="sticky left-[130px] z-40 bg-slate-200 {{ !$hasFestival ? 'border-r-2 border-b-2 border-slate-800 shadow-xs print:border-r-2 print:border-black' : 'border-r border-b-2 border-slate-800 print:border-black' }} p-2 text-center font-bold w-[75px] min-w-[75px] print:static print:w-[65px]">
                         道路
                     </th>
+                    @endif
 
+                    @if($hasFestival)
                     <!-- 4. まつり列（固定・右側に濃い境界線） -->
                     <th scope="col"
-                        class="sticky left-[205px] z-40 bg-slate-200 border-r-2 border-b-2 border-slate-800 p-2 text-center font-bold w-[75px] min-w-[75px] print:static print:w-[65px] print:border-r-2 print:border-black shadow-xs">
+                        class="sticky {{ $hasRoad ? 'left-[205px]' : 'left-[130px]' }} z-40 bg-slate-200 border-r-2 border-b-2 border-slate-800 p-2 text-center font-bold w-[75px] min-w-[75px] print:static print:w-[65px] print:border-r-2 print:border-black shadow-xs">
                         まつり
                     </th>
+                    @endif
 
                     <!-- 5. 各担当班列ヘッダー -->
                     @foreach($lanes as $lane)
@@ -243,19 +252,23 @@
                     @endif
 
                     <!-- 2. 時間セル（30分刻み） -->
-                    <td class="sticky left-[65px] z-20 bg-slate-50 border-r border-slate-700 p-2 text-center font-mono font-bold text-xs text-slate-900 print:static print:border-black">
+                    <td class="sticky left-[65px] z-20 bg-slate-50 {{ !$hasRoad && !$hasFestival ? 'border-r-2 border-slate-800 print:border-r-2 print:border-black' : 'border-r border-slate-700 print:border-black' }} p-2 text-center font-mono font-bold text-xs text-slate-900 print:static">
                         {{ $slot['time'] }}
                     </td>
 
+                    @if($hasRoad)
                     <!-- 3. 道路列（車両通行止め） -->
-                    <td class="sticky left-[130px] z-20 border-r border-slate-700 p-1 text-center text-xs print:static print:border-black {{ $slot['road']['status'] === 'closed' ? 'bg-rose-100 text-rose-800 font-bold print:bg-rose-50' : 'bg-white text-slate-400 font-mono' }}">
+                    <td class="sticky left-[130px] z-20 {{ !$hasFestival ? 'border-r-2 border-slate-800 print:border-r-2 print:border-black' : 'border-r border-slate-700 print:border-black' }} p-1 text-center text-xs print:static {{ $slot['road']['status'] === 'closed' ? 'bg-rose-100 text-rose-800 font-bold print:bg-rose-50' : 'bg-white text-slate-400 font-mono' }}">
                         {{ $slot['road']['label'] }}
                     </td>
+                    @endif
 
+                    @if($hasFestival)
                     <!-- 4. まつり列（開催中・右側に太線） -->
-                    <td class="sticky left-[205px] z-20 border-r-2 border-slate-800 p-1 text-center text-xs print:static print:border-r-2 print:border-black {{ $slot['festival']['status'] === 'active' ? 'bg-emerald-100 text-emerald-800 font-bold print:bg-emerald-50' : 'bg-white text-slate-400 font-mono' }}">
+                    <td class="sticky {{ $hasRoad ? 'left-[205px]' : 'left-[130px]' }} z-20 border-r-2 border-slate-800 p-1 text-center text-xs print:static print:border-r-2 print:border-black {{ $slot['festival']['status'] === 'active' ? 'bg-emerald-100 text-emerald-800 font-bold print:bg-emerald-50' : 'bg-white text-slate-400 font-mono' }}">
                         {{ $slot['festival']['label'] }}
                     </td>
+                    @endif
 
                     <!-- 5. 各担当班のセル -->
                     @foreach($lanes as $lane)

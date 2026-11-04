@@ -176,4 +176,3 @@ class ScheduleAuthorizationTest extends TestCase
         $this->delete(route('schedules.destroy', $schedule))->assertStatus(403);
     }
 }
-

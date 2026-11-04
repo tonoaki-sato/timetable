@@ -147,6 +147,42 @@ class Timetable extends Model
     }
 
     /**
+     * 道路規制・通行止めの予定が設定されているか判定
+     */
+    public function hasRoadPeriods(): bool
+    {
+        if (empty($this->road_periods) || ! is_array($this->road_periods)) {
+            return false;
+        }
+
+        foreach ($this->road_periods as $period) {
+            if (! empty($period['start_time']) && ! empty($period['end_time'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * まつり運行の予定が設定されているか判定
+     */
+    public function hasFestivalPeriods(): bool
+    {
+        if (empty($this->festival_periods) || ! is_array($this->festival_periods)) {
+            return false;
+        }
+
+        foreach ($this->festival_periods as $period) {
+            if (! empty($period['start_time']) && ! empty($period['end_time'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * target_date のミューテタ（DB保存時に Y-m-d 形式を担保）
      */
     public function setTargetDateAttribute(mixed $value): void

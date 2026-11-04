@@ -118,4 +118,3 @@ class ScheduleServiceTest extends TestCase
         $this->assertTrue($service->deleteSchedule($schedule));
     }
 }
-

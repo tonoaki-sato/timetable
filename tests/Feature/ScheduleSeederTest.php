@@ -66,4 +66,3 @@ class ScheduleSeederTest extends TestCase
         $this->assertSame($firstCount, $secondCount);
     }
 }
-

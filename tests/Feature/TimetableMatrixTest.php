@@ -421,4 +421,109 @@ class TimetableMatrixTest extends TestCase
         // 右上のプロフィールアイコンリンクは維持されていること
         $response->assertSee(route('profile'));
     }
+
+    /**
+     * 道路予定がない場合、道路列が非表示になり、まつり列のみが表示されること
+     */
+    public function test_matrix_hides_road_column_when_road_periods_is_empty(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '道路予定なし運行日',
+            'road_periods' => null,
+            'festival_periods' => [
+                ['start_time' => '11:00', 'end_time' => '17:00', 'label' => '開催中', 'status' => 'active'],
+            ],
+            'status' => 'active',
+        ]);
+
+        $response = $this->get(route('timetable.index', ['timetable_id' => $timetable->id]));
+        $response->assertStatus(200);
+
+        // まつり列ヘッダーが表示され、道路列ヘッダーが表示されないこと
+        $response->assertSee('まつり');
+        $response->assertSee('開催中');
+        $response->assertDontSee('<th scope="col" class="sticky left-[130px] z-40 bg-slate-200', false);
+        $response->assertSee('sticky left-[130px] z-40 bg-slate-200 border-r-2 border-b-2 border-slate-800 p-2 text-center font-bold w-[75px]', false);
+    }
+
+    /**
+     * まつり予定がない場合、まつり列が非表示になり、道路列のみが表示されること
+     */
+    public function test_matrix_hides_festival_column_when_festival_periods_is_empty(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => 'まつり予定なし運行日',
+            'road_periods' => [
+                ['start_time' => '10:00', 'end_time' => '18:00', 'label' => '通行止め', 'status' => 'closed'],
+            ],
+            'festival_periods' => null,
+            'status' => 'active',
+        ]);
+
+        $response = $this->get(route('timetable.index', ['timetable_id' => $timetable->id]));
+        $response->assertStatus(200);
+
+        // 道路列ヘッダーが表示され、まつり列ヘッダーが表示されないこと
+        $response->assertSee('道路');
+        $response->assertSee('通行止め');
+        $response->assertDontSee('<th scope="col" class="sticky left-[205px]', false);
+        $response->assertDontSee('sticky left-[130px] z-40 bg-slate-200 border-r-2 border-b-2 border-slate-800 p-2 text-center font-bold w-[75px]', false);
+        $response->assertSee('sticky left-[130px] z-40 bg-slate-200 border-r-2 border-b-2 border-slate-800 shadow-xs print:border-r-2 print:border-black p-2 text-center font-bold w-[75px]', false);
+    }
+
+    /**
+     * 道路・まつり両方の予定がない場合、両方の列が非表示になること
+     */
+    public function test_matrix_hides_both_columns_when_neither_periods_exist(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '準備日（規制・まつり共になし）',
+            'road_periods' => null,
+            'festival_periods' => null,
+            'status' => 'active',
+        ]);
+
+        $response = $this->get(route('timetable.index', ['timetable_id' => $timetable->id]));
+        $response->assertStatus(200);
+
+        // 道路列・まつり列ヘッダーが共に描画されないこと
+        $response->assertDontSee('sticky left-[130px]', false);
+        $response->assertDontSee('sticky left-[205px]', false);
+        // 時間列の右境界線が太線（border-r-2）になっていること
+        $response->assertSee('sticky left-[65px] z-40 bg-slate-200 border-r-2 border-b-2 border-slate-800 shadow-xs', false);
+    }
+
+    /**
+     * 道路・まつり両方の予定がある場合、両方の列が表示されること
+     */
+    public function test_matrix_shows_both_columns_when_both_periods_exist(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '本祭運行日（両方あり）',
+            'road_periods' => [
+                ['start_time' => '10:00', 'end_time' => '18:00', 'label' => '通行止め', 'status' => 'closed'],
+            ],
+            'festival_periods' => [
+                ['start_time' => '11:00', 'end_time' => '17:00', 'label' => '開催中', 'status' => 'active'],
+            ],
+            'status' => 'active',
+        ]);
+
+        $response = $this->get(route('timetable.index', ['timetable_id' => $timetable->id]));
+        $response->assertStatus(200);
+
+        // 道路列（left-[130px]）とまつり列（left-[205px]）が共に描画されること
+        $response->assertSee('sticky left-[130px] z-40 bg-slate-200 border-r border-b-2 border-slate-800', false);
+        $response->assertSee('sticky left-[205px] z-40 bg-slate-200 border-r-2 border-b-2 border-slate-800', false);
+        $response->assertSee('通行止め');
+        $response->assertSee('開催中');
+    }
 }
