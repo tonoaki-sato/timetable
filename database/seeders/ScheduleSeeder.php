@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Schedule;
+use App\Models\Staff;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -14,6 +15,7 @@ class ScheduleSeeder extends Seeder
     public function run(): void
     {
         $admin = User::where('role', 'admin')->first() ?? User::factory()->create(['role' => 'admin']);
+        $yamamichi = Staff::find(13) ?? Staff::where('name', '山道 在明')->first();
 
         $schedules = [
             // =========================================================================
@@ -26,9 +28,9 @@ class ScheduleSeeder extends Seeder
                 'end_date' => null,
                 'start_time' => '19:00',
                 'end_time' => '20:00',
-                'location' => '未定',
+                'location' => '番所',
                 'status' => 'planned',
-                'staff_id' => null,
+                'staff_id' => $yamamichi?->id,
                 'description' => null,
                 'created_by' => $admin->id,
             ],

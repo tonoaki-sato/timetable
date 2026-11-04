@@ -26,7 +26,7 @@ class TimetableSeeder extends Seeder
             ['target_date' => '2026-10-11'],
             [
                 'name' => '宿場まつり 1日目',
-                'description' => null,
+                'description' => 'テスト',
                 'start_time' => '07:00:00',
                 'end_time' => '20:00:00',
                 'status' => 'active',
@@ -169,7 +169,7 @@ class TimetableSeeder extends Seeder
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
                 'location' => '本陣',
-                'content' => null,
+                'content' => 'ほげほが',
                 'required_people_count' => 0,
                 'is_at_least' => false,
                 'is_critical' => false,
