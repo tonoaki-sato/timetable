@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DestroyLaneRequest;
 use App\Http\Requests\ReorderLanesRequest;
 use App\Http\Requests\StoreLaneRequest;
-use App\Http\Requests\UpdateLaneLeadStaffRequest;
 use App\Http\Requests\UpdateLaneRequest;
 use App\Models\Equipment;
 use App\Models\Lane;
@@ -58,13 +57,10 @@ class LaneController extends Controller
         $this->authorize('viewAny', Lane::class);
 
         $lanes = $this->laneRepository->getForTimetable($timetable);
-        $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
 
         return view('lanes.index', [
             'timetable' => $timetable,
             'lanes' => $lanes,
-            'activeStaff' => $activeStaff,
-            'colorOptions' => Lane::COLOR_OPTIONS,
         ]);
     }
 
@@ -171,6 +167,8 @@ class LaneController extends Controller
         $this->laneRepository->update($lane, $validated);
 
         if ($lane->lead_staff_id) {
+            $lane->fixedStaff()->syncWithoutDetaching([$lane->lead_staff_id]);
+            Staff::where('id', $lane->lead_staff_id)->update(['staff_type' => 'fixed']);
             $this->taskService->syncLaneLeadToTasks($lane, $oldLeadStaffId);
         }
 
@@ -191,32 +189,6 @@ class LaneController extends Controller
 
         return redirect()->route('timetables.lanes.index', $timetable)
             ->with('success', "担当班「{$lane->name}」を更新しました。");
-    }
-
-    /**
-     * 班長（主担当スタッフ）のクイック更新・解除（既存タスクへの自動アサイン同期対応）
-     */
-    public function updateLeadStaff(UpdateLaneLeadStaffRequest $request, Timetable $timetable, Lane $lane): RedirectResponse
-    {
-        $oldLeadStaffId = $lane->lead_staff_id ? (int) $lane->lead_staff_id : null;
-
-        $lane->update([
-            'lead_staff_id' => $request->validated('lead_staff_id'),
-        ]);
-
-        $syncedCount = 0;
-        if ($lane->lead_staff_id) {
-            $lane->fixedStaff()->syncWithoutDetaching([$lane->lead_staff_id]);
-            Staff::where('id', $lane->lead_staff_id)->update(['staff_type' => 'fixed']);
-            $syncedCount = $this->taskService->syncLaneLeadToTasks($lane, $oldLeadStaffId);
-        }
-
-        $leadName = $lane->leadStaff ? $lane->leadStaff->name : '未設定';
-        $message = $syncedCount > 0
-            ? "レーン「{$lane->name}」の班長を「{$leadName}」に更新し、{$syncedCount}件のタスクに反映しました。"
-            : "レーン「{$lane->name}」の班長を「{$leadName}」に更新しました。";
-
-        return back()->with('success', $message);
     }
 
     /**

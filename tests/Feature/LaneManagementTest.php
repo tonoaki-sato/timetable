@@ -95,7 +95,11 @@ class LaneManagementTest extends TestCase
         $response->assertSee('ステカン');
         $response->assertSee('lanes-container');
         $response->assertSee('⋮⋮');
-        $response->assertSee('主要班');
+        $response->assertSee('班名');
+        $response->assertSee('バッジ');
+        $response->assertSee('班長名');
+        $response->assertSee('役割概要');
+        $response->assertSee('操作');
         $response->assertSee('delete-migration-modal');
         $response->assertSee(route('timetable-tasks.create', ['timetable_id' => $this->timetable->id]));
         $response->assertSee('タスク登録へ進む (Step 3へ)');
@@ -195,9 +199,9 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 5. 主担当をクイック更新エンドポイントから更新・解除できること
+     * 5. 班長をレーン更新から設定・解除でき、一覧画面に班長名が表示されること
      */
-    public function test_can_update_lead_staff_via_quick_endpoint(): void
+    public function test_can_update_lead_staff(): void
     {
         $this->timetable->createDefaultLanes();
         $lane = $this->timetable->lanes()->where('name', '衛生')->firstOrFail();
@@ -209,7 +213,10 @@ class LaneManagementTest extends TestCase
 
         // 1. 割り当て
         $response = $this->actingAs($this->operatorUser)
-            ->patch(route('timetables.lanes.update-lead', [$this->timetable, $lane]), [
+            ->put(route('timetables.lanes.update', [$this->timetable, $lane]), [
+                'name' => $lane->name,
+                'color' => $lane->color,
+                'display_order' => $lane->display_order,
                 'lead_staff_id' => $staff->id,
             ]);
 
@@ -219,21 +226,31 @@ class LaneManagementTest extends TestCase
         $this->assertTrue($lane->fixedStaff->contains($staff));
         $this->assertSame('fixed', $staff->fresh()->staff_type);
 
-        // レーン一覧のHTMLでも固定スタッフ一覧に「👑 班長」として含まれていること
+        // レーン一覧のHTMLでも班長名「👑 山田 太郎」が表示されていること
         $viewResponse = $this->actingAs($this->operatorUser)
             ->get(route('timetables.lanes.index', $this->timetable));
         $viewResponse->assertStatus(200);
-        $viewResponse->assertSee('👑 班長');
+        $viewResponse->assertSee('👑');
+        $viewResponse->assertSee('山田 太郎');
 
         // 2. 解除 (null)
         $response = $this->actingAs($this->operatorUser)
-            ->patch(route('timetables.lanes.update-lead', [$this->timetable, $lane]), [
+            ->put(route('timetables.lanes.update', [$this->timetable, $lane]), [
+                'name' => $lane->name,
+                'color' => $lane->color,
+                'display_order' => $lane->display_order,
                 'lead_staff_id' => null,
             ]);
 
         $response->assertSessionHas('success');
         $lane->refresh();
         $this->assertNull($lane->lead_staff_id);
+
+        // レーン一覧で未設定と表示されること
+        $viewResponse = $this->actingAs($this->operatorUser)
+            ->get(route('timetables.lanes.index', $this->timetable));
+        $viewResponse->assertStatus(200);
+        $viewResponse->assertSee('未設定');
     }
 
     /**
@@ -386,7 +403,10 @@ class LaneManagementTest extends TestCase
 
         // 1. 後付けで初代リーダーを設定 -> 既存2タスクに自動アサインされること
         $this->actingAs($this->operatorUser)
-            ->patch(route('timetables.lanes.update-lead', [$this->timetable, $lane]), [
+            ->put(route('timetables.lanes.update', [$this->timetable, $lane]), [
+                'name' => $lane->name,
+                'color' => $lane->color,
+                'display_order' => $lane->display_order,
                 'lead_staff_id' => $firstLead->id,
             ])
             ->assertSessionHas('success');
@@ -406,7 +426,10 @@ class LaneManagementTest extends TestCase
 
         // 2. 二代目リーダーに変更 -> 班長が二代目へ引き継がれること
         $this->actingAs($this->operatorUser)
-            ->patch(route('timetables.lanes.update-lead', [$this->timetable, $lane]), [
+            ->put(route('timetables.lanes.update', [$this->timetable, $lane]), [
+                'name' => $lane->name,
+                'color' => $lane->color,
+                'display_order' => $lane->display_order,
                 'lead_staff_id' => $secondLead->id,
             ])
             ->assertSessionHas('success');

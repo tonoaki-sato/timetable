@@ -102,7 +102,6 @@ Route::middleware('auth')->group(function () {
         Route::get('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'show'])->name('timetables.lanes.show');
         Route::get('timetables/{timetable}/lanes/{lane}/edit', [LaneController::class, 'edit'])->name('timetables.lanes.edit');
         Route::put('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'update'])->name('timetables.lanes.update');
-        Route::patch('timetables/{timetable}/lanes/{lane}/lead-staff', [LaneController::class, 'updateLeadStaff'])->name('timetables.lanes.update-lead');
         Route::delete('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'destroy'])->name('timetables.lanes.destroy');
         Route::post('timetables/{timetable}/lanes/reorder', [LaneController::class, 'reorder'])->name('timetables.lanes.reorder');
     });

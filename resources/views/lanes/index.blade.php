@@ -21,11 +21,6 @@
                 <span>➕</span>
                 <span>新規担当班を追加</span>
             </a>
-            <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
-                <span>タスク登録へ進む (Step 3へ)</span>
-                <span>→</span>
-            </a>
         </x-slot:actions>
     </x-page-header>
 
@@ -74,172 +69,111 @@
                     左端のハンドル（⋮⋮）をドラッグ＆ドロップすると並び順を即時変更できます。
                 </p>
             </div>
-
-            <div>
-                <a href="{{ route('timetables.lanes.create', $timetable) }}"
-                    class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition flex items-center space-x-1">
-                    <span>➕</span>
-                    <span>新規担当班を追加</span>
-                </a>
-            </div>
         </div>
 
-        <div id="lanes-container"
-            data-reorder-url="{{ route('timetables.lanes.reorder', $timetable) }}"
-            class="divide-y divide-slate-100">
-            @forelse($lanes as $lane)
-            @php
-                $classes = $lane->color_classes;
-            @endphp
-            <div data-lane-id="{{ $lane->id }}" draggable="true"
-                class="p-4 sm:p-5 hover:bg-slate-50/70 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4 cursor-default">
-                <!-- 左側: ハンドル + レーン情報 -->
-                <div class="flex items-center space-x-3 flex-1 min-w-0">
-                    <!-- ドラッグハンドル -->
-                    <div class="cursor-grab active:cursor-grabbing text-slate-400 hover:text-indigo-600 px-1 py-2 select-none" title="ドラッグして並び替え">
-                        <span class="text-base font-bold">⋮⋮</span>
-                    </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
+                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap">班名</th>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap">バッジ</th>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap">班長名</th>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap">役割概要</th>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap text-right">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="lanes-container"
+                    data-reorder-url="{{ route('timetables.lanes.reorder', $timetable) }}"
+                    class="divide-y divide-slate-100 bg-white">
+                    @forelse($lanes as $lane)
+                    @php
+                        $classes = $lane->color_classes;
+                    @endphp
+                    <tr data-lane-id="{{ $lane->id }}" draggable="true"
+                        class="hover:bg-slate-50/80 transition cursor-default">
+                        <!-- 班名 -->
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="flex items-center space-x-2">
+                                <span class="cursor-grab active:cursor-grabbing text-slate-400 hover:text-indigo-600 px-1 select-none font-bold text-sm" title="ドラッグして並び替え">⋮⋮</span>
+                                <a href="{{ route('timetables.lanes.show', [$timetable, $lane]) }}"
+                                    class="font-bold text-slate-800 hover:text-indigo-600 hover:underline transition"
+                                    title="クリックして詳細を表示">
+                                    {{ $lane->name }}
+                                </a>
+                                @if(!$lane->is_active)
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 font-bold">
+                                    🔒 非表示中
+                                </span>
+                                @endif
+                            </div>
+                        </td>
 
-                    <div class="space-y-1.5 flex-1 min-w-0">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="order-badge font-mono text-[10px] text-slate-400 font-bold px-1.5 py-0.5 bg-slate-100 rounded">
-                                #{{ $lane->display_order }}
+                        <!-- バッジ -->
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border {{ $classes['badge'] }}">
+                                <span>{{ $lane->icon ?: '📋' }}</span>
+                                <span class="ml-1">{{ $lane->name }}</span>
                             </span>
+                        </td>
 
-                            <a href="{{ route('timetables.lanes.show', [$timetable, $lane]) }}"
-                                class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border {{ $classes['badge'] }} hover:opacity-80 transition"
-                                title="クリックして詳細を表示">
-                                <span class="mr-1.5">{{ $lane->icon ?: '📋' }}</span>
-                                <span>{{ $lane->name }}</span>
-                            </a>
-
-                            <!-- 主要班バッジ -->
-                            @if($lane->is_core)
-                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold flex items-center space-x-0.5">
-                                <span>⭐</span>
-                                <span>主要班</span>
+                        <!-- 班長名 -->
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            @if($lane->leadStaff)
+                            <span class="inline-flex items-center space-x-1 font-bold text-slate-800">
+                                <span>👑</span>
+                                <span>{{ $lane->leadStaff->name }}</span>
                             </span>
+                            @else
+                            <span class="text-slate-400">未設定</span>
                             @endif
+                        </td>
 
-                            <!-- 非表示バッジ -->
-                            @if(!$lane->is_active)
-                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 font-bold">
-                                🔒 非表示中
-                            </span>
-                            @endif
+                        <!-- 役割概要 -->
+                        <td class="px-4 py-3 whitespace-nowrap max-w-xs md:max-w-md truncate text-slate-600" title="{{ $lane->description }}">
+                            {{ $lane->description ?: '—' }}
+                        </td>
 
-                            <!-- タスク件数バッジ -->
-                            <span class="text-[11px] text-slate-500 font-mono">
-                                タスク: <strong class="text-slate-800">{{ $lane->tasks->count() }}</strong> 件
-                            </span>
-
-                            <!-- 固定スタッフ件数バッジ -->
-                            <span class="text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded font-bold">
-                                📌 固定スタッフ: {{ $lane->fixedStaff->count() }} 名
-                            </span>
-
-                            <!-- クイックタスク追加導線 -->
-                            <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id, 'lane_id' => $lane->id]) }}"
-                                class="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold ml-1 transition">
-                                ＋ タスク追加
+                        <!-- 操作 -->
+                        <td class="px-4 py-3 whitespace-nowrap text-right space-x-1">
+                            <a href="{{ route('timetables.lanes.edit', [$timetable, $lane]) }}"
+                                class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1">
+                                <span>✏️</span>
+                                <span>編集</span>
                             </a>
-                        </div>
-
-                        @if($lane->description)
-                        <p class="text-xs text-slate-600 line-clamp-1">
-                            {{ $lane->description }}
-                        </p>
-                        @endif
-
-                        @if($lane->fixedStaff->isNotEmpty())
-                        <div class="flex flex-wrap items-center gap-1 pt-0.5">
-                            <span class="text-[10px] text-slate-400 font-bold">固定スタッフ:</span>
-                            @foreach($lane->fixedStaff as $fixedMember)
-                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-                                {{ $fixedMember->name }}
-                            </span>
-                            @endforeach
-                        </div>
-                        @endif
-                    </div>
-                </div>
-
-                <!-- 中央: 班長設定フォーム -->
-                <div class="flex items-center gap-2 shrink-0 bg-slate-50 p-2 rounded-xl border border-slate-200/80">
-                    <form action="{{ route('timetables.lanes.update-lead', [$timetable, $lane]) }}" method="POST" class="flex items-center gap-2">
-                        @csrf
-                        @method('PATCH')
-                        <div class="flex items-center space-x-1.5">
-                            <span class="text-xs text-slate-500 font-bold" title="班長を設定・変更すると、この班のタスクにデフォルトで自動アサインされます">👑 班長:</span>
-                            <select name="lead_staff_id" data-auto-submit
-                                title="班長を選択すると、このレーンの全タスクに班長として自動アサインされます"
-                                class="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                                <option value="" {{ !$lane->lead_staff_id ? 'selected' : '' }}>-- 未設定 --</option>
-                                @foreach($activeStaff as $st)
-                                <option value="{{ $st->id }}" {{ $lane->lead_staff_id == $st->id ? 'selected' : '' }}>
-                                    {{ $st->name }} {{ $st->affiliation ? "({$st->affiliation})" : '' }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </form>
-
-                    @if($lane->leadStaff)
-                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
-                        設定済
-                    </span>
-                    @else
-                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">
-                        未定
-                    </span>
-                    @endif
-                </div>
-
-                <!-- 右側: 詳細・編集・削除ボタン -->
-                <div class="flex items-center space-x-2 shrink-0">
-                    <!-- 詳細画面ボタン -->
-                    <a href="{{ route('timetables.lanes.show', [$timetable, $lane]) }}"
-                        class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1">
-                        <span>👁️</span>
-                        <span>詳細</span>
-                    </a>
-
-                    <!-- 編集画面ボタン -->
-                    <a href="{{ route('timetables.lanes.edit', [$timetable, $lane]) }}"
-                        class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1">
-                        <span>✏️</span>
-                        <span>編集</span>
-                    </a>
-
-                    <!-- 削除ボタン（タスクがある場合は移行モーダルを開く） -->
-                    @if($lane->tasks->count() > 0)
-                    <button type="button"
-                        data-action="open-delete-modal"
-                        data-lane-id="{{ $lane->id }}"
-                        data-lane-name="{{ $lane->name }}"
-                        data-task-count="{{ $lane->tasks->count() }}"
-                        data-delete-url="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}"
-                        class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer">
-                        🗑️ 削除...
-                    </button>
-                    @else
-                    <form action="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}" method="POST" class="inline"
-                        data-confirm="レーン「{{ $lane->name }}」を削除しますか？">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                            class="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer">
-                            🗑️ 削除
-                        </button>
-                    </form>
-                    @endif
-                </div>
-            </div>
-            @empty
-            <div class="p-8 text-center text-slate-400 text-xs">
-                レーンがまだ登録されていません。ヘッダーの「➕ 新規担当班を追加」から登録してください。
-            </div>
-            @endforelse
+                            @if($lane->tasks->count() > 0)
+                            <button type="button"
+                                data-action="open-delete-modal"
+                                data-lane-id="{{ $lane->id }}"
+                                data-lane-name="{{ $lane->name }}"
+                                data-task-count="{{ $lane->tasks->count() }}"
+                                data-delete-url="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}"
+                                class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center space-x-1">
+                                <span>🗑️</span>
+                                <span>削除...</span>
+                            </button>
+                            @else
+                            <form action="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}" method="POST" class="inline"
+                                data-confirm="レーン「{{ $lane->name }}」を削除しますか？">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                    class="px-2.5 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center space-x-1">
+                                    <span>🗑️</span>
+                                    <span>削除</span>
+                                </button>
+                            </form>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-slate-400 text-xs">
+                            レーンがまだ登録されていません。ヘッダーの「➕ 新規担当班を追加」から登録してください。
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 

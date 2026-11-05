@@ -58,12 +58,6 @@ function initDragAndDropReorder() {
 
         if (!reorderUrl || !csrfToken) return;
 
-        // 連番バッジの仮更新
-        items.forEach((el, idx) => {
-            const badge = el.querySelector('.order-badge');
-            if (badge) badge.textContent = `#${(idx + 1) * 10}`;
-        });
-
         try {
             const res = await fetch(reorderUrl, {
                 method: 'POST',
