@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
@@ -285,16 +286,13 @@ class TimetableTaskManagementTest extends TestCase
         $response = $this->get(route('timetable-tasks.show', $task));
 
         $response->assertOk()
-            ->assertSee('中央通り規制コーン設置')
-            ->assertSee('カラーコーン')
+            ->assertSee('カラーコーン 中央通り規制コーン設置')
             ->assertSee('08:00 〜 09:30')
             ->assertSee('中央通り交差点')
-            ->assertSee('配置スタッフ・出欠アテンド管理')
-            ->assertSee('スタッフ一括配置・スマートアサイン')
-            ->assertSee('配置済み太郎')
-            ->assertSee('候補者次郎')
+            ->assertSee('タスク基本情報・作業指示')
             ->assertSee('1行目の手順指示です。')
-            ->assertSee('全文を表示');
+            ->assertDontSee('配置スタッフ・出欠アテンド管理')
+            ->assertDontSee('スタッフ一括配置・スマートアサイン');
     }
 
     /**
@@ -365,14 +363,20 @@ class TimetableTaskManagementTest extends TestCase
     }
 
     /**
-     * 詳細画面のヘッダー表示（パンくず、一覧に戻るリンク、編集・削除アクション、コンテキストバー）が正常に描画されること
+     * 詳細画面のヘッダー表示（パンくず、一覧に戻るリンク、タイトル班名付加、コンテキストバー）が正常に描画され、編集・削除ボタンが表示されないこと
      */
     public function test_show_task_view_renders_header_breadcrumbs_and_back_link(): void
     {
         $this->actingAs($this->operator);
 
+        $lane = Lane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'name' => '警備班',
+        ]);
+
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
+            'lane_id' => $lane->id,
             'title' => '安全パトロール',
         ]);
 
@@ -387,13 +391,12 @@ class TimetableTaskManagementTest extends TestCase
         $response->assertSee($this->timetable->name);
         $response->assertSee(route('timetables.tasks.index', $this->timetable));
         $response->assertSee('タスク一覧');
-        $response->assertSee('安全パトロール');
+        $response->assertSee('警備班 安全パトロール');
 
-        // アクション: 一覧に戻るリンク & 編集・削除
+        // アクション: 一覧に戻るリンクのみ表示され、タスク情報編集・削除は表示されないこと
         $response->assertSee('タスク一覧に戻る');
-        $response->assertSee(route('timetable-tasks.edit', $task));
-        $response->assertSee('タスク情報編集');
-        $response->assertSee('削除');
+        $response->assertDontSee('タスク情報編集');
+        $response->assertDontSee('削除');
 
         // コンテキストバー
         $response->assertSee('対象運行日:');

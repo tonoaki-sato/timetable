@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTimetableTaskRequest;
 use App\Http\Requests\UpdateTimetableTaskRequest;
 use App\Models\Lane;
-use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Services\ConflictDetectionService;
@@ -151,23 +150,16 @@ class TimetableTaskController extends Controller
     }
 
     /**
-     * 作業タスク詳細画面（スタッフアサイン・出欠管理）の表示
+     * 作業タスク詳細画面の表示
      */
     public function show(TimetableTask $task): View
     {
         $this->authorize('view', $task);
 
         $detailedTask = $this->taskService->getTaskDetails($task->id) ?? $task;
-        $activeStaff = $this->taskService->getActiveStaff();
-        $conflictsMap = $this->conflictService->getConflictsMapForStaffList($detailedTask, $activeStaff);
-        $prioritizedStaff = $this->allocationService->getPrioritizedStaffForTask($detailedTask, $activeStaff);
 
         return view('timetable_tasks.show', [
             'task' => $detailedTask,
-            'activeStaff' => $activeStaff,
-            'prioritizedStaff' => $prioritizedStaff,
-            'conflictsMap' => $conflictsMap,
-            'attendanceStatuses' => TaskStaffAssignment::ATTENDANCE_STATUSES,
         ]);
     }
 

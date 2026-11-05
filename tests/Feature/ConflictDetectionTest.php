@@ -8,6 +8,7 @@ use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
+use App\Services\ConflictDetectionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -297,9 +298,9 @@ class ConflictDetectionTest extends TestCase
     }
 
     /**
-     * タスク詳細画面で重複中スタッフの選択肢ラベルに警告が表示されること
+     * 重複中スタッフのコンフリクト情報が正しく判定されること
      */
-    public function test_task_show_view_renders_conflicts_map(): void
+    public function test_conflicts_map_detects_overlapping_task_for_staff(): void
     {
         $this->actingAs($this->operator);
 
@@ -325,9 +326,10 @@ class ConflictDetectionTest extends TestCase
             'end_time' => '12:00:00',
         ]);
 
-        $response = $this->get(route('timetable-tasks.show', $taskB));
+        $conflictService = app(ConflictDetectionService::class);
+        $conflictsMap = $conflictService->getConflictsMapForStaffList($taskB, collect([$this->staff]));
 
-        $response->assertStatus(200);
-        $response->assertSee('重複中: 神輿先導');
+        $this->assertArrayHasKey($this->staff->id, $conflictsMap);
+        $this->assertSame('神輿先導', $conflictsMap[$this->staff->id]->title);
     }
 }

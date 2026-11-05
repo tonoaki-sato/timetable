@@ -45,7 +45,7 @@
     <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
     <x-timetable-context-bar :timetable="$task->timetable" active="tasks" />
 
-    <div class="max-w-4xl mx-auto space-y-3.5">
+    <div class="w-full space-y-3.5">
         <!-- エラーサマリー -->
         @if ($errors->any())
         <div class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl space-y-1">
