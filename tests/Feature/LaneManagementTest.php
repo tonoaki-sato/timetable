@@ -718,6 +718,21 @@ class LaneManagementTest extends TestCase
         $response->assertSee('足踏み給水タンクの設置点検');
         $response->assertSee(route('timetables.lanes.edit', [$this->timetable, $lane]));
         $response->assertSee(route('timetables.lanes.index', $this->timetable));
+        $response->assertSee('一覧に戻る');
+        $response->assertSee('班名バッジ');
+        $response->assertSee('主な資機材');
+
+        // ヘッダーから削除されたリンクおよびバッジの検証
+        $response->assertDontSee('🗺️');
+        $response->assertDontSee('表示順 / 優先度');
+        $response->assertDontSee('#'.$lane->display_order);
+        $response->assertDontSee('👁️ 有効');
+        $response->assertDontSee('🔒 非表示中');
+        $response->assertDontSee('担当班の削除');
+        $response->assertDontSee('delete-migration-modal');
+
+        // タスク追加リンクがタスク一覧カード内に存在すること
+        $response->assertSee(route('timetable-tasks.create', ['timetable_id' => $this->timetable->id, 'lane_id' => $lane->id]));
     }
 
     /**

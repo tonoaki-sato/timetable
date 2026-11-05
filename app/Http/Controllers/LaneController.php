@@ -120,13 +120,11 @@ class LaneController extends Controller
         $this->authorize('view', $lane);
 
         $laneWithDetails = $this->laneRepository->findWithDetails($timetable, $lane->id) ?? $lane;
-        $otherLanes = $timetable->lanes()->where('id', '!=', $lane->id)->ordered()->get();
         $equipments = Equipment::where('lane_id', $lane->id)->orderBy('name')->get();
 
         return view('lanes.show', [
             'timetable' => $timetable,
             'lane' => $laneWithDetails,
-            'otherLanes' => $otherLanes,
             'equipments' => $equipments,
         ]);
     }

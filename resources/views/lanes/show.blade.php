@@ -24,46 +24,7 @@
             <span class="text-slate-700 font-bold truncate">{{ $lane->name }}</span>
         </x-slot:breadcrumbs>
 
-        <x-slot:badges>
-            <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold border {{ $lane->color_classes['badge'] }}">
-                {{ $lane->icon ?: '📋' }} {{ $lane->name }}
-            </span>
-            <span class="font-mono text-xs text-slate-500 font-bold px-2 py-0.5 bg-slate-100 rounded-lg">
-                #{{ $lane->display_order }}
-            </span>
-            @if($lane->is_active)
-            <span class="text-xs px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 font-bold">
-                👁️ 有効
-            </span>
-            @else
-            <span class="text-xs px-2 py-0.5 rounded-lg bg-slate-200 text-slate-600 font-bold">
-                🔒 非表示中
-            </span>
-            @endif
-            <span class="text-xs px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold">
-                📋 タスク: {{ $lane->tasks->count() }} 件
-            </span>
-            <span class="text-xs px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold">
-                📌 固定スタッフ: {{ $lane->fixedStaff->count() }} 名
-            </span>
-        </x-slot:badges>
-
         <x-slot:actions>
-            <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id, 'lane_id' => $lane->id]) }}"
-                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
-                <span>＋</span>
-                <span>タスク追加</span>
-            </a>
-            <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
-                <span>🗺️</span>
-                <span>運行マトリクス</span>
-            </a>
-            <a href="{{ route('timetables.lanes.edit', [$timetable, $lane]) }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
-                <span>✏️</span>
-                <span>基本情報編集</span>
-            </a>
             <a href="{{ route('timetables.lanes.index', $timetable) }}"
                 class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>←</span>
@@ -117,10 +78,12 @@
                         </span>
                     </div>
                     <div>
-                        <span class="text-slate-400 block text-[11px]">表示順 / 優先度</span>
-                        <span class="font-bold text-slate-800 mt-0.5 block">
-                            第 #{{ $lane->display_order }} レーン
-                        </span>
+                        <span class="text-slate-400 block text-[11px]">班名バッジ</span>
+                        <div class="mt-0.5">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold border {{ $lane->color_classes['badge'] }}">
+                                {{ $lane->icon ?: '📋' }} {{ $lane->name }}
+                            </span>
+                        </div>
                     </div>
                     <div>
                         <span class="text-slate-400 block text-[11px]">運行マトリクス表示</span>
@@ -156,7 +119,7 @@
                     </div>
 
                     <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id, 'lane_id' => $lane->id]) }}"
-                        class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition flex items-center space-x-1 shrink-0">
+                        class="text-xs text-indigo-600 hover:text-indigo-800 font-bold transition flex items-center space-x-1 shrink-0">
                         <span>＋</span>
                         <span>タスク追加</span>
                     </a>
@@ -352,7 +315,7 @@
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h2 class="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
                         <span>📦</span>
-                        <span>担当資材・機材</span>
+                        <span>主な資機材</span>
                     </h2>
                     <span class="text-xs font-mono text-slate-500">
                         {{ $equipments->count() }} 品目
@@ -420,107 +383,9 @@
             </div>
             @endif
 
-            <!-- 6. 危険ゾーン（削除） -->
-            @can('delete', $lane)
-            <div class="bg-rose-50/50 rounded-2xl border border-rose-200 p-4 space-y-2">
-                <div class="text-xs font-bold text-rose-900 flex items-center space-x-1">
-                    <span>⚠️</span>
-                    <span>担当班の削除</span>
-                </div>
-                <p class="text-[11px] text-rose-700">
-                    この担当班を削除します。
-                </p>
-                <div class="pt-1">
-                    @if($lane->tasks->count() > 0)
-                    <button type="button"
-                        data-action="open-delete-modal"
-                        data-lane-id="{{ $lane->id }}"
-                        data-lane-name="{{ $lane->name }}"
-                        data-task-count="{{ $lane->tasks->count() }}"
-                        data-delete-url="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}"
-                        class="w-full px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer text-center">
-                        🗑️ この担当班を削除する...
-                    </button>
-                    @else
-                    <form action="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}" method="POST"
-                        data-confirm="担当班「{{ $lane->name }}」を削除しますか？">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                            class="w-full px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer text-center">
-                            🗑️ この担当班を削除する
-                        </button>
-                    </form>
-                    @endif
-                </div>
-            </div>
-            @endcan
-
         </div>
 
     </div>
 
 </div>
-
-<!-- タスク移行削除モーダル -->
-<div id="delete-migration-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="text-base font-bold text-rose-900 flex items-center space-x-2">
-                <span>⚠️</span>
-                <span>担当班の削除とタスク引き継ぎ</span>
-            </h3>
-            <button type="button" data-close-modal class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
-        </div>
-
-        <form id="delete-migration-form" action="" method="POST" class="p-5 space-y-4">
-            @csrf
-            @method('DELETE')
-
-            <p class="text-xs text-slate-700 leading-relaxed">
-                担当班「<strong id="modal-delete-lane-name" class="text-slate-900">{{ $lane->name }}</strong>」には、現在
-                <strong id="modal-delete-task-count" class="text-rose-600 font-mono">{{ $lane->tasks->count() }}</strong> 件の作業タスクが登録されています。
-            </p>
-
-            <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-xl space-y-3">
-                <div>
-                    <label for="modal-migrate-target-select" class="block text-xs font-bold text-amber-900 mb-1">
-                        タスクの引き継ぎ先レーンを選択（推奨）
-                    </label>
-                    <select id="modal-migrate-target-select" name="migrate_to_lane_id"
-                        class="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500">
-                        <option value="">-- 引き継ぎ先レーンを選択 --</option>
-                        @foreach($otherLanes as $targetLane)
-                        <option value="{{ $targetLane->id }}">
-                            {{ $targetLane->icon ?: '📋' }} {{ $targetLane->name }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <p class="text-[10px] text-amber-800 mt-1">※ 全タスクが選択したレーンに付け替えられた後、当該レーンが安全に削除されます。</p>
-                </div>
-
-                <div class="pt-2 border-t border-amber-200/80">
-                    <label class="flex items-center space-x-2 cursor-pointer select-none">
-                        <input type="checkbox" name="cascade_delete_tasks" value="1"
-                            class="w-4 h-4 text-rose-600 rounded border-amber-400 focus:ring-rose-500">
-                        <span class="text-xs font-bold text-rose-800">引き継がず、タスクも含めてすべて削除する</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                <button type="button" data-close-modal
-                    class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
-                    キャンセル
-                </button>
-                <button type="submit"
-                    class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
-                    削除を実行する
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-@vite(['resources/js/lanes.js'])
 </x-layouts.app>
