@@ -736,6 +736,9 @@ class LaneManagementTest extends TestCase
         $response->assertDontSee('name="display_order"', false);
         $response->assertSee('更新内容を保存');
         $response->assertSee(route('timetables.lanes.update', [$this->timetable, $lane]));
+        $response->assertDontSee('危険な操作: 担当班の削除');
+        $response->assertDontSee('この担当班を削除');
+        $response->assertDontSee('data-action="open-delete-modal"', false);
 
         $opResponse = $this->actingAs($this->operatorUser)
             ->get(route('timetables.lanes.edit', [$this->timetable, $lane]));

@@ -140,14 +140,12 @@ class LaneController extends Controller
 
         $lane->loadMissing(['leadStaff', 'fixedStaff', 'tasks']);
         $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
-        $otherLanes = $timetable->lanes()->where('id', '!=', $lane->id)->ordered()->get();
 
         return view('lanes.edit', [
             'timetable' => $timetable,
             'lane' => $lane,
             'activeStaff' => $activeStaff,
             'colorOptions' => Lane::COLOR_OPTIONS,
-            'otherLanes' => $otherLanes,
         ]);
     }
 

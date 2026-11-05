@@ -282,45 +282,6 @@
         </form>
     </div>
 
-    <!-- 危険ゾーン（削除） -->
-    @can('delete', $lane)
-    <div class="bg-rose-50/50 rounded-2xl border border-rose-200 p-5 space-y-3">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-xs font-bold text-rose-900 flex items-center space-x-1">
-                    <span>⚠️</span>
-                    <span>危険な操作: 担当班の削除</span>
-                </h3>
-                <p class="text-[11px] text-rose-700 mt-0.5">
-                    この担当班を削除します。タスクが登録されている場合は、別の担当班への引き継ぎまたは一括削除が必要です。
-                </p>
-            </div>
-
-            @if($lane->tasks->count() > 0)
-            <button type="button"
-                data-action="open-delete-modal"
-                data-lane-id="{{ $lane->id }}"
-                data-lane-name="{{ $lane->name }}"
-                data-task-count="{{ $lane->tasks->count() }}"
-                data-delete-url="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}"
-                class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
-                🗑️ この担当班を削除する...
-            </button>
-            @else
-            <form action="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}" method="POST"
-                data-confirm="担当班「{{ $lane->name }}」を削除しますか？">
-                @csrf
-                @method('DELETE')
-                <button type="submit"
-                    class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
-                    🗑️ この担当班を削除
-                </button>
-            </form>
-            @endif
-        </div>
-    </div>
-    @endcan
-
 </div>
 
 @vite(['resources/js/lanes.js'])
