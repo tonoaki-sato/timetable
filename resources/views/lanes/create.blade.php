@@ -89,32 +89,33 @@
 
                 <!-- 左カラム: 基本情報・体制設定 -->
                 <div class="space-y-4">
-                    <!-- 1. 担当班名 -->
-                    <div>
-                        <label for="name" class="block text-xs font-bold text-slate-700 mb-1">
-                            担当班名（レーン名） <span class="text-rose-600">*</span>
-                        </label>
-                        <input type="text" id="name" name="name" value="{{ old('name') }}" required
-                            placeholder="例: 会場放送班、音響PA班"
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <p class="text-[10px] text-slate-400 mt-1">※ タイムテーブルや作業割当カードに表示される班の名前です。</p>
-                    </div>
+                    <!-- 1. 担当班名 & 2. 班長 (横1列配置) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="name" class="block text-xs font-bold text-slate-700 mb-1">
+                                担当班名（レーン名） <span class="text-rose-600">*</span>
+                            </label>
+                            <input type="text" id="name" name="name" value="{{ old('name') }}" required
+                                placeholder="例: 会場放送班、音響PA班"
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <p class="text-[10px] text-slate-400 mt-1">※ タイムテーブルや作業割当カードに表示される班の名前です。</p>
+                        </div>
 
-                    <!-- 2. 班長 -->
-                    <div>
-                        <label for="lead_staff_id" class="block text-xs font-bold text-slate-700 mb-1">
-                            👑 班長（現場リーダー / 後から設定・変更可能）
-                        </label>
-                        <select id="lead_staff_id" name="lead_staff_id"
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="">-- 未設定（後で割り当てる） --</option>
-                            @foreach($activeStaff as $st)
-                            <option value="{{ $st->id }}" {{ old('lead_staff_id') == $st->id ? 'selected' : '' }}>
-                                {{ $st->name }} {{ $st->affiliation ? "({$st->affiliation})" : '' }}
-                            </option>
-                            @endforeach
-                        </select>
-                        <p class="text-[10px] text-slate-400 mt-1">※ 班長に任命されたスタッフは、この班の全タスクへ自動的にアサインされます。</p>
+                        <div>
+                            <label for="lead_staff_id" class="block text-xs font-bold text-slate-700 mb-1">
+                                👑 班長（現場リーダー / 後から設定・変更可能）
+                            </label>
+                            <select id="lead_staff_id" name="lead_staff_id"
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">-- 未設定（後で割り当てる） --</option>
+                                @foreach($activeStaff as $st)
+                                <option value="{{ $st->id }}" {{ old('lead_staff_id') == $st->id ? 'selected' : '' }}>
+                                    {{ $st->name }} {{ $st->affiliation ? "({$st->affiliation})" : '' }}
+                                </option>
+                                @endforeach
+                            </select>
+                            <p class="text-[10px] text-slate-400 mt-1">※ 班長に任命されたスタッフは、この班の全タスクへ自動的にアサインされます。</p>
+                        </div>
                     </div>
 
                     <!-- 3. 業務所管・担当エリア（メモ） -->
@@ -136,7 +137,7 @@
                             </span>
                             <span class="text-[11px] text-slate-500">決まっている場合は選択（複数選択可）</span>
                         </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-white">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-80 sm:max-h-96 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-white">
                             @forelse($activeStaff as $st)
                             <label class="flex items-center space-x-1.5 text-xs text-slate-700 cursor-pointer hover:bg-indigo-50 p-1.5 rounded transition">
                                 <input type="checkbox" name="fixed_staff_ids[]" value="{{ $st->id }}"
@@ -173,70 +174,74 @@
                         <span class="text-[11px] text-slate-400">※ 入力内容やカラー選択が即座に反映されます</span>
                     </div>
 
-                    <!-- 6. 絵文字アイコン入力 -->
-                    <div>
-                        <label for="icon" class="block text-xs font-bold text-slate-700 mb-1">
-                            絵文字アイコン
-                        </label>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="icon" name="icon" value="{{ old('icon', '📋') }}" maxlength="20"
-                                placeholder="例: 🎤"
-                                class="w-20 text-center px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <div class="text-[10px] text-slate-400 leading-tight">
-                                自由入力または下の候補から選択
+                    <!-- 絵文字設定 & テーマカラー選択 (横1列配置) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start">
+                        <!-- 絵文字エリア (sm:col-span-5) -->
+                        <div class="sm:col-span-5 space-y-3">
+                            <!-- 6. 絵文字アイコン入力 -->
+                            <div>
+                                <label for="icon" class="block text-xs font-bold text-slate-700 mb-1">
+                                    絵文字アイコン
+                                </label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" id="icon" name="icon" value="{{ old('icon', '📋') }}" maxlength="20"
+                                        placeholder="例: 🎤"
+                                        class="w-16 text-center px-2 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <div class="text-[10px] text-slate-400 leading-tight">
+                                        自由入力または下から選択
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 7. おすすめ絵文字パレット -->
+                            <div class="p-2.5 bg-slate-50/70 border border-slate-200/80 rounded-xl space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[11px] font-bold text-slate-700 flex items-center space-x-1">
+                                        <span>✨</span>
+                                        <span>おすすめ絵文字</span>
+                                    </span>
+                                    <span class="text-[9px] text-slate-400 font-mono">クリック即時</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1" id="emoji-palette">
+                                    @foreach($emojiPresets as $emoji)
+                                    <button type="button"
+                                        data-emoji="{{ $emoji }}"
+                                        class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 text-xs flex items-center justify-center transition cursor-pointer shadow-2xs">
+                                        {{ $emoji }}
+                                    </button>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- 7. 絵文字クイックパレット -->
-                    <div class="p-3 bg-slate-50/70 border border-slate-200/80 rounded-xl space-y-2">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                            <span class="text-xs font-bold text-slate-700 flex items-center space-x-1">
-                                <span>✨</span>
-                                <span>おすすめ絵文字パレット（クリックで即時セット）</span>
-                            </span>
-                            <span class="text-[10px] text-slate-400 font-mono">
-                                PC: Win + . / Mac: Ctrl + Cmd + Space
-                            </span>
-                        </div>
-                        <div class="flex flex-wrap gap-1.5" id="emoji-palette">
-                            @foreach($emojiPresets as $emoji)
-                            <button type="button"
-                                data-emoji="{{ $emoji }}"
-                                class="w-8 h-8 rounded-lg bg-white border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 text-sm flex items-center justify-center transition cursor-pointer shadow-2xs">
-                                {{ $emoji }}
-                            </button>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <!-- 8. テーマカラー（視覚的カラースウォッチ） -->
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <label class="block text-xs font-bold text-slate-700">
-                                テーマカラー選択 <span class="text-rose-600">*</span>
-                            </label>
-                            <span class="text-[10px] text-slate-400">見本を確認しながら選択できます</span>
-                        </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="color-options-grid">
-                            @foreach($colorOptions as $colorKey => $colorLabel)
-                            @php
-                                $colorMeta = $colorClassesMap[$colorKey] ?? $colorClassesMap['slate'];
-                                $isSelected = $selectedColor === $colorKey;
-                            @endphp
-                            <label class="lane-color-card relative flex items-center justify-between p-2 rounded-xl border cursor-pointer transition select-none hover:bg-slate-50 {{ $isSelected ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-2xs' : 'border-slate-200 bg-white' }}"
-                                data-color="{{ $colorKey }}"
-                                data-badge-class="{{ $colorMeta['badge'] }}">
-                                <input type="radio" name="color" value="{{ $colorKey }}" {{ $isSelected ? 'checked' : '' }} required class="sr-only">
-                                <div class="flex items-center space-x-2 truncate mr-1">
-                                    <span class="w-3.5 h-3.5 rounded-full {{ $colorMeta['dot'] }} shrink-0 border border-black/10"></span>
-                                    <span class="text-xs font-bold text-slate-800 truncate">{{ $colorLabel }}</span>
-                                </div>
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $colorMeta['badge'] }} shrink-0">
-                                    見本
-                                </span>
-                            </label>
-                            @endforeach
+                        <!-- テーマカラー選択 (sm:col-span-7) -->
+                        <div class="sm:col-span-7 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-xs font-bold text-slate-700">
+                                    テーマカラー選択 <span class="text-rose-600">*</span>
+                                </label>
+                                <span class="text-[10px] text-slate-400">見本を確認</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-1.5" id="color-options-grid">
+                                @foreach($colorOptions as $colorKey => $colorLabel)
+                                @php
+                                    $colorMeta = $colorClassesMap[$colorKey] ?? $colorClassesMap['slate'];
+                                    $isSelected = $selectedColor === $colorKey;
+                                @endphp
+                                <label class="lane-color-card relative flex items-center justify-between p-2 rounded-xl border cursor-pointer transition select-none hover:bg-slate-50 {{ $isSelected ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-2xs' : 'border-slate-200 bg-white' }}"
+                                    data-color="{{ $colorKey }}"
+                                    data-badge-class="{{ $colorMeta['badge'] }}">
+                                    <input type="radio" name="color" value="{{ $colorKey }}" {{ $isSelected ? 'checked' : '' }} required class="sr-only">
+                                    <div class="flex items-center space-x-1.5 truncate mr-1">
+                                        <span class="w-3 h-3 rounded-full {{ $colorMeta['dot'] }} shrink-0 border border-black/10"></span>
+                                        <span class="text-[11px] font-bold text-slate-800 truncate">{{ $colorLabel }}</span>
+                                    </div>
+                                    <span class="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold border {{ $colorMeta['badge'] }} shrink-0">
+                                        見本
+                                    </span>
+                                </label>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 </div>
