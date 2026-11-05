@@ -630,4 +630,111 @@ class LaneManagementTest extends TestCase
 
         $response->assertStatus(404);
     }
+
+    /**
+     * 19. 新規レーン作成画面の表示（管理者・オペレーターがアクセス可能、一般・非アクティブは拒否）
+     */
+    public function test_admin_and_operator_can_view_lane_create_screen(): void
+    {
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('timetables.lanes.create', $this->timetable));
+
+        $response->assertStatus(200);
+        $response->assertSee('新規担当班の追加');
+        $response->assertSee('担当班名（レーン名）');
+        $response->assertSee('絵文字アイコン');
+        $response->assertSee('テーマカラー');
+        $response->assertSee('表示順');
+        $response->assertSee('この担当班を新規登録');
+
+        $opResponse = $this->actingAs($this->operatorUser)
+            ->get(route('timetables.lanes.create', $this->timetable));
+        $opResponse->assertStatus(200);
+
+        // 非アクティブユーザーは拒否
+        $inactiveUser = User::factory()->create(['role' => 'admin', 'is_active' => false]);
+        $this->actingAs($inactiveUser)
+            ->get(route('timetables.lanes.create', $this->timetable))
+            ->assertStatus(403);
+    }
+
+    /**
+     * 20. レーン詳細画面の表示（班基本仕様・班長・固定スタッフ・タスク・資材サマリー）
+     */
+    public function test_user_can_view_lane_show_screen(): void
+    {
+        $this->timetable->createDefaultLanes();
+        $lane = $this->timetable->lanes()->where('name', '給水設備')->firstOrFail();
+
+        $lead = Staff::factory()->create(['name' => '給水班長 佐藤', 'is_active' => true]);
+        $fixed = Staff::factory()->create(['name' => '給水固定メンバー', 'is_active' => true]);
+        $lane->update(['lead_staff_id' => $lead->id]);
+        $lane->fixedStaff()->attach([$lead->id, $fixed->id]);
+
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '足踏み給水タンクの設置点検',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('timetables.lanes.show', [$this->timetable, $lane]));
+
+        $response->assertStatus(200);
+        $response->assertSee('給水設備');
+        $response->assertSee('担当班詳細');
+        $response->assertSee('給水班長 佐藤');
+        $response->assertSee('給水固定メンバー');
+        $response->assertSee('足踏み給水タンクの設置点検');
+        $response->assertSee(route('timetables.lanes.edit', [$this->timetable, $lane]));
+        $response->assertSee(route('timetables.lanes.index', $this->timetable));
+    }
+
+    /**
+     * 21. レーン編集画面の表示（管理者・オペレーターがアクセス可能、初期値バインド検証）
+     */
+    public function test_admin_and_operator_can_view_lane_edit_screen(): void
+    {
+        $this->timetable->createDefaultLanes();
+        $lane = $this->timetable->lanes()->where('name', '本陣')->firstOrFail();
+
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('timetables.lanes.edit', [$this->timetable, $lane]));
+
+        $response->assertStatus(200);
+        $response->assertSee('担当班の編集: 本陣');
+        $response->assertSee('value="本陣"', false);
+        $response->assertSee('更新内容を保存');
+        $response->assertSee(route('timetables.lanes.update', [$this->timetable, $lane]));
+
+        $opResponse = $this->actingAs($this->operatorUser)
+            ->get(route('timetables.lanes.edit', [$this->timetable, $lane]));
+        $opResponse->assertStatus(200);
+
+        // 非アクティブユーザーは拒否
+        $inactiveUser = User::factory()->create(['role' => 'admin', 'is_active' => false]);
+        $this->actingAs($inactiveUser)
+            ->get(route('timetables.lanes.edit', [$this->timetable, $lane]))
+            ->assertStatus(403);
+    }
+
+    /**
+     * 22. レーン一覧画面で新規作成・詳細・編集へのナビゲーションリンクが表示されること
+     */
+    public function test_lane_index_displays_crud_navigation_links(): void
+    {
+        $this->timetable->createDefaultLanes();
+        $lane = $this->timetable->lanes()->firstOrFail();
+
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('timetables.lanes.index', $this->timetable));
+
+        $response->assertStatus(200);
+        $response->assertSee(route('timetables.lanes.create', $this->timetable));
+        $response->assertSee('新規担当班を追加');
+        $response->assertSee(route('timetables.lanes.show', [$this->timetable, $lane]));
+        $response->assertSee(route('timetables.lanes.edit', [$this->timetable, $lane]));
+        $response->assertSee('詳細');
+        $response->assertSee('編集');
+    }
 }

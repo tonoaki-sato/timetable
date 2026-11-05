@@ -97,11 +97,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/lanes', [LaneController::class, 'select'])->name('lanes.index');
     Route::scopeBindings()->group(function () {
         Route::get('timetables/{timetable}/lanes', [LaneController::class, 'index'])->name('timetables.lanes.index');
+        Route::get('timetables/{timetable}/lanes/create', [LaneController::class, 'create'])->name('timetables.lanes.create');
         Route::post('timetables/{timetable}/lanes', [LaneController::class, 'store'])->name('timetables.lanes.store');
-        Route::post('timetables/{timetable}/lanes/reorder', [LaneController::class, 'reorder'])->name('timetables.lanes.reorder');
+        Route::get('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'show'])->name('timetables.lanes.show');
+        Route::get('timetables/{timetable}/lanes/{lane}/edit', [LaneController::class, 'edit'])->name('timetables.lanes.edit');
         Route::put('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'update'])->name('timetables.lanes.update');
         Route::patch('timetables/{timetable}/lanes/{lane}/lead-staff', [LaneController::class, 'updateLeadStaff'])->name('timetables.lanes.update-lead');
         Route::delete('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'destroy'])->name('timetables.lanes.destroy');
+        Route::post('timetables/{timetable}/lanes/reorder', [LaneController::class, 'reorder'])->name('timetables.lanes.reorder');
     });
     Route::patch('lane-requests/{laneRequest}/status', [LaneRequestController::class, 'updateStatus'])->name('lane-requests.update-status');
 

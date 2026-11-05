@@ -7,9 +7,11 @@ use App\Http\Requests\ReorderLanesRequest;
 use App\Http\Requests\StoreLaneRequest;
 use App\Http\Requests\UpdateLaneLeadStaffRequest;
 use App\Http\Requests\UpdateLaneRequest;
+use App\Models\Equipment;
 use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Services\TimetableTaskService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +21,8 @@ use Illuminate\View\View;
 class LaneController extends Controller
 {
     public function __construct(
-        protected TimetableTaskService $taskService
+        protected TimetableTaskService $taskService,
+        protected LaneRepositoryInterface $laneRepository
     ) {}
 
     /**
@@ -54,7 +57,7 @@ class LaneController extends Controller
     {
         $this->authorize('viewAny', Lane::class);
 
-        $lanes = $timetable->lanes()->with(['leadStaff', 'fixedStaff', 'tasks', 'laneRequests.task', 'laneRequests.requestedByStaff'])->ordered()->get();
+        $lanes = $this->laneRepository->getForTimetable($timetable);
         $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
 
         return view('lanes.index', [
@@ -62,6 +65,24 @@ class LaneController extends Controller
             'lanes' => $lanes,
             'activeStaff' => $activeStaff,
             'colorOptions' => Lane::COLOR_OPTIONS,
+        ]);
+    }
+
+    /**
+     * 新規レーン作成画面の表示
+     */
+    public function create(Timetable $timetable): View
+    {
+        $this->authorize('create', Lane::class);
+
+        $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
+        $defaultOrder = $this->laneRepository->getMaxDisplayOrder($timetable) + 10;
+
+        return view('lanes.create', [
+            'timetable' => $timetable,
+            'activeStaff' => $activeStaff,
+            'colorOptions' => Lane::COLOR_OPTIONS,
+            'defaultOrder' => $defaultOrder,
         ]);
     }
 
@@ -75,11 +96,10 @@ class LaneController extends Controller
         unset($data['fixed_staff_ids']);
 
         if (! isset($data['display_order']) || $data['display_order'] === null) {
-            $maxOrder = $timetable->lanes()->max('display_order') ?? 0;
-            $data['display_order'] = $maxOrder + 10;
+            $data['display_order'] = $this->laneRepository->getMaxDisplayOrder($timetable) + 10;
         }
 
-        $lane = $timetable->lanes()->create($data);
+        $lane = $this->laneRepository->create($timetable, $data);
 
         if ($lane->lead_staff_id && ! in_array((int) $lane->lead_staff_id, array_map('intval', $fixedStaffIds), true)) {
             $fixedStaffIds[] = (int) $lane->lead_staff_id;
@@ -99,6 +119,45 @@ class LaneController extends Controller
     }
 
     /**
+     * レーン詳細画面の表示
+     */
+    public function show(Timetable $timetable, Lane $lane): View
+    {
+        $this->authorize('view', $lane);
+
+        $laneWithDetails = $this->laneRepository->findWithDetails($timetable, $lane->id) ?? $lane;
+        $otherLanes = $timetable->lanes()->where('id', '!=', $lane->id)->ordered()->get();
+        $equipments = Equipment::where('lane_id', $lane->id)->orderBy('name')->get();
+
+        return view('lanes.show', [
+            'timetable' => $timetable,
+            'lane' => $laneWithDetails,
+            'otherLanes' => $otherLanes,
+            'equipments' => $equipments,
+        ]);
+    }
+
+    /**
+     * レーン編集画面の表示
+     */
+    public function edit(Timetable $timetable, Lane $lane): View
+    {
+        $this->authorize('update', $lane);
+
+        $lane->loadMissing(['leadStaff', 'fixedStaff', 'tasks']);
+        $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
+        $otherLanes = $timetable->lanes()->where('id', '!=', $lane->id)->ordered()->get();
+
+        return view('lanes.edit', [
+            'timetable' => $timetable,
+            'lane' => $lane,
+            'activeStaff' => $activeStaff,
+            'colorOptions' => Lane::COLOR_OPTIONS,
+            'otherLanes' => $otherLanes,
+        ]);
+    }
+
+    /**
      * レーン更新処理（班長・固定スタッフの設定・変更、主要班・表示状態切り替えを含む）
      */
     public function update(UpdateLaneRequest $request, Timetable $timetable, Lane $lane): JsonResponse|RedirectResponse
@@ -109,7 +168,7 @@ class LaneController extends Controller
         $fixedStaffIds = $validated['fixed_staff_ids'] ?? [];
         unset($validated['fixed_staff_ids']);
 
-        $lane->update($validated);
+        $this->laneRepository->update($lane, $validated);
 
         if ($lane->lead_staff_id) {
             $this->taskService->syncLaneLeadToTasks($lane, $oldLeadStaffId);
@@ -167,17 +226,7 @@ class LaneController extends Controller
     {
         $this->authorize('update', Lane::class);
 
-        $validated = $request->validated();
-
-        DB::transaction(function () use ($validated, $timetable) {
-            $order = 10;
-            foreach ($validated['lane_ids'] as $laneId) {
-                $timetable->lanes()->where('id', $laneId)->update([
-                    'display_order' => $order,
-                ]);
-                $order += 10;
-            }
-        });
+        $this->laneRepository->reorder($timetable, $request->validated('lane_ids'));
 
         return response()->json([
             'success' => true,
@@ -203,9 +252,9 @@ class LaneController extends Controller
                 return back()->with('error', '有効な移行先レーンを選択してください。');
             }
 
-            DB::transaction(function () use ($lane, $targetLane) {
+            DB::transaction(function () use ($lane, $targetLane): void {
                 $lane->tasks()->update(['lane_id' => $targetLane->id]);
-                $lane->delete();
+                $this->laneRepository->delete($lane);
             });
 
             return redirect()->route('timetables.lanes.index', $timetable)
@@ -214,9 +263,9 @@ class LaneController extends Controller
 
         // タスクごと削除が明示的に指定されている場合
         if ($request->boolean('cascade_delete_tasks')) {
-            DB::transaction(function () use ($lane) {
+            DB::transaction(function () use ($lane): void {
                 $lane->tasks()->delete();
-                $lane->delete();
+                $this->laneRepository->delete($lane);
             });
 
             return redirect()->route('timetables.lanes.index', $timetable)
@@ -234,7 +283,7 @@ class LaneController extends Controller
         }
 
         $name = $lane->name;
-        $lane->delete();
+        $this->laneRepository->delete($lane);
 
         return redirect()->route('timetables.lanes.index', $timetable)
             ->with('success', "担当班「{$name}」を削除しました。");

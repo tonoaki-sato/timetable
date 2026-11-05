@@ -1,0 +1,203 @@
+<x-layouts.app :title="'新規担当班の追加 - ' . $timetable->name">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
+
+    <!-- ナビゲーション & ヘッダー -->
+    <x-page-header
+        title="新規担当班の追加"
+        icon="➕"
+        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）に新しい担当班（レーン）を追加します。'">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('lanes.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>🏷️</span>
+                <span>担当班管理</span>
+            </a>
+            <span class="text-slate-300">/</span>
+            <a href="{{ route('timetables.lanes.index', $timetable) }}" class="hover:text-indigo-600 transition truncate">
+                📅 {{ $timetable->name }}
+            </a>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">➕ 新規追加</span>
+        </x-slot:breadcrumbs>
+
+        <x-slot:actions>
+            <a href="{{ route('timetables.lanes.index', $timetable) }}"
+                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+                <span>←</span>
+                <span>担当班一覧に戻る</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
+
+    <!-- 運行日コンテキストバー -->
+    <x-timetable-context-bar :timetable="$timetable" active="lanes" />
+
+    <!-- 入力エラーメッセージ -->
+    @if($errors->any())
+    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl space-y-1">
+        <div class="font-bold flex items-center space-x-1">
+            <span>⚠️</span>
+            <span>入力内容を確認してください</span>
+        </div>
+        @foreach($errors->all() as $err)
+        <div>・{{ $err }}</div>
+        @endforeach
+    </div>
+    @endif
+
+    <!-- 作成フォームカード -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                <span>📋</span>
+                <span>担当班の基本設定とメンバー編成</span>
+            </h2>
+            <span class="text-xs text-slate-500 font-mono">
+                日付: {{ $timetable->target_date?->format('Y/m/d') }}
+            </span>
+        </div>
+
+        <form action="{{ route('timetables.lanes.store', $timetable) }}" method="POST" class="p-6 space-y-6">
+            @csrf
+
+            <!-- 1. 基本属性グリッド -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- 担当班名 -->
+                <div>
+                    <label for="name" class="block text-xs font-bold text-slate-700 mb-1">
+                        担当班名（レーン名） <span class="text-rose-600">*</span>
+                    </label>
+                    <input type="text" id="name" name="name" value="{{ old('name') }}" required
+                        placeholder="例: 会場放送班、音響PA班"
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- 絵文字アイコン -->
+                <div>
+                    <label for="icon" class="block text-xs font-bold text-slate-700 mb-1">
+                        絵文字アイコン
+                    </label>
+                    <input type="text" id="icon" name="icon" value="{{ old('icon', '📋') }}"
+                        placeholder="例: 🎤, 🎪, 📢, 🔺"
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- テーマカラー -->
+                <div>
+                    <label for="color" class="block text-xs font-bold text-slate-700 mb-1">
+                        テーマカラー <span class="text-rose-600">*</span>
+                    </label>
+                    <select id="color" name="color" required
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        @foreach($colorOptions as $colorKey => $colorLabel)
+                        <option value="{{ $colorKey }}" {{ old('color', 'slate') === $colorKey ? 'selected' : '' }}>
+                            {{ $colorLabel }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- 表示順 -->
+                <div>
+                    <label for="display_order" class="block text-xs font-bold text-slate-700 mb-1">
+                        表示順
+                    </label>
+                    <input type="number" id="display_order" name="display_order" value="{{ old('display_order', $defaultOrder) }}" min="0" max="9999"
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <!-- 2. 班長および説明メモ -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- 班長（主担当スタッフ） -->
+                <div>
+                    <label for="lead_staff_id" class="block text-xs font-bold text-slate-700 mb-1">
+                        👑 班長（現場リーダー / 後から設定・変更可能）
+                    </label>
+                    <select id="lead_staff_id" name="lead_staff_id"
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">-- 未設定（後で割り当てる） --</option>
+                        @foreach($activeStaff as $st)
+                        <option value="{{ $st->id }}" {{ old('lead_staff_id') == $st->id ? 'selected' : '' }}>
+                            {{ $st->name }} {{ $st->affiliation ? "({$st->affiliation})" : '' }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <p class="text-[10px] text-slate-400 mt-1">※ 班長に任命されたスタッフは、この班の全タスクへ自動的にアサインされます。</p>
+                </div>
+
+                <!-- 業務説明メモ -->
+                <div>
+                    <label for="description" class="block text-xs font-bold text-slate-700 mb-1">
+                        業務所管・担当エリア（メモ）
+                    </label>
+                    <input type="text" id="description" name="description" value="{{ old('description') }}"
+                        placeholder="例: 会場放送設備の設営、式典アナウンスの実施、本陣周辺"
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <!-- 3. 固定スタッフ選択エリア -->
+            <div class="p-4 bg-indigo-50/40 rounded-xl border border-indigo-200/80 space-y-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <span class="text-xs font-bold text-indigo-950 flex items-center space-x-1">
+                        <span>📌</span>
+                        <span>固定スタッフ設定（この班のタスクに自動で基本配置されます）</span>
+                    </span>
+                    <span class="text-[11px] text-slate-500">決まっている場合は選択（複数選択可）</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-white">
+                    @forelse($activeStaff as $st)
+                    <label class="flex items-center space-x-1.5 text-xs text-slate-700 cursor-pointer hover:bg-indigo-50 p-1.5 rounded transition">
+                        <input type="checkbox" name="fixed_staff_ids[]" value="{{ $st->id }}"
+                            {{ in_array($st->id, old('fixed_staff_ids', [])) ? 'checked' : '' }}
+                            class="w-3.5 h-3.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                        <span class="truncate" title="{{ $st->name }} ({{ $st->affiliation ?: '所属なし' }})">
+                            {{ $st->name }}
+                            @if($st->affiliation)
+                            <span class="text-[10px] text-slate-400">({{ $st->affiliation }})</span>
+                            @endif
+                        </span>
+                    </label>
+                    @empty
+                    <div class="col-span-full py-2 text-center text-xs text-slate-400">
+                        利用可能なスタッフが登録されていません。
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- 4. 主要班・有効化フラグ -->
+            <div class="flex flex-wrap items-center gap-6 pt-3 border-t border-slate-200">
+                <label class="flex items-center space-x-2 cursor-pointer select-none">
+                    <input type="checkbox" name="is_core" value="1" {{ old('is_core') ? 'checked' : '' }}
+                        class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                    <span class="text-xs font-bold text-slate-700">⭐ 主要班（マトリクス固定表示・強調）</span>
+                </label>
+
+                <label class="flex items-center space-x-2 cursor-pointer select-none">
+                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', '1') === '1' ? 'checked' : '' }}
+                        class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                    <span class="text-xs font-bold text-slate-700">👁️ 有効（マトリクス・帳票に表示）</span>
+                </label>
+            </div>
+
+            <!-- 5. 送信ボタンエリア -->
+            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
+                <a href="{{ route('timetables.lanes.index', $timetable) }}"
+                    class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition">
+                    キャンセル
+                </a>
+                <button type="submit"
+                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
+                    <span>➕</span>
+                    <span>この担当班を新規登録</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+@vite(['resources/js/lanes.js'])
+</x-layouts.app>
+
