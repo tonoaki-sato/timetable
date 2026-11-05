@@ -126,20 +126,6 @@ class TimetableRepository implements TimetableRepositoryInterface
     }
 
     /**
-     * 運行準備用の直近完了済みタイムテーブルを取得（日付降順・最大件数指定）
-     *
-     * @return Collection<int, Timetable>
-     */
-    public function getRecentCompletedWithWorkflowDetails(int $limit = 2): Collection
-    {
-        return Timetable::with(['lanes.fixedStaff', 'lanes.leadStaff', 'tasks.assignments'])
-            ->where('status', 'completed')
-            ->orderBy('target_date', 'desc')
-            ->limit($limit)
-            ->get();
-    }
-
-    /**
      * タイムテーブルの総登録数を取得
      */
     public function getTotalCount(): int

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Timetable;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
-use Illuminate\Support\Collection;
 
 class PreparationNavigatorService
 {
@@ -16,42 +15,18 @@ class PreparationNavigatorService
      * ナビゲーター画面用の集約データを取得
      *
      * @return array{
-     *     activeTimetableStates: Collection<int, array<string, mixed>>,
-     *     completedTimetableStates: Collection<int, array<string, mixed>>,
      *     totalCount: int,
-     *     emptyState: ?array<string, mixed>
+     *     firstActiveTimetable: ?Timetable
      * }
      */
     public function getNavigatorViewData(): array
     {
-        $activeTimetables = $this->timetableRepository->getActiveAndDraftWithWorkflowDetails();
-        $completedTimetables = $this->timetableRepository->getRecentCompletedWithWorkflowDetails(2);
         $totalCount = $this->timetableRepository->getTotalCount();
-
-        $activeTimetableStates = $activeTimetables->map(
-            fn (Timetable $timetable): array => $this->calculateWorkflowStateForTimetable($timetable)
-        );
-
-        $completedTimetableStates = $completedTimetables->map(
-            fn (Timetable $timetable): array => $this->calculateWorkflowStateForTimetable($timetable)
-        );
-
-        $emptyState = null;
-        if ($totalCount === 0) {
-            $emptyState = [
-                'current_step' => 1,
-                'action_title' => '運行日（タイムテーブル）を登録しましょう',
-                'action_desc' => 'まつりの各日程枠（本祭り、前夜祭など）を登録して準備を開始します。',
-                'action_url' => route('timetables.create'),
-                'action_btn_text' => '新規タイムテーブルを登録 (Step 1)',
-            ];
-        }
+        $firstActiveTimetable = $this->timetableRepository->getActiveAndDraftWithWorkflowDetails()->first();
 
         return [
-            'activeTimetableStates' => $activeTimetableStates,
-            'completedTimetableStates' => $completedTimetableStates,
             'totalCount' => $totalCount,
-            'emptyState' => $emptyState,
+            'firstActiveTimetable' => $firstActiveTimetable,
         ];
     }
 
@@ -79,11 +54,6 @@ class PreparationNavigatorService
 
                 return ! $state['is_satisfied'];
             }) ?? $activeTimetables->firstWhere('status', 'active') ?? $activeTimetables->first();
-        }
-
-        if (! $targetTimetable) {
-            $recentCompleted = $this->timetableRepository->getRecentCompletedWithWorkflowDetails(1);
-            $targetTimetable = $recentCompleted->first();
         }
 
         if (! $targetTimetable) {

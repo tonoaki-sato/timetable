@@ -58,13 +58,6 @@ interface TimetableRepositoryInterface
     public function getActiveAndDraftWithWorkflowDetails(): Collection;
 
     /**
-     * 運行準備用の直近完了済みタイムテーブルを取得（日付降順・最大件数指定）
-     *
-     * @return Collection<int, Timetable>
-     */
-    public function getRecentCompletedWithWorkflowDetails(int $limit = 2): Collection;
-
-    /**
      * タイムテーブルの総登録数を取得
      */
     public function getTotalCount(): int;
