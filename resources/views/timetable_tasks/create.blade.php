@@ -12,13 +12,29 @@
                 <span>タイムテーブル一覧</span>
             </a>
             <span class="text-slate-300">/</span>
-            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition shrink-0">
-                <span>📅 {{ $timetable->name }}</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>📅</span>
+                <span>{{ $timetable->name }}</span>
             </a>
             <span class="text-slate-300">/</span>
-            <span class="text-slate-700 font-bold truncate">タスク追加</span>
+            <a href="{{ route('timetables.tasks.index', $timetable) }}" class="hover:text-indigo-600 transition truncate">
+                📋 タスク一覧
+            </a>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">➕ 新規登録</span>
         </x-slot:breadcrumbs>
+
+        <x-slot:actions>
+            <a href="{{ route('timetables.tasks.index', $timetable) }}"
+                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+                <span>←</span>
+                <span>タスク一覧に戻る</span>
+            </a>
+        </x-slot:actions>
     </x-page-header>
+
+    <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
+    <x-timetable-context-bar :timetable="$timetable" active="tasks" />
 
     <!-- エラーサマリー -->
     @if ($errors->any())

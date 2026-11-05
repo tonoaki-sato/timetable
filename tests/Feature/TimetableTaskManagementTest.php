@@ -336,4 +336,101 @@ class TimetableTaskManagementTest extends TestCase
         $this->assertSame(0, $task->shortage_count);
         $this->assertSame(3, $task->assigned_count);
     }
+
+    /**
+     * 新規登録画面のヘッダー表示（パンくず、一覧に戻るリンク、コンテキストバー）が正常に描画されること
+     */
+    public function test_create_task_view_renders_header_breadcrumbs_and_back_link(): void
+    {
+        $this->actingAs($this->operator);
+
+        $response = $this->get(route('timetable-tasks.create', ['timetable_id' => $this->timetable->id]));
+
+        $response->assertStatus(200);
+
+        // パンくずリスト
+        $response->assertSee(route('timetables.index'));
+        $response->assertSee('タイムテーブル一覧');
+        $response->assertSee(route('timetables.show', $this->timetable));
+        $response->assertSee($this->timetable->name);
+        $response->assertSee(route('timetables.tasks.index', $this->timetable));
+        $response->assertSee('タスク一覧');
+        $response->assertSee('新規登録');
+
+        // アクション: 一覧に戻るリンク
+        $response->assertSee('タスク一覧に戻る');
+
+        // コンテキストバー
+        $response->assertSee('対象運行日:');
+    }
+
+    /**
+     * 詳細画面のヘッダー表示（パンくず、一覧に戻るリンク、編集・削除アクション、コンテキストバー）が正常に描画されること
+     */
+    public function test_show_task_view_renders_header_breadcrumbs_and_back_link(): void
+    {
+        $this->actingAs($this->operator);
+
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'title' => '安全パトロール',
+        ]);
+
+        $response = $this->get(route('timetable-tasks.show', $task));
+
+        $response->assertStatus(200);
+
+        // パンくずリスト
+        $response->assertSee(route('timetables.index'));
+        $response->assertSee('タイムテーブル一覧');
+        $response->assertSee(route('timetables.show', $this->timetable));
+        $response->assertSee($this->timetable->name);
+        $response->assertSee(route('timetables.tasks.index', $this->timetable));
+        $response->assertSee('タスク一覧');
+        $response->assertSee('安全パトロール');
+
+        // アクション: 一覧に戻るリンク & 編集・削除
+        $response->assertSee('タスク一覧に戻る');
+        $response->assertSee(route('timetable-tasks.edit', $task));
+        $response->assertSee('タスク情報編集');
+        $response->assertSee('削除');
+
+        // コンテキストバー
+        $response->assertSee('対象運行日:');
+    }
+
+    /**
+     * 編集画面のヘッダー表示（パンくず、詳細を見るリンク、一覧に戻るリンク、コンテキストバー）が正常に描画されること
+     */
+    public function test_edit_task_view_renders_header_breadcrumbs_and_back_link(): void
+    {
+        $this->actingAs($this->operator);
+
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'title' => '警備巡回タスク',
+        ]);
+
+        $response = $this->get(route('timetable-tasks.edit', $task));
+
+        $response->assertStatus(200);
+
+        // パンくずリスト
+        $response->assertSee(route('timetables.index'));
+        $response->assertSee('タイムテーブル一覧');
+        $response->assertSee(route('timetables.show', $this->timetable));
+        $response->assertSee($this->timetable->name);
+        $response->assertSee(route('timetables.tasks.index', $this->timetable));
+        $response->assertSee('タスク一覧');
+        $response->assertSee(route('timetable-tasks.show', $task));
+        $response->assertSee('警備巡回タスク');
+        $response->assertSee('編集');
+
+        // アクション: 詳細を見る & 一覧に戻るリンク
+        $response->assertSee('詳細を見る');
+        $response->assertSee('タスク一覧に戻る');
+
+        // コンテキストバー
+        $response->assertSee('対象運行日:');
+    }
 }

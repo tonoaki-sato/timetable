@@ -34,16 +34,21 @@
         icon="📋"
         :description="'「' . ($task->timetable?->name ?? '運行タイムテーブル') . '」（' . ($task->timetable?->target_date?->format('Y年m月d日') ?? '-') . '）の人員配置・出欠アテンド管理'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1">
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
                 <span>タイムテーブル一覧</span>
             </a>
-            <span>/</span>
-            <a href="{{ route('timetables.show', $task->timetable_id) }}" class="hover:text-indigo-600 transition">
-                <span>📅 {{ $task->timetable?->name }}</span>
+            <span class="text-slate-300">/</span>
+            <a href="{{ route('timetables.show', $task->timetable_id) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>📅</span>
+                <span>{{ $task->timetable?->name }}</span>
             </a>
-            <span>/</span>
-            <span class="text-slate-700 font-bold">📋 {{ $task->title }}</span>
+            <span class="text-slate-300">/</span>
+            <a href="{{ route('timetables.tasks.index', $task->timetable) }}" class="hover:text-indigo-600 transition truncate">
+                📋 タスク一覧
+            </a>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate max-w-xs">📋 {{ $task->title }}</span>
         </x-slot:breadcrumbs>
 
         <x-slot:badges>
@@ -101,9 +106,15 @@
         </x-slot:badges>
 
         <x-slot:actions>
+            <a href="{{ route('timetables.tasks.index', $task->timetable) }}"
+                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+                <span>←</span>
+                <span>タスク一覧に戻る</span>
+            </a>
+
             @can('update', $task)
             <a href="{{ route('timetable-tasks.edit', $task) }}"
-                class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
                 <span>✏️</span>
                 <span>タスク情報編集</span>
             </a>
@@ -115,7 +126,7 @@
                 @csrf
                 @method('DELETE')
                 <button type="submit"
-                    class="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs cursor-pointer">
+                    class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs cursor-pointer whitespace-nowrap shrink-0">
                     <span>🗑️</span>
                     <span>削除</span>
                 </button>
@@ -123,6 +134,9 @@
             @endcan
         </x-slot:actions>
     </x-page-header>
+
+    <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
+    <x-timetable-context-bar :timetable="$task->timetable" active="tasks" />
 
     <!-- 作業内容・手順指示（コンパクト表示） -->
     @if($task->content)
