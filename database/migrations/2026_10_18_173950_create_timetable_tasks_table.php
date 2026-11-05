@@ -23,7 +23,6 @@ return new class extends Migration
             $table->unsignedSmallInteger('required_people_count')->default(1);
             $table->boolean('is_at_least')->default(false); // 「〇〇名以上」フラグ
             $table->boolean('is_critical')->default(false);
-            $table->boolean('requires_review')->default(false);
             $table->string('status', 30)->default('not_started')->index();
 
             // 2038年問題対策として DATETIME 型を採用

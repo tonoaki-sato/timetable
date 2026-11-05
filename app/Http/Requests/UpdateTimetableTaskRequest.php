@@ -29,7 +29,6 @@ class UpdateTimetableTaskRequest extends FormRequest
         $mergeData = [
             'is_at_least' => $this->boolean('is_at_least'),
             'is_critical' => $this->boolean('is_critical'),
-            'requires_review' => $this->boolean('requires_review'),
         ];
 
         if (! $this->filled('lane_id') && $this->filled('lane')) {
@@ -69,7 +68,6 @@ class UpdateTimetableTaskRequest extends FormRequest
             'required_people_count' => ['required', 'integer', 'min:0', 'max:999'],
             'is_at_least' => ['required', 'boolean'],
             'is_critical' => ['required', 'boolean'],
-            'requires_review' => ['required', 'boolean'],
             'status' => ['required', 'string', 'in:'.implode(',', array_keys(TimetableTask::STATUSES))],
         ];
     }
@@ -92,7 +90,6 @@ class UpdateTimetableTaskRequest extends FormRequest
             'required_people_count' => '必要人員数',
             'is_at_least' => '〇〇名以上フラグ',
             'is_critical' => '最優先フラグ',
-            'requires_review' => '本部確認フラグ',
             'status' => '進行ステータス',
         ];
     }

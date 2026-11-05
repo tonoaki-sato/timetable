@@ -70,7 +70,6 @@ class BulkTimetableTaskCreationTest extends TestCase
                     'content' => '朝礼と注意事項共有',
                     'status' => 'not_started',
                     'is_critical' => '0',
-                    'requires_review' => '0',
                 ],
                 [
                     'title' => 'ゴミ箱準備・設置',
@@ -82,7 +81,6 @@ class BulkTimetableTaskCreationTest extends TestCase
                     'content' => 'ブルーシート・袋設置',
                     'status' => 'not_started',
                     'is_critical' => '0',
-                    'requires_review' => '1',
                 ],
                 [
                     'title' => '最終撤収・清掃',
@@ -94,7 +92,6 @@ class BulkTimetableTaskCreationTest extends TestCase
                     'content' => '完全撤去確認',
                     'status' => 'not_started',
                     'is_critical' => '1',
-                    'requires_review' => '1',
                 ],
             ],
         ];
@@ -113,7 +110,6 @@ class BulkTimetableTaskCreationTest extends TestCase
         $this->assertSame('集合・事前ミーティング', $createdTasks[0]->title);
         $this->assertSame('ゴミ箱準備・設置', $createdTasks[1]->title);
         $this->assertTrue($createdTasks[1]->is_at_least);
-        $this->assertTrue($createdTasks[1]->requires_review);
         $this->assertSame('最終撤収・清掃', $createdTasks[2]->title);
         $this->assertTrue($createdTasks[2]->is_critical);
 
@@ -154,7 +150,6 @@ class BulkTimetableTaskCreationTest extends TestCase
                     'required_people_count' => 2,
                     'is_at_least' => '0',
                     'is_critical' => '0',
-                    'requires_review' => '0',
                     'status' => 'not_started',
                 ],
             ],
@@ -191,7 +186,6 @@ class BulkTimetableTaskCreationTest extends TestCase
             'required_people_count' => 3,
             'is_at_least' => '0',
             'is_critical' => '1',
-            'requires_review' => '0',
             'status' => 'not_started',
         ]);
 

@@ -51,7 +51,6 @@ class StoreTimetableTaskRequest extends FormRequest
                 $normalizedTasks[$index] = array_merge($taskItem, [
                     'is_at_least' => filter_var($taskItem['is_at_least'] ?? false, FILTER_VALIDATE_BOOLEAN),
                     'is_critical' => filter_var($taskItem['is_critical'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'requires_review' => filter_var($taskItem['requires_review'] ?? false, FILTER_VALIDATE_BOOLEAN),
                     'status' => $taskItem['status'] ?? 'not_started',
                 ]);
             }
@@ -68,7 +67,6 @@ class StoreTimetableTaskRequest extends FormRequest
                     'required_people_count' => $this->input('required_people_count', 0),
                     'is_at_least' => $this->boolean('is_at_least'),
                     'is_critical' => $this->boolean('is_critical'),
-                    'requires_review' => $this->boolean('requires_review'),
                     'status' => $this->input('status', 'not_started'),
                 ],
             ];
@@ -102,7 +100,6 @@ class StoreTimetableTaskRequest extends FormRequest
             'tasks.*.required_people_count' => ['required', 'integer', 'min:0', 'max:999'],
             'tasks.*.is_at_least' => ['required', 'boolean'],
             'tasks.*.is_critical' => ['required', 'boolean'],
-            'tasks.*.requires_review' => ['required', 'boolean'],
             'tasks.*.status' => ['required', 'string', 'in:'.$statusKeys],
         ];
     }
@@ -127,7 +124,6 @@ class StoreTimetableTaskRequest extends FormRequest
             'tasks.*.required_people_count' => '必要人員数',
             'tasks.*.is_at_least' => '〇〇名以上フラグ',
             'tasks.*.is_critical' => '最優先フラグ',
-            'tasks.*.requires_review' => '本部確認フラグ',
             'tasks.*.status' => '進行ステータス',
         ];
     }

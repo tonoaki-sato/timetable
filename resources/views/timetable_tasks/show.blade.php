@@ -69,11 +69,6 @@
                     🚨 最優先
                 </span>
                 @endif
-                @if($task->requires_review)
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                    📋 本部確認要
-                </span>
-                @endif
             </div>
         </div>
 

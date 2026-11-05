@@ -63,7 +63,6 @@
                     'content' => old('content', ''),
                     'status' => old('status', 'not_started'),
                     'is_critical' => (bool) old('is_critical', false),
-                    'requires_review' => (bool) old('requires_review', false),
                 ],
             ];
         } else {
@@ -316,7 +315,7 @@
                     </div>
 
                     <!-- 4行目: ステータス ＆ 重要フラグ設定 -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1">
                                 初期進行ステータス <span class="text-red-500">*</span>
@@ -343,18 +342,6 @@
                                     {{ !empty($taskItem['is_critical']) ? 'checked' : '' }}
                                     class="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-4 w-4">
                                 <span class="text-xs font-bold text-rose-700">🚨 最優先タスク（重要）</span>
-                            </label>
-                        </div>
-
-                        <div class="sm:pt-6 flex items-center">
-                            <label class="flex items-center space-x-2 cursor-pointer select-none">
-                                <input type="checkbox"
-                                    data-field="requires_review"
-                                    name="tasks[{{ $idx }}][requires_review]"
-                                    value="1"
-                                    {{ !empty($taskItem['requires_review']) ? 'checked' : '' }}
-                                    class="rounded border-slate-300 text-amber-600 focus:ring-amber-500 h-4 w-4">
-                                <span class="text-xs font-bold text-amber-800">📋 本部完了確認を要する</span>
                             </label>
                         </div>
                     </div>

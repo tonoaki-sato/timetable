@@ -179,7 +179,6 @@ function initBulkTaskRowsManager() {
         const contentInput = clone.querySelector('[data-field="content"]');
         const statusSelect = clone.querySelector('[data-field="status"]');
         const criticalInput = clone.querySelector('[data-field="is_critical"]');
-        const reviewInput = clone.querySelector('[data-field="requires_review"]');
 
         if (titleInput) titleInput.value = '';
         if (locationInput) locationInput.value = '';
@@ -190,7 +189,6 @@ function initBulkTaskRowsManager() {
         if (contentInput) contentInput.value = '';
         if (statusSelect) statusSelect.value = 'not_started';
         if (criticalInput) criticalInput.checked = false;
-        if (reviewInput) reviewInput.checked = false;
 
         tasksContainer.appendChild(clone);
         reindexTaskCards();

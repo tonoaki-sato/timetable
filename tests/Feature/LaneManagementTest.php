@@ -318,7 +318,6 @@ class LaneManagementTest extends TestCase
             'required_people_count' => 2,
             'is_at_least' => false,
             'is_critical' => false,
-            'requires_review' => false,
             'status' => 'not_started',
             'auto_assign_lead' => '1',
         ];

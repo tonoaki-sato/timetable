@@ -46,9 +46,6 @@
                             @if ($task->is_critical)
                                 <span class="px-2 py-0.5 bg-red-600 text-white font-bold text-[10px] rounded">🚨 最優先設置</span>
                             @endif
-                            @if ($task->requires_review)
-                                <span class="px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 font-semibold text-[10px] rounded">🔍 要確認・立会</span>
-                            @endif
                             @if ($laneDisplay = $formatLaneDisplay($task))
                                 <span class="text-xs font-semibold text-slate-600">{{ $laneDisplay }}</span>
                             @endif

@@ -93,7 +93,6 @@ class NextTasksCardTest extends TestCase
             'required_people_count' => 4,
             'is_at_least' => true,
             'is_critical' => true,
-            'requires_review' => true,
             'status' => 'not_started',
         ]);
 
@@ -113,7 +112,6 @@ class NextTasksCardTest extends TestCase
             'required_people_count' => 2,
             'is_at_least' => false,
             'is_critical' => false,
-            'requires_review' => false,
             'status' => 'not_started',
         ]);
 
@@ -127,7 +125,7 @@ class NextTasksCardTest extends TestCase
         $response->assertSee('12:00 - 13:00');
         $response->assertSee('🚻 衛生 (有エ 喜一郎)');
         $response->assertSee('🚨 最優先');
-        $response->assertSee('🔍 要確認・立会');
+        $response->assertDontSee('要確認・立会');
         $response->assertSee('北川製粉所横ゴミステーション巡回回収');
         $response->assertSee('午後開始の巡回タスク');
         $response->assertSee('📍 北川製粉所横');

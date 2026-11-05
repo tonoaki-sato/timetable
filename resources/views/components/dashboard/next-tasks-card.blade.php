@@ -52,14 +52,9 @@
 
                         <!-- 中段: バッジ & タスク名 -->
                         <div class="space-y-1">
-                            @if ($task->is_critical || $task->requires_review)
+                            @if ($task->is_critical)
                                 <div class="flex flex-wrap items-center gap-1">
-                                    @if ($task->is_critical)
-                                        <span class="px-1.5 py-0.5 bg-red-600 text-white font-bold text-[10px] rounded">🚨 最優先</span>
-                                    @endif
-                                    @if ($task->requires_review)
-                                        <span class="px-1.5 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 font-semibold text-[10px] rounded">🔍 要確認・立会</span>
-                                    @endif
+                                    <span class="px-1.5 py-0.5 bg-red-600 text-white font-bold text-[10px] rounded">🚨 最優先</span>
                                 </div>
                             @endif
                             <h5 class="font-bold text-slate-900 text-xs leading-snug">

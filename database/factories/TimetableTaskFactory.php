@@ -39,7 +39,6 @@ class TimetableTaskFactory extends Factory
             'required_people_count' => fake()->numberBetween(2, 4),
             'is_at_least' => false,
             'is_critical' => false,
-            'requires_review' => false,
             'status' => 'not_started',
         ];
     }

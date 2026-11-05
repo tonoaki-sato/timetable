@@ -99,7 +99,6 @@ class NowTasksCardTest extends TestCase
             'required_people_count' => 3,
             'is_at_least' => false,
             'is_critical' => true,
-            'requires_review' => true,
             'status' => 'in_progress',
         ]);
 
@@ -116,7 +115,7 @@ class NowTasksCardTest extends TestCase
         $response->assertSee('10:15 時点');
         $response->assertSee('10:00 - 11:00');
         $response->assertSee('🚨 最優先設置');
-        $response->assertSee('🔍 要確認・立会');
+        $response->assertDontSee('要確認・立会');
         $response->assertSee('🔺 カラーコーン (漆原 功)');
         $response->assertSee('支道接続点カラーコーン本設置');
         $response->assertSee('税務署前交差点');

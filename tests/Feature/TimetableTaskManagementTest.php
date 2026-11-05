@@ -66,7 +66,6 @@ class TimetableTaskManagementTest extends TestCase
             'required_people_count' => 3,
             'is_at_least' => '1',
             'is_critical' => '1',
-            'requires_review' => '0',
             'status' => 'not_started',
         ]);
 
@@ -397,6 +396,7 @@ class TimetableTaskManagementTest extends TestCase
         $response->assertSee('タスク一覧に戻る');
         $response->assertDontSee('タスク情報編集');
         $response->assertDontSee('削除');
+        $response->assertDontSee('本部確認要');
 
         // コンテキストバー
         $response->assertSee('対象運行日:');

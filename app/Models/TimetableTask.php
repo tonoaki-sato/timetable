@@ -22,7 +22,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'required_people_count',
     'is_at_least',
     'is_critical',
-    'requires_review',
     'status',
 ])]
 class TimetableTask extends Model
@@ -53,7 +52,6 @@ class TimetableTask extends Model
             'required_people_count' => 'integer',
             'is_at_least' => 'boolean',
             'is_critical' => 'boolean',
-            'requires_review' => 'boolean',
         ];
     }
 
