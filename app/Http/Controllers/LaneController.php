@@ -138,7 +138,7 @@ class LaneController extends Controller
     {
         $this->authorize('update', $lane);
 
-        $lane->loadMissing(['leadStaff', 'fixedStaff', 'tasks']);
+        $lane->loadMissing(['leadStaff', 'fixedStaff']);
         $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
 
         return view('lanes.edit', [
