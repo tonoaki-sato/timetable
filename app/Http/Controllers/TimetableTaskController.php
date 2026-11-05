@@ -53,17 +53,21 @@ class TimetableTaskController extends Controller
 
         $timetable->load([
             'lanes' => function ($q) {
-                $q->orderBy('display_order')->with('leadStaff');
-            },
-            'tasks' => function ($q) {
-                $q->orderBy('start_time', 'asc')
-                    ->with(['assignments.staff', 'laneRelation.leadStaff']);
+                $q->orderBy('display_order')->with([
+                    'leadStaff',
+                    'tasks' => function ($tQuery) {
+                        $tQuery->orderBy('start_time', 'asc')
+                            ->orderBy('end_time', 'asc')
+                            ->with('assignments');
+                    },
+                ]);
             },
         ]);
 
         return view('timetable_tasks.index', [
             'timetable' => $timetable,
-            'tasks' => $timetable->tasks,
+            'lanes' => $timetable->lanes,
+            'tasks' => $timetable->lanes->flatMap->tasks,
         ]);
     }
 

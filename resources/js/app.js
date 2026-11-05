@@ -88,6 +88,30 @@ function initGlobalEventHandlers() {
             }
             return;
         }
+
+        // 8. アコーディオン一括開閉 (data-action="toggle-accordions", data-target="#containerId")
+        const accordionBtn = e.target.closest('[data-action="toggle-accordions"]');
+        if (accordionBtn) {
+            const containerSelector = accordionBtn.getAttribute('data-target') || '#task-accordions';
+            const container = document.querySelector(containerSelector);
+            if (container) {
+                const detailsList = container.querySelectorAll('details');
+                const shouldOpen = accordionBtn.getAttribute('data-state') !== 'open';
+                detailsList.forEach(d => {
+                    d.open = shouldOpen;
+                });
+                accordionBtn.setAttribute('data-state', shouldOpen ? 'open' : 'closed');
+                const label = accordionBtn.querySelector('[data-label]');
+                if (label) {
+                    label.textContent = shouldOpen ? 'すべて折りたたむ' : 'すべて開く';
+                }
+                const icon = accordionBtn.querySelector('[data-icon]');
+                if (icon) {
+                    icon.textContent = shouldOpen ? '🔼' : '🔽';
+                }
+            }
+            return;
+        }
     });
 }
 
