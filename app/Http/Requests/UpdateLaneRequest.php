@@ -50,10 +50,8 @@ class UpdateLaneRequest extends FormRequest
             'lead_staff_id' => ['nullable', 'integer', 'exists:staff,id'],
             'fixed_staff_ids' => ['nullable', 'array'],
             'fixed_staff_ids.*' => ['integer', 'exists:staff,id'],
-            'is_core' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'display_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
         ];
     }
 
@@ -71,7 +69,6 @@ class UpdateLaneRequest extends FormRequest
             'lead_staff_id' => '班長',
             'fixed_staff_ids' => '固定スタッフ',
             'description' => '業務範囲・説明',
-            'display_order' => '表示順',
         ];
     }
 }

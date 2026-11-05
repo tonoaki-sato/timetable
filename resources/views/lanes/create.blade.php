@@ -44,6 +44,31 @@
     </div>
     @endif
 
+    @php
+        $colorClassesMap = [
+            'amber'   => ['dot' => 'bg-amber-500', 'badge' => 'bg-amber-100 text-amber-800 border-amber-300'],
+            'sky'     => ['dot' => 'bg-sky-500', 'badge' => 'bg-sky-100 text-sky-800 border-sky-300'],
+            'emerald' => ['dot' => 'bg-emerald-500', 'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300'],
+            'purple'  => ['dot' => 'bg-purple-500', 'badge' => 'bg-purple-100 text-purple-800 border-purple-300'],
+            'pink'    => ['dot' => 'bg-pink-500', 'badge' => 'bg-pink-100 text-pink-800 border-pink-300'],
+            'red'     => ['dot' => 'bg-rose-500', 'badge' => 'bg-rose-100 text-rose-800 border-rose-300'],
+            'orange'  => ['dot' => 'bg-orange-500', 'badge' => 'bg-orange-100 text-orange-800 border-orange-300'],
+            'indigo'  => ['dot' => 'bg-indigo-500', 'badge' => 'bg-indigo-100 text-indigo-800 border-indigo-300'],
+            'teal'    => ['dot' => 'bg-teal-500', 'badge' => 'bg-teal-100 text-teal-800 border-teal-300'],
+            'yellow'  => ['dot' => 'bg-yellow-400', 'badge' => 'bg-yellow-100 text-yellow-800 border-yellow-300'],
+            'slate'   => ['dot' => 'bg-slate-500', 'badge' => 'bg-slate-100 text-slate-800 border-slate-300'],
+        ];
+        $selectedColor = old('color', 'slate');
+        $initialBadgeClass = $colorClassesMap[$selectedColor]['badge'] ?? $colorClassesMap['slate']['badge'];
+        $emojiPresets = [
+            '🔺', '🚨', '🪧', '🛑', '🚧', '🛡️',
+            '🚰', '🚻', '💡', '🔧', '🧹', '🎪', '⛺',
+            '📢', '🎤', '🏛️', '📋', '📻', '🎫',
+            '🏮', '🎈', '🧺', '🍱', '🍧', '🎯',
+            '🚚', '📦', '🛒', '🏃‍♂️', '🚲',
+        ];
+    @endphp
+
     <!-- 作成フォームカード -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-5 border-b border-slate-100 flex items-center justify-between">
@@ -56,58 +81,105 @@
             </span>
         </div>
 
-        <form action="{{ route('timetables.lanes.store', $timetable) }}" method="POST" class="p-6 space-y-6">
+        <form action="{{ route('timetables.lanes.store', $timetable) }}" method="POST" class="p-6 space-y-6" id="lane-form">
             @csrf
 
-            <!-- 1. 基本属性グリッド -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- リアルタイム・バッジプレビュー -->
+            <div class="p-4 bg-slate-50/80 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center space-x-3">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">表示プレビュー:</span>
+                    <div id="lane-preview-badge"
+                        class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border transition-all duration-150 {{ $initialBadgeClass }}">
+                        <span id="preview-icon" class="mr-1.5 text-sm">{{ old('icon', '📋') ?: '📋' }}</span>
+                        <span id="preview-name">{{ old('name') ?: '担当班名' }}</span>
+                    </div>
+                </div>
+                <span class="text-[11px] text-slate-400">※ 入力内容やカラー選択が即座に反映されます</span>
+            </div>
+
+            <!-- 1. 基本属性（名前 & アイコン） -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <!-- 担当班名 -->
-                <div>
+                <div class="md:col-span-2">
                     <label for="name" class="block text-xs font-bold text-slate-700 mb-1">
                         担当班名（レーン名） <span class="text-rose-600">*</span>
                     </label>
                     <input type="text" id="name" name="name" value="{{ old('name') }}" required
                         placeholder="例: 会場放送班、音響PA班"
                         class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p class="text-[10px] text-slate-400 mt-1">※ タイムテーブルや作業割当カードに表示される班の名前です。</p>
                 </div>
 
-                <!-- 絵文字アイコン -->
+                <!-- 絵文字アイコン入力 -->
                 <div>
                     <label for="icon" class="block text-xs font-bold text-slate-700 mb-1">
                         絵文字アイコン
                     </label>
-                    <input type="text" id="icon" name="icon" value="{{ old('icon', '📋') }}"
-                        placeholder="例: 🎤, 🎪, 📢, 🔺"
-                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="icon" name="icon" value="{{ old('icon', '📋') }}" maxlength="20"
+                            placeholder="例: 🎤"
+                            class="w-20 text-center px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <div class="text-[10px] text-slate-400 leading-tight">
+                            自由入力または下の候補から選択
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <!-- テーマカラー -->
-                <div>
-                    <label for="color" class="block text-xs font-bold text-slate-700 mb-1">
-                        テーマカラー <span class="text-rose-600">*</span>
-                    </label>
-                    <select id="color" name="color" required
-                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        @foreach($colorOptions as $colorKey => $colorLabel)
-                        <option value="{{ $colorKey }}" {{ old('color', 'slate') === $colorKey ? 'selected' : '' }}>
-                            {{ $colorLabel }}
-                        </option>
-                        @endforeach
-                    </select>
+            <!-- 絵文字クイックパレット -->
+            <div class="p-3 bg-slate-50/70 border border-slate-200/80 rounded-xl space-y-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <span class="text-xs font-bold text-slate-700 flex items-center space-x-1">
+                        <span>✨</span>
+                        <span>おすすめ絵文字パレット（クリックで即時セット）</span>
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-mono">
+                        PCショートカット: Win + . / Mac: Ctrl + Cmd + Space
+                    </span>
                 </div>
+                <div class="flex flex-wrap gap-1.5" id="emoji-palette">
+                    @foreach($emojiPresets as $emoji)
+                    <button type="button"
+                        data-emoji="{{ $emoji }}"
+                        class="w-8 h-8 rounded-lg bg-white border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 text-sm flex items-center justify-center transition cursor-pointer shadow-2xs">
+                        {{ $emoji }}
+                    </button>
+                    @endforeach
+                </div>
+            </div>
 
-                <!-- 表示順 -->
-                <div>
-                    <label for="display_order" class="block text-xs font-bold text-slate-700 mb-1">
-                        表示順
+            <!-- テーマカラー（視覚的カラースウォッチ） -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold text-slate-700">
+                        テーマカラー選択 <span class="text-rose-600">*</span>
                     </label>
-                    <input type="number" id="display_order" name="display_order" value="{{ old('display_order', $defaultOrder) }}" min="0" max="9999"
-                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <span class="text-[10px] text-slate-400">実際の色味とバッジ見本を確認しながら選択できます</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2" id="color-options-grid">
+                    @foreach($colorOptions as $colorKey => $colorLabel)
+                    @php
+                        $colorMeta = $colorClassesMap[$colorKey] ?? $colorClassesMap['slate'];
+                        $isSelected = $selectedColor === $colorKey;
+                    @endphp
+                    <label class="lane-color-card relative flex items-center justify-between p-2 rounded-xl border cursor-pointer transition select-none hover:bg-slate-50 {{ $isSelected ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-2xs' : 'border-slate-200 bg-white' }}"
+                        data-color="{{ $colorKey }}"
+                        data-badge-class="{{ $colorMeta['badge'] }}">
+                        <input type="radio" name="color" value="{{ $colorKey }}" {{ $isSelected ? 'checked' : '' }} required class="sr-only">
+                        <div class="flex items-center space-x-2 truncate mr-1">
+                            <span class="w-3.5 h-3.5 rounded-full {{ $colorMeta['dot'] }} shrink-0 border border-black/10"></span>
+                            <span class="text-xs font-bold text-slate-800 truncate">{{ $colorLabel }}</span>
+                        </div>
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $colorMeta['badge'] }} shrink-0">
+                            見本
+                        </span>
+                    </label>
+                    @endforeach
                 </div>
             </div>
 
             <!-- 2. 班長および説明メモ -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                 <!-- 班長（主担当スタッフ） -->
                 <div>
                     <label for="lead_staff_id" class="block text-xs font-bold text-slate-700 mb-1">
@@ -166,15 +238,9 @@
                 </div>
             </div>
 
-            <!-- 4. 主要班・有効化フラグ -->
-            <div class="flex flex-wrap items-center gap-6 pt-3 border-t border-slate-200">
-                <label class="flex items-center space-x-2 cursor-pointer select-none">
-                    <input type="checkbox" name="is_core" value="1" {{ old('is_core') ? 'checked' : '' }}
-                        class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                    <span class="text-xs font-bold text-slate-700">⭐ 主要班（マトリクス固定表示・強調）</span>
-                </label>
-
-                <label class="flex items-center space-x-2 cursor-pointer select-none">
+            <!-- 4. 有効化フラグ -->
+            <div class="pt-3 border-t border-slate-200">
+                <label class="inline-flex items-center space-x-2 cursor-pointer select-none">
                     <input type="checkbox" name="is_active" value="1" {{ old('is_active', '1') === '1' ? 'checked' : '' }}
                         class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
                     <span class="text-xs font-bold text-slate-700">👁️ 有効（マトリクス・帳票に表示）</span>
@@ -200,4 +266,3 @@
 
 @vite(['resources/js/lanes.js'])
 </x-layouts.app>
-

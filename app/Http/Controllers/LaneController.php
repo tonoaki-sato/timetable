@@ -72,13 +72,11 @@ class LaneController extends Controller
         $this->authorize('create', Lane::class);
 
         $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
-        $defaultOrder = $this->laneRepository->getMaxDisplayOrder($timetable) + 10;
 
         return view('lanes.create', [
             'timetable' => $timetable,
             'activeStaff' => $activeStaff,
             'colorOptions' => Lane::COLOR_OPTIONS,
-            'defaultOrder' => $defaultOrder,
         ]);
     }
 

@@ -229,7 +229,6 @@ class Timetable extends Model
                     'color' => $laneData['color'],
                     'description' => $laneData['description'],
                     'display_order' => $laneData['display_order'],
-                    'is_core' => $laneData['is_core'] ?? false,
                     'is_active' => true,
                     'lead_staff_id' => null,
                 ]

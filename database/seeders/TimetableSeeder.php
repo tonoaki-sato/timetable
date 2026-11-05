@@ -50,7 +50,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 20,
                 'lead_staff_id' => 27, // 有エ 喜一郎
                 'description' => '仮設トイレ・ごみステーション設置・回収袋交換',
-                'is_core' => true,
                 'is_active' => true,
             ],
             [
@@ -60,7 +59,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 40,
                 'lead_staff_id' => 35, // Jouko Karvonen
                 'description' => '路上規制バー・コーン搬入・本設置・撤去',
-                'is_core' => true,
                 'is_active' => true,
             ],
             [
@@ -70,7 +68,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 50,
                 'lead_staff_id' => 6, // 宮永 彩夫
                 'description' => '給水タンク・仮設手洗い場・配管ホース設置',
-                'is_core' => true,
                 'is_active' => true,
             ],
             [
@@ -80,7 +77,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 60,
                 'lead_staff_id' => 1, // 佐藤 外亮
                 'description' => '会場警備・迷子対応・防犯パトロール・動線監視',
-                'is_core' => true,
                 'is_active' => true,
             ],
             [
@@ -90,7 +86,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 70,
                 'lead_staff_id' => 5, // 岡本 隆良
                 'description' => 'こども体験ブース設営・運営・安全管理',
-                'is_core' => false,
                 'is_active' => true,
             ],
             [
@@ -100,7 +95,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 80,
                 'lead_staff_id' => 35, // 森 和成
                 'description' => '提灯取付・配線点検・点灯確認・翌日回収',
-                'is_core' => false,
                 'is_active' => true,
             ],
             [
@@ -110,7 +104,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 90,
                 'lead_staff_id' => 23, // 漆原 功
                 'description' => 'ござ敷設・出店区画案内・境界管理・漆原さん連携',
-                'is_core' => false,
                 'is_active' => true,
             ],
             [
@@ -120,7 +113,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 100,
                 'lead_staff_id' => 19, // 原 美知子
                 'description' => '本部運営・来賓応接・放送アナウンス・総合案内',
-                'is_core' => false,
                 'is_active' => true,
             ],
             [
@@ -130,7 +122,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 110,
                 'lead_staff_id' => null,
                 'description' => '開催前清掃・巡回清掃・規制解除前の最終路面清掃',
-                'is_core' => false,
                 'is_active' => true,
             ],
             [
@@ -140,7 +131,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 120,
                 'lead_staff_id' => 1, // 佐藤 外亮
                 'description' => '捨て看板（案内標識）の電柱・フェンス設置および完全回収',
-                'is_core' => true,
                 'is_active' => true,
             ],
         ];
@@ -571,7 +561,6 @@ class TimetableSeeder extends Seeder
                 'color' => 'amber',
                 'icon' => '📋',
                 'lead_staff_id' => 24, // 寺井 智之
-                'is_core' => true,
                 'is_active' => true,
                 'display_order' => 10,
                 'description' => null,

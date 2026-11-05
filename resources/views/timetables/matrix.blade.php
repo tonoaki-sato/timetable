@@ -106,13 +106,11 @@
                 @foreach($lanes as $lane)
                 @php
                     $leadName = $lane->leadStaff ? (explode(' ', $lane->leadStaff->name)[0] ?? $lane->leadStaff->name) : '';
-                    $isCoreLane = (bool) $lane->is_core;
                 @endphp
                 <button type="button"
                     id="chip-lane-{{ $lane->id }}"
                     data-lane-id="{{ $lane->id }}"
                     data-lane-name="{{ $lane->name }}"
-                    data-is-core="{{ $isCoreLane ? '1' : '0' }}"
                     data-lead-id="{{ $lane->lead_staff_id ?? '' }}"
                     class="lane-chip inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border transition bg-white text-slate-800 border-slate-300 hover:border-indigo-400 whitespace-nowrap shrink-0">
                     <span class="mr-1 text-[10px] text-emerald-600 font-bold">✔</span>
@@ -464,15 +462,6 @@
                         <option value="{{ $st->id }}">{{ $st->name }} {{ $st->affiliation ? "({$st->affiliation})" : '' }}</option>
                         @endforeach
                     </select>
-                </div>
-
-                <!-- 主要班フラグ -->
-                <div class="flex items-center space-x-2 pt-1">
-                    <input type="checkbox" id="modal_lane_is_core" name="is_core" value="1"
-                        class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                    <label for="modal_lane_is_core" class="text-xs font-bold text-slate-700 cursor-pointer">
-                        ⭐ 主要班（コアレーン）として左側に優先表示・強調する
-                    </label>
                 </div>
 
                 <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">

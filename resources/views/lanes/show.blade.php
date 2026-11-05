@@ -26,12 +26,6 @@
             <span class="font-mono text-xs text-slate-500 font-bold px-2 py-0.5 bg-slate-100 rounded-lg">
                 #{{ $lane->display_order }}
             </span>
-            @if($lane->is_core)
-            <span class="text-xs px-2 py-0.5 rounded-lg bg-amber-100 text-amber-800 font-bold flex items-center space-x-1">
-                <span>⭐</span>
-                <span>主要班</span>
-            </span>
-            @endif
             @if($lane->is_active)
             <span class="text-xs px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 font-bold">
                 👁️ 有効
@@ -121,9 +115,6 @@
                         <span class="text-slate-400 block text-[11px]">表示順 / 優先度</span>
                         <span class="font-bold text-slate-800 mt-0.5 block">
                             第 #{{ $lane->display_order }} レーン
-                            @if($lane->is_core)
-                            <span class="text-amber-600 font-bold ml-1">⭐ 主要</span>
-                            @endif
                         </span>
                     </div>
                     <div>

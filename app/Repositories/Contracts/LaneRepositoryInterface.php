@@ -51,4 +51,3 @@ interface LaneRepositoryInterface
      */
     public function getMaxDisplayOrder(Timetable $timetable): int;
 }
-

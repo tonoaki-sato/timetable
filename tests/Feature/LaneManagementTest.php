@@ -446,22 +446,23 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 9. デフォルトレーン生成時に主要班（コアレーン）フラグが正しく設定されること
+     * 9. デフォルト10レーンが正しい名前・色・表示順で生成されること
      */
-    public function test_default_ten_lanes_have_core_flags(): void
+    public function test_default_ten_lanes_are_created_properly(): void
     {
         $this->timetable->createDefaultLanes();
 
-        $coreLaneNames = ['カラーコーン', '給水設備', '衛生', '巡回', 'ステカン'];
-        foreach ($coreLaneNames as $name) {
-            $lane = $this->timetable->lanes()->where('name', $name)->firstOrFail();
-            $this->assertTrue($lane->is_core, "Lane {$name} should be core");
-        }
+        $this->assertCount(10, $this->timetable->lanes);
 
-        $nonCoreLaneNames = ['キッズ村', 'ちょうちん', 'ござ市', '本陣', '道路清掃'];
-        foreach ($nonCoreLaneNames as $name) {
-            $lane = $this->timetable->lanes()->where('name', $name)->firstOrFail();
-            $this->assertFalse($lane->is_core, "Lane {$name} should not be core");
+        $expectedNames = [
+            'カラーコーン', '給水設備', '衛生', '巡回', 'キッズ村',
+            'ちょうちん', 'ござ市', '本陣', '道路清掃', 'ステカン',
+        ];
+
+        foreach ($expectedNames as $name) {
+            $lane = $this->timetable->lanes()->where('name', $name)->first();
+            $this->assertNotNull($lane, "Lane {$name} should exist");
+            $this->assertTrue($lane->is_active);
         }
     }
 
@@ -666,8 +667,10 @@ class LaneManagementTest extends TestCase
         $response->assertSee('新規担当班の追加');
         $response->assertSee('担当班名（レーン名）');
         $response->assertSee('絵文字アイコン');
-        $response->assertSee('テーマカラー');
-        $response->assertSee('表示順');
+        $response->assertSee('おすすめ絵文字パレット');
+        $response->assertSee('テーマカラー選択');
+        $response->assertDontSee('⭐ 主要班');
+        $response->assertDontSee('name="display_order"', false);
         $response->assertSee('この担当班を新規登録');
 
         $opResponse = $this->actingAs($this->operatorUser)
@@ -727,6 +730,10 @@ class LaneManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('担当班の編集: 本陣');
         $response->assertSee('value="本陣"', false);
+        $response->assertSee('おすすめ絵文字パレット');
+        $response->assertSee('テーマカラー選択');
+        $response->assertDontSee('⭐ 主要班');
+        $response->assertDontSee('name="display_order"', false);
         $response->assertSee('更新内容を保存');
         $response->assertSee(route('timetables.lanes.update', [$this->timetable, $lane]));
 

@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDragAndDropReorder();
     initDeleteMigrationModal();
     initLeadStaffAutoSelection();
+    initLaneFormInteractions();
 });
 
 /**
@@ -186,4 +187,90 @@ function initLeadStaffAutoSelection() {
             checkbox.checked = true;
         }
     });
+}
+
+/**
+ * 4. 担当班登録・編集フォームの対話操作（絵文字パレット・カラースウォッチ・リアルタイムプレビュー）
+ */
+function initLaneFormInteractions() {
+    const form = document.getElementById('lane-form');
+    if (!form) return;
+
+    const nameInput = document.getElementById('name');
+    const iconInput = document.getElementById('icon');
+    const previewBadge = document.getElementById('lane-preview-badge');
+    const previewName = document.getElementById('preview-name');
+    const previewIcon = document.getElementById('preview-icon');
+    const colorCards = form.querySelectorAll('.lane-color-card');
+
+    // 1. 班名入力とプレビュー同期
+    if (nameInput && previewName) {
+        nameInput.addEventListener('input', () => {
+            const val = nameInput.value.trim();
+            previewName.textContent = val || '担当班名';
+        });
+    }
+
+    // 2. 絵文字アイコン入力とプレビュー同期
+    if (iconInput && previewIcon) {
+        iconInput.addEventListener('input', () => {
+            const val = iconInput.value.trim();
+            previewIcon.textContent = val || '📋';
+        });
+    }
+
+    // 3. 絵文字クイックパレットクリック
+    const palette = document.getElementById('emoji-palette');
+    if (palette && iconInput && previewIcon) {
+        palette.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-emoji]');
+            if (!btn) return;
+            const emoji = btn.dataset.emoji;
+            if (!emoji) return;
+
+            iconInput.value = emoji;
+            previewIcon.textContent = emoji;
+
+            // パレットボタンのクリックフィードバック
+            btn.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-100');
+            setTimeout(() => {
+                btn.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-100');
+            }, 200);
+        });
+    }
+
+    // 4. カラースウォッチ選択とプレビュー同期
+    if (colorCards.length > 0 && previewBadge) {
+        const updateColorSelection = (selectedCard) => {
+            colorCards.forEach(card => {
+                const isTarget = card === selectedCard;
+                card.classList.toggle('border-indigo-600', isTarget);
+                card.classList.toggle('bg-indigo-50/50', isTarget);
+                card.classList.toggle('ring-2', isTarget);
+                card.classList.toggle('ring-indigo-500/20', isTarget);
+                card.classList.toggle('shadow-2xs', isTarget);
+
+                card.classList.toggle('border-slate-200', !isTarget);
+                card.classList.toggle('bg-white', !isTarget);
+            });
+
+            // プレビューバッジのクラス更新
+            const badgeClass = selectedCard.dataset.badgeClass;
+            if (badgeClass) {
+                // 既存のカラー関連クラス（bg-*, text-*, border-*）をリセットして新クラスを適用
+                const baseClasses = ['inline-flex', 'items-center', 'px-3', 'py-1', 'rounded-lg', 'text-xs', 'font-bold', 'border', 'transition-all', 'duration-150'];
+                previewBadge.className = `${baseClasses.join(' ')} ${badgeClass}`;
+            }
+        };
+
+        colorCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const radio = card.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                }
+                updateColorSelection(card);
+            });
+        });
+    }
 }
