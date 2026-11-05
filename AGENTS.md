@@ -149,4 +149,38 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Rerun a test after each change to it.
 - Run `vendor/bin/phpunit` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.
 
+=== application architecture & view component rules ===
+
+# Application Architecture & Layering Rules
+
+本アプリケーションでは以下の7層レイヤードアーキテクチャを厳格に遵守すること。
+
+1. **Presentation Layer (View / Presenter)**:
+   - BladeテンプレートによるSSR描画。UI表示の加工は `app/Presenters/` や View Component に委譲し、Blade内に複雑なロジックを直接記述しない。
+   - フロントエンドは Vanilla JS (ES Modules) + Vite + Print CSS。厳格な CSP（インラインスクリプト/スタイルの禁止）を遵守する。
+
+2. **HTTP / Delivery Layer (Controller / FormRequest)**:
+   - **Thin Controller の徹底**: コントローラーはリクエストの受付、バリデーション済みデータの受け渡し、Service/Actionの呼び出し、レスポンス返却のみを行い、業務ロジックを直接記述しない。
+   - バリデーションおよび認可（authorize）は必ず `app/Http/Requests/` の FormRequest を使用する。
+
+3. **Action Layer (`app/Actions/`)**:
+   - スタッフアサインやCSVインポート/エクスポートなど、単一の具体的なユースケース（単一責任）をカプセル化する。
+
+4. **Domain & Application Service Layer (`app/Services/`, `app/DTOs/`, `app/Enums/`, `app/Policies/`)**:
+   - 業務ルール、横断的計算、競合検知、制約検証は Service に実装する。
+   - 複数レイヤー間のデータ受け渡しは連想配列ではなく DTO（`app/DTOs/`）を定義して型安全に行う。
+   - 状態・種別判定は Enum（`app/Enums/`）を使用する。
+   - リソースごとの認可判定は Policy（`app/Policies/`）に委譲する。
+
+5. **Repository Layer (`app/Repositories/`)**:
+   - Eloquent クエリは直接 Controller に書かず、Repository パターンを用いる。
+   - `app/Repositories/Contracts/` にインターフェースを定義し、`app/Repositories/Eloquent/` で実装する（DIPの遵守）。Service や Action からは Contract 経由で呼び出す。
+
+6. **Model & Persistence Layer (`app/Models/`)**:
+   - Eloquent Model はリレーション定義、スコープ、属性キャストに専念する。
+
+7. **View Components (`app/View/Components/`, `resources/views/components/`)**:
+   - **クラスベース (`app/View/Components/`)**: ダッシュボードの各カードなど、DI（Service注入）や表示判定ロジック（ViewModel的役割）が必要なUIパーツに使用する。
+   - **匿名コンポーネント (`resources/views/components/`)**: ヘッダー、レイアウト、バッジなど、表示構造・デザインの共通化に使用する。
+
 </laravel-boost-guidelines>
