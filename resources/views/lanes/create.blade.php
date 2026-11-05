@@ -253,16 +253,8 @@
 
             </div>
 
-            <!-- 共通下部バー: 9. 有効チェックボックス & 10. 送信ボタンエリア -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-200">
-                <div>
-                    <label class="inline-flex items-center space-x-2 cursor-pointer select-none">
-                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', '1') === '1' ? 'checked' : '' }}
-                            class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                        <span class="text-xs font-bold text-slate-700">👁️ 有効（マトリクス・帳票に表示）</span>
-                    </label>
-                </div>
-
+            <!-- 共通下部バー: 送信ボタンエリア -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-4 pt-4 border-t border-slate-200">
                 <div class="flex items-center space-x-3">
                     <a href="{{ route('timetables.lanes.index', $timetable) }}"
                         class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition">

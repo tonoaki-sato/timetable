@@ -45,7 +45,6 @@ class StoreLaneRequest extends FormRequest
             'lead_staff_id' => ['nullable', 'integer', 'exists:staff,id'],
             'fixed_staff_ids' => ['nullable', 'array'],
             'fixed_staff_ids.*' => ['integer', 'exists:staff,id'],
-            'is_active' => ['nullable', 'boolean'],
             'description' => ['nullable', 'string', 'max:2000'],
         ];
     }

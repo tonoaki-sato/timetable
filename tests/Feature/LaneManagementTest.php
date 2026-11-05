@@ -466,7 +466,6 @@ class LaneManagementTest extends TestCase
         foreach ($expectedNames as $name) {
             $lane = $this->timetable->lanes()->where('name', $name)->first();
             $this->assertNotNull($lane, "Lane {$name} should exist");
-            $this->assertTrue($lane->is_active);
         }
     }
 

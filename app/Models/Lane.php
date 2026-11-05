@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'color',
     'icon',
     'lead_staff_id',
-    'is_active',
     'description',
     'display_order',
 ])]
@@ -71,16 +70,7 @@ class Lane extends Model
     {
         return [
             'display_order' => 'integer',
-            'is_active' => 'boolean',
         ];
-    }
-
-    /**
-     * 有効レーンのみ抽出するスコープ
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
     }
 
     /**

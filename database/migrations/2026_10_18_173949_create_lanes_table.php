@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('color', 30)->default('slate');
             $table->string('icon', 50)->nullable();
             $table->foreignId('lead_staff_id')->nullable()->constrained('staff')->nullOnDelete();
-            $table->boolean('is_active')->default(true);
             $table->unsignedInteger('display_order')->default(0);
             $table->text('description')->nullable();
 

@@ -53,7 +53,7 @@ class EquipmentLogisticsController extends Controller
         $onsiteNightPlans = $this->logisticsService->getOnsiteNightStoragePlans();
         $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData();
         $festivalDates = $this->logisticsService->resolveFestivalDates();
-        $lanes = Lane::active()->ordered()->get();
+        $lanes = Lane::ordered()->get();
 
         return view('logistics.print', compact(
             'format',

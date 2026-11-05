@@ -50,7 +50,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 20,
                 'lead_staff_id' => 27, // 有エ 喜一郎
                 'description' => '仮設トイレ・ごみステーション設置・回収袋交換',
-                'is_active' => true,
             ],
             [
                 'name' => 'カラーコーン',
@@ -59,7 +58,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 40,
                 'lead_staff_id' => 35, // Jouko Karvonen
                 'description' => '路上規制バー・コーン搬入・本設置・撤去',
-                'is_active' => true,
             ],
             [
                 'name' => '給水設備',
@@ -68,7 +66,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 50,
                 'lead_staff_id' => 6, // 宮永 彩夫
                 'description' => '給水タンク・仮設手洗い場・配管ホース設置',
-                'is_active' => true,
             ],
             [
                 'name' => '巡回',
@@ -77,7 +74,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 60,
                 'lead_staff_id' => 1, // 佐藤 外亮
                 'description' => '会場警備・迷子対応・防犯パトロール・動線監視',
-                'is_active' => true,
             ],
             [
                 'name' => 'キッズ村',
@@ -86,7 +82,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 70,
                 'lead_staff_id' => 5, // 岡本 隆良
                 'description' => 'こども体験ブース設営・運営・安全管理',
-                'is_active' => true,
             ],
             [
                 'name' => 'ちょうちん',
@@ -95,7 +90,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 80,
                 'lead_staff_id' => 35, // 森 和成
                 'description' => '提灯取付・配線点検・点灯確認・翌日回収',
-                'is_active' => true,
             ],
             [
                 'name' => 'ござ市',
@@ -104,7 +98,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 90,
                 'lead_staff_id' => 23, // 漆原 功
                 'description' => 'ござ敷設・出店区画案内・境界管理・漆原さん連携',
-                'is_active' => true,
             ],
             [
                 'name' => '本陣',
@@ -113,7 +106,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 100,
                 'lead_staff_id' => 19, // 原 美知子
                 'description' => '本部運営・来賓応接・放送アナウンス・総合案内',
-                'is_active' => true,
             ],
             [
                 'name' => '道路清掃',
@@ -122,7 +114,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 110,
                 'lead_staff_id' => null,
                 'description' => '開催前清掃・巡回清掃・規制解除前の最終路面清掃',
-                'is_active' => true,
             ],
             [
                 'name' => 'ステカン',
@@ -131,7 +122,6 @@ class TimetableSeeder extends Seeder
                 'display_order' => 120,
                 'lead_staff_id' => 1, // 佐藤 外亮
                 'description' => '捨て看板（案内標識）の電柱・フェンス設置および完全回収',
-                'is_active' => true,
             ],
         ];
 
@@ -561,7 +551,6 @@ class TimetableSeeder extends Seeder
                 'color' => 'amber',
                 'icon' => '📋',
                 'lead_staff_id' => 24, // 寺井 智之
-                'is_active' => true,
                 'display_order' => 10,
                 'description' => null,
             ]
@@ -635,6 +624,64 @@ class TimetableSeeder extends Seeder
                         'notes' => null,
                     ]
                 );
+            }
+        }
+
+        // =========================================================================
+        // 4. 第35回保土ケ谷宿場まつり（1日目） - 2027-10-10 (日)
+        // =========================================================================
+        $timetableDay4 = Timetable::updateOrCreate(
+            ['target_date' => '2027-10-10'],
+            [
+                'name' => '第35回保土ケ谷宿場まつり（1日目）',
+                'description' => null,
+                'start_time' => '07:00:00',
+                'end_time' => '20:00:00',
+                'status' => 'draft',
+                'road_periods' => [
+                    ['start_time' => '10:00', 'end_time' => '18:00', 'label' => '通行止め', 'status' => 'closed'],
+                ],
+                'festival_periods' => [
+                    ['start_time' => '11:00', 'end_time' => '17:00', 'label' => '開催中', 'status' => 'active'],
+                ],
+                'created_by' => $admin->id,
+            ]
+        );
+
+        $lanesDay4Data = [
+            ['name' => 'カラーコーン', 'color' => 'amber', 'icon' => '🔺', 'display_order' => 10, 'lead_staff_id' => 33, 'fixed_staff_ids' => [33], 'description' => '路上規制バー・コーン搬入・本設置・撤去'],
+            ['name' => '給水設備', 'color' => 'sky', 'icon' => '🚰', 'display_order' => 20, 'lead_staff_id' => 6, 'fixed_staff_ids' => [6], 'description' => '給水タンク・仮設手洗い場・配管ホース設置'],
+            ['name' => '衛生', 'color' => 'emerald', 'icon' => '🚻', 'display_order' => 30, 'lead_staff_id' => 26, 'fixed_staff_ids' => [26], 'description' => '仮設トイレ・ごみステーション設置・回収袋交換'],
+            ['name' => '巡回', 'color' => 'purple', 'icon' => '🚨', 'display_order' => 40, 'lead_staff_id' => null, 'fixed_staff_ids' => [], 'description' => '会場警備・迷子対応・防犯パトロール・動線監視'],
+            ['name' => 'キッズ村', 'color' => 'pink', 'icon' => '🎈', 'display_order' => 50, 'lead_staff_id' => 5, 'fixed_staff_ids' => [5], 'description' => 'こども体験ブース設営・運営・安全管理'],
+            ['name' => 'ちょうちん', 'color' => 'red', 'icon' => '🏮', 'display_order' => 60, 'lead_staff_id' => 35, 'fixed_staff_ids' => [35], 'description' => '提灯取付・配線点検・点灯確認・翌日回収'],
+            ['name' => 'ござ市', 'color' => 'orange', 'icon' => '🧺', 'display_order' => 70, 'lead_staff_id' => 22, 'fixed_staff_ids' => [22], 'description' => 'ござ敷設・出店区画案内・境界管理・漆原さん連携'],
+            ['name' => '本陣', 'color' => 'indigo', 'icon' => '🏛️', 'display_order' => 80, 'lead_staff_id' => 19, 'fixed_staff_ids' => [19], 'description' => '本部運営・来賓応接・放送アナウンス・総合案内'],
+            ['name' => '道路清掃', 'color' => 'teal', 'icon' => '🧹', 'display_order' => 90, 'lead_staff_id' => null, 'fixed_staff_ids' => [], 'description' => '開催前清掃・巡回清掃・規制解除前の最終路面清掃'],
+            ['name' => 'ステカン', 'color' => 'yellow', 'icon' => '🪧', 'display_order' => 100, 'lead_staff_id' => 21, 'fixed_staff_ids' => [21], 'description' => '捨て看板（案内標識）の電柱・フェンス設置および完全回収'],
+            ['name' => '直営店', 'color' => 'indigo', 'icon' => '🛒', 'display_order' => 110, 'lead_staff_id' => 28, 'fixed_staff_ids' => [28, 4], 'description' => '直営店の企画・管理など'],
+            ['name' => 'イベント', 'color' => 'orange', 'icon' => '🎤', 'display_order' => 120, 'lead_staff_id' => 13, 'fixed_staff_ids' => [13, 12], 'description' => 'ステージ、イベントブースの準備・出演者管理、運行など'],
+            ['name' => '宿場くん/宿場ちゃん', 'color' => 'red', 'icon' => '🏃‍♂️', 'display_order' => 130, 'lead_staff_id' => 15, 'fixed_staff_ids' => [10, 25, 23, 15], 'description' => 'マスコットキャラのマネジメント、パフォーマンス'],
+            ['name' => '撮影記録', 'color' => 'indigo', 'icon' => '📸', 'display_order' => 140, 'lead_staff_id' => 17, 'fixed_staff_ids' => [17], 'description' => '宣材・証跡用素材写真撮影記録'],
+        ];
+
+        foreach ($lanesDay4Data as $laneItem) {
+            $lane = Lane::updateOrCreate(
+                [
+                    'timetable_id' => $timetableDay4->id,
+                    'name' => $laneItem['name'],
+                ],
+                [
+                    'color' => $laneItem['color'],
+                    'icon' => $laneItem['icon'],
+                    'display_order' => $laneItem['display_order'],
+                    'lead_staff_id' => $laneItem['lead_staff_id'],
+                    'description' => $laneItem['description'],
+                ]
+            );
+
+            if (! empty($laneItem['fixed_staff_ids'])) {
+                $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
             }
         }
 

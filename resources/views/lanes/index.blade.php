@@ -105,11 +105,6 @@
                                     title="クリックして詳細を表示">
                                     {{ $lane->name }}
                                 </a>
-                                @if(!$lane->is_active)
-                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 font-bold">
-                                    🔒 非表示中
-                                </span>
-                                @endif
                             </div>
                         </td>
 

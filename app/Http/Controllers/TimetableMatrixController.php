@@ -45,20 +45,14 @@ class TimetableMatrixController extends Controller
         $tasksCount = 0;
 
         if ($selectedTimetable !== null) {
+            if ($selectedTimetable->lanes()->doesntExist()) {
+                $selectedTimetable->createDefaultLanes();
+            }
+
             $lanes = $selectedTimetable->lanes()
                 ->with('leadStaff')
-                ->active()
                 ->ordered()
                 ->get();
-
-            if ($lanes->isEmpty()) {
-                $selectedTimetable->createDefaultLanes();
-                $lanes = $selectedTimetable->lanes()
-                    ->with('leadStaff')
-                    ->active()
-                    ->ordered()
-                    ->get();
-            }
 
             $tasks = TimetableTask::with(['assignments.staff', 'laneRelation'])
                 ->where('timetable_id', $selectedTimetable->id)

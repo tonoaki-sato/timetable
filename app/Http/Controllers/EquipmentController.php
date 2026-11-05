@@ -40,7 +40,7 @@ class EquipmentController extends Controller
 
         $equipments = $query->paginate(20)->withQueryString();
 
-        $lanes = Lane::active()->ordered()->get();
+        $lanes = Lane::ordered()->get();
 
         // 統計カウント
         $totalCount = Equipment::count();
@@ -69,7 +69,7 @@ class EquipmentController extends Controller
     {
         $this->authorize('create', Equipment::class);
 
-        $lanes = Lane::active()->ordered()->get();
+        $lanes = Lane::ordered()->get();
 
         return view('equipments.create', compact('lanes'));
     }
@@ -123,7 +123,7 @@ class EquipmentController extends Controller
     {
         $this->authorize('update', $equipment);
 
-        $lanes = Lane::active()->ordered()->get();
+        $lanes = Lane::ordered()->get();
 
         return view('equipments.edit', compact('equipment', 'lanes'));
     }

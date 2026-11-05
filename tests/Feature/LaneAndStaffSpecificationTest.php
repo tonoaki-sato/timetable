@@ -48,7 +48,6 @@ class LaneAndStaffSpecificationTest extends TestCase
             'lead_staff_id' => $leader->id,
             'fixed_staff_ids' => [$fixedStaff1->id, $fixedStaff2->id],
             'display_order' => 10,
-            'is_active' => 1,
         ]);
 
         $response->assertRedirect(route('timetables.lanes.index', $timetable));

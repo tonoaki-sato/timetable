@@ -62,7 +62,7 @@
                     </a>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
                     <div>
                         <span class="text-slate-400 block text-[11px]">担当班名</span>
                         <span class="font-bold text-slate-800 flex items-center space-x-1 mt-0.5">
@@ -84,12 +84,6 @@
                                 {{ $lane->icon ?: '📋' }} {{ $lane->name }}
                             </span>
                         </div>
-                    </div>
-                    <div>
-                        <span class="text-slate-400 block text-[11px]">運行マトリクス表示</span>
-                        <span class="font-bold {{ $lane->is_active ? 'text-emerald-700' : 'text-slate-500' }} mt-0.5 block">
-                            {{ $lane->is_active ? '👁️ 表示中（有効）' : '🔒 非表示' }}
-                        </span>
                     </div>
                 </div>
 
