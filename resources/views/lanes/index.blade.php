@@ -1,18 +1,23 @@
-<x-layouts.app :title="'担当班管理 - ' . $timetable->name">
+<x-layouts.app :title="$timetable->name . ' 担当班一覧'">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
-        title="担当班管理"
+        :title="$timetable->name . ' 担当班一覧'"
         icon="🏷️"
         :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）のレーン編成と、現場を率いる班長および固定スタッフを設定・管理します。'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('lanes.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>🏷️</span>
-                <span>担当班管理</span>
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>⏱️</span>
+                <span>タイムテーブル一覧</span>
             </a>
             <span class="text-slate-300">/</span>
-            <span class="text-slate-700 font-bold truncate">📅 {{ $timetable->name }}</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>📅</span>
+                <span>{{ $timetable->name }}</span>
+            </a>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">🏷️ 担当班一覧</span>
         </x-slot:breadcrumbs>
 
         <x-slot:actions>

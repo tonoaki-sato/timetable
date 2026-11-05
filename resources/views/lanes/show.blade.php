@@ -7,13 +7,18 @@
         :icon="$lane->icon ?: '📋'"
         :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）における担当班の基本設定、班長・固定メンバー体制、所属作業タスクおよび資材サマリーです。'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('lanes.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>🏷️</span>
-                <span>担当班管理</span>
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>⏱️</span>
+                <span>タイムテーブル一覧</span>
+            </a>
+            <span class="text-slate-300">/</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>📅</span>
+                <span>{{ $timetable->name }}</span>
             </a>
             <span class="text-slate-300">/</span>
             <a href="{{ route('timetables.lanes.index', $timetable) }}" class="hover:text-indigo-600 transition truncate">
-                📅 {{ $timetable->name }}
+                🏷️ 担当班一覧
             </a>
             <span class="text-slate-300">/</span>
             <span class="text-slate-700 font-bold truncate">{{ $lane->name }}</span>

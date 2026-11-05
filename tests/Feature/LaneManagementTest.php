@@ -85,6 +85,10 @@ class LaneManagementTest extends TestCase
             ->get(route('timetables.lanes.index', $this->timetable));
 
         $response->assertStatus(200);
+        $response->assertSee($this->timetable->name.' 担当班一覧');
+        $response->assertSee('タイムテーブル一覧');
+        $response->assertSee(route('timetables.index'));
+        $response->assertSee(route('timetables.show', $this->timetable));
         $response->assertSee('担当班管理');
         $response->assertSee(route('lanes.index'));
         $response->assertDontSee('他日程からコピー');

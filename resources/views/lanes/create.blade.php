@@ -7,13 +7,18 @@
         icon="➕"
         :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）に新しい担当班（レーン）を追加します。'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('lanes.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>🏷️</span>
-                <span>担当班管理</span>
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>⏱️</span>
+                <span>タイムテーブル一覧</span>
+            </a>
+            <span class="text-slate-300">/</span>
+            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>📅</span>
+                <span>{{ $timetable->name }}</span>
             </a>
             <span class="text-slate-300">/</span>
             <a href="{{ route('timetables.lanes.index', $timetable) }}" class="hover:text-indigo-600 transition truncate">
-                📅 {{ $timetable->name }}
+                🏷️ 担当班一覧
             </a>
             <span class="text-slate-300">/</span>
             <span class="text-slate-700 font-bold truncate">➕ 新規追加</span>
