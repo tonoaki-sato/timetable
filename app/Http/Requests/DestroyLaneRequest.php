@@ -28,4 +28,3 @@ class DestroyLaneRequest extends FormRequest
         ];
     }
 }
-

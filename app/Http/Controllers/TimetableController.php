@@ -33,12 +33,13 @@ class TimetableController extends Controller
     /**
      * タイムテーブル新規登録画面の表示
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $this->authorize('create', Timetable::class);
 
         return view('timetables.create', [
             'statuses' => Timetable::STATUSES,
+            'defaultDate' => $request->input('target_date', now()->toDateString()),
         ]);
     }
 

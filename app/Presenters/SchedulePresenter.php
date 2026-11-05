@@ -107,4 +107,3 @@ class SchedulePresenter
         return implode("\n", $lines);
     }
 }
-

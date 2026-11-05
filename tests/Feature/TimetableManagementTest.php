@@ -169,6 +169,25 @@ class TimetableManagementTest extends TestCase
     }
 
     /**
+     * 新規作成画面の開催日初期値が当日の日付（またはクエリ指定値）であること
+     */
+    public function test_create_view_presets_target_date_to_today_or_query_param(): void
+    {
+        $this->actingAs($this->operator);
+
+        // 指定なしの場合: 当日の日付がプリセットされる
+        $response = $this->get(route('timetables.create'));
+        $response->assertStatus(200);
+        $today = now()->toDateString();
+        $response->assertSee('value="'.$today.'"', false);
+
+        // クエリパラメータで target_date を指定した場合: その日付がプリセットされる
+        $customDateResponse = $this->get(route('timetables.create', ['target_date' => '2026-11-20']));
+        $customDateResponse->assertStatus(200);
+        $customDateResponse->assertSee('value="2026-11-20"', false);
+    }
+
+    /**
      * チェックを外して文字列 '0' が送信された場合に標準10班が作成されないこと
      */
     public function test_can_create_timetable_without_default_lanes_with_string_zero(): void

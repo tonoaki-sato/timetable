@@ -29,4 +29,3 @@ class UpdateStaffAssignmentStatusRequest extends FormRequest
         ];
     }
 }
-

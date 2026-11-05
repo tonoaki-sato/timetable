@@ -72,4 +72,3 @@ class ExportStaffCsvAction
         }, 200, $headers);
     }
 }
-

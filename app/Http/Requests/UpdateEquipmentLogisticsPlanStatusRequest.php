@@ -29,4 +29,3 @@ class UpdateEquipmentLogisticsPlanStatusRequest extends FormRequest
         ];
     }
 }
-
