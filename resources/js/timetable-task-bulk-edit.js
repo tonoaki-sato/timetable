@@ -37,11 +37,77 @@ function getDurationMinutes(startTime, endTime) {
  * 作業タスク一括編集マネージャー
  */
 function initBulkTaskEditManager() {
+    const form = document.getElementById('bulk-task-edit-form');
     const tasksContainer = document.getElementById('tasks-container');
     const countBadge = document.getElementById('task-count-badge');
     const submitBtn = document.getElementById('submit-tasks-btn');
 
     if (!tasksContainer) return;
+
+    /**
+     * 時間帯の重複チェック
+     * @returns {boolean} 重複がある場合は true
+     */
+    function checkTimeOverlaps() {
+        const cards = Array.from(tasksContainer.querySelectorAll('.task-item-card'));
+        const cardData = cards.map((card, idx) => {
+            const startInput = card.querySelector('[data-field="start_time"]');
+            const endInput = card.querySelector('[data-field="end_time"]');
+            const statusSelect = card.querySelector('[data-field="status"]');
+            const warningEl = card.querySelector('.task-overlap-warning');
+
+            return {
+                card,
+                index: idx,
+                start: startInput?.value || '',
+                end: endInput?.value || '',
+                status: statusSelect?.value || 'not_started',
+                warningEl,
+                overlapsWith: [],
+            };
+        });
+
+        let hasOverlap = false;
+
+        // ペアごとに重複判定 (startA < endB && endA > startB)
+        for (let i = 0; i < cardData.length; i++) {
+            const a = cardData[i];
+            if (a.status === 'cancelled' || !a.start || !a.end || a.start >= a.end) {
+                continue;
+            }
+
+            for (let j = i + 1; j < cardData.length; j++) {
+                const b = cardData[j];
+                if (b.status === 'cancelled' || !b.start || !b.end || b.start >= b.end) {
+                    continue;
+                }
+
+                if (a.start < b.end && a.end > b.start) {
+                    a.overlapsWith.push(j + 1);
+                    b.overlapsWith.push(i + 1);
+                    hasOverlap = true;
+                }
+            }
+        }
+
+        // 各カードのUI表示更新
+        cardData.forEach((item) => {
+            if (item.overlapsWith.length > 0) {
+                item.card.classList.add('border-rose-400', 'bg-rose-50/20');
+                if (item.warningEl) {
+                    item.warningEl.textContent = `⚠️ タスク #${item.overlapsWith.join(', #')} と時間帯が重複しています`;
+                    item.warningEl.classList.remove('hidden');
+                }
+            } else {
+                item.card.classList.remove('border-rose-400', 'bg-rose-50/20');
+                if (item.warningEl) {
+                    item.warningEl.classList.add('hidden');
+                }
+            }
+        });
+
+        return hasOverlap;
+    }
 
     /**
      * 全タスクカードの name 属性インデックスと表示番号を同期
@@ -70,6 +136,8 @@ function initBulkTaskEditManager() {
         if (countBadge) {
             countBadge.textContent = `${total} 件`;
         }
+
+        checkTimeOverlaps();
     }
 
     /**
@@ -166,7 +234,7 @@ function initBulkTaskEditManager() {
         // バッジを「新規追加枠」に変更
         const headerLeft = card.querySelector('.task-index-badge')?.parentElement;
         if (headerLeft) {
-            const oldStatusBadge = headerLeft.querySelector('span:not(.task-index-badge)');
+            const oldStatusBadge = headerLeft.querySelector('span:not(.task-index-badge):not(.task-overlap-warning)');
             if (oldStatusBadge) oldStatusBadge.remove();
 
             const newBadge = document.createElement('span');
@@ -182,10 +250,15 @@ function initBulkTaskEditManager() {
             cancelBtn.type = 'button';
             cancelBtn.setAttribute('data-action', 'remove-new-task-row');
             cancelBtn.title = 'この追加枠を取り消す';
-            cancelBtn.className = 'btn-remove-task px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer';
+            cancelBtn.className = 'btn-remove-task px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer';
             cancelBtn.innerHTML = '<span>✕</span><span>取り消し</span>';
             headerRight.appendChild(cancelBtn);
         }
+
+        // 重複警告の初期化
+        card.classList.remove('border-rose-400', 'bg-rose-50/20');
+        const warningEl = card.querySelector('.task-overlap-warning');
+        if (warningEl) warningEl.classList.add('hidden');
 
         // 時刻セット
         const startInput = card.querySelector('[data-field="start_time"]');
@@ -231,5 +304,30 @@ function initBulkTaskEditManager() {
             removeNewTaskCard(card);
         }
     });
-}
 
+    // 入力変更時の重複チェック連動
+    tasksContainer.addEventListener('input', (e) => {
+        if (e.target.matches('[data-field="start_time"], [data-field="end_time"]')) {
+            checkTimeOverlaps();
+        }
+    });
+
+    tasksContainer.addEventListener('change', (e) => {
+        if (e.target.matches('[data-field="start_time"], [data-field="end_time"], [data-field="status"]')) {
+            checkTimeOverlaps();
+        }
+    });
+
+    // 送信時チェック
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            if (checkTimeOverlaps()) {
+                e.preventDefault();
+                alert('時間帯が重複している作業タスクがあります。開始時刻・終了時刻を確認してください。');
+            }
+        });
+    }
+
+    // 初期チェック
+    checkTimeOverlaps();
+}

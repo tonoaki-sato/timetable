@@ -237,4 +237,127 @@ class BulkTimetableTaskCreationTest extends TestCase
         $response->assertSessionHasErrors(['tasks.1.end_time']);
         $this->assertSame(0, TimetableTask::where('timetable_id', $timetable->id)->count());
     }
+
+    /**
+     * 送信した複数タスク間で時間帯が重複している場合は登録できずバリデーションエラーとなること
+     */
+    public function test_cannot_create_tasks_when_time_overlaps_within_submitted_tasks(): void
+    {
+        $user = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $timetable = Timetable::factory()->create(['created_by' => $user->id]);
+        $lane = Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => '警備班',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('timetable-tasks.store'), [
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'tasks' => [
+                [
+                    'title' => 'タスクA',
+                    'start_time' => '09:00',
+                    'end_time' => '10:30',
+                    'required_people_count' => 2,
+                    'status' => 'not_started',
+                    'is_at_least' => false,
+                    'is_critical' => false,
+                ],
+                [
+                    'title' => 'タスクB',
+                    'start_time' => '10:00',
+                    'end_time' => '11:00', // 重複 (09:00〜10:30 と 10:00〜11:00)
+                    'required_people_count' => 2,
+                    'status' => 'not_started',
+                    'is_at_least' => false,
+                    'is_critical' => false,
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors(['tasks']);
+        $this->assertSame(0, TimetableTask::where('lane_id', $lane->id)->count());
+    }
+
+    /**
+     * 同一レーンに既に登録されているタスクと時間帯が重複している場合は登録できないこと
+     */
+    public function test_cannot_create_task_when_time_overlaps_with_existing_task_in_same_lane(): void
+    {
+        $user = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $timetable = Timetable::factory()->create(['created_by' => $user->id]);
+        $lane = Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => '案内班',
+        ]);
+
+        TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '既存タスク',
+            'start_time' => '13:00:00',
+            'end_time' => '15:00:00',
+            'status' => 'not_started',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('timetable-tasks.store'), [
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'tasks' => [
+                [
+                    'title' => '新規追加タスク',
+                    'start_time' => '14:30',
+                    'end_time' => '16:00', // 重複
+                    'required_people_count' => 2,
+                    'status' => 'not_started',
+                    'is_at_least' => false,
+                    'is_critical' => false,
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors(['tasks']);
+        $this->assertSame(1, TimetableTask::where('lane_id', $lane->id)->count());
+    }
+
+    /**
+     * 境界が接している連続タスク（例: 09:00〜10:00 と 10:00〜11:00）は正常に登録できること
+     */
+    public function test_can_create_consecutive_tasks_with_touching_boundaries(): void
+    {
+        $user = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $timetable = Timetable::factory()->create(['created_by' => $user->id]);
+        $lane = Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => '受付班',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('timetable-tasks.store'), [
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'tasks' => [
+                [
+                    'title' => '午前第1部',
+                    'start_time' => '09:00',
+                    'end_time' => '10:00',
+                    'required_people_count' => 2,
+                    'status' => 'not_started',
+                    'is_at_least' => false,
+                    'is_critical' => false,
+                ],
+                [
+                    'title' => '午前第2部',
+                    'start_time' => '10:00',
+                    'end_time' => '11:00',
+                    'required_people_count' => 2,
+                    'status' => 'not_started',
+                    'is_at_least' => false,
+                    'is_critical' => false,
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertSame(2, TimetableTask::where('lane_id', $lane->id)->count());
+    }
 }

@@ -333,4 +333,109 @@ class BulkTimetableTaskUpdateTest extends TestCase
         $task->refresh();
         $this->assertSame('変更前タスク', $task->title);
     }
+
+    /**
+     * 一括更新時に時間帯重複がある場合は更新できずバリデーションエラーとなること
+     */
+    public function test_cannot_bulk_update_tasks_when_time_overlaps(): void
+    {
+        $task1 = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $this->lane->id,
+            'title' => 'タスク1',
+            'start_time' => '08:00:00',
+            'end_time' => '09:00:00',
+        ]);
+
+        $task2 = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $this->lane->id,
+            'title' => 'タスク2',
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
+        ]);
+
+        $response = $this->actingAs($this->operator)
+            ->put(route('timetables.lanes.tasks.update', ['timetable' => $this->timetable, 'lane' => $this->lane]), [
+                'tasks' => [
+                    [
+                        'id' => $task1->id,
+                        'title' => 'タスク1更新',
+                        'start_time' => '08:30',
+                        'end_time' => '10:30', // タスク2と重複 (08:30〜10:30 と 10:00〜11:00)
+                        'required_people_count' => 2,
+                        'status' => 'not_started',
+                        'is_at_least' => false,
+                        'is_critical' => false,
+                    ],
+                    [
+                        'id' => $task2->id,
+                        'title' => 'タスク2更新',
+                        'start_time' => '10:00',
+                        'end_time' => '11:00',
+                        'required_people_count' => 2,
+                        'status' => 'not_started',
+                        'is_at_least' => false,
+                        'is_critical' => false,
+                    ],
+                ],
+            ]);
+
+        $response->assertSessionHasErrors(['tasks']);
+        $task1->refresh();
+        $this->assertSame('08:00:00', $task1->start_time);
+    }
+
+    /**
+     * 境界が接している連続タスクは正常に一括更新できること
+     */
+    public function test_can_bulk_update_consecutive_tasks(): void
+    {
+        $task1 = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $this->lane->id,
+            'title' => 'タスク1',
+            'start_time' => '08:00:00',
+            'end_time' => '09:00:00',
+        ]);
+
+        $task2 = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $this->lane->id,
+            'title' => 'タスク2',
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
+        ]);
+
+        $response = $this->actingAs($this->operator)
+            ->put(route('timetables.lanes.tasks.update', ['timetable' => $this->timetable, 'lane' => $this->lane]), [
+                'tasks' => [
+                    [
+                        'id' => $task1->id,
+                        'title' => 'タスク1更新',
+                        'start_time' => '08:30',
+                        'end_time' => '10:00',
+                        'required_people_count' => 2,
+                        'status' => 'not_started',
+                        'is_at_least' => false,
+                        'is_critical' => false,
+                    ],
+                    [
+                        'id' => $task2->id,
+                        'title' => 'タスク2更新',
+                        'start_time' => '10:00',
+                        'end_time' => '11:30',
+                        'required_people_count' => 2,
+                        'status' => 'not_started',
+                        'is_at_least' => false,
+                        'is_critical' => false,
+                    ],
+                ],
+            ]);
+
+        $response->assertSessionHasNoErrors();
+        $task1->refresh();
+        $this->assertSame('08:30', substr($task1->start_time, 0, 5));
+        $this->assertSame('10:00', substr($task1->end_time, 0, 5));
+    }
 }

@@ -1,9 +1,8 @@
 /**
- * 作業タスク新規登録（複数タスク一括登録対応）スクリプト (CSP完全準拠)
+ * 作業タスク新規登録スクリプト (CSP完全準拠)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    initLaneSelectorSync();
     initBulkTaskRowsManager();
 });
 
@@ -22,7 +21,7 @@ function addMinutesToTime(timeStr, minutesToAdd = 60) {
 }
 
 /**
- * 2つの時刻文字列 (HH:MM) の差分（分）を計算する（最低30分）
+ * 2つの時刻文字列 (HH:MM) の差分（分）を計算する（最低15分、デフォルト60分）
  */
 function getDurationMinutes(startTime, endTime) {
     if (!/^\d{2}:\d{2}$/.test(startTime || '') || !/^\d{2}:\d{2}$/.test(endTime || '')) {
@@ -35,82 +34,80 @@ function getDurationMinutes(startTime, endTime) {
 }
 
 /**
- * 1. 担当班変更時の主担当スタッフ表示・推奨開始時刻連動
- */
-function initLaneSelectorSync() {
-    const laneSelect = document.getElementById('lane_id');
-    const leadBanner = document.getElementById('lead-staff-banner');
-    const noLeadBanner = document.getElementById('no-lead-staff-banner');
-    const leadNameEl = document.getElementById('lead-staff-name');
-    const leadAffEl = document.getElementById('lead-staff-affiliation');
-    const fixedCountEl = document.getElementById('fixed-staff-count');
-    const fixedNamesEl = document.getElementById('fixed-staff-names');
-    const tasksContainer = document.getElementById('tasks-container');
-
-    if (!laneSelect) return;
-
-    laneSelect.addEventListener('change', () => {
-        const selectedOption = laneSelect.options[laneSelect.selectedIndex];
-        if (!selectedOption) return;
-
-        const leadName = selectedOption.dataset.leadName || '';
-        const leadAff = selectedOption.dataset.leadAff || '';
-        const fixedCount = selectedOption.dataset.fixedCount || '0';
-        const fixedNames = selectedOption.dataset.fixedNames || '';
-        const suggestedStart = selectedOption.dataset.suggestedStart || '';
-
-        if (fixedCountEl) fixedCountEl.textContent = fixedCount;
-        if (fixedNamesEl) fixedNamesEl.textContent = fixedNames || '（設定なし）';
-
-        if (leadName || parseInt(fixedCount, 10) > 0) {
-            if (leadNameEl) leadNameEl.textContent = leadName || '未設定';
-            if (leadAffEl) {
-                if (leadAff) {
-                    leadAffEl.textContent = `(${leadAff})`;
-                    leadAffEl.classList.remove('hidden');
-                } else {
-                    leadAffEl.textContent = '';
-                    leadAffEl.classList.add('hidden');
-                }
-            }
-            leadBanner?.classList.remove('hidden');
-            if (leadName) {
-                noLeadBanner?.classList.add('hidden');
-            } else {
-                noLeadBanner?.classList.remove('hidden');
-            }
-        } else {
-            leadBanner?.classList.add('hidden');
-            noLeadBanner?.classList.remove('hidden');
-        }
-
-        // タスク枠が1件のみで作業名がまだ未入力の場合、推奨開始時刻を1枠目に反映
-        if (tasksContainer && suggestedStart) {
-            const cards = tasksContainer.querySelectorAll('.task-item-card');
-            if (cards.length === 1) {
-                const firstCard = cards[0];
-                const titleInput = firstCard.querySelector('[data-field="title"]');
-                const startInput = firstCard.querySelector('[data-field="start_time"]');
-                const endInput = firstCard.querySelector('[data-field="end_time"]');
-
-                if (titleInput && !titleInput.value.trim() && startInput && endInput) {
-                    startInput.value = suggestedStart;
-                    endInput.value = addMinutesToTime(suggestedStart, suggestedStart === '08:00' ? 90 : 60);
-                }
-            }
-        }
-    });
-}
-
-/**
- * 2. 作業タスク入力枠の追加・複製・削除およびインデックス管理
+ * 作業タスク入力枠の追加・複製・削除、インデックス管理および時間帯重複チェック
  */
 function initBulkTaskRowsManager() {
+    const form = document.getElementById('bulk-task-create-form');
     const tasksContainer = document.getElementById('tasks-container');
     const countBadge = document.getElementById('task-count-badge');
     const submitBtn = document.getElementById('submit-tasks-btn');
 
     if (!tasksContainer) return;
+
+    /**
+     * 時間帯の重複チェック
+     * @returns {boolean} 重複がある場合は true
+     */
+    function checkTimeOverlaps() {
+        const cards = Array.from(tasksContainer.querySelectorAll('.task-item-card'));
+        const cardData = cards.map((card, idx) => {
+            const startInput = card.querySelector('[data-field="start_time"]');
+            const endInput = card.querySelector('[data-field="end_time"]');
+            const statusSelect = card.querySelector('[data-field="status"]');
+            const warningEl = card.querySelector('.task-overlap-warning');
+
+            return {
+                card,
+                index: idx,
+                start: startInput?.value || '',
+                end: endInput?.value || '',
+                status: statusSelect?.value || 'not_started',
+                warningEl,
+                overlapsWith: [],
+            };
+        });
+
+        let hasOverlap = false;
+
+        // ペアごとに重複判定 (startA < endB && endA > startB)
+        for (let i = 0; i < cardData.length; i++) {
+            const a = cardData[i];
+            if (a.status === 'cancelled' || !a.start || !a.end || a.start >= a.end) {
+                continue;
+            }
+
+            for (let j = i + 1; j < cardData.length; j++) {
+                const b = cardData[j];
+                if (b.status === 'cancelled' || !b.start || !b.end || b.start >= b.end) {
+                    continue;
+                }
+
+                if (a.start < b.end && a.end > b.start) {
+                    a.overlapsWith.push(j + 1);
+                    b.overlapsWith.push(i + 1);
+                    hasOverlap = true;
+                }
+            }
+        }
+
+        // 各カードのUI表示更新
+        cardData.forEach((item) => {
+            if (item.overlapsWith.length > 0) {
+                item.card.classList.add('border-rose-400', 'bg-rose-50/20');
+                if (item.warningEl) {
+                    item.warningEl.textContent = `⚠️ タスク #${item.overlapsWith.join(', #')} と時間帯が重複しています`;
+                    item.warningEl.classList.remove('hidden');
+                }
+            } else {
+                item.card.classList.remove('border-rose-400', 'bg-rose-50/20');
+                if (item.warningEl) {
+                    item.warningEl.classList.add('hidden');
+                }
+            }
+        });
+
+        return hasOverlap;
+    }
 
     /**
      * 全タスクカードの name 属性インデックスと表示番号・ボタン状態を同期
@@ -154,6 +151,8 @@ function initBulkTaskRowsManager() {
                 ? `${total}件の作業タスクを一括登録する`
                 : '作業タスクを登録する';
         }
+
+        checkTimeOverlaps();
     }
 
     /**
@@ -190,6 +189,10 @@ function initBulkTaskRowsManager() {
         if (statusSelect) statusSelect.value = 'not_started';
         if (criticalInput) criticalInput.checked = false;
 
+        clone.classList.remove('border-rose-400', 'bg-rose-50/20');
+        const warningEl = clone.querySelector('.task-overlap-warning');
+        if (warningEl) warningEl.classList.add('hidden');
+
         tasksContainer.appendChild(clone);
         reindexTaskCards();
 
@@ -221,6 +224,10 @@ function initBulkTaskRowsManager() {
         if (srcStatus && cloneStatus) {
             cloneStatus.value = srcStatus.value;
         }
+
+        clone.classList.remove('border-rose-400', 'bg-rose-50/20');
+        const warningEl = clone.querySelector('.task-overlap-warning');
+        if (warningEl) warningEl.classList.add('hidden');
 
         sourceCard.insertAdjacentElement('afterend', clone);
         reindexTaskCards();
@@ -262,5 +269,30 @@ function initBulkTaskRowsManager() {
             }
         }
     });
-}
 
+    // 入力変更時の重複チェック連動
+    tasksContainer.addEventListener('input', (e) => {
+        if (e.target.matches('[data-field="start_time"], [data-field="end_time"]')) {
+            checkTimeOverlaps();
+        }
+    });
+
+    tasksContainer.addEventListener('change', (e) => {
+        if (e.target.matches('[data-field="start_time"], [data-field="end_time"], [data-field="status"]')) {
+            checkTimeOverlaps();
+        }
+    });
+
+    // 送信時チェック
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            if (checkTimeOverlaps()) {
+                e.preventDefault();
+                alert('時間帯が重複している作業タスクがあります。開始時刻・終了時刻を確認してください。');
+            }
+        });
+    }
+
+    // 初期チェック
+    checkTimeOverlaps();
+}

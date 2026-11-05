@@ -400,4 +400,101 @@ class TimetableTaskService
             'lane_suggested_start_times' => $laneSuggestedStartTimes,
         ];
     }
+
+    /**
+     * 送信されたタスクリスト内での時間帯重複チェック
+     *
+     * @param  array<int, array<string, mixed>>  $tasks
+     * @return array<int, string> 重複エラーメッセージの配列
+     */
+    public function checkInternalOverlaps(array $tasks): array
+    {
+        $errors = [];
+        $count = count($tasks);
+
+        for ($i = 0; $i < $count; $i++) {
+            $taskA = $tasks[$i];
+            $statusA = $taskA['status'] ?? 'not_started';
+            if ($statusA === 'cancelled') {
+                continue;
+            }
+
+            $startA = ! empty($taskA['start_time']) ? substr($taskA['start_time'], 0, 5) : null;
+            $endA = ! empty($taskA['end_time']) ? substr($taskA['end_time'], 0, 5) : null;
+            if (! $startA || ! $endA) {
+                continue;
+            }
+
+            for ($j = $i + 1; $j < $count; $j++) {
+                $taskB = $tasks[$j];
+                $statusB = $taskB['status'] ?? 'not_started';
+                if ($statusB === 'cancelled') {
+                    continue;
+                }
+
+                $startB = ! empty($taskB['start_time']) ? substr($taskB['start_time'], 0, 5) : null;
+                $endB = ! empty($taskB['end_time']) ? substr($taskB['end_time'], 0, 5) : null;
+                if (! $startB || ! $endB) {
+                    continue;
+                }
+
+                // 重複判定: startA < endB && endA > startB
+                if ($startA < $endB && $endA > $startB) {
+                    $titleA = ! empty($taskA['title']) ? "「{$taskA['title']}」" : 'タスク #'.($i + 1);
+                    $titleB = ! empty($taskB['title']) ? "「{$taskB['title']}」" : 'タスク #'.($j + 1);
+                    $errors[] = 'タスク #'.($i + 1)." {$titleA}（{$startA}〜{$endA}）と タスク #".($j + 1)." {$titleB}（{$startB}〜{$endB}）の時間帯が重複しています。";
+                }
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * 指定レーンの既存タスクとの時間帯重複チェック
+     *
+     * @param  array<int, array<string, mixed>>  $tasks
+     * @param  array<int, int>  $ignoredTaskIds  更新対象など除外する既存タスクID一覧
+     * @return array<int, string> 重複エラーメッセージの配列
+     */
+    public function checkDatabaseOverlaps(int $laneId, array $tasks, array $ignoredTaskIds = []): array
+    {
+        $existingTasks = TimetableTask::where('lane_id', $laneId)
+            ->where('status', '!=', 'cancelled')
+            ->when(! empty($ignoredTaskIds), function ($query) use ($ignoredTaskIds) {
+                $query->whereNotIn('id', $ignoredTaskIds);
+            })
+            ->get();
+
+        if ($existingTasks->isEmpty()) {
+            return [];
+        }
+
+        $errors = [];
+
+        foreach ($tasks as $index => $taskItem) {
+            $status = $taskItem['status'] ?? 'not_started';
+            if ($status === 'cancelled') {
+                continue;
+            }
+
+            $start = ! empty($taskItem['start_time']) ? substr($taskItem['start_time'], 0, 5) : null;
+            $end = ! empty($taskItem['end_time']) ? substr($taskItem['end_time'], 0, 5) : null;
+            if (! $start || ! $end) {
+                continue;
+            }
+
+            foreach ($existingTasks as $existing) {
+                $exStart = substr($existing->start_time, 0, 5);
+                $exEnd = substr($existing->end_time, 0, 5);
+
+                if ($start < $exEnd && $end > $exStart) {
+                    $itemTitle = ! empty($taskItem['title']) ? "「{$taskItem['title']}」" : 'タスク #'.($index + 1);
+                    $errors[] = "{$itemTitle}（{$start}〜{$end}）は、既に登録されているタスク「{$existing->title}」（{$exStart}〜{$exEnd}）と時間帯が重複しています。";
+                }
+            }
+        }
+
+        return $errors;
+    }
 }
