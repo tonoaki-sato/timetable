@@ -36,7 +36,6 @@ function initTimetableTaskModals() {
     const detailLocation = document.getElementById('detail-task-location');
     const detailPeople = document.getElementById('detail-task-people');
     const detailContent = document.getElementById('detail-task-content');
-    const btnDetailSwitchEdit = document.getElementById('btn-detail-switch-edit');
 
     // 追加モーダル内要素
     const createForm = document.getElementById('task-create-form');
@@ -171,11 +170,6 @@ function initTimetableTaskModals() {
             } else {
                 detailCriticalBadge.classList.add('hidden');
             }
-        }
-
-        // 編集切り替えボタン
-        if (btnDetailSwitchEdit) {
-            btnDetailSwitchEdit.dataset.taskId = String(task.id);
         }
 
         detailModal.classList.remove('hidden');
@@ -322,15 +316,6 @@ function initTimetableTaskModals() {
             e.preventDefault();
             const taskId = detailBtn.dataset.taskId;
             if (taskId) openDetailModal(taskId);
-            return;
-        }
-
-        // 詳細モーダルから編集モーダルへ移行
-        const switchBtn = e.target.closest('#btn-detail-switch-edit');
-        if (switchBtn) {
-            e.preventDefault();
-            const taskId = switchBtn.dataset.taskId;
-            if (taskId) openEditModal(taskId);
             return;
         }
 

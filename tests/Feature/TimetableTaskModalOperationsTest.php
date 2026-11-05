@@ -87,6 +87,10 @@ class TimetableTaskModalOperationsTest extends TestCase
         $response->assertSee('data-task-id="'.$task->id.'"', false);
         $response->assertSee('data-task=', false);
 
+        // 詳細モーダル内: 「このタスクを編集」ボタンは削除され、「閉じる」ボタンのみ存在すること
+        $response->assertDontSee('id="btn-detail-switch-edit"', false);
+        $response->assertDontSee('このタスクを編集');
+
         // 各モーダル内にスリム2段フォームの必須項目が存在すること
         // 追加モーダル
         $response->assertSee('id="create-modal-title"', false);
