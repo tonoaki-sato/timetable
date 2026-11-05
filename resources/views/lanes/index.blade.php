@@ -192,9 +192,9 @@
         </div>
 
         <div class="flex items-center gap-3 shrink-0">
-            <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
+            <a href="{{ route('timetables.tasks.index', $timetable) }}"
                 class="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center space-x-2">
-                <span>📝 タスク登録へ進む (Step 3へ)</span>
+                <span>📝 タスク管理へ進む (Step 3へ)</span>
                 <span>→</span>
             </a>
         </div>

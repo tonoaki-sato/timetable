@@ -78,11 +78,10 @@ class TimetableTaskIndexTest extends TestCase
         $response->assertSee('人員配置表印刷');
         $response->assertDontSee('作業タスクを追加');
 
-        // 班アコーディオンヘッダー: タスク追加リンクおよびタスクがある場合の「タスク編集」リンクが表示されること
-        $response->assertSee(route('timetable-tasks.create', ['timetable_id' => $this->timetable->id, 'lane_id' => $this->lane->id]));
+        // 班アコーディオンヘッダー: タスク追加モーダルトリガーが表示され、旧一括タスク編集リンクは表示されないこと
+        $response->assertSee('data-action="open-task-create"', false);
         $response->assertSee('タスク追加');
-        $response->assertSee(route('timetables.lanes.tasks.edit', ['timetable' => $this->timetable, 'lane' => $this->lane]));
-        $response->assertSee('タスク編集');
+        $response->assertDontSee('>タスク編集<', false);
 
         // ヘッダーのスタッフ稼働タイムラインリンクは削除されていること
         $response->assertDontSee('<span>スタッフ稼働タイムライン</span>', false);
@@ -111,19 +110,20 @@ class TimetableTaskIndexTest extends TestCase
         $response->assertDontSee('<th class="px-3.5 py-2.5 whitespace-nowrap">場所</th>', false);
         $response->assertDontSee('<th class="px-3.5 py-2.5 whitespace-nowrap">状態</th>', false);
 
-        // タスク情報（タイトル、詳細リンク、作業内容、必要人員）が表示されていること
+        // タスク情報（タイトル、詳細モーダル属性、作業内容、必要人員）が表示されていること
         $response->assertSee('交差点誘導');
-        $response->assertSee(route('timetable-tasks.show', $this->task));
+        $response->assertSee('data-action="open-task-detail"', false);
         $response->assertSee('北側交差点での歩行者誘導および迂回案内');
         $response->assertSee('2名');
 
         // 作業名リンクの後ろの矢印（→）が削除されていること
         $response->assertDontSee('text-indigo-500 font-normal">→</span>', false);
 
-        // 操作列は削除ボタンのみが表示され、単一タスクの編集リンクは削除されていること
+        // 操作列には編集モーダル呼び出しボタンと削除ボタンが表示されること
         $response->assertDontSee('👥 人員管理');
         $response->assertDontSee('人員管理');
-        $response->assertDontSee('timetable-tasks/'.$this->task->id.'/edit');
+        $response->assertSee('data-action="open-task-edit"', false);
+        $response->assertSee('編集');
         $response->assertSee('🗑️');
         $response->assertSee('削除');
     }
@@ -180,13 +180,10 @@ class TimetableTaskIndexTest extends TestCase
         $posLater = strpos($content, '午後ゴミ回収');
         $this->assertTrue($posEarlier < $posLater, '午前トイレ点検 should appear before 午後ゴミ回収 in chronological order');
 
-        // 空の班のアコーディオンに空状態メッセージが表示され、タスク編集リンクが表示されないこと
+        // 空の班のアコーディオンに空状態メッセージが表示されること
         $response->assertSee('キッズ村班');
         $response->assertSee('この班に登録されている作業タスクはありません。');
-        $response->assertDontSee(route('timetables.lanes.tasks.edit', ['timetable' => $this->timetable, 'lane' => $laneEmpty]));
-
-        // タスクのある衛生班にはタスク編集リンクが表示されること
-        $response->assertSee(route('timetables.lanes.tasks.edit', ['timetable' => $this->timetable, 'lane' => $laneA]));
+        $response->assertDontSee('>タスク編集<', false);
     }
 
     /**

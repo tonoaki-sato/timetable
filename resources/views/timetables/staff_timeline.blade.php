@@ -203,7 +203,7 @@
                         class="p-1 border-r border-slate-300 align-middle">
                         <div class="p-1.5 rounded-lg border {{ $badgeBg }} text-xs shadow-2xs space-y-0.5">
                             <div class="font-bold truncate leading-tight flex items-center justify-between">
-                                <a href="{{ route('timetable-tasks.show', $task) }}" class="hover:underline truncate" title="{{ $task->title }}">
+                                <a href="{{ route('timetables.tasks.index', $timetable) }}" class="hover:underline truncate" title="{{ $task->title }}">
                                     {{ $task->title }}
                                 </a>
                                 <span class="text-[9px] font-mono shrink-0 ml-1 opacity-75">

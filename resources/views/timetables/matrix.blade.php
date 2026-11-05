@@ -288,7 +288,7 @@
                             <div>
                                 <!-- 作業タイトル ＋ 人員規模 -->
                                 <div class="font-bold text-xs text-slate-900 leading-snug">
-                                    <a href="{{ route('timetable-tasks.show', $task) }}"
+                                    <a href="{{ route('timetables.tasks.index', $selectedTimetable) }}"
                                         class="hover:text-indigo-600 transition hover:underline">
                                         {{ $task->title }}
                                     </a>
@@ -333,7 +333,7 @@
                                         👥 配置
                                     </button>
                                     @endcan
-                                    <a href="{{ route('timetable-tasks.show', $task) }}"
+                                    <a href="{{ route('timetables.tasks.index', $selectedTimetable) }}"
                                         class="text-[10px] text-slate-500 hover:text-indigo-600 font-bold hover:underline">
                                         詳細 →
                                     </a>
@@ -372,8 +372,8 @@
                                 -
                             </span>
                             @can('create', App\Models\TimetableTask::class)
-                            <a href="{{ route('timetable-tasks.create', ['timetable_id' => $selectedTimetable->id, 'lane_id' => $lane->id, 'start_time' => $slot['time']]) }}"
-                                title="{{ $lane->name }}の{{ $slot['time'] }}にタスクを追加"
+                            <a href="{{ route('timetables.tasks.index', ['timetable' => $selectedTimetable, 'lane_id' => $lane->id]) }}"
+                                title="{{ $lane->name }}のタスク一覧"
                                 class="print:hidden absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-bold text-indigo-600 bg-indigo-50/80 rounded transition">
                                 ➕
                             </a>

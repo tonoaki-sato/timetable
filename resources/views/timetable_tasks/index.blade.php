@@ -58,6 +58,8 @@
             $hasTasks = $lane->tasks->isNotEmpty();
             $badgeClass = $lane->color_classes['badge'] ?? 'bg-slate-100 text-slate-800 border-slate-200';
             $laneIcon = $lane->icon ?: '📋';
+            $latestTask = $lane->tasks->sortByDesc('end_time')->first();
+            $suggestedStart = $latestTask ? substr($latestTask->end_time, 0, 5) : '08:00';
         @endphp
         <details id="lane-{{ $lane->id }}" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group" {{ $hasTasks ? 'open' : '' }}>
             <summary class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-100/70 transition select-none">
@@ -79,24 +81,18 @@
 
                 <div class="flex items-center space-x-2 shrink-0">
                     @can('create', App\Models\TimetableTask::class)
-                    <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id, 'lane_id' => $lane->id]) }}"
-                        class="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-indigo-50 text-indigo-700 hover:text-indigo-800 border border-indigo-200 rounded-lg text-xs font-bold transition shadow-2xs"
+                    <button type="button"
+                        data-action="open-task-create"
+                        data-lane-id="{{ $lane->id }}"
+                        data-lane-name="{{ $lane->name }}"
+                        data-lane-icon="{{ $laneIcon }}"
+                        data-suggested-start="{{ $suggestedStart }}"
+                        class="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-indigo-50 text-indigo-700 hover:text-indigo-800 border border-indigo-200 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
                         title="{{ $lane->name }}にタスクを追加">
                         <span>➕</span>
                         <span class="hidden md:inline">タスク追加</span>
-                    </a>
+                    </button>
                     @endcan
-
-                    @if($hasTasks)
-                    @can('update', App\Models\TimetableTask::class)
-                    <a href="{{ route('timetables.lanes.tasks.edit', ['timetable' => $timetable, 'lane' => $lane]) }}"
-                        class="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-amber-50 text-amber-700 hover:text-amber-800 border border-amber-200 rounded-lg text-xs font-bold transition shadow-2xs"
-                        title="{{ $lane->name }}のタスクを一括編集">
-                        <span>✏️</span>
-                        <span class="hidden md:inline">タスク編集</span>
-                    </a>
-                    @endcan
-                    @endif
                 </div>
             </summary>
 
@@ -120,7 +116,28 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach($lane->tasks as $task)
-                        <tr class="hover:bg-slate-50/70 transition">
+                        @php
+                            $taskData = [
+                                'id' => $task->id,
+                                'timetable_id' => $task->timetable_id,
+                                'lane_id' => $task->lane_id,
+                                'lane_name' => $lane->name,
+                                'lane_icon' => $laneIcon,
+                                'lead_staff_name' => $lane->leadStaff?->name,
+                                'title' => $task->title,
+                                'start_time' => substr($task->start_time, 0, 5),
+                                'end_time' => substr($task->end_time, 0, 5),
+                                'required_people_count' => $task->required_people_count,
+                                'is_at_least' => (bool) $task->is_at_least,
+                                'is_critical' => (bool) $task->is_critical,
+                                'location' => $task->location ?? '',
+                                'status' => $task->status,
+                                'status_label' => $task->status_label,
+                                'content' => $task->content ?? '',
+                                'update_url' => route('timetable-tasks.update', $task),
+                            ];
+                        @endphp
+                        <tr class="hover:bg-slate-50/70 transition" data-task-row data-task-id="{{ $task->id }}" data-task='@json($taskData)'>
                             <!-- 最優先 -->
                             <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
                                 @if($task->is_critical)
@@ -139,12 +156,14 @@
                                 <span>{{ substr($task->end_time, 0, 5) }}</span>
                             </td>
 
-                            <!-- 作業名 -->
+                            <!-- 作業名 (クリックで詳細モーダル起動) -->
                             <td class="px-3.5 py-2.5">
-                                <a href="{{ route('timetable-tasks.show', $task) }}"
-                                    class="font-bold text-slate-900 hover:text-indigo-600 transition">
+                                <button type="button"
+                                    data-action="open-task-detail"
+                                    data-task-id="{{ $task->id }}"
+                                    class="font-bold text-slate-900 hover:text-indigo-600 transition text-left cursor-pointer">
                                     {{ $task->title }}
-                                </a>
+                                </button>
                             </td>
 
                             <!-- 作業内容 -->
@@ -166,7 +185,18 @@
                             </td>
 
                             <!-- 操作 -->
-                            <td class="px-3.5 py-2.5 text-right whitespace-nowrap">
+                            <td class="px-3.5 py-2.5 text-right whitespace-nowrap space-x-1">
+                                @can('update', $task)
+                                <button type="button"
+                                    data-action="open-task-edit"
+                                    data-task-id="{{ $task->id }}"
+                                    class="inline-flex items-center space-x-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                                    title="編集">
+                                    <span>✏️</span>
+                                    <span>編集</span>
+                                </button>
+                                @endcan
+
                                 @can('delete', $task)
                                 <form action="{{ route('timetable-tasks.destroy', $task) }}" method="POST" class="inline"
                                     data-confirm="作業タスク「{{ $task->title }}」を削除しますか？">
@@ -197,5 +227,12 @@
         @endforelse
     </div>
 
+    <!-- 各種タスク操作モーダル (独立コンポーネント) -->
+    <x-timetable-tasks.detail-modal />
+    <x-timetable-tasks.create-modal :timetable="$timetable" :statuses="$statuses" />
+    <x-timetable-tasks.edit-modal :statuses="$statuses" />
+
 </div>
+
+@vite(['resources/js/timetable-task-modal.js'])
 </x-layouts.app>

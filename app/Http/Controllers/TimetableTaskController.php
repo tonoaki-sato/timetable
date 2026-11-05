@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\BulkUpdateTimetableTaskRequest;
 use App\Http\Requests\StoreTimetableTaskRequest;
+use App\Http\Requests\UpdateTimetableTaskRequest;
 use App\Models\Lane;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
@@ -66,50 +66,12 @@ class TimetableTaskController extends Controller
             'timetable' => $timetable,
             'lanes' => $timetable->lanes,
             'tasks' => $timetable->lanes->flatMap->tasks,
-        ]);
-    }
-
-    /**
-     * 作業タスク新規作成画面の表示
-     */
-    public function create(Request $request): View
-    {
-        $this->authorize('create', TimetableTask::class);
-
-        $timetableId = $request->integer('timetable_id');
-        $timetable = Timetable::findOrFail($timetableId);
-
-        $timetableLanes = $timetable->lanes()->with(['leadStaff', 'fixedStaff', 'tasks'])->get();
-        if ($timetableLanes->isEmpty()) {
-            $timetable->createDefaultLanes();
-            $timetableLanes = $timetable->lanes()->with(['leadStaff', 'fixedStaff', 'tasks'])->get();
-        }
-
-        $selectedLaneId = $request->integer('lane_id') ?: null;
-        $selectedLane = $selectedLaneId
-            ? $timetableLanes->firstWhere('id', $selectedLaneId)
-            : $timetableLanes->first();
-
-        $suggestedRange = $this->taskService->calculateSuggestedTimeRange(
-            $timetableLanes,
-            $selectedLane,
-            $request->query('start_time')
-        );
-
-        return view('timetable_tasks.create', [
-            'timetable' => $timetable,
-            'timetableLanes' => $timetableLanes,
-            'selectedLane' => $selectedLane,
-            'suggestedStartTime' => $suggestedRange['suggested_start_time'],
-            'suggestedEndTime' => $suggestedRange['suggested_end_time'],
-            'laneSuggestedStartTimes' => $suggestedRange['lane_suggested_start_times'],
-            'lanes' => $timetableLanes->pluck('name', 'name')->all(),
             'statuses' => TimetableTask::STATUSES,
         ]);
     }
 
     /**
-     * 作業タスク新規登録処理（単一・複数タスク一括登録対応）
+     * 作業タスク新規登録処理（モーダル・一括登録双方対応）
      */
     public function store(StoreTimetableTaskRequest $request): RedirectResponse
     {
@@ -137,81 +99,25 @@ class TimetableTaskController extends Controller
         } else {
             $lane = Lane::find($laneId);
             $laneName = $lane?->name ?? '選択した担当班';
-            $message = "「{$laneName}」に {$count} 件の作業タスクを一括登録しました。";
+            $message = "「{$laneName}」に {$count} 件の作業タスクを登録しました。";
         }
 
-        if ($request->input('redirect_to') === 'show') {
-            return redirect()->route('timetables.show', $timetableId)
-                ->with('success', $message);
-        }
-
-        return redirect()->route('timetable.index', ['timetable_id' => $timetableId])
+        return redirect()->route('timetables.tasks.index', $timetableId)
             ->with('success', $message);
     }
 
     /**
-     * 作業タスク詳細画面の表示
+     * 作業タスク個別更新処理（モーダル編集対応）
      */
-    public function show(TimetableTask $task): View
+    public function update(UpdateTimetableTaskRequest $request, TimetableTask $task): RedirectResponse
     {
-        $this->authorize('view', $task);
-
-        $detailedTask = $this->taskService->getTaskDetails($task->id) ?? $task;
-
-        return view('timetable_tasks.show', [
-            'task' => $detailedTask,
-        ]);
-    }
-
-    /**
-     * 班別作業タスク一括編集画面の表示
-     */
-    public function bulkEdit(Timetable $timetable, Lane $lane): View
-    {
-        $this->authorize('update', TimetableTask::class);
-
-        if ((int) $lane->timetable_id !== (int) $timetable->id) {
-            abort(404);
-        }
-
-        $lane->loadMissing([
-            'leadStaff',
-            'fixedStaff',
-            'tasks' => function ($query) {
-                $query->orderBy('start_time', 'asc')
-                    ->orderBy('end_time', 'asc');
-            },
-        ]);
-
-        return view('timetable_tasks.bulk_edit', [
-            'timetable' => $timetable,
-            'lane' => $lane,
-            'tasks' => $lane->tasks,
-            'statuses' => TimetableTask::STATUSES,
-        ]);
-    }
-
-    /**
-     * 班別作業タスク一括更新処理
-     */
-    public function bulkUpdate(BulkUpdateTimetableTaskRequest $request, Timetable $timetable, Lane $lane): RedirectResponse
-    {
-        $this->authorize('update', TimetableTask::class);
-
-        if ((int) $lane->timetable_id !== (int) $timetable->id) {
-            abort(404);
-        }
+        $this->authorize('update', $task);
 
         $validated = $request->validated();
-        $tasksData = $validated['tasks'];
+        $this->taskService->updateTask($task, $validated);
 
-        $result = $this->taskService->updateBulkTasks($lane, $tasksData);
-        $totalCount = $result['updated_count'] + $result['created_count'];
-
-        $message = "「{$lane->name}」の作業タスク（{$totalCount}件）を一括更新しました。";
-
-        return redirect()->route('timetables.tasks.index', $timetable)
-            ->with('success', $message);
+        return redirect()->route('timetables.tasks.index', $task->timetable_id)
+            ->with('success', "作業タスク「{$task->title}」を更新しました。");
     }
 
     /**
@@ -226,12 +132,7 @@ class TimetableTaskController extends Controller
 
         $this->taskService->deleteTask($task);
 
-        if (request()->input('redirect_to') === 'show') {
-            return redirect()->route('timetables.show', $timetableId)
-                ->with('success', "作業タスク「{$title}」を削除しました。");
-        }
-
-        return redirect()->route('timetable.index', ['timetable_id' => $timetableId])
+        return redirect()->route('timetables.tasks.index', $timetableId)
             ->with('success', "作業タスク「{$title}」を削除しました。");
     }
 }

@@ -105,8 +105,8 @@ class LaneManagementTest extends TestCase
         $response->assertSee('役割概要');
         $response->assertSee('操作');
         $response->assertSee('delete-migration-modal');
-        $response->assertSee(route('timetable-tasks.create', ['timetable_id' => $this->timetable->id]));
-        $response->assertSee('タスク登録へ進む (Step 3へ)');
+        $response->assertSee(route('timetables.tasks.index', $this->timetable));
+        $response->assertSee('タスク管理へ進む (Step 3へ)');
     }
 
     /**
@@ -325,7 +325,7 @@ class LaneManagementTest extends TestCase
         $response = $this->actingAs($this->adminUser)
             ->post(route('timetable-tasks.store'), $taskData);
 
-        $response->assertRedirect(route('timetable.index', ['timetable_id' => $this->timetable->id]));
+        $response->assertRedirect(route('timetables.tasks.index', $this->timetable));
 
         $task = TimetableTask::where('title', '足踏み式給水設備 設置点検')->firstOrFail();
         $this->assertSame($lane->id, $task->lane_id);
@@ -367,7 +367,7 @@ class LaneManagementTest extends TestCase
                 'status' => 'not_started',
             ]);
 
-        $response->assertRedirect(route('timetable.index', ['timetable_id' => $this->timetable->id]));
+        $response->assertRedirect(route('timetables.tasks.index', $this->timetable));
 
         $task = TimetableTask::where('title', 'コーン設置タスク（デフォルトアサイン確認）')->firstOrFail();
 
@@ -729,8 +729,8 @@ class LaneManagementTest extends TestCase
         $response->assertDontSee('担当班の削除');
         $response->assertDontSee('delete-migration-modal');
 
-        // タスク追加リンクがタスク一覧カード内に存在すること
-        $response->assertSee(route('timetable-tasks.create', ['timetable_id' => $this->timetable->id, 'lane_id' => $lane->id]));
+        // タスク一覧・追加リンクがタスク一覧カード内に存在すること
+        $response->assertSee(route('timetables.tasks.index', $this->timetable));
     }
 
     /**

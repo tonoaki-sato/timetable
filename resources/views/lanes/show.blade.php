@@ -112,10 +112,10 @@
                         </p>
                     </div>
 
-                    <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id, 'lane_id' => $lane->id]) }}"
+                    <a href="{{ route('timetables.tasks.index', $timetable) }}"
                         class="text-xs text-indigo-600 hover:text-indigo-800 font-bold transition flex items-center space-x-1 shrink-0">
-                        <span>＋</span>
-                        <span>タスク追加</span>
+                        <span>📋</span>
+                        <span>タスク管理</span>
                     </a>
                 </div>
 
@@ -140,7 +140,7 @@
                                 </td>
                                 <td class="p-3.5 min-w-[180px]">
                                     <div class="font-bold text-slate-900">
-                                        <a href="{{ route('timetable-tasks.show', $task) }}" class="hover:text-indigo-600 transition">
+                                        <a href="{{ route('timetables.tasks.index', $timetable) }}" class="hover:text-indigo-600 transition">
                                             {{ $task->title }}
                                         </a>
                                     </div>
@@ -179,7 +179,7 @@
                                     </span>
                                 </td>
                                 <td class="p-3.5 pr-5 text-right whitespace-nowrap">
-                                    <a href="{{ route('timetable-tasks.show', $task) }}"
+                                    <a href="{{ route('timetables.tasks.index', $timetable) }}"
                                         class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 rounded text-[11px] font-bold text-slate-700 transition">
                                         詳細 →
                                     </a>
@@ -193,12 +193,12 @@
                 <div class="p-8 text-center space-y-2">
                     <span class="text-3xl block">📭</span>
                     <p class="text-xs font-bold text-slate-600">この担当班に割り当てられている作業タスクはありません。</p>
-                    <p class="text-[11px] text-slate-400">「タスク追加」から運行タスクを作成してこの班を割り当ててください。</p>
+                    <p class="text-[11px] text-slate-400">「タスク管理」から運行タスクを作成してこの班を割り当ててください。</p>
                     <div class="pt-2">
-                        <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id, 'lane_id' => $lane->id]) }}"
+                        <a href="{{ route('timetables.tasks.index', $timetable) }}"
                             class="inline-flex items-center space-x-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
                             <span>＋</span>
-                            <span>最初のタスクを追加する</span>
+                            <span>タスク一覧・追加を開く</span>
                         </a>
                     </div>
                 </div>

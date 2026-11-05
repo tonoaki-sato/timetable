@@ -46,6 +46,20 @@ class TimetableTaskService
     }
 
     /**
+     * 単一タスクの更新
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function updateTask(TimetableTask $task, array $data): TimetableTask
+    {
+        return DB::transaction(function () use ($task, $data) {
+            $this->taskRepository->update($task, $data);
+
+            return $task->fresh(['lane', 'assignments']);
+        });
+    }
+
+    /**
      * 選択したレーンに対する複数タスクの一括登録（班長・固定スタッフのデフォルト自動アサイン対応）
      *
      * @param  array<int, array<string, mixed>>  $tasksData
@@ -289,16 +303,6 @@ class TimetableTaskService
 
             return $syncedCount;
         });
-    }
-
-    /**
-     * タスク情報の更新
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public function updateTask(TimetableTask $task, array $data): bool
-    {
-        return $this->taskRepository->update($task, $data);
     }
 
     /**

@@ -113,7 +113,7 @@ class PreparationNavigatorService
             $currentStep = 3;
             $actionTitle = 'タスクを登録しましょう';
             $actionDesc = '各班のタイムテーブル作業タスクを登録します。設定済みの班長・固定スタッフは自動配置されます。';
-            $actionUrl = route('timetable-tasks.create', ['timetable_id' => $timetable->id]);
+            $actionUrl = route('timetables.tasks.index', $timetable);
             $actionBtnText = 'タスクを登録する (Step 3)';
         } elseif ($shortageTasksCount > 0) {
             $currentStep = 4;

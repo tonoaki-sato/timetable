@@ -107,12 +107,10 @@ Route::middleware('auth')->group(function () {
     });
     Route::patch('lane-requests/{laneRequest}/status', [LaneRequestController::class, 'updateStatus'])->name('lane-requests.update-status');
 
-    // 作業タスクリソースルート（編集・更新は班単位の一括編集画面に一本化）
-    Route::get('timetables/{timetable}/lanes/{lane}/tasks/edit', [TimetableTaskController::class, 'bulkEdit'])->name('timetables.lanes.tasks.edit');
-    Route::put('timetables/{timetable}/lanes/{lane}/tasks', [TimetableTaskController::class, 'bulkUpdate'])->name('timetables.lanes.tasks.update');
+    // 作業タスクリソースルート（モーダルによる登録・更新対応）
     Route::resource('timetable-tasks', TimetableTaskController::class)
         ->parameters(['timetable-tasks' => 'task'])
-        ->except(['edit', 'update']);
+        ->only(['index', 'store', 'update', 'destroy']);
 
     // スタッフアサイン・出欠管理
     Route::get('timetable-tasks/{task}/assign-modal-data', [TimetableTaskAssignmentController::class, 'getAssignModalData'])->name('timetable-tasks.assign-modal-data');
