@@ -89,19 +89,37 @@ class TimetableTaskIndexTest extends TestCase
         $response->assertSee('すべて折りたたむ');
         $response->assertSee('警備班');
 
-        // テーブルヘッダーの新しい列構成（最優先、作業名、作業内容）
+        // テーブルヘッダーの列構成（最優先、時間帯、作業名、作業内容、必要人員、操作）
         $response->assertSee('最優先');
+        $response->assertSee('時間帯');
         $response->assertSee('作業名');
         $response->assertSee('作業内容');
+        $response->assertSee('必要人員');
+        $response->assertSee('操作');
 
-        // タスク情報（タイトル、詳細リンク、作業内容）が表示されていること
+        // 削除された列（場所、状態、充足状況）が含まれていないこと
+        $response->assertDontSee('必要人員 & 充足状況');
+        $response->assertDontSee('(充足)');
+        $response->assertDontSee('(不足');
+        $response->assertDontSee('<th class="px-3.5 py-2.5 whitespace-nowrap">場所</th>', false);
+        $response->assertDontSee('<th class="px-3.5 py-2.5 whitespace-nowrap">状態</th>', false);
+
+        // タスク情報（タイトル、詳細リンク、作業内容、必要人員）が表示されていること
         $response->assertSee('交差点誘導');
         $response->assertSee(route('timetable-tasks.show', $this->task));
         $response->assertSee('北側交差点での歩行者誘導および迂回案内');
+        $response->assertSee('2名');
 
-        // 操作列の「人員管理」リンクは削除されていること
+        // 作業名リンクの後ろの矢印（→）が削除されていること
+        $response->assertDontSee('text-indigo-500 font-normal">→</span>', false);
+
+        // 操作列の「人員管理」リンクは削除され、デザイン統一された編集・削除ボタンが表示されること
         $response->assertDontSee('👥 人員管理');
         $response->assertDontSee('人員管理');
+        $response->assertSee('✏️');
+        $response->assertSee('編集');
+        $response->assertSee('🗑️');
+        $response->assertSee('削除');
     }
 
     /**

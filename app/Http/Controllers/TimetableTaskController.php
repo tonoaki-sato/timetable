@@ -57,8 +57,7 @@ class TimetableTaskController extends Controller
                     'leadStaff',
                     'tasks' => function ($tQuery) {
                         $tQuery->orderBy('start_time', 'asc')
-                            ->orderBy('end_time', 'asc')
-                            ->with('assignments');
+                            ->orderBy('end_time', 'asc');
                     },
                 ]);
             },
