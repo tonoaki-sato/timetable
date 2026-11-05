@@ -110,7 +110,7 @@
                             <th class="px-3.5 py-2.5 text-center whitespace-nowrap w-16">最優先</th>
                             <th class="px-3.5 py-2.5 whitespace-nowrap w-28">時間帯</th>
                             <th class="px-3.5 py-2.5 min-w-[160px]">作業名</th>
-                            <th class="px-3.5 py-2.5 min-w-[200px]">作業内容</th>
+                            <th class="px-3.5 py-2.5 max-w-[200px]">作業内容</th>
                             <th class="px-3.5 py-2.5 whitespace-nowrap">必要人員</th>
                             <th class="px-3.5 py-2.5 font-bold text-right whitespace-nowrap">操作</th>
                         </tr>
@@ -147,7 +147,7 @@
                             <!-- 作業内容 -->
                             <td class="px-3.5 py-2.5 text-slate-600 text-xs">
                                 @if($task->content)
-                                <div class="line-clamp-2 max-w-md" title="{{ $task->content }}">
+                                <div class="truncate max-w-[200px]" title="{{ $task->content }}">
                                     {{ $task->content }}
                                 </div>
                                 @else
