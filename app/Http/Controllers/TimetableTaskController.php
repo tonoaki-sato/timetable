@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BulkUpdateTimetableTaskRequest;
 use App\Http\Requests\StoreTimetableTaskRequest;
-use App\Http\Requests\UpdateTimetableTaskRequest;
 use App\Models\Lane;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
@@ -164,38 +164,54 @@ class TimetableTaskController extends Controller
     }
 
     /**
-     * 作業タスク編集画面の表示
+     * 班別作業タスク一括編集画面の表示
      */
-    public function edit(TimetableTask $task): View
+    public function bulkEdit(Timetable $timetable, Lane $lane): View
     {
-        $this->authorize('update', $task);
+        $this->authorize('update', TimetableTask::class);
 
-        $timetableLanes = $task->timetable->lanes()->with('leadStaff')->get();
+        if ((int) $lane->timetable_id !== (int) $timetable->id) {
+            abort(404);
+        }
 
-        return view('timetable_tasks.edit', [
-            'task' => $task,
-            'timetableLanes' => $timetableLanes,
-            'lanes' => $timetableLanes->pluck('name', 'name')->all(),
+        $lane->loadMissing([
+            'leadStaff',
+            'fixedStaff',
+            'tasks' => function ($query) {
+                $query->orderBy('start_time', 'asc')
+                    ->orderBy('end_time', 'asc');
+            },
+        ]);
+
+        return view('timetable_tasks.bulk_edit', [
+            'timetable' => $timetable,
+            'lane' => $lane,
+            'tasks' => $lane->tasks,
             'statuses' => TimetableTask::STATUSES,
         ]);
     }
 
     /**
-     * 作業タスク更新処理
+     * 班別作業タスク一括更新処理
      */
-    public function update(UpdateTimetableTaskRequest $request, TimetableTask $task): RedirectResponse
+    public function bulkUpdate(BulkUpdateTimetableTaskRequest $request, Timetable $timetable, Lane $lane): RedirectResponse
     {
-        $this->authorize('update', $task);
+        $this->authorize('update', TimetableTask::class);
 
-        $this->taskService->updateTask($task, $request->validated());
-
-        if ($request->input('redirect_to') === 'show') {
-            return redirect()->route('timetables.show', $task->timetable_id)
-                ->with('success', "作業タスク「{$task->title}」を更新しました。");
+        if ((int) $lane->timetable_id !== (int) $timetable->id) {
+            abort(404);
         }
 
-        return redirect()->route('timetable.index', ['timetable_id' => $task->timetable_id])
-            ->with('success', "作業タスク「{$task->title}」を更新しました。");
+        $validated = $request->validated();
+        $tasksData = $validated['tasks'];
+
+        $result = $this->taskService->updateBulkTasks($lane, $tasksData);
+        $totalCount = $result['updated_count'] + $result['created_count'];
+
+        $message = "「{$lane->name}」の作業タスク（{$totalCount}件）を一括更新しました。";
+
+        return redirect()->route('timetables.tasks.index', $timetable)
+            ->with('success', $message);
     }
 
     /**

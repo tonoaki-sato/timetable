@@ -106,9 +106,9 @@ class TimetableTaskManagementTest extends TestCase
     }
 
     /**
-     * 作業タスクを更新できること
+     * 単一作業タスク更新ルートが削除され404または405となること（一括編集へ一本化）
      */
-    public function test_can_update_task(): void
+    public function test_single_task_update_route_is_removed(): void
     {
         $this->actingAs($this->operator);
 
@@ -120,29 +120,11 @@ class TimetableTaskManagementTest extends TestCase
             'title' => '更新前タスク',
         ]);
 
-        $response = $this->put(route('timetable-tasks.update', $task), [
-            'timetable_id' => $this->timetable->id,
-            'lane_id' => $waterLane->id,
+        $response = $this->put('/timetable-tasks/'.$task->id, [
             'title' => '更新後タスク名称',
-            'content' => '給水タンクを10個追加配置する',
-            'start_time' => '08:00',
-            'end_time' => '10:00',
-            'required_people_count' => 5,
-            'is_at_least' => '1',
-            'status' => 'in_progress',
         ]);
 
-        $response->assertRedirect(route('timetable.index', ['timetable_id' => $this->timetable->id]));
-
-        $this->assertDatabaseHas('timetable_tasks', [
-            'id' => $task->id,
-            'lane_id' => $waterLane->id,
-            'title' => '更新後タスク名称',
-            'content' => '給水タンクを10個追加配置する',
-            'required_people_count' => 5,
-            'is_at_least' => true,
-            'status' => 'in_progress',
-        ]);
+        $response->assertStatus(405);
     }
 
     /**
@@ -403,9 +385,9 @@ class TimetableTaskManagementTest extends TestCase
     }
 
     /**
-     * 編集画面のヘッダー表示（パンくず、詳細を見るリンク、一覧に戻るリンク、コンテキストバー）が正常に描画されること
+     * 単一編集画面へのルートが削除され404となること（一括編集へ一本化）
      */
-    public function test_edit_task_view_renders_header_breadcrumbs_and_back_link(): void
+    public function test_single_task_edit_route_is_removed(): void
     {
         $this->actingAs($this->operator);
 
@@ -414,26 +396,8 @@ class TimetableTaskManagementTest extends TestCase
             'title' => '警備巡回タスク',
         ]);
 
-        $response = $this->get(route('timetable-tasks.edit', $task));
+        $response = $this->get('/timetable-tasks/'.$task->id.'/edit');
 
-        $response->assertStatus(200);
-
-        // パンくずリスト
-        $response->assertSee(route('timetables.index'));
-        $response->assertSee('タイムテーブル一覧');
-        $response->assertSee(route('timetables.show', $this->timetable));
-        $response->assertSee($this->timetable->name);
-        $response->assertSee(route('timetables.tasks.index', $this->timetable));
-        $response->assertSee('タスク一覧');
-        $response->assertSee(route('timetable-tasks.show', $task));
-        $response->assertSee('警備巡回タスク');
-        $response->assertSee('編集');
-
-        // アクション: 詳細を見る & 一覧に戻るリンク
-        $response->assertSee('詳細を見る');
-        $response->assertSee('タスク一覧に戻る');
-
-        // コンテキストバー
-        $response->assertSee('対象運行日:');
+        $response->assertStatus(404);
     }
 }

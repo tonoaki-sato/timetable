@@ -26,14 +26,6 @@
                 <span>🖨️</span>
                 <span>人員配置表印刷</span>
             </a>
-
-            @can('create', App\Models\TimetableTask::class)
-            <a href="{{ route('timetable-tasks.create', ['timetable_id' => $timetable->id]) }}"
-                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
-                <span>➕</span>
-                <span>作業タスクを追加</span>
-            </a>
-            @endcan
         </x-slot:actions>
     </x-page-header>
 
@@ -94,6 +86,17 @@
                         <span class="hidden md:inline">タスク追加</span>
                     </a>
                     @endcan
+
+                    @if($hasTasks)
+                    @can('update', App\Models\TimetableTask::class)
+                    <a href="{{ route('timetables.lanes.tasks.edit', ['timetable' => $timetable, 'lane' => $lane]) }}"
+                        class="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-amber-50 text-amber-700 hover:text-amber-800 border border-amber-200 rounded-lg text-xs font-bold transition shadow-2xs"
+                        title="{{ $lane->name }}のタスクを一括編集">
+                        <span>✏️</span>
+                        <span class="hidden md:inline">タスク編集</span>
+                    </a>
+                    @endcan
+                    @endif
                 </div>
             </summary>
 
@@ -163,16 +166,7 @@
                             </td>
 
                             <!-- 操作 -->
-                            <td class="px-3.5 py-2.5 text-right space-x-1 whitespace-nowrap">
-                                @can('update', $task)
-                                <a href="{{ route('timetable-tasks.edit', $task) }}"
-                                    class="inline-flex items-center space-x-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition"
-                                    title="編集">
-                                    <span>✏️</span>
-                                    <span>編集</span>
-                                </a>
-                                @endcan
-
+                            <td class="px-3.5 py-2.5 text-right whitespace-nowrap">
                                 @can('delete', $task)
                                 <form action="{{ route('timetable-tasks.destroy', $task) }}" method="POST" class="inline"
                                     data-confirm="作業タスク「{{ $task->title }}」を削除しますか？">

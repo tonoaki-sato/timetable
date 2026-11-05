@@ -82,6 +82,54 @@ class TimetableTaskService
     }
 
     /**
+     * 担当班の作業タスクを一括更新（新規追加枠の自動作成および班長・固定スタッフアサイン対応）
+     *
+     * @param  array<int, array<string, mixed>>  $tasksData
+     * @return array{updated_count: int, created_count: int}
+     */
+    public function updateBulkTasks(Lane $lane, array $tasksData): array
+    {
+        return DB::transaction(function () use ($lane, $tasksData) {
+            $lane->loadMissing('fixedStaff');
+            $existingTasks = $lane->tasks()->get()->keyBy('id');
+
+            $updatedCount = 0;
+            $createdCount = 0;
+
+            foreach ($tasksData as $taskItem) {
+                $taskId = ! empty($taskItem['id']) ? (int) $taskItem['id'] : null;
+
+                if ($taskId && isset($existingTasks[$taskId])) {
+                    $task = $existingTasks[$taskId];
+                    $attributes = $taskItem;
+                    unset($attributes['id']);
+                    $attributes['timetable_id'] = $lane->timetable_id;
+                    $attributes['lane_id'] = $lane->id;
+                    $attributes['lane'] = $lane->name;
+
+                    $this->taskRepository->update($task, $attributes);
+                    $updatedCount++;
+                } else {
+                    $attributes = $taskItem;
+                    unset($attributes['id']);
+                    $attributes['timetable_id'] = $lane->timetable_id;
+                    $attributes['lane_id'] = $lane->id;
+                    $attributes['lane'] = $lane->name;
+
+                    $newTask = $this->taskRepository->create($attributes);
+                    $this->autoAssignLaneMembersToTask($newTask, $lane);
+                    $createdCount++;
+                }
+            }
+
+            return [
+                'updated_count' => $updatedCount,
+                'created_count' => $createdCount,
+            ];
+        });
+    }
+
+    /**
      * 単一タスクに対して班長および固定スタッフを基本アサインする
      */
     protected function autoAssignLaneMembersToTask(TimetableTask $task, Lane $lane): void

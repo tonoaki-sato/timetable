@@ -34,7 +34,7 @@ class TimetableTaskPolicy
     /**
      * 作業タスク更新権限（admin, operator同等）
      */
-    public function update(User $user, TimetableTask $task): bool
+    public function update(User $user, ?TimetableTask $task = null): bool
     {
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }
