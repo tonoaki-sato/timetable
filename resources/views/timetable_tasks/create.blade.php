@@ -147,9 +147,9 @@
                         </div>
                     </div>
 
-                    <!-- 1段目 (主要情報): 作業タスク名 / 実施場所 / 開始時刻 / 終了時刻 -->
-                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-                        <div class="sm:col-span-5">
+                    <!-- 1段目: 作業タスク名 / 開始時刻 / 終了時刻 / 必要人員 / 最優先フラグ -->
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                        <div class="sm:col-span-4">
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                 作業タスク名 <span class="text-red-500">*</span>
                             </label>
@@ -158,19 +158,7 @@
                                 name="tasks[{{ $idx }}][title]"
                                 value="{{ $taskItem['title'] ?? '' }}"
                                 required
-                                placeholder="例: 中央通り カラーコーン・規制バー設置"
-                                class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        </div>
-
-                        <div class="sm:col-span-3">
-                            <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                実施場所・持ち場
-                            </label>
-                            <input type="text"
-                                data-field="location"
-                                name="tasks[{{ $idx }}][location]"
-                                value="{{ $taskItem['location'] ?? '' }}"
-                                placeholder="例: 本陣、第1ゲート"
+                                placeholder="例: 中央通り カラーコーン設置"
                                 class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
 
@@ -197,22 +185,19 @@
                                 required
                                 class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-medium">
                         </div>
-                    </div>
 
-                    <!-- 2段目 (人数・詳細・状態): 必要人数 & 以上フラグ / 進行ステータス / 最優先 / 作業内容・手順 -->
-                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center bg-slate-50/70 p-2.5 rounded-lg border border-slate-200/70">
-                        <div class="sm:col-span-3">
+                        <div class="sm:col-span-2">
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                 必要人員 <span class="text-red-500">*</span>
                             </label>
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-1.5">
                                 <input type="number"
                                     data-field="required_people_count"
                                     name="tasks[{{ $idx }}][required_people_count]"
                                     value="{{ $taskItem['required_people_count'] ?? 2 }}"
                                     min="0" max="999" required
-                                    class="w-20 px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
-                                <label class="inline-flex items-center space-x-1 cursor-pointer select-none">
+                                    class="w-16 px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+                                <label class="inline-flex items-center space-x-1 cursor-pointer select-none whitespace-nowrap">
                                     <input type="checkbox"
                                         data-field="is_at_least"
                                         name="tasks[{{ $idx }}][is_at_least]"
@@ -222,6 +207,33 @@
                                     <span class="text-[11px] font-bold text-slate-700">以上</span>
                                 </label>
                             </div>
+                        </div>
+
+                        <div class="sm:col-span-2 pb-2">
+                            <label class="inline-flex items-center space-x-1.5 cursor-pointer select-none">
+                                <input type="checkbox"
+                                    data-field="is_critical"
+                                    name="tasks[{{ $idx }}][is_critical]"
+                                    value="1"
+                                    {{ !empty($taskItem['is_critical']) ? 'checked' : '' }}
+                                    class="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-3.5 w-3.5">
+                                <span class="text-[11px] font-bold text-rose-700 whitespace-nowrap">🚨 最優先</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 2段目: 実施場所 / 進行ステータス / 作業内容・手順指示 -->
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end bg-slate-50/70 p-2.5 rounded-lg border border-slate-200/70">
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                実施場所・持ち場
+                            </label>
+                            <input type="text"
+                                data-field="location"
+                                name="tasks[{{ $idx }}][location]"
+                                value="{{ $taskItem['location'] ?? '' }}"
+                                placeholder="例: 本陣、第1ゲート"
+                                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
 
                         <div class="sm:col-span-2">
@@ -241,19 +253,7 @@
                             </select>
                         </div>
 
-                        <div class="sm:col-span-2 pt-1 sm:pt-4">
-                            <label class="inline-flex items-center space-x-1.5 cursor-pointer select-none">
-                                <input type="checkbox"
-                                    data-field="is_critical"
-                                    name="tasks[{{ $idx }}][is_critical]"
-                                    value="1"
-                                    {{ !empty($taskItem['is_critical']) ? 'checked' : '' }}
-                                    class="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-3.5 w-3.5">
-                                <span class="text-[11px] font-bold text-rose-700">🚨 最優先</span>
-                            </label>
-                        </div>
-
-                        <div class="sm:col-span-5">
+                        <div class="sm:col-span-8">
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                 作業内容・手順指示
                             </label>
