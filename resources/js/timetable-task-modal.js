@@ -165,10 +165,13 @@ function initTimetableTaskModals() {
 
         // 最優先バッジ
         if (detailCriticalBadge) {
+            const defaultNotice = detailCriticalBadge.nextElementSibling;
             if (task.is_critical) {
                 detailCriticalBadge.classList.remove('hidden');
+                if (defaultNotice) defaultNotice.classList.add('hidden');
             } else {
                 detailCriticalBadge.classList.add('hidden');
+                if (defaultNotice) defaultNotice.classList.remove('hidden');
             }
         }
 

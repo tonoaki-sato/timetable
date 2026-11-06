@@ -5,10 +5,10 @@
     <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" data-action="close-modal"></div>
 
     <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
-        <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all">
+        <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
 
-            <!-- モーダルヘッダー -->
-            <div class="px-5 py-3.5 bg-white border-b border-slate-100 flex items-center justify-between">
+            <!-- モーダルヘッダー (固定) -->
+            <div class="shrink-0 px-5 py-3.5 bg-white border-b border-slate-100 flex items-center justify-between">
                 <div class="flex items-center space-x-2.5 min-w-0">
                     <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center text-sm shadow-2xs shrink-0 font-bold">
                         ➕
@@ -32,22 +32,22 @@
                 </button>
             </div>
 
-            <!-- 時間帯重複警告メッセージ -->
-            <div class="px-5 pt-3 empty:hidden">
+            <!-- 時間帯重複警告メッセージ (固定ヘッダー直下) -->
+            <div class="shrink-0 px-5 pt-3 empty:hidden">
                 <div id="create-modal-overlap-warning" class="hidden p-2.5 bg-rose-50 border border-rose-200/90 text-rose-800 text-xs rounded-xl flex items-center space-x-2 font-bold shadow-2xs">
                     <span class="text-sm">⚠️</span>
                     <span class="warning-text">同一レーン内の既存タスクと時間帯が重複しています。</span>
                 </div>
             </div>
 
-            <!-- 入力フォーム (縦長・スクロールフリー設計) -->
-            <form id="task-create-form" action="{{ route('timetable-tasks.store') }}" method="POST">
+            <!-- 入力フォーム (縦スクロール可能ボディ) -->
+            <form id="task-create-form" action="{{ route('timetable-tasks.store') }}" method="POST" class="flex-1 flex flex-col min-h-0">
                 @csrf
                 <input type="hidden" name="timetable_id" value="{{ $timetable?->id }}">
                 <input type="hidden" id="create-modal-lane-id" name="lane_id" value="">
                 <input type="hidden" name="auto_assign_lead" value="1">
 
-                <div class="p-5 space-y-3">
+                <div class="overflow-y-auto flex-1 p-5 space-y-3.5">
                     <!-- 1. 作業タスク名 (1行全幅) -->
                     <div>
                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
@@ -112,7 +112,7 @@
                             </div>
                         </div>
 
-                        <div class="pb-1">
+                        <div class="pb-0.5">
                             <label class="inline-flex items-center space-x-2 cursor-pointer select-none px-3 py-1.5 bg-rose-50/60 hover:bg-rose-50 border border-rose-200/80 rounded-lg transition w-full">
                                 <input type="checkbox"
                                     id="create-modal-critical"
@@ -155,21 +155,22 @@
                         </div>
                     </div>
 
-                    <!-- 5. 作業内容・手順指示 (1行全幅) -->
+                    <!-- 5. 作業内容・手順指示 (5行テキストエリア) -->
                     <div>
                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
                             📝 作業内容・手順指示
                         </label>
-                        <input type="text"
+                        <textarea
                             id="create-modal-content"
                             name="content"
-                            placeholder="作業手順や伝達事項・注意事項を入力"
-                            class="w-full px-3 py-1.5 bg-slate-50/60 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                            rows="5"
+                            placeholder="作業手順や伝達事項・注意事項を入力（改行可能）"
+                            class="w-full px-3 py-2 bg-slate-50/60 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition leading-relaxed resize-y"></textarea>
                     </div>
                 </div>
 
-                <!-- モーダルフッター -->
-                <div class="px-5 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
+                <!-- モーダルフッター (固定) -->
+                <div class="shrink-0 px-5 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
                     <button type="button" data-action="close-modal"
                         class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                         キャンセル
