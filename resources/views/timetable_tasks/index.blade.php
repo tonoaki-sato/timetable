@@ -62,24 +62,40 @@
             $suggestedStart = $latestTask ? substr($latestTask->end_time, 0, 5) : '08:00';
         @endphp
         <details id="lane-{{ $lane->id }}" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group" {{ $hasTasks ? 'open' : '' }}>
-            <summary class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-100/70 transition select-none">
-                <div class="flex items-center space-x-2.5 min-w-0 flex-wrap gap-y-1">
-                    <span class="text-slate-400 group-open:rotate-90 transition-transform duration-150 inline-block text-xs">▶</span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border {{ $badgeClass }}">
-                        <span class="mr-1">{{ $laneIcon }}</span>
-                        <span>{{ $lane->name }}</span>
-                    </span>
-                    @if($lane->leadStaff)
-                    <span class="text-xs text-slate-500 font-medium hidden sm:inline">
-                        👤 班長: <strong class="text-slate-700">{{ $lane->leadStaff->name }}</strong>
-                    </span>
-                    @endif
-                    <span class="text-[11px] px-2 py-0.5 rounded-full font-mono font-bold {{ $hasTasks ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-400' }}">
-                        {{ $lane->tasks->count() }} 件
-                    </span>
+            <summary class="px-3.5 sm:px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 sm:gap-3 cursor-pointer hover:bg-slate-100/70 transition select-none">
+                <div class="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
+                    <!-- 1. 開閉トグルアイコン (固定幅) -->
+                    <span class="w-4 shrink-0 text-center text-slate-400 group-open:rotate-90 transition-transform duration-150 inline-block text-xs">▶</span>
+
+                    <!-- 2. 班名バッジ (固定幅・長い班名はtruncate) -->
+                    <div class="w-36 sm:w-44 md:w-48 shrink-0">
+                        <span class="inline-flex items-center max-w-full px-2 py-0.5 rounded text-xs font-bold border {{ $badgeClass }}" title="{{ $lane->name }}">
+                            <span class="mr-1 shrink-0">{{ $laneIcon }}</span>
+                            <span class="truncate">{{ $lane->name }}</span>
+                        </span>
+                    </div>
+
+                    <!-- 3. 班長 (固定幅・未設定時プレースホルダー) -->
+                    <div class="w-32 sm:w-36 md:w-44 shrink-0 hidden sm:flex items-center text-xs text-slate-500 font-medium">
+                        <span class="shrink-0 text-slate-400 mr-1">👤</span>
+                        <span class="shrink-0 mr-1 text-slate-500">班長:</span>
+                        @if($lane->leadStaff)
+                            <strong class="text-slate-700 truncate" title="{{ $lane->leadStaff->name }}">{{ $lane->leadStaff->name }}</strong>
+                        @else
+                            <span class="text-slate-400 italic">未設定</span>
+                        @endif
+                    </div>
+
+                    <!-- 4. タスク件数バッジ (固定幅・中央揃え) -->
+                    <div class="w-16 sm:w-20 shrink-0 text-left sm:text-center">
+                        <span class="inline-flex items-center justify-center min-w-[52px] sm:min-w-[60px] text-[11px] px-2 py-0.5 rounded-full font-mono font-bold {{ $hasTasks ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-400' }}">
+                            {{ $lane->tasks->count() }} 件
+                        </span>
+                    </div>
                 </div>
 
-                <div class="flex items-center space-x-2 shrink-0">
+                <!-- 5. アクションボタン (右寄せ) -->
+                <div class="flex items-center space-x-2 shrink-0 ml-auto">
                     @can('create', App\Models\TimetableTask::class)
                     <button type="button"
                         data-action="open-task-create"

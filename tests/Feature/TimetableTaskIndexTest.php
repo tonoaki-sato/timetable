@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Lane;
+use App\Models\Staff;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
@@ -94,6 +95,8 @@ class TimetableTaskIndexTest extends TestCase
         $response->assertSee('運行作業タスク一覧 (班別時系列)');
         $response->assertSee('すべて折りたたむ');
         $response->assertSee('警備班');
+        $response->assertSee('1 件');
+        $response->assertSee('未設定');
 
         // テーブルヘッダーの列構成（最優先、時間帯、作業名、作業内容、必要人員、操作）
         $response->assertSee('最優先');
@@ -182,8 +185,41 @@ class TimetableTaskIndexTest extends TestCase
 
         // 空の班のアコーディオンに空状態メッセージが表示されること
         $response->assertSee('キッズ村班');
+        $response->assertSee('0 件');
         $response->assertSee('この班に登録されている作業タスクはありません。');
         $response->assertDontSee('>タスク編集<', false);
+    }
+
+    /**
+     * 班長が設定されている班と未設定の班でアコーディオンヘッダーの班長項目が正しく表示されること
+     */
+    public function test_accordion_headers_display_lead_staff_or_placeholder(): void
+    {
+        $this->actingAs($this->operator);
+
+        $leadStaff = Staff::factory()->create([
+            'name' => '山田 太郎',
+        ]);
+
+        Lane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'name' => '本部班',
+            'lead_staff_id' => $leadStaff->id,
+            'display_order' => 10,
+        ]);
+
+        Lane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'name' => '誘導班',
+            'lead_staff_id' => null,
+            'display_order' => 20,
+        ]);
+
+        $response = $this->get(route('timetables.tasks.index', $this->timetable));
+
+        $response->assertStatus(200);
+        $response->assertSee('山田 太郎');
+        $response->assertSee('未設定');
     }
 
     /**
