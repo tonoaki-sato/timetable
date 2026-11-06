@@ -170,6 +170,8 @@ class TimetableManagementTest extends TestCase
 
         $response = $this->get(route('timetables.create'));
         $response->assertStatus(200);
+        $response->assertSee('運行情報登録');
+        $response->assertSee('運行情報一覧');
         $response->assertSee('max-w-5xl');
         $response->assertDontSee('まつり運行準備ステップガイド');
         $response->assertSee('<input type="hidden" name="create_default_lanes" value="0">', false);
@@ -248,6 +250,24 @@ class TimetableManagementTest extends TestCase
 
         // 詳細閲覧は許可されること
         $this->get(route('timetables.show', $timetable))->assertStatus(200);
+    }
+
+    /**
+     * 運行情報編集画面が正常に表示されること
+     */
+    public function test_edit_view_renders_cleanly(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '1日目 本祭運行',
+        ]);
+
+        $response = $this->get(route('timetables.edit', $timetable));
+        $response->assertStatus(200);
+        $response->assertSee('運行情報編集');
+        $response->assertSee('運行情報一覧');
+        $response->assertSee('1日目 本祭運行');
     }
 
     /**

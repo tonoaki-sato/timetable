@@ -69,7 +69,7 @@ class TimetableTaskIndexTest extends TestCase
         $response->assertStatus(200);
 
         // パンくずリスト
-        $response->assertSee('タイムテーブル一覧');
+        $response->assertSee('運行情報一覧');
         $response->assertSee(route('timetables.index'));
         $response->assertSee($this->timetable->name);
         $response->assertSee(route('timetables.show', $this->timetable));

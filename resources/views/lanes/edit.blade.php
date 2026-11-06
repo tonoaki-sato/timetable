@@ -9,7 +9,7 @@
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
-                <span>タイムテーブル一覧</span>
+                <span>運行情報一覧</span>
             </a>
             <span class="text-slate-300">/</span>
             <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">

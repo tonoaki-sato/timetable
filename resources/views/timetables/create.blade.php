@@ -1,15 +1,15 @@
-<x-layouts.app title="新規タイムテーブル登録">
+<x-layouts.app title="運行情報登録">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
-        title="新規タイムテーブル登録"
+        title="運行情報登録"
         icon="➕"
         description="まつり開催日（例: 前日設営、本祭1日目など）の基本枠を新設します。">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
-                <span>タイムテーブル一覧</span>
+                <span>運行情報一覧</span>
             </a>
             <span class="text-slate-300">/</span>
             <span class="text-slate-700 font-bold truncate">新規登録</span>

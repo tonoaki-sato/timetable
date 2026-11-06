@@ -26,7 +26,7 @@
     </div>
     @endif
 
-    <!-- タイムテーブル一覧リスト（テーブル形式） -->
+    <!-- 運行情報一覧リスト（テーブル形式） -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <!-- リストヘッダー -->
         <div class="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">

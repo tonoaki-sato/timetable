@@ -1,15 +1,15 @@
-<x-layouts.app title="タイムテーブル編集">
+<x-layouts.app title="運行情報編集">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
-        title="タイムテーブル編集"
+        title="運行情報編集"
         icon="✏️"
         :description="'「' . $timetable->name . '」の運行基本設定を更新します。'">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
-                <span>タイムテーブル一覧</span>
+                <span>運行情報一覧</span>
             </a>
             <span class="text-slate-300">/</span>
             <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition shrink-0">
