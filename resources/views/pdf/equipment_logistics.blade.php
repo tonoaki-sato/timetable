@@ -7,12 +7,51 @@
         @font-face {
             font-family: 'JapaneseFont';
             src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 800;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 900;
+            font-style: normal;
         }
         @page {
             size: A4 landscape;
             margin: 8mm 8mm;
         }
-        * {
+        *, body, table, th, td, h1, h2, h3, div, span, strong, b, p {
+            font-family: 'JapaneseFont', sans-serif !important;
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -171,7 +210,7 @@
 
     <!-- 主要中継拠点・保管場所一覧 -->
     @if(!empty($locationsData))
-    <div class="table-title">📍 主要中継拠点・保管場所 & 利用可能時間</div>
+    <div class="table-title">■ 主要中継拠点・保管場所 ＆ 利用可能時間</div>
     <table class="locations-table">
         <tr>
             @foreach(array_slice($locationsData, 0, 5) as $locItem)
@@ -235,9 +274,9 @@
                     @forelse($preDayPlans as $p)
                     <div class="plan-box">
                         <div class="plan-title">{{ $p->title }}</div>
-                        <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }} ({{ $p->resolved_from_location }}➔{{ $p->resolved_to_location }})</div>
+                        <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }} ({{ $p->resolved_from_location }}→{{ $p->resolved_to_location }})</div>
                         @if($p->witness_required)
-                        <div class="witness-tag">👁️立会: {{ $p->witnessStaff?->name ?: '要' }}</div>
+                        <div class="witness-tag">【立会要】: {{ $p->witnessStaff?->name ?: '要' }}</div>
                         @endif
                     </div>
                     @empty
@@ -248,7 +287,7 @@
                     @forelse($day1MPlans as $p)
                     <div class="plan-box">
                         <div class="plan-title">{{ $p->title }}</div>
-                        <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }} ({{ $p->resolved_from_location }}➔{{ $p->resolved_to_location }})</div>
+                        <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }} ({{ $p->resolved_from_location }}→{{ $p->resolved_to_location }})</div>
                     </div>
                     @empty
                     <span style="color: #cbd5e1;">ー</span>
@@ -278,7 +317,7 @@
                     @forelse($day2EPlans as $p)
                     <div class="plan-box" style="background-color: #fffbeb;">
                         <div class="plan-title" style="color: #78350f;">{{ $p->title }}</div>
-                        <div class="plan-meta">➔ {{ $p->to_location }} ({{ $p->start_time ? substr($p->start_time, 0, 5) : '' }})</div>
+                        <div class="plan-meta">→ {{ $p->to_location }} ({{ $p->start_time ? substr($p->start_time, 0, 5) : '' }})</div>
                     </div>
                     @empty
                     <span style="color: #cbd5e1;">ー</span>

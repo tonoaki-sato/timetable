@@ -7,12 +7,51 @@
         @font-face {
             font-family: 'JapaneseFont';
             src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 800;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 900;
+            font-style: normal;
         }
         @page {
             size: A4 portrait;
             margin: 8mm 6mm;
         }
-        * {
+        *, body, table, th, td, h1, h2, h3, div, span, strong, b, p {
+            font-family: 'JapaneseFont', sans-serif !important;
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -161,7 +200,7 @@
                                     <div class="staff-kana">{{ $staff->kana ?: 'ー' }}</div>
                                     <div class="staff-name">{{ $staff->name }}</div>
                                     <div class="staff-affiliation">
-                                        🏢 {{ $staff->affiliation ?: '本部直属 / 一般公募' }}
+                                        所属: {{ $staff->affiliation ?: '本部直属 / 一般公募' }}
                                     </div>
                                 </td>
                                 <td class="qr-col">
@@ -174,7 +213,7 @@
 
                         <!-- フッター -->
                         <div class="badge-footer">
-                            スマホでQR読取 ➡ 当日のマイシフト・運行表を確認
+                            スマホでQR読取 → 当日のマイシフト・運行表を確認
                         </div>
                     </div>
                 </td>

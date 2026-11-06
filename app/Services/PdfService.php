@@ -40,13 +40,18 @@ class PdfService
             mkdir($fontDir, 0777, true);
         }
 
+        $html = view($viewPath, $data)->render();
+        // 4バイトUTF-8絵文字・異体字セレクタ等はDompdf/php-font-libでサロゲートペア化され文字化けの原因となるため安全に除去
+        $html = preg_replace('/[\x{10000}-\x{10FFFF}\x{FE00}-\x{FE0F}]/u', '', $html) ?? $html;
+
         /** @var DomPdfWrapper $pdf */
-        $pdf = Pdf::loadView($viewPath, $data);
+        $pdf = Pdf::loadHTML($html);
         $pdf->setPaper('a4', $orientation);
         $pdf->setOptions([
             'isHtml5ParserEnabled' => true,
             'isRemoteEnabled' => true,
             'enable_font_subsetting' => true,
+            'defaultFont' => 'JapaneseFont',
             'chroot' => base_path(),
             'font_dir' => $fontDir,
             'font_cache' => $fontDir,

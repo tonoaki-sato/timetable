@@ -7,12 +7,51 @@
         @font-face {
             font-family: 'JapaneseFont';
             src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 800;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JapaneseFont';
+            src: url('{{ $japaneseFontPath }}') format('truetype');
+            font-weight: 900;
+            font-style: normal;
         }
         @page {
             size: A4 landscape;
             margin: 8mm 10mm;
         }
-        * {
+        *, body, table, th, td, h1, h2, h3, div, span, strong, b, p {
+            font-family: 'JapaneseFont', sans-serif !important;
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -174,7 +213,7 @@
     <div class="lane-section">
         <table class="lane-header-table">
             <tr>
-                <td>🏷️ {{ $lane->name }}</td>
+                <td>【班】{{ $lane->name }}</td>
                 <td class="lane-lead">
                     班リーダー: <strong>{{ $lane->leadStaff?->name ?: '未指名' }}</strong>
                 </td>
@@ -200,7 +239,7 @@
                     <td class="col-task">
                         <div class="task-title">{{ $task->title }}</div>
                         @if($task->location)
-                        <div class="task-location">📍 {{ $task->location }}</div>
+                        <div class="task-location">[場所] {{ $task->location }}</div>
                         @endif
                     </td>
                     <td class="col-count">
