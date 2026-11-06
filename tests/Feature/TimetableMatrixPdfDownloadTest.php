@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Timetable\DownloadTimetableMatrixPdfAction;
 use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
+use App\Services\PdfService;
+use Dompdf\Dompdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -279,6 +282,84 @@ class TimetableMatrixPdfDownloadTest extends TestCase
     }
 
     /**
+     * 進行表PDFに適切な余白（@page margin: 10mm 12mm等）が設定され、
+     * 改ページ時にも日付データが欠落しないよう全スロット行に日付セルが出力されていること
+     */
+    public function test_matrix_pdf_has_proper_margins_and_renders_date_cell_for_every_slot(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '保土ケ谷宿場まつり 1日目',
+            'target_date' => '2026-10-11',
+            'start_time' => '07:00:00',
+            'end_time' => '09:00:00', // 5スロット (07:00, 07:30, 08:00, 08:30, 09:00)
+        ]);
+
+        $response = $this->get(route('timetables.print-matrix', [
+            'timetable' => $timetable,
+            'preview' => 1,
+        ]));
+
+        $response->assertStatus(200);
+
+        // 余白・改ページCSS設定
+        $response->assertSee('margin: 10mm 12mm;', false);
+        $response->assertSee('margin-bottom: 12px;', false);
+        $response->assertSee('page-break-inside: avoid;', false);
+        $response->assertSee('display: table-header-group;', false);
+
+        // 全称セレクタ * による @page マージンリセットの上書きがないこと
+        $response->assertDontSee('*, body, table', false);
+        $response->assertSee('body, table, th, td', false);
+
+        // 日付セルが全スロット行に出力され、全体rowspanによる欠落原因が存在しないこと
+        $response->assertDontSee('rowspan="5" class="cell-date"', false);
+        $content = $response->getContent();
+        // 5スロット分、すべての日付セルに「1日目」が出力されていること
+        $this->assertSame(5, substr_count($content, '<td class="cell-date">'));
+    }
+
+    /**
+     * 進行表PDFの管理系列列（日付・時間・道路・まつり）の幅がギリギリまで狭小化され、
+     * white-space: nowrap が適用されていること（DomPDFのtable-layout: fixedで均等割付されないパーセント指定）
+     */
+    public function test_matrix_pdf_narrows_control_column_widths(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '宿場まつり 1日目',
+            'target_date' => '2026-10-11',
+            'start_time' => '07:00:00',
+            'end_time' => '08:00:00',
+        ]);
+
+        $response = $this->get(route('timetables.print-matrix', [
+            'timetable' => $timetable,
+            'preview' => 1,
+        ]));
+
+        $response->assertStatus(200);
+
+        // 狭小化された各列幅の検証（パーセント指定）
+        $response->assertSee('.col-date {', false);
+        $response->assertSee('width: 3.5%;', false);
+
+        $response->assertSee('.col-time {', false);
+        $response->assertSee('width: 4.2%;', false);
+
+        $response->assertSee('.col-road {', false);
+        $response->assertSee('width: 4.8%;', false);
+
+        $response->assertSee('.col-festival {', false);
+        $response->assertSee('width: 4.2%;', false);
+
+        // 折り返し防止の検証
+        $response->assertSee('white-space: nowrap;', false);
+    }
+
+    /**
      * 進行表画面（/timetable）のヘッダーが共通 x-page-header であり、タイトルが「{タイムテーブル名} 進行表」、
      * バッジが運行日のみ、説明文が「進行表」、パンくずが「運行情報一覧」となっていること
      */
@@ -318,5 +399,43 @@ class TimetableMatrixPdfDownloadTest extends TestCase
 
         // 既存の黒背景ヘッダー（旧ヘッダー枠）が存在しないこと
         $response->assertDontSee('border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5', false);
+    }
+
+    /**
+     * 実際のDomPDFレンダリングにおいて、ルートフレームのページ余白（10mm 12mm）が保持され、
+     * 管理系列列が全列均等割付けにならず狭小化されること
+     */
+    public function test_matrix_pdf_dompdf_renders_with_page_margins_and_narrow_control_columns(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '宿場まつり 1日目',
+            'target_date' => '2026-10-11',
+            'start_time' => '07:00:00',
+            'end_time' => '08:00:00',
+        ]);
+
+        $action = app(DownloadTimetableMatrixPdfAction::class);
+        $viewData = $action->buildViewData($timetable);
+        $viewData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
+
+        $html = view('pdf.timetable_matrix', $viewData)->render();
+        $html = preg_replace('/[\x{10000}-\x{10FFFF}\x{FE00}-\x{FE0F}]/u', '', $html) ?? $html;
+
+        $dompdf = new Dompdf([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'JapaneseFont',
+        ]);
+        $dompdf->setPaper('a4', 'landscape');
+        $dompdf->loadHtml($html);
+        $dompdf->render();
+
+        // ルート要素のマージンが 0 0 0 0 に上書きされず、10mm 12mm (約28.3pt 34.0pt) が保持されていること
+        $rootMargin = $dompdf->getTree()->get_root()->get_style()->margin;
+        $this->assertNotSame('0 0 0 0', $rootMargin);
+        $this->assertStringContainsString('34.01', $rootMargin);
+        $this->assertStringContainsString('28.34', $rootMargin);
     }
 }

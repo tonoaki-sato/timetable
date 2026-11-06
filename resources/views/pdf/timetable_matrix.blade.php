@@ -18,9 +18,9 @@
         }
         @page {
             size: A4 landscape;
-            margin: 7mm 8mm;
+            margin: 10mm 12mm;
         }
-        *, body, table, th, td, h1, div, span, strong, b, p {
+        body, table, th, td, h1, div, span, strong, b, p {
             font-family: 'JapaneseFont', sans-serif !important;
             box-sizing: border-box;
             margin: 0;
@@ -34,7 +34,7 @@
         }
         .header-area {
             width: 100%;
-            margin-bottom: 5px;
+            margin-bottom: 12px;
         }
         .header-table {
             width: 100%;
@@ -53,13 +53,9 @@
             vertical-align: bottom;
         }
 
-        /* テーブル外枠コンテナ（添付画像の濃紺枠線＆角丸） */
+        /* テーブルコンテナ */
         .matrix-wrapper {
             width: 100%;
-            border: 2px solid #1e293b;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-            overflow: hidden;
             background-color: #ffffff;
         }
 
@@ -67,6 +63,19 @@
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
+            border: 1.5px solid #1e293b;
+        }
+
+        table.matrix-table thead {
+            display: table-header-group;
+        }
+
+        table.matrix-table tbody {
+            display: table-row-group;
+        }
+
+        table.matrix-table tr {
+            page-break-inside: avoid;
         }
 
         /* 共通ヘッダー・セル罫線 */
@@ -74,7 +83,7 @@
         table.matrix-table td {
             border-right: 1px solid #334155;
             border-bottom: 1px solid #334155;
-            padding: 3px 4px;
+            padding: 4px 5px;
             overflow: hidden;
             word-wrap: break-word;
             word-break: break-all;
@@ -88,7 +97,8 @@
             font-weight: bold;
             font-size: 7.5pt;
             vertical-align: middle;
-            height: 22px;
+            height: 24px;
+            padding: 4px 6px;
         }
 
         /* 管理系列ヘッダー（日付・時間・道路・まつり: スレートグレー） */
@@ -96,6 +106,9 @@
             background-color: #f1f5f9;
             color: #0f172a;
             text-align: center;
+            padding-left: 1px;
+            padding-right: 1px;
+            white-space: nowrap;
         }
 
         /* 担当班列ヘッダー（オフホワイト・左寄せ） */
@@ -122,18 +135,18 @@
             font-size: 8pt;
         }
 
-        /* 列幅 */
+        /* 列幅（固定％指定によりDomPDFのtable-layout: fixed環境下でも最小幅を維持し、担当班列を最大化） */
         .col-date {
-            width: 44px;
+            width: 3.5%;
         }
         .col-time {
-            width: 42px;
+            width: 4.2%;
         }
         .col-road {
-            width: 48px;
+            width: 4.8%;
         }
         .col-festival {
-            width: 48px;
+            width: 4.2%;
         }
         .col-boundary {
             border-right: 2px solid #1e293b !important;
@@ -144,10 +157,12 @@
             text-align: center;
             vertical-align: middle;
             font-weight: bold;
-            font-size: 8.5pt;
-            letter-spacing: 1px;
+            font-size: 7pt;
             background-color: #f1f5f9;
-            color: #0f172a;
+            color: #334155;
+            padding-left: 1px;
+            padding-right: 1px;
+            white-space: nowrap;
         }
 
         /* 時間セル */
@@ -158,6 +173,9 @@
             font-size: 7.8pt;
             color: #0f172a;
             background-color: #ffffff;
+            padding-left: 1px;
+            padding-right: 1px;
+            white-space: nowrap;
         }
 
         /* 空セル */
@@ -177,6 +195,9 @@
             background-color: #fee2e2;
             font-weight: bold;
             font-size: 7pt;
+            padding-left: 1px;
+            padding-right: 1px;
+            white-space: nowrap;
         }
         .cell-festival-active {
             text-align: center;
@@ -185,6 +206,9 @@
             background-color: #dcfce7;
             font-weight: bold;
             font-size: 7pt;
+            padding-left: 1px;
+            padding-right: 1px;
+            white-space: nowrap;
         }
 
         /* タスクセル（添付画像のカードデザイン） */
@@ -192,7 +216,7 @@
             vertical-align: top;
             text-align: left;
             background-color: #ffffff;
-            padding: 4px 5px;
+            padding: 5px 6px;
         }
         .task-card {
             width: 100%;
@@ -200,13 +224,13 @@
 
         /* タイトル ＋ 人員規模 */
         .task-header {
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
         .task-title {
             font-weight: bold;
             color: #0f172a;
             font-size: 7.5pt;
-            line-height: 1.15;
+            line-height: 1.2;
         }
         .task-people {
             font-weight: bold;
@@ -217,19 +241,19 @@
 
         /* 作業内容・箇条書き */
         .task-content {
-            margin-top: 2px;
-            margin-bottom: 2px;
-            padding-left: 4px;
+            margin-top: 3px;
+            margin-bottom: 3px;
+            padding-left: 5px;
             border-left: 2px solid #cbd5e1;
             color: #334155;
             white-space: pre-line;
             font-size: 6.5pt;
-            line-height: 1.15;
+            line-height: 1.2;
         }
 
         /* 場所情報（赤ピン付き） */
         .task-location-row {
-            margin-top: 2px;
+            margin-top: 3px;
             margin-bottom: 3px;
             font-size: 6.8pt;
             color: #64748b;
@@ -275,7 +299,7 @@
             padding: 0.5px 3.5px;
             border-radius: 3px;
             margin-right: 2px;
-            margin-bottom: 1.5px;
+            margin-bottom: 2px;
         }
 
         /* 右端列の右枠線消去（外枠と重複するため） */
@@ -342,11 +366,9 @@
             <tbody>
                 @foreach($timeSlots as $sIdx => $slot)
                 <tr>
-                    @if($loop->first)
-                    <td rowspan="{{ count($timeSlots) }}" class="cell-date">
+                    <td class="cell-date">
                         {{ $dateLabel }}
                     </td>
-                    @endif
 
                     <td class="cell-time">
                         {{ $slot['time'] }}
