@@ -9,6 +9,7 @@ use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Services\PdfService;
+use Dompdf\Adapter\CPDF;
 use Dompdf\Dompdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -491,6 +492,8 @@ class TimetableMatrixPdfDownloadTest extends TestCase
         $dompdf->render();
 
         $canvas = $dompdf->getCanvas();
+        $this->assertInstanceOf(CPDF::class, $canvas);
+        /** @var CPDF $canvas */
         $pageCount = $canvas->get_page_count();
         $this->assertGreaterThanOrEqual(2, $pageCount);
 
