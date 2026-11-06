@@ -164,9 +164,9 @@ class TimetableMatrixPdfDownloadTest extends TestCase
     }
 
     /**
-     * 複数スロットにまたがるタスクが適切な rowspan で描画されること
+     * 複数スロットにまたがるタスクが開始スロットと継続スロット（cell-task-continue）で正しく描画されること
      */
-    public function test_matrix_pdf_renders_tasks_with_proper_rowspan(): void
+    public function test_matrix_pdf_renders_tasks_with_proper_flow_and_continuation(): void
     {
         $this->actingAs($this->operator);
 
@@ -185,7 +185,7 @@ class TimetableMatrixPdfDownloadTest extends TestCase
             'display_order' => 10,
         ]);
 
-        // 7:30〜9:00 のタスク (3スロット分: rowspan="3")
+        // 7:30〜9:00 のタスク (3スロット分: 07:30開始, 08:00継続, 08:30継続)
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
             'lane_id' => $lane->id,
@@ -208,7 +208,8 @@ class TimetableMatrixPdfDownloadTest extends TestCase
         $response->assertSee('【4名以上】');
         $response->assertSee('① 名札設置');
         $response->assertSee('② 袋設置');
-        $response->assertSee('rowspan="3"', false);
+        $response->assertSee('cell-task-continue', false);
+        $response->assertSee('↓ 事前準備');
     }
 
     /**
@@ -282,10 +283,10 @@ class TimetableMatrixPdfDownloadTest extends TestCase
     }
 
     /**
-     * 進行表PDFに適切な余白（@page margin: 10mm 12mm等）が設定され、
-     * 改ページ時にも日付データが欠落しないよう全スロット行に日付セルが出力されていること
+     * 進行表PDFに適切な余白（@page margin: 18mm 12mm 10mm 12mm）が設定され、
+     * 固定ヘッダー（position: fixed）が全ページ表示用として定義され、日付列が削除されていること
      */
-    public function test_matrix_pdf_has_proper_margins_and_renders_date_cell_for_every_slot(): void
+    public function test_matrix_pdf_has_proper_margins_fixed_header_and_omits_date_column(): void
     {
         $this->actingAs($this->operator);
 
@@ -303,25 +304,22 @@ class TimetableMatrixPdfDownloadTest extends TestCase
 
         $response->assertStatus(200);
 
-        // 余白・改ページCSS設定
-        $response->assertSee('margin: 10mm 12mm;', false);
-        $response->assertSee('margin-bottom: 12px;', false);
+        // 余白・改ページ・固定ヘッダーCSS設定
+        $response->assertSee('margin: 18mm 12mm 10mm 12mm;', false);
+        $response->assertSee('position: fixed;', false);
+        $response->assertSee('top: -13mm;', false);
         $response->assertSee('page-break-inside: avoid;', false);
         $response->assertSee('display: table-header-group;', false);
 
-        // 全称セレクタ * による @page マージンリセットの上書きがないこと
-        $response->assertDontSee('*, body, table', false);
-        $response->assertSee('body, table, th, td', false);
-
-        // 日付セルが全スロット行に出力され、全体rowspanによる欠落原因が存在しないこと
-        $response->assertDontSee('rowspan="5" class="cell-date"', false);
-        $content = $response->getContent();
-        // 5スロット分、すべての日付セルに「1日目」が出力されていること
-        $this->assertSame(5, substr_count($content, '<td class="cell-date">'));
+        // 日付列が削除されていること
+        $response->assertDontSee('.col-date', false);
+        $response->assertDontSee('.cell-date', false);
+        $response->assertDontSee('<th class="col-date th-control">日付</th>', false);
+        $response->assertDontSee('<td class="cell-date">', false);
     }
 
     /**
-     * 進行表PDFの管理系列列（日付・時間・道路・まつり）の幅がギリギリまで狭小化され、
+     * 進行表PDFの管理系列列（時間・道路・まつり）の幅がギリギリまで狭小化され、
      * white-space: nowrap が適用されていること（DomPDFのtable-layout: fixedで均等割付されないパーセント指定）
      */
     public function test_matrix_pdf_narrows_control_column_widths(): void
@@ -342,18 +340,18 @@ class TimetableMatrixPdfDownloadTest extends TestCase
 
         $response->assertStatus(200);
 
-        // 狭小化された各列幅の検証（パーセント指定）
-        $response->assertSee('.col-date {', false);
-        $response->assertSee('width: 3.5%;', false);
+        // 日付列は存在しない
+        $response->assertDontSee('.col-date', false);
 
+        // 狭小化された各列幅の検証（パーセント指定: 5.0%, 5.5%, 5.0%）
         $response->assertSee('.col-time {', false);
-        $response->assertSee('width: 4.2%;', false);
+        $response->assertSee('width: 5.0%;', false);
 
         $response->assertSee('.col-road {', false);
-        $response->assertSee('width: 4.8%;', false);
+        $response->assertSee('width: 5.5%;', false);
 
         $response->assertSee('.col-festival {', false);
-        $response->assertSee('width: 4.2%;', false);
+        $response->assertSee('width: 5.0%;', false);
 
         // 折り返し防止の検証
         $response->assertSee('white-space: nowrap;', false);
@@ -402,7 +400,7 @@ class TimetableMatrixPdfDownloadTest extends TestCase
     }
 
     /**
-     * 実際のDomPDFレンダリングにおいて、ルートフレームのページ余白（10mm 12mm）が保持され、
+     * 実際のDomPDFレンダリングにおいて、ルートフレームのページ余白（18mm 12mm 10mm 12mm）が保持され、
      * 管理系列列が全列均等割付けにならず狭小化されること
      */
     public function test_matrix_pdf_dompdf_renders_with_page_margins_and_narrow_control_columns(): void
@@ -432,10 +430,97 @@ class TimetableMatrixPdfDownloadTest extends TestCase
         $dompdf->loadHtml($html);
         $dompdf->render();
 
-        // ルート要素のマージンが 0 0 0 0 に上書きされず、10mm 12mm (約28.3pt 34.0pt) が保持されていること
+        // ルート要素のマージンが 0 0 0 0 に上書きされず、18mm 12mm 10mm 12mm (約51.0pt 34.0pt 28.3pt 34.0pt) が保持されていること
         $rootMargin = $dompdf->getTree()->get_root()->get_style()->margin;
         $this->assertNotSame('0 0 0 0', $rootMargin);
         $this->assertStringContainsString('34.01', $rootMargin);
-        $this->assertStringContainsString('28.34', $rootMargin);
+        $this->assertStringContainsString('51.02', $rootMargin);
+    }
+
+    /**
+     * 複数ページに渡る進行表PDF出力において、全ページに同一ヘッダーが表示され、
+     * 2ページ目の最右端列（キッズ村等）の枠線が欠落せず描画されること
+     */
+    public function test_matrix_pdf_renders_fixed_header_on_all_pages_and_prevents_rightmost_border_disappearance(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '第35回保土ケ谷宿場まつり（1日目）',
+            'target_date' => '2027-10-10',
+            'start_time' => '07:00:00',
+            'end_time' => '20:00:00',
+        ]);
+
+        $lanes = [];
+        $names = ['カラーコーン', '給水設備', '衛生', '巡回', 'キッズ村'];
+        foreach ($names as $idx => $name) {
+            $lanes[] = Lane::factory()->create([
+                'timetable_id' => $timetable->id,
+                'name' => $name,
+                'display_order' => ($idx + 1) * 10,
+            ]);
+        }
+
+        // 11:00〜17:00（複数ページをまたぐ長時間タスク）
+        TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lanes[1]->id, // 給水設備
+            'title' => '定期巡回',
+            'start_time' => '11:00:00',
+            'end_time' => '17:00:00',
+            'required_people_count' => 2,
+            'is_at_least' => true,
+        ]);
+
+        $action = app(DownloadTimetableMatrixPdfAction::class);
+        $laneIds = collect($lanes)->pluck('id')->all();
+        $viewData = $action->buildViewData($timetable, $laneIds);
+        $viewData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
+
+        $html = view('pdf.timetable_matrix', $viewData)->render();
+        $html = preg_replace('/[\x{10000}-\x{10FFFF}\x{FE00}-\x{FE0F}]/u', '', $html) ?? $html;
+
+        $dompdf = new Dompdf([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'JapaneseFont',
+        ]);
+        $dompdf->setPaper('a4', 'landscape');
+        $dompdf->loadHtml($html);
+        $dompdf->render();
+
+        $canvas = $dompdf->getCanvas();
+        $pageCount = $canvas->get_page_count();
+        $this->assertGreaterThanOrEqual(2, $pageCount);
+
+        // CPDFオブジェクトを解析し、全ページにタイトルヘッダーが出現し、2ページ目の最右端列の枠線が存在することを検証
+        $cpdf = $canvas->get_cpdf();
+        $needle = mb_convert_encoding('進行表', 'UTF-16BE', 'UTF-8');
+
+        $pageIndex = 1;
+        foreach ($cpdf->objects as $obj) {
+            if (isset($obj['t']) && $obj['t'] === 'contents') {
+                $c = $obj['c'];
+                // 各ページにヘッダー（進行表）が存在すること
+                $this->assertStringContainsString($needle, $c, "Page {$pageIndex} must contain the header title");
+
+                // 各ページの行（時間スロット）数と最右端列（キッズ村）の垂直線が欠落せず描画されていること
+                preg_match_all('/\((\d{2}:\d{2})\)/', $c, $timeMatches);
+                preg_match_all('/([0-9\.]+)\s+([0-9\.]+)\s+m\s+([0-9\.]+)\s+([0-9\.]+)\s+l\s+S/', $c, $matches, PREG_SET_ORDER);
+                $rightmostLines = 0;
+                foreach ($matches as $m) {
+                    if (abs(floatval($m[1]) - floatval($m[3])) < 0.1 && floatval($m[1]) > 800) {
+                        $rightmostLines++;
+                    }
+                }
+
+                $timeCount = count($timeMatches[1]);
+                $this->assertGreaterThan(0, $timeCount, "Page {$pageIndex} must contain time slots");
+                $this->assertGreaterThanOrEqual($timeCount, $rightmostLines, "Page {$pageIndex} rightmost border lines must be fully drawn for all rows");
+
+                $pageIndex++;
+            }
+        }
     }
 }

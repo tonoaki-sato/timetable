@@ -87,7 +87,7 @@ class DownloadTimetableMatrixPdfAction
         }
 
         $timeSlots = $this->gridService->generateTimeSlots($timetable);
-        $grid = $this->gridService->buildMatrixGrid($timeSlots, $lanes, $tasksByLane);
+        $grid = $this->gridService->buildPdfMatrixGrid($timeSlots, $lanes, $tasksByLane);
 
         $dateLabel = '1日目';
         $dateTheme = 'day1';

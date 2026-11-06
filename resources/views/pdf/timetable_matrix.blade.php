@@ -18,7 +18,7 @@
         }
         @page {
             size: A4 landscape;
-            margin: 10mm 12mm;
+            margin: 18mm 12mm 10mm 12mm;
         }
         body, table, th, td, h1, div, span, strong, b, p {
             font-family: 'JapaneseFont', sans-serif !important;
@@ -33,8 +33,12 @@
             background-color: #ffffff;
         }
         .header-area {
-            width: 100%;
-            margin-bottom: 12px;
+            position: fixed;
+            top: -13mm;
+            left: 0;
+            right: 0;
+            height: 10mm;
+            margin-bottom: 0;
         }
         .header-table {
             width: 100%;
@@ -101,7 +105,7 @@
             padding: 4px 6px;
         }
 
-        /* 管理系列ヘッダー（日付・時間・道路・まつり: スレートグレー） */
+        /* 管理系列ヘッダー（時間・道路・まつり: スレートグレー） */
         .th-control {
             background-color: #f1f5f9;
             color: #0f172a;
@@ -136,33 +140,17 @@
         }
 
         /* 列幅（固定％指定によりDomPDFのtable-layout: fixed環境下でも最小幅を維持し、担当班列を最大化） */
-        .col-date {
-            width: 3.5%;
-        }
         .col-time {
-            width: 4.2%;
+            width: 5.0%;
         }
         .col-road {
-            width: 4.8%;
+            width: 5.5%;
         }
         .col-festival {
-            width: 4.2%;
+            width: 5.0%;
         }
         .col-boundary {
             border-right: 2px solid #1e293b !important;
-        }
-
-        /* 日付セル */
-        .cell-date {
-            text-align: center;
-            vertical-align: middle;
-            font-weight: bold;
-            font-size: 7pt;
-            background-color: #f1f5f9;
-            color: #334155;
-            padding-left: 1px;
-            padding-right: 1px;
-            white-space: nowrap;
         }
 
         /* 時間セル */
@@ -217,6 +205,22 @@
             text-align: left;
             background-color: #ffffff;
             padding: 5px 6px;
+        }
+        .cell-task-continue {
+            vertical-align: middle;
+            text-align: center;
+            background-color: #f8fafc;
+            color: #64748b;
+            font-size: 6.8pt;
+            border-top: 1px dashed #cbd5e1 !important;
+            padding: 3px 5px;
+        }
+        .cell-task-continue-text {
+            color: #64748b;
+            font-weight: normal;
+        }
+        .cell-task-has-next {
+            border-bottom: 1px dashed #cbd5e1 !important;
         }
         .task-card {
             width: 100%;
@@ -302,11 +306,6 @@
             margin-bottom: 2px;
         }
 
-        /* 右端列の右枠線消去（外枠と重複するため） */
-        table.matrix-table tr > th:last-child,
-        table.matrix-table tr > td:last-child {
-            border-right: none;
-        }
         /* 最終行の下枠線消去 */
         table.matrix-table tr:last-child > td {
             border-bottom: none;
@@ -335,7 +334,6 @@
         <table class="matrix-table">
             <thead>
                 <tr>
-                    <th class="col-date th-control">日付</th>
                     <th class="col-time th-control {{ !$hasRoad && !$hasFestival ? 'col-boundary' : '' }}">時間</th>
                     @if($hasRoad)
                         <th class="col-road th-control {{ !$hasFestival ? 'col-boundary' : '' }}">道路</th>
@@ -366,10 +364,6 @@
             <tbody>
                 @foreach($timeSlots as $sIdx => $slot)
                 <tr>
-                    <td class="cell-date">
-                        {{ $dateLabel }}
-                    </td>
-
                     <td class="cell-time">
                         {{ $slot['time'] }}
                     </td>
@@ -392,7 +386,7 @@
 
                     @foreach($lanes as $lane)
                         @php
-                            $cell = $grid[$sIdx][$lane->id] ?? ['type' => 'empty', 'rowspan' => 1];
+                            $cell = $grid[$sIdx][$lane->id] ?? ['type' => 'empty'];
                         @endphp
 
                         @if($cell['type'] === 'task')
@@ -401,7 +395,7 @@
                                 $reqCount = $task->required_people_count;
                                 $peopleLabel = $reqCount ? ($task->is_at_least ? "【{$reqCount}名以上】" : "【{$reqCount}名】") : '';
                             @endphp
-                            <td rowspan="{{ $cell['rowspan'] }}" class="cell-task">
+                            <td class="cell-task {{ ($cell['has_next'] ?? false) ? 'cell-task-has-next' : '' }}">
                                 <div class="task-card">
                                     <!-- タイトル ＋ 人員規模 -->
                                     <div class="task-header">
@@ -446,10 +440,14 @@
                                     @endif
                                 </div>
                             </td>
+                        @elseif($cell['type'] === 'task_continue')
+                            <td class="cell-task-continue {{ ($cell['has_next'] ?? false) ? 'cell-task-has-next' : '' }}">
+                                <span class="cell-task-continue-text">↓ {{ $cell['task'] ? $cell['task']->title : '' }}</span>
+                            </td>
                         @elseif($cell['type'] === 'empty')
                             <td class="cell-empty">-</td>
                         @elseif($cell['type'] === 'skip')
-                            {{-- 上位セルで縦結合済みのスロット --}}
+                            <td class="cell-empty">-</td>
                         @endif
                     @endforeach
                 </tr>

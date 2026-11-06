@@ -161,6 +161,101 @@ class TimetableGridService
     }
 
     /**
+     * PDF出力用：DomPDFの改ページ跨ぎrowspan欠損を防ぐスロット × レーンのグリッドセルを算出
+     * 全行・全列に必ずセルを出力し、継続タスクは task_continue として表現
+     *
+     * @param  array<int, array<string, mixed>>  $timeSlots
+     * @param  Collection<int, Lane>  $lanes
+     * @param  array<int, Collection<int, TimetableTask>>  $tasksByLane
+     * @return array<int, array<int, array{type: string, task?: TimetableTask, has_next?: bool}>>
+     */
+    public function buildPdfMatrixGrid(array $timeSlots, Collection $lanes, array $tasksByLane): array
+    {
+        $grid = [];
+        $activeTask = [];
+        $taskEndsAt = [];
+
+        foreach ($timeSlots as $sIdx => $slot) {
+            $slotCarbon = Carbon::createFromFormat('H:i', $slot['time']);
+            $slotEndCarbon = $slotCarbon->copy()->addMinutes(30);
+
+            $grid[$sIdx] = [];
+
+            foreach ($lanes as $lane) {
+                $laneTasks = $tasksByLane[$lane->id] ?? collect();
+
+                // このスロットの時間帯に新規開始するタスクを探索
+                $task = $laneTasks->first(function (TimetableTask $t) use ($slotCarbon, $slotEndCarbon) {
+                    $tStart = Carbon::createFromFormat('H:i', substr($t->start_time, 0, 5));
+
+                    return $tStart->gte($slotCarbon) && $tStart->lt($slotEndCarbon);
+                });
+
+                if ($task) {
+                    $tEnd = Carbon::createFromFormat('H:i', substr($task->end_time, 0, 5));
+                    $activeTask[$lane->id] = $task;
+                    $taskEndsAt[$lane->id] = $tEnd;
+                    $hasNext = $tEnd->gt($slotEndCarbon);
+
+                    $grid[$sIdx][$lane->id] = [
+                        'type' => 'task',
+                        'task' => $task,
+                        'has_next' => $hasNext,
+                    ];
+
+                    continue;
+                }
+
+                // 継続中のタスクがあるかチェック
+                if (isset($activeTask[$lane->id], $taskEndsAt[$lane->id])) {
+                    if ($taskEndsAt[$lane->id]->gt($slotCarbon)) {
+                        $hasNext = $taskEndsAt[$lane->id]->gt($slotEndCarbon);
+                        $grid[$sIdx][$lane->id] = [
+                            'type' => 'task_continue',
+                            'task' => $activeTask[$lane->id],
+                            'has_next' => $hasNext,
+                        ];
+
+                        continue;
+                    }
+
+                    // タスク終了
+                    unset($activeTask[$lane->id], $taskEndsAt[$lane->id]);
+                }
+
+                // 過去に開始して現在スロットもカバーするタスクのフォールバック探索
+                $spanningTask = $laneTasks->first(function (TimetableTask $t) use ($slotCarbon) {
+                    $tStart = Carbon::createFromFormat('H:i', substr($t->start_time, 0, 5));
+                    $tEnd = Carbon::createFromFormat('H:i', substr($t->end_time, 0, 5));
+
+                    return $tStart->lte($slotCarbon) && $tEnd->gt($slotCarbon);
+                });
+
+                if ($spanningTask) {
+                    $tEnd = Carbon::createFromFormat('H:i', substr($spanningTask->end_time, 0, 5));
+                    $activeTask[$lane->id] = $spanningTask;
+                    $taskEndsAt[$lane->id] = $tEnd;
+                    $hasNext = $tEnd->gt($slotEndCarbon);
+
+                    $grid[$sIdx][$lane->id] = [
+                        'type' => 'task_continue',
+                        'task' => $spanningTask,
+                        'has_next' => $hasNext,
+                    ];
+
+                    continue;
+                }
+
+                $grid[$sIdx][$lane->id] = [
+                    'type' => 'empty',
+                ];
+            }
+        }
+
+        return $grid;
+    }
+
+    /**
      * スタッフ × 時間スロットのグリッドセル（横結合 colspan）を算出
      *
      * @param  array<int, array<string, mixed>>  $timeSlots
