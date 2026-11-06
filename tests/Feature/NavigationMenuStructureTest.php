@@ -67,17 +67,17 @@ class NavigationMenuStructureTest extends TestCase
         // 進行表
         $response->assertSee(route('timetable.index', ['timetable_id' => $this->timetable->id]));
 
-        // 人員当日配置（稼働タイムライン）
+        // 人員当日配置
         $response->assertSee(route('timetables.staff-timeline', $this->timetable));
-        $response->assertSee('人員当日配置（稼働タイムライン）');
+        $response->assertSee('人員当日配置');
 
-        // 当日スタッフ登録（紹介・飛び入り）
+        // 当日スタッフ登録
         $response->assertSee(route('staff.create'));
-        $response->assertSee('当日スタッフ登録（紹介・飛び入り）');
+        $response->assertSee('当日スタッフ登録');
 
         // 搬出入チェック
         $response->assertSee(route('logistics.index'));
-        $response->assertSee('搬出入チェック（現場配備・回収）');
+        $response->assertSee('搬出入チェック');
     }
 
     /**
@@ -88,13 +88,13 @@ class NavigationMenuStructureTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // 運行準備ナビゲーター
+        // 運行準備ナビ
         $response->assertSee(route('preparation-navigator.index'));
-        $response->assertSee('まつり運行準備ナビゲーター');
+        $response->assertSee('運行準備ナビ');
 
         // 運行日程管理
         $response->assertSee(route('timetables.index'));
-        $response->assertSee('運行情報管理');
+        $response->assertSee('運行日程管理');
 
         // 担当班編成
         $response->assertSee(route('lanes.index'));
@@ -104,9 +104,9 @@ class NavigationMenuStructureTest extends TestCase
         $response->assertSee(route('timetable-tasks.index'));
         $response->assertSee('作業タスク台帳');
 
-        // 人員事前配置（アサインワークスペース）
+        // 人員事前配置
         $response->assertSee(route('timetables.assignments', $this->timetable));
-        $response->assertSee('人員事前配置（アサインワークスペース）');
+        $response->assertSee('人員事前配置');
 
         // カレンダー & スケジュール
         $response->assertSee(route('calendar.index'));
@@ -144,7 +144,7 @@ class NavigationMenuStructureTest extends TestCase
         // 現場・当日用帳票
         $response->assertSee(route('timetables.print-assignments', $this->timetable));
         $response->assertSee(route('logistics.print'));
-        $response->assertSee('スタッフ名札・個別緊急印刷');
+        $response->assertSee('個別名札緊急印刷');
 
         // 事前準備用帳票
         $response->assertSee(route('staff.print-cards'));

@@ -318,7 +318,7 @@ class TimetableMatrixTest extends TestCase
 
         // セクション2: 編成・業務計画
         $response->assertSee('編成・業務計画');
-        $response->assertSee('運行情報管理');
+        $response->assertSee('運行日程管理');
         $response->assertSee('搬出入計画');
         $response->assertSee(route('timetables.index'));
         $response->assertSee(route('logistics.index'));
@@ -381,21 +381,21 @@ class TimetableMatrixTest extends TestCase
         // マスター管理グループ
         $response->assertSee('マスター管理');
         $response->assertSee('人員マスター');
-        $response->assertSee('スタッフ名簿管理');
+        $response->assertSee('スタッフ名簿');
         $response->assertSee(route('staff.index'));
         $response->assertSee('資材・拠点マスター');
         $response->assertSee('資材管理');
         $response->assertSee(route('equipments.index'));
-        $response->assertSee('拠点・番所・駐車場管理');
+        $response->assertSee('拠点・駐車場管理');
         $response->assertSee(route('locations.index'));
         $response->assertSee('拠点タイプ管理');
         $response->assertSee(route('location-types.index'));
 
         // 帳票・印刷グループ
         $response->assertSee('帳票・印刷');
-        $response->assertSee('スタッフ名札カード一括印刷');
+        $response->assertSee('名札一括印刷');
         $response->assertSee(route('staff.print-cards'));
-        $response->assertSee('搬出入計画・指示書の印刷');
+        $response->assertSee('搬出入指示書印刷');
         $response->assertSee(route('logistics.print'));
         $response->assertSee('スタッフCSV出力');
         $response->assertSee(route('staff.export-csv'));
@@ -409,7 +409,7 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee(route('presentation.index'));
         $response->assertSee('ユーザー管理');
         $response->assertSee(route('users.index'));
-        $response->assertSee('スタッフセルフ登録フォーム');
+        $response->assertSee('セルフ登録フォーム');
         $response->assertSee(route('staff.join'));
 
         $response->assertSee('システム設定');

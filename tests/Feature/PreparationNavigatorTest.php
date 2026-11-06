@@ -45,7 +45,7 @@ class PreparationNavigatorTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('まつり運行準備ナビゲーター');
+        $response->assertSee('運行準備ナビ');
         $response->assertSee(route('preparation-navigator.index'));
     }
 
