@@ -14,6 +14,7 @@ export default defineConfig({
                 'resources/js/schedules.js',
                 'resources/js/lanes.js',
                 'resources/js/staff-timeline.js',
+                'resources/js/timetable-assignments.js',
                 'resources/js/timetable-task-modal.js',
                 'resources/js/presentation.js',
                 'resources/js/locations.js',

@@ -113,8 +113,13 @@
                 </div>
             </div>
 
-            <!-- モーダルフッター (固定・閉じるボタンのみ) -->
-            <div class="shrink-0 px-5 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end">
+            <!-- モーダルフッター -->
+            <div class="shrink-0 px-5 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
+                <a id="detail-modal-assign-link" href="#"
+                    class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                    <span>👥</span>
+                    <span>人員アサイン画面へ</span>
+                </a>
                 <button type="button" data-action="close-modal"
                     class="px-5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                     閉じる

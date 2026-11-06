@@ -175,6 +175,11 @@ function initTimetableTaskModals() {
             }
         }
 
+        const assignLink = document.getElementById('detail-modal-assign-link');
+        if (assignLink && task.timetable_id) {
+            assignLink.href = `/timetables/${task.timetable_id}/assignments?task_id=${task.id}`;
+        }
+
         detailModal.classList.remove('hidden');
     }
 

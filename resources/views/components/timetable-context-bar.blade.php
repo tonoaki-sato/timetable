@@ -9,6 +9,7 @@
         return match($active) {
             'lanes' => route('timetables.lanes.index', $tt),
             'tasks' => route('timetables.tasks.index', $tt),
+            'assignments' => route('timetables.assignments', $tt),
             'timeline' => route('timetables.staff-timeline', $tt),
             'show' => route('timetables.show', $tt),
             'print' => route('timetables.print-assignments', $tt),
@@ -59,8 +60,8 @@
                 <span class="text-[10px] opacity-75 font-mono">({{ $timetable->tasks->count() }})</span>
             @endif
         </a>
-        <a href="{{ route('timetables.staff-timeline', $timetable) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'timeline' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+        <a href="{{ route('timetables.assignments', $timetable) }}"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['assignments', 'timeline'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>👥</span>
             <span>人員配置</span>
         </a>

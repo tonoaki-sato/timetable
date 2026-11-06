@@ -24,6 +24,7 @@ return new class extends Migration
             $table->dateTime('updated_at')->nullable();
 
             $table->unique(['timetable_task_id', 'staff_id']);
+            $table->index(['staff_id', 'attendance_status']);
         });
     }
 

@@ -203,6 +203,13 @@
                             <!-- 操作 -->
                             <td class="px-3.5 py-2.5 text-right whitespace-nowrap space-x-1">
                                 @can('update', $task)
+                                <a href="{{ route('timetables.assignments', [$timetable, 'task_id' => $task->id]) }}"
+                                    class="inline-flex items-center space-x-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition"
+                                    title="このタスクに人員をアサイン">
+                                    <span>👥</span>
+                                    <span>アサイン</span>
+                                </a>
+
                                 <button type="button"
                                     data-action="open-task-edit"
                                     data-task-id="{{ $task->id }}"
