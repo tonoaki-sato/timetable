@@ -847,6 +847,50 @@
                                 <strong>即時セキュリティ無効化:</strong> 古いQRコードは404失効となり第三者に運行情報を見られません。本部卓上プリンターで「単一カード印刷」を押し、わずか2分で新名札を手渡しできます。
                             </div>
                         </div>
+
+                        <!-- 機能E: 当日紹介・飛び入りスタッフ即時受付 & 個別名札手渡しフロー -->
+                        <div class="col-span-1 md:col-span-2 p-4 bg-emerald-50/90 border-2 border-emerald-300 rounded-xl space-y-3">
+                            <div class="font-bold text-emerald-950 flex items-center justify-between text-sm">
+                                <span class="flex items-center space-x-1.5">
+                                    <span>⚡</span>
+                                    <span>まつり当日の紹介・飛び入り参加者受付 &amp; 即時配置フロー（3ステップ）</span>
+                                </span>
+                                <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-emerald-600 text-white">当日現場</span>
+                            </div>
+                            <p class="text-emerald-900 leading-relaxed text-[11px]">
+                                まつり当日に既存スタッフや班長から友人・知人の応援参加者が連れてこられた場合、本部で直ちに受付・配置・名札手渡しが完了するシームレスな導線を用意しています。
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                                <div class="bg-white p-3 rounded-lg border border-emerald-200 space-y-1">
+                                    <div class="text-xs font-bold text-emerald-900 flex items-center space-x-1">
+                                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-mono">1</span>
+                                        <span>当日紹介される</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 leading-relaxed">
+                                        既存スタッフ・班長からボランティア希望者が本部に連れてこられます。
+                                    </p>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-emerald-200 space-y-1">
+                                    <div class="text-xs font-bold text-emerald-900 flex items-center space-x-1">
+                                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-mono">2</span>
+                                        <span>登録 &amp; 状況に応じた配置</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-600 space-y-1">
+                                        <div><strong>a. 紹介者と同班</strong>: 「固定スタッフ」として登録し、紹介者の班へ配属（知人と一緒で安心・即戦力）。</div>
+                                        <div><strong>b. 不足タスク充当</strong>: 「充足スタッフ」として登録し、タイムラインで不足枠・要請枠へ割り当て。</div>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-emerald-200 space-y-1">
+                                    <div class="text-xs font-bold text-emerald-900 flex items-center space-x-1">
+                                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-mono">3</span>
+                                        <span>名札印刷 &amp; 手渡し</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 leading-relaxed">
+                                        登録完了画面や一覧から「🖨️ 名札」を押して1枚出力。ホルダーに入れて手渡し、スマホでQRを読めば現場マイシフトが即時稼働します。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 実際の画面画像: スタッフカード印刷プレビュー -->

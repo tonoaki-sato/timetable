@@ -159,6 +159,14 @@
                             @endif
                         </td>
                         <td class="px-3.5 py-2 text-right space-x-1 whitespace-nowrap">
+                            <!-- 名札単票印刷ボタン -->
+                            <a href="{{ route('staff.print-card', $staff) }}" target="_blank"
+                                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-bold transition whitespace-nowrap inline-flex items-center space-x-0.5"
+                                title="名札カードを印刷">
+                                <span>🖨️</span>
+                                <span>名札</span>
+                            </a>
+
                             <!-- QR表示ボタン -->
                             <button type="button"
                                     class="open-qr-btn px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[11px] font-bold transition cursor-pointer whitespace-nowrap"

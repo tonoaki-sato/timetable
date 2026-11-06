@@ -373,45 +373,42 @@ class TimetableMatrixTest extends TestCase
         $response = $this->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // ナビゲーションバーから「本部ダッシュボード」ボタン、「その他」、「アカウント情報」が削除されていること
-        $response->assertDontSee('本部ダッシュボード');
+        // ナビゲーションバーから独立した「本部状況」ボタン、「その他」、「アカウント情報」が削除されていること
+        $response->assertDontSee('<span>本部状況</span>', false);
         $response->assertDontSee('その他');
         $response->assertDontSee('アカウント情報');
 
         // マスター管理グループ
         $response->assertSee('マスター管理');
-        $response->assertSee('人員・組織マスター');
-        $response->assertSee('スタッフ管理');
+        $response->assertSee('人員マスター');
+        $response->assertSee('スタッフ名簿管理');
         $response->assertSee(route('staff.index'));
-        $response->assertSee('担当班管理');
-        $response->assertSee(route('lanes.index'));
-        $response->assertSee('ユーザー管理');
-        $response->assertSee(route('users.index'));
         $response->assertSee('資材・拠点マスター');
         $response->assertSee('資材管理');
         $response->assertSee(route('equipments.index'));
-        $response->assertSee('拠点管理');
+        $response->assertSee('拠点・番所・駐車場管理');
         $response->assertSee(route('locations.index'));
         $response->assertSee('拠点タイプ管理');
         $response->assertSee(route('location-types.index'));
 
         // 帳票・印刷グループ
         $response->assertSee('帳票・印刷');
-        $response->assertSee('帳票・印刷出力');
-        $response->assertSee('スタッフ名札印刷');
+        $response->assertSee('スタッフ名札カード一括印刷');
         $response->assertSee(route('staff.print-cards'));
-        $response->assertSee('搬出入計画の印刷');
+        $response->assertSee('搬出入計画・指示書の印刷');
         $response->assertSee(route('logistics.print'));
         $response->assertSee('スタッフCSV出力');
         $response->assertSee(route('staff.export-csv'));
 
         // システム管理グループ（マニュアル・資料 ＆ システム設定）
-        $response->assertSee('システム管理');
+        $response->assertSee('システム・ガイド');
         $response->assertSee('ガイド・広報資料');
         $response->assertSee('操作マニュアル');
         $response->assertSee(route('manual.index'));
         $response->assertSee('幹事会プレゼン');
         $response->assertSee(route('presentation.index'));
+        $response->assertSee('ユーザー管理');
+        $response->assertSee(route('users.index'));
         $response->assertSee('スタッフセルフ登録フォーム');
         $response->assertSee(route('staff.join'));
 
