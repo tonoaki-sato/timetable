@@ -34,7 +34,7 @@ class DownloadTimetableMatrixPdfAction
             'pdf.timetable_matrix',
             $viewData,
             $filename,
-            'portrait'
+            'landscape'
         );
     }
 
@@ -115,4 +115,3 @@ class DownloadTimetableMatrixPdfAction
         ];
     }
 }
-

@@ -209,6 +209,76 @@ class TimetableMatrixPdfDownloadTest extends TestCase
     }
 
     /**
+     * Web画面準拠の新PDFデザイン要素（充足バッジ、スタッフ名バッジ、場所ピン、ヘッダー班長名）が正しく描画されること
+     */
+    public function test_matrix_pdf_renders_web_design_elements_correctly(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '宿場まつり 1日目',
+            'target_date' => '2026-10-11',
+            'start_time' => '07:00:00',
+            'end_time' => '08:00:00',
+        ]);
+
+        $leadStaff = Staff::factory()->create(['name' => 'Jouko Karvonen']);
+        $lane = Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => 'カラーコーン',
+            'icon' => '▲',
+            'lead_staff_id' => $leadStaff->id,
+            'display_order' => 10,
+        ]);
+
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '全体ミーティング',
+            'location' => '本陣',
+            'start_time' => '07:00:00',
+            'end_time' => '07:30:00',
+            'required_people_count' => 1,
+            'is_at_least' => true,
+        ]);
+
+        $task->assignments()->create([
+            'staff_id' => $leadStaff->id,
+            'status' => 'confirmed',
+        ]);
+
+        $response = $this->get(route('timetables.print-matrix', [
+            'timetable' => $timetable,
+            'preview' => 1,
+        ]));
+
+        $response->assertStatus(200);
+
+        // ヘッダー要素
+        $response->assertSee('カラーコーン');
+        $response->assertSee('Joukoさん');
+        $response->assertSee('▲');
+
+        // タスク情報
+        $response->assertSee('全体ミーティング');
+        $response->assertSee('【1名以上】');
+        $response->assertSee('本陣');
+
+        // 充足バッジ
+        $response->assertSee('status-badge-satisfied', false);
+        $response->assertSee('✔ 充足 (1)');
+
+        // アサインされたスタッフ名
+        $response->assertSee('staff-pill', false);
+        $response->assertSee('Jouko Karvonen');
+
+        // デザイン用クラス
+        $response->assertSee('matrix-wrapper', false);
+        $response->assertSee('th-control', false);
+        $response->assertSee('th-lane', false);
+    }
+
+    /**
      * 進行表画面（/timetable）のヘッダーが共通 x-page-header であり、タイトルが「{タイムテーブル名} 進行表」、
      * バッジが運行日のみ、説明文が「進行表」、パンくずが「運行情報一覧」となっていること
      */
