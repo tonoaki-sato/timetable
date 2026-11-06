@@ -15,11 +15,12 @@
             </span>
         </x-slot:badges>
         <x-slot:actions>
-            <!-- 名札一括印刷 -->
-            <a href="{{ route('staff.print-cards') }}" target="_blank"
-                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">
-                <span>🖨️</span>
-                <span>名札印刷</span>
+            <!-- 名札一括PDFダウンロード -->
+            <a href="{{ route('staff.print-cards') }}"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0"
+                title="全スタッフの名札カードをA4面付けPDFでダウンロード">
+                <span>📄</span>
+                <span>名札PDF</span>
             </a>
 
             <!-- CSVエクスポート -->
@@ -159,12 +160,12 @@
                             @endif
                         </td>
                         <td class="px-3.5 py-2 text-right space-x-1 whitespace-nowrap">
-                            <!-- 名札単票印刷ボタン -->
-                            <a href="{{ route('staff.print-card', $staff) }}" target="_blank"
+                            <!-- 名札単票PDFダウンロードボタン -->
+                            <a href="{{ route('staff.print-card', $staff) }}"
                                 class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-bold transition whitespace-nowrap inline-flex items-center space-x-0.5"
-                                title="名札カードを印刷">
-                                <span>🖨️</span>
-                                <span>名札</span>
+                                title="名札カードをPDFでダウンロード">
+                                <span>📄</span>
+                                <span>名札PDF</span>
                             </a>
 
                             <!-- QR表示ボタン -->

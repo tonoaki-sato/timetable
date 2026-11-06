@@ -15,9 +15,14 @@
             <a href="{{ route('timetables.show', $timetable) }}" class="btn-back">← タイムテーブル詳細に戻る</a>
             <h2 class="page-title">{{ $title }}</h2>
         </div>
-        <button type="button" data-action="print" class="btn-print">
-            🖨️ 今すぐ印刷する (A4横向き)
-        </button>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <a href="{{ route('timetables.print-assignments', $timetable) }}" class="btn-print" style="text-decoration: none; display: inline-block;">
+                📄 PDFをダウンロード (A4横)
+            </a>
+            <button type="button" data-action="print" class="btn-print" style="background-color: #64748b;">
+                🖨️ ブラウザ印刷
+            </button>
+        </div>
     </div>
 
     <!-- 印刷用紙シート -->

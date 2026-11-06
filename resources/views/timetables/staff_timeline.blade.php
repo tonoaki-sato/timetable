@@ -39,11 +39,12 @@
                 <span>準備ナビ</span>
             </a>
 
-            <button type="button" data-action="print"
-                class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer shadow-2xs whitespace-nowrap shrink-0">
-                <span>🖨️</span>
-                <span>A4横 印刷</span>
-            </button>
+            <a href="{{ route('timetables.print-assignments', $timetable) }}"
+                class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
+                title="運行日の人員配置表をA4横PDFでダウンロード">
+                <span>📄</span>
+                <span>A4横 配置表PDF</span>
+            </a>
 
             <a href="{{ route('timetables.show', $timetable) }}"
                 class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">

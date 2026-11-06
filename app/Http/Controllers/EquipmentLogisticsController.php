@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Logistics\DownloadEquipmentLogisticsPdfAction;
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
 use App\Models\Lane;
@@ -9,12 +10,14 @@ use App\Models\Location;
 use App\Models\Staff;
 use App\Services\EquipmentLogisticsService;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class EquipmentLogisticsController extends Controller
 {
     public function __construct(
-        protected EquipmentLogisticsService $logisticsService
+        protected EquipmentLogisticsService $logisticsService,
+        protected DownloadEquipmentLogisticsPdfAction $downloadLogisticsPdfAction
     ) {}
 
     /**
@@ -36,38 +39,42 @@ class EquipmentLogisticsController extends Controller
     }
 
     /**
-     * A4横 搬出入指示書兼チェックリスト印刷画面の表示
+     * A4横 搬出入指示書兼チェックリストPDFダウンロード（またはプレビュー表示）
      */
-    public function print(Request $request): View
+    public function print(Request $request): Response|View
     {
         $this->authorize('viewAny', Equipment::class);
 
-        $format = $request->query('format', 'all');
-        $typeFilter = $request->query('type');
-        $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
-        $phaseFilter = $request->query('phase');
+        if ($request->boolean('preview')) {
+            $format = $request->query('format', 'all');
+            $typeFilter = $request->query('type');
+            $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
+            $phaseFilter = $request->query('phase');
 
-        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter);
-        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter);
-        $locationsData = $this->logisticsService->getLocationsStatusData();
-        $onsiteNightPlans = $this->logisticsService->getOnsiteNightStoragePlans();
-        $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData();
-        $festivalDates = $this->logisticsService->resolveFestivalDates();
-        $lanes = Lane::ordered()->get();
+            $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter);
+            $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter);
+            $locationsData = $this->logisticsService->getLocationsStatusData();
+            $onsiteNightPlans = $this->logisticsService->getOnsiteNightStoragePlans();
+            $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData();
+            $festivalDates = $this->logisticsService->resolveFestivalDates();
+            $lanes = Lane::ordered()->get();
 
-        return view('logistics.print', compact(
-            'format',
-            'typeFilter',
-            'laneFilter',
-            'phaseFilter',
-            'equipments',
-            'checklistPlans',
-            'locationsData',
-            'onsiteNightPlans',
-            'eventCompanyPlans',
-            'festivalDates',
-            'lanes'
-        ));
+            return view('logistics.print', compact(
+                'format',
+                'typeFilter',
+                'laneFilter',
+                'phaseFilter',
+                'equipments',
+                'checklistPlans',
+                'locationsData',
+                'onsiteNightPlans',
+                'eventCompanyPlans',
+                'festivalDates',
+                'lanes'
+            ));
+        }
+
+        return $this->downloadLogisticsPdfAction->execute($request);
     }
 
     /**

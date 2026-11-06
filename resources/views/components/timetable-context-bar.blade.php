@@ -70,11 +70,12 @@
             <span>⏱️</span>
             <span>進行表</span>
         </a>
-        <a href="{{ route('timetables.print-assignments', $timetable) }}" target="_blank"
-            class="px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-1">
-            <span>🖨️</span>
-            <span>配置表印刷</span>
-            <span class="text-[10px] opacity-60">↗</span>
+        <a href="{{ route('timetables.print-assignments', $timetable) }}"
+            class="px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-1"
+            title="人員配置一覧表をPDFでダウンロード">
+            <span>📄</span>
+            <span>配置表PDF</span>
+            <span class="text-[10px] opacity-60">↓</span>
         </a>
     </div>
 </div>

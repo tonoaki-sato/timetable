@@ -29,7 +29,7 @@ class StaffPrintAndCsvTest extends TestCase
     }
 
     /**
-     * オペレーターがスタッフ名札一括印刷画面を表示できること
+     * オペレーターがスタッフ名札一括PDFダウンロードおよびプレビュー画面を表示できること
      */
     public function test_can_render_staff_cards_print_view(): void
     {
@@ -42,17 +42,23 @@ class StaffPrintAndCsvTest extends TestCase
             'is_active' => true,
         ]);
 
+        // 1. デフォルト: PDFダウンロード
         $response = $this->get(route('staff.print-cards'));
-
         $response->assertStatus(200);
-        $response->assertSee('神輿 太郎');
-        $response->assertSee('ミコシ タロウ');
-        $response->assertSee('神輿保存会');
-        $response->assertSee('<svg', false);
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringContainsString('staff_cards_', (string) $response->headers->get('Content-Disposition'));
+
+        // 2. プレビュー指定時: HTML表示
+        $previewResponse = $this->get(route('staff.print-cards', ['preview' => 1]));
+        $previewResponse->assertStatus(200);
+        $previewResponse->assertSee('神輿 太郎');
+        $previewResponse->assertSee('ミコシ タロウ');
+        $previewResponse->assertSee('神輿保存会');
+        $previewResponse->assertSee('<svg', false);
     }
 
     /**
-     * 単一スタッフの名札印刷画面が表示できること
+     * 単一スタッフの名札PDFダウンロードおよびプレビュー画面が表示できること
      */
     public function test_can_render_single_staff_card_print_view(): void
     {
@@ -63,15 +69,21 @@ class StaffPrintAndCsvTest extends TestCase
             'kana' => 'コベツ ハナコ',
         ]);
 
+        // 1. デフォルト: PDFダウンロード
         $response = $this->get(route('staff.print-card', $staff));
-
         $response->assertStatus(200);
-        $response->assertSee('個別 花子');
-        $response->assertSee('<svg', false);
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringContainsString('staff_card_', (string) $response->headers->get('Content-Disposition'));
+
+        // 2. プレビュー指定時: HTML表示
+        $previewResponse = $this->get(route('staff.print-card', ['staff' => $staff, 'preview' => 1]));
+        $previewResponse->assertStatus(200);
+        $previewResponse->assertSee('個別 花子');
+        $previewResponse->assertSee('<svg', false);
     }
 
     /**
-     * 運行日別人員配置一覧表の印刷画面が表示できること
+     * 運行日別人員配置一覧表のPDFダウンロードおよびプレビュー画面が表示できること
      */
     public function test_can_render_timetable_assignments_print_view(): void
     {
@@ -94,14 +106,20 @@ class StaffPrintAndCsvTest extends TestCase
             'role_description' => '合図担当',
         ]);
 
+        // 1. デフォルト: PDFダウンロード
         $response = $this->get(route('timetables.print-assignments', $timetable));
-
         $response->assertStatus(200);
-        $response->assertSee('本祭 昼運行');
-        $response->assertSee('誘導警備班');
-        $response->assertSee('交差点A 交通遮断');
-        $response->assertSee('警備 隊長');
-        $response->assertSee('合図担当');
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringContainsString('assignments_', (string) $response->headers->get('Content-Disposition'));
+
+        // 2. プレビュー指定時: HTML表示
+        $previewResponse = $this->get(route('timetables.print-assignments', ['timetable' => $timetable, 'preview' => 1]));
+        $previewResponse->assertStatus(200);
+        $previewResponse->assertSee('本祭 昼運行');
+        $previewResponse->assertSee('誘導警備班');
+        $previewResponse->assertSee('交差点A 交通遮断');
+        $previewResponse->assertSee('警備 隊長');
+        $previewResponse->assertSee('合図担当');
     }
 
     /**

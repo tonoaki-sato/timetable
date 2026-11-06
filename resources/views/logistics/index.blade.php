@@ -35,8 +35,9 @@
             🧩 搬出入パターン管理 ({{ $patterns->count() }})
         </span>
         <a href="{{ route('logistics.print') }}"
-           class="px-3 py-1.5 rounded-lg font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition whitespace-nowrap shrink-0">
-            🖨️ 搬出入指示書印刷
+           class="px-3 py-1.5 rounded-lg font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition whitespace-nowrap shrink-0"
+           title="搬出入指示書兼現場チェックリストをPDFでダウンロード">
+            📄 搬出入指示書PDF
         </a>
     </div>
 

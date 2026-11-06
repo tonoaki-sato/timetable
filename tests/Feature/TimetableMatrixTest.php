@@ -86,10 +86,10 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('通行止め');
         $response->assertSee('開催中');
 
-        // ヘッダー1行化・リアルタイム時計・赤ボーダーライン・印刷ボタン
+        // ヘッダー1行化・リアルタイム時計・赤ボーダーライン・PDFダウンロードボタン
         $response->assertSee('matrix-live-clock');
         $response->assertSee('matrix-current-time-line');
-        $response->assertSee('A4横 印刷 / PDF保存');
+        $response->assertSee('A4横 人員配置表PDF');
         $response->assertDontSee('<span>担当班管理</span>', false);
 
         // クイックアサインモーダルの統合ヘッダー要素が含まれていること

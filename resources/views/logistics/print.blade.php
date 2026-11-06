@@ -24,9 +24,13 @@
                 <a href="{{ route('logistics.index') }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
                     ← 画面に戻る
                 </a>
-                <button type="button" data-action="print" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition flex items-center space-x-1 cursor-pointer">
+                <a href="{{ route('logistics.print', request()->except('preview')) }}" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition flex items-center space-x-1">
+                    <span>📄</span>
+                    <span>PDFダウンロード (A4横)</span>
+                </a>
+                <button type="button" data-action="print" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-700 hover:bg-slate-600 text-slate-200 transition flex items-center space-x-1 cursor-pointer">
                     <span>🖨️</span>
-                    <span>今すぐ印刷 (Ctrl+P)</span>
+                    <span>ブラウザ印刷</span>
                 </button>
             </div>
         </div>

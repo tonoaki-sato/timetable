@@ -352,8 +352,8 @@
                                         <span class="text-base shrink-0">🖨️</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold flex items-center space-x-1">
-                                                <span class="whitespace-nowrap truncate">人員配置表印刷</span>
-                                                <span class="text-[10px] text-slate-400">↗</span>
+                                                <span class="whitespace-nowrap truncate">人員配置表印刷 (PDF)</span>
+                                                <span class="text-[10px] text-slate-400">↓</span>
                                             </div>
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">各班・タスクの配置一覧（A4横・現場用）</p>
                                         </div>
@@ -364,8 +364,8 @@
                                         <span class="text-base shrink-0">🚚</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold flex items-center space-x-1">
-                                                <span class="whitespace-nowrap truncate">搬出入指示書印刷</span>
-                                                <span class="text-[10px] text-slate-400">↗</span>
+                                                <span class="whitespace-nowrap truncate">搬出入指示書印刷 (PDF)</span>
+                                                <span class="text-[10px] text-slate-400">↓</span>
                                             </div>
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">機材指示書兼現場チェックシート（A4横）</p>
                                         </div>
@@ -395,8 +395,8 @@
                                         <span class="text-base shrink-0">🪪</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold flex items-center space-x-1">
-                                                <span class="whitespace-nowrap truncate">名札一括印刷</span>
-                                                <span class="text-[10px] text-slate-400">↗</span>
+                                                <span class="whitespace-nowrap truncate">名札一括印刷 (PDF)</span>
+                                                <span class="text-[10px] text-slate-400">↓</span>
                                             </div>
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">QR付き名札カードの一括A4面付け印刷</p>
                                         </div>

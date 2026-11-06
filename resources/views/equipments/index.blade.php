@@ -16,11 +16,12 @@
                 <span>🧩</span>
                 <span>搬出入パターン</span>
             </a>
-            <a href="{{ route('logistics.print') }}" target="_blank"
-                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
-                <span>🚚</span>
-                <span>搬出入指示書</span>
-                <span class="text-[10px] opacity-60">↗</span>
+            <a href="{{ route('logistics.print') }}"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0"
+                title="搬出入指示書兼現場チェックリストをPDFでダウンロード">
+                <span>📄</span>
+                <span>搬出入指示書PDF</span>
+                <span class="text-[10px] opacity-60">↓</span>
             </a>
             <a href="{{ route('equipments.create') }}"
                 class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">

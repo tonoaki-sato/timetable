@@ -41,10 +41,11 @@
         </x-slot:badges>
 
         <x-slot:actions>
-            <a href="{{ route('staff.print-card', $staff) }}" target="_blank"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
-                <span>🖨️</span>
-                <span>名札印刷</span>
+            <a href="{{ route('staff.print-card', $staff) }}"
+                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
+                title="名札カードをPDFでダウンロード">
+                <span>📄</span>
+                <span>名札PDF</span>
             </a>
 
             @can('update', $staff)
@@ -82,11 +83,11 @@
                 </p>
             </div>
         </div>
-        <a href="{{ route('staff.print-card', $staff) }}" target="_blank"
+        <a href="{{ route('staff.print-card', $staff) }}"
            class="inline-flex items-center justify-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm transition whitespace-nowrap space-x-1.5 cursor-pointer">
-            <span>🖨️</span>
-            <span>新名札カードを印刷する</span>
-            <span>↗</span>
+            <span>📄</span>
+            <span>新名札カードPDFをダウンロード</span>
+            <span>↓</span>
         </a>
     </div>
     @endif

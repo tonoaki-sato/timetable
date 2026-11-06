@@ -113,7 +113,7 @@ class StaffSecurityReissueTest extends TestCase
         ]);
 
         $responseNormal = $this->actingAs($this->adminUser)
-            ->get(route('staff.print-card', $normalStaff));
+            ->get(route('staff.print-card', ['staff' => $normalStaff, 'preview' => 1]));
 
         $responseNormal->assertStatus(200);
         $responseNormal->assertDontSee('再発行 (Ver.');
@@ -124,7 +124,7 @@ class StaffSecurityReissueTest extends TestCase
         ]);
 
         $responseReissued = $this->actingAs($this->adminUser)
-            ->get(route('staff.print-card', $reissuedStaff));
+            ->get(route('staff.print-card', ['staff' => $reissuedStaff, 'preview' => 1]));
 
         $responseReissued->assertStatus(200);
         $responseReissued->assertSee('再発行 (Ver.2)');

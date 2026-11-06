@@ -65,12 +65,13 @@
                 <span>スタッフタイムライン</span>
             </a>
 
-            <!-- A4横 印刷 / PDF保存ボタン -->
-            <button type="button" data-action="print"
-                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0">
-                <span>🖨️</span>
-                <span>A4横 印刷 / PDF</span>
-            </button>
+            <!-- A4横 人員配置表PDFダウンロードボタン -->
+            <a href="{{ route('timetables.print-assignments', $selectedTimetable) }}"
+                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0"
+                title="選択中運行日の人員配置一覧表をA4横PDFでダウンロード">
+                <span>📄</span>
+                <span>A4横 人員配置表PDF</span>
+            </a>
         </div>
         @endif
     </div>

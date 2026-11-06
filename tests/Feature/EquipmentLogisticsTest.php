@@ -264,21 +264,27 @@ class EquipmentLogisticsTest extends TestCase
             'lane_id' => $tentLane->id,
         ]);
 
-        // 全体印刷表示
-        $response = $this->get(route('logistics.print'));
+        // 全体PDFダウンロード
+        $pdfResponse = $this->get(route('logistics.print'));
+        $pdfResponse->assertStatus(200);
+        $pdfResponse->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringContainsString('equipment_logistics_plan_', (string) $pdfResponse->headers->get('Content-Disposition'));
+
+        // 全体プレビュー表示
+        $response = $this->get(route('logistics.print', ['preview' => 1]));
         $response->assertStatus(200);
         $response->assertSee('資材・機材 搬出入・中継・夜間保管計画書');
         $response->assertSee('コーン班専用機材');
         $response->assertSee('テント班私物台車');
 
         // 担当班で絞り込み
-        $laneResponse = $this->get(route('logistics.print', ['lane_id' => $coneLane->id]));
+        $laneResponse = $this->get(route('logistics.print', ['lane_id' => $coneLane->id, 'preview' => 1]));
         $laneResponse->assertStatus(200);
         $laneResponse->assertSee('コーン班専用機材');
         $laneResponse->assertDontSee('テント班私物台車');
 
         // 区分（personal）で絞り込み
-        $typeResponse = $this->get(route('logistics.print', ['type' => 'personal']));
+        $typeResponse = $this->get(route('logistics.print', ['type' => 'personal', 'preview' => 1]));
         $typeResponse->assertStatus(200);
         $typeResponse->assertSee('テント班私物台車');
         $typeResponse->assertDontSee('コーン班専用機材');
@@ -301,10 +307,14 @@ class EquipmentLogisticsTest extends TestCase
             ->assertSee('搬出入パターン管理')
             ->assertSee('登録されている搬出入パターンはありません');
 
-        $this->get(route('logistics.print'))
+        $this->get(route('logistics.print', ['preview' => 1]))
             ->assertStatus(200)
             ->assertSee('登録されている拠点はありません')
             ->assertSee('該当する資材または搬出入計画データはありません');
+
+        $this->get(route('logistics.print'))
+            ->assertStatus(200)
+            ->assertHeader('Content-Type', 'application/pdf');
     }
 
     /**
