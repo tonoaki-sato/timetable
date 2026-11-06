@@ -210,7 +210,8 @@ class TimetableMatrixPdfDownloadTest extends TestCase
         $response->assertSee('① 名札設置');
         $response->assertSee('② 袋設置');
         $response->assertSee('cell-task-continue', false);
-        $response->assertSee('↓ 事前準備');
+        $response->assertDontSee('↓ 事前準備');
+        $this->assertSame(1, substr_count($response->getContent(), '事前準備'));
     }
 
     /**
@@ -521,6 +522,15 @@ class TimetableMatrixPdfDownloadTest extends TestCase
                 $timeCount = count($timeMatches[1]);
                 $this->assertGreaterThan(0, $timeCount, "Page {$pageIndex} must contain time slots");
                 $this->assertGreaterThanOrEqual($timeCount, $rightmostLines, "Page {$pageIndex} rightmost border lines must be fully drawn for all rows");
+
+                // 各ページのテーブルヘッダー上部罫線（水平線）が描画されていること
+                $topHlines = 0;
+                foreach ($matches as $m) {
+                    if (abs(floatval($m[2]) - floatval($m[4])) < 0.1 && floatval($m[2]) > 530) {
+                        $topHlines++;
+                    }
+                }
+                $this->assertGreaterThan(0, $topHlines, "Page {$pageIndex} must contain the header top border line");
 
                 $pageIndex++;
             }

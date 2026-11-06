@@ -95,9 +95,11 @@
 
         /* テーブルヘッダー */
         table.matrix-table thead tr {
+            border-top: 1.5px solid #1e293b;
             border-bottom: 2px solid #1e293b;
         }
         table.matrix-table th {
+            border-top: 1.5px solid #1e293b;
             font-weight: bold;
             font-size: 7.5pt;
             vertical-align: middle;
@@ -207,20 +209,13 @@
             padding: 5px 6px;
         }
         .cell-task-continue {
-            vertical-align: middle;
-            text-align: center;
-            background-color: #f8fafc;
-            color: #64748b;
-            font-size: 6.8pt;
-            border-top: 1px dashed #cbd5e1 !important;
-            padding: 3px 5px;
-        }
-        .cell-task-continue-text {
-            color: #64748b;
-            font-weight: normal;
+            vertical-align: top;
+            background-color: #ffffff;
+            border-top: none !important;
+            padding: 0;
         }
         .cell-task-has-next {
-            border-bottom: 1px dashed #cbd5e1 !important;
+            border-bottom: none !important;
         }
         .task-card {
             width: 100%;
@@ -441,9 +436,7 @@
                                 </div>
                             </td>
                         @elseif($cell['type'] === 'task_continue')
-                            <td class="cell-task-continue {{ ($cell['has_next'] ?? false) ? 'cell-task-has-next' : '' }}">
-                                <span class="cell-task-continue-text">↓ {{ $cell['task'] ? $cell['task']->title : '' }}</span>
-                            </td>
+                            <td class="cell-task-continue {{ ($cell['has_next'] ?? false) ? 'cell-task-has-next' : '' }}"></td>
                         @elseif($cell['type'] === 'empty')
                             <td class="cell-empty">-</td>
                         @elseif($cell['type'] === 'skip')
