@@ -127,6 +127,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
 - Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
 - When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
+- CSP検証や画面レンダリングテストでは、空モデルだけでなく子レコード（タスク、アサイン等）を登録した状態で検証し、ループ（`@foreach` / `@forelse`）や条件分岐（`@if`）内部のHTMLブロックが実際にレンダリングされた状態でインラインスタイル・イベントハンドラの不在を検証する。
 
 === pint/core rules ===
 
@@ -158,6 +159,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 1. **Presentation Layer (View / Presenter)**:
    - BladeテンプレートによるSSR描画。UI表示の加工は `app/Presenters/` や View Component に委譲し、Blade内に複雑なロジックを直接記述しない。
    - フロントエンドは Vanilla JS (ES Modules) + Vite + Print CSS。厳格な CSP（インラインスクリプト/スタイルの禁止）を遵守する。
+   - 動的な幅・位置の計算（プログレスバー等）においてインラインスタイル属性（`style="..."` や動的生成文字列）をBlade内に出力しない。`data-*` 属性に値を保持させ、JavaScript (CSSOM: `element.style.width = ...`) 経由で初期化・更新する。
 
 2. **HTTP / Delivery Layer (Controller / FormRequest)**:
    - **Thin Controller の徹底**: コントローラーはリクエストの受付、バリデーション済みデータの受け渡し、Service/Actionの呼び出し、レスポンス返却のみを行い、業務ロジックを直接記述しない。

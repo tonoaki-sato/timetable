@@ -175,7 +175,7 @@
                     <!-- 進捗プログレスミニバー & 充足カウント -->
                     <div class="flex items-center space-x-2 pt-1">
                         <div class="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div data-task-progress-bar class="{{ $progressColor }} h-full transition-all duration-300" style="width: {{ $percent }}%"></div>
+                            <div data-task-progress-bar data-percent="{{ $percent }}" class="{{ $progressColor }} h-full transition-all duration-300"></div>
                         </div>
                         <span data-task-people-label class="text-[11px] font-mono text-slate-500 shrink-0 font-medium">
                             👥 {{ $assignedCount }}/{{ $task->required_people_label }}

@@ -27,6 +27,12 @@ function initAssignmentWorkspace() {
 
     const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
+    // 各タスクカードのプログレスバー初期化（CSP準拠: HTMLインラインスタイルを排除しJSで設定）
+    document.querySelectorAll('[data-task-progress-bar]').forEach(bar => {
+        const percent = bar.getAttribute('data-percent') || '0';
+        bar.style.width = `${percent}%`;
+    });
+
     // =========================================================================
     // 1. 左ペイン: タスク一覧のフィルタリング & 選択
     // =========================================================================

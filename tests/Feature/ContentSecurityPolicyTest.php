@@ -63,6 +63,15 @@ class ContentSecurityPolicyTest extends TestCase
 
         $timetable = Timetable::factory()->create();
         $lane = Lane::factory()->create(['timetable_id' => $timetable->id]);
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'required_people_count' => 2,
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $task->id,
+            'staff_id' => $staff->id,
+        ]);
 
         $routesToTest = [
             route('dashboard'),
@@ -70,6 +79,7 @@ class ContentSecurityPolicyTest extends TestCase
             route('calendar.index'),
             route('schedules.index'),
             route('timetables.index'),
+            route('timetables.assignments', $timetable),
             route('timetable.index', ['timetable_id' => $timetable->id]),
             route('timetables.tasks.index', $timetable),
             route('timetables.lanes.index', $timetable),
