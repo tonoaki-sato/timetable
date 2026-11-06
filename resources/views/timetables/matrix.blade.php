@@ -8,7 +8,7 @@
         </a>
         <span class="text-slate-300">/</span>
         <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition shrink-0">
-            <span>タイムテーブル管理</span>
+            <span>運行情報管理</span>
         </a>
         <span class="text-slate-300">/</span>
         <span class="text-slate-700 font-bold truncate">⏱️ {{ $selectedTimetable?->name ?? '進行表' }}</span>
@@ -79,7 +79,7 @@
     <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 shadow-sm">
         <span class="text-4xl block mb-3">📅</span>
         <h3 class="text-base font-bold text-slate-800">表示できるタイムテーブルがありません</h3>
-        <p class="text-xs text-slate-500 mt-1">「タイムテーブル管理」から新規タイムテーブルを登録してください。</p>
+        <p class="text-xs text-slate-500 mt-1">「運行情報管理」から新規タイムテーブルを登録してください。</p>
         <div class="mt-4">
             <a href="{{ route('timetables.create') }}" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow transition">
                 新規タイムテーブルを登録

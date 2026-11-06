@@ -318,7 +318,7 @@ class TimetableMatrixTest extends TestCase
 
         // セクション2: 編成・業務計画
         $response->assertSee('編成・業務計画');
-        $response->assertSee('タイムテーブル管理');
+        $response->assertSee('運行情報管理');
         $response->assertSee('搬出入計画');
         $response->assertSee(route('timetables.index'));
         $response->assertSee(route('logistics.index'));

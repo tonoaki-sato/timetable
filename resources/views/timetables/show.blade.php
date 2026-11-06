@@ -1,4 +1,4 @@
-<x-layouts.app :title="$timetable->name . ' - タイムテーブル詳細'">
+<x-layouts.app :title="$timetable->name . ' - 運行基本情報'">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
@@ -9,41 +9,18 @@
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
-                <span>タイムテーブル一覧</span>
+                <span>運行情報一覧</span>
             </a>
             <span class="text-slate-300">/</span>
             <span class="text-slate-700 font-bold truncate">📅 {{ $timetable->name }}</span>
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <!-- タイムテーブル基本情報編集 -->
-            @can('update', $timetable)
-            <a href="{{ route('timetables.edit', $timetable) }}"
-                class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
-                <span>✏️</span>
-                <span>基本情報を編集</span>
-            </a>
-            @endcan
-
-            <!-- 進行表マトリクスへ -->
-            <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
+            <!-- 運行情報一覧に戻る -->
+            <a href="{{ route('timetables.index') }}"
                 class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
-                <span>⏱️</span>
-                <span>マトリクス進行表</span>
-            </a>
-
-            <!-- 担当班編成へ -->
-            <a href="{{ route('timetables.lanes.index', $timetable) }}"
-                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
-                <span>🏷️</span>
-                <span>担当班編成</span>
-            </a>
-
-            <!-- 作業タスク管理へ -->
-            <a href="{{ route('timetables.tasks.index', $timetable) }}"
-                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
-                <span>📋</span>
-                <span>作業タスク管理</span>
+                <span>←</span>
+                <span>運行情報一覧に戻る</span>
             </a>
         </x-slot:actions>
     </x-page-header>
@@ -82,7 +59,15 @@
                     <p class="text-xs text-slate-500">まつり開催日の基本的な運用枠と設定ステータスです。</p>
                 </div>
             </div>
-            <div>
+            <div class="flex items-center space-x-2 shrink-0">
+                @can('update', $timetable)
+                <a href="{{ route('timetables.edit', $timetable) }}"
+                    class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
+                    <span>✏️</span>
+                    <span>基本情報を編集</span>
+                </a>
+                @endcan
+
                 @php
                     $statusBadge = match($timetable->status) {
                         'active' => 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold',
@@ -158,78 +143,80 @@
             </div>
         </div>
         @endif
-    </div>
 
-    <!-- 2. 運行状況・規制時間帯カード (2カラム) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- 道路の状況 -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
-                    <span>🚧</span>
-                    <span>道路の状況（交通規制・通行止め）</span>
-                </h3>
-                <span class="text-[11px] px-2 py-0.5 rounded font-mono font-bold {{ !empty($timetable->road_periods) ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-500' }}">
-                    {{ !empty($timetable->road_periods) ? count($timetable->road_periods) . '件の設定' : '終日規制なし' }}
-                </span>
-            </div>
-
-            @if(!empty($timetable->road_periods))
-            <div class="space-y-2">
-                @foreach($timetable->road_periods as $rp)
-                <div class="flex items-center justify-between p-3 bg-rose-50/50 rounded-xl border border-rose-100 text-xs">
-                    <div class="flex items-center space-x-2">
-                        <span class="px-2 py-0.5 rounded font-mono font-bold bg-rose-100 text-rose-800 text-[11px]">
-                            {{ substr($rp['start_time'] ?? '', 0, 5) }} 〜 {{ substr($rp['end_time'] ?? '', 0, 5) }}
+        <!-- 道路の状況 & まつりの状況 (運行基本情報カード内に統合) -->
+        <div class="pt-3 border-t border-slate-100">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 道路の状況 -->
+                <div class="bg-slate-50/70 rounded-xl border border-slate-200/80 p-4 space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                        <h3 class="font-bold text-xs text-slate-900 flex items-center space-x-1.5">
+                            <span>🚧</span>
+                            <span>道路の状況（交通規制・通行止め）</span>
+                        </h3>
+                        <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold {{ !empty($timetable->road_periods) ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-500' }}">
+                            {{ !empty($timetable->road_periods) ? count($timetable->road_periods) . '件の設定' : '終日規制なし' }}
                         </span>
-                        <strong class="text-rose-950 font-bold">{{ $rp['label'] ?? '通行止め' }}</strong>
                     </div>
-                    <span class="text-[10px] text-rose-600 font-bold bg-white px-2 py-0.5 rounded border border-rose-200">
-                        {{ ($rp['status'] ?? 'closed') === 'closed' ? '車両通行止め' : $rp['status'] }}
-                    </span>
+
+                    @if(!empty($timetable->road_periods))
+                    <div class="space-y-1.5">
+                        @foreach($timetable->road_periods as $rp)
+                        <div class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-rose-100 text-xs">
+                            <div class="flex items-center space-x-2">
+                                <span class="px-1.5 py-0.5 rounded font-mono font-bold bg-rose-100 text-rose-800 text-[10px]">
+                                    {{ substr($rp['start_time'] ?? '', 0, 5) }} 〜 {{ substr($rp['end_time'] ?? '', 0, 5) }}
+                                </span>
+                                <strong class="text-rose-950 font-bold">{{ $rp['label'] ?? '通行止め' }}</strong>
+                            </div>
+                            <span class="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                                {{ ($rp['status'] ?? 'closed') === 'closed' ? '車両通行止め' : $rp['status'] }}
+                            </span>
+                        </div>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="py-4 text-center text-slate-400 text-xs">
+                        <span>終日、車両通行止め規制はありません（通常交通）。</span>
+                    </div>
+                    @endif
                 </div>
-                @endforeach
-            </div>
-            @else
-            <div class="py-6 text-center text-slate-400 text-xs">
-                <span>終日、車両通行止め規制はありません（通常交通）。</span>
-            </div>
-            @endif
-        </div>
 
-        <!-- まつりの状況 -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
-                    <span>🏮</span>
-                    <span>まつりの状況（イベント進行状況）</span>
-                </h3>
-                <span class="text-[11px] px-2 py-0.5 rounded font-mono font-bold {{ !empty($timetable->festival_periods) ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500' }}">
-                    {{ !empty($timetable->festival_periods) ? count($timetable->festival_periods) . '件の設定' : '終日準備・待機' }}
-                </span>
-            </div>
-
-            @if(!empty($timetable->festival_periods))
-            <div class="space-y-2">
-                @foreach($timetable->festival_periods as $fp)
-                <div class="flex items-center justify-between p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 text-xs">
-                    <div class="flex items-center space-x-2">
-                        <span class="px-2 py-0.5 rounded font-mono font-bold bg-emerald-100 text-emerald-800 text-[11px]">
-                            {{ substr($fp['start_time'] ?? '', 0, 5) }} 〜 {{ substr($fp['end_time'] ?? '', 0, 5) }}
+                <!-- まつりの状況 -->
+                <div class="bg-slate-50/70 rounded-xl border border-slate-200/80 p-4 space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                        <h3 class="font-bold text-xs text-slate-900 flex items-center space-x-1.5">
+                            <span>🏮</span>
+                            <span>まつりの状況（イベント進行状況）</span>
+                        </h3>
+                        <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold {{ !empty($timetable->festival_periods) ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500' }}">
+                            {{ !empty($timetable->festival_periods) ? count($timetable->festival_periods) . '件の設定' : '終日準備・待機' }}
                         </span>
-                        <strong class="text-emerald-950 font-bold">{{ $fp['label'] ?? '開催中' }}</strong>
                     </div>
-                    <span class="text-[10px] text-emerald-700 font-bold bg-white px-2 py-0.5 rounded border border-emerald-200">
-                        {{ ($fp['status'] ?? 'active') === 'active' ? 'イベント進行中' : $fp['status'] }}
-                    </span>
+
+                    @if(!empty($timetable->festival_periods))
+                    <div class="space-y-1.5">
+                        @foreach($timetable->festival_periods as $fp)
+                        <div class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-emerald-100 text-xs">
+                            <div class="flex items-center space-x-2">
+                                <span class="px-1.5 py-0.5 rounded font-mono font-bold bg-emerald-100 text-emerald-800 text-[10px]">
+                                    {{ substr($fp['start_time'] ?? '', 0, 5) }} 〜 {{ substr($fp['end_time'] ?? '', 0, 5) }}
+                                </span>
+                                <strong class="text-emerald-950 font-bold">{{ $fp['label'] ?? '開催中' }}</strong>
+                            </div>
+                            <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                {{ ($fp['status'] ?? 'active') === 'active' ? 'イベント進行中' : $fp['status'] }}
+                            </span>
+                        </div>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="py-4 text-center text-slate-400 text-xs">
+                        <span>終日、まつり本祭運行はありません（準備・片付け日等）。</span>
+                    </div>
+                    @endif
                 </div>
-                @endforeach
             </div>
-            @else
-            <div class="py-6 text-center text-slate-400 text-xs">
-                <span>終日、まつり本祭運行はありません（準備・片付け日等）。</span>
-            </div>
-            @endif
         </div>
     </div>
 

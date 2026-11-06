@@ -38,10 +38,10 @@
 
     <!-- 右側: 5大機能タブ (横スクロール可能・各タブ whitespace-nowrap) -->
     <div class="flex items-center space-x-1 shrink-0 overflow-x-auto scrollbar-none flex-nowrap py-0.5">
-        <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'matrix' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
-            <span>⏱️</span>
-            <span>進行表</span>
+        <a href="{{ route('timetables.show', $timetable) }}"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'show' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+            <span>ℹ️</span>
+            <span>運行情報</span>
         </a>
         <a href="{{ route('timetables.lanes.index', $timetable) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'lanes' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
@@ -64,10 +64,10 @@
             <span>👥</span>
             <span>人員配置</span>
         </a>
-        <a href="{{ route('timetables.show', $timetable) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'show' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
-            <span>ℹ️</span>
-            <span>運行情報</span>
+        <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'matrix' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+            <span>⏱️</span>
+            <span>進行表</span>
         </a>
         <a href="{{ route('timetables.print-assignments', $timetable) }}" target="_blank"
             class="px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-1">

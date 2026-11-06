@@ -135,7 +135,7 @@ class ScheduleController extends Controller
 
         if ($schedule->is_linked_to_timetable) {
             return redirect()->route('schedules.index')
-                ->with('error', "予定「{$title}」は運行スケジュール（タイムテーブル）と自動連動しているため、スケジュール管理画面からは削除できません。タイムテーブル管理画面から削除してください。");
+                ->with('error', "予定「{$title}」は運行スケジュール（タイムテーブル）と自動連動しているため、スケジュール管理画面からは削除できません。運行情報管理画面から削除してください。");
         }
 
         $this->scheduleService->deleteSchedule($schedule);

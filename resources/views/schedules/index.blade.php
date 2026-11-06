@@ -216,7 +216,7 @@
 
                                 @if($schedule->is_linked_to_timetable)
                                 <span class="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-xs font-bold cursor-not-allowed select-none"
-                                    title="運行スケジュールはタイムテーブル管理画面から削除してください">
+                                    title="運行スケジュールは運行情報管理画面から削除してください">
                                     <span>🔒</span>
                                     <span>連動中</span>
                                 </span>

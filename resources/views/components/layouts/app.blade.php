@@ -153,7 +153,7 @@
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.index') || request()->routeIs('timetables.show') || request()->routeIs('timetables.create') || request()->routeIs('timetables.edit') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">📅</span>
                                         <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold">タイムテーブル管理</div>
+                                            <div class="text-xs font-bold">運行情報管理</div>
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">各日の運行日程・基本情報台帳</p>
                                         </div>
                                     </a>
@@ -591,7 +591,7 @@
                         <div class="grid grid-cols-2 gap-1.5 text-xs">
                             <a href="{{ route('timetables.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200">
                                 <span class="text-base">📅</span>
-                                <span class="font-bold truncate">タイムテーブル管理</span>
+                                <span class="font-bold truncate">運行情報管理</span>
                             </a>
                             <a href="{{ route('timetable-tasks.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200">
                                 <span class="text-base">📝</span>

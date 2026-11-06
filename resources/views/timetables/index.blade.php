@@ -1,13 +1,13 @@
-<x-layouts.app title="タイムテーブル管理">
+<x-layouts.app title="運行情報管理">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ヘッダー -->
     <x-page-header
-        title="タイムテーブル管理"
+        title="運行情報管理"
         icon="⏱️"
         description="まつり開催日ごとの基本枠（運行日・開始終了時刻）および各日の作業タスク・人員動態を管理します。">
         <x-slot:breadcrumbs>
-            <span class="text-slate-700 font-bold truncate">⏱️ タイムテーブル管理</span>
+            <span class="text-slate-700 font-bold truncate">⏱️ 運行情報管理</span>
         </x-slot:breadcrumbs>
 
         @can('create', App\Models\Timetable::class)

@@ -84,8 +84,9 @@ class TimetableShowViewTest extends TestCase
 
         $response->assertStatus(200);
 
-        // パンくずリスト
-        $response->assertSee('タイムテーブル一覧');
+        // パンくずリスト & 戻るリンク
+        $response->assertSee('運行情報一覧');
+        $response->assertSee('運行情報一覧に戻る');
         $response->assertSee(route('timetables.index'));
 
         // タイトル & 説明
@@ -98,15 +99,12 @@ class TimetableShowViewTest extends TestCase
         $response->assertSee('08:00 〜 18:00');
         $response->assertSee('運行中');
 
-        // アクションボタン
+        // カード内編集ボタン
         $response->assertSee(route('timetables.edit', $this->timetable));
         $response->assertSee('基本情報を編集');
-        $response->assertSee(route('timetables.tasks.index', $this->timetable));
-        $response->assertSee('作業タスク管理');
-        $response->assertSee(route('timetable.index', ['timetable_id' => $this->timetable->id]));
-        $response->assertSee('マトリクス進行表');
-        $response->assertSee(route('timetables.lanes.index', $this->timetable));
-        $response->assertSee('担当班編成');
+
+        // ヘッダーから削除されたリンクが表示されていないこと
+        $response->assertDontSee('マトリクス進行表');
 
         // 道路規制・まつり状況カード
         $response->assertSee('道路の状況（交通規制・通行止め）');
