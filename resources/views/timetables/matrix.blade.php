@@ -1,30 +1,70 @@
 <x-layouts.app title="タイムテーブル">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
-    <!-- パンくずリスト -->
-    <div class="print:hidden flex items-center space-x-1.5 text-[11px] text-slate-500 overflow-hidden text-ellipsis whitespace-nowrap">
-        <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-            <span>🏮</span><span>ホーム</span>
-        </a>
-        <span class="text-slate-300">/</span>
-        <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition shrink-0">
-            <span>運行情報管理</span>
-        </a>
-        <span class="text-slate-300">/</span>
-        <span class="text-slate-700 font-bold truncate">⏱️ {{ $selectedTimetable?->name ?? '進行表' }}</span>
-    </div>
+    <!-- ナビゲーション & ヘッダー (共通 x-page-header) -->
+    <x-page-header
+        :title="$selectedTimetable ? $selectedTimetable->name . ' 進行表' : '進行表'"
+        icon="⏱️"
+        :description="$selectedTimetable ? '「' . $selectedTimetable->name . '」の進行表および担当班タスク配置です。' : '進行表および担当班タスク配置です。'">
+        <x-slot:breadcrumbs>
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>⏱️</span>
+                <span>運行情報一覧</span>
+            </a>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">⏱️ {{ $selectedTimetable ? $selectedTimetable->name . ' 進行表' : '進行表' }}</span>
+        </x-slot:breadcrumbs>
+
+        @if($selectedTimetable && $selectedTimetable->target_date)
+        <x-slot:badges>
+            <span class="px-2 py-0.5 rounded text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
+                📅 {{ $selectedTimetable->target_date->format('Y年m月d日') }}
+            </span>
+        </x-slot:badges>
+        @endif
+
+        @if($selectedTimetable)
+        <x-slot:actions>
+            <!-- スタッフタイムラインボタン -->
+            <a href="{{ route('timetables.staff-timeline', $selectedTimetable) }}"
+                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
+                <span>👥</span>
+                <span>スタッフタイムライン</span>
+            </a>
+
+            <!-- A4横 人員配置表PDFダウンロードボタン -->
+            <a href="{{ route('timetables.print-assignments', $selectedTimetable) }}"
+                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
+                title="選択中運行日の人員配置一覧表をA4横PDFでダウンロード">
+                <span>📄</span>
+                <span>A4横 人員配置表PDF</span>
+            </a>
+
+            <!-- 進行表PDFダウンロードボタン -->
+            <button type="button"
+                id="btn-download-matrix-pdf"
+                data-timetable-id="{{ $selectedTimetable->id }}"
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0"
+                title="画面で選択中の担当班を反映した進行表PDFをダウンロード">
+                <span>📄</span>
+                <span>進行表PDF</span>
+            </button>
+        </x-slot:actions>
+        @endif
+    </x-page-header>
 
     @if($selectedTimetable)
     <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
     <div class="print:hidden">
         <x-timetable-context-bar :timetable="$selectedTimetable" active="matrix" />
+        <span id="matrix-live-clock" class="hidden">{{ $nowTime }}</span>
     </div>
     @endif
 
     <!-- 印刷用ヘッダー（印刷時のみ表示） -->
     <div class="hidden print:block text-center pb-2 border-b-2 border-black mb-2">
         <h1 class="text-xl font-bold tracking-tight text-black">
-            {{ $selectedTimetable?->name ?? 'タイムテーブル' }}
+            {{ $selectedTimetable ? $selectedTimetable->name . ' 進行表' : '進行表' }}
             @if($selectedTimetable?->target_date)
             <span class="text-base font-normal ml-2">({{ $selectedTimetable->target_date->format('Y年m月d日') }})</span>
             @endif
@@ -35,52 +75,11 @@
         </div>
     </div>
 
-    <!-- 1. ヘッダー（タイトル ＆ アクションを1行に集約） -->
-    <div class="print:hidden bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl px-4 py-2.5 sm:px-5 sm:py-3 text-white shadow-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 min-w-0">
-            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 shrink-0">
-                ⏱️ タイムテーブル
-            </span>
-            <h1 class="text-base sm:text-lg font-bold tracking-tight break-words">
-                {{ $selectedTimetable?->name ?? '運行タイムテーブル' }}
-            </h1>
-            <span class="h-4 w-px bg-slate-700 hidden sm:inline-block shrink-0"></span>
-            <div class="flex items-center space-x-1.5 text-xs text-slate-300 shrink-0">
-                <span class="text-slate-400">現在時刻:</span>
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <strong id="matrix-live-clock" class="font-mono text-emerald-400 font-bold text-sm tracking-wider">{{ $nowTime }}</strong>
-            </div>
-        </div>
-
-        <!-- 右側: コンパクトなアクションボタン（A4横印刷のみ） -->
-        @if($selectedTimetable)
-        <div class="flex flex-wrap items-center gap-1.5 shrink-0 self-start sm:self-center">
-            <!-- スタッフタイムラインボタン -->
-            <a href="{{ route('timetables.staff-timeline', $selectedTimetable) }}"
-                class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-400/30 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs whitespace-nowrap shrink-0">
-                <span>👥</span>
-                <span>スタッフタイムライン</span>
-            </a>
-
-            <!-- A4横 人員配置表PDFダウンロードボタン -->
-            <a href="{{ route('timetables.print-assignments', $selectedTimetable) }}"
-                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0"
-                title="選択中運行日の人員配置一覧表をA4横PDFでダウンロード">
-                <span>📄</span>
-                <span>A4横 人員配置表PDF</span>
-            </a>
-        </div>
-        @endif
-    </div>
-
     @if(!$selectedTimetable)
     <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 shadow-sm">
         <span class="text-4xl block mb-3">📅</span>
         <h3 class="text-base font-bold text-slate-800">表示できるタイムテーブルがありません</h3>
-        <p class="text-xs text-slate-500 mt-1">「運行情報管理」から新規タイムテーブルを登録してください。</p>
+        <p class="text-xs text-slate-500 mt-1">「運行情報一覧」から新規タイムテーブルを登録してください。</p>
         <div class="mt-4">
             <a href="{{ route('timetables.create') }}" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow transition">
                 新規タイムテーブルを登録
@@ -101,6 +100,20 @@
             <span class="text-xs font-bold text-slate-700 flex items-center mr-1">
                 <span>🔍 表示班:</span>
             </span>
+
+            <!-- 全選択 / 全解除 ボタン -->
+            <div class="inline-flex rounded border border-slate-300 bg-white p-0.5 mr-1 shrink-0">
+                <button type="button" data-action="select-all-lanes"
+                    title="全班を表示"
+                    class="px-1.5 py-0.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-[10px] font-bold transition cursor-pointer">
+                    全選択
+                </button>
+                <button type="button" data-action="deselect-all-lanes"
+                    title="全班を非表示"
+                    class="px-1.5 py-0.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-[10px] font-bold transition cursor-pointer">
+                    全解除
+                </button>
+            </div>
 
             <!-- 各班のチップ（ON/OFF トグル） -->
             <div class="flex flex-wrap items-center gap-1.5" id="lane-filter-chips">

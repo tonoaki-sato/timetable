@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initLiveClock();
     initCurrentTimeIndicator();
     initQuickAssignModal();
+    initMatrixPdfDownload();
 });
 
 /**
@@ -144,6 +145,73 @@ function initLaneFilters() {
         if (laneId) {
             toggleLaneColumn(laneId);
         }
+    });
+
+    // 全選択・全解除ボタン
+    document.addEventListener('click', (e) => {
+        const selectAllBtn = e.target.closest('[data-action="select-all-lanes"]');
+        if (selectAllBtn) {
+            setAllLanesVisibility(true);
+            return;
+        }
+
+        const deselectAllBtn = e.target.closest('[data-action="deselect-all-lanes"]');
+        if (deselectAllBtn) {
+            setAllLanesVisibility(false);
+            return;
+        }
+    });
+}
+
+function setAllLanesVisibility(visible) {
+    const chips = document.querySelectorAll('.lane-chip');
+    chips.forEach(chip => {
+        const laneId = chip.getAttribute('data-lane-id');
+        if (!laneId) return;
+        const elements = document.querySelectorAll('.lane-col-' + laneId);
+        const check = chip.querySelector('span:first-child');
+
+        if (visible) {
+            elements.forEach(el => el.classList.remove('hidden'));
+            chip.classList.remove('opacity-40', 'bg-slate-100');
+            chip.classList.add('border-indigo-400');
+            if (check) check.textContent = '✔';
+        } else {
+            elements.forEach(el => el.classList.add('hidden'));
+            chip.classList.add('opacity-40', 'bg-slate-100');
+            chip.classList.remove('border-indigo-400');
+            if (check) check.textContent = '✕';
+        }
+    });
+
+    updateVisibleCount();
+}
+
+/**
+ * 画面で選択中の担当班を反映した進行表PDFダウンロード
+ */
+function initMatrixPdfDownload() {
+    const btn = document.getElementById('btn-download-matrix-pdf');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+        const timetableId = btn.getAttribute('data-timetable-id');
+        if (!timetableId) return;
+
+        // 現在表示中（.opacity-40 を持たない）のチップを収集
+        const visibleChips = Array.from(document.querySelectorAll('.lane-chip:not(.opacity-40)'));
+        if (visibleChips.length === 0) {
+            alert('印刷対象の担当班を1つ以上選択してください。');
+            return;
+        }
+
+        const laneIds = visibleChips
+            .map(chip => chip.getAttribute('data-lane-id'))
+            .filter(Boolean)
+            .join(',');
+
+        const targetUrl = `/timetables/${timetableId}/print-matrix?lane_ids=${encodeURIComponent(laneIds)}`;
+        window.location.href = targetUrl;
     });
 }
 

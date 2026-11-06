@@ -91,6 +91,7 @@ Route::middleware('auth')->group(function () {
     // タイムテーブル基本運行日リソースルート & 帳票印刷
     Route::get('timetables/{timetable}/assignments', [TimetableAssignmentWorkspaceController::class, 'index'])->name('timetables.assignments');
     Route::get('timetables/{timetable}/print-assignments', [TimetablePrintController::class, 'printAssignments'])->name('timetables.print-assignments');
+    Route::get('timetables/{timetable}/print-matrix', [TimetablePrintController::class, 'printMatrix'])->name('timetables.print-matrix');
     Route::get('timetables/{timetable}/staff-timeline', [StaffTimelineController::class, 'index'])->name('timetables.staff-timeline');
     Route::get('timetables/{timetable}/tasks', [TimetableTaskController::class, 'indexByTimetable'])->name('timetables.tasks.index');
     Route::resource('timetables', TimetableController::class);
