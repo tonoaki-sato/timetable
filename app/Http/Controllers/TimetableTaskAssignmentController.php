@@ -16,6 +16,7 @@ use App\Models\TaskStaffAssignment;
 use App\Models\TimetableTask;
 use App\Services\StaffAllocationService;
 use App\Services\TimetableTaskService;
+use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -223,7 +224,18 @@ class TimetableTaskAssignmentController extends Controller
     {
         $this->authorize('update', $task);
 
-        $this->taskService->removeStaff($task, $staff->id);
+        try {
+            $this->taskService->removeStaff($task, $staff->id);
+        } catch (DomainException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
+            return back()->with('error', $e->getMessage());
+        }
 
         if ($request->wantsJson()) {
             return response()->json([

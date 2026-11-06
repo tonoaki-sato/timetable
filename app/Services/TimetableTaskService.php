@@ -7,6 +7,7 @@ use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\TimetableTask;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
+use DomainException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -337,6 +338,11 @@ class TimetableTaskService
      */
     public function removeStaff(TimetableTask $task, int $staffId): bool
     {
+        $task->loadMissing('laneRelation');
+        if ($task->laneRelation && (int) $task->laneRelation->lead_staff_id === $staffId) {
+            throw new DomainException('班長はタスクの配置から解除できません。');
+        }
+
         return $this->taskRepository->removeStaff($task, $staffId);
     }
 

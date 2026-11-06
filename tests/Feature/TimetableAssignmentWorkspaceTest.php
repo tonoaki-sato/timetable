@@ -80,7 +80,8 @@ class TimetableAssignmentWorkspaceTest extends TestCase
 
         $response->assertOk();
         $response->assertViewIs('timetables.assignments.index');
-        $response->assertSee('人員アサイン');
+        $response->assertSee('人員配置');
+        $response->assertDontSee('Step 4 人員アサイン');
         $response->assertSee('東口警戒巡回');
         $response->assertSee('朝礼ミーティング');
         $response->assertSee('本部巡回班');

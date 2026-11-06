@@ -1,9 +1,9 @@
-<x-layouts.app :title="$timetable->name . ' - 人員アサイン（タスク別配置）'">
+<x-layouts.app :title="$timetable->name . ' - 人員配置'">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー (共通 x-page-header) -->
     <x-page-header
-        :title="$timetable->name . ' 人員アサイン'"
+        :title="$timetable->name . ' 人員配置'"
         icon="👥"
         description="作業タスクを選択し、最適なスタッフを効率的かつ安全にアサイン（人員配置）します。">
         <x-slot:breadcrumbs>
@@ -17,20 +17,8 @@
                 <span>{{ $timetable->name }}</span>
             </a>
             <span class="text-slate-300">/</span>
-            <span class="text-slate-700 font-bold truncate">👥 人員アサイン</span>
+            <span class="text-slate-700 font-bold truncate">👥 人員配置</span>
         </x-slot:breadcrumbs>
-
-        <x-slot:badges>
-            <span class="px-2 py-0.5 rounded text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">
-                Step 4 人員アサイン
-            </span>
-            <span class="px-2 py-0.5 rounded text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
-                📅 {{ $timetable->target_date?->format('Y年m月d日') }}
-            </span>
-            <span class="px-2 py-0.5 rounded text-xs font-mono text-slate-600 bg-slate-100 border border-slate-200 whitespace-nowrap">
-                ⏱️ {{ substr($timetable->start_time, 0, 5) }}〜{{ substr($timetable->end_time, 0, 5) }}
-            </span>
-        </x-slot:badges>
 
         <x-slot:actions>
             <a href="{{ route('timetables.staff-timeline', $timetable) }}"
@@ -226,7 +214,6 @@
                 <div class="flex items-center justify-between gap-2">
                     <div class="flex flex-wrap items-center gap-1.5 text-xs">
                         <span id="detail-task-time" class="font-mono font-bold text-indigo-200 bg-slate-800/90 px-2 py-0.5 rounded border border-slate-700">⏱️ --:-- 〜 --:--</span>
-                        <span id="detail-task-lane" class="px-2 py-0.5 rounded bg-indigo-500/20 border border-indigo-400/30 text-[10px] font-bold text-indigo-200">🏷️ 担当班</span>
                         <span id="detail-task-location" class="hidden px-2 py-0.5 rounded bg-slate-800/80 border border-slate-700 text-[10px] text-slate-300">📍 場所</span>
                         <span id="detail-task-status"></span>
                     </div>

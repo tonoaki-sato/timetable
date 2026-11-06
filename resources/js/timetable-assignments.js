@@ -239,15 +239,14 @@ function initAssignmentWorkspace() {
         // 1. ヘッダー情報
         const titleEl = document.getElementById('detail-task-title');
         const timeEl = document.getElementById('detail-task-time');
-        const laneEl = document.getElementById('detail-task-lane');
         const locationEl = document.getElementById('detail-task-location');
         const statusEl = document.getElementById('detail-task-status');
         const poolBtnWrapper = document.getElementById('detail-pool-btn-wrapper');
         const taskLink = document.getElementById('detail-task-link');
 
-        if (titleEl) titleEl.textContent = task.title;
+        const fullTitle = task.lane ? `${task.lane} ${task.title}` : task.title;
+        if (titleEl) titleEl.textContent = fullTitle;
         if (timeEl) timeEl.textContent = `⏱️ ${task.start_time} 〜 ${task.end_time}`;
-        if (laneEl) laneEl.textContent = `🏷️ ${task.lane || '班未設定'}`;
         if (locationEl) {
             if (task.location) {
                 locationEl.textContent = `📍 ${task.location}`;
@@ -265,12 +264,17 @@ function initAssignmentWorkspace() {
         if (poolBtnWrapper) {
             if (!task.is_satisfied && task.lane) {
                 poolBtnWrapper.innerHTML = `
-                    <button type="button" id="btn-assign-lane-pool"
-                        title="「${escapeHtml(task.lane)}」の空き専属メンバーから不足分を自動配置"
-                        class="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-lg text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer shadow-xs">
-                        <span>⚡</span>
-                        <span>班から自動配置</span>
-                    </button>
+                    <div class="flex items-center space-x-1.5">
+                        <button type="button" id="btn-assign-lane-pool"
+                            title="「${escapeHtml(task.lane)}」の空き専属メンバーから不足分を自動配置"
+                            class="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-lg text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer shadow-xs">
+                            <span>⚡</span>
+                            <span>班から自動配置</span>
+                        </button>
+                        <span class="hidden sm:inline-block text-[10px] text-indigo-200/90 bg-slate-800/80 border border-slate-700 px-1.5 py-0.5 rounded" title="担当班の固定・所属スタッフから、重複のない空きメンバーを不足人数分だけ自動で配置します">
+                            ※ 担当班の空き枠から自動補充
+                        </span>
+                    </div>
                 `;
                 document.getElementById('btn-assign-lane-pool')?.addEventListener('click', handleAssignLanePool);
             } else {
@@ -316,11 +320,17 @@ function initAssignmentWorkspace() {
                     </span>
                     ${a.affiliation ? `<span class="text-[10px] text-slate-400 truncate hidden sm:inline">(${escapeHtml(a.affiliation)})</span>` : ''}
                 </div>
-                <button type="button" data-action="remove-staff" data-staff-id="${a.staff_id}" data-staff-name="${escapeHtml(a.staff_name)}"
-                    class="px-1.5 py-0.5 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded text-[11px] font-bold transition cursor-pointer shrink-0"
-                    title="配置を解除">
-                    解除
-                </button>
+                ${a.is_lane_lead ? `
+                    <span class="px-1.5 py-0.5 text-slate-400 bg-slate-200/60 rounded text-[11px] font-medium shrink-0 cursor-not-allowed select-none" title="班長は解除できません">
+                        解除不可
+                    </span>
+                ` : `
+                    <button type="button" data-action="remove-staff" data-staff-id="${a.staff_id}" data-staff-name="${escapeHtml(a.staff_name)}"
+                        class="px-1.5 py-0.5 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded text-[11px] font-bold transition cursor-pointer shrink-0"
+                        title="配置を解除">
+                        解除
+                    </button>
+                `}
             </div>
         `).join('');
 

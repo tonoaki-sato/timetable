@@ -158,4 +158,34 @@ class TimetablePhase2AssignmentTest extends TestCase
             'staff_id' => $staff->id,
         ]);
     }
+
+    /**
+     * 班長スタッフはタスクの配置から解除できないこと（422）
+     */
+    public function test_cannot_remove_lane_lead_staff(): void
+    {
+        $this->actingAs($this->operator);
+
+        $leadStaff = Staff::factory()->create(['is_active' => true, 'name' => 'テスト班長']);
+        $this->lane->update(['lead_staff_id' => $leadStaff->id]);
+
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $this->task->id,
+            'staff_id' => $leadStaff->id,
+            'role_description' => '班長',
+        ]);
+
+        $response = $this->deleteJson(route('timetable-tasks.remove-staff', [$this->task, $leadStaff]));
+
+        $response->assertStatus(422);
+        $response->assertJson([
+            'success' => false,
+            'message' => '班長はタスクの配置から解除できません。',
+        ]);
+
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $this->task->id,
+            'staff_id' => $leadStaff->id,
+        ]);
+    }
 }
