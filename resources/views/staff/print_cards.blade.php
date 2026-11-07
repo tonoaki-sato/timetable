@@ -32,16 +32,11 @@
             @php $staff = $card['staff']; @endphp
             <div class="badge-card">
                 <!-- ヘッダー -->
-                <div class="badge-header {{ $staff->is_leader ? 'header-leader' : 'header-staff' }}">
+                <div class="badge-header">
                     <span class="event-title">保土ケ谷宿場まつり STAFF</span>
                     <div class="badge-header-right">
                         @if($staff->is_reissued)
                         <span class="reissue-tag">再発行 (Ver.{{ $staff->reissue_count + 1 }})</span>
-                        @endif
-                        @if($staff->is_leader)
-                            @foreach($staff->led_lane_names as $laneName)
-                            <span class="lane-tag">{{ $laneName }}</span>
-                            @endforeach
                         @endif
                     </div>
                 </div>

@@ -91,11 +91,10 @@ class StaffPrintAndCsvTest extends TestCase
         $previewResponse->assertSee('data:image/png;base64,', false);
         $previewResponse->assertSee('マイシフト確認');
 
-        // 班長バッジ（複数班名）の検証
-        $previewResponse->assertSee('header-leader');
-        $previewResponse->assertSee('header-staff');
-        $previewResponse->assertSee('誘導警備班');
-        $previewResponse->assertSee('巡回班');
+        // 班名バッジ・班長色分けクラスは削除され表示されないことの検証
+        $previewResponse->assertDontSee('header-leader');
+        $previewResponse->assertDontSeeText('誘導警備班');
+        $previewResponse->assertDontSeeText('巡回班');
 
         // 8名のスタッフ作成時にPDFが1ページ、16名作成時にPDFが2ページで正しく収まること（意図しない改ページがないこと）
         $pdfContent = $response->getContent();

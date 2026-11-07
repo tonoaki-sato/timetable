@@ -91,13 +91,7 @@
             border-radius: 4px;
             padding: 4px 8px;
             margin-bottom: 3px;
-        }
-        .header-staff {
             background-color: #1e40af;
-            color: #ffffff;
-        }
-        .header-leader {
-            background-color: #b45309;
             color: #ffffff;
         }
         .event-title {
@@ -112,16 +106,6 @@
             text-align: right;
             font-size: 9px;
             vertical-align: middle;
-        }
-        .lane-tag {
-            background-color: #ffffff;
-            color: #78350f;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 9.5px;
-            font-weight: bold;
-            margin-left: 3px;
-            white-space: nowrap;
         }
         .reissue-tag {
             background-color: #fef3c7;
@@ -204,17 +188,12 @@
                 <td class="card-cell">
                     <div class="badge-card">
                         <!-- ヘッダー -->
-                        <table class="header-table {{ $staff->is_leader ? 'header-leader' : 'header-staff' }}">
+                        <table class="header-table">
                             <tr>
                                 <td class="event-title">保土ケ谷宿場まつり STAFF</td>
                                 <td class="header-right">
                                     @if($staff->is_reissued)
                                     <span class="reissue-tag">再発行(V.{{ $staff->reissue_count + 1 }})</span>
-                                    @endif
-                                    @if($staff->is_leader)
-                                        @foreach($staff->led_lane_names as $laneName)
-                                        <span class="lane-tag">{{ $laneName }}</span>
-                                        @endforeach
                                     @endif
                                 </td>
                             </tr>

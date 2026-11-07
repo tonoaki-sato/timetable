@@ -26,8 +26,7 @@ class StaffPrintController extends Controller
         // プレビュー指定時はHTMLプレビュー画面を表示
         if ($request->boolean('preview')) {
             $query = Staff::query()
-                ->where('is_active', true)
-                ->with('ledLanes');
+                ->where('is_active', true);
 
             if ($request->has('ids') && is_array($request->input('ids'))) {
                 $ids = array_filter(array_map('intval', $request->input('ids')));
@@ -69,7 +68,6 @@ class StaffPrintController extends Controller
 
         // プレビュー指定時はHTMLプレビュー画面を表示
         if ($request->boolean('preview')) {
-            $staff->loadMissing('ledLanes');
             $shiftUrl = route('staff.myshift', ['token' => $staff->access_token]);
             $qrSvg = $this->qrCodeService->generateSvg($shiftUrl, 120);
             $qrDataUri = $this->qrCodeService->generatePngDataUri($shiftUrl, 240);

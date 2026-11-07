@@ -22,8 +22,7 @@ class DownloadStaffCardsPdfAction
     public function execute(Request $request): Response
     {
         $query = Staff::query()
-            ->where('is_active', true)
-            ->with('ledLanes');
+            ->where('is_active', true);
 
         if ($request->has('ids') && is_array($request->input('ids'))) {
             $ids = array_filter(array_map('intval', $request->input('ids')));
@@ -53,7 +52,6 @@ class DownloadStaffCardsPdfAction
      */
     public function executeForSingle(Staff $staff): Response
     {
-        $staff->loadMissing('ledLanes');
         $cards = $this->buildCardsData(collect([$staff]), 120);
 
         $sanitizedName = preg_replace('/[^\p{L}\p{N}_-]+/u', '_', $staff->name);

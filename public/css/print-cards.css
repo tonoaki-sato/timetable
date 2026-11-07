@@ -91,13 +91,7 @@ body {
     justify-content: space-between;
     padding: 6px 10px;
     border-radius: 6px;
-}
-.header-staff {
     background-color: #1e40af;
-    color: #ffffff;
-}
-.header-leader {
-    background-color: #b45309;
     color: #ffffff;
 }
 .event-title {
@@ -113,15 +107,6 @@ body {
     gap: 4px;
     flex-wrap: wrap;
     justify-content: flex-end;
-}
-.lane-tag {
-    font-size: 11px;
-    background: #ffffff;
-    color: #78350f;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 800;
-    white-space: nowrap;
 }
 .reissue-tag {
     font-size: 10px;
