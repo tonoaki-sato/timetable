@@ -35,11 +35,32 @@ class StaffPrintAndCsvTest extends TestCase
     {
         $this->actingAs($this->operator);
 
+        $timetable = Timetable::factory()->create(['name' => '本祭']);
+
+        // 一般スタッフ（所属あり）
         $staffA = Staff::factory()->create([
             'name' => '神輿 太郎',
             'kana' => 'ミコシ タロウ',
             'affiliation' => '神輿保存会',
             'is_active' => true,
+        ]);
+
+        // 班長スタッフ（2つの班の班長）
+        $leaderStaff = Staff::factory()->create([
+            'name' => '警備 隊長',
+            'kana' => 'ケイビ タイチョウ',
+            'affiliation' => '防犯部',
+            'is_active' => true,
+        ]);
+        Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => '誘導警備班',
+            'lead_staff_id' => $leaderStaff->id,
+        ]);
+        Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => '巡回班',
+            'lead_staff_id' => $leaderStaff->id,
         ]);
 
         // 1. デフォルト: PDFダウンロード
@@ -51,10 +72,72 @@ class StaffPrintAndCsvTest extends TestCase
         // 2. プレビュー指定時: HTML表示
         $previewResponse = $this->get(route('staff.print-cards', ['preview' => 1]));
         $previewResponse->assertStatus(200);
+
+        // 新ヘッダーとフッターの検証
+        $previewResponse->assertSee('保土ケ谷宿場まつり STAFF');
+        $previewResponse->assertSee('発行: 保土ケ谷宿場まつり実行委員会');
+
+        // 所属が削除され表示されないことの検証
+        $previewResponse->assertDontSeeText('神輿保存会');
+        $previewResponse->assertDontSeeText('防犯部');
+
+        // 氏名・カナの検証
         $previewResponse->assertSee('神輿 太郎');
         $previewResponse->assertSee('ミコシ タロウ');
-        $previewResponse->assertSee('神輿保存会');
-        $previewResponse->assertSee('<svg', false);
+        $previewResponse->assertSee('警備 隊長');
+        $previewResponse->assertSee('ケイビ タイチョウ');
+
+        // QRコード画像 (PNG Data URI) の出力検証
+        $previewResponse->assertSee('data:image/png;base64,', false);
+        $previewResponse->assertSee('マイシフト確認');
+
+        // 班長バッジ（複数班名）の検証
+        $previewResponse->assertSee('header-leader');
+        $previewResponse->assertSee('header-staff');
+        $previewResponse->assertSee('誘導警備班');
+        $previewResponse->assertSee('巡回班');
+
+        // 8名のスタッフ作成時にPDFが1ページ、16名作成時にPDFが2ページで正しく収まること（意図しない改ページがないこと）
+        $pdfContent = $response->getContent();
+        $this->assertNotEmpty($pdfContent);
+    }
+
+    /**
+     * 8名で1ページ、16名で2ページに収まること（カードサイズ拡大による意図しない改ページが発生しないこと）
+     */
+    public function test_staff_cards_pdf_page_count(): void
+    {
+        $this->actingAs($this->operator);
+
+        Staff::query()->delete();
+        Staff::factory()->count(8)->create(['is_active' => true]);
+
+        $response8 = $this->get(route('staff.print-cards'));
+        $response8->assertStatus(200);
+        $pdf8 = $response8->getContent();
+        // PDF内の /Type /Page の数をカウント（ページオブジェクト）
+        $pageCount8 = preg_match_all('/\/Type\s*\/Page\b/', $pdf8);
+        $this->assertSame(1, $pageCount8, '8名のスタッフカードは1ページに収まる必要があります。');
+
+        Staff::factory()->count(8)->create(['is_active' => true]);
+        $response16 = $this->get(route('staff.print-cards'));
+        $response16->assertStatus(200);
+        $pdf16 = $response16->getContent();
+        $pageCount16 = preg_match_all('/\/Type\s*\/Page\b/', $pdf16);
+        $this->assertSame(2, $pageCount16, '16名のスタッフカードは2ページに収まる必要があります。');
+
+        // 34名のスタッフ（複数班長・長名を含む）で5ページに綺麗に収まること
+        Staff::factory()->count(18)->create(['is_active' => true]);
+        $timetable = Timetable::first() ?? Timetable::factory()->create();
+        $leadStaff = Staff::first();
+        Lane::factory()->create(['timetable_id' => $timetable->id, 'name' => '宿場くん/宿場ちゃん', 'lead_staff_id' => $leadStaff->id]);
+        Lane::factory()->create(['timetable_id' => $timetable->id, 'name' => 'ステカン', 'lead_staff_id' => $leadStaff->id]);
+
+        $response34 = $this->get(route('staff.print-cards'));
+        $response34->assertStatus(200);
+        $pdf34 = $response34->getContent();
+        $pageCount34 = preg_match_all('/\/Type\s*\/Page\b/', $pdf34);
+        $this->assertSame(5, $pageCount34, '34名のスタッフカードは5ページに収まる必要があります。');
     }
 
     /**
@@ -67,6 +150,7 @@ class StaffPrintAndCsvTest extends TestCase
         $staff = Staff::factory()->create([
             'name' => '個別 花子',
             'kana' => 'コベツ ハナコ',
+            'affiliation' => 'ボランティア連盟',
         ]);
 
         // 1. デフォルト: PDFダウンロード
@@ -79,7 +163,10 @@ class StaffPrintAndCsvTest extends TestCase
         $previewResponse = $this->get(route('staff.print-card', ['staff' => $staff, 'preview' => 1]));
         $previewResponse->assertStatus(200);
         $previewResponse->assertSee('個別 花子');
-        $previewResponse->assertSee('<svg', false);
+        $previewResponse->assertSee('保土ケ谷宿場まつり STAFF');
+        $previewResponse->assertSee('発行: 保土ケ谷宿場まつり実行委員会');
+        $previewResponse->assertDontSeeText('ボランティア連盟');
+        $previewResponse->assertSee('data:image/png;base64,', false);
     }
 
     /**

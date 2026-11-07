@@ -132,6 +132,36 @@ class Staff extends Model
     }
 
     /**
+     * 班長（主担当）を務めているかどうか
+     */
+    public function getIsLeaderAttribute(): bool
+    {
+        if (isset($this->attributes['led_lanes_exists'])) {
+            return (bool) $this->attributes['led_lanes_exists'];
+        }
+
+        if ($this->relationLoaded('ledLanes')) {
+            return $this->ledLanes->isNotEmpty();
+        }
+
+        return $this->ledLanes()->exists();
+    }
+
+    /**
+     * 班長を務めるユニークな班（レーン）名リスト
+     *
+     * @return array<int, string>
+     */
+    public function getLedLaneNamesAttribute(): array
+    {
+        if (! $this->relationLoaded('ledLanes')) {
+            $this->load('ledLanes');
+        }
+
+        return $this->ledLanes->pluck('name')->unique()->values()->all();
+    }
+
+    /**
      * 固定スタッフとして所属するレーン一覧との多対多リレーション
      */
     public function fixedLanes(): BelongsToMany

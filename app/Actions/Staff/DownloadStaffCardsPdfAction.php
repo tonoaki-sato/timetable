@@ -21,7 +21,9 @@ class DownloadStaffCardsPdfAction
      */
     public function execute(Request $request): Response
     {
-        $query = Staff::query()->where('is_active', true);
+        $query = Staff::query()
+            ->where('is_active', true)
+            ->with('ledLanes');
 
         if ($request->has('ids') && is_array($request->input('ids'))) {
             $ids = array_filter(array_map('intval', $request->input('ids')));
@@ -51,6 +53,7 @@ class DownloadStaffCardsPdfAction
      */
     public function executeForSingle(Staff $staff): Response
     {
+        $staff->loadMissing('ledLanes');
         $cards = $this->buildCardsData(collect([$staff]), 120);
 
         $sanitizedName = preg_replace('/[^\p{L}\p{N}_-]+/u', '_', $staff->name);
@@ -71,18 +74,20 @@ class DownloadStaffCardsPdfAction
      * スタッフ一覧からQRコード付きカードコレクションを構築
      *
      * @param  Collection<int, Staff>  $staffList
-     * @return Collection<int, array{staff: Staff, shift_url: string, qr_svg: string}>
+     * @return Collection<int, array{staff: Staff, shift_url: string, qr_svg: string, qr_data_uri: string}>
      */
     protected function buildCardsData(Collection $staffList, int $qrSize = 100): Collection
     {
         return $staffList->map(function (Staff $staff) use ($qrSize) {
             $shiftUrl = route('staff.myshift', ['token' => $staff->access_token]);
             $qrSvg = $this->qrCodeService->generateSvg($shiftUrl, $qrSize);
+            $qrDataUri = $this->qrCodeService->generatePngDataUri($shiftUrl, $qrSize * 2);
 
             return [
                 'staff' => $staff,
                 'shift_url' => $shiftUrl,
                 'qr_svg' => $qrSvg,
+                'qr_data_uri' => $qrDataUri,
             ];
         });
     }

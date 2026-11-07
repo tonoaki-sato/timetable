@@ -81,88 +81,111 @@
         .badge-card {
             border: 1.5px dashed #94a3b8;
             border-radius: 8px;
-            padding: 8px 10px;
+            padding: 5px 8px 3px 8px;
             background-color: #ffffff;
             height: 62mm;
         }
         .header-table {
             width: 100%;
-            border-bottom: 1.5px solid #e2e8f0;
-            padding-bottom: 4px;
-            margin-bottom: 6px;
+            border-collapse: collapse;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin-bottom: 3px;
+        }
+        .header-staff {
+            background-color: #1e40af;
+            color: #ffffff;
+        }
+        .header-leader {
+            background-color: #b45309;
+            color: #ffffff;
         }
         .event-title {
-            font-size: 9px;
+            font-size: 11px;
             font-weight: bold;
-            color: #4338ca;
+            color: #ffffff;
             letter-spacing: 0.5px;
+            vertical-align: middle;
+            white-space: nowrap;
         }
         .header-right {
             text-align: right;
-            font-size: 8px;
+            font-size: 9px;
+            vertical-align: middle;
         }
-        .role-tag {
-            background-color: #4f46e5;
-            color: #ffffff;
-            padding: 1px 5px;
+        .lane-tag {
+            background-color: #ffffff;
+            color: #78350f;
+            padding: 2px 5px;
             border-radius: 3px;
+            font-size: 9.5px;
             font-weight: bold;
+            margin-left: 3px;
+            white-space: nowrap;
         }
         .reissue-tag {
-            background-color: #f59e0b;
-            color: #ffffff;
-            padding: 1px 4px;
+            background-color: #fef3c7;
+            color: #92400e;
+            padding: 2px 4px;
             border-radius: 3px;
+            font-size: 8.5px;
             font-weight: bold;
             margin-right: 3px;
+            white-space: nowrap;
         }
         .body-table {
             width: 100%;
-            margin-bottom: 4px;
+            height: 45mm;
+            border-collapse: collapse;
         }
         .info-col {
             vertical-align: middle;
-            width: 66%;
+            width: 60%;
+            padding-left: 6px;
+            padding-right: 4px;
         }
         .staff-kana {
-            font-size: 8px;
+            font-size: 11px;
             color: #64748b;
-            margin-bottom: 1px;
+            margin-bottom: 4px;
         }
         .staff-name {
-            font-size: 14px;
+            font-size: 24px;
             font-weight: bold;
             color: #0f172a;
-            margin-bottom: 4px;
-            white-space: nowrap;
-        }
-        .staff-affiliation {
-            font-size: 8px;
-            color: #475569;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            padding: 2px 4px;
+            line-height: 1.2;
+            word-break: break-all;
         }
         .qr-col {
-            width: 34%;
+            width: 40%;
             text-align: center;
             vertical-align: middle;
         }
         .qr-wrapper {
             display: inline-block;
+            text-align: center;
         }
-        .qr-wrapper svg {
-            width: 75px;
-            height: 75px;
+        .qr-img {
+            width: 92px;
+            height: 92px;
+            display: block;
+            margin: 0 auto;
+        }
+        .qr-caption {
+            font-size: 8.5px;
+            color: #475569;
+            margin-top: 3px;
+            text-align: center;
+            line-height: 1;
+            font-weight: bold;
         }
         .badge-footer {
-            font-size: 7.5px;
+            font-size: 8.5px;
             color: #64748b;
-            text-align: center;
+            text-align: right;
             border-top: 1px solid #f1f5f9;
-            padding-top: 4px;
-            margin-top: 2px;
+            padding-top: 3px;
+            margin-top: 1px;
         }
     </style>
 </head>
@@ -181,14 +204,18 @@
                 <td class="card-cell">
                     <div class="badge-card">
                         <!-- ヘッダー -->
-                        <table class="header-table">
+                        <table class="header-table {{ $staff->is_leader ? 'header-leader' : 'header-staff' }}">
                             <tr>
-                                <td class="event-title">まつり運行スタッフ証</td>
+                                <td class="event-title">保土ケ谷宿場まつり STAFF</td>
                                 <td class="header-right">
                                     @if($staff->is_reissued)
                                     <span class="reissue-tag">再発行(V.{{ $staff->reissue_count + 1 }})</span>
                                     @endif
-                                    <span class="role-tag">現場STAFF</span>
+                                    @if($staff->is_leader)
+                                        @foreach($staff->led_lane_names as $laneName)
+                                        <span class="lane-tag">{{ $laneName }}</span>
+                                        @endforeach
+                                    @endif
                                 </td>
                             </tr>
                         </table>
@@ -199,13 +226,11 @@
                                 <td class="info-col">
                                     <div class="staff-kana">{{ $staff->kana ?: 'ー' }}</div>
                                     <div class="staff-name">{{ $staff->name }}</div>
-                                    <div class="staff-affiliation">
-                                        所属: {{ $staff->affiliation ?: '本部直属 / 一般公募' }}
-                                    </div>
                                 </td>
                                 <td class="qr-col">
                                     <div class="qr-wrapper">
-                                        {!! $card['qr_svg'] !!}
+                                        <img src="{{ $card['qr_data_uri'] }}" class="qr-img" alt="マイシフトQR">
+                                        <div class="qr-caption">マイシフト確認</div>
                                     </div>
                                 </td>
                             </tr>
@@ -213,7 +238,7 @@
 
                         <!-- フッター -->
                         <div class="badge-footer">
-                            スマホでQR読取 → 当日のマイシフト・運行表を確認
+                            発行: 保土ケ谷宿場まつり実行委員会
                         </div>
                     </div>
                 </td>
@@ -234,4 +259,3 @@
     @endforelse
 </body>
 </html>
-

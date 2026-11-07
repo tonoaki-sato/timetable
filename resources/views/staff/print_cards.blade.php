@@ -32,35 +32,37 @@
             @php $staff = $card['staff']; @endphp
             <div class="badge-card">
                 <!-- ヘッダー -->
-                <div class="badge-header">
-                    <span class="event-title">まつり運行スタッフ証</span>
+                <div class="badge-header {{ $staff->is_leader ? 'header-leader' : 'header-staff' }}">
+                    <span class="event-title">保土ケ谷宿場まつり STAFF</span>
                     <div class="badge-header-right">
                         @if($staff->is_reissued)
                         <span class="reissue-tag">再発行 (Ver.{{ $staff->reissue_count + 1 }})</span>
                         @endif
-                        <span class="role-tag">現場STAFF</span>
+                        @if($staff->is_leader)
+                            @foreach($staff->led_lane_names as $laneName)
+                            <span class="lane-tag">{{ $laneName }}</span>
+                            @endforeach
+                        @endif
                     </div>
                 </div>
 
                 <!-- ボディ -->
                 <div class="badge-body">
                     <div class="info-col">
-                        <div class="staff-kana">{{ $staff->kana }}</div>
+                        <div class="staff-kana">{{ $staff->kana ?: 'ー' }}</div>
                         <div class="staff-name">{{ $staff->name }}</div>
-                        <div class="staff-affiliation">
-                            🏢 {{ $staff->affiliation ?: '本部直属 / 一般公募' }}
-                        </div>
                     </div>
 
                     <!-- QRコード -->
                     <div class="qr-col">
-                        {!! $card['qr_svg'] !!}
+                        <img src="{{ $card['qr_data_uri'] }}" class="qr-img" alt="マイシフトQR">
+                        <div class="qr-caption">マイシフト確認</div>
                     </div>
                 </div>
 
                 <!-- フッター -->
                 <div class="badge-footer">
-                    スマートフォンでQRコードを読取 ➡ 当日のマイシフト・運行表を確認
+                    発行: 保土ケ谷宿場まつり実行委員会
                 </div>
             </div>
             @empty
