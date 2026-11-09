@@ -28,4 +28,3 @@ class ReorderEquipmentsRequest extends FormRequest
         ];
     }
 }
-

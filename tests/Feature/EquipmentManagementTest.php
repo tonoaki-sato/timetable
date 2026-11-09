@@ -246,6 +246,13 @@ class EquipmentManagementTest extends TestCase
         $permResponse->assertStatus(200);
         $permResponse->assertSee('折りたたみ大型台車');
         $permResponse->assertDontSee('自由持出バケツ');
+
+        // 一覧画面に「持ち出しルール」カラムおよびバッジが正しく表示されること
+        $indexResponse = $this->get(route('equipments.index'));
+        $indexResponse->assertStatus(200);
+        $indexResponse->assertSee('持ち出しルール');
+        $indexResponse->assertSee('本陣許可制');
+        $indexResponse->assertSee('自由持出可');
     }
 
     /**

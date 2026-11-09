@@ -148,6 +148,7 @@
                     <tr>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">備品名</th>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">区分</th>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap">持ち出しルール</th>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">総数量</th>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">定常保管場所 / 調達</th>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">主担当班</th>
@@ -174,11 +175,6 @@
                                         title="クリックして詳細を表示">
                                         {{ $item->name }}
                                     </a>
-                                    @if($item->checkout_rule === 'permission_required')
-                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">⚠️ 本陣許可制</span>
-                                    @elseif($item->checkout_rule === 'leader_only')
-                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">👑 班長限定</span>
-                                    @endif
                                 </div>
                             </td>
 
@@ -186,6 +182,16 @@
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border {{ $item->type_enum->badgeClasses() }}">
                                     {{ $item->type_enum->icon() }} {{ $item->type_enum->shortLabel() }}
+                                </span>
+                            </td>
+
+                            <!-- 持ち出しルール -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border {{ $item->checkout_rule_enum->badgeClasses() }}">
+                                    @if($item->checkout_rule_enum->icon())
+                                        <span class="mr-1">{{ $item->checkout_rule_enum->icon() }}</span>
+                                    @endif
+                                    <span>{{ $item->checkout_rule_enum->shortLabel() }}</span>
                                 </span>
                             </td>
 
@@ -247,7 +253,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
+                            <td colspan="7" class="p-8 text-center text-slate-400 text-xs">
                                 備品がまだ登録されていません。ヘッダーの「➕ 新規備品を追加」から登録してください。
                             </td>
                         </tr>

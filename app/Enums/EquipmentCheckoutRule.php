@@ -45,6 +45,18 @@ enum EquipmentCheckoutRule: string
     }
 
     /**
+     * アイコンを取得
+     */
+    public function icon(): ?string
+    {
+        return match ($this) {
+            self::Free => null,
+            self::PermissionRequired => '⚠️',
+            self::LeaderOnly => '👑',
+        };
+    }
+
+    /**
      * セレクトボックス等の選択肢一覧を取得
      *
      * @return array<string, string>
