@@ -45,4 +45,3 @@ interface EquipmentLogisticsPatternRepositoryInterface
      */
     public function getMaxDisplayOrder(): int;
 }
-

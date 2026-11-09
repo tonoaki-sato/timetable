@@ -50,6 +50,7 @@ class EquipmentController extends Controller
             'committeeCount' => $counts['committee'],
             'rentalCount' => $counts['rental'],
             'personalCount' => $counts['personal'],
+            'isTimetableScoped' => $request->route('timetable') instanceof Timetable,
         ]);
     }
 
@@ -69,6 +70,7 @@ class EquipmentController extends Controller
         return view('equipments.create', [
             'timetable' => $timetable,
             'lanes' => $lanes,
+            'isTimetableScoped' => $request->route('timetable') instanceof Timetable,
         ]);
     }
 
@@ -108,10 +110,15 @@ class EquipmentController extends Controller
 
         $timetable = $this->resolveTimetable($request, $timetable);
         $equipment = $this->equipmentRepository->findWithDetails($equipment->id, $timetable) ?? $equipment;
+        $allTimetables = Timetable::withCount([
+            'logisticsPlans' => fn ($query) => $query->where('equipment_id', $equipment->id),
+        ])->orderBy('target_date', 'asc')->get();
 
         return view('equipments.show', [
             'timetable' => $timetable,
             'equipment' => $equipment,
+            'allTimetables' => $allTimetables,
+            'isTimetableScoped' => $request->route('timetable') instanceof Timetable,
         ]);
     }
 
@@ -132,6 +139,7 @@ class EquipmentController extends Controller
             'timetable' => $timetable,
             'equipment' => $equipment,
             'lanes' => $lanes,
+            'isTimetableScoped' => $request->route('timetable') instanceof Timetable,
         ]);
     }
 

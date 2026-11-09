@@ -310,8 +310,8 @@
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('equipments.*') || request()->routeIs('timetables.equipments.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">📦</span>
                                         <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">資機材管理</div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">保有備品・外部レンタル台帳</p>
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">資機材・資材管理</div>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">自前備品・レンタル機材・私物の一元台帳</p>
                                         </div>
                                     </a>
                                     <a href="{{ route('location-types.index') }}"

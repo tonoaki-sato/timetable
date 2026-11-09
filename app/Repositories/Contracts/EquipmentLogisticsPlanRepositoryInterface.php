@@ -54,4 +54,3 @@ interface EquipmentLogisticsPlanRepositoryInterface
      */
     public function clearForEquipment(Equipment $equipment, Timetable $timetable): int;
 }
-

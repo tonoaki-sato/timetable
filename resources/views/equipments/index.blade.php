@@ -1,39 +1,74 @@
-<x-layouts.app :title="$timetable->name . ' 資機材管理'">
+@php
+    $isScoped = $isTimetableScoped ?? false;
+    $pageTitle = $isScoped ? ($timetable->name . ' 資機材・資材管理') : '資機材・資材管理（備品台帳）';
+    $pageDesc = $isScoped
+        ? '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）運行に使用する自前保有備品・提携レンタル機材・個人持ち込み私物の台帳および配備状況を管理します。'
+        : 'まつり運行全般で使用する自前保有備品、外部レンタル機材、個人持ち込み私物の台帳です。数量、保管場所、管理番号、主担当班および持出ルールを一元管理します。';
+    $indexRoute = $isScoped ? route('timetables.equipments.index', $timetable) : route('equipments.index');
+    $createRoute = $isScoped ? route('timetables.equipments.create', $timetable) : route('equipments.create');
+    $logisticsRoute = $isScoped ? route('timetables.logistics.index', $timetable) : route('logistics.index');
+@endphp
+
+<x-layouts.app :title="$pageTitle">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- 1. ナビゲーション & ヘッダー -->
     <x-page-header
-        :title="$timetable->name . ' 資機材・資材管理'"
+        :title="$pageTitle"
         icon="📦"
-        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）運行に使用する自前保有備品・提携レンタル機材・個人持ち込み私物の台帳および配備状況を管理します。'">
+        :description="$pageDesc">
         <x-slot:breadcrumbs>
-            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>⏱️</span>
-                <span>運行情報一覧</span>
-            </a>
-            <span class="text-slate-300">/</span>
-            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>📅</span>
-                <span>{{ $timetable->name }}</span>
-            </a>
-            <span class="text-slate-300">/</span>
-            <span class="text-slate-700 font-bold truncate">📦 資機材・資材管理</span>
+            @if($isScoped)
+                <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                    <span>⏱️</span>
+                    <span>運行情報一覧</span>
+                </a>
+                <span class="text-slate-300">/</span>
+                <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                    <span>📅</span>
+                    <span>{{ $timetable->name }}</span>
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-700 font-bold truncate">📦 資機材管理</span>
+            @else
+                <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                    <span>🏮</span>
+                    <span>本部</span>
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-500">🗂️ マスター管理</span>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-700 font-bold truncate">📦 資機材管理</span>
+            @endif
         </x-slot:breadcrumbs>
 
+        <x-slot:badges>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-slate-100 text-slate-800 border border-slate-200">
+                登録総数: {{ $totalCount }} 品目
+            </span>
+            @if($isScoped)
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    📅 {{ $timetable->name }}
+                </span>
+            @endif
+        </x-slot:badges>
+
         <x-slot:actions>
-            <a href="{{ route('timetables.logistics.print', $timetable) }}"
-                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0"
-                title="搬出入指示書兼現場チェックリストをPDFでダウンロード">
-                <span>📄</span>
-                <span>指示書PDF</span>
-                <span class="text-[10px] opacity-60">↓</span>
-            </a>
-            <a href="{{ route('timetables.logistics.index', $timetable) }}"
-                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
+            @if($isScoped)
+                <a href="{{ route('timetables.logistics.print', $timetable) }}"
+                    class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0"
+                    title="搬出入指示書兼現場チェックリストをPDFでダウンロード">
+                    <span>📄</span>
+                    <span>指示書PDF</span>
+                </a>
+            @endif
+            <a href="{{ $logisticsRoute }}"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0"
+                title="日別の搬出入計画・現場チェック">
                 <span>🚚</span>
                 <span>搬出入計画</span>
             </a>
-            <a href="{{ route('timetables.equipments.create', $timetable) }}"
+            <a href="{{ $createRoute }}"
                 class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">
                 <span>➕</span>
                 <span>新規資機材を追加</span>
@@ -41,8 +76,10 @@
         </x-slot:actions>
     </x-page-header>
 
-    <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
-    <x-timetable-context-bar :timetable="$timetable" active="equipments" />
+    <!-- タイムテーブルスコープ時のみコンテキストバーを表示 -->
+    @if($isScoped)
+        <x-timetable-context-bar :timetable="$timetable" active="logistics" />
+    @endif
 
     <!-- アラートメッセージ -->
     @if (session('status'))
@@ -65,26 +102,26 @@
             <!-- 区分フィルター -->
             <div class="flex items-center space-x-1.5 overflow-x-auto scrollbar-none flex-nowrap py-0.5">
                 <span class="text-xs font-bold text-slate-500 mr-1 whitespace-nowrap shrink-0">区分:</span>
-                <a href="{{ route('timetables.equipments.index', array_merge(['timetable' => $timetable], array_filter(['lane_id' => $laneFilter, 'keyword' => $keyword]))) }}"
+                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ !$typeFilter ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                     すべて ({{ $totalCount }})
                 </a>
-                <a href="{{ route('timetables.equipments.index', array_merge(['timetable' => $timetable], array_filter(['type' => 'committee', 'lane_id' => $laneFilter, 'keyword' => $keyword]))) }}"
+                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'committee', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'committee' ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200' }}">
                     🏛️ 実行委員会 ({{ $committeeCount }})
                 </a>
-                <a href="{{ route('timetables.equipments.index', array_merge(['timetable' => $timetable], array_filter(['type' => 'rental', 'lane_id' => $laneFilter, 'keyword' => $keyword]))) }}"
+                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'rental', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'rental' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200' }}">
                     🏢 イベント会社 ({{ $rentalCount }})
                 </a>
-                <a href="{{ route('timetables.equipments.index', array_merge(['timetable' => $timetable], array_filter(['type' => 'personal', 'lane_id' => $laneFilter, 'keyword' => $keyword]))) }}"
+                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'personal', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'personal' ? 'bg-amber-600 text-white shadow-2xs' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200' }}">
                     🎒 私物 ({{ $personalCount }})
                 </a>
             </div>
 
             <!-- 所管班 & キーワード検索フォーム -->
-            <form method="GET" action="{{ route('timetables.equipments.index', $timetable) }}" class="flex items-center space-x-2 flex-wrap gap-2">
+            <form method="GET" action="{{ $indexRoute }}" class="flex items-center space-x-2 flex-wrap gap-2">
                 @if($typeFilter)
                     <input type="hidden" name="type" value="{{ $typeFilter }}">
                 @endif
@@ -112,7 +149,7 @@
                 </button>
 
                 @if($typeFilter || $laneFilter || $keyword)
-                    <a href="{{ route('timetables.equipments.index', $timetable) }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 underline">
+                    <a href="{{ $indexRoute }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 underline">
                         クリア
                     </a>
                 @endif
@@ -120,7 +157,7 @@
         </div>
     </div>
 
-    <!-- 3. 資機材台帳一覧テーブル (班担当管理風カード) -->
+    <!-- 3. 資機材台帳一覧テーブル -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
@@ -132,7 +169,11 @@
                     </span>
                 </h2>
                 <p class="text-xs text-slate-500 mt-0.5">
-                    「{{ $timetable->name }}」における配備ステップおよび定常保管場所の一覧です。
+                    @if($isScoped)
+                        「{{ $timetable->name }}」における配備動態および定常保管場所の一覧です。
+                    @else
+                        保有備品、レンタル機材、私物の基本情報および主担当班の一覧です。
+                    @endif
                 </p>
             </div>
         </div>
@@ -146,17 +187,23 @@
                         <th scope="col" class="py-3.5 px-3 whitespace-nowrap">総数量</th>
                         <th scope="col" class="py-3.5 px-4 whitespace-nowrap">定常保管場所 / 調達</th>
                         <th scope="col" class="py-3.5 px-3 whitespace-nowrap">主担当班</th>
-                        <th scope="col" class="py-3.5 px-3 whitespace-nowrap">本日配備動態</th>
+                        <th scope="col" class="py-3.5 px-3 whitespace-nowrap">配備・搬出入動態</th>
                         <th scope="col" class="py-3.5 px-4 text-right whitespace-nowrap">操作</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white">
                     @forelse($equipments as $item)
+                        @php
+                            $itemShowUrl = $isScoped ? route('timetables.equipments.show', [$timetable, $item]) : route('equipments.show', $item);
+                            $itemEditUrl = $isScoped ? route('timetables.equipments.edit', [$timetable, $item]) : route('equipments.edit', $item);
+                            $itemDestroyUrl = $isScoped ? route('timetables.equipments.destroy', [$timetable, $item]) : route('equipments.destroy', $item);
+                            $itemLogisticsUrl = $isScoped ? route('timetables.logistics.equipments.show', [$timetable, $item]) : route('logistics.equipments.show', $item);
+                        @endphp
                         <tr class="hover:bg-slate-50/80 transition">
                             <!-- 資機材名 -->
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center space-x-1.5 flex-wrap">
-                                    <a href="{{ route('timetables.equipments.show', [$timetable, $item]) }}" class="font-bold text-slate-900 text-sm hover:text-indigo-600 transition">
+                                    <a href="{{ $itemShowUrl }}" class="font-bold text-slate-900 text-sm hover:text-indigo-600 transition">
                                         {{ $item->name }}
                                     </a>
                                     @if($item->checkout_rule === 'permission_required')
@@ -216,39 +263,40 @@
                                 @endif
                             </td>
 
-                            <!-- 搬出入計画配備状況 (本日スコープ) -->
+                            <!-- 搬出入計画配備状況 -->
                             <td class="py-3.5 px-3 whitespace-nowrap">
                                 @php $planCount = $item->plans->count(); @endphp
                                 @if($planCount > 0)
-                                    <a href="{{ route('timetables.logistics.equipments.show', [$timetable, $item]) }}"
+                                    <a href="{{ $itemLogisticsUrl }}"
                                        class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition"
-                                       title="この資機材の搬出入ステップを確認・設定">
+                                       title="搬出入ステップを確認・設定">
                                         <span>🚚</span>
                                         <span>{{ $planCount }} ステップ</span>
                                     </a>
                                 @else
-                                    <a href="{{ route('timetables.logistics.equipments.show', [$timetable, $item]) }}"
-                                       class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition"
-                                       title="搬出入ステップを追加">
-                                        未設定
+                                    <a href="{{ $itemLogisticsUrl }}"
+                                       class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
+                                       title="搬出入ステップを設定">
+                                        <span>⚡</span>
+                                        <span>設定する</span>
                                     </a>
                                 @endif
                             </td>
 
-                            <!-- 操作列 (班担当管理統一スタイル) -->
+                            <!-- 操作列 -->
                             <td class="py-3.5 px-4 text-right whitespace-nowrap space-x-1">
-                                <a href="{{ route('timetables.equipments.show', [$timetable, $item]) }}"
+                                <a href="{{ $itemShowUrl }}"
                                    class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition inline-flex items-center"
                                    title="詳細表示">
                                     詳細
                                 </a>
-                                <a href="{{ route('timetables.equipments.edit', [$timetable, $item]) }}"
+                                <a href="{{ $itemEditUrl }}"
                                    class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition inline-flex items-center"
                                    title="編集">
                                     編集
                                 </a>
                                 @can('delete', $item)
-                                    <form method="POST" action="{{ route('timetables.equipments.destroy', [$timetable, $item]) }}" class="inline"
+                                    <form method="POST" action="{{ $itemDestroyUrl }}" class="inline"
                                           data-confirm="資機材「{{ $item->name }}」を削除しますか？&#10;紐づくすべての搬出入計画ステップも削除されます。">
                                         @csrf
                                         @method('DELETE')
@@ -269,7 +317,7 @@
                                 <div class="font-bold text-slate-700">登録されている資材がありません</div>
                                 <div class="text-xs text-slate-400 mt-1">「新規資機材を追加」ボタンから自前備品や提携レンタル機材、私物を登録してください。</div>
                                 <div class="mt-4">
-                                    <a href="{{ route('timetables.equipments.create', $timetable) }}" class="inline-block px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 transition">
+                                    <a href="{{ $createRoute }}" class="inline-block px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 transition">
                                         ＋ 新規資機材を追加
                                     </a>
                                 </div>

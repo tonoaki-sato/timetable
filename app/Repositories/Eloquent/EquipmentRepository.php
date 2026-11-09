@@ -93,4 +93,3 @@ class EquipmentRepository implements EquipmentRepositoryInterface
         return $equipment->delete();
     }
 }
-

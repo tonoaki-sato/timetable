@@ -59,4 +59,3 @@ enum EquipmentCheckoutRule: string
         return $options;
     }
 }
-

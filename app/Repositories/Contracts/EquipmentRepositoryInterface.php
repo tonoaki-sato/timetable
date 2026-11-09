@@ -53,4 +53,3 @@ interface EquipmentRepositoryInterface
      */
     public function delete(Equipment $equipment): bool;
 }
-

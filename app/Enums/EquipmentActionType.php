@@ -68,4 +68,3 @@ enum EquipmentActionType: string
         return $options;
     }
 }
-

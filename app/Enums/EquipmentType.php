@@ -71,4 +71,3 @@ enum EquipmentType: string
         return $options;
     }
 }
-

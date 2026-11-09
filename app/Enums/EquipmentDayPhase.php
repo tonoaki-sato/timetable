@@ -73,4 +73,3 @@ enum EquipmentDayPhase: string
         return $options;
     }
 }
-

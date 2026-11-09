@@ -1,31 +1,56 @@
-<x-layouts.app :title="'新規資機材の追加 - ' . $timetable->name">
+@php
+    $isScoped = $isTimetableScoped ?? false;
+    $indexUrl = $isScoped ? route('timetables.equipments.index', $timetable) : route('equipments.index');
+    $storeUrl = $isScoped ? route('timetables.equipments.store', $timetable) : route('equipments.store');
+    $pageTitle = $isScoped ? ('新規資機材の追加 - ' . $timetable->name) : '新規資材の登録 - 資機材管理';
+    $pageDesc = $isScoped
+        ? '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）運行に使用する自前保有備品、提携イベント会社レンタル機材、または個人持ち込み私物を台帳に登録します。'
+        : 'まつり運行全般で使用する自前保有備品、提携イベント会社レンタル機材、または個人持ち込み私物を資機材台帳に登録します。';
+@endphp
+
+<x-layouts.app :title="$pageTitle">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
         title="新規資材の登録"
         icon="➕"
-        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）運行に使用する自前保有備品、提携イベント会社レンタル機材、または個人持ち込み私物を台帳に登録します。'">
+        :description="$pageDesc">
         <x-slot:breadcrumbs>
-            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>⏱️</span>
-                <span>運行情報一覧</span>
-            </a>
-            <span class="text-slate-300">/</span>
-            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>📅</span>
-                <span>{{ $timetable->name }}</span>
-            </a>
-            <span class="text-slate-300">/</span>
-            <a href="{{ route('timetables.equipments.index', $timetable) }}" class="hover:text-indigo-600 transition truncate">
-                📦 資材管理
-            </a>
-            <span class="text-slate-300">/</span>
-            <span class="text-slate-700 font-bold truncate">➕ 新規資材の登録</span>
+            @if($isScoped)
+                <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                    <span>⏱️</span>
+                    <span>運行情報一覧</span>
+                </a>
+                <span class="text-slate-300">/</span>
+                <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                    <span>📅</span>
+                    <span>{{ $timetable->name }}</span>
+                </a>
+                <span class="text-slate-300">/</span>
+                <a href="{{ $indexUrl }}" class="hover:text-indigo-600 transition truncate">
+                    📦 資材管理
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-700 font-bold truncate">➕ 新規資材の登録</span>
+            @else
+                <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                    <span>🏮</span>
+                    <span>本部</span>
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-500">🗂️ マスター管理</span>
+                <span class="text-slate-300">/</span>
+                <a href="{{ route('equipments.index') }}" class="hover:text-indigo-600 transition truncate">
+                    📦 資材管理
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-700 font-bold truncate">➕ 新規資材の登録</span>
+            @endif
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.equipments.index', $timetable) }}"
+            <a href="{{ $indexUrl }}"
                 class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>←</span>
                 <span>資材管理に戻る</span>
@@ -33,8 +58,9 @@
         </x-slot:actions>
     </x-page-header>
 
-    <!-- 運行日コンテキストバー -->
-    <x-timetable-context-bar :timetable="$timetable" active="equipments" />
+    @if($isScoped)
+        <x-timetable-context-bar :timetable="$timetable" active="logistics" />
+    @endif
 
     <!-- 入力エラーメッセージ -->
     @if ($errors->any())
@@ -52,7 +78,7 @@
     <div class="max-w-4xl mx-auto space-y-3.5">
         <!-- フォームカード -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
-            <form method="POST" action="{{ route('timetables.equipments.store', $timetable) }}" class="space-y-6">
+            <form method="POST" action="{{ $storeUrl }}" class="space-y-6">
                 @csrf
 
                 <!-- 資機材基本情報 -->
@@ -98,75 +124,74 @@
                                 class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
 
-                        <div class="flex items-center pt-5">
-                            <label class="flex items-center space-x-2 text-xs font-bold text-slate-700 cursor-pointer">
-                                <input type="checkbox" name="is_approximate_quantity" value="1" {{ old('is_approximate_quantity') ? 'checked' : '' }}
-                                    class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                                <span>概数管理（「約 ○ 個」と表記）</span>
+                        <div class="flex items-center sm:pt-5">
+                            <label class="relative flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="is_approximate_quantity" name="is_approximate_quantity" value="1"
+                                    {{ old('is_approximate_quantity') ? 'checked' : '' }}
+                                    class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                <span class="text-xs font-bold text-slate-700">概数（約○個）として管理</span>
                             </label>
                         </div>
                     </div>
 
-                    <!-- 持出ルール & 主担当班 -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="checkout_rule" class="block text-xs font-bold text-slate-700 mb-1">持出・利用ルール</label>
-                            <select id="checkout_rule" name="checkout_rule"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                @foreach(\App\Enums\EquipmentCheckoutRule::cases() as $ruleCase)
-                                    <option value="{{ $ruleCase->value }}" {{ old('checkout_rule', 'free') === $ruleCase->value ? 'selected' : '' }}>
-                                        {{ $ruleCase->label() }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="lane_id" class="block text-xs font-bold text-slate-700 mb-1">主担当班（レーン）</label>
-                            <select id="lane_id" name="lane_id"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                <option value="">（未定・共用資機材）</option>
-                                @foreach($lanes as $lane)
-                                    <option value="{{ $lane->id }}" {{ old('lane_id') == $lane->id ? 'selected' : '' }}>
-                                        {{ $lane->icon ?: '🏷️' }} {{ $lane->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- 保管場所（自前・私物用） -->
-                    <div id="section-committee" class="space-y-4 pt-2">
-                        <div>
-                            <label for="storage_location" class="block text-xs font-bold text-slate-700 mb-1">定常保管場所</label>
-                            <input type="text" id="storage_location" name="storage_location" value="{{ old('storage_location', '番所地下倉庫') }}"
-                                placeholder="例: 番所地下倉庫、番所倉庫、コミュニティルーム、自宅"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <!-- クイック選択 -->
-                            <div class="flex items-center space-x-1.5 mt-1.5 flex-wrap gap-1">
-                                <span class="text-[10px] text-slate-400">候補入力:</span>
-                                @foreach(\App\Models\Equipment::STORAGE_LOCATIONS as $locName)
-                                    <button type="button" data-set-storage-location="{{ $locName }}"
-                                        class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 transition cursor-pointer">
-                                        {{ $locName }}
-                                    </button>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <div>
-                            <label for="storage_detail" class="block text-xs font-bold text-slate-700 mb-1">棚番・置場詳細・私物所有者</label>
-                            <input type="text" id="storage_detail" name="storage_detail" value="{{ old('storage_detail') }}"
-                                placeholder="例: 奥側スチールラック中段、西側コンテナ、所有者: 鈴木（090-XXXX-XXXX）"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        </div>
-                    </div>
-
-                    <!-- 仕様・備考メモ -->
+                    <!-- 主担当班の指名 -->
                     <div>
-                        <label for="description" class="block text-xs font-bold text-slate-700 mb-1">仕様メモ・注意事項</label>
+                        <label for="lane_id" class="block text-xs font-bold text-slate-700 mb-1">
+                            主担当班（維持・設営・保管の責任班）
+                        </label>
+                        <select id="lane_id" name="lane_id"
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">未指定（全社共通管理）</option>
+                            @foreach($lanes as $lane)
+                                <option value="{{ $lane->id }}" {{ old('lane_id') == $lane->id ? 'selected' : '' }}>
+                                    {{ $lane->icon ?: '🏷️' }} {{ $lane->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-[10px] text-slate-400 mt-1">※ 班を指定すると、班別資機材一覧や担当班詳細に表示されます。</p>
+                    </div>
+
+                    <!-- 保管場所・調達先（自前/レンタル/私物によりJSで切替表示） -->
+                    <div id="storage-container" class="space-y-3 p-4 bg-slate-50/70 rounded-xl border border-slate-200">
+                        <div id="storage-location-field">
+                            <label for="storage_location" class="block text-xs font-bold text-slate-700 mb-1">定常保管場所</label>
+                            <input type="text" id="storage_location" name="storage_location" value="{{ old('storage_location') }}"
+                                placeholder="例: 番所地下倉庫、本部テント内、各詰所など"
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <div id="storage-detail-field">
+                            <label for="storage_detail" class="block text-xs font-bold text-slate-700 mb-1">棚番・置場詳細・所有者連絡先</label>
+                            <input type="text" id="storage_detail" name="storage_detail" value="{{ old('storage_detail') }}"
+                                placeholder="例: 奥棚A-3、段ボール箱#2、個人所有者（連絡先: 090-xxxx-xxxx）など"
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <div id="rental-notice" class="hidden text-xs text-sky-800 bg-sky-50 border border-sky-200 p-3 rounded-lg">
+                            <span class="font-bold">🏢 イベント会社手配</span>: 保管場所は手配会社による現場直接搬入となるため、登録不要です。
+                        </div>
+                    </div>
+
+                    <!-- 持出・利用ルール -->
+                    <div>
+                        <label for="checkout_rule" class="block text-xs font-bold text-slate-700 mb-1">
+                            持出・利用ルール <span class="text-rose-600">*</span>
+                        </label>
+                        <select id="checkout_rule" name="checkout_rule" required
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            @foreach(\App\Enums\EquipmentCheckoutRule::cases() as $ruleCase)
+                                <option value="{{ $ruleCase->value }}" {{ old('checkout_rule', 'free') === $ruleCase->value ? 'selected' : '' }}>
+                                    {{ $ruleCase->label() }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- 仕様・注意事項・申し送り -->
+                    <div>
+                        <label for="description" class="block text-xs font-bold text-slate-700 mb-1">仕様・注意事項・申し送りメモ</label>
                         <textarea id="description" name="description" rows="3"
-                            placeholder="例: 前日に清掃点検が必要。給水用と排水用でポリタンク（20L）が4個付属。"
+                            placeholder="例: パイプテント用の杭とロープは別箱に保管。マイク用単三電池は予備4本同封。取扱注意。"
                             class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed">{{ old('description') }}</textarea>
                     </div>
 
@@ -178,9 +203,9 @@
                     </div>
                 </div>
 
-                <!-- フォーム送信ボタン (班担当管理統一スタイル) -->
+                <!-- フォーム送信ボタン -->
                 <div class="flex items-center justify-end space-x-3 pt-6 border-t border-slate-200">
-                    <a href="{{ route('timetables.equipments.index', $timetable) }}"
+                    <a href="{{ $indexUrl }}"
                         class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition">
                         キャンセル
                     </a>

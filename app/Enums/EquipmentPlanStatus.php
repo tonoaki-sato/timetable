@@ -50,4 +50,3 @@ enum EquipmentPlanStatus: string
         return $options;
     }
 }
-

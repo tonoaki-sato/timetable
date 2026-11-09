@@ -44,4 +44,3 @@ enum EquipmentOperatorType: string
         return $options;
     }
 }
-

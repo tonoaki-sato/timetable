@@ -26,4 +26,3 @@ readonly class EquipmentFilterDTO
         );
     }
 }
-

@@ -54,7 +54,7 @@
             <a href="{{ route('equipments.index') }}"
                class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">
                 <span>📦</span>
-                <span>資材管理（台帳）</span>
+                <span>資機材台帳</span>
             </a>
         </x-slot:actions>
     </x-page-header>

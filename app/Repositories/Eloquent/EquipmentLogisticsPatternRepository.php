@@ -97,4 +97,3 @@ class EquipmentLogisticsPatternRepository implements EquipmentLogisticsPatternRe
         return (int) EquipmentLogisticsPattern::max('display_order');
     }
 }
-

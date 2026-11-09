@@ -110,4 +110,3 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
         return $count;
     }
 }
-
