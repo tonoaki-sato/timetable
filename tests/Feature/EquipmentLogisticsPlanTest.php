@@ -180,6 +180,7 @@ class EquipmentLogisticsPlanTest extends TestCase
         ]);
 
         $sourceEquipment->plans()->create([
+            'timetable_id' => Timetable::first()->id,
             'day_phase' => 'pre_day',
             'action_type' => 'vendor_receive',
             'title' => '前日 イベント会社納品・受取立会',
@@ -195,6 +196,7 @@ class EquipmentLogisticsPlanTest extends TestCase
         ]);
 
         $sourceEquipment->plans()->create([
+            'timetable_id' => Timetable::first()->id,
             'day_phase' => 'post_day',
             'action_type' => 'vendor_pickup',
             'title' => '翌日 イベント会社回収・引渡立会',

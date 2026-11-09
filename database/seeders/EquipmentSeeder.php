@@ -23,12 +23,15 @@ class EquipmentSeeder extends Seeder
         // 立会スタッフ（佐藤 外亮）
         $witnessStaff = Staff::where('name', '佐藤 外亮')->first();
 
+        $timetableDay1 = Timetable::where('target_date', '2026-10-11')->first() ?? Timetable::first();
+        $timetableDay2 = Timetable::where('target_date', '2026-10-12')->first() ?? $timetableDay1;
+
         // 関連拠点
-        $banshoSpace = Location::where('name', '番所前スペース')->first();
-        $taxOfficeParking = Location::where('name', '税務署前駐車場')->first();
+        $banshoSpace1 = Location::where('timetable_id', $timetableDay1?->id)->where('name', '番所前スペース')->first();
+        $taxOfficeParking1 = Location::where('timetable_id', $timetableDay1?->id)->where('name', '税務署前駐車場')->first();
+        $banshoSpace2 = Location::where('timetable_id', $timetableDay2?->id)->where('name', '番所前スペース')->first() ?? $banshoSpace1;
 
         // 2日目の給水設備レーン
-        $timetableDay2 = Timetable::where('target_date', '2026-10-12')->first();
         $waterLane = Lane::where('timetable_id', $timetableDay2?->id)
             ->where('name', '給水設備')
             ->first();
@@ -54,6 +57,7 @@ class EquipmentSeeder extends Seeder
         // 2. 搬出入計画ステップ（7ステップ）
         $plans = [
             [
+                'timetable_id' => $timetableDay1?->id,
                 'target_date' => '2026-10-10',
                 'day_phase' => 'pre_day',
                 'action_type' => 'vendor_receive',
@@ -64,8 +68,8 @@ class EquipmentSeeder extends Seeder
                 'end_time' => null,
                 'from_location' => '番所前スペース',
                 'to_location' => '番所前スペース',
-                'from_location_id' => $banshoSpace?->id,
-                'to_location_id' => $banshoSpace?->id,
+                'from_location_id' => $banshoSpace1?->id,
+                'to_location_id' => $banshoSpace1?->id,
                 'operator_type' => 'committee',
                 'witness_required' => true,
                 'witness_staff_id' => $witnessStaff?->id,
@@ -74,6 +78,7 @@ class EquipmentSeeder extends Seeder
                 'display_order' => 10,
             ],
             [
+                'timetable_id' => $timetableDay1?->id,
                 'target_date' => null,
                 'day_phase' => 'pre_day',
                 'action_type' => 'staging_move',
@@ -84,8 +89,8 @@ class EquipmentSeeder extends Seeder
                 'end_time' => null,
                 'from_location' => '番所前スペース',
                 'to_location' => '税務署前駐車場',
-                'from_location_id' => $banshoSpace?->id,
-                'to_location_id' => $taxOfficeParking?->id,
+                'from_location_id' => $banshoSpace1?->id,
+                'to_location_id' => $taxOfficeParking1?->id,
                 'operator_type' => 'committee',
                 'witness_required' => false,
                 'witness_staff_id' => null,
@@ -94,6 +99,7 @@ class EquipmentSeeder extends Seeder
                 'display_order' => 20,
             ],
             [
+                'timetable_id' => $timetableDay1?->id,
                 'target_date' => null,
                 'day_phase' => 'day1_morning',
                 'action_type' => 'setup',
@@ -104,7 +110,7 @@ class EquipmentSeeder extends Seeder
                 'end_time' => null,
                 'from_location' => '税務署前駐車場',
                 'to_location' => '設置点各所',
-                'from_location_id' => $taxOfficeParking?->id,
+                'from_location_id' => $taxOfficeParking1?->id,
                 'to_location_id' => null,
                 'operator_type' => 'committee',
                 'witness_required' => false,
@@ -114,6 +120,7 @@ class EquipmentSeeder extends Seeder
                 'display_order' => 30,
             ],
             [
+                'timetable_id' => $timetableDay1?->id,
                 'target_date' => null,
                 'day_phase' => 'day1_evening',
                 'action_type' => 'night_storage',
@@ -134,6 +141,7 @@ class EquipmentSeeder extends Seeder
                 'display_order' => 40,
             ],
             [
+                'timetable_id' => $timetableDay2?->id,
                 'target_date' => null,
                 'day_phase' => 'day2_morning',
                 'action_type' => 'setup',
@@ -154,6 +162,7 @@ class EquipmentSeeder extends Seeder
                 'display_order' => 50,
             ],
             [
+                'timetable_id' => $timetableDay2?->id,
                 'target_date' => null,
                 'day_phase' => 'day2_evening',
                 'action_type' => 'collection_staging',
@@ -165,7 +174,7 @@ class EquipmentSeeder extends Seeder
                 'from_location' => '設置点各所',
                 'to_location' => '番所前スペース',
                 'from_location_id' => null,
-                'to_location_id' => $banshoSpace?->id,
+                'to_location_id' => $banshoSpace2?->id,
                 'operator_type' => 'committee',
                 'witness_required' => false,
                 'witness_staff_id' => null,
@@ -174,6 +183,7 @@ class EquipmentSeeder extends Seeder
                 'display_order' => 60,
             ],
             [
+                'timetable_id' => $timetableDay2?->id,
                 'target_date' => '2026-10-13',
                 'day_phase' => 'post_day',
                 'action_type' => 'vendor_pickup',
@@ -184,7 +194,7 @@ class EquipmentSeeder extends Seeder
                 'end_time' => null,
                 'from_location' => '番所前スペース',
                 'to_location' => '（未定）',
-                'from_location_id' => $banshoSpace?->id,
+                'from_location_id' => $banshoSpace2?->id,
                 'to_location_id' => null,
                 'operator_type' => 'committee',
                 'witness_required' => true,

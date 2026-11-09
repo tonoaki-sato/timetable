@@ -146,33 +146,68 @@ Route::middleware('auth')->group(function () {
     Route::resource('equipments', EquipmentController::class);
 
     // 2. 搬出入計画・カスタムパターン管理 (Logistics & Operations)
-    Route::prefix('logistics')->name('logistics.')->group(function () {
-        Route::get('/', [EquipmentLogisticsController::class, 'index'])->name('index');
-        Route::get('print', [EquipmentLogisticsController::class, 'print'])->name('print');
-        Route::get('equipments/{equipment}', [EquipmentLogisticsController::class, 'show'])->name('equipments.show');
-        Route::post('{equipment}/apply-template', [EquipmentLogisticsPlanController::class, 'applyTemplate'])->name('apply-template');
-        Route::post('{equipment}/save-as-pattern', [EquipmentLogisticsPatternController::class, 'saveFromEquipment'])->name('save-as-pattern');
-        Route::delete('{equipment}/plans/clear', [EquipmentLogisticsPlanController::class, 'clear'])->name('plans.clear');
+    Route::get('/logistics', [EquipmentLogisticsController::class, 'select'])->name('logistics.index');
+    Route::group([], function () {
+        Route::get('timetables/{timetable}/logistics', [EquipmentLogisticsController::class, 'index'])->name('timetables.logistics.index');
+        Route::get('timetables/{timetable}/logistics/print', [EquipmentLogisticsController::class, 'print'])->name('timetables.logistics.print');
+        Route::get('timetables/{timetable}/logistics/equipments/{equipment}', [EquipmentLogisticsController::class, 'show'])->name('timetables.logistics.equipments.show');
+        Route::post('timetables/{timetable}/logistics/{equipment}/apply-template', [EquipmentLogisticsPlanController::class, 'applyTemplate'])->name('timetables.logistics.apply-template');
+        Route::delete('timetables/{timetable}/logistics/{equipment}/plans/clear', [EquipmentLogisticsPlanController::class, 'clear'])->name('timetables.logistics.plans.clear');
 
-        // 搬出入パターン（テンプレート）CRUD操作
+        // 搬出入計画ステップ操作
+        Route::post('timetables/{timetable}/logistics/plans', [EquipmentLogisticsPlanController::class, 'store'])->name('timetables.logistics.plans.store');
+        Route::put('timetables/{timetable}/logistics/plans/{plan}', [EquipmentLogisticsPlanController::class, 'update'])->name('timetables.logistics.plans.update');
+        Route::delete('timetables/{timetable}/logistics/plans/{plan}', [EquipmentLogisticsPlanController::class, 'destroy'])->name('timetables.logistics.plans.destroy');
+        Route::patch('timetables/{timetable}/logistics/plans/{plan}/status', [EquipmentLogisticsPlanController::class, 'updateStatus'])->name('timetables.logistics.plans.update-status');
+    });
+
+    // 搬出入パターン（テンプレート）CRUD操作 & 既存互換フォールバック
+    Route::prefix('logistics')->name('logistics.')->group(function () {
+        Route::get('print', [EquipmentLogisticsController::class, 'printLegacy'])->name('print');
+        Route::get('equipments/{equipment}', [EquipmentLogisticsController::class, 'showLegacy'])->name('equipments.show');
+        Route::post('{equipment}/apply-template', [EquipmentLogisticsPlanController::class, 'applyTemplateLegacy'])->name('apply-template');
+        Route::post('{equipment}/save-as-pattern', [EquipmentLogisticsPatternController::class, 'saveFromEquipment'])->name('save-as-pattern');
+        Route::delete('{equipment}/plans/clear', [EquipmentLogisticsPlanController::class, 'clearLegacy'])->name('plans.clear');
+
         Route::post('patterns', [EquipmentLogisticsPatternController::class, 'store'])->name('patterns.store');
         Route::put('patterns/{pattern}', [EquipmentLogisticsPatternController::class, 'update'])->name('patterns.update');
         Route::delete('patterns/{pattern}', [EquipmentLogisticsPatternController::class, 'destroy'])->name('patterns.destroy');
 
-        // 搬出入計画ステップ操作
-        Route::post('plans', [EquipmentLogisticsPlanController::class, 'store'])->name('plans.store');
-        Route::put('plans/{plan}', [EquipmentLogisticsPlanController::class, 'update'])->name('plans.update');
-        Route::delete('plans/{plan}', [EquipmentLogisticsPlanController::class, 'destroy'])->name('plans.destroy');
-        Route::patch('plans/{plan}/status', [EquipmentLogisticsPlanController::class, 'updateStatus'])->name('plans.update-status');
+        Route::post('plans', [EquipmentLogisticsPlanController::class, 'storeLegacy'])->name('plans.store');
+        Route::put('plans/{plan}', [EquipmentLogisticsPlanController::class, 'updateLegacy'])->name('plans.update');
+        Route::delete('plans/{plan}', [EquipmentLogisticsPlanController::class, 'destroyLegacy'])->name('plans.destroy');
+        Route::patch('plans/{plan}/status', [EquipmentLogisticsPlanController::class, 'updateStatusLegacy'])->name('plans.update-status');
     });
 
     // 拠点管理・時間帯スケジュール・拠点タイプ管理
-    Route::resource('locations', LocationController::class);
+    Route::get('/locations', [LocationController::class, 'select'])->name('locations.index');
     Route::scopeBindings()->group(function () {
-        Route::post('locations/{location}/schedules', [LocationScheduleController::class, 'store'])->name('locations.schedules.store');
-        Route::put('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'update'])->name('locations.schedules.update');
-        Route::patch('locations/{location}/schedules/{schedule}/status', [LocationScheduleController::class, 'updateStatus'])->name('locations.schedules.update-status');
-        Route::delete('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'destroy'])->name('locations.schedules.destroy');
+        Route::get('timetables/{timetable}/locations', [LocationController::class, 'index'])->name('timetables.locations.index');
+        Route::get('timetables/{timetable}/locations/create', [LocationController::class, 'create'])->name('timetables.locations.create');
+        Route::post('timetables/{timetable}/locations', [LocationController::class, 'store'])->name('timetables.locations.store');
+        Route::get('timetables/{timetable}/locations/{location}', [LocationController::class, 'show'])->name('timetables.locations.show');
+        Route::get('timetables/{timetable}/locations/{location}/edit', [LocationController::class, 'edit'])->name('timetables.locations.edit');
+        Route::put('timetables/{timetable}/locations/{location}', [LocationController::class, 'update'])->name('timetables.locations.update');
+        Route::delete('timetables/{timetable}/locations/{location}', [LocationController::class, 'destroy'])->name('timetables.locations.destroy');
+
+        // 拠点スケジュール枠
+        Route::post('timetables/{timetable}/locations/{location}/schedules', [LocationScheduleController::class, 'store'])->name('timetables.locations.schedules.store');
+        Route::put('timetables/{timetable}/locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'update'])->name('timetables.locations.schedules.update');
+        Route::patch('timetables/{timetable}/locations/{location}/schedules/{schedule}/status', [LocationScheduleController::class, 'updateStatus'])->name('timetables.locations.schedules.update-status');
+        Route::delete('timetables/{timetable}/locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'destroy'])->name('timetables.locations.schedules.destroy');
     });
+
+    // 拠点管理 既存互換フォールバック
+    Route::get('locations/create', [LocationController::class, 'createRedirect'])->name('locations.create');
+    Route::post('locations', [LocationController::class, 'storeLegacy'])->name('locations.store');
+    Route::get('locations/{location}', [LocationController::class, 'showLegacy'])->name('locations.show');
+    Route::get('locations/{location}/edit', [LocationController::class, 'editLegacy'])->name('locations.edit');
+    Route::match(['put', 'patch'], 'locations/{location}', [LocationController::class, 'updateLegacy'])->name('locations.update');
+    Route::delete('locations/{location}', [LocationController::class, 'destroyLegacy'])->name('locations.destroy');
+    Route::post('locations/{location}/schedules', [LocationScheduleController::class, 'storeLegacy'])->name('locations.schedules.store');
+    Route::put('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'updateLegacy'])->name('locations.schedules.update');
+    Route::patch('locations/{location}/schedules/{schedule}/status', [LocationScheduleController::class, 'updateStatusLegacy'])->name('locations.schedules.update-status');
+    Route::delete('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'destroyLegacy'])->name('locations.schedules.destroy');
+
     Route::resource('location-types', LocationTypeController::class)->except(['create', 'show', 'edit']);
 });

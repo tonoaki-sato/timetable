@@ -6,6 +6,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
 use App\Models\Staff;
+use App\Models\Timetable;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -23,6 +24,7 @@ class EquipmentLogisticsPlanFactory extends Factory
     public function definition(): array
     {
         return [
+            'timetable_id' => Timetable::factory(),
             'equipment_id' => Equipment::factory(),
             'target_date' => '2026-10-10',
             'day_phase' => 'pre_day',

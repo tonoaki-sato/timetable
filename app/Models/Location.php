@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
+    'timetable_id',
     'location_type_id',
     'name',
     'notes',
@@ -27,6 +28,70 @@ class Location extends Model
 {
     /** @use HasFactory<LocationFactory> */
     use HasFactory;
+
+    /**
+     * デフォルト拠点定義一覧（運行計画作成時の自動生成用）
+     *
+     * @var array<int, array{name: string, type_slug: string, is_all_day: bool, notes: string, display_order: int}>
+     */
+    public const array DEFAULT_LOCATIONS = [
+        [
+            'name' => '番所地下倉庫',
+            'type_slug' => 'storage',
+            'is_all_day' => false,
+            'notes' => '大型自前機材（カラーコーン、ござ市用テント、大型台車等）の常時保管場所。',
+            'display_order' => 10,
+        ],
+        [
+            'name' => '番所倉庫',
+            'type_slug' => 'storage',
+            'is_all_day' => false,
+            'notes' => '地下倉庫とは別の番所倉庫。交通整理用LED誘導棒などの常時保管場所。',
+            'display_order' => 15,
+        ],
+        [
+            'name' => '番所前スペース',
+            'type_slug' => 'open_space',
+            'is_all_day' => false,
+            'notes' => "番所空きスペース。前日の倉庫出し・業者納品時の一時集約場所、および2日目終了後〜翌日の倉庫格納前・業者回収待ち集約場所。\n※1日目・2日目の通行止め（まつり開催）期間中はイベントブースとして使用されるため資材置き場として利用不可。",
+            'display_order' => 20,
+        ],
+        [
+            'name' => 'コミュニティルーム',
+            'type_slug' => 'community_space',
+            'is_all_day' => false,
+            'notes' => "主に消耗品および看板（ステカン）の常時保管場所。\n本祭期間中の盗難のおそれがある資材や荒天時退避資材の夜間保管先としても活用。",
+            'display_order' => 30,
+        ],
+        [
+            'name' => '税務署前駐車場',
+            'type_slug' => 'parking',
+            'is_all_day' => false,
+            'notes' => 'イベントブース。機材の前日中継集約および1日目夜の分散夜間保管場所として利用。',
+            'display_order' => 40,
+        ],
+        [
+            'name' => '長島駐車場（旧北川駐車場）',
+            'type_slug' => 'parking',
+            'is_all_day' => false,
+            'notes' => '近隣貸切駐車場。企業ブース、および1日目夜の夜間分散保管場所として利用。',
+            'display_order' => 50,
+        ],
+        [
+            'name' => 'S&S駐車場',
+            'type_slug' => 'parking',
+            'is_all_day' => false,
+            'notes' => '本陣待機場所。機材の前日中継集約および1日目夜の分散夜間保管場所として利用。',
+            'display_order' => 60,
+        ],
+        [
+            'name' => '横浜銀行駐車場',
+            'type_slug' => 'parking',
+            'is_all_day' => false,
+            'notes' => '近隣住民用の代替駐車場として利用。',
+            'display_order' => 70,
+        ],
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -42,6 +107,14 @@ class Location extends Model
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * 運行計画（タイムテーブル）とのリレーション
+     */
+    public function timetable(): BelongsTo
+    {
+        return $this->belongsTo(Timetable::class);
     }
 
     /**
@@ -162,6 +235,16 @@ class Location extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * 特定の運行計画に属する拠点を抽出
+     */
+    public function scopeForTimetable(Builder $query, Timetable|int $timetable): Builder
+    {
+        $id = $timetable instanceof Timetable ? $timetable->id : $timetable;
+
+        return $query->where('timetable_id', $id);
     }
 
     /**

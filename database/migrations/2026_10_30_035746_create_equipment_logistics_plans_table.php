@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('equipment_logistics_plans', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
             $table->foreignId('equipment_id')->constrained('equipments')->cascadeOnDelete();
             $table->date('target_date')->nullable()->comment('実施日 (YYYY-MM-DD)');
             $table->string('day_phase', 30)->default('pre_day')->comment('フェーズ: other, pre_day, day1_morning, day1_evening, day2_morning, day2_evening, post_day');
@@ -34,6 +35,9 @@ return new class extends Migration
             $table->integer('display_order')->default(0)->comment('表示順序');
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
+
+            $table->index(['timetable_id', 'equipment_id']);
+            $table->index(['timetable_id', 'start_time']);
         });
     }
 

@@ -1,14 +1,33 @@
 <x-layouts.app title="{{ $location->name }} - 拠点詳細">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
+    @if(isset($timetable))
+        <x-timetable-context-bar :timetable="$timetable" active="locations" />
+    @endif
+
+    @php
+        $indexUrl = isset($timetable) ? route('timetables.locations.index', $timetable) : route('locations.index');
+        $storeScheduleUrl = isset($timetable) ? route('timetables.locations.schedules.store', [$timetable, $location]) : route('locations.schedules.store', $location);
+        $updateStatusUrl = fn($s) => isset($timetable) ? route('timetables.locations.schedules.update-status', [$timetable, $location, $s]) : route('locations.schedules.update-status', [$location, $s]);
+        $updateScheduleUrl = fn($s) => isset($timetable) ? route('timetables.locations.schedules.update', [$timetable, $location, $s]) : route('locations.schedules.update', [$location, $s]);
+        $destroyScheduleUrl = fn($s) => isset($timetable) ? route('timetables.locations.schedules.destroy', [$timetable, $location, $s]) : route('locations.schedules.destroy', [$location, $s]);
+    @endphp
+
     <!-- 1. ヘッダーエリア -->
     <x-page-header
         title="{{ $location->name }}"
         icon="📍"
         description="{{ $evaluation->detail }}">
         <x-slot:breadcrumbs>
-            <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
-            <span class="text-slate-300">/</span>
+            @if(isset($timetable))
+                <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition shrink-0">運行日程</a>
+                <span class="text-slate-400">/</span>
+                <a href="{{ $indexUrl }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
+                <span class="text-slate-400">/</span>
+            @else
+                <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
+                <span class="text-slate-300">/</span>
+            @endif
             <span class="text-slate-800 font-bold truncate">{{ $location->name }}</span>
         </x-slot:breadcrumbs>
 
@@ -54,7 +73,7 @@
             <button type="button"
                     data-action="open-schedule-modal"
                     data-mode="create"
-                    data-store-url="{{ route('locations.schedules.store', $location) }}"
+                    data-store-url="{{ $storeScheduleUrl }}"
                     class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer self-start sm:self-auto">
                 <span>➕</span>
                 <span>時間帯を追加</span>
@@ -94,7 +113,7 @@
                                     {{ $schedule->title ?: '—' }}
                                 </td>
                                 <td class="py-2.5 px-4 whitespace-nowrap">
-                                    <form method="POST" action="{{ route('locations.schedules.update-status', [$location, $schedule]) }}" class="inline-flex items-center space-x-1.5">
+                                    <form method="POST" action="{{ $updateStatusUrl($schedule) }}" class="inline-flex items-center space-x-1.5">
                                         @csrf
                                         @method('PATCH')
                                         <select name="availability_status"
@@ -115,12 +134,12 @@
                                     <button type="button"
                                             data-action="open-schedule-modal"
                                             data-mode="edit"
-                                            data-update-url="{{ route('locations.schedules.update', [$location, $schedule]) }}"
+                                            data-update-url="{{ $updateScheduleUrl($schedule) }}"
                                             data-schedule="{{ json_encode($schedule) }}"
                                             class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[11px] font-bold transition cursor-pointer">
                                         編集
                                     </button>
-                                    <form method="POST" action="{{ route('locations.schedules.destroy', [$location, $schedule]) }}"
+                                    <form method="POST" action="{{ $destroyScheduleUrl($schedule) }}"
                                           data-confirm="この時間帯枠を削除しますか？" class="inline">
                                         @csrf
                                         @method('DELETE')
@@ -150,7 +169,7 @@
             <button type="button" data-action="close-schedule-modal" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">✕</button>
         </div>
 
-        <form id="schedule-modal-form" method="POST" action="{{ route('locations.schedules.store', $location) }}" class="space-y-4">
+        <form id="schedule-modal-form" method="POST" action="{{ $storeScheduleUrl }}" class="space-y-4">
             @csrf
             <div id="schedule-form-method"></div>
 

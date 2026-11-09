@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
+    'timetable_id',
     'equipment_id',
     'target_date',
     'day_phase',
@@ -104,6 +105,14 @@ class EquipmentLogisticsPlan extends Model
             'witness_required' => 'boolean',
             'display_order' => 'integer',
         ];
+    }
+
+    /**
+     * 運行計画（タイムテーブル）とのリレーション
+     */
+    public function timetable(): BelongsTo
+    {
+        return $this->belongsTo(Timetable::class);
     }
 
     /**
@@ -268,6 +277,16 @@ class EquipmentLogisticsPlan extends Model
     public function getLocationWarningsAttribute(): array
     {
         return app(LocationAvailabilityService::class)->getLocationWarnings($this);
+    }
+
+    /**
+     * 特定の運行計画に属する計画を抽出
+     */
+    public function scopeForTimetable(Builder $query, Timetable|int $timetable): Builder
+    {
+        $id = $timetable instanceof Timetable ? $timetable->id : $timetable;
+
+        return $query->where('timetable_id', $id);
     }
 
     /**

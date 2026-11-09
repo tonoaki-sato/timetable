@@ -55,12 +55,21 @@ class TimetableService
             : true;
         unset($data['create_default_lanes']);
 
+        $createDefaultLocations = array_key_exists('create_default_locations', $data)
+            ? (bool) $data['create_default_locations']
+            : true;
+        unset($data['create_default_locations']);
+
         $data['created_by'] = $creator?->id;
 
         $timetable = $this->timetableRepository->create($data);
 
         if ($createDefaultLanes) {
             $timetable->createDefaultLanes();
+        }
+
+        if ($createDefaultLocations) {
+            $timetable->createDefaultLocations();
         }
 
         $this->scheduleRepository->syncForTimetable($timetable);

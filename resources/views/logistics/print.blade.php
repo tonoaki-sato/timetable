@@ -1,3 +1,9 @@
+@php
+    $backUrl = isset($timetable) ? route('timetables.logistics.index', $timetable) : route('logistics.index');
+    $downloadUrl = isset($timetable) ? route('timetables.logistics.print', array_merge(['timetable' => $timetable], request()->except('preview'))) : route('logistics.print', request()->except('preview'));
+    $formAction = isset($timetable) ? route('timetables.logistics.print', $timetable) : route('logistics.print');
+    $resetUrl = isset($timetable) ? route('timetables.logistics.print', ['timetable' => $timetable, 'preview' => 1]) : route('logistics.print');
+@endphp
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -15,16 +21,21 @@
             <div class="flex items-center space-x-2">
                 <span class="text-xl">🖨️</span>
                 <div>
-                    <div class="font-bold text-sm">資材搬出入計画書 印刷プレビュー</div>
+                    <div class="font-bold text-sm">
+                        資材搬出入計画書 印刷プレビュー
+                        @if(isset($timetable))
+                            <span class="text-xs font-normal text-indigo-300 ml-2">【{{ $timetable->name }} ({{ $timetable->target_date?->format('Y/m/d') }})】</span>
+                        @endif
+                    </div>
                     <div class="text-[11px] text-slate-400">A4横向き印刷に最適化されています。必要に応じて担当班や区分で絞り込んで現場配布用シートを出力してください。</div>
                 </div>
             </div>
 
             <div class="flex items-center space-x-2">
-                <a href="{{ route('logistics.index') }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
+                <a href="{{ $backUrl }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
                     ← 画面に戻る
                 </a>
-                <a href="{{ route('logistics.print', request()->except('preview')) }}" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition flex items-center space-x-1">
+                <a href="{{ $downloadUrl }}" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition flex items-center space-x-1">
                     <span>📄</span>
                     <span>PDFダウンロード (A4横)</span>
                 </a>
@@ -36,7 +47,8 @@
         </div>
 
         <!-- 印刷絞り込みフィルタ（画面のみ） -->
-        <form method="GET" action="{{ route('logistics.print') }}" class="flex items-center space-x-3 pt-2 border-t border-slate-800 text-xs flex-wrap gap-y-2">
+        <form method="GET" action="{{ $formAction }}" class="flex items-center space-x-3 pt-2 border-t border-slate-800 text-xs flex-wrap gap-y-2">
+            <input type="hidden" name="preview" value="1">
             <span class="text-slate-400 font-bold">小分け印刷フィルタ:</span>
 
             <select name="lane_id" data-auto-submit class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200">
@@ -56,7 +68,7 @@
             </select>
 
             @if($laneFilter || $typeFilter)
-                <a href="{{ route('logistics.print') }}" class="text-indigo-400 hover:underline">
+                <a href="{{ $resetUrl }}" class="text-indigo-400 hover:underline">
                     フィルタ解除
                 </a>
             @endif

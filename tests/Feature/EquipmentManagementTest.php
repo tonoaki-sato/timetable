@@ -194,8 +194,11 @@ class EquipmentManagementTest extends TestCase
     {
         $this->actingAs($this->operator);
 
+        $timetable = Timetable::first();
+
         $equipment = Equipment::factory()->committee()->create(['name' => 'カスケード削除検証用資材']);
         $plan = $equipment->plans()->create([
+            'timetable_id' => $timetable->id,
             'title' => 'テスト搬出ステップ',
             'day_phase' => 'pre_day',
             'action_type' => 'storage_out',

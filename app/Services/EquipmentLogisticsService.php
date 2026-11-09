@@ -42,21 +42,27 @@ class EquipmentLogisticsService
      *
      * @param  array{staging_location_id?: ?int, night_location_1_id?: ?int, night_location_2_id?: ?int, witness_staff_id?: ?int, override_existing?: ?bool}  $options
      */
-    public function applyPattern(Equipment $equipment, EquipmentLogisticsPattern $pattern, array $options = []): int
+    public function applyPattern(Equipment $equipment, EquipmentLogisticsPattern $pattern, array $options = [], ?Timetable $timetable = null): int
     {
         $override = array_key_exists('override_existing', $options)
             ? (bool) $options['override_existing']
             : true;
 
+        $targetTimetable = $timetable ?? Timetable::orderBy('target_date', 'asc')->first();
+        if (! $targetTimetable) {
+            return 0;
+        }
+
         if ($override) {
-            $equipment->plans()->delete();
+            $equipment->plans()->where('timetable_id', $targetTimetable->id)->delete();
         }
 
         $dates = $this->resolveFestivalDates();
+        $targetDate = $targetTimetable->target_date?->format('Y-m-d') ?? $dates['day1'];
 
         $stagingLocation = ! empty($options['staging_location_id'])
             ? Location::find($options['staging_location_id'])
-            : Location::where('name', 'like', '%税務署%')->first();
+            : Location::where('timetable_id', $targetTimetable->id)->where('name', 'like', '%税務署%')->first();
 
         $nightLocation1 = ! empty($options['night_location_1_id'])
             ? Location::find($options['night_location_1_id'])
@@ -66,26 +72,12 @@ class EquipmentLogisticsService
             ? Location::find($options['night_location_2_id'])
             : null;
 
-        $hasSplitNight = $nightLocation2 !== null && $nightLocation2->id !== $nightLocation1?->id;
-
         $storageLocationName = $equipment->isPersonal()
             ? ($equipment->storage_detail ?: '所有者（個人持ち込み・持ち帰り）')
             : ($equipment->storage_location ?: '番所地下倉庫');
 
-        $storageLocationModel = $equipment->isPersonal()
-            ? null
-            : (Location::where('name', $storageLocationName)->first()
-                ?? Location::where('name', 'like', '%番所地下%')->first());
-
-        $banshoSpace = Location::where('name', '番所前スペース')->first()
-            ?? Location::where('name', 'like', '%番所%スペース%')->first()
-            ?? Location::where('name', 'like', '%番所前%')->first();
-
         $witnessStaffId = $options['witness_staff_id'] ?? null;
-
         $qty = (int) $equipment->quantity;
-        $qty1 = (int) ceil($qty / 2);
-        $qty2 = max(0, $qty - $qty1);
 
         $pattern->loadMissing(['steps.fromLocationModel', 'steps.toLocationModel']);
 
@@ -98,13 +90,27 @@ class EquipmentLogisticsService
             $toLocId = $step->to_location_id;
             $toLocText = $step->toLocationModel?->name ?? '（未定）';
 
-            $targetDate = match ($step->day_phase) {
-                'other' => $dates['other'],
-                'pre_day' => $dates['pre_day'],
-                'day1_morning', 'day1_evening' => $dates['day1'],
-                'day2_morning', 'day2_evening' => $dates['day2'],
-                'post_day' => $dates['post_day'],
-                default => $dates['day1'],
+            // 拠点が別運行日マスタの場合、同一名拠点を対象運行日から解決
+            if ($fromLocId && $step->fromLocationModel?->timetable_id !== $targetTimetable->id) {
+                $matched = Location::where('timetable_id', $targetTimetable->id)->where('name', $step->fromLocationModel?->name)->first();
+                if ($matched) {
+                    $fromLocId = $matched->id;
+                }
+            }
+            if ($toLocId && $step->toLocationModel?->timetable_id !== $targetTimetable->id) {
+                $matched = Location::where('timetable_id', $targetTimetable->id)->where('name', $step->toLocationModel?->name)->first();
+                if ($matched) {
+                    $toLocId = $matched->id;
+                }
+            }
+
+            $stepDate = match ($step->day_phase) {
+                'other' => $dates['other'] ?? $targetDate,
+                'pre_day' => $dates['pre_day'] ?? $targetDate,
+                'day1_morning', 'day1_evening' => $dates['day1'] ?? $targetDate,
+                'day2_morning', 'day2_evening' => $dates['day2'] ?? $targetDate,
+                'post_day' => $dates['post_day'] ?? $targetDate,
+                default => $targetDate,
             };
 
             $title = str_replace(
@@ -114,7 +120,8 @@ class EquipmentLogisticsService
             );
 
             $equipment->plans()->create([
-                'target_date' => $targetDate,
+                'timetable_id' => $targetTimetable->id,
+                'target_date' => $stepDate,
                 'day_phase' => $step->day_phase,
                 'action_type' => $step->action_type,
                 'title' => $title,
@@ -185,16 +192,21 @@ class EquipmentLogisticsService
      *
      * @return Collection<int, Equipment>
      */
-    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null): Collection
+    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null): Collection
     {
         $query = Equipment::with([
             'lane',
-            'plans' => fn ($q) => $q->with([
-                'equipment',
-                'fromLocationModel.schedules',
-                'toLocationModel.schedules',
-                'witnessStaff',
-            ])->orderBy('display_order')->orderBy('id'),
+            'plans' => function ($q) use ($timetable) {
+                if ($timetable) {
+                    $q->where('timetable_id', $timetable->id);
+                }
+                $q->with([
+                    'equipment',
+                    'fromLocationModel.schedules',
+                    'toLocationModel.schedules',
+                    'witnessStaff',
+                ])->orderBy('display_order')->orderBy('id');
+            },
         ])->ordered();
 
         if ($type) {
@@ -213,7 +225,7 @@ class EquipmentLogisticsService
      *
      * @return Collection<int, EquipmentLogisticsPlan>
      */
-    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null): Collection
+    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null): Collection
     {
         $query = EquipmentLogisticsPlan::with([
             'equipment.lane',
@@ -224,6 +236,10 @@ class EquipmentLogisticsService
             ->orderBy('target_date', 'asc')
             ->orderBy('start_time', 'asc')
             ->orderBy('display_order', 'asc');
+
+        if ($timetable) {
+            $query->where('timetable_id', $timetable->id);
+        }
 
         if ($dayPhase) {
             $query->where('day_phase', $dayPhase);
@@ -245,17 +261,25 @@ class EquipmentLogisticsService
      *
      * @return array<int, array{location: Location, plans: Collection<int, EquipmentLogisticsPlan>, nightPlans: Collection<int, EquipmentLogisticsPlan>, collectionPlans: Collection<int, EquipmentLogisticsPlan>}>
      */
-    public function getLocationsStatusData(): array
+    public function getLocationsStatusData(?Timetable $timetable = null): array
     {
-        $locations = Location::active()->ordered()->with(['type', 'schedules'])->get();
+        $locationsQuery = Location::active()->ordered()->with(['type', 'schedules']);
+        if ($timetable) {
+            $locationsQuery->where('timetable_id', $timetable->id);
+        }
+        $locations = $locationsQuery->get();
         $locationIds = $locations->pluck('id')->all();
 
-        $allPlans = EquipmentLogisticsPlan::with(['equipment.lane'])
+        $plansQuery = EquipmentLogisticsPlan::with(['equipment.lane'])
             ->whereIn('to_location_id', $locationIds)
             ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->get()
-            ->groupBy('to_location_id');
+            ->orderBy('start_time', 'asc');
+
+        if ($timetable) {
+            $plansQuery->where('timetable_id', $timetable->id);
+        }
+
+        $allPlans = $plansQuery->get()->groupBy('to_location_id');
 
         $result = [];
 
@@ -281,15 +305,20 @@ class EquipmentLogisticsService
      *
      * @return Collection<int, EquipmentLogisticsPlan>
      */
-    public function getOnsiteNightStoragePlans(): Collection
+    public function getOnsiteNightStoragePlans(?Timetable $timetable = null): Collection
     {
-        return EquipmentLogisticsPlan::with(['equipment.lane', 'witnessStaff'])
+        $query = EquipmentLogisticsPlan::with(['equipment.lane', 'witnessStaff'])
             ->where('action_type', 'night_storage')
             ->whereNull('to_location_id')
             ->orderBy('target_date', 'asc')
             ->orderBy('start_time', 'asc')
-            ->orderBy('display_order', 'asc')
-            ->get();
+            ->orderBy('display_order', 'asc');
+
+        if ($timetable) {
+            $query->where('timetable_id', $timetable->id);
+        }
+
+        return $query->get();
     }
 
     /**
@@ -297,9 +326,9 @@ class EquipmentLogisticsService
      *
      * @return Collection<int, EquipmentLogisticsPlan>
      */
-    public function getEventCompanyScheduleData(): Collection
+    public function getEventCompanyScheduleData(?Timetable $timetable = null): Collection
     {
-        return EquipmentLogisticsPlan::with(['equipment.lane', 'witnessStaff', 'fromLocationModel', 'toLocationModel'])
+        $query = EquipmentLogisticsPlan::with(['equipment.lane', 'witnessStaff', 'fromLocationModel', 'toLocationModel'])
             ->where(function ($q) {
                 $q->where('operator_type', 'event_company')
                     ->orWhere('witness_required', true)
@@ -307,8 +336,13 @@ class EquipmentLogisticsService
             })
             ->orderBy('target_date', 'asc')
             ->orderBy('start_time', 'asc')
-            ->orderBy('display_order', 'asc')
-            ->get();
+            ->orderBy('display_order', 'asc');
+
+        if ($timetable) {
+            $query->where('timetable_id', $timetable->id);
+        }
+
+        return $query->get();
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lane;
 use App\Models\LaneRequest;
+use App\Models\Location;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
@@ -72,6 +73,9 @@ class ContentSecurityPolicyTest extends TestCase
             'timetable_task_id' => $task->id,
             'staff_id' => $staff->id,
         ]);
+        $location = Location::factory()->create([
+            'timetable_id' => $timetable->id,
+        ]);
 
         $routesToTest = [
             route('dashboard'),
@@ -86,6 +90,11 @@ class ContentSecurityPolicyTest extends TestCase
             route('timetables.lanes.create', $timetable),
             route('timetables.lanes.show', [$timetable, $lane]),
             route('timetables.lanes.edit', [$timetable, $lane]),
+            route('timetables.locations.index', $timetable),
+            route('timetables.locations.create', $timetable),
+            route('timetables.locations.show', [$timetable, $location]),
+            route('timetables.locations.edit', [$timetable, $location]),
+            route('timetables.logistics.index', $timetable),
             route('timetables.staff-timeline', $timetable),
             route('staff.index'),
             route('staff.create'),
@@ -94,7 +103,6 @@ class ContentSecurityPolicyTest extends TestCase
             route('users.index'),
             route('presentation.index'),
             route('equipments.index'),
-            route('locations.index'),
         ];
 
         foreach ($routesToTest as $url) {

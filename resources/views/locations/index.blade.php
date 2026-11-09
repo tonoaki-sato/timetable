@@ -1,12 +1,29 @@
 <x-layouts.app title="拠点管理">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
+    @if(isset($timetable))
+        <x-timetable-context-bar :timetable="$timetable" active="locations" />
+    @endif
+
+    @php
+        $createUrl = isset($timetable) ? route('timetables.locations.create', $timetable) : route('locations.create');
+        $showUrl = fn($l) => isset($timetable) ? route('timetables.locations.show', [$timetable, $l]) : route('locations.show', $l);
+        $editUrl = fn($l) => isset($timetable) ? route('timetables.locations.edit', [$timetable, $l]) : route('locations.edit', $l);
+        $destroyUrl = fn($l) => isset($timetable) ? route('timetables.locations.destroy', [$timetable, $l]) : route('locations.destroy', $l);
+    @endphp
+
     <!-- 1. ヘッダーエリア -->
     <x-page-header
         title="拠点管理"
         icon="📍"
         description="番所・駐車場・コミュニティスペース等の基本情報と、年月日時分単位の利用可能時間帯・申請状況を一元管理します。">
         <x-slot:breadcrumbs>
+            @if(isset($timetable))
+                <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition shrink-0">運行日程</a>
+                <span class="text-slate-400">/</span>
+                <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition shrink-0">{{ $timetable->name }}</a>
+                <span class="text-slate-400">/</span>
+            @endif
             <span class="text-slate-700 font-bold truncate">📍 拠点管理</span>
         </x-slot:breadcrumbs>
 
@@ -21,7 +38,7 @@
                 <span>🏷️</span>
                 <span>拠点タイプマスタ</span>
             </a>
-            <a href="{{ route('locations.create') }}"
+            <a href="{{ $createUrl }}"
                 class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">
                 <span>➕</span>
                 <span>拠点を新規登録</span>
@@ -35,7 +52,7 @@
             <div class="text-3xl mb-2">📍</div>
             <h3 class="text-sm font-bold text-slate-800 mb-1">拠点がまだ登録されていません</h3>
             <p class="text-xs text-slate-500 mb-4">番所や近隣駐車場、コミュニティスペース等の拠点を登録してください。</p>
-            <a href="{{ route('locations.create') }}"
+            <a href="{{ $createUrl }}"
                 class="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
                 <span>➕</span>
                 <span>拠点を登録する</span>
@@ -69,7 +86,7 @@
                                 <!-- 列1: 拠点名 & タイプ -->
                                 <td class="py-2.5 px-4 align-middle">
                                     <div class="flex items-center space-x-2">
-                                        <a href="{{ route('locations.show', $loc) }}" class="font-bold text-slate-900 hover:text-indigo-600 transition text-sm">
+                                        <a href="{{ $showUrl($loc) }}" class="font-bold text-slate-900 hover:text-indigo-600 transition text-sm">
                                             {{ $loc->name }}
                                         </a>
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
@@ -117,15 +134,15 @@
 
                                 <!-- 列4: 操作 -->
                                 <td class="py-2.5 px-4 align-middle text-right space-x-1 whitespace-nowrap">
-                                    <a href="{{ route('locations.show', $loc) }}"
+                                    <a href="{{ $showUrl($loc) }}"
                                         class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[11px] font-medium transition inline-block">
                                         詳細
                                     </a>
-                                    <a href="{{ route('locations.edit', $loc) }}"
+                                    <a href="{{ $editUrl($loc) }}"
                                         class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium transition inline-block">
                                         編集
                                     </a>
-                                    <form method="POST" action="{{ route('locations.destroy', $loc) }}"
+                                    <form method="POST" action="{{ $destroyUrl($loc) }}"
                                           data-confirm="拠点「{{ $loc->name }}」を削除しますか？&#10;（関連する時間帯データも削除されます）"
                                           class="inline">
                                         @csrf

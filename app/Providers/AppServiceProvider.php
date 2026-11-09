@@ -6,12 +6,14 @@ use App\Models\FeatureSetting;
 use App\Models\Timetable;
 use App\Repositories\Contracts\FeatureSettingRepositoryInterface;
 use App\Repositories\Contracts\LaneRepositoryInterface;
+use App\Repositories\Contracts\LocationRepositoryInterface;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use App\Repositories\Eloquent\FeatureSettingRepository;
 use App\Repositories\Eloquent\LaneRepository;
+use App\Repositories\Eloquent\LocationRepository;
 use App\Repositories\Eloquent\ScheduleRepository;
 use App\Repositories\Eloquent\StaffRepository;
 use App\Repositories\Eloquent\TimetableRepository;
@@ -55,6 +57,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             LaneRepositoryInterface::class,
             LaneRepository::class
+        );
+
+        $this->app->bind(
+            LocationRepositoryInterface::class,
+            LocationRepository::class
         );
     }
 

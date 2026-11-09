@@ -1,20 +1,37 @@
-<x-layouts.app title="搬出入パターン管理">
+<x-layouts.app title="搬出入計画・パターン管理">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
+
+    @if(isset($timetable))
+        <x-timetable-context-bar :timetable="$timetable" active="logistics" />
+    @endif
+
+    @php
+        $printUrl = isset($timetable) ? route('timetables.logistics.print', $timetable) : route('logistics.print');
+    @endphp
 
     <!-- 1. ヘッダーセクション -->
     <x-page-header
-        title="搬出入パターン管理"
-        icon="🧩"
-        description="よく使う搬出入・中継・夜間保管のステップ構成をパターン（テンプレート）として登録・管理します。">
+        title="搬出入計画・パターン管理"
+        icon="🚚"
+        description="運行計画における資材搬出入ステップの管理および、よく使うステップ構成のパターン（テンプレート）を一元管理します。">
         <x-slot:breadcrumbs>
-            <a href="{{ route('equipments.index') }}" class="hover:underline shrink-0">資材管理</a>
-            <span class="shrink-0 text-slate-300">/</span>
-            <span class="text-slate-800 font-bold shrink-0">搬出入パターン管理</span>
+            @if(isset($timetable))
+                <a href="{{ route('timetables.index') }}" class="hover:underline shrink-0">運行日程</a>
+                <span class="shrink-0 text-slate-300">/</span>
+                <a href="{{ route('timetables.show', $timetable) }}" class="hover:underline shrink-0">{{ $timetable->name }}</a>
+                <span class="shrink-0 text-slate-300">/</span>
+            @endif
+            <span class="text-slate-800 font-bold shrink-0">搬出入計画</span>
         </x-slot:breadcrumbs>
         <x-slot:badges>
             <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
                 全 {{ $patterns->count() }} パターン
             </span>
+            @if(isset($timetable))
+                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                    対象日: {{ $timetable->target_date?->format('Y/m/d') }}
+                </span>
+            @endif
         </x-slot:badges>
         <x-slot:actions>
             <button type="button" data-action="open-pattern-modal" data-mode="create"
@@ -34,7 +51,7 @@
         <span class="px-3 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-2xs whitespace-nowrap shrink-0">
             🧩 搬出入パターン管理 ({{ $patterns->count() }})
         </span>
-        <a href="{{ route('logistics.print') }}"
+        <a href="{{ $printUrl }}"
            class="px-3 py-1.5 rounded-lg font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition whitespace-nowrap shrink-0"
            title="搬出入指示書兼現場チェックリストをPDFでダウンロード">
             📄 搬出入指示書PDF

@@ -11,6 +11,8 @@
             'tasks' => route('timetables.tasks.index', $tt),
             'assignments' => route('timetables.assignments', $tt),
             'timeline' => route('timetables.staff-timeline', $tt),
+            'locations' => route('timetables.locations.index', $tt),
+            'logistics' => route('timetables.logistics.index', $tt),
             'show' => route('timetables.show', $tt),
             'print' => route('timetables.print-assignments', $tt),
             default => route('timetable.index', ['timetable_id' => $tt->id]),
@@ -64,6 +66,22 @@
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['assignments', 'timeline'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>👥</span>
             <span>人員配置</span>
+        </a>
+        <a href="{{ route('timetables.locations.index', $timetable) }}"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'locations' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+            <span>📍</span>
+            <span>拠点</span>
+            @if(isset($timetable->locations_count) || $timetable->locations->isNotEmpty())
+                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->locations->count() }})</span>
+            @endif
+        </a>
+        <a href="{{ route('timetables.logistics.index', $timetable) }}"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'logistics' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+            <span>🚚</span>
+            <span>搬出入</span>
+            @if(isset($timetable->logistics_plans_count) || $timetable->logisticsPlans->isNotEmpty())
+                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->logistics_plans_count ?? $timetable->logisticsPlans->count() }})</span>
+            @endif
         </a>
         <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'matrix' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">

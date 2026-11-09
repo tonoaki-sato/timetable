@@ -23,6 +23,7 @@ class StoreEquipmentLogisticsPlanRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'timetable_id' => ['nullable', 'exists:timetables,id'],
             'equipment_id' => ['required', 'exists:equipments,id'],
             'target_date' => ['nullable', 'date'],
             'day_phase' => ['required', 'string', 'in:other,pre_day,day1_morning,day1_evening,day2_morning,day2_evening,post_day'],

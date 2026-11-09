@@ -8,6 +8,7 @@ use App\Enums\ParkingConstraintStatus;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
 use App\Models\LocationSchedule;
+use App\Models\Timetable;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -22,13 +23,17 @@ class ParkingConstraintService
     /**
      * 拠点・駐車場利用時間制約監視コンテキストを取得（デフォルトで全拠点対象）
      */
-    public function getMonitoringContext(?Carbon $now = null, bool $parkingOnly = false): ParkingMonitoringContext
+    public function getMonitoringContext(?Carbon $now = null, bool $parkingOnly = false, ?Timetable $timetable = null): ParkingMonitoringContext
     {
         $now = $this->normalizeToTokyo($now ?? Carbon::now('Asia/Tokyo'));
 
         $query = Location::active()->ordered()->with(['type', 'schedules']);
         if ($parkingOnly) {
             $query->whereHas('type', fn ($q) => $q->where('name', 'parking'));
+        }
+
+        if ($timetable) {
+            $query->where('timetable_id', $timetable->id);
         }
 
         $locations = $query->get();

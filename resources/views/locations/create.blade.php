@@ -1,14 +1,30 @@
 <x-layouts.app title="拠点の新規登録">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
+        @if(isset($timetable))
+            <x-timetable-context-bar :timetable="$timetable" active="locations" />
+        @endif
+
+        @php
+            $storeAction = isset($timetable) ? route('timetables.locations.store', $timetable) : route('locations.store');
+            $backUrl = isset($timetable) ? route('timetables.locations.index', $timetable) : route('locations.index');
+        @endphp
+
         <!-- ヘッダーエリア -->
         <x-page-header
             title="拠点の新規登録"
             icon="📍"
             description="番所、駐車場、コミュニティスペース等の基本情報を登録します。">
             <x-slot:breadcrumbs>
-                <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
-                <span class="text-slate-300">/</span>
+                @if(isset($timetable))
+                    <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition shrink-0">運行日程</a>
+                    <span class="text-slate-400">/</span>
+                    <a href="{{ route('timetables.locations.index', $timetable) }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
+                    <span class="text-slate-400">/</span>
+                @else
+                    <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
+                    <span class="text-slate-300">/</span>
+                @endif
                 <span class="text-slate-800 font-bold truncate">新規登録</span>
             </x-slot:breadcrumbs>
         </x-page-header>
@@ -44,7 +60,7 @@
             @endif
 
             <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6">
-                <form method="POST" action="{{ route('locations.store') }}" class="space-y-5">
+                <form method="POST" action="{{ $storeAction }}" class="space-y-5">
                     @csrf
 
                     <!-- 拠点名 -->
@@ -115,7 +131,7 @@
                     </div>
 
                     <div class="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100">
-                        <a href="{{ route('locations.index') }}"
+                        <a href="{{ $backUrl }}"
                             class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
                             キャンセル
                         </a>

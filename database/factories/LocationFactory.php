@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Location;
 use App\Models\LocationType;
+use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -22,6 +23,7 @@ class LocationFactory extends Factory
     public function definition(): array
     {
         return [
+            'timetable_id' => Timetable::factory(),
             'location_type_id' => LocationType::factory(),
             'name' => fake()->city().'待機所',
             'notes' => fake()->paragraph(),

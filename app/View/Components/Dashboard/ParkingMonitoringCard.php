@@ -3,6 +3,7 @@
 namespace App\View\Components\Dashboard;
 
 use App\DTOs\ParkingMonitoringContext;
+use App\Models\Timetable;
 use App\Services\ParkingConstraintService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -20,10 +21,11 @@ class ParkingMonitoringCard extends Component
     public function __construct(
         protected ParkingConstraintService $parkingConstraintService,
         ?Carbon $now = null,
-        ?ParkingMonitoringContext $context = null
+        ?ParkingMonitoringContext $context = null,
+        ?Timetable $timetable = null
     ) {
         $this->now = $now ?? Carbon::now('Asia/Tokyo');
-        $this->context = $context ?? $this->parkingConstraintService->getMonitoringContext($this->now);
+        $this->context = $context ?? $this->parkingConstraintService->getMonitoringContext($this->now, false, $timetable);
     }
 
     /**

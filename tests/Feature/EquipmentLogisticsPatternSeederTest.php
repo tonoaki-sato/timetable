@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
+use App\Models\Timetable;
 use App\Models\User;
 use App\Services\EquipmentLogisticsService;
 use Database\Seeders\EquipmentLogisticsPatternSeeder;
@@ -70,7 +71,7 @@ class EquipmentLogisticsPatternSeederTest extends TestCase
     }
 
     /**
-     * 搬出入管理画面（/logistics）で初期パターンが表示されること
+     * 搬出入管理画面で初期パターンが表示されること
      */
     public function test_logistics_index_shows_seeded_patterns(): void
     {
@@ -78,7 +79,9 @@ class EquipmentLogisticsPatternSeederTest extends TestCase
 
         $this->actingAs($this->operator);
 
-        $response = $this->get(route('logistics.index'));
+        $timetable = Timetable::first();
+
+        $response = $this->get(route('timetables.logistics.index', $timetable));
 
         $response->assertStatus(200);
         $response->assertSee('カラーコーン型（交通規制連動・9ステップ）');

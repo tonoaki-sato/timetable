@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Location;
 use App\Models\LocationSchedule;
 use App\Models\LocationType;
+use App\Models\Timetable;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -91,31 +92,44 @@ class LocationSeeder extends Seeder
             ],
         ];
 
-        foreach ($locations as $locData) {
-            $location = Location::updateOrCreate(
-                ['name' => $locData['name']],
-                [
-                    'location_type_id' => $locData['type_id'],
-                    'notes' => $locData['notes'],
-                    'is_all_day' => $locData['is_all_day'],
-                    'display_order' => $locData['display_order'],
-                    'is_active' => true,
-                    'created_by' => $adminId,
-                ]
-            );
+        $timetables = Timetable::all();
+        if ($timetables->isEmpty()) {
+            $timetables = collect([Timetable::factory()->create([
+                'name' => '本番日',
+                'target_date' => '2026-10-11',
+            ])]);
+        }
 
-            // スケジュール設定
-            if (! empty($locData['schedules'])) {
-                $location->schedules()->delete();
-                foreach ($locData['schedules'] as $sch) {
-                    LocationSchedule::create([
-                        'location_id' => $location->id,
-                        'start_at' => Carbon::parse($sch['start_at']),
-                        'end_at' => Carbon::parse($sch['end_at']),
-                        'availability_status' => $sch['availability_status'],
-                        'title' => $sch['title'],
-                        'note' => $sch['note'],
-                    ]);
+        foreach ($timetables as $timetable) {
+            foreach ($locations as $locData) {
+                $location = Location::updateOrCreate(
+                    [
+                        'timetable_id' => $timetable->id,
+                        'name' => $locData['name'],
+                    ],
+                    [
+                        'location_type_id' => $locData['type_id'],
+                        'notes' => $locData['notes'],
+                        'is_all_day' => $locData['is_all_day'],
+                        'display_order' => $locData['display_order'],
+                        'is_active' => true,
+                        'created_by' => $adminId,
+                    ]
+                );
+
+                // スケジュール設定
+                if (! empty($locData['schedules'])) {
+                    $location->schedules()->delete();
+                    foreach ($locData['schedules'] as $sch) {
+                        LocationSchedule::create([
+                            'location_id' => $location->id,
+                            'start_at' => Carbon::parse($sch['start_at']),
+                            'end_at' => Carbon::parse($sch['end_at']),
+                            'availability_status' => $sch['availability_status'],
+                            'title' => $sch['title'],
+                            'note' => $sch['note'],
+                        ]);
+                    }
                 }
             }
         }

@@ -1,6 +1,20 @@
 <x-layouts.app :title="$equipment->name . ' - 搬出入計画'">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
+    @if(isset($timetable))
+        <x-timetable-context-bar :timetable="$timetable" active="logistics" />
+    @endif
+
+    @php
+        $clearAction = isset($timetable) ? route('timetables.logistics.plans.clear', [$timetable, $equipment]) : route('logistics.plans.clear', $equipment);
+        $updateStatusUrl = fn($p) => isset($timetable) ? route('timetables.logistics.plans.update-status', [$timetable, $p]) : route('logistics.plans.update-status', $p);
+        $destroyPlanUrl = fn($p) => isset($timetable) ? route('timetables.logistics.plans.destroy', [$timetable, $p]) : route('logistics.plans.destroy', $p);
+        $storePlanUrl = isset($timetable) ? route('timetables.logistics.plans.store', $timetable) : route('logistics.plans.store');
+        $updatePlanUrl = fn($p) => isset($timetable) ? route('timetables.logistics.plans.update', [$timetable, $p]) : route('logistics.plans.update', $p);
+        $applyTemplateUrl = isset($timetable) ? route('timetables.logistics.apply-template', [$timetable, $equipment]) : route('logistics.apply-template', $equipment);
+        $backLogisticsUrl = isset($timetable) ? route('timetables.logistics.index', $timetable) : route('logistics.index');
+    @endphp
+
     <!-- ヘッダーエリア -->
     <x-page-header
         :title="$equipment->name"
@@ -11,8 +25,15 @@
                 ? '個人持ち込み私物（定常保管: ' . ($equipment->storage_location ?: '自宅') . '）'
                 : '実行委員会保有備品（定常保管: ' . ($equipment->storage_location ?: '番所地下倉庫') . '）')">
         <x-slot:breadcrumbs>
-            <a href="{{ route('equipments.index') }}" class="hover:underline shrink-0">資材管理</a>
-            <span class="shrink-0 text-slate-300">/</span>
+            @if(isset($timetable))
+                <a href="{{ route('timetables.index') }}" class="hover:underline shrink-0">運行日程</a>
+                <span class="shrink-0 text-slate-300">/</span>
+                <a href="{{ $backLogisticsUrl }}" class="hover:underline shrink-0">搬出入計画</a>
+                <span class="shrink-0 text-slate-300">/</span>
+            @else
+                <a href="{{ route('equipments.index') }}" class="hover:underline shrink-0">資材管理</a>
+                <span class="shrink-0 text-slate-300">/</span>
+            @endif
             <a href="{{ route('equipments.show', $equipment) }}" class="hover:underline truncate max-w-[160px]">{{ $equipment->name }}</a>
             <span class="shrink-0 text-slate-300">/</span>
             <span class="text-slate-800 font-bold shrink-0">搬出入ステップ</span>
@@ -119,7 +140,7 @@
                 </span>
                 @if($equipment->plans->isNotEmpty())
                     @can('update', $equipment)
-                        <form method="POST" action="{{ route('logistics.plans.clear', $equipment) }}" class="inline"
+                        <form method="POST" action="{{ $clearAction }}" class="inline"
                               data-confirm="資材「{{ $equipment->name }}」の全ステップ（全{{ $equipment->plans->count() }}件）を削除しますか？&#10;※資材本体は削除されません。">
                             @csrf
                             @method('DELETE')
@@ -180,7 +201,7 @@
 
                             <!-- ステータス切替ボタン & アクション -->
                             <div class="flex items-center space-x-2 shrink-0 self-end sm:self-center">
-                                <form method="POST" action="{{ route('logistics.plans.update-status', $plan) }}" class="inline">
+                                <form method="POST" action="{{ $updateStatusUrl($plan) }}" class="inline">
                                     @csrf
                                     @method('PATCH')
                                     @if($plan->isCompleted())
@@ -235,7 +256,7 @@
                                     編集
                                 </button>
 
-                                <form method="POST" action="{{ route('logistics.plans.destroy', $plan) }}" data-confirm="このステップを削除しますか？">
+                                <form method="POST" action="{{ $destroyPlanUrl($plan) }}" data-confirm="このステップを削除しますか？">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="px-2 py-1 text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg transition cursor-pointer">
@@ -331,7 +352,7 @@
             <button type="button" data-action="close-step-modal" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">✕</button>
         </div>
 
-        <form id="form-step" method="POST" action="{{ route('logistics.plans.store') }}" class="space-y-4">
+        <form id="form-step" method="POST" action="{{ $storePlanUrl }}" class="space-y-4">
             @csrf
             <div id="form-step-method"></div>
             <input type="hidden" name="equipment_id" value="{{ $equipment->id }}">
@@ -514,7 +535,7 @@
                 </a>
             </div>
         @else
-            <form method="POST" action="{{ route('logistics.apply-template', $equipment) }}" class="space-y-4">
+            <form method="POST" action="{{ $applyTemplateUrl }}" class="space-y-4">
                 @csrf
 
                 @if($equipment->plans->isNotEmpty())

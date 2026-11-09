@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Location;
 use App\Models\LocationSchedule;
 use App\Models\LocationType;
+use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -57,6 +58,9 @@ class LocationAuthorizationTest extends TestCase
             'display_order' => 1,
             'is_active' => true,
         ]);
+
+        Timetable::factory()->create(['name' => '1日目', 'target_date' => '2026-10-11']);
+        Timetable::factory()->create(['name' => '2日目', 'target_date' => '2026-10-12']);
 
         $this->actingAs($admin);
 

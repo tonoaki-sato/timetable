@@ -209,6 +209,22 @@ class Timetable extends Model
     }
 
     /**
+     * 紐づく拠点一覧とのリレーション
+     */
+    public function locations(): HasMany
+    {
+        return $this->hasMany(Location::class)->orderBy('display_order', 'asc');
+    }
+
+    /**
+     * 紐づく資機材搬出入計画一覧とのリレーション
+     */
+    public function logisticsPlans(): HasMany
+    {
+        return $this->hasMany(EquipmentLogisticsPlan::class)->orderBy('display_order', 'asc')->orderBy('start_time', 'asc');
+    }
+
+    /**
      * 連動するスケジュールとのリレーション
      */
     public function schedule(): HasOne
@@ -230,6 +246,33 @@ class Timetable extends Model
                     'description' => $laneData['description'],
                     'display_order' => $laneData['display_order'],
                     'lead_staff_id' => null,
+                ]
+            );
+        }
+    }
+
+    /**
+     * デフォルト拠点一覧を一括生成
+     */
+    public function createDefaultLocations(): void
+    {
+        $types = LocationType::all()->keyBy('name');
+
+        foreach (Location::DEFAULT_LOCATIONS as $locData) {
+            $type = $types->get($locData['type_slug']) ?? LocationType::first();
+            if (! $type) {
+                continue;
+            }
+
+            $this->locations()->firstOrCreate(
+                ['name' => $locData['name']],
+                [
+                    'location_type_id' => $type->id,
+                    'notes' => $locData['notes'],
+                    'is_all_day' => $locData['is_all_day'],
+                    'display_order' => $locData['display_order'],
+                    'is_active' => true,
+                    'created_by' => $this->created_by,
                 ]
             );
         }

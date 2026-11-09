@@ -1,15 +1,32 @@
 <x-layouts.app title="拠点の編集 - {{ $location->name }}">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
+    @if(isset($timetable))
+        <x-timetable-context-bar :timetable="$timetable" active="locations" />
+    @endif
+
+    @php
+        $updateAction = isset($timetable) ? route('timetables.locations.update', [$timetable, $location]) : route('locations.update', $location);
+        $showUrl = isset($timetable) ? route('timetables.locations.show', [$timetable, $location]) : route('locations.show', $location);
+        $backUrl = isset($timetable) ? route('timetables.locations.index', $timetable) : route('locations.index');
+    @endphp
+
     <!-- ヘッダーエリア -->
     <x-page-header
         title="拠点の編集"
         icon="📍"
         description="拠点「{{ $location->name }}」の基本情報を編集します。">
         <x-slot:breadcrumbs>
-            <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
-            <span class="text-slate-300">/</span>
-            <a href="{{ route('locations.show', $location) }}" class="hover:text-indigo-600 transition shrink-0">{{ $location->name }}</a>
+            @if(isset($timetable))
+                <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition shrink-0">運行日程</a>
+                <span class="text-slate-400">/</span>
+                <a href="{{ route('timetables.locations.index', $timetable) }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
+                <span class="text-slate-400">/</span>
+            @else
+                <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
+                <span class="text-slate-300">/</span>
+            @endif
+            <a href="{{ $showUrl }}" class="hover:text-indigo-600 transition shrink-0">{{ $location->name }}</a>
             <span class="text-slate-300">/</span>
             <span class="text-slate-800 font-bold truncate">編集</span>
         </x-slot:breadcrumbs>
@@ -27,7 +44,7 @@
     @endif
 
     <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6">
-        <form method="POST" action="{{ route('locations.update', $location) }}" class="space-y-5">
+        <form method="POST" action="{{ $updateAction }}" class="space-y-5">
             @csrf
             @method('PUT')
 
@@ -95,7 +112,7 @@
             </div>
 
             <div class="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100">
-                <a href="{{ route('locations.index') }}"
+                <a href="{{ $backUrl }}"
                     class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
                     キャンセル
                 </a>

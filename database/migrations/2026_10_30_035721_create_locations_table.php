@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
             $table->foreignId('location_type_id')->constrained('location_types')->restrictOnDelete();
             $table->string('name')->comment('拠点名');
             $table->text('notes')->nullable()->comment('メモ欄（フリーテキスト）');
@@ -22,6 +23,8 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
+
+            $table->index(['timetable_id', 'display_order']);
         });
     }
 
