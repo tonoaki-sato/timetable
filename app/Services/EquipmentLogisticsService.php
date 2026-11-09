@@ -2,17 +2,25 @@
 
 namespace App\Services;
 
+use App\DTOs\ApplyEquipmentPatternDTO;
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
 use App\Models\Timetable;
+use App\Repositories\Contracts\EquipmentLogisticsPatternRepositoryInterface;
+use App\Repositories\Contracts\EquipmentLogisticsPlanRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 class EquipmentLogisticsService
 {
+    public function __construct(
+        protected EquipmentLogisticsPlanRepositoryInterface $planRepository,
+        protected EquipmentLogisticsPatternRepositoryInterface $patternRepository
+    ) {}
+
     /**
      * まつりの代表日程（事前準備、前日、1日目、2日目、翌日）を取得
      *
@@ -40,13 +48,14 @@ class EquipmentLogisticsService
     /**
      * カスタム搬出入パターン（EquipmentLogisticsPattern）を対象資材に適用してステップを一括生成
      *
-     * @param  array{staging_location_id?: ?int, night_location_1_id?: ?int, night_location_2_id?: ?int, witness_staff_id?: ?int, override_existing?: ?bool}  $options
+     * @param  ApplyEquipmentPatternDTO|array<string, mixed>  $options
      */
-    public function applyPattern(Equipment $equipment, EquipmentLogisticsPattern $pattern, array $options = [], ?Timetable $timetable = null): int
+    public function applyPattern(Equipment $equipment, EquipmentLogisticsPattern $pattern, ApplyEquipmentPatternDTO|array $options = [], ?Timetable $timetable = null): int
     {
-        $override = array_key_exists('override_existing', $options)
-            ? (bool) $options['override_existing']
-            : true;
+        $dto = $options instanceof ApplyEquipmentPatternDTO
+            ? $options
+            : ApplyEquipmentPatternDTO::fromArray(array_merge(['pattern_id' => $pattern->id], $options));
+        $override = $dto->overrideExisting;
 
         $targetTimetable = $timetable ?? Timetable::orderBy('target_date', 'asc')->first();
         if (! $targetTimetable) {
@@ -54,29 +63,29 @@ class EquipmentLogisticsService
         }
 
         if ($override) {
-            $equipment->plans()->where('timetable_id', $targetTimetable->id)->delete();
+            $this->planRepository->clearForEquipment($equipment, $targetTimetable);
         }
 
         $dates = $this->resolveFestivalDates();
         $targetDate = $targetTimetable->target_date?->format('Y-m-d') ?? $dates['day1'];
 
-        $stagingLocation = ! empty($options['staging_location_id'])
-            ? Location::find($options['staging_location_id'])
+        $stagingLocation = $dto->stagingLocationId
+            ? Location::find($dto->stagingLocationId)
             : Location::where('timetable_id', $targetTimetable->id)->where('name', 'like', '%税務署%')->first();
 
-        $nightLocation1 = ! empty($options['night_location_1_id'])
-            ? Location::find($options['night_location_1_id'])
+        $nightLocation1 = $dto->nightLocation1Id
+            ? Location::find($dto->nightLocation1Id)
             : $stagingLocation;
 
-        $nightLocation2 = ! empty($options['night_location_2_id'])
-            ? Location::find($options['night_location_2_id'])
+        $nightLocation2 = $dto->nightLocation2Id
+            ? Location::find($dto->nightLocation2Id)
             : null;
 
         $storageLocationName = $equipment->isPersonal()
             ? ($equipment->storage_detail ?: '所有者（個人持ち込み・持ち帰り）')
             : ($equipment->storage_location ?: '番所地下倉庫');
 
-        $witnessStaffId = $options['witness_staff_id'] ?? null;
+        $witnessStaffId = $dto->witnessStaffId;
         $qty = (int) $equipment->quantity;
 
         $pattern->loadMissing(['steps.fromLocationModel', 'steps.toLocationModel']);
@@ -194,30 +203,7 @@ class EquipmentLogisticsService
      */
     public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null): Collection
     {
-        $query = Equipment::with([
-            'lane',
-            'plans' => function ($q) use ($timetable) {
-                if ($timetable) {
-                    $q->where('timetable_id', $timetable->id);
-                }
-                $q->with([
-                    'equipment',
-                    'fromLocationModel.schedules',
-                    'toLocationModel.schedules',
-                    'witnessStaff',
-                ])->orderBy('display_order')->orderBy('id');
-            },
-        ])->ordered();
-
-        if ($type) {
-            $query->where('type', $type);
-        }
-
-        if ($laneId) {
-            $query->where('lane_id', $laneId);
-        }
-
-        return $query->get();
+        return $this->planRepository->getEquipmentsFlowData($type, $laneId, $timetable);
     }
 
     /**
@@ -227,33 +213,7 @@ class EquipmentLogisticsService
      */
     public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null): Collection
     {
-        $query = EquipmentLogisticsPlan::with([
-            'equipment.lane',
-            'fromLocationModel.schedules',
-            'toLocationModel.schedules',
-            'witnessStaff',
-        ])
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->orderBy('display_order', 'asc');
-
-        if ($timetable) {
-            $query->where('timetable_id', $timetable->id);
-        }
-
-        if ($dayPhase) {
-            $query->where('day_phase', $dayPhase);
-        }
-
-        if ($laneId) {
-            $query->whereHas('equipment', fn ($q) => $q->where('lane_id', $laneId));
-        }
-
-        if ($type) {
-            $query->whereHas('equipment', fn ($q) => $q->where('type', $type));
-        }
-
-        return $query->get();
+        return $this->planRepository->getPhaseChecklistData($dayPhase, $laneId, $type, $timetable);
     }
 
     /**
@@ -352,8 +312,6 @@ class EquipmentLogisticsService
      */
     public function getPatternsData(): Collection
     {
-        return EquipmentLogisticsPattern::with(['steps.fromLocationModel', 'steps.toLocationModel', 'creator'])
-            ->ordered()
-            ->get();
+        return $this->patternRepository->getAllWithSteps();
     }
 }

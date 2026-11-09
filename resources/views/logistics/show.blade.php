@@ -242,6 +242,7 @@
                                 <button type="button"
                                         data-action="open-step-modal"
                                         data-mode="edit"
+                                        data-update-url="{{ $updatePlanUrl($plan) }}"
                                         data-plan="{{ json_encode([
                                             'id' => $plan->id,
                                             'status' => $plan->status,

@@ -321,7 +321,7 @@
                     @foreach($equipments as $equipment)
                     <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between">
                         <div>
-                            <a href="{{ route('equipments.show', $equipment) }}" class="font-bold text-slate-800 hover:text-indigo-600 transition">
+                            <a href="{{ route('timetables.equipments.show', [$timetable, $equipment]) }}" class="font-bold text-slate-800 hover:text-indigo-600 transition">
                                 {{ $equipment->name }}
                             </a>
                             <div class="text-[10px] text-slate-400 mt-0.5">

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\EquipmentCheckoutRule;
+use App\Enums\EquipmentType;
 use Database\Factories\EquipmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -84,11 +86,43 @@ class Equipment extends Model
     }
 
     /**
+     * タイプEnumアクセサ
+     */
+    public function getTypeEnumAttribute(): EquipmentType
+    {
+        return EquipmentType::tryFrom((string) $this->type) ?? EquipmentType::Committee;
+    }
+
+    /**
+     * 持出ルールEnumアクセサ
+     */
+    public function getCheckoutRuleEnumAttribute(): EquipmentCheckoutRule
+    {
+        return EquipmentCheckoutRule::tryFrom((string) $this->checkout_rule) ?? EquipmentCheckoutRule::Free;
+    }
+
+    /**
+     * 区分ミューテータ（Enum または文字列を受け入れ）
+     */
+    public function setTypeAttribute(EquipmentType|string|null $value): void
+    {
+        $this->attributes['type'] = $value instanceof EquipmentType ? $value->value : (string) $value;
+    }
+
+    /**
+     * 持出ルールミューテータ（Enum または文字列を受け入れ）
+     */
+    public function setCheckoutRuleAttribute(EquipmentCheckoutRule|string|null $value): void
+    {
+        $this->attributes['checkout_rule'] = $value instanceof EquipmentCheckoutRule ? $value->value : (string) $value;
+    }
+
+    /**
      * 区分ラベルアクセサ
      */
     public function getTypeLabelAttribute(): string
     {
-        return self::TYPES[$this->type] ?? $this->type;
+        return $this->type_enum->label();
     }
 
     /**
@@ -96,7 +130,7 @@ class Equipment extends Model
      */
     public function getCheckoutRuleLabelAttribute(): string
     {
-        return self::CHECKOUT_RULES[$this->checkout_rule] ?? $this->checkout_rule ?? '';
+        return $this->checkout_rule_enum->label();
     }
 
     /**
@@ -114,7 +148,7 @@ class Equipment extends Model
      */
     public function isCommittee(): bool
     {
-        return $this->type === 'committee';
+        return $this->type === EquipmentType::Committee || $this->type === 'committee';
     }
 
     /**
@@ -122,7 +156,7 @@ class Equipment extends Model
      */
     public function isRental(): bool
     {
-        return $this->type === 'rental';
+        return $this->type === EquipmentType::Rental || $this->type === 'rental';
     }
 
     /**
@@ -130,7 +164,7 @@ class Equipment extends Model
      */
     public function isPersonal(): bool
     {
-        return $this->type === 'personal';
+        return $this->type === EquipmentType::Personal || $this->type === 'personal';
     }
 
     /**

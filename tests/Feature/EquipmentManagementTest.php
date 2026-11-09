@@ -357,4 +357,49 @@ class EquipmentManagementTest extends TestCase
             ->assertSee('搬出入パターンがまだ登録されていません')
             ->assertSee(route('equipments.show', $firstEquipment));
     }
+
+    /**
+     * タイムテーブルスコープでの資機材管理一覧・詳細画面（班担当管理風導線）が表示されること
+     */
+    public function test_timetable_scoped_equipment_routes_and_navigation(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::first();
+        $lane = Lane::factory()->create(['timetable_id' => $timetable->id, 'name' => '放送設営班']);
+        $equipment = Equipment::factory()->committee()->create([
+            'name' => 'ワイヤレスアンプ',
+            'lane_id' => $lane->id,
+            'quantity' => 2,
+            'unit' => '台',
+        ]);
+
+        // タイムテーブルスコープの一覧表示
+        $indexRes = $this->get(route('timetables.equipments.index', $timetable));
+        $indexRes->assertStatus(200);
+        $indexRes->assertSee($timetable->name);
+        $indexRes->assertSee('ワイヤレスアンプ');
+        $indexRes->assertSee('放送設営班');
+        $indexRes->assertSee('対象運行日:');
+
+        // タイムテーブルスコープの詳細表示 (2:1 カラム)
+        $showRes = $this->get(route('timetables.equipments.show', [$timetable, $equipment]));
+        $showRes->assertStatus(200);
+        $showRes->assertSee('ワイヤレスアンプ');
+        $showRes->assertSee('資材基本台帳情報');
+        $showRes->assertSee('主担当班の体制');
+        $showRes->assertSee('放送設営班');
+        $showRes->assertSee('クイック操作');
+
+        // タイムテーブルスコープの作成画面表示
+        $createRes = $this->get(route('timetables.equipments.create', $timetable));
+        $createRes->assertStatus(200);
+        $createRes->assertSee('新規資材の登録');
+        $createRes->assertSee('放送設営班');
+
+        // タイムテーブルスコープの編集画面表示
+        $editRes = $this->get(route('timetables.equipments.edit', [$timetable, $equipment]));
+        $editRes->assertStatus(200);
+        $editRes->assertSee('ワイヤレスアンプ の編集');
+    }
 }

@@ -7,16 +7,17 @@ use App\Http\Requests\StoreEquipmentLogisticsPatternRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPatternRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
+use App\Repositories\Contracts\EquipmentLogisticsPatternRepositoryInterface;
 use App\Services\EquipmentLogisticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class EquipmentLogisticsPatternController extends Controller
 {
     public function __construct(
-        protected EquipmentLogisticsService $logisticsService
+        protected EquipmentLogisticsService $logisticsService,
+        protected EquipmentLogisticsPatternRepositoryInterface $patternRepository
     ) {}
 
     /**
@@ -27,32 +28,14 @@ class EquipmentLogisticsPatternController extends Controller
         $this->authorize('create', EquipmentLogisticsPattern::class);
 
         $validated = $request->validated();
+        $steps = $validated['steps'];
+        unset($validated['steps']);
 
-        $pattern = DB::transaction(function () use ($validated, $request) {
-            $pattern = EquipmentLogisticsPattern::create([
-                'name' => $validated['name'],
-                'target_type' => $validated['target_type'],
-                'description' => $validated['description'] ?? null,
-                'display_order' => $validated['display_order'] ?? ((int) EquipmentLogisticsPattern::max('display_order') + 10),
-                'created_by' => $request->user()?->id,
-            ]);
-
-            foreach ($validated['steps'] as $index => $stepData) {
-                $pattern->steps()->create([
-                    'day_phase' => $stepData['day_phase'],
-                    'action_type' => $stepData['action_type'],
-                    'title' => $stepData['title'],
-                    'from_location_id' => $stepData['from_location_id'] ?? null,
-                    'to_location_id' => $stepData['to_location_id'] ?? null,
-                    'operator_type' => $stepData['operator_type'],
-                    'witness_required' => (bool) ($stepData['witness_required'] ?? false),
-                    'notes' => $stepData['notes'] ?? null,
-                    'display_order' => $stepData['display_order'] ?? (($index + 1) * 10),
-                ]);
-            }
-
-            return $pattern->load('steps');
-        });
+        $pattern = $this->patternRepository->createWithSteps(
+            $validated,
+            $steps,
+            $request->user()?->id
+        );
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -74,32 +57,10 @@ class EquipmentLogisticsPatternController extends Controller
         $this->authorize('update', $pattern);
 
         $validated = $request->validated();
+        $steps = $validated['steps'];
+        unset($validated['steps']);
 
-        DB::transaction(function () use ($pattern, $validated) {
-            $pattern->update([
-                'name' => $validated['name'],
-                'target_type' => $validated['target_type'],
-                'description' => $validated['description'] ?? null,
-                'display_order' => $validated['display_order'] ?? $pattern->display_order,
-            ]);
-
-            $pattern->steps()->delete();
-
-            foreach ($validated['steps'] as $index => $stepData) {
-                $pattern->steps()->create([
-                    'day_phase' => $stepData['day_phase'],
-                    'action_type' => $stepData['action_type'],
-                    'title' => $stepData['title'],
-                    'from_location_id' => $stepData['from_location_id'] ?? null,
-                    'to_location_id' => $stepData['to_location_id'] ?? null,
-                    'operator_type' => $stepData['operator_type'],
-                    'witness_required' => (bool) ($stepData['witness_required'] ?? false),
-                    'notes' => $stepData['notes'] ?? null,
-                    'display_order' => $stepData['display_order'] ?? (($index + 1) * 10),
-                ]);
-            }
-        });
-
+        $this->patternRepository->updateWithSteps($pattern, $validated, $steps);
         $pattern->load('steps');
 
         if ($request->wantsJson()) {
@@ -122,7 +83,7 @@ class EquipmentLogisticsPatternController extends Controller
         $this->authorize('delete', $pattern);
 
         $name = $pattern->name;
-        $pattern->delete();
+        $this->patternRepository->delete($pattern);
 
         if ($request->wantsJson()) {
             return response()->json([

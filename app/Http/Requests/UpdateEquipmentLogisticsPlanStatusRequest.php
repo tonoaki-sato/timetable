@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\EquipmentLogisticsPlan;
+use App\Enums\EquipmentPlanStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,7 +25,7 @@ class UpdateEquipmentLogisticsPlanStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', 'string', Rule::in(array_keys(EquipmentLogisticsPlan::STATUSES))],
+            'status' => ['required', Rule::enum(EquipmentPlanStatus::class)],
         ];
     }
 }

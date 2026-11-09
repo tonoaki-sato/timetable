@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\EquipmentActionType;
+use App\Enums\EquipmentDayPhase;
+use App\Enums\EquipmentOperatorType;
+use App\Enums\EquipmentPlanStatus;
 use App\Services\LocationAvailabilityService;
 use Database\Factories\EquipmentLogisticsPlanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -107,6 +111,46 @@ class EquipmentLogisticsPlan extends Model
         ];
     }
 
+    public function getDayPhaseEnumAttribute(): EquipmentDayPhase
+    {
+        return EquipmentDayPhase::tryFrom((string) $this->day_phase) ?? EquipmentDayPhase::Other;
+    }
+
+    public function getActionTypeEnumAttribute(): EquipmentActionType
+    {
+        return EquipmentActionType::tryFrom((string) $this->action_type) ?? EquipmentActionType::Other;
+    }
+
+    public function getOperatorTypeEnumAttribute(): EquipmentOperatorType
+    {
+        return EquipmentOperatorType::tryFrom((string) $this->operator_type) ?? EquipmentOperatorType::Committee;
+    }
+
+    public function getStatusEnumAttribute(): EquipmentPlanStatus
+    {
+        return EquipmentPlanStatus::tryFrom((string) $this->status) ?? EquipmentPlanStatus::Planned;
+    }
+
+    public function setDayPhaseAttribute(EquipmentDayPhase|string|null $value): void
+    {
+        $this->attributes['day_phase'] = $value instanceof EquipmentDayPhase ? $value->value : (string) $value;
+    }
+
+    public function setActionTypeAttribute(EquipmentActionType|string|null $value): void
+    {
+        $this->attributes['action_type'] = $value instanceof EquipmentActionType ? $value->value : (string) $value;
+    }
+
+    public function setOperatorTypeAttribute(EquipmentOperatorType|string|null $value): void
+    {
+        $this->attributes['operator_type'] = $value instanceof EquipmentOperatorType ? $value->value : (string) $value;
+    }
+
+    public function setStatusAttribute(EquipmentPlanStatus|string|null $value): void
+    {
+        $this->attributes['status'] = $value instanceof EquipmentPlanStatus ? $value->value : (string) $value;
+    }
+
     /**
      * 運行計画（タイムテーブル）とのリレーション
      */
@@ -152,7 +196,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function getPhaseLabelAttribute(): string
     {
-        return self::DAY_PHASES[$this->day_phase] ?? $this->day_phase;
+        return $this->day_phase_enum->label();
     }
 
     /**
@@ -160,7 +204,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function getActionLabelAttribute(): string
     {
-        return self::ACTION_TYPES[$this->action_type] ?? $this->action_type;
+        return $this->action_type_enum->label();
     }
 
     /**
@@ -168,7 +212,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return self::STATUSES[$this->status] ?? $this->status;
+        return $this->status_enum->label();
     }
 
     /**
@@ -176,7 +220,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function getOperatorLabelAttribute(): string
     {
-        return self::OPERATOR_TYPES[$this->operator_type] ?? $this->operator_type;
+        return $this->operator_type_enum->label();
     }
 
     /**
@@ -246,7 +290,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function isCompleted(): bool
     {
-        return $this->status === 'completed';
+        return $this->status === EquipmentPlanStatus::Completed || $this->status === 'completed';
     }
 
     /**

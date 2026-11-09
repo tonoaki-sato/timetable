@@ -142,8 +142,17 @@ Route::middleware('auth')->group(function () {
     // タイムテーブル全体運行マトリクスビュー
     Route::get('/timetable', [TimetableMatrixController::class, 'index'])->name('timetable.index');
 
-    // 1. 資材管理 (Equipment Management)
+    // 1. 資機材管理 (Equipment Management)
     Route::resource('equipments', EquipmentController::class);
+    Route::group([], function () {
+        Route::get('timetables/{timetable}/equipments', [EquipmentController::class, 'timetableIndex'])->name('timetables.equipments.index');
+        Route::get('timetables/{timetable}/equipments/create', [EquipmentController::class, 'timetableCreate'])->name('timetables.equipments.create');
+        Route::post('timetables/{timetable}/equipments', [EquipmentController::class, 'timetableStore'])->name('timetables.equipments.store');
+        Route::get('timetables/{timetable}/equipments/{equipment}', [EquipmentController::class, 'timetableShow'])->name('timetables.equipments.show');
+        Route::get('timetables/{timetable}/equipments/{equipment}/edit', [EquipmentController::class, 'timetableEdit'])->name('timetables.equipments.edit');
+        Route::put('timetables/{timetable}/equipments/{equipment}', [EquipmentController::class, 'timetableUpdate'])->name('timetables.equipments.update');
+        Route::delete('timetables/{timetable}/equipments/{equipment}', [EquipmentController::class, 'timetableDestroy'])->name('timetables.equipments.destroy');
+    });
 
     // 2. 搬出入計画・カスタムパターン管理 (Logistics & Operations)
     Route::get('/logistics', [EquipmentLogisticsController::class, 'select'])->name('logistics.index');

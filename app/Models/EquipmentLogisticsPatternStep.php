@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\EquipmentActionType;
+use App\Enums\EquipmentDayPhase;
+use App\Enums\EquipmentOperatorType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,6 +36,36 @@ class EquipmentLogisticsPatternStep extends Model
         ];
     }
 
+    public function getDayPhaseEnumAttribute(): EquipmentDayPhase
+    {
+        return EquipmentDayPhase::tryFrom((string) $this->day_phase) ?? EquipmentDayPhase::Other;
+    }
+
+    public function getActionTypeEnumAttribute(): EquipmentActionType
+    {
+        return EquipmentActionType::tryFrom((string) $this->action_type) ?? EquipmentActionType::Other;
+    }
+
+    public function getOperatorTypeEnumAttribute(): EquipmentOperatorType
+    {
+        return EquipmentOperatorType::tryFrom((string) $this->operator_type) ?? EquipmentOperatorType::Committee;
+    }
+
+    public function setDayPhaseAttribute(EquipmentDayPhase|string|null $value): void
+    {
+        $this->attributes['day_phase'] = $value instanceof EquipmentDayPhase ? $value->value : (string) $value;
+    }
+
+    public function setActionTypeAttribute(EquipmentActionType|string|null $value): void
+    {
+        $this->attributes['action_type'] = $value instanceof EquipmentActionType ? $value->value : (string) $value;
+    }
+
+    public function setOperatorTypeAttribute(EquipmentOperatorType|string|null $value): void
+    {
+        $this->attributes['operator_type'] = $value instanceof EquipmentOperatorType ? $value->value : (string) $value;
+    }
+
     /**
      * 所属パターンとのリレーション
      */
@@ -62,7 +95,7 @@ class EquipmentLogisticsPatternStep extends Model
      */
     public function getPhaseLabelAttribute(): string
     {
-        return EquipmentLogisticsPlan::DAY_PHASES[$this->day_phase] ?? $this->day_phase;
+        return $this->day_phase_enum->label();
     }
 
     /**
@@ -70,7 +103,7 @@ class EquipmentLogisticsPatternStep extends Model
      */
     public function getActionLabelAttribute(): string
     {
-        return EquipmentLogisticsPlan::ACTION_TYPES[$this->action_type] ?? $this->action_type;
+        return $this->action_type_enum->label();
     }
 
     /**

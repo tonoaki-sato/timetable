@@ -10,6 +10,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Timetable;
+use App\Repositories\Contracts\EquipmentLogisticsPlanRepositoryInterface;
 use App\Services\EquipmentLogisticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +19,8 @@ use Illuminate\Http\Request;
 class EquipmentLogisticsPlanController extends Controller
 {
     public function __construct(
-        protected EquipmentLogisticsService $logisticsService
+        protected EquipmentLogisticsService $logisticsService,
+        protected EquipmentLogisticsPlanRepositoryInterface $planRepository
     ) {}
 
     /**
@@ -31,7 +33,7 @@ class EquipmentLogisticsPlanController extends Controller
         $validated = $request->validated();
         $validated['timetable_id'] = $timetable->id;
 
-        $plan = EquipmentLogisticsPlan::create($validated);
+        $plan = $this->planRepository->create($validated);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -52,7 +54,7 @@ class EquipmentLogisticsPlanController extends Controller
         abort_if($plan->timetable_id !== $timetable->id, 404);
         $this->authorize('update', $plan);
 
-        $plan->update($request->validated());
+        $this->planRepository->update($plan, $request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -74,7 +76,7 @@ class EquipmentLogisticsPlanController extends Controller
         $this->authorize('delete', $plan);
 
         $title = $plan->title;
-        $plan->delete();
+        $this->planRepository->delete($plan);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -96,7 +98,7 @@ class EquipmentLogisticsPlanController extends Controller
 
         $validated = $request->validated();
 
-        $plan->update(['status' => $validated['status']]);
+        $this->planRepository->update($plan, ['status' => $validated['status']]);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -144,9 +146,7 @@ class EquipmentLogisticsPlanController extends Controller
     {
         $this->authorize('update', $equipment);
 
-        $query = $equipment->plans()->where('timetable_id', $timetable->id);
-        $count = $query->count();
-        $query->delete();
+        $count = $this->planRepository->clearForEquipment($equipment, $timetable);
 
         if ($request->wantsJson()) {
             return response()->json([

@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\EquipmentActionType;
+use App\Enums\EquipmentDayPhase;
+use App\Enums\EquipmentOperatorType;
 use App\Models\EquipmentLogisticsPattern;
-use App\Models\EquipmentLogisticsPlan;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -31,12 +33,12 @@ class UpdateEquipmentLogisticsPatternRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:2000'],
             'display_order' => ['nullable', 'integer', 'min:0'],
             'steps' => ['required', 'array', 'min:1'],
-            'steps.*.day_phase' => ['required', 'string', Rule::in(array_keys(EquipmentLogisticsPlan::DAY_PHASES))],
-            'steps.*.action_type' => ['required', 'string', Rule::in(array_keys(EquipmentLogisticsPlan::ACTION_TYPES))],
+            'steps.*.day_phase' => ['required', Rule::enum(EquipmentDayPhase::class)],
+            'steps.*.action_type' => ['required', Rule::enum(EquipmentActionType::class)],
             'steps.*.title' => ['required', 'string', 'max:255'],
             'steps.*.from_location_id' => ['nullable', 'exists:locations,id'],
             'steps.*.to_location_id' => ['nullable', 'exists:locations,id'],
-            'steps.*.operator_type' => ['required', 'string', Rule::in(array_keys(EquipmentLogisticsPlan::OPERATOR_TYPES))],
+            'steps.*.operator_type' => ['required', Rule::enum(EquipmentOperatorType::class)],
             'steps.*.witness_required' => ['nullable', 'boolean'],
             'steps.*.notes' => ['nullable', 'string', 'max:2000'],
             'steps.*.display_order' => ['nullable', 'integer', 'min:0'],

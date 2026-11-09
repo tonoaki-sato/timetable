@@ -12,6 +12,7 @@
             'assignments' => route('timetables.assignments', $tt),
             'timeline' => route('timetables.staff-timeline', $tt),
             'locations' => route('timetables.locations.index', $tt),
+            'equipments' => route('timetables.equipments.index', $tt),
             'logistics' => route('timetables.logistics.index', $tt),
             'show' => route('timetables.show', $tt),
             'print' => route('timetables.print-assignments', $tt),
@@ -74,6 +75,11 @@
             @if(isset($timetable->locations_count) || $timetable->locations->isNotEmpty())
                 <span class="text-[10px] opacity-75 font-mono">({{ $timetable->locations->count() }})</span>
             @endif
+        </a>
+        <a href="{{ route('timetables.equipments.index', $timetable) }}"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'equipments' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+            <span>📦</span>
+            <span>資機材</span>
         </a>
         <a href="{{ route('timetables.logistics.index', $timetable) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'logistics' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">

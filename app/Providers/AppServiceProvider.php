@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Models\FeatureSetting;
 use App\Models\Timetable;
+use App\Repositories\Contracts\EquipmentLogisticsPatternRepositoryInterface;
+use App\Repositories\Contracts\EquipmentLogisticsPlanRepositoryInterface;
+use App\Repositories\Contracts\EquipmentRepositoryInterface;
 use App\Repositories\Contracts\FeatureSettingRepositoryInterface;
 use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Repositories\Contracts\LocationRepositoryInterface;
@@ -11,6 +14,9 @@ use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
+use App\Repositories\Eloquent\EquipmentLogisticsPatternRepository;
+use App\Repositories\Eloquent\EquipmentLogisticsPlanRepository;
+use App\Repositories\Eloquent\EquipmentRepository;
 use App\Repositories\Eloquent\FeatureSettingRepository;
 use App\Repositories\Eloquent\LaneRepository;
 use App\Repositories\Eloquent\LocationRepository;
@@ -62,6 +68,21 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             LocationRepositoryInterface::class,
             LocationRepository::class
+        );
+
+        $this->app->bind(
+            EquipmentRepositoryInterface::class,
+            EquipmentRepository::class
+        );
+
+        $this->app->bind(
+            EquipmentLogisticsPlanRepositoryInterface::class,
+            EquipmentLogisticsPlanRepository::class
+        );
+
+        $this->app->bind(
+            EquipmentLogisticsPatternRepositoryInterface::class,
+            EquipmentLogisticsPatternRepository::class
         );
     }
 

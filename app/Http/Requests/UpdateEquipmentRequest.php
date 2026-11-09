@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\EquipmentCheckoutRule;
+use App\Enums\EquipmentType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateEquipmentRequest extends FormRequest
 {
@@ -24,8 +27,8 @@ class UpdateEquipmentRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:committee,rental,personal'],
-            'checkout_rule' => ['nullable', 'string', 'in:free,permission_required,leader_only'],
+            'type' => ['required', Rule::enum(EquipmentType::class)],
+            'checkout_rule' => ['nullable', Rule::enum(EquipmentCheckoutRule::class)],
             'quantity' => ['required', 'integer', 'min:1'],
             'is_approximate_quantity' => ['boolean'],
             'unit' => ['required', 'string', 'max:20'],

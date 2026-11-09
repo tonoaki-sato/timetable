@@ -123,7 +123,7 @@ function initStepModal() {
                 }
                 try {
                     const plan = JSON.parse(btn.dataset.plan || '{}');
-                    form.action = `/logistics/plans/${plan.id}`;
+                    form.action = btn.dataset.updateUrl || `/logistics/plans/${plan.id}`;
                     if (methodContainer) {
                         methodContainer.innerHTML = '<input type="hidden" name="_method" value="PUT">';
                     }

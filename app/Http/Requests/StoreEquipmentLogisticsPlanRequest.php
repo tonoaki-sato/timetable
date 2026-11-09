@@ -2,8 +2,13 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\EquipmentActionType;
+use App\Enums\EquipmentDayPhase;
+use App\Enums\EquipmentOperatorType;
+use App\Enums\EquipmentPlanStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreEquipmentLogisticsPlanRequest extends FormRequest
 {
@@ -26,8 +31,8 @@ class StoreEquipmentLogisticsPlanRequest extends FormRequest
             'timetable_id' => ['nullable', 'exists:timetables,id'],
             'equipment_id' => ['required', 'exists:equipments,id'],
             'target_date' => ['nullable', 'date'],
-            'day_phase' => ['required', 'string', 'in:other,pre_day,day1_morning,day1_evening,day2_morning,day2_evening,post_day'],
-            'action_type' => ['required', 'string', 'in:storage_out,vendor_receive,staging_move,setup,night_storage,return_storage,collection_staging,vendor_setup,vendor_pickup,other'],
+            'day_phase' => ['required', Rule::enum(EquipmentDayPhase::class)],
+            'action_type' => ['required', Rule::enum(EquipmentActionType::class)],
             'title' => ['required', 'string', 'max:255'],
             'quantity' => ['nullable', 'integer', 'min:1'],
             'quantity_note' => ['nullable', 'string', 'max:255'],
@@ -37,10 +42,10 @@ class StoreEquipmentLogisticsPlanRequest extends FormRequest
             'to_location' => ['nullable', 'string', 'max:255'],
             'from_location_id' => ['nullable', 'exists:locations,id'],
             'to_location_id' => ['nullable', 'exists:locations,id'],
-            'operator_type' => ['required', 'string', 'in:committee,event_company'],
+            'operator_type' => ['required', Rule::enum(EquipmentOperatorType::class)],
             'witness_required' => ['boolean'],
             'witness_staff_id' => ['nullable', 'exists:staff,id'],
-            'status' => ['required', 'string', 'in:planned,in_progress,completed,cancelled'],
+            'status' => ['required', Rule::enum(EquipmentPlanStatus::class)],
             'notes' => ['nullable', 'string', 'max:2000'],
             'display_order' => ['nullable', 'integer', 'min:0'],
         ];

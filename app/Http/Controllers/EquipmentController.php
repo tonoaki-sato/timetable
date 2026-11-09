@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\DTOs\EquipmentFilterDTO;
 use App\Http\Requests\StoreEquipmentRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
 use App\Models\Equipment;
 use App\Models\Lane;
+use App\Models\Timetable;
+use App\Repositories\Contracts\EquipmentRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,71 +16,66 @@ use Illuminate\View\View;
 
 class EquipmentController extends Controller
 {
+    public function __construct(
+        protected EquipmentRepositoryInterface $equipmentRepository
+    ) {}
+
     /**
-     * 資材管理（備品・機材台帳）一覧画面の表示
+     * 資機材管理（台帳・配備一覧）画面の表示
      */
-    public function index(Request $request): View
+    public function index(Request $request, ?Timetable $timetable = null): View
     {
         $this->authorize('viewAny', Equipment::class);
 
-        $typeFilter = $request->query('type');
-        $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
-        $checkoutRuleFilter = $request->query('checkout_rule');
-        $keyword = $request->query('keyword');
+        $timetable = $this->resolveTimetable($request, $timetable);
+        $filter = EquipmentFilterDTO::fromArray($request->query());
 
-        $query = Equipment::query()
-            ->with(['lane', 'plans'])
-            ->when($typeFilter, fn ($q) => $q->where('type', $typeFilter))
-            ->when($laneFilter, fn ($q) => $q->where('lane_id', $laneFilter))
-            ->when($checkoutRuleFilter, fn ($q) => $q->where('checkout_rule', $checkoutRuleFilter))
-            ->when($keyword, fn ($q) => $q->where(function ($sub) use ($keyword) {
-                $sub->where('name', 'like', "%{$keyword}%")
-                    ->orWhere('storage_location', 'like', "%{$keyword}%")
-                    ->orWhere('storage_detail', 'like', "%{$keyword}%")
-                    ->orWhere('description', 'like', "%{$keyword}%");
-            }))
-            ->ordered();
+        $equipments = $this->equipmentRepository->getPaginated($filter, $timetable, 20);
+        $lanes = $timetable->lanes()->ordered()->get();
+        if ($lanes->isEmpty()) {
+            $lanes = Lane::ordered()->get();
+        }
 
-        $equipments = $query->paginate(20)->withQueryString();
+        $counts = $this->equipmentRepository->getCountsByType();
 
-        $lanes = Lane::ordered()->get();
-
-        // 統計カウント
-        $totalCount = Equipment::count();
-        $committeeCount = Equipment::where('type', 'committee')->count();
-        $rentalCount = Equipment::where('type', 'rental')->count();
-        $personalCount = Equipment::where('type', 'personal')->count();
-
-        return view('equipments.index', compact(
-            'equipments',
-            'lanes',
-            'typeFilter',
-            'laneFilter',
-            'checkoutRuleFilter',
-            'keyword',
-            'totalCount',
-            'committeeCount',
-            'rentalCount',
-            'personalCount'
-        ));
+        return view('equipments.index', [
+            'timetable' => $timetable,
+            'equipments' => $equipments,
+            'lanes' => $lanes,
+            'typeFilter' => $filter->type,
+            'laneFilter' => $filter->laneId,
+            'checkoutRuleFilter' => $filter->checkoutRule,
+            'keyword' => $filter->keyword,
+            'totalCount' => $counts['total'],
+            'committeeCount' => $counts['committee'],
+            'rentalCount' => $counts['rental'],
+            'personalCount' => $counts['personal'],
+        ]);
     }
 
     /**
-     * 資材新規登録画面の表示
+     * 資機材新規登録画面の表示
      */
-    public function create(): View
+    public function create(Request $request, ?Timetable $timetable = null): View
     {
         $this->authorize('create', Equipment::class);
 
-        $lanes = Lane::ordered()->get();
+        $timetable = $this->resolveTimetable($request, $timetable);
+        $lanes = $timetable->lanes()->ordered()->get();
+        if ($lanes->isEmpty()) {
+            $lanes = Lane::ordered()->get();
+        }
 
-        return view('equipments.create', compact('lanes'));
+        return view('equipments.create', [
+            'timetable' => $timetable,
+            'lanes' => $lanes,
+        ]);
     }
 
     /**
-     * 資材新規登録処理
+     * 資機材新規登録処理
      */
-    public function store(StoreEquipmentRequest $request): RedirectResponse|JsonResponse
+    public function store(StoreEquipmentRequest $request, ?Timetable $timetable = null): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Equipment::class);
 
@@ -86,87 +84,161 @@ class EquipmentController extends Controller
             $data['created_by'] = $request->user()->id;
         }
 
-        $equipment = Equipment::create($data);
+        $equipment = $this->equipmentRepository->create($data);
+        $timetable = $this->resolveTimetable($request, $timetable);
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "資材「{$equipment->name}」を登録しました。",
+                'message' => "資機材「{$equipment->name}」を登録しました。",
                 'equipment' => $equipment,
             ]);
         }
 
         return redirect()->route('equipments.show', $equipment)
-            ->with('status', "資材「{$equipment->name}」を登録しました。");
+            ->with('status', "資機材「{$equipment->name}」を登録しました。");
     }
 
     /**
-     * 資材マスター詳細画面の表示
+     * 資機材マスター詳細画面の表示 (2:1 カラムレイアウト)
      */
-    public function show(Equipment $equipment): View
+    public function show(Request $request, Equipment $equipment, ?Timetable $timetable = null): View
     {
         $this->authorize('view', $equipment);
 
-        $equipment->load([
-            'lane',
-            'creator',
-            'plans' => fn ($q) => $q->orderBy('display_order')->orderBy('id'),
+        $timetable = $this->resolveTimetable($request, $timetable);
+        $equipment = $this->equipmentRepository->findWithDetails($equipment->id, $timetable) ?? $equipment;
+
+        return view('equipments.show', [
+            'timetable' => $timetable,
+            'equipment' => $equipment,
         ]);
-
-        return view('equipments.show', compact('equipment'));
     }
 
     /**
-     * 資材編集画面の表示
+     * 資機材編集画面の表示
      */
-    public function edit(Equipment $equipment): View
+    public function edit(Request $request, Equipment $equipment, ?Timetable $timetable = null): View
     {
         $this->authorize('update', $equipment);
 
-        $lanes = Lane::ordered()->get();
+        $timetable = $this->resolveTimetable($request, $timetable);
+        $lanes = $timetable->lanes()->ordered()->get();
+        if ($lanes->isEmpty()) {
+            $lanes = Lane::ordered()->get();
+        }
 
-        return view('equipments.edit', compact('equipment', 'lanes'));
+        return view('equipments.edit', [
+            'timetable' => $timetable,
+            'equipment' => $equipment,
+            'lanes' => $lanes,
+        ]);
     }
 
     /**
-     * 資材更新処理
+     * 資機材更新処理
      */
-    public function update(UpdateEquipmentRequest $request, Equipment $equipment): RedirectResponse|JsonResponse
+    public function update(UpdateEquipmentRequest $request, Equipment $equipment, ?Timetable $timetable = null): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $equipment);
 
-        $equipment->update($request->validated());
+        $this->equipmentRepository->update($equipment, $request->validated());
+        $timetable = $this->resolveTimetable($request, $timetable);
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "資材「{$equipment->name}」を更新しました。",
+                'message' => "資機材「{$equipment->name}」を更新しました。",
                 'equipment' => $equipment,
             ]);
         }
 
         return redirect()->route('equipments.show', $equipment)
-            ->with('status', "資材「{$equipment->name}」を更新しました。");
+            ->with('status', "資機材「{$equipment->name}」を更新しました。");
     }
 
     /**
-     * 資材削除処理
+     * 資機材削除処理
      */
-    public function destroy(Request $request, Equipment $equipment): RedirectResponse|JsonResponse
+    public function destroy(Request $request, Equipment $equipment, ?Timetable $timetable = null): RedirectResponse|JsonResponse
     {
         $this->authorize('delete', $equipment);
 
         $name = $equipment->name;
-        $equipment->delete();
+        $this->equipmentRepository->delete($equipment);
+        $timetable = $this->resolveTimetable($request, $timetable);
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "資材「{$name}」を削除しました。",
+                'message' => "資機材「{$name}」を削除しました。",
             ]);
         }
 
         return redirect()->route('equipments.index')
-            ->with('status', "資材「{$name}」を削除しました。");
+            ->with('status', "資機材「{$name}」を削除しました。");
+    }
+
+    /**
+     * タイムテーブルスコープ用のアクション群
+     */
+    public function timetableIndex(Request $request, Timetable $timetable): View
+    {
+        return $this->index($request, $timetable);
+    }
+
+    public function timetableCreate(Request $request, Timetable $timetable): View
+    {
+        return $this->create($request, $timetable);
+    }
+
+    public function timetableStore(StoreEquipmentRequest $request, Timetable $timetable): RedirectResponse|JsonResponse
+    {
+        return $this->store($request, $timetable);
+    }
+
+    public function timetableShow(Request $request, Timetable $timetable, Equipment $equipment): View
+    {
+        return $this->show($request, $equipment, $timetable);
+    }
+
+    public function timetableEdit(Request $request, Timetable $timetable, Equipment $equipment): View
+    {
+        return $this->edit($request, $equipment, $timetable);
+    }
+
+    public function timetableUpdate(UpdateEquipmentRequest $request, Timetable $timetable, Equipment $equipment): RedirectResponse|JsonResponse
+    {
+        return $this->update($request, $equipment, $timetable);
+    }
+
+    public function timetableDestroy(Request $request, Timetable $timetable, Equipment $equipment): RedirectResponse|JsonResponse
+    {
+        return $this->destroy($request, $equipment, $timetable);
+    }
+
+    /**
+     * 対象運行日（Timetable）の解決ヘルパー
+     */
+    protected function resolveTimetable(?Request $request = null, ?Timetable $timetable = null): Timetable
+    {
+        if ($timetable && $timetable->exists) {
+            return $timetable;
+        }
+
+        if ($request && $request->route('timetable') instanceof Timetable) {
+            return $request->route('timetable');
+        }
+
+        if ($request && $request->filled('timetable_id')) {
+            $found = Timetable::find($request->integer('timetable_id'));
+            if ($found) {
+                return $found;
+            }
+        }
+
+        return Timetable::where('status', 'active')->orderBy('target_date', 'asc')->first()
+            ?? Timetable::orderBy('target_date', 'asc')->first()
+            ?? Timetable::factory()->create(['name' => '既定運行計画', 'target_date' => now()->toDateString()]);
     }
 }
