@@ -1,4 +1,4 @@
-<x-layouts.app :title="$timetable->name . ' 搬出入計画・パターン管理'">
+<x-layouts.app :title="$timetable->name . ' 搬出入計画一覧'">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     @php
@@ -7,9 +7,9 @@
 
     <!-- 1. ヘッダーセクション -->
     <x-page-header
-        :title="$timetable->name . ' 搬出入計画・パターン管理'"
+        :title="$timetable->name . ' 搬出入計画一覧'"
         icon="🚚"
-        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）における資材の搬出入・中継・夜間保管計画、および共通ステップ構成パターン（テンプレート）を管理します。'">
+        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）における資材の搬出入・中継・夜間保管計画の進捗台帳です。'">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
@@ -32,29 +32,27 @@
                 全 {{ $stats['total_equipments'] }} 資材
             </span>
             <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
-                全 {{ $patterns->count() }} パターン
+                配備済 {{ $stats['planned_equipments'] }} 資材
             </span>
         </x-slot:badges>
 
         <x-slot:actions>
-            @if($tab === 'patterns')
-                <button type="button" data-action="open-pattern-modal" data-mode="create"
-                        class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer whitespace-nowrap shrink-0">
-                    <span>➕</span>
-                    <span>新規パターン</span>
-                </button>
-            @else
-                <a href="{{ $printUrl }}"
-                   class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0"
-                   title="搬出入指示書兼現場チェックリストをPDFでダウンロード">
-                    <span>📄</span>
-                    <span>搬出入指示書PDF</span>
-                </a>
-            @endif
+            <a href="{{ route('equipment-patterns.index') }}"
+               class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0"
+               title="全運行日共通の搬出入ステップ・テンプレートを管理">
+                <span>🧩</span>
+                <span>搬出入パターンマスター</span>
+            </a>
+            <a href="{{ $printUrl }}"
+               class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0"
+               title="搬出入指示書兼現場チェックリストをPDFでダウンロード">
+                <span>📄</span>
+                <span>搬出入指示書PDF</span>
+            </a>
             <a href="{{ route('equipments.index') }}"
                class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">
                 <span>📦</span>
-                <span>資機材台帳</span>
+                <span>機材・備品一覧</span>
             </a>
         </x-slot:actions>
     </x-page-header>
@@ -86,20 +84,20 @@
         </div>
     @endif
 
-    <!-- 2. タブ切り替えバー -->
+    <!-- 2. サブナビゲーションバー -->
     <div class="flex items-center space-x-2 border-b border-slate-200 pb-2 overflow-x-auto flex-nowrap text-xs">
-        <a href="{{ route('timetables.logistics.index', array_merge(['timetable' => $timetable, 'tab' => 'plans'], request()->except('tab'))) }}"
-           class="px-3.5 py-1.5 rounded-lg font-bold transition whitespace-nowrap flex items-center space-x-1.5 {{ $tab !== 'patterns' ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200' }}">
+        <a href="{{ route('timetables.logistics.index', $timetable) }}"
+           class="px-3.5 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-2xs transition whitespace-nowrap flex items-center space-x-1.5">
             <span>🚚</span>
             <span>搬出入計画一覧</span>
             <span class="text-[10px] opacity-80 font-mono">({{ $stats['planned_equipments'] }} / {{ $stats['total_equipments'] }} 配備)</span>
         </a>
 
-        <a href="{{ route('timetables.logistics.index', array_merge(['timetable' => $timetable, 'tab' => 'patterns'], request()->except('tab'))) }}"
-           class="px-3.5 py-1.5 rounded-lg font-bold transition whitespace-nowrap flex items-center space-x-1.5 {{ $tab === 'patterns' ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200' }}">
+        <a href="{{ route('equipment-patterns.index') }}"
+           class="px-3.5 py-1.5 rounded-lg font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition whitespace-nowrap flex items-center space-x-1.5">
             <span>🧩</span>
-            <span>搬出入パターン管理</span>
-            <span class="text-[10px] opacity-80 font-mono">({{ $patterns->count() }})</span>
+            <span>搬出入パターンマスター</span>
+            <span class="text-[10px] text-slate-400">↗</span>
         </a>
 
         <a href="{{ $printUrl }}"
@@ -112,12 +110,11 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- タブ1: 🚚 搬出入計画一覧（資材別進捗） -->
+    <!-- 🚚 搬出入計画一覧（資材別進捗） -->
     <!-- ========================================================================= -->
-    @if($tab !== 'patterns')
-        @php
-            $progressPercent = $stats['total_steps'] > 0 ? (int) round(($stats['completed_steps'] / $stats['total_steps']) * 100) : 0;
-        @endphp
+    @php
+        $progressPercent = $stats['total_steps'] > 0 ? (int) round(($stats['completed_steps'] / $stats['total_steps']) * 100) : 0;
+    @endphp
 
         <!-- KPIサマリーカード -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -317,283 +314,5 @@
                 </div>
             @endforelse
         </div>
-    @endif
-
-    <!-- ========================================================================= -->
-    <!-- タブ2: 🧩 搬出入パターン管理（テンプレート一覧） -->
-    <!-- ========================================================================= -->
-    @if($tab === 'patterns')
-        <div class="space-y-4">
-            @forelse($patterns as $pattern)
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                        <div class="space-y-1">
-                            <div class="flex items-center space-x-2 flex-wrap">
-                                <span class="font-bold text-slate-900 text-base">{{ $pattern->name }}</span>
-                                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                    {{ $pattern->target_type_label }}
-                                </span>
-                                <span class="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-slate-100 text-slate-700">
-                                    {{ $pattern->steps->count() }} ステップ
-                                </span>
-                            </div>
-                            @if($pattern->description)
-                                <p class="text-xs text-slate-500">{{ $pattern->description }}</p>
-                            @endif
-                        </div>
-
-                        <div class="flex items-center space-x-2 shrink-0 self-end sm:self-center">
-                            <button type="button"
-                                    data-action="open-pattern-modal"
-                                    data-mode="edit"
-                                    data-pattern="{{ json_encode($pattern) }}"
-                                    class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center space-x-1">
-                                <span>✏️</span>
-                                <span>編集</span>
-                            </button>
-                            <form method="POST" action="{{ route('logistics.patterns.destroy', $pattern) }}" class="inline"
-                                  data-confirm="パターン「{{ $pattern->name }}」を削除しますか？&#10;（すでに各資材に生成済みの計画ステップは消えません）">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="px-2.5 py-1.5 bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center space-x-1">
-                                    <span>🗑️</span>
-                                    <span>削除</span>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- パターン内ステップ構成テーブル -->
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full text-left text-xs divide-y divide-slate-100">
-                            <thead class="bg-slate-50 text-slate-600 font-bold">
-                                <tr>
-                                    <th class="py-2 px-3 w-12 text-center">順序</th>
-                                    <th class="py-2 px-3 w-28">フェーズ</th>
-                                    <th class="py-2 px-3 w-32">種別</th>
-                                    <th class="py-2 px-3">ステップ表示名</th>
-                                    <th class="py-2 px-3">移動元 ➔ 移動先</th>
-                                    <th class="py-2 px-3 w-28">作業主体</th>
-                                    <th class="py-2 px-3 w-20 text-center">立会</th>
-                                    <th class="py-2 px-3">注意事項</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                @foreach($pattern->steps as $step)
-                                    <tr class="hover:bg-slate-50/50">
-                                        <td class="py-2 px-3 text-center font-mono text-slate-400 font-bold">
-                                            {{ $loop->iteration }}
-                                        </td>
-                                        <td class="py-2 px-3">
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold border
-                                                @if($step->day_phase === 'pre_day') bg-purple-50 text-purple-700 border-purple-200
-                                                @elseif($step->day_phase === 'day1_morning') bg-sky-50 text-sky-700 border-sky-200
-                                                @elseif($step->day_phase === 'day1_evening') bg-indigo-50 text-indigo-700 border-indigo-200
-                                                @elseif($step->day_phase === 'day2_morning') bg-teal-50 text-teal-700 border-teal-200
-                                                @elseif($step->day_phase === 'day2_evening') bg-amber-50 text-amber-700 border-amber-200
-                                                @else bg-slate-50 text-slate-700 border-slate-200 @endif">
-                                                {{ $step->phase_label }}
-                                            </span>
-                                        </td>
-                                        <td class="py-2 px-3 font-medium text-slate-800">
-                                            {{ $step->action_label }}
-                                        </td>
-                                        <td class="py-2 px-3 font-bold text-slate-900">
-                                            {{ $step->title }}
-                                        </td>
-                                        <td class="py-2 px-3 text-slate-700 font-mono text-[11px]">
-                                            <span class="text-slate-500">{{ $step->fromLocationModel?->name ?: '（資材定常保管場所）' }}</span>
-                                            <span class="text-indigo-600 font-bold px-1">➔</span>
-                                            <span class="font-bold text-slate-800">{{ $step->toLocationModel?->name ?: '（現地指定）' }}</span>
-                                        </td>
-                                        <td class="py-2 px-3 text-slate-600">
-                                            {{ $step->operator_type_label }}
-                                        </td>
-                                        <td class="py-2 px-3 text-center">
-                                            @if($step->witness_required)
-                                                <span class="px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200">必須</span>
-                                            @else
-                                                <span class="text-slate-300">-</span>
-                                            @endif
-                                        </td>
-                                        <td class="py-2 px-3 text-slate-500 max-w-xs truncate">
-                                            {{ $step->notes ?: '-' }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            @empty
-                <div class="p-12 text-center bg-white rounded-2xl border border-dashed border-slate-300 text-slate-500 space-y-3">
-                    <span class="text-3xl block">🧩</span>
-                    <p class="font-bold text-slate-700">登録されている搬出入パターンはありません</p>
-                    <p class="text-xs text-slate-400">「新規パターン」ボタンから登録するか、資材詳細画面で組んだステップをパターンとして保存してください。</p>
-                    <button type="button" data-action="open-pattern-modal" data-mode="create"
-                            class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 transition cursor-pointer">
-                        ➕ 新規パターンを作成する
-                    </button>
-                </div>
-            @endforelse
-        </div>
-    @endif
-
-</div>
-
-<!-- ========================================================================= -->
-<!-- パターン新規作成・編集モーダル (CSP準拠) -->
-<!-- ========================================================================= -->
-<div id="modal-pattern" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-left space-y-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 id="modal-pattern-title" class="text-sm sm:text-base font-bold text-slate-900 flex items-center space-x-2">
-                <span>🧩</span>
-                <span>新規パターンの作成</span>
-            </h3>
-            <button type="button" data-action="close-pattern-modal" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">✕</button>
-        </div>
-
-        <form id="form-pattern" method="POST" action="{{ route('logistics.patterns.store') }}" class="space-y-4">
-            @csrf
-            <div id="form-pattern-method"></div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div class="sm:col-span-2">
-                    <label for="pattern_name" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">パターン名 <span class="text-rose-500">*</span></label>
-                    <input type="text" id="pattern_name" name="name" required
-                           placeholder="例: パターンA: 自前備品標準、パターンB: テント一式"
-                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label for="pattern_target_type" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">主な対象区分 <span class="text-rose-500">*</span></label>
-                    <select id="pattern_target_type" name="target_type" required
-                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        @foreach(\App\Models\EquipmentLogisticsPattern::TARGET_TYPES as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label for="pattern_description" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">パターンの説明（任意）</label>
-                <input type="text" id="pattern_description" name="description"
-                       placeholder="例: 前日倉庫出し ➔ 本部テント設置 ➔ 2日目夕方撤収"
-                       class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-
-            <!-- ステップ行コンテナ -->
-            <div class="space-y-2">
-                <div class="flex items-center justify-between">
-                    <label class="text-xs font-bold text-slate-800">構成ステップ一覧 <span class="text-rose-500">*</span></label>
-                    <button type="button" data-action="add-pattern-step"
-                            class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition cursor-pointer">
-                        ＋ ステップ行を追加
-                    </button>
-                </div>
-
-                <div id="pattern-steps-container" class="space-y-3"></div>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                <button type="button" data-action="close-pattern-modal"
-                        class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
-                    キャンセル
-                </button>
-                <button type="submit"
-                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
-                    パターンを保存する
-                </button>
-            </div>
-        </form>
     </div>
-</div>
-
-<!-- ステップ行のHTMLテンプレート（JSから複製利用） -->
-<template id="tpl-pattern-step-row">
-    <div class="pattern-step-row p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5 text-xs">
-        <div class="flex items-center justify-between gap-2 border-b border-slate-200/60 pb-2">
-            <span class="font-bold text-slate-700 step-row-number">ステップ #1</span>
-            <button type="button" data-action="remove-pattern-step" class="text-rose-600 hover:text-rose-800 font-bold text-xs cursor-pointer">
-                ✕ この行を削除
-            </button>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <div>
-                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">フェーズ *</label>
-                <select data-field="day_phase" required class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold">
-                    @foreach(\App\Models\EquipmentLogisticsPlan::DAY_PHASES as $key => $lbl)
-                        <option value="{{ $key }}">{{ $lbl }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">アクション種別 *</label>
-                <select data-field="action_type" required class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold">
-                    @foreach(\App\Models\EquipmentLogisticsPlan::ACTION_TYPES as $key => $lbl)
-                        <option value="{{ $key }}">{{ $lbl }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">作業主体 *</label>
-                <select data-field="operator_type" required class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold">
-                    <option value="committee">👥 委員会スタッフ</option>
-                    <option value="event_company">🏢 イベント会社</option>
-                </select>
-            </div>
-        </div>
-
-        <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-0.5">ステップ表示名 *</label>
-            <input type="text" data-field="title" required placeholder="例: 前日倉庫出し・現場へ搬送、夕方夜間保管場所へ移動"
-                   class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs">
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div class="p-2.5 rounded-lg bg-white border border-slate-200 space-y-1">
-                <label class="block text-[10px] font-bold text-slate-600 flex items-center space-x-1">
-                    <span>📍</span>
-                    <span>移動元拠点 (From)</span>
-                </label>
-                <select data-field="from_location_id" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium">
-                    <option value="">未指定（現場または各資材設定を参照）</option>
-                    @foreach($locations as $loc)
-                        <option value="{{ $loc->id }}">{{ $loc->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="p-2.5 rounded-lg bg-white border border-slate-200 space-y-1">
-                <label class="block text-[10px] font-bold text-slate-600 flex items-center space-x-1">
-                    <span>🏁</span>
-                    <span>移動先拠点 (To)</span>
-                </label>
-                <select data-field="to_location_id" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium">
-                    <option value="">未指定（現場または各資材設定を参照）</option>
-                    @foreach($locations as $loc)
-                        <option value="{{ $loc->id }}">{{ $loc->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1">
-            <div class="flex-1 w-full">
-                <input type="text" data-field="notes" placeholder="申し送り・注意事項メモ（任意）"
-                       class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs">
-            </div>
-            <div class="shrink-0">
-                <label class="inline-flex items-center space-x-1.5 cursor-pointer">
-                    <input type="checkbox" data-field="witness_required" value="1" class="rounded border-slate-300 text-indigo-600">
-                    <span class="font-bold text-slate-700 text-xs">👁️ 幹事・スタッフ立会必須</span>
-                </label>
-            </div>
-        </div>
-    </div>
-</template>
-
-@vite(['resources/js/equipments.js'])
 </x-layouts.app>

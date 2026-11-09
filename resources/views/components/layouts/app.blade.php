@@ -42,8 +42,8 @@
                             || request()->routeIs('lanes.*')
                             || request()->routeIs('calendar.*')
                             || request()->routeIs('schedules.*')
-                            || (request()->routeIs('logistics.*') && !request()->routeIs('logistics.print') && request()->query('tab') !== 'patterns')
-                            || (request()->routeIs('timetables.logistics.index') && request()->query('tab') !== 'patterns')
+                            || (request()->routeIs('logistics.*') && !request()->routeIs('logistics.print'))
+                            || request()->routeIs('timetables.logistics.index')
                             || request()->routeIs('preparation-navigator.*');
 
                         $isMasterActive = (request()->routeIs('staff.*') && !request()->routeIs('staff.print*') && !request()->routeIs('staff.export*') && !request()->routeIs('staff.import*'))
@@ -51,7 +51,7 @@
                             || request()->routeIs('timetables.equipments.*')
                             || request()->routeIs('locations.*')
                             || request()->routeIs('location-types.*')
-                            || ((request()->routeIs('logistics.*') || request()->routeIs('timetables.logistics.*')) && request()->query('tab') === 'patterns');
+                            || request()->routeIs('equipment-patterns.*');
 
                         $isPrintActive = request()->routeIs('staff.print*')
                             || request()->routeIs('staff.export*')
@@ -68,10 +68,10 @@
 
                         $targetPrintTimetable = collect($navTimetables ?? [])->firstWhere('status', 'active') ?? collect($navTimetables ?? [])->first();
                         $targetLogisticsIndexUrl = $targetPrintTimetable ? route('timetables.logistics.index', $targetPrintTimetable) : route('logistics.index');
-                        $targetLogisticsPatternUrl = $targetPrintTimetable ? route('timetables.logistics.index', ['timetable' => $targetPrintTimetable, 'tab' => 'patterns']) : route('logistics.index', ['tab' => 'patterns']);
+                        $targetLogisticsPatternUrl = route('equipment-patterns.index');
                         $targetLogisticsPrintUrl = $targetPrintTimetable ? route('timetables.logistics.print', $targetPrintTimetable) : route('logistics.print');
-                        $isLogisticsPlansActive = (request()->routeIs('logistics.*') || request()->routeIs('timetables.logistics.*')) && !request()->routeIs('*print*') && request()->query('tab') !== 'patterns';
-                        $isLogisticsPatternsActive = (request()->routeIs('logistics.*') || request()->routeIs('timetables.logistics.*')) && request()->query('tab') === 'patterns';
+                        $isLogisticsPlansActive = (request()->routeIs('logistics.*') || request()->routeIs('timetables.logistics.*')) && !request()->routeIs('*print*');
+                        $isLogisticsPatternsActive = request()->routeIs('equipment-patterns.*');
                         $isLogisticsPrintActive = request()->routeIs('logistics.print') || request()->routeIs('timetables.logistics.print');
                     @endphp
                     <nav class="hidden md:flex items-center space-x-1 pl-2.5 border-l border-slate-800 shrink-0">
@@ -322,8 +322,8 @@
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">拠点種別・アイコン設定</p>
                                         </div>
                                     </a>
-                                    <a href="{{ route('logistics.index', ['tab' => 'patterns']) }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ $isLogisticsPatternsActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                    <a href="{{ route('equipment-patterns.index') }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('equipment-patterns.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🧩</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold whitespace-nowrap truncate">搬出入パターン</div>
@@ -736,7 +736,7 @@
                                 <span class="text-base shrink-0">🏷️</span>
                                 <span class="font-bold truncate">拠点タイプ管理</span>
                             </a>
-                            <a href="{{ route('logistics.index', ['tab' => 'patterns']) }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            <a href="{{ route('equipment-patterns.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🧩</span>
                                 <span class="font-bold truncate">搬出入パターン</span>
                             </a>

@@ -17,7 +17,11 @@ class UpdateEquipmentLogisticsPatternRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $pattern = $this->route('pattern');
+
+        return $pattern instanceof EquipmentLogisticsPattern
+            ? ($this->user()?->can('update', $pattern) ?? false)
+            : false;
     }
 
     /**

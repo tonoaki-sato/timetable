@@ -7,11 +7,13 @@ use App\Http\Requests\StoreEquipmentLogisticsPatternRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPatternRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
+use App\Models\Location;
 use App\Repositories\Contracts\EquipmentLogisticsPatternRepositoryInterface;
 use App\Services\EquipmentLogisticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class EquipmentLogisticsPatternController extends Controller
 {
@@ -19,6 +21,22 @@ class EquipmentLogisticsPatternController extends Controller
         protected EquipmentLogisticsService $logisticsService,
         protected EquipmentLogisticsPatternRepositoryInterface $patternRepository
     ) {}
+
+    /**
+     * 搬出入パターン（テンプレート）一覧画面の表示
+     */
+    public function index(): View
+    {
+        $this->authorize('viewAny', EquipmentLogisticsPattern::class);
+
+        $patterns = $this->patternRepository->getAllWithSteps();
+        $locations = Location::select('id', 'name')
+            ->orderBy('display_order')
+            ->get()
+            ->unique('name');
+
+        return view('equipment_patterns.index', compact('patterns', 'locations'));
+    }
 
     /**
      * 搬出入パターン（テンプレート）の新規作成
@@ -45,7 +63,7 @@ class EquipmentLogisticsPatternController extends Controller
             ]);
         }
 
-        return redirect()->route('logistics.index', ['tab' => 'patterns'])
+        return redirect()->route('equipment-patterns.index')
             ->with('status', "搬出入パターン「{$pattern->name}」を作成しました。");
     }
 
@@ -71,7 +89,7 @@ class EquipmentLogisticsPatternController extends Controller
             ]);
         }
 
-        return redirect()->route('logistics.index', ['tab' => 'patterns'])
+        return redirect()->route('equipment-patterns.index')
             ->with('status', "搬出入パターン「{$pattern->name}」を更新しました。");
     }
 
@@ -92,7 +110,7 @@ class EquipmentLogisticsPatternController extends Controller
             ]);
         }
 
-        return redirect()->route('logistics.index', ['tab' => 'patterns'])
+        return redirect()->route('equipment-patterns.index')
             ->with('status', "搬出入パターン「{$name}」を削除しました。");
     }
 

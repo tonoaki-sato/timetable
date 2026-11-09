@@ -125,7 +125,7 @@ class NavigationMenuStructureTest extends TestCase
         $response->assertSee(route('staff.index'));
         $response->assertSee(route('equipments.index'));
         $response->assertSee(route('location-types.index'));
-        $response->assertSee(route('logistics.index', ['tab' => 'patterns']));
+        $response->assertSee(route('equipment-patterns.index'));
 
         // マスター管理内に担当班が重複登録されていないこと（デスクトップ・モバイル各1箇所のみ）
         $html = $response->getContent();

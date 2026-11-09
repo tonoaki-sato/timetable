@@ -51,17 +51,15 @@ class EquipmentLogisticsController extends Controller
     }
 
     /**
-     * 指定タイムテーブルにおける搬出入計画・パターン管理画面の表示
+     * 指定タイムテーブルにおける搬出入計画一覧画面の表示
      */
     public function index(Timetable $timetable, Request $request): View
     {
         $this->authorize('viewAny', Equipment::class);
 
-        $tab = $request->query('tab', 'plans');
         $typeFilter = $request->query('type');
         $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
 
-        $patterns = $this->logisticsService->getPatternsData();
         $locations = Location::forTimetable($timetable)->active()->ordered()->get();
         $lanes = $timetable->lanes()->ordered()->get();
         $equipments = $this->logisticsService->getEquipmentsFlowData(
@@ -81,8 +79,6 @@ class EquipmentLogisticsController extends Controller
 
         return view('logistics.index', compact(
             'timetable',
-            'tab',
-            'patterns',
             'locations',
             'lanes',
             'equipments',

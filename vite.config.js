@@ -19,6 +19,7 @@ export default defineConfig({
                 'resources/js/presentation.js',
                 'resources/js/locations.js',
                 'resources/js/equipments.js',
+                'resources/js/equipment-patterns.js',
             ],
             refresh: true,
             fonts: [

@@ -107,25 +107,25 @@ class EquipmentLogisticsTest extends TestCase
 
         $response = $this->get(route('timetables.logistics.index', $this->timetable1));
         $response->assertStatus(200);
-        $response->assertSee('搬出入計画・パターン管理');
         $response->assertSee('搬出入計画一覧');
         $response->assertSee('テストパイプ椅子');
         $response->assertSee('前日会場搬入');
     }
 
     /**
-     * 搬出入パターンの詳細情報が一覧に表示されること
+     * 搬出入パターンマスター一覧画面が表示されること
      */
-    public function test_logistics_tabs_display_correctly(): void
+    public function test_equipment_patterns_master_index_displays_correctly(): void
     {
         $this->actingAs($this->operator);
 
-        $response = $this->get(route('timetables.logistics.index', ['timetable' => $this->timetable1, 'tab' => 'patterns']));
+        $response = $this->get(route('equipment-patterns.index'));
         $response->assertStatus(200);
-        $response->assertSee('搬出入パターン管理');
+        $response->assertSee('搬出入パターン一覧');
         $response->assertSee('テスト標準パターンA');
         $response->assertSee('税務署前駐車場');
         $response->assertSee('前日倉庫出し');
+        $response->assertSee('すべて折りたたむ');
     }
 
     /**
@@ -154,7 +154,7 @@ class EquipmentLogisticsTest extends TestCase
         $this->actingAs($this->operator);
 
         // 1. 新規登録
-        $response = $this->post(route('logistics.patterns.store'), [
+        $response = $this->post(route('equipment-patterns.store'), [
             'name' => '新規作成パターン',
             'target_type' => 'rental',
             'description' => '業者レンタル機材用',
@@ -178,13 +178,13 @@ class EquipmentLogisticsTest extends TestCase
             ],
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('equipment-patterns.index'));
         $newPattern = EquipmentLogisticsPattern::where('name', '新規作成パターン')->first();
         $this->assertNotNull($newPattern);
         $this->assertEquals(2, $newPattern->steps()->count());
 
         // 2. 更新
-        $updateResponse = $this->put(route('logistics.patterns.update', $newPattern), [
+        $updateResponse = $this->put(route('equipment-patterns.update', $newPattern), [
             'name' => '更新後パターン名',
             'target_type' => 'rental',
             'description' => '更新後の説明',
@@ -200,14 +200,14 @@ class EquipmentLogisticsTest extends TestCase
             ],
         ]);
 
-        $updateResponse->assertRedirect();
+        $updateResponse->assertRedirect(route('equipment-patterns.index'));
         $newPattern->refresh();
         $this->assertEquals('更新後パターン名', $newPattern->name);
         $this->assertEquals(1, $newPattern->steps()->count());
 
         // 3. 削除
-        $deleteResponse = $this->delete(route('logistics.patterns.destroy', $newPattern));
-        $deleteResponse->assertRedirect();
+        $deleteResponse = $this->delete(route('equipment-patterns.destroy', $newPattern));
+        $deleteResponse->assertRedirect(route('equipment-patterns.index'));
         $this->assertDatabaseMissing('equipment_logistics_patterns', ['id' => $newPattern->id]);
     }
 
@@ -353,8 +353,8 @@ class EquipmentLogisticsTest extends TestCase
 
         $this->get(route('timetables.logistics.index', $this->timetable1))
             ->assertStatus(200)
-            ->assertSee('搬出入計画・パターン管理')
-            ->assertSee('全 0 パターン');
+            ->assertSee('搬出入計画一覧')
+            ->assertSee('全 0 資材');
 
         $this->get(route('timetables.logistics.print', ['timetable' => $this->timetable1, 'preview' => 1]))
             ->assertStatus(200)

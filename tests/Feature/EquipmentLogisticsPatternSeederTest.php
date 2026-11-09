@@ -81,7 +81,7 @@ class EquipmentLogisticsPatternSeederTest extends TestCase
 
         $timetable = Timetable::first();
 
-        $response = $this->get(route('timetables.logistics.index', ['timetable' => $timetable, 'tab' => 'patterns']));
+        $response = $this->get(route('equipment-patterns.index'));
 
         $response->assertStatus(200);
         $response->assertSee('カラーコーン型（交通規制連動・9ステップ）');
