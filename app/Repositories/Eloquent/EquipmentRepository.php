@@ -8,6 +8,7 @@ use App\Models\Timetable;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Override;
 
 class EquipmentRepository implements EquipmentRepositoryInterface
@@ -91,5 +92,25 @@ class EquipmentRepository implements EquipmentRepositoryInterface
     public function delete(Equipment $equipment): bool
     {
         return $equipment->delete();
+    }
+
+    #[Override]
+    public function reorder(array $equipmentIds): void
+    {
+        DB::transaction(function () use ($equipmentIds): void {
+            $order = 10;
+            foreach ($equipmentIds as $equipmentId) {
+                Equipment::where('id', $equipmentId)->update([
+                    'display_order' => $order,
+                ]);
+                $order += 10;
+            }
+        });
+    }
+
+    #[Override]
+    public function getMaxDisplayOrder(): int
+    {
+        return (int) (Equipment::max('display_order') ?? 0);
     }
 }

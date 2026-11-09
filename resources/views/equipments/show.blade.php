@@ -27,7 +27,7 @@
                 </a>
                 <span class="text-slate-300">/</span>
                 <a href="{{ $indexUrl }}" class="hover:text-indigo-600 transition truncate">
-                    📦 資機材管理
+                    📦 備品一覧
                 </a>
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-700 font-bold truncate">{{ $equipment->name }}</span>
@@ -40,7 +40,7 @@
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>
                 <a href="{{ route('equipments.index') }}" class="hover:text-indigo-600 transition truncate">
-                    📦 資機材管理
+                    📦 備品一覧
                 </a>
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-700 font-bold truncate">{{ $equipment->name }}</span>

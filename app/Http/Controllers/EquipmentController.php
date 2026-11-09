@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\DTOs\EquipmentFilterDTO;
+use App\Http\Requests\ReorderEquipmentsRequest;
 use App\Http\Requests\StoreEquipmentRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
 use App\Models\Equipment;
@@ -75,6 +76,21 @@ class EquipmentController extends Controller
     }
 
     /**
+     * 備品の表示順一括更新（ドラッグ＆ドロップ用）
+     */
+    public function reorder(ReorderEquipmentsRequest $request): JsonResponse
+    {
+        $this->authorize('update', Equipment::class);
+
+        $this->equipmentRepository->reorder($request->validated('equipment_ids'));
+
+        return response()->json([
+            'success' => true,
+            'message' => '備品の表示順を更新しました。',
+        ]);
+    }
+
+    /**
      * 資機材新規登録処理
      */
     public function store(StoreEquipmentRequest $request, ?Timetable $timetable = null): RedirectResponse|JsonResponse
@@ -84,6 +100,9 @@ class EquipmentController extends Controller
         $data = $request->validated();
         if ($request->user() && empty($data['created_by'])) {
             $data['created_by'] = $request->user()->id;
+        }
+        if (! isset($data['display_order']) || $data['display_order'] === null) {
+            $data['display_order'] = $this->equipmentRepository->getMaxDisplayOrder() + 10;
         }
 
         $equipment = $this->equipmentRepository->create($data);

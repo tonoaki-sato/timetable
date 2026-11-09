@@ -52,4 +52,16 @@ interface EquipmentRepositoryInterface
      * 資機材を削除
      */
     public function delete(Equipment $equipment): bool;
+
+    /**
+     * 備品の表示順を一括更新
+     *
+     * @param  array<int, int>  $equipmentIds
+     */
+    public function reorder(array $equipmentIds): void;
+
+    /**
+     * 最大の表示順を取得
+     */
+    public function getMaxDisplayOrder(): int;
 }

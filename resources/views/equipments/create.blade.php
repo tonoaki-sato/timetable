@@ -29,7 +29,7 @@
                 </a>
                 <span class="text-slate-300">/</span>
                 <a href="{{ $indexUrl }}" class="hover:text-indigo-600 transition truncate">
-                    📦 資材管理
+                    📦 備品一覧
                 </a>
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-700 font-bold truncate">➕ 新規資材の登録</span>
@@ -42,7 +42,7 @@
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>
                 <a href="{{ route('equipments.index') }}" class="hover:text-indigo-600 transition truncate">
-                    📦 資材管理
+                    📦 備品一覧
                 </a>
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-700 font-bold truncate">➕ 新規資材の登録</span>

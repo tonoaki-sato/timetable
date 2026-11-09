@@ -142,9 +142,11 @@ Route::middleware('auth')->group(function () {
     // タイムテーブル全体運行マトリクスビュー
     Route::get('/timetable', [TimetableMatrixController::class, 'index'])->name('timetable.index');
 
-    // 1. 資機材管理 (Equipment Management)
+    // 1. 資機材・備品管理 (Equipment Management)
+    Route::post('equipments/reorder', [EquipmentController::class, 'reorder'])->name('equipments.reorder');
     Route::resource('equipments', EquipmentController::class);
     Route::group([], function () {
+        Route::post('timetables/{timetable}/equipments/reorder', [EquipmentController::class, 'reorder'])->name('timetables.equipments.reorder');
         Route::get('timetables/{timetable}/equipments', [EquipmentController::class, 'timetableIndex'])->name('timetables.equipments.index');
         Route::get('timetables/{timetable}/equipments/create', [EquipmentController::class, 'timetableCreate'])->name('timetables.equipments.create');
         Route::post('timetables/{timetable}/equipments', [EquipmentController::class, 'timetableStore'])->name('timetables.equipments.store');

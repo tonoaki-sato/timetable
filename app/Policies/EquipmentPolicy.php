@@ -34,7 +34,7 @@ class EquipmentPolicy
     /**
      * 資材更新権限
      */
-    public function update(User $user, Equipment $equipment): bool
+    public function update(User $user, ?Equipment $equipment = null): bool
     {
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }

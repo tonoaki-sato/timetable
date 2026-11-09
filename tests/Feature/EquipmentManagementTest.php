@@ -322,7 +322,7 @@ class EquipmentManagementTest extends TestCase
 
         $this->get(route('equipments.index'))
             ->assertStatus(200)
-            ->assertSee('登録されている資材がありません');
+            ->assertSee('備品がまだ登録されていません');
 
         $this->get(route('equipments.create'))
             ->assertStatus(200)
@@ -401,5 +401,52 @@ class EquipmentManagementTest extends TestCase
         $editRes = $this->get(route('timetables.equipments.edit', [$timetable, $equipment]));
         $editRes->assertStatus(200);
         $editRes->assertSee('ワイヤレスアンプ の編集');
+    }
+
+    /**
+     * ドラッグ＆ドロップAPIで備品の表示順（display_order）が一括更新できること
+     */
+    public function test_reorder_updates_equipment_display_orders(): void
+    {
+        $this->actingAs($this->operator);
+
+        $eq1 = Equipment::factory()->create(['name' => '備品A', 'display_order' => 10]);
+        $eq2 = Equipment::factory()->create(['name' => '備品B', 'display_order' => 20]);
+        $eq3 = Equipment::factory()->create(['name' => '備品C', 'display_order' => 30]);
+
+        $response = $this->postJson(route('equipments.reorder'), [
+            'equipment_ids' => [$eq3->id, $eq1->id, $eq2->id],
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'message' => '備品の表示順を更新しました。',
+        ]);
+
+        $this->assertSame(10, $eq3->fresh()->display_order);
+        $this->assertSame(20, $eq1->fresh()->display_order);
+        $this->assertSame(30, $eq2->fresh()->display_order);
+    }
+
+    /**
+     * 一般スタッフは備品の表示順を変更できないこと
+     */
+    public function test_general_staff_cannot_reorder_equipments(): void
+    {
+        $regularUser = User::factory()->create([
+            'role' => 'staff',
+            'is_active' => true,
+        ]);
+        $this->actingAs($regularUser);
+
+        $eq1 = Equipment::factory()->create(['name' => '備品A', 'display_order' => 10]);
+        $eq2 = Equipment::factory()->create(['name' => '備品B', 'display_order' => 20]);
+
+        $response = $this->postJson(route('equipments.reorder'), [
+            'equipment_ids' => [$eq2->id, $eq1->id],
+        ]);
+
+        $response->assertForbidden();
     }
 }

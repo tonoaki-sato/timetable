@@ -1,12 +1,12 @@
 @php
     $isScoped = $isTimetableScoped ?? false;
-    $pageTitle = $isScoped ? ($timetable->name . ' 資機材・資材管理') : '資機材・資材管理（備品台帳）';
+    $pageTitle = $isScoped ? ($timetable->name . ' 備品一覧') : '備品一覧';
     $pageDesc = $isScoped
-        ? '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）運行に使用する自前保有備品・提携レンタル機材・個人持ち込み私物の台帳および配備状況を管理します。'
-        : 'まつり運行全般で使用する自前保有備品、外部レンタル機材、個人持ち込み私物の台帳です。数量、保管場所、管理番号、主担当班および持出ルールを一元管理します。';
+        ? '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）運行に使用する備品の台帳および配備状況を管理します。'
+        : 'まつり運行全般で使用する自前保有備品、外部レンタル機材、個人持ち込み私物の台帳です。ドラッグ＆ドロップで表示順を変更できます。';
     $indexRoute = $isScoped ? route('timetables.equipments.index', $timetable) : route('equipments.index');
     $createRoute = $isScoped ? route('timetables.equipments.create', $timetable) : route('equipments.create');
-    $logisticsRoute = $isScoped ? route('timetables.logistics.index', $timetable) : route('logistics.index');
+    $reorderRoute = $isScoped ? route('timetables.equipments.reorder', $timetable) : route('equipments.reorder');
 @endphp
 
 <x-layouts.app :title="$pageTitle">
@@ -29,7 +29,7 @@
                     <span>{{ $timetable->name }}</span>
                 </a>
                 <span class="text-slate-300">/</span>
-                <span class="text-slate-700 font-bold truncate">📦 資機材管理</span>
+                <span class="text-slate-700 font-bold truncate">📦 備品一覧</span>
             @else
                 <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                     <span>🏮</span>
@@ -38,20 +38,9 @@
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>
-                <span class="text-slate-700 font-bold truncate">📦 資機材管理</span>
+                <span class="text-slate-700 font-bold truncate">📦 備品一覧</span>
             @endif
         </x-slot:breadcrumbs>
-
-        <x-slot:badges>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-slate-100 text-slate-800 border border-slate-200">
-                登録総数: {{ $totalCount }} 品目
-            </span>
-            @if($isScoped)
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    📅 {{ $timetable->name }}
-                </span>
-            @endif
-        </x-slot:badges>
 
         <x-slot:actions>
             @if($isScoped)
@@ -62,16 +51,10 @@
                     <span>指示書PDF</span>
                 </a>
             @endif
-            <a href="{{ $logisticsRoute }}"
-                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0"
-                title="日別の搬出入計画・現場チェック">
-                <span>🚚</span>
-                <span>搬出入計画</span>
-            </a>
             <a href="{{ $createRoute }}"
-                class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>➕</span>
-                <span>新規資機材を追加</span>
+                <span>新規備品を追加</span>
             </a>
         </x-slot:actions>
     </x-page-header>
@@ -157,101 +140,79 @@
         </div>
     </div>
 
-    <!-- 3. 資機材台帳一覧テーブル -->
+    <!-- 3. 備品一覧テーブル（ドラッグ＆ドロップ対応） -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-                <h2 class="font-bold text-base text-slate-900 flex items-center space-x-2">
-                    <span>📋</span>
-                    <span>資機材台帳一覧</span>
-                    <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono font-normal">
-                        全 {{ $equipments->total() }} 品目
-                    </span>
-                </h2>
-                <p class="text-xs text-slate-500 mt-0.5">
-                    @if($isScoped)
-                        「{{ $timetable->name }}」における配備動態および定常保管場所の一覧です。
-                    @else
-                        保有備品、レンタル機材、私物の基本情報および主担当班の一覧です。
-                    @endif
-                </p>
-            </div>
-        </div>
-
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
                 <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
                     <tr>
-                        <th scope="col" class="py-3.5 px-4 whitespace-nowrap">資機材名 / 仕様メモ</th>
-                        <th scope="col" class="py-3.5 px-3 whitespace-nowrap">区分</th>
-                        <th scope="col" class="py-3.5 px-3 whitespace-nowrap">総数量</th>
-                        <th scope="col" class="py-3.5 px-4 whitespace-nowrap">定常保管場所 / 調達</th>
-                        <th scope="col" class="py-3.5 px-3 whitespace-nowrap">主担当班</th>
-                        <th scope="col" class="py-3.5 px-3 whitespace-nowrap">配備・搬出入動態</th>
-                        <th scope="col" class="py-3.5 px-4 text-right whitespace-nowrap">操作</th>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap">備品名</th>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap">区分</th>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap">総数量</th>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap">定常保管場所 / 調達</th>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap">主担当班</th>
+                        <th scope="col" class="px-4 py-3 whitespace-nowrap text-right">操作</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 bg-white">
+                <tbody id="equipments-container"
+                    data-reorder-url="{{ $reorderRoute }}"
+                    class="divide-y divide-slate-100 bg-white">
                     @forelse($equipments as $item)
                         @php
                             $itemShowUrl = $isScoped ? route('timetables.equipments.show', [$timetable, $item]) : route('equipments.show', $item);
                             $itemEditUrl = $isScoped ? route('timetables.equipments.edit', [$timetable, $item]) : route('equipments.edit', $item);
                             $itemDestroyUrl = $isScoped ? route('timetables.equipments.destroy', [$timetable, $item]) : route('equipments.destroy', $item);
-                            $itemLogisticsUrl = $isScoped ? route('timetables.logistics.equipments.show', [$timetable, $item]) : route('logistics.equipments.show', $item);
                         @endphp
-                        <tr class="hover:bg-slate-50/80 transition">
-                            <!-- 資機材名 -->
-                            <td class="py-3.5 px-4">
-                                <div class="flex items-center space-x-1.5 flex-wrap">
-                                    <a href="{{ $itemShowUrl }}" class="font-bold text-slate-900 text-sm hover:text-indigo-600 transition">
+                        <tr data-equipment-id="{{ $item->id }}" draggable="true"
+                            class="hover:bg-slate-50/80 transition cursor-default">
+                            <!-- 備品名 -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="flex items-center space-x-2">
+                                    <span class="cursor-grab active:cursor-grabbing text-slate-400 hover:text-indigo-600 px-1 select-none font-bold text-sm" title="ドラッグして並び替え">⋮⋮</span>
+                                    <a href="{{ $itemShowUrl }}"
+                                        class="font-bold text-slate-800 hover:text-indigo-600 hover:underline transition"
+                                        title="クリックして詳細を表示">
                                         {{ $item->name }}
                                     </a>
                                     @if($item->checkout_rule === 'permission_required')
-                                        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">⚠️ 本陣許可制</span>
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">⚠️ 本陣許可制</span>
                                     @elseif($item->checkout_rule === 'leader_only')
-                                        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">👑 班長限定</span>
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">👑 班長限定</span>
                                     @endif
                                 </div>
-                                @if($item->description)
-                                    <div class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
-                                        {{ $item->description }}
-                                    </div>
-                                @endif
                             </td>
 
                             <!-- 区分 -->
-                            <td class="py-3.5 px-3 whitespace-nowrap">
+                            <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border {{ $item->type_enum->badgeClasses() }}">
                                     {{ $item->type_enum->icon() }} {{ $item->type_enum->shortLabel() }}
                                 </span>
                             </td>
 
                             <!-- 数量・単位 -->
-                            <td class="py-3.5 px-3 whitespace-nowrap">
+                            <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="font-bold font-mono text-slate-900 text-sm">{{ $item->formatted_quantity }}</span>
                             </td>
 
                             <!-- 保管場所 / 調達区分 -->
-                            <td class="py-3.5 px-4">
+                            <td class="px-4 py-3 whitespace-nowrap">
                                 @if($item->isRental())
-                                    <div class="text-slate-700 font-medium">
+                                    <span class="text-slate-700 font-medium">
                                         🏢 イベント会社手配
-                                    </div>
+                                    </span>
                                 @else
                                     <div class="font-medium text-slate-800 flex items-center space-x-1">
                                         <span class="text-slate-400">📍</span>
                                         <span>{{ $item->storage_location ?: ($item->isPersonal() ? '自宅（個人保管）' : '番所地下倉庫') }}</span>
+                                        @if($item->storage_detail)
+                                            <span class="text-[10px] text-slate-400 ml-1">({{ $item->storage_detail }})</span>
+                                        @endif
                                     </div>
-                                    @if($item->storage_detail)
-                                        <div class="text-[10px] text-slate-400 mt-0.5 line-clamp-1">
-                                            {{ $item->storage_detail }}
-                                        </div>
-                                    @endif
                                 @endif
                             </td>
 
                             <!-- 所管班 -->
-                            <td class="py-3.5 px-3 whitespace-nowrap">
+                            <td class="px-4 py-3 whitespace-nowrap">
                                 @if($item->lane)
                                     @php $laneClasses = $item->lane->color_classes; @endphp
                                     <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-bold border {{ $laneClasses['badge'] ?? 'bg-slate-100 text-slate-800 border-slate-200' }}">
@@ -263,46 +224,20 @@
                                 @endif
                             </td>
 
-                            <!-- 搬出入計画配備状況 -->
-                            <td class="py-3.5 px-3 whitespace-nowrap">
-                                @php $planCount = $item->plans->count(); @endphp
-                                @if($planCount > 0)
-                                    <a href="{{ $itemLogisticsUrl }}"
-                                       class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition"
-                                       title="搬出入ステップを確認・設定">
-                                        <span>🚚</span>
-                                        <span>{{ $planCount }} ステップ</span>
-                                    </a>
-                                @else
-                                    <a href="{{ $itemLogisticsUrl }}"
-                                       class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
-                                       title="搬出入ステップを設定">
-                                        <span>⚡</span>
-                                        <span>設定する</span>
-                                    </a>
-                                @endif
-                            </td>
-
-                            <!-- 操作列 -->
-                            <td class="py-3.5 px-4 text-right whitespace-nowrap space-x-1">
-                                <a href="{{ $itemShowUrl }}"
-                                   class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition inline-flex items-center"
-                                   title="詳細表示">
-                                    詳細
-                                </a>
+                            <!-- 操作 -->
+                            <td class="px-4 py-3 whitespace-nowrap text-right space-x-1">
                                 <a href="{{ $itemEditUrl }}"
-                                   class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition inline-flex items-center"
-                                   title="編集">
-                                    編集
+                                    class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1">
+                                    <span>✏️</span>
+                                    <span>編集</span>
                                 </a>
                                 @can('delete', $item)
                                     <form method="POST" action="{{ $itemDestroyUrl }}" class="inline"
-                                          data-confirm="資機材「{{ $item->name }}」を削除しますか？&#10;紐づくすべての搬出入計画ステップも削除されます。">
+                                        data-confirm="備品「{{ $item->name }}」を削除しますか？&#10;紐づくすべての搬出入計画ステップも削除されます。">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                                class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition inline-flex items-center space-x-0.5 cursor-pointer"
-                                                title="削除">
+                                            class="px-2.5 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center space-x-1">
                                             <span>🗑️</span>
                                             <span>削除</span>
                                         </button>
@@ -312,15 +247,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="py-12 text-center text-slate-400">
-                                <div class="text-3xl mb-2">📦</div>
-                                <div class="font-bold text-slate-700">登録されている資材がありません</div>
-                                <div class="text-xs text-slate-400 mt-1">「新規資機材を追加」ボタンから自前備品や提携レンタル機材、私物を登録してください。</div>
-                                <div class="mt-4">
-                                    <a href="{{ $createRoute }}" class="inline-block px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 transition">
-                                        ＋ 新規資機材を追加
-                                    </a>
-                                </div>
+                            <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
+                                備品がまだ登録されていません。ヘッダーの「➕ 新規備品を追加」から登録してください。
                             </td>
                         </tr>
                     @endforelse
@@ -336,4 +264,6 @@
     </div>
 
 </div>
+
+@vite(['resources/js/equipments.js'])
 </x-layouts.app>
