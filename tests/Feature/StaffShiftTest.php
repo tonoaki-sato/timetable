@@ -7,6 +7,7 @@ use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -327,6 +328,8 @@ class StaffShiftTest extends TestCase
      */
     public function test_my_shift_displays_now_and_next_badges_in_task_rows(): void
     {
+        $targetDate = $this->timetable->target_date->format('Y-m-d');
+        Carbon::setTestNow(Carbon::parse($targetDate.' 12:00:00'));
         $now = now();
         $currentTime = $now->format('H:i:s');
 
@@ -369,6 +372,8 @@ class StaffShiftTest extends TestCase
         // 現在タスクの行内着手ボタンの確認
         $response->assertSee('着手');
         $response->assertSee('完了');
+
+        Carbon::setTestNow();
     }
 
     /**

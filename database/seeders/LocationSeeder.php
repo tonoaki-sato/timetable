@@ -100,8 +100,25 @@ class LocationSeeder extends Seeder
             ])]);
         }
 
+        $day4Orders = [
+            'コミュニティルーム' => 10,
+            '番所倉庫' => 20,
+            '番所地下倉庫' => 30,
+            '番所前スペース' => 40,
+            '税務署前駐車場' => 50,
+            '長島駐車場（旧北川駐車場）' => 60,
+            'S&S駐車場' => 70,
+            '横浜銀行駐車場' => 80,
+        ];
+
         foreach ($timetables as $timetable) {
+            $isDay4 = str_contains($timetable->name, '第35回');
+
             foreach ($locations as $locData) {
+                $displayOrder = ($isDay4 && isset($day4Orders[$locData['name']]))
+                    ? $day4Orders[$locData['name']]
+                    : $locData['display_order'];
+
                 $location = Location::updateOrCreate(
                     [
                         'timetable_id' => $timetable->id,
@@ -111,7 +128,7 @@ class LocationSeeder extends Seeder
                         'location_type_id' => $locData['type_id'],
                         'notes' => $locData['notes'],
                         'is_all_day' => $locData['is_all_day'],
-                        'display_order' => $locData['display_order'],
+                        'display_order' => $displayOrder,
                         'is_active' => true,
                         'created_by' => $adminId,
                     ]
