@@ -41,7 +41,7 @@ class EquipmentManagementTest extends TestCase
 
         $response = $this->get(route('equipments.index'));
         $response->assertStatus(200);
-        $response->assertSee('資材管理');
+        $response->assertSee('機材・備品一覧');
         $response->assertSee('立て看板');
         $response->assertSee('パイプテント');
         $response->assertSee('私物折りたたみ台車');
@@ -228,14 +228,12 @@ class EquipmentManagementTest extends TestCase
             'quantity' => 5,
             'unit' => '台',
             'storage_location' => '番所地下倉庫',
-            'storage_detail' => '地下倉庫入口右手・台車ラック',
         ]);
 
         $equipment = Equipment::where('name', '折りたたみ大型台車')->first();
         $this->assertNotNull($equipment);
         $response->assertRedirect(route('equipments.show', $equipment));
         $this->assertSame('permission_required', $equipment->checkout_rule);
-        $this->assertSame('地下倉庫入口右手・台車ラック', $equipment->storage_detail);
 
         Equipment::factory()->create([
             'name' => '自由持出バケツ',
@@ -279,7 +277,7 @@ class EquipmentManagementTest extends TestCase
     /**
      * レンタル機材（type=rental）登録・更新時に、フォーム初期値の保管場所が送信されてもnullに正規化されること
      */
-    public function test_rental_equipment_clears_default_storage_location_and_detail(): void
+    public function test_rental_equipment_clears_default_storage_location(): void
     {
         $this->actingAs($this->operator);
 
@@ -290,19 +288,16 @@ class EquipmentManagementTest extends TestCase
             'quantity' => 5,
             'unit' => '台',
             'storage_location' => '番所地下倉庫',
-            'storage_detail' => '不要な詳細',
         ]);
 
         $equipment = Equipment::where('name', '足踏み式給水設備')->first();
         $this->assertNotNull($equipment);
         $response->assertRedirect(route('equipments.show', $equipment));
         $this->assertNull($equipment->storage_location);
-        $this->assertNull($equipment->storage_detail);
 
         // 委員会管理からレンタルへ更新した場合もクリアされること
         $committeeEq = Equipment::factory()->committee()->create([
             'storage_location' => '番所地下倉庫',
-            'storage_detail' => '地下1階',
         ]);
 
         $this->put(route('equipments.update', $committeeEq), [
@@ -311,12 +306,10 @@ class EquipmentManagementTest extends TestCase
             'quantity' => 3,
             'unit' => '台',
             'storage_location' => '番所地下倉庫',
-            'storage_detail' => '地下1階',
         ])->assertRedirect(route('equipments.show', $committeeEq));
 
         $committeeEq->refresh();
         $this->assertNull($committeeEq->storage_location);
-        $this->assertNull($committeeEq->storage_detail);
     }
 
     /**
@@ -333,8 +326,8 @@ class EquipmentManagementTest extends TestCase
 
         $this->get(route('equipments.create'))
             ->assertStatus(200)
-            ->assertSee('新規資材の登録')
-            ->assertSee('資材管理に戻る')
+            ->assertSee('新規備品の登録')
+            ->assertSee('機材・備品一覧に戻る')
             ->assertSee('<select id="type" name="type"', false);
 
         $this->post(route('equipments.store'), [
@@ -350,9 +343,11 @@ class EquipmentManagementTest extends TestCase
             ->assertStatus(200)
             ->assertSee('<select id="type" name="type"', false);
 
+        // 非スコープ（/equipments/{id}）での詳細画面表示（lanes.show未定義エラーが発生しないことの検証）
         $this->get(route('equipments.show', $firstEquipment))
             ->assertStatus(200)
             ->assertSee('初回登録資材')
+            ->assertSee('機材・備品一覧')
             ->assertSee('資材基本台帳情報')
             ->assertSee('搬出入計画・現場配備状況')
             ->assertSee(route('logistics.equipments.show', $firstEquipment));
@@ -401,7 +396,7 @@ class EquipmentManagementTest extends TestCase
         // タイムテーブルスコープの作成画面表示
         $createRes = $this->get(route('timetables.equipments.create', $timetable));
         $createRes->assertStatus(200);
-        $createRes->assertSee('新規資材の登録');
+        $createRes->assertSee('新規備品の登録');
         $createRes->assertSee('放送設営班');
 
         // タイムテーブルスコープの編集画面表示
@@ -434,6 +429,27 @@ class EquipmentManagementTest extends TestCase
         $this->assertSame(10, $eq3->fresh()->display_order);
         $this->assertSame(20, $eq1->fresh()->display_order);
         $this->assertSame(30, $eq2->fresh()->display_order);
+    }
+
+    /**
+     * 主担当班が割り当てられた機材の非スコープ詳細画面（/equipments/{id}）がエラーなく表示されること
+     */
+    public function test_show_with_assigned_lane_renders_cleanly_without_timetable_scope(): void
+    {
+        $this->actingAs($this->operator);
+
+        $lane = Lane::factory()->create(['name' => 'カラーコーン班']);
+        $equipment = Equipment::factory()->committee()->create([
+            'name' => 'テスト用カラーコーン',
+            'lane_id' => $lane->id,
+        ]);
+
+        $response = $this->get(route('equipments.show', $equipment));
+        $response->assertStatus(200);
+        $response->assertSee('テスト用カラーコーン');
+        $response->assertSee('カラーコーン班');
+        $response->assertSee('担当班の詳細を見る');
+        $response->assertDontSee('storage_detail');
     }
 
     /**

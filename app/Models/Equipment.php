@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'is_approximate_quantity',
     'unit',
     'storage_location',
-    'storage_detail',
     'lane_id',
     'description',
     'display_order',

@@ -81,9 +81,8 @@ class EquipmentLogisticsService
             ? Location::find($dto->nightLocation2Id)
             : null;
 
-        $storageLocationName = $equipment->isPersonal()
-            ? ($equipment->storage_detail ?: '所有者（個人持ち込み・持ち帰り）')
-            : ($equipment->storage_location ?: '番所地下倉庫');
+        $storageLocationName = $equipment->storage_location
+            ?: ($equipment->isPersonal() ? '所有者（個人持ち込み・持ち帰り）' : '番所地下倉庫');
 
         $witnessStaffId = $dto->witnessStaffId;
         $qty = (int) $equipment->quantity;

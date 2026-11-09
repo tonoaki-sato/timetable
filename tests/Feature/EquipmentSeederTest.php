@@ -35,8 +35,16 @@ class EquipmentSeederTest extends TestCase
     {
         $this->seed(EquipmentSeeder::class);
 
-        $this->assertSame(1, Equipment::count());
+        $this->assertSame(2, Equipment::count());
         $this->assertSame(7, EquipmentLogisticsPlan::count());
+
+        $cone = Equipment::where('name', 'カラーコーン')->first();
+        $this->assertNotNull($cone);
+        $this->assertSame('committee', $cone->type);
+        $this->assertSame(100, $cone->quantity);
+        $this->assertSame('個', $cone->unit);
+        $this->assertSame('番所地下倉庫', $cone->storage_location);
+        $this->assertSame(10, $cone->display_order);
 
         $equipment = Equipment::with('plans')->where('name', '足踏み式給水設備')->first();
         $this->assertNotNull($equipment);

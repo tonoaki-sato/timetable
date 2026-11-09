@@ -113,7 +113,7 @@
         </div>
     @endif
 
-    @if($equipment->description || $equipment->storage_detail || $equipment->storage_location)
+    @if($equipment->description || $equipment->storage_location)
         <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 space-y-2 text-xs">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
                 <div class="font-bold text-slate-800 flex items-center space-x-1.5">
@@ -125,9 +125,6 @@
                 <div class="text-slate-600 flex items-center space-x-2">
                     <span class="font-bold text-slate-700">定常保管場所:</span>
                     <span class="text-slate-900 font-medium">{{ $equipment->storage_location }}</span>
-                    @if($equipment->storage_detail)
-                        <span class="text-slate-500 font-medium bg-slate-50 border border-slate-200 px-2 py-0.5 rounded text-[11px]">定位置詳細: {{ $equipment->storage_detail }}</span>
-                    @endif
                 </div>
             @endif
             @if($equipment->description)

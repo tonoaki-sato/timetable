@@ -27,7 +27,7 @@
                 </a>
                 <span class="text-slate-300">/</span>
                 <a href="{{ $indexUrl }}" class="hover:text-indigo-600 transition truncate">
-                    📦 備品一覧
+                    📦 機材・備品一覧
                 </a>
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-700 font-bold truncate">{{ $equipment->name }}</span>
@@ -40,7 +40,7 @@
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>
                 <a href="{{ route('equipments.index') }}" class="hover:text-indigo-600 transition truncate">
-                    📦 備品一覧
+                    📦 機材・備品一覧
                 </a>
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-700 font-bold truncate">{{ $equipment->name }}</span>
@@ -329,16 +329,22 @@
 
                         <div class="pt-2 border-t border-slate-100">
                             @php
-                                $laneShowUrl = $isScoped
-                                    ? route('timetables.lanes.show', [$timetable, $equipment->lane])
-                                    : (route('lanes.show', $equipment->lane));
+                                $laneShowUrl = $equipment->lane
+                                    ? ($isScoped
+                                        ? route('timetables.lanes.show', [$timetable, $equipment->lane])
+                                        : ($equipment->lane->timetable_id
+                                            ? route('timetables.lanes.show', [$equipment->lane->timetable_id, $equipment->lane])
+                                            : route('lanes.index')))
+                                    : null;
                             @endphp
-                            <a href="{{ $laneShowUrl }}"
-                               class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
-                                <span>🏷️</span>
-                                <span>担当班の詳細を見る</span>
-                                <span>→</span>
-                            </a>
+                            @if($laneShowUrl)
+                                <a href="{{ $laneShowUrl }}"
+                                   class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
+                                    <span>🏷️</span>
+                                    <span>担当班の詳細を見る</span>
+                                    <span>→</span>
+                                </a>
+                            @endif
                         </div>
                     </div>
                 @else
@@ -364,15 +370,6 @@
                             {{ $equipment->storage_location ?: ($equipment->isPersonal() ? '自宅（個人保管）' : '番所地下倉庫') }}
                         </span>
                     </div>
-
-                    @if($equipment->storage_detail)
-                        <div>
-                            <span class="text-slate-400 block text-[11px]">棚番・置場・所有者メモ</span>
-                            <div class="p-2 bg-slate-50 rounded-lg text-slate-700 font-mono mt-0.5">
-                                {{ $equipment->storage_detail }}
-                            </div>
-                        </div>
-                    @endif
 
                     @if($equipment->creator)
                         <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-400">

@@ -31,7 +31,6 @@ class EquipmentRepository implements EquipmentRepositoryInterface
             ->when($filter->keyword, fn ($q) => $q->where(function ($sub) use ($filter) {
                 $sub->where('name', 'like', "%{$filter->keyword}%")
                     ->orWhere('storage_location', 'like', "%{$filter->keyword}%")
-                    ->orWhere('storage_detail', 'like', "%{$filter->keyword}%")
                     ->orWhere('description', 'like', "%{$filter->keyword}%");
             }))
             ->ordered();

@@ -20,15 +20,12 @@ function initEquipmentForm() {
     function toggleEquipmentType(type) {
         if (!commSec) return;
         const storageInput = document.getElementById('storage_location');
-        const detailInput = document.getElementById('storage_detail');
         if (type === 'rental') {
             commSec.classList.add('hidden');
             if (storageInput) storageInput.disabled = true;
-            if (detailInput) detailInput.disabled = true;
         } else {
             commSec.classList.remove('hidden');
             if (storageInput) storageInput.disabled = false;
-            if (detailInput) detailInput.disabled = false;
         }
     }
 

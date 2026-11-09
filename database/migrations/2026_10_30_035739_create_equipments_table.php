@@ -20,7 +20,6 @@ return new class extends Migration
             $table->boolean('is_approximate_quantity')->default(false)->comment('概数管理フラグ（true: 約○個として扱う）');
             $table->string('unit', 20)->default('個')->comment('単位（本・台・張・セット・一式等）');
             $table->string('storage_location')->nullable()->comment('定常保管場所（番所地下倉庫・番所倉庫・コミュニティルーム等）');
-            $table->string('storage_detail')->nullable()->comment('棚番・置場・私物所有者詳細');
             $table->foreignId('lane_id')->nullable()->constrained('lanes')->nullOnDelete()->comment('主担当班ID');
             $table->text('description')->nullable()->comment('仕様・備考メモ');
             $table->integer('display_order')->default(0)->comment('表示順序');

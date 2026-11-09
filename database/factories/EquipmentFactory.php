@@ -31,7 +31,6 @@ class EquipmentFactory extends Factory
             'is_approximate_quantity' => false,
             'unit' => fake()->randomElement(['個', '本', '張', '台', '組', '式']),
             'storage_location' => $isCommittee ? fake()->randomElement(['番所地下倉庫', '番所倉庫', 'コミュニティルーム']) : null,
-            'storage_detail' => null,
             'lane_id' => Lane::factory(),
             'description' => fake()->optional()->sentence(),
             'display_order' => fake()->numberBetween(1, 100),
@@ -68,8 +67,7 @@ class EquipmentFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'personal',
-            'storage_location' => null,
-            'storage_detail' => '所有者: 実行委員（2日目終了時持ち帰り）',
+            'storage_location' => '所有者（個人持ち込み・持ち帰り）',
             'checkout_rule' => 'leader_only',
         ]);
     }

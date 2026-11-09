@@ -36,7 +36,27 @@ class EquipmentSeeder extends Seeder
             ->where('name', '給水設備')
             ->first();
 
-        // 1. 機材: 足踏み式給水設備
+        // カラーコーン班レーン
+        $coneLane = Lane::where('name', 'カラーコーン')->first();
+
+        // 1. 機材: カラーコーン
+        Equipment::updateOrCreate(
+            ['name' => 'カラーコーン'],
+            [
+                'type' => 'committee',
+                'checkout_rule' => 'permission_required',
+                'quantity' => 100,
+                'is_approximate_quantity' => true,
+                'unit' => '個',
+                'storage_location' => '番所地下倉庫',
+                'lane_id' => $coneLane?->id,
+                'description' => null,
+                'display_order' => 10,
+                'created_by' => $adminId,
+            ]
+        );
+
+        // 2. 機材: 足踏み式給水設備
         $equipment = Equipment::updateOrCreate(
             ['name' => '足踏み式給水設備'],
             [
@@ -46,10 +66,9 @@ class EquipmentSeeder extends Seeder
                 'is_approximate_quantity' => false,
                 'unit' => '台',
                 'storage_location' => null,
-                'storage_detail' => null,
                 'lane_id' => $waterLane?->id,
                 'description' => '給水用と排水用でポリタンク（20リットル）が４個付属',
-                'display_order' => 0,
+                'display_order' => 20,
                 'created_by' => $adminId,
             ]
         );

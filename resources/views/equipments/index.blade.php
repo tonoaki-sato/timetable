@@ -1,6 +1,6 @@
 @php
     $isScoped = $isTimetableScoped ?? false;
-    $pageTitle = $isScoped ? ($timetable->name . ' 備品一覧') : '備品一覧';
+    $pageTitle = $isScoped ? ($timetable->name . ' 機材・備品一覧') : '機材・備品一覧';
     $pageDesc = $isScoped
         ? '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）運行に使用する備品の台帳および配備状況を管理します。'
         : 'まつり運行全般で使用する自前保有備品、外部レンタル機材、個人持ち込み私物の台帳です。ドラッグ＆ドロップで表示順を変更できます。';
@@ -29,7 +29,7 @@
                     <span>{{ $timetable->name }}</span>
                 </a>
                 <span class="text-slate-300">/</span>
-                <span class="text-slate-700 font-bold truncate">📦 備品一覧</span>
+                <span class="text-slate-700 font-bold truncate">📦 機材・備品一覧</span>
             @else
                 <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                     <span>🏮</span>
@@ -38,7 +38,7 @@
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>
-                <span class="text-slate-700 font-bold truncate">📦 備品一覧</span>
+                <span class="text-slate-700 font-bold truncate">📦 機材・備品一覧</span>
             @endif
         </x-slot:breadcrumbs>
 
@@ -210,9 +210,6 @@
                                     <div class="font-medium text-slate-800 flex items-center space-x-1">
                                         <span class="text-slate-400">📍</span>
                                         <span>{{ $item->storage_location ?: ($item->isPersonal() ? '自宅（個人保管）' : '番所地下倉庫') }}</span>
-                                        @if($item->storage_detail)
-                                            <span class="text-[10px] text-slate-400 ml-1">({{ $item->storage_detail }})</span>
-                                        @endif
                                     </div>
                                 @endif
                             </td>
