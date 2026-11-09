@@ -6,7 +6,6 @@ readonly class EquipmentFilterDTO
 {
     public function __construct(
         public ?string $type = null,
-        public ?int $laneId = null,
         public ?string $checkoutRule = null,
         public ?string $keyword = null,
     ) {}
@@ -20,7 +19,6 @@ readonly class EquipmentFilterDTO
     {
         return new self(
             type: ! empty($data['type']) ? (string) $data['type'] : null,
-            laneId: ! empty($data['lane_id']) ? (int) $data['lane_id'] : null,
             checkoutRule: ! empty($data['checkout_rule']) ? (string) $data['checkout_rule'] : null,
             keyword: ! empty($data['keyword']) ? trim((string) $data['keyword']) : null,
         );

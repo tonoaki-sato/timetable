@@ -140,7 +140,6 @@ class EquipmentLogisticsController extends Controller
         $this->authorize('view', $equipment);
 
         $equipment->load([
-            'lane',
             'creator',
             'plans' => fn ($q) => $q->where('timetable_id', $timetable->id)->with([
                 'equipment',

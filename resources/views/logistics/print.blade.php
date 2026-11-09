@@ -167,12 +167,9 @@
                                 </div>
                             </td>
 
-                            <!-- 区分・班 -->
+                            <!-- 区分 -->
                             <td class="p-2 border-r border-slate-300 text-slate-600">
                                 <div class="font-bold">{{ $eq->type_label }}</div>
-                                @if($eq->lane)
-                                    <div class="text-[10px] text-slate-500 mt-0.5">{{ $eq->lane->name }}</div>
-                                @endif
                             </td>
 
                             <!-- 事前・前日 -->

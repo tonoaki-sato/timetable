@@ -85,40 +85,29 @@
             <!-- 区分フィルター -->
             <div class="flex items-center space-x-1.5 overflow-x-auto scrollbar-none flex-nowrap py-0.5">
                 <span class="text-xs font-bold text-slate-500 mr-1 whitespace-nowrap shrink-0">区分:</span>
-                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
+                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ !$typeFilter ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                     すべて ({{ $totalCount }})
                 </a>
-                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'committee', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
+                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'committee', 'keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'committee' ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200' }}">
                     🏛️ 実行委員会 ({{ $committeeCount }})
                 </a>
-                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'rental', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
+                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'rental', 'keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'rental' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200' }}">
                     🏢 イベント会社 ({{ $rentalCount }})
                 </a>
-                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'personal', 'lane_id' => $laneFilter, 'keyword' => $keyword])) }}"
+                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'personal', 'keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'personal' ? 'bg-amber-600 text-white shadow-2xs' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200' }}">
                     🎒 私物 ({{ $personalCount }})
                 </a>
             </div>
 
-            <!-- 所管班 & キーワード検索フォーム -->
+            <!-- キーワード検索フォーム -->
             <form method="GET" action="{{ $indexRoute }}" class="flex items-center space-x-2 flex-wrap gap-2">
                 @if($typeFilter)
                     <input type="hidden" name="type" value="{{ $typeFilter }}">
                 @endif
-
-                <!-- 所管班 -->
-                <select name="lane_id" data-auto-submit
-                        class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-8">
-                    <option value="">全班表示</option>
-                    @foreach($lanes as $lane)
-                        <option value="{{ $lane->id }}" {{ $laneFilter == $lane->id ? 'selected' : '' }}>
-                            {{ $lane->icon ?: '🏷️' }} {{ $lane->name }}
-                        </option>
-                    @endforeach
-                </select>
 
                 <!-- キーワード入力 -->
                 <div class="relative">
@@ -131,7 +120,7 @@
                     検索
                 </button>
 
-                @if($typeFilter || $laneFilter || $keyword)
+                @if($typeFilter || $keyword)
                     <a href="{{ $indexRoute }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 underline">
                         クリア
                     </a>
@@ -151,7 +140,6 @@
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">持ち出しルール</th>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">総数量</th>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">定常保管場所 / 調達</th>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap">主担当班</th>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap text-right">操作</th>
                     </tr>
                 </thead>
@@ -214,19 +202,6 @@
                                 @endif
                             </td>
 
-                            <!-- 所管班 -->
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                @if($item->lane)
-                                    @php $laneClasses = $item->lane->color_classes; @endphp
-                                    <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-bold border {{ $laneClasses['badge'] ?? 'bg-slate-100 text-slate-800 border-slate-200' }}">
-                                        <span>{{ $item->lane->icon ?: '🏷️' }}</span>
-                                        <span>{{ $item->lane->name }}</span>
-                                    </span>
-                                @else
-                                    <span class="text-slate-400 text-[11px]">未設定</span>
-                                @endif
-                            </td>
-
                             <!-- 操作 -->
                             <td class="px-4 py-3 whitespace-nowrap text-right space-x-1">
                                 <a href="{{ $itemEditUrl }}"
@@ -250,7 +225,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="p-8 text-center text-slate-400 text-xs">
+                            <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
                                 備品がまだ登録されていません。ヘッダーの「➕ 新規備品を追加」から登録してください。
                             </td>
                         </tr>

@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Equipment;
-use App\Models\Lane;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -31,7 +30,6 @@ class EquipmentFactory extends Factory
             'is_approximate_quantity' => false,
             'unit' => fake()->randomElement(['個', '本', '張', '台', '組', '式']),
             'storage_location' => $isCommittee ? fake()->randomElement(['番所地下倉庫', '番所倉庫', 'コミュニティルーム']) : null,
-            'lane_id' => Lane::factory(),
             'description' => fake()->optional()->sentence(),
             'display_order' => fake()->numberBetween(1, 100),
             'created_by' => User::factory(),

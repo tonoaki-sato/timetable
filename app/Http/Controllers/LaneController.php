@@ -6,7 +6,6 @@ use App\Http\Requests\DestroyLaneRequest;
 use App\Http\Requests\ReorderLanesRequest;
 use App\Http\Requests\StoreLaneRequest;
 use App\Http\Requests\UpdateLaneRequest;
-use App\Models\Equipment;
 use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\Timetable;
@@ -120,12 +119,10 @@ class LaneController extends Controller
         $this->authorize('view', $lane);
 
         $laneWithDetails = $this->laneRepository->findWithDetails($timetable, $lane->id) ?? $lane;
-        $equipments = Equipment::where('lane_id', $lane->id)->orderBy('name')->get();
 
         return view('lanes.show', [
             'timetable' => $timetable,
             'lane' => $laneWithDetails,
-            'equipments' => $equipments,
         ]);
     }
 

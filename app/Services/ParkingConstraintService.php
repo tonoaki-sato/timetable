@@ -39,14 +39,14 @@ class ParkingConstraintService
         $locations = $query->get();
         $locationIds = $locations->pluck('id')->all();
 
-        $allPlansTo = EquipmentLogisticsPlan::with(['equipment.lane'])
+        $allPlansTo = EquipmentLogisticsPlan::with(['equipment'])
             ->whereIn('to_location_id', $locationIds)
             ->orderBy('target_date', 'asc')
             ->orderBy('start_time', 'asc')
             ->get()
             ->groupBy('to_location_id');
 
-        $allPlansFrom = EquipmentLogisticsPlan::with(['equipment.lane'])
+        $allPlansFrom = EquipmentLogisticsPlan::with(['equipment'])
             ->whereIn('from_location_id', $locationIds)
             ->orderBy('target_date', 'asc')
             ->orderBy('start_time', 'asc')
@@ -94,13 +94,13 @@ class ParkingConstraintService
         $now = $this->normalizeToTokyo($now);
 
         // 当該拠点に関わる資材計画（搬入・保管先、または搬出元）を取得
-        $plansToLocation = $prefetchedPlansTo ?? EquipmentLogisticsPlan::with(['equipment.lane'])
+        $plansToLocation = $prefetchedPlansTo ?? EquipmentLogisticsPlan::with(['equipment'])
             ->where('to_location_id', $location->id)
             ->orderBy('target_date', 'asc')
             ->orderBy('start_time', 'asc')
             ->get();
 
-        $plansFromLocation = $prefetchedPlansFrom ?? EquipmentLogisticsPlan::with(['equipment.lane'])
+        $plansFromLocation = $prefetchedPlansFrom ?? EquipmentLogisticsPlan::with(['equipment'])
             ->where('from_location_id', $location->id)
             ->orderBy('target_date', 'asc')
             ->orderBy('start_time', 'asc')

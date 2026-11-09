@@ -304,42 +304,7 @@
                 </div>
             </div>
 
-            <!-- 4. 担当資材一覧カード -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h2 class="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
-                        <span>📦</span>
-                        <span>主な資機材</span>
-                    </h2>
-                    <span class="text-xs font-mono text-slate-500">
-                        {{ $equipments->count() }} 品目
-                    </span>
-                </div>
 
-                @if($equipments->isNotEmpty())
-                <div class="space-y-1.5 max-h-48 overflow-y-auto text-xs">
-                    @foreach($equipments as $equipment)
-                    <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between">
-                        <div>
-                            <a href="{{ route('timetables.equipments.show', [$timetable, $equipment]) }}" class="font-bold text-slate-800 hover:text-indigo-600 transition">
-                                {{ $equipment->name }}
-                            </a>
-                            <div class="text-[10px] text-slate-400 mt-0.5">
-                                保管: {{ $equipment->storage_location ?: '定常保管場所未定' }}
-                            </div>
-                        </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white border border-slate-200 text-slate-700">
-                            {{ $equipment->quantity }}{{ $equipment->unit ?: '個' }}
-                        </span>
-                    </div>
-                    @endforeach
-                </div>
-                @else
-                <p class="text-xs text-slate-400 py-2 text-center bg-slate-50 rounded-xl">
-                    この担当班に紐づく資材はありません。
-                </p>
-                @endif
-            </div>
 
             <!-- 5. 班長からの要請履歴カード -->
             @if($lane->laneRequests->isNotEmpty())

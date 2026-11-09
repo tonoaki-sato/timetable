@@ -229,7 +229,7 @@ class EquipmentLogisticsService
         $locations = $locationsQuery->get();
         $locationIds = $locations->pluck('id')->all();
 
-        $plansQuery = EquipmentLogisticsPlan::with(['equipment.lane'])
+        $plansQuery = EquipmentLogisticsPlan::with(['equipment'])
             ->whereIn('to_location_id', $locationIds)
             ->orderBy('target_date', 'asc')
             ->orderBy('start_time', 'asc');
@@ -266,7 +266,7 @@ class EquipmentLogisticsService
      */
     public function getOnsiteNightStoragePlans(?Timetable $timetable = null): Collection
     {
-        $query = EquipmentLogisticsPlan::with(['equipment.lane', 'witnessStaff'])
+        $query = EquipmentLogisticsPlan::with(['equipment', 'witnessStaff'])
             ->where('action_type', 'night_storage')
             ->whereNull('to_location_id')
             ->orderBy('target_date', 'asc')
@@ -287,7 +287,7 @@ class EquipmentLogisticsService
      */
     public function getEventCompanyScheduleData(?Timetable $timetable = null): Collection
     {
-        $query = EquipmentLogisticsPlan::with(['equipment.lane', 'witnessStaff', 'fromLocationModel', 'toLocationModel'])
+        $query = EquipmentLogisticsPlan::with(['equipment', 'witnessStaff', 'fromLocationModel', 'toLocationModel'])
             ->where(function ($q) {
                 $q->where('operator_type', 'event_company')
                     ->orWhere('witness_required', true)

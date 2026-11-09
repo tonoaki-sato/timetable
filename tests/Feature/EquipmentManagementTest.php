@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Equipment;
-use App\Models\Lane;
 use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -86,7 +85,6 @@ class EquipmentManagementTest extends TestCase
     public function test_store_creates_committee_equipment_with_approximate_quantity(): void
     {
         $this->actingAs($this->operator);
-        $lane = Lane::factory()->create(['name' => 'カラーコーン班']);
 
         $response = $this->post(route('equipments.store'), [
             'name' => 'カラーコーン（バー付き）',
@@ -95,7 +93,6 @@ class EquipmentManagementTest extends TestCase
             'is_approximate_quantity' => '1',
             'unit' => '本',
             'storage_location' => '番所倉庫',
-            'lane_id' => $lane->id,
             'description' => '路上規制用コーン',
         ]);
 
@@ -343,14 +340,16 @@ class EquipmentManagementTest extends TestCase
             ->assertStatus(200)
             ->assertSee('<select id="type" name="type"', false);
 
-        // 非スコープ（/equipments/{id}）での詳細画面表示（lanes.show未定義エラーが発生しないことの検証）
+        // 非スコープ（/equipments/{id}）での詳細画面表示（不要カード・リンクが削除され基本台帳情報が表示されることの検証）
         $this->get(route('equipments.show', $firstEquipment))
             ->assertStatus(200)
             ->assertSee('初回登録資材')
             ->assertSee('機材・備品一覧')
             ->assertSee('資材基本台帳情報')
-            ->assertSee('搬出入計画・現場配備状況')
-            ->assertSee(route('logistics.equipments.show', $firstEquipment));
+            ->assertDontSee('搬出入計画・現場配備状況')
+            ->assertDontSee('クイック操作')
+            ->assertDontSee('主担当班の体制')
+            ->assertDontSee('編集する');
 
         // 計画画面への導線および計画画面の初期表示検証
         $this->get(route('logistics.equipments.show', $firstEquipment))
@@ -368,10 +367,8 @@ class EquipmentManagementTest extends TestCase
         $this->actingAs($this->operator);
 
         $timetable = Timetable::first();
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id, 'name' => '放送設営班']);
         $equipment = Equipment::factory()->committee()->create([
             'name' => 'ワイヤレスアンプ',
-            'lane_id' => $lane->id,
             'quantity' => 2,
             'unit' => '台',
         ]);
@@ -381,23 +378,21 @@ class EquipmentManagementTest extends TestCase
         $indexRes->assertStatus(200);
         $indexRes->assertSee($timetable->name);
         $indexRes->assertSee('ワイヤレスアンプ');
-        $indexRes->assertSee('放送設営班');
         $indexRes->assertSee('対象運行日:');
 
-        // タイムテーブルスコープの詳細表示 (2:1 カラム)
+        // タイムテーブルスコープの詳細表示
         $showRes = $this->get(route('timetables.equipments.show', [$timetable, $equipment]));
         $showRes->assertStatus(200);
         $showRes->assertSee('ワイヤレスアンプ');
         $showRes->assertSee('資材基本台帳情報');
-        $showRes->assertSee('主担当班の体制');
-        $showRes->assertSee('放送設営班');
-        $showRes->assertSee('クイック操作');
+        $showRes->assertDontSee('主担当班の体制');
+        $showRes->assertDontSee('クイック操作');
+        $showRes->assertDontSee('搬出入計画・現場配備状況');
 
         // タイムテーブルスコープの作成画面表示
         $createRes = $this->get(route('timetables.equipments.create', $timetable));
         $createRes->assertStatus(200);
         $createRes->assertSee('新規備品の登録');
-        $createRes->assertSee('放送設営班');
 
         // タイムテーブルスコープの編集画面表示
         $editRes = $this->get(route('timetables.equipments.edit', [$timetable, $equipment]));
@@ -432,24 +427,26 @@ class EquipmentManagementTest extends TestCase
     }
 
     /**
-     * 主担当班が割り当てられた機材の非スコープ詳細画面（/equipments/{id}）がエラーなく表示されること
+     * 機材の非スコープ詳細画面（/equipments/{id}）が余分なカードや主担当班なしでエラーなく表示されること
      */
-    public function test_show_with_assigned_lane_renders_cleanly_without_timetable_scope(): void
+    public function test_equipment_show_renders_cleanly_without_extra_cards_or_lane(): void
     {
         $this->actingAs($this->operator);
 
-        $lane = Lane::factory()->create(['name' => 'カラーコーン班']);
         $equipment = Equipment::factory()->committee()->create([
             'name' => 'テスト用カラーコーン',
-            'lane_id' => $lane->id,
         ]);
 
         $response = $this->get(route('equipments.show', $equipment));
         $response->assertStatus(200);
         $response->assertSee('テスト用カラーコーン');
-        $response->assertSee('カラーコーン班');
-        $response->assertSee('担当班の詳細を見る');
-        $response->assertDontSee('storage_detail');
+        $response->assertSee('資材基本台帳情報');
+        $response->assertSee('機材・備品一覧に戻る');
+        $response->assertDontSee('主担当班');
+        $response->assertDontSee('搬出入計画・現場配備状況');
+        $response->assertDontSee('クイック操作');
+        $response->assertDontSee('保管・調達・所有情報');
+        $response->assertDontSee('搬出入動態を設定');
     }
 
     /**

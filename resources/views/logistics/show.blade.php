@@ -54,11 +54,6 @@
                 @else bg-slate-50 text-slate-600 border border-slate-200 @endif">
                 {{ $equipment->checkout_rule_label }}
             </span>
-            @if($equipment->lane)
-                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                    {{ $equipment->lane->icon }} {{ $equipment->lane->name }}
-                </span>
-            @endif
         </x-slot:badges>
 
         <x-slot:actions>

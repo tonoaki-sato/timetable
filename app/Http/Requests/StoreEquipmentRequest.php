@@ -33,7 +33,6 @@ class StoreEquipmentRequest extends FormRequest
             'is_approximate_quantity' => ['boolean'],
             'unit' => ['required', 'string', 'max:20'],
             'storage_location' => ['nullable', 'string', 'max:255'],
-            'lane_id' => ['nullable', 'exists:lanes,id'],
             'description' => ['nullable', 'string', 'max:2000'],
             'display_order' => ['nullable', 'integer', 'min:0'],
         ];

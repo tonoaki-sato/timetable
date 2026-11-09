@@ -222,11 +222,6 @@
                             <span class="px-2 py-0.5 rounded-full text-xs font-bold {{ $equipment->isCommittee() ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : ($equipment->isRental() ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-amber-50 text-amber-700 border border-amber-200') }}">
                                 {{ $equipment->type_label }}
                             </span>
-                            @if($equipment->lane)
-                                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                    {{ $equipment->lane->icon ?: '🏷️' }} {{ $equipment->lane->name }}
-                                </span>
-                            @endif
                             @if($equipment->storage_location)
                                 <span class="text-[11px] text-slate-500 font-medium">
                                     保管: {{ $equipment->storage_location }}

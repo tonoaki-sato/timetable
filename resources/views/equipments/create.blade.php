@@ -107,8 +107,8 @@
                     </div>
                 </div>
 
-                <!-- 行2: 数量/単位/概数 & 持出ルール & 主担当班 -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                <!-- 行2: 数量/単位/概数 & 持出ルール -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">
                             基準数量 & 単位 <span class="text-rose-600">*</span>
@@ -139,21 +139,6 @@
                             @foreach(\App\Enums\EquipmentCheckoutRule::cases() as $ruleCase)
                                 <option value="{{ $ruleCase->value }}" {{ old('checkout_rule', 'free') === $ruleCase->value ? 'selected' : '' }}>
                                     {{ $ruleCase->label() }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="lane_id" class="block text-xs font-bold text-slate-700 mb-1">
-                            主担当班（責任班）
-                        </label>
-                        <select id="lane_id" name="lane_id"
-                            class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="">未指定（共通管理）</option>
-                            @foreach($lanes as $lane)
-                                <option value="{{ $lane->id }}" {{ old('lane_id') == $lane->id ? 'selected' : '' }}>
-                                    {{ $lane->icon ?: '🏷️' }} {{ $lane->name }}
                                 </option>
                             @endforeach
                         </select>

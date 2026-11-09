@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'is_approximate_quantity',
     'unit',
     'storage_location',
-    'lane_id',
     'description',
     'display_order',
     'created_by',
@@ -172,14 +171,6 @@ class Equipment extends Model
     public function plans(): HasMany
     {
         return $this->hasMany(EquipmentLogisticsPlan::class, 'equipment_id')->orderBy('display_order', 'asc')->orderBy('id', 'asc');
-    }
-
-    /**
-     * 主担当班とのリレーション
-     */
-    public function lane(): BelongsTo
-    {
-        return $this->belongsTo(Lane::class, 'lane_id');
     }
 
     /**

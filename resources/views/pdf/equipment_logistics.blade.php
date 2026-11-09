@@ -266,9 +266,6 @@
                 </td>
                 <td class="col-type">
                     <div>{{ $eq->type_label }}</div>
-                    @if($eq->lane)
-                    <div style="color: #64748b; font-size: 7.5px;">{{ $eq->lane->name }}</div>
-                    @endif
                 </td>
                 <td class="col-phase">
                     @forelse($preDayPlans as $p)

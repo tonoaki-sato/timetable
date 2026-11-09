@@ -15,7 +15,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
     public function getForTimetable(Timetable $timetable): Collection
     {
         return $timetable->logisticsPlans()
-            ->with(['equipment.lane', 'fromLocationModel', 'toLocationModel', 'witnessStaff'])
+            ->with(['equipment', 'fromLocationModel', 'toLocationModel', 'witnessStaff'])
             ->orderBy('display_order')
             ->orderBy('id')
             ->get();
@@ -25,7 +25,6 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
     public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null): Collection
     {
         $query = Equipment::with([
-            'lane',
             'plans' => function ($q) use ($timetable) {
                 if ($timetable) {
                     $q->where('timetable_id', $timetable->id);
@@ -43,10 +42,6 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
             $query->where('type', $type);
         }
 
-        if ($laneId) {
-            $query->where('lane_id', $laneId);
-        }
-
         return $query->get();
     }
 
@@ -54,7 +49,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
     public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null): Collection
     {
         $query = EquipmentLogisticsPlan::with([
-            'equipment.lane',
+            'equipment',
             'fromLocationModel.schedules',
             'toLocationModel.schedules',
             'witnessStaff',
@@ -69,10 +64,6 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
 
         if ($dayPhase) {
             $query->where('day_phase', $dayPhase);
-        }
-
-        if ($laneId) {
-            $query->whereHas('equipment', fn ($q) => $q->where('lane_id', $laneId));
         }
 
         if ($type) {

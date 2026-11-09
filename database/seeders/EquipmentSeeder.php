@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Equipment;
-use App\Models\Lane;
 use App\Models\Location;
 use App\Models\Staff;
 use App\Models\Timetable;
@@ -31,14 +30,6 @@ class EquipmentSeeder extends Seeder
         $taxOfficeParking1 = Location::where('timetable_id', $timetableDay1?->id)->where('name', '税務署前駐車場')->first();
         $banshoSpace2 = Location::where('timetable_id', $timetableDay2?->id)->where('name', '番所前スペース')->first() ?? $banshoSpace1;
 
-        // 2日目の給水設備レーン
-        $waterLane = Lane::where('timetable_id', $timetableDay2?->id)
-            ->where('name', '給水設備')
-            ->first();
-
-        // カラーコーン班レーン
-        $coneLane = Lane::where('name', 'カラーコーン')->first();
-
         // 1. 機材: カラーコーン
         Equipment::updateOrCreate(
             ['name' => 'カラーコーン'],
@@ -49,7 +40,6 @@ class EquipmentSeeder extends Seeder
                 'is_approximate_quantity' => true,
                 'unit' => '個',
                 'storage_location' => '番所地下倉庫',
-                'lane_id' => $coneLane?->id,
                 'description' => null,
                 'display_order' => 10,
                 'created_by' => $adminId,
@@ -66,7 +56,6 @@ class EquipmentSeeder extends Seeder
                 'is_approximate_quantity' => false,
                 'unit' => '台',
                 'storage_location' => null,
-                'lane_id' => $waterLane?->id,
                 'description' => '給水用と排水用でポリタンク（20リットル）が４個付属',
                 'display_order' => 20,
                 'created_by' => $adminId,

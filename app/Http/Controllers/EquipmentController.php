@@ -7,7 +7,6 @@ use App\Http\Requests\ReorderEquipmentsRequest;
 use App\Http\Requests\StoreEquipmentRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
 use App\Models\Equipment;
-use App\Models\Lane;
 use App\Models\Timetable;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
 use Illuminate\Http\JsonResponse;
@@ -32,19 +31,12 @@ class EquipmentController extends Controller
         $filter = EquipmentFilterDTO::fromArray($request->query());
 
         $equipments = $this->equipmentRepository->getPaginated($filter, $timetable, 20);
-        $lanes = $timetable->lanes()->ordered()->get();
-        if ($lanes->isEmpty()) {
-            $lanes = Lane::ordered()->get();
-        }
-
         $counts = $this->equipmentRepository->getCountsByType();
 
         return view('equipments.index', [
             'timetable' => $timetable,
             'equipments' => $equipments,
-            'lanes' => $lanes,
             'typeFilter' => $filter->type,
-            'laneFilter' => $filter->laneId,
             'checkoutRuleFilter' => $filter->checkoutRule,
             'keyword' => $filter->keyword,
             'totalCount' => $counts['total'],
@@ -63,14 +55,9 @@ class EquipmentController extends Controller
         $this->authorize('create', Equipment::class);
 
         $timetable = $this->resolveTimetable($request, $timetable);
-        $lanes = $timetable->lanes()->ordered()->get();
-        if ($lanes->isEmpty()) {
-            $lanes = Lane::ordered()->get();
-        }
 
         return view('equipments.create', [
             'timetable' => $timetable,
-            'lanes' => $lanes,
             'isTimetableScoped' => $request->route('timetable') instanceof Timetable,
         ]);
     }
@@ -121,7 +108,7 @@ class EquipmentController extends Controller
     }
 
     /**
-     * 資機材マスター詳細画面の表示 (2:1 カラムレイアウト)
+     * 資機材マスター詳細画面の表示
      */
     public function show(Request $request, Equipment $equipment, ?Timetable $timetable = null): View
     {
@@ -129,14 +116,10 @@ class EquipmentController extends Controller
 
         $timetable = $this->resolveTimetable($request, $timetable);
         $equipment = $this->equipmentRepository->findWithDetails($equipment->id, $timetable) ?? $equipment;
-        $allTimetables = Timetable::withCount([
-            'logisticsPlans' => fn ($query) => $query->where('equipment_id', $equipment->id),
-        ])->orderBy('target_date', 'asc')->get();
 
         return view('equipments.show', [
             'timetable' => $timetable,
             'equipment' => $equipment,
-            'allTimetables' => $allTimetables,
             'isTimetableScoped' => $request->route('timetable') instanceof Timetable,
         ]);
     }
@@ -149,15 +132,10 @@ class EquipmentController extends Controller
         $this->authorize('update', $equipment);
 
         $timetable = $this->resolveTimetable($request, $timetable);
-        $lanes = $timetable->lanes()->ordered()->get();
-        if ($lanes->isEmpty()) {
-            $lanes = Lane::ordered()->get();
-        }
 
         return view('equipments.edit', [
             'timetable' => $timetable,
             'equipment' => $equipment,
-            'lanes' => $lanes,
             'isTimetableScoped' => $request->route('timetable') instanceof Timetable,
         ]);
     }

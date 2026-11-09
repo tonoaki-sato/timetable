@@ -718,7 +718,7 @@ class LaneManagementTest extends TestCase
         $response->assertSee(route('timetables.lanes.index', $this->timetable));
         $response->assertSee('一覧に戻る');
         $response->assertSee('班名バッジ');
-        $response->assertSee('主な資機材');
+        $response->assertDontSee('主な資機材');
 
         // ヘッダーから削除されたリンクおよびバッジの検証
         $response->assertDontSee('🗺️');

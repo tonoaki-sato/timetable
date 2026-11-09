@@ -18,7 +18,6 @@ class EquipmentRepository implements EquipmentRepositoryInterface
     {
         $query = Equipment::query()
             ->with([
-                'lane',
                 'plans' => function ($q) use ($timetable) {
                     if ($timetable) {
                         $q->where('timetable_id', $timetable->id);
@@ -26,7 +25,6 @@ class EquipmentRepository implements EquipmentRepositoryInterface
                 },
             ])
             ->when($filter->type, fn ($q) => $q->where('type', $filter->type))
-            ->when($filter->laneId, fn ($q) => $q->where('lane_id', $filter->laneId))
             ->when($filter->checkoutRule, fn ($q) => $q->where('checkout_rule', $filter->checkoutRule))
             ->when($filter->keyword, fn ($q) => $q->where(function ($sub) use ($filter) {
                 $sub->where('name', 'like', "%{$filter->keyword}%")
@@ -52,21 +50,7 @@ class EquipmentRepository implements EquipmentRepositoryInterface
     #[Override]
     public function findWithDetails(int $id, ?Timetable $timetable = null): ?Equipment
     {
-        return Equipment::with([
-            'lane',
-            'creator',
-            'plans' => function ($q) use ($timetable) {
-                if ($timetable) {
-                    $q->where('timetable_id', $timetable->id);
-                }
-                $q->with([
-                    'equipment',
-                    'fromLocationModel.schedules',
-                    'toLocationModel.schedules',
-                    'witnessStaff',
-                ])->orderBy('display_order')->orderBy('id');
-            },
-        ])->find($id);
+        return Equipment::find($id);
     }
 
     #[Override]

@@ -51,7 +51,6 @@ class EquipmentSeederTest extends TestCase
         $this->assertSame('rental', $equipment->type);
         $this->assertSame(5, $equipment->quantity);
         $this->assertSame('台', $equipment->unit);
-        $this->assertSame('給水設備', $equipment->lane?->name);
 
         $this->assertCount(7, $equipment->plans);
 

@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
-use App\Models\Lane;
 use App\Models\Location;
 use App\Models\Timetable;
 use App\Models\User;
@@ -312,20 +311,14 @@ class EquipmentLogisticsTest extends TestCase
     }
 
     /**
-     * 印刷プレビューで担当班や区分によるフィルタリングが正常に動作すること
+     * 印刷プレビューで区分によるフィルタリングが正常に動作すること
      */
     public function test_print_preview_supports_filtering(): void
     {
         $this->actingAs($this->operator);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $this->timetable1->id,
-            'name' => '本部警備班',
-        ]);
-
         $equipment = Equipment::factory()->rental()->create([
             'name' => 'トランシーバー特小',
-            'lane_id' => $lane->id,
         ]);
 
         $equipment->plans()->create([
@@ -340,13 +333,11 @@ class EquipmentLogisticsTest extends TestCase
         $response = $this->get(route('timetables.logistics.print', [
             'timetable' => $this->timetable1,
             'preview' => 1,
-            'lane_id' => $lane->id,
             'type' => 'rental',
         ]));
 
         $response->assertStatus(200);
         $response->assertSee('トランシーバー特小');
-        $response->assertSee('本部警備班');
     }
 
     /**
