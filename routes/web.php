@@ -180,7 +180,6 @@ Route::middleware('auth')->group(function () {
     });
 
     // 拠点管理・時間帯スケジュール・拠点タイプ管理
-    Route::get('/locations', [LocationController::class, 'select'])->name('locations.index');
     Route::scopeBindings()->group(function () {
         Route::get('timetables/{timetable}/locations', [LocationController::class, 'index'])->name('timetables.locations.index');
         Route::get('timetables/{timetable}/locations/create', [LocationController::class, 'create'])->name('timetables.locations.create');

@@ -7,15 +7,18 @@
         icon="🏷️"
         description="「コミュニティスペース」「駐車場」など、拠点の種別を追加・編集・整理できます。">
         <x-slot:breadcrumbs>
-            <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition shrink-0">拠点管理</a>
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>⏱️</span>
+                <span>運行情報一覧</span>
+            </a>
             <span class="text-slate-300">/</span>
-            <span class="text-slate-800 font-bold truncate">タイプマスタ管理</span>
+            <span class="text-slate-800 font-bold truncate">🏷️ 拠点タイプマスタ管理</span>
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('locations.index') }}"
+            <a href="{{ route('timetables.index') }}"
                 class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
-                <span>← 拠点一覧に戻る</span>
+                <span>← 運行情報一覧に戻る</span>
             </a>
             <button type="button"
                     data-action="open-type-modal"

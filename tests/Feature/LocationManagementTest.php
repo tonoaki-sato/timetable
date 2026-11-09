@@ -58,17 +58,18 @@ class LocationManagementTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('timetables.locations.index', $this->timetable));
 
         $response->assertOk()
-            ->assertSee('拠点管理')
+            ->assertSee('拠点一覧')
             ->assertSee('番所')
             ->assertSee('コミュニティスペース')
             ->assertSee(route('timetables.locations.show', [$this->timetable, $location]))
-            ->assertSee('詳細');
+            ->assertSee('編集')
+            ->assertSee('削除');
 
-        // メモは詳細画面で確認可能かつ「拠点を編集」ボタンは存在しない
+        // メモは詳細画面で確認可能
         $showResponse = $this->actingAs($this->admin)->get(route('timetables.locations.show', [$this->timetable, $location]));
         $showResponse->assertOk()
             ->assertSee('鍵は暗証番号4920で開錠。')
-            ->assertDontSee('✏️ 拠点を編集');
+            ->assertSee('基本情報を編集');
 
         // 編集画面のキャンセルボタンは拠点一覧画面を指す
         $editResponse = $this->actingAs($this->admin)->get(route('timetables.locations.edit', [$this->timetable, $location]));

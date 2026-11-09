@@ -121,10 +121,9 @@ class NavigationMenuStructureTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // スタッフ・資材・拠点・パターンが存在すること
+        // スタッフ・資材・拠点タイプ・パターンが存在すること
         $response->assertSee(route('staff.index'));
         $response->assertSee(route('equipments.index'));
-        $response->assertSee(route('locations.index'));
         $response->assertSee(route('location-types.index'));
         $response->assertSee(route('logistics.index', ['tab' => 'patterns']));
 
@@ -203,7 +202,7 @@ class NavigationMenuStructureTest extends TestCase
             route('schedules.index'),
             route('staff.index'),
             route('equipments.index'),
-            route('locations.index'),
+            route('timetables.locations.index', $this->timetable),
             route('location-types.index'),
             route('timetables.print-assignments', $this->timetable),
             route('logistics.print'),

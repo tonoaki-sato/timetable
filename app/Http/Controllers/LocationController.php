@@ -21,31 +21,6 @@ class LocationController extends Controller
     ) {}
 
     /**
-     * 拠点管理の対象タイムテーブル選択画面の表示
-     */
-    public function select(Request $request): View|RedirectResponse
-    {
-        $this->authorize('viewAny', Location::class);
-
-        $timetables = Timetable::with(['locations.type'])
-            ->orderBy('target_date', 'asc')
-            ->get();
-
-        if ($timetables->isEmpty()) {
-            return redirect()->route('timetables.index')
-                ->with('info', '拠点管理を行う前に、運行日を登録してください。');
-        }
-
-        if ($timetables->count() === 1) {
-            return redirect()->route('timetables.locations.index', $timetables->first());
-        }
-
-        return view('locations.select', [
-            'timetables' => $timetables,
-        ]);
-    }
-
-    /**
      * 指定タイムテーブルにおける拠点一覧表示
      */
     public function index(Timetable $timetable, Request $request): View|JsonResponse

@@ -386,8 +386,6 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('資材・拠点マスター');
         $response->assertSee('資材管理');
         $response->assertSee(route('equipments.index'));
-        $response->assertSee('拠点・駐車場管理');
-        $response->assertSee(route('locations.index'));
         $response->assertSee('拠点タイプ管理');
         $response->assertSee(route('location-types.index'));
 

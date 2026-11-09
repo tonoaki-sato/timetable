@@ -119,6 +119,13 @@
                                 <span>担当班</span>
                             </a>
 
+                            <!-- 拠点リンク -->
+                            <a href="{{ route('timetables.locations.index', $timetable) }}"
+                                class="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition shadow-2xs whitespace-nowrap">
+                                <span>📍</span>
+                                <span>拠点</span>
+                            </a>
+
                             <!-- タスク台帳リンク -->
                             <a href="{{ route('timetables.tasks.index', $timetable) }}"
                                 class="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition shadow-2xs whitespace-nowrap">

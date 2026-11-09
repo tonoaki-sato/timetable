@@ -15,6 +15,8 @@ class ParkingMonitoringCard extends Component
 
     public readonly Carbon $now;
 
+    public readonly ?Timetable $timetable;
+
     /**
      * Create a new component instance.
      */
@@ -24,6 +26,7 @@ class ParkingMonitoringCard extends Component
         ?ParkingMonitoringContext $context = null,
         ?Timetable $timetable = null
     ) {
+        $this->timetable = $timetable;
         $this->now = $now ?? Carbon::now('Asia/Tokyo');
         $this->context = $context ?? $this->parkingConstraintService->getMonitoringContext($this->now, false, $timetable);
     }
