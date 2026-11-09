@@ -60,7 +60,7 @@ class LocationManagementTest extends TestCase
         $response->assertOk()
             ->assertSee('拠点一覧')
             ->assertSee('番所')
-            ->assertSee('コミュニティスペース')
+            ->assertDontSee('<th>種別</th>', false)
             ->assertSee(route('timetables.locations.show', [$this->timetable, $location]))
             ->assertSee('編集')
             ->assertSee('削除');
@@ -316,5 +316,251 @@ class LocationManagementTest extends TestCase
             ->get(route('location-types.index'))
             ->assertOk()
             ->assertSee('登録されている拠点タイプがありません');
+    }
+
+    /**
+     * 拠点のドラッグ＆ドロップ並び替えAPIが正常に動作すること
+     */
+    public function test_can_reorder_locations(): void
+    {
+        $loc1 = Location::factory()->create(['timetable_id' => $this->timetable->id, 'display_order' => 10]);
+        $loc2 = Location::factory()->create(['timetable_id' => $this->timetable->id, 'display_order' => 20]);
+        $loc3 = Location::factory()->create(['timetable_id' => $this->timetable->id, 'display_order' => 30]);
+
+        $response = $this->actingAs($this->admin)->postJson(route('timetables.locations.reorder', $this->timetable), [
+            'location_ids' => [$loc3->id, $loc1->id, $loc2->id],
+        ]);
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'message' => '拠点の表示順を更新しました。',
+            ]);
+
+        $this->assertEquals(10, $loc3->fresh()->display_order);
+        $this->assertEquals(20, $loc1->fresh()->display_order);
+        $this->assertEquals(30, $loc2->fresh()->display_order);
+    }
+
+    /**
+     * 拠点登録画面から利用可能時間帯スロットを一括保存でき、display_orderが自動採番されること
+     */
+    public function test_can_create_location_with_schedules(): void
+    {
+        $response = $this->actingAs($this->admin)->post(route('timetables.locations.store', $this->timetable), [
+            'name' => '番所本部',
+            'location_type_id' => $this->type->id,
+            'is_all_day' => false,
+            'is_active' => true,
+            'schedules' => [
+                [
+                    'start_at' => '2026-10-11 08:00:00',
+                    'end_at' => '2026-10-11 12:00:00',
+                    'availability_status' => 'available',
+                    'title' => '午前準備',
+                    'note' => '鍵の受取完了',
+                ],
+                [
+                    'start_at' => '2026-10-11 13:00:00',
+                    'end_at' => '2026-10-11 18:00:00',
+                    'availability_status' => 'unavailable',
+                    'title' => '午後撤収',
+                    'note' => '前面道路規制中',
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasNoErrors();
+
+        $location = Location::where('timetable_id', $this->timetable->id)->where('name', '番所本部')->first();
+        $this->assertNotNull($location);
+        $this->assertEquals(10, $location->display_order); // 自動採番
+        $this->assertCount(2, $location->schedules);
+        $response->assertRedirect(route('timetables.locations.show', [$this->timetable, $location]));
+    }
+
+    /**
+     * 拠点編集画面から利用可能時間帯スロットを一括更新・削除・新規追加できること
+     */
+    public function test_can_update_location_with_schedules(): void
+    {
+        $location = Location::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'location_type_id' => $this->type->id,
+            'is_all_day' => false,
+            'display_order' => 50,
+        ]);
+
+        $schedule1 = LocationSchedule::create([
+            'location_id' => $location->id,
+            'start_at' => '2026-10-11 08:00:00',
+            'end_at' => '2026-10-11 12:00:00',
+            'availability_status' => 'available',
+            'title' => '旧枠1',
+        ]);
+        $schedule2 = LocationSchedule::create([
+            'location_id' => $location->id,
+            'start_at' => '2026-10-11 13:00:00',
+            'end_at' => '2026-10-11 17:00:00',
+            'availability_status' => 'available',
+            'title' => '旧枠2（削除対象）',
+        ]);
+
+        // schedule1を更新、schedule2は送信せず削除、新規枠3を追加
+        $response = $this->actingAs($this->admin)->put(route('timetables.locations.update', [$this->timetable, $location]), [
+            'name' => '番所本部更新',
+            'location_type_id' => $this->type->id,
+            'is_all_day' => false,
+            'schedules' => [
+                [
+                    'id' => $schedule1->id,
+                    'start_at' => '2026-10-11 08:30:00',
+                    'end_at' => '2026-10-11 12:30:00',
+                    'availability_status' => 'unavailable',
+                    'title' => '更新後枠1',
+                    'note' => '利用不可に変更',
+                ],
+                [
+                    'start_at' => '2026-10-11 18:00:00',
+                    'end_at' => '2026-10-11 21:00:00',
+                    'availability_status' => 'available',
+                    'title' => '新規枠3',
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect(route('timetables.locations.index', $this->timetable));
+
+        $location->refresh();
+        $this->assertEquals(50, $location->display_order); // 既存の表示順を維持
+        $this->assertCount(2, $location->schedules);
+        $this->assertDatabaseHas('location_schedules', [
+            'id' => $schedule1->id,
+            'title' => '更新後枠1',
+            'availability_status' => 'unavailable',
+        ]);
+        $this->assertDatabaseMissing('location_schedules', [
+            'id' => $schedule2->id,
+        ]);
+        $this->assertDatabaseHas('location_schedules', [
+            'location_id' => $location->id,
+            'title' => '新規枠3',
+        ]);
+    }
+
+    /**
+     * 詳細画面から削除カード、時間帯追加リンク、基本仕様の編集リンクが削除されていること
+     */
+    public function test_location_show_screen_has_no_delete_card_or_add_schedule_link(): void
+    {
+        $location = Location::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'location_type_id' => $this->type->id,
+            'name' => 'テスト対象拠点',
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('timetables.locations.show', [$this->timetable, $location]));
+
+        $response->assertOk()
+            ->assertDontSee('この拠点を完全に削除する')
+            ->assertDontSee('data-action="open-schedule-modal"')
+            ->assertDontSee('✏️ 編集する');
+    }
+
+    /**
+     * 登録・編集画面に表示順フォームが存在しないこと
+     */
+    public function test_create_and_edit_screens_have_no_display_order_input(): void
+    {
+        $location = Location::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'location_type_id' => $this->type->id,
+        ]);
+
+        $createRes = $this->actingAs($this->admin)->get(route('timetables.locations.create', $this->timetable));
+        $createRes->assertOk()->assertDontSee('name="display_order"', false);
+
+        $editRes = $this->actingAs($this->admin)->get(route('timetables.locations.edit', [$this->timetable, $location]));
+        $editRes->assertOk()->assertDontSee('name="display_order"', false);
+    }
+
+    /**
+     * 登録・編集画面に「新しいタイプを追加」リンクが存在しないこと
+     */
+    public function test_create_and_edit_screens_have_no_add_type_link(): void
+    {
+        $location = Location::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'location_type_id' => $this->type->id,
+        ]);
+
+        $createRes = $this->actingAs($this->admin)->get(route('timetables.locations.create', $this->timetable));
+        $createRes->assertOk()->assertDontSee('新しいタイプを追加');
+
+        $editRes = $this->actingAs($this->admin)->get(route('timetables.locations.edit', [$this->timetable, $location]));
+        $editRes->assertOk()->assertDontSee('新しいタイプを追加');
+    }
+
+    /**
+     * 一覧画面で本日の利用可能枠が3種類（利用可（確保済）/一部未確保/本日枠無し）で正しく表示されること
+     */
+    public function test_locations_daily_availability_status_display(): void
+    {
+        // 1. 終日利用可能拠点 -> 利用可（確保済）
+        $loc1 = Location::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'location_type_id' => $this->type->id,
+            'name' => '終日利用拠点A',
+            'is_all_day' => true,
+        ]);
+
+        // 2. スロットあり（全て確保済） -> 利用可（確保済）
+        $loc2 = Location::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'location_type_id' => $this->type->id,
+            'name' => '時間枠確保済拠点B',
+            'is_all_day' => false,
+        ]);
+        LocationSchedule::create([
+            'location_id' => $loc2->id,
+            'start_at' => '2026-10-11 09:00:00',
+            'end_at' => '2026-10-11 17:00:00',
+            'availability_status' => 'available',
+        ]);
+
+        // 3. スロットあり（一部未確保） -> 一部未確保
+        $loc3 = Location::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'location_type_id' => $this->type->id,
+            'name' => '一部未確保拠点C',
+            'is_all_day' => false,
+        ]);
+        LocationSchedule::create([
+            'location_id' => $loc3->id,
+            'start_at' => '2026-10-11 09:00:00',
+            'end_at' => '2026-10-11 12:00:00',
+            'availability_status' => 'available',
+        ]);
+        LocationSchedule::create([
+            'location_id' => $loc3->id,
+            'start_at' => '2026-10-11 13:00:00',
+            'end_at' => '2026-10-11 17:00:00',
+            'availability_status' => 'unavailable',
+        ]);
+
+        // 4. スロットなし -> 本日枠無し
+        $loc4 = Location::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'location_type_id' => $this->type->id,
+            'name' => '枠未登録拠点D',
+            'is_all_day' => false,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('timetables.locations.index', $this->timetable));
+
+        $response->assertOk();
+        $response->assertSee('利用可（確保済）');
+        $response->assertSee('一部未確保');
+        $response->assertSee('本日枠無し');
     }
 }

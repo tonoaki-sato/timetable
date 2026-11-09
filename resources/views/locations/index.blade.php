@@ -78,7 +78,7 @@
                     </span>
                 </h2>
                 <p class="text-xs text-slate-500 mt-0.5">
-                    各拠点の利用可能枠・現在の状態を確認し、拠点名をクリックすると詳細・スケジュール管理画面へ遷移します。
+                    左端のハンドル（⋮⋮）をドラッグ＆ドロップすると並び順を即時変更できます。拠点名をクリックすると詳細画面へ遷移します。
                 </p>
             </div>
             <span class="text-[11px] text-slate-400 font-mono shrink-0">
@@ -91,41 +91,33 @@
                 <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
                     <tr>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">拠点名</th>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap">種別</th>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">現在の状態</th>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">本日の利用可能枠</th>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap">備考・メモ</th>
                         <th scope="col" class="px-4 py-3 whitespace-nowrap text-right">操作</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 bg-white">
+                <tbody id="locations-container"
+                    data-reorder-url="{{ route('timetables.locations.reorder', $timetable) }}"
+                    class="divide-y divide-slate-100 bg-white">
                     @forelse($locationsWithStatus as $item)
                         @php
-                            $loc = $item['location'];
-                            $eval = $item['evaluation'];
-                            $todaySlots = $item['todaySchedules'];
+                            $loc = $item->location;
+                            $eval = $item->currentEvaluation;
+                            $dailyStatus = $item->dailyStatus;
+                            $todaySlots = $item->todaySchedules;
                         @endphp
-                        <tr class="hover:bg-slate-50/80 transition cursor-default">
+                        <tr data-location-id="{{ $loc->id }}" draggable="true"
+                            class="hover:bg-slate-50/80 transition cursor-default">
                             <!-- 拠点名 -->
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <a href="{{ route('timetables.locations.show', [$timetable, $loc]) }}"
-                                    class="font-bold text-slate-800 hover:text-indigo-600 hover:underline transition"
-                                    title="クリックして詳細を表示">
-                                    {{ $loc->name }}
-                                </a>
-                            </td>
-
-                            <!-- 種別 -->
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="flex items-center space-x-1.5">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border bg-slate-100 text-slate-700 border-slate-200">
-                                        {{ $loc->type?->label ?? '未分類' }}
-                                    </span>
-                                    @if($loc->is_all_day)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border bg-blue-50 text-blue-700 border-blue-200">
-                                            終日利用可
-                                        </span>
-                                    @endif
+                                <div class="flex items-center space-x-2">
+                                    <span class="cursor-grab active:cursor-grabbing text-slate-400 hover:text-indigo-600 px-1 select-none font-bold text-sm" title="ドラッグして並び替え">⋮⋮</span>
+                                    <a href="{{ route('timetables.locations.show', [$timetable, $loc]) }}"
+                                        class="font-bold text-slate-800 hover:text-indigo-600 hover:underline transition"
+                                        title="クリックして詳細を表示">
+                                        {{ $loc->name }}
+                                    </a>
                                 </div>
                             </td>
 
@@ -144,21 +136,17 @@
 
                             <!-- 本日の利用可能枠 -->
                             <td class="px-4 py-3 whitespace-nowrap">
-                                @if($todaySlots->isNotEmpty())
-                                    <div class="flex flex-wrap items-center gap-1 max-w-xs">
-                                        @foreach($todaySlots as $slot)
-                                            <span class="inline-flex items-center space-x-1 text-[10px] px-1.5 py-0.5 rounded border {{ $slot->availability_status_badge_class }}"
-                                                  title="{{ $slot->title ? $slot->title . ' / ' : '' }}{{ $slot->note }}">
-                                                <span class="font-mono font-bold">{{ $slot->start_at->format('H:i') }}-{{ $slot->end_at->format('H:i') }}</span>
-                                                <span class="font-bold">[{{ $slot->availability_status_label }}]</span>
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                @elseif($loc->is_all_day)
-                                    <span class="text-xs text-blue-600 font-bold">終日常時利用可能</span>
-                                @else
-                                    <span class="text-xs text-slate-400">本日枠なし</span>
-                                @endif
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $dailyStatus->badgeClass() }}">
+                                        <span>{{ $dailyStatus->icon() }}</span>
+                                        <span>{{ $dailyStatus->label() }}</span>
+                                    </span>
+                                    @if($todaySlots->isNotEmpty())
+                                        <span class="text-[11px] text-slate-500 font-mono" title="{{ $todaySlots->map(fn($s) => $s->start_at->format('H:i').'-'.$s->end_at->format('H:i').'['.$s->availability_status_label.']')->join(', ') }}">
+                                            ({{ $todaySlots->count() }}枠)
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
 
                             <!-- 備考・メモ -->
@@ -187,7 +175,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
+                            <td colspan="5" class="p-8 text-center text-slate-400 text-xs">
                                 拠点がまだ登録されていません。ヘッダーの「➕ 新規拠点を追加」から登録してください。
                             </td>
                         </tr>

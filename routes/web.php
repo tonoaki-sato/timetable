@@ -182,6 +182,7 @@ Route::middleware('auth')->group(function () {
     // 拠点管理・時間帯スケジュール・拠点タイプ管理
     Route::scopeBindings()->group(function () {
         Route::get('timetables/{timetable}/locations', [LocationController::class, 'index'])->name('timetables.locations.index');
+        Route::post('timetables/{timetable}/locations/reorder', [LocationController::class, 'reorder'])->name('timetables.locations.reorder');
         Route::get('timetables/{timetable}/locations/create', [LocationController::class, 'create'])->name('timetables.locations.create');
         Route::post('timetables/{timetable}/locations', [LocationController::class, 'store'])->name('timetables.locations.store');
         Route::get('timetables/{timetable}/locations/{location}', [LocationController::class, 'show'])->name('timetables.locations.show');

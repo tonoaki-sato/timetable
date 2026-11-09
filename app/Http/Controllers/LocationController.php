@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\DTOs\LocationListItemData;
+use App\Http\Requests\ReorderLocationsRequest;
 use App\Http\Requests\StoreLocationRequest;
 use App\Http\Requests\UpdateLocationRequest;
 use App\Models\Location;
 use App\Models\LocationType;
 use App\Models\Timetable;
 use App\Repositories\Contracts\LocationRepositoryInterface;
+use App\Services\LocationAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +26,7 @@ class LocationController extends Controller
     /**
      * 指定タイムテーブルにおける拠点一覧表示
      */
-    public function index(Timetable $timetable, Request $request): View|JsonResponse
+    public function index(Timetable $timetable, Request $request, LocationAvailabilityService $availabilityService): View|JsonResponse
     {
         $this->authorize('viewAny', Location::class);
 
@@ -32,17 +35,19 @@ class LocationController extends Controller
 
         $locations = $this->locationRepository->getForTimetable($timetable);
 
-        $locationsWithStatus = $locations->map(function (Location $location) use ($now, $targetDate) {
+        $locationsWithStatus = $locations->map(function (Location $location) use ($now, $targetDate, $availabilityService) {
             $evaluation = $location->evaluateStatusAt($now);
+            $dailyStatus = $availabilityService->evaluateDailyAvailability($location, $targetDate);
             $targetSchedules = $location->schedules->filter(function ($s) use ($targetDate) {
                 return $s->start_at->format('Y-m-d') === $targetDate || $s->end_at->format('Y-m-d') === $targetDate;
             });
 
-            return [
-                'location' => $location,
-                'evaluation' => $evaluation,
-                'todaySchedules' => $targetSchedules,
-            ];
+            return new LocationListItemData(
+                location: $location,
+                currentEvaluation: $evaluation,
+                dailyStatus: $dailyStatus,
+                todaySchedules: $targetSchedules,
+            );
         });
 
         if ($request->wantsJson()) {
@@ -85,7 +90,18 @@ class LocationController extends Controller
         $validated = $request->validated();
         $validated['created_by'] = $request->user()?->id;
 
+        if (! isset($validated['display_order']) || $validated['display_order'] === null) {
+            $validated['display_order'] = $this->locationRepository->getMaxDisplayOrder($timetable) + 10;
+        }
+
+        $schedules = $validated['schedules'] ?? [];
+        unset($validated['schedules']);
+
         $location = $this->locationRepository->create($timetable, $validated);
+
+        if (! empty($schedules) && ! ($validated['is_all_day'] ?? false)) {
+            $this->locationRepository->syncSchedules($location, $schedules);
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -96,7 +112,22 @@ class LocationController extends Controller
         }
 
         return redirect()->route('timetables.locations.show', [$timetable, $location])
-            ->with('status', "拠点「{$location->name}」を登録しました。続けて利用可能時間帯を設定してください。");
+            ->with('status', "拠点「{$location->name}」を登録しました。");
+    }
+
+    /**
+     * 拠点の表示順一括更新（ドラッグ＆ドロップ用）
+     */
+    public function reorder(ReorderLocationsRequest $request, Timetable $timetable): JsonResponse
+    {
+        $this->authorize('update', Location::class);
+
+        $this->locationRepository->reorder($timetable, $request->validated('location_ids'));
+
+        return response()->json([
+            'success' => true,
+            'message' => '拠点の表示順を更新しました。',
+        ]);
     }
 
     /**
@@ -125,6 +156,10 @@ class LocationController extends Controller
         abort_if($location->timetable_id !== $timetable->id, 404);
         $this->authorize('update', $location);
 
+        $location->load(['schedules' => function ($query): void {
+            $query->orderBy('start_at', 'asc');
+        }]);
+
         $types = LocationType::active()->ordered()->get();
 
         return view('locations.edit', [
@@ -142,7 +177,15 @@ class LocationController extends Controller
         abort_if($location->timetable_id !== $timetable->id, 404);
         $this->authorize('update', $location);
 
-        $this->locationRepository->update($location, $request->validated());
+        $validated = $request->validated();
+        $schedules = $validated['schedules'] ?? [];
+        unset($validated['schedules']);
+
+        $this->locationRepository->update($location, $validated);
+
+        if (! ($validated['is_all_day'] ?? false)) {
+            $this->locationRepository->syncSchedules($location, $schedules);
+        }
 
         if ($request->wantsJson()) {
             return response()->json([

@@ -86,7 +86,7 @@
             <!-- 2段組みグリッド -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
-                <!-- 左カラム: 拠点名 & タイプ & 終日設定 -->
+                <!-- 左カラム: 拠点名 & タイプ & 終日設定 & 有効フラグ -->
                 <div class="space-y-4">
                     <!-- 拠点名 -->
                     <div>
@@ -100,14 +100,9 @@
 
                     <!-- 拠点タイプ -->
                     <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label for="location_type_id" class="block text-xs font-bold text-slate-700">
-                                拠点タイプ <span class="text-rose-500">*</span>
-                            </label>
-                            <a href="{{ route('location-types.index') }}" target="_blank" class="text-[11px] font-bold text-indigo-600 hover:underline">
-                                ＋ 新しいタイプを追加
-                            </a>
-                        </div>
+                        <label for="location_type_id" class="block text-xs font-bold text-slate-700 mb-1">
+                            拠点タイプ <span class="text-rose-500">*</span>
+                        </label>
                         <select name="location_type_id" id="location_type_id" required
                             class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="">選択してください</option>
@@ -125,22 +120,15 @@
                             class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
                         <div>
                             <label for="is_all_day" class="text-xs font-bold text-slate-800 cursor-pointer">終日（24時間）常時利用可能な拠点</label>
-                            <p class="text-[11px] text-slate-500 mt-0.5">時間制限なく利用できる場合にチェックしてください。チェックがない場合は詳細画面で年月日時分単位の時間帯スロットを設定します。</p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">時間制限なく利用できる場合にチェックしてください。チェックを外すと下部で年月日時分単位の時間帯スロットを設定できます。</p>
                         </div>
                     </div>
 
-                    <!-- 表示順 & 有効フラグ -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="display_order" class="block text-xs font-bold text-slate-700 mb-1">表示順</label>
-                            <input type="number" name="display_order" id="display_order" value="{{ old('display_order', 10) }}" min="0"
-                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        </div>
-                        <div class="flex items-center space-x-2 pt-6">
-                            <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
-                                class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                            <label for="is_active" class="text-xs font-bold text-slate-700 cursor-pointer">有効（稼働中）</label>
-                        </div>
+                    <!-- 有効フラグ -->
+                    <div class="flex items-center space-x-2 pt-2">
+                        <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
+                            class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                        <label for="is_active" class="text-xs font-bold text-slate-700 cursor-pointer">有効（稼働中）</label>
                     </div>
                 </div>
 
@@ -159,6 +147,84 @@
 
             </div>
 
+            <!-- 利用可能時間帯スロット設定セクション -->
+            <div id="schedules-form-container" class="space-y-3 pt-6 border-t border-slate-100">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                            <span>⏱️</span>
+                            <span>利用可能時間帯スロット設定</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">
+                            終日常時利用でない場合、この運行日における利用枠（年月日時分）を設定します。
+                        </p>
+                    </div>
+                    <button type="button" id="add-schedule-row-btn"
+                        data-target-date="{{ $timetable->target_date?->format('Y-m-d') }}"
+                        class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 self-start sm:self-auto cursor-pointer">
+                        <span>➕</span>
+                        <span>時間帯枠を追加</span>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-200 rounded-xl bg-slate-50/50">
+                    <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
+                        <thead class="bg-slate-100/75 text-slate-700 font-bold">
+                            <tr>
+                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">日時範囲 (年月日時分) <span class="text-rose-500">*</span></th>
+                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">利用ステータス <span class="text-rose-500">*</span></th>
+                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">枠名 / タイトル</th>
+                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">メモ / 特記事項</th>
+                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schedules-form-body" class="divide-y divide-slate-100 bg-white">
+                            @php
+                                $oldSchedules = old('schedules', []);
+                            @endphp
+                            @foreach($oldSchedules as $index => $sch)
+                                <tr data-schedule-row="true" class="border-b border-slate-100 hover:bg-slate-50/60 transition">
+                                    <td class="py-2.5 px-3">
+                                        <div class="flex items-center space-x-1 font-mono">
+                                            <input type="datetime-local" name="schedules[{{ $index }}][start_at]" value="{{ $sch['start_at'] ?? '' }}" required
+                                                class="px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono">
+                                            <span class="text-slate-400">〜</span>
+                                            <input type="datetime-local" name="schedules[{{ $index }}][end_at]" value="{{ $sch['end_at'] ?? '' }}" required
+                                                class="px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono">
+                                        </div>
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <select name="schedules[{{ $index }}][availability_status]" required
+                                            class="px-2 py-1 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                            @foreach(\App\Models\LocationSchedule::AVAILABILITY_STATUSES as $k => $l)
+                                                <option value="{{ $k }}" {{ ($sch['availability_status'] ?? 'available') === $k ? 'selected' : '' }}>{{ $l }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <input type="text" name="schedules[{{ $index }}][title]" value="{{ $sch['title'] ?? '' }}" placeholder="例: 午前設営枠"
+                                            class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <input type="text" name="schedules[{{ $index }}][note]" value="{{ $sch['note'] ?? '' }}" placeholder="例: 道路使用許可申請中"
+                                            class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                    </td>
+                                    <td class="py-2.5 px-3 text-right">
+                                        <button type="button" data-action="remove-schedule-row"
+                                            class="px-2 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded text-xs font-bold transition cursor-pointer">
+                                            ✕ 削除
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    <div id="schedules-empty-message" class="p-6 text-center text-slate-400 text-xs {{ !empty($oldSchedules) ? 'hidden' : '' }}">
+                        利用可能時間帯枠がありません。「➕ 時間帯枠を追加」から登録してください。
+                    </div>
+                </div>
+            </div>
+
             <!-- アクションボタン -->
             <div class="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100">
                 <a href="{{ route('timetables.locations.index', $timetable) }}"
@@ -167,11 +233,13 @@
                 </a>
                 <button type="submit" @disabled($types->isEmpty())
                     class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
-                    登録して利用時間帯を設定する
+                    登録を完了する
                 </button>
             </div>
         </form>
     </div>
 
 </div>
+
+@vite(['resources/js/locations.js'])
 </x-layouts.app>

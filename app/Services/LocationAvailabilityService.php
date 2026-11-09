@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTOs\LocationStatusEvaluation;
 use App\Enums\LocationCurrentStatus;
+use App\Enums\LocationDailyAvailabilityStatus;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
 use App\Models\LocationSchedule;
@@ -256,5 +257,39 @@ class LocationAvailabilityService
             detail: $nextDetail,
             nextSchedule: $next
         );
+    }
+
+    /**
+     * 対象日付における拠点の1日利用枠ステータスを評価
+     */
+    public function evaluateDailyAvailability(Location $location, Carbon|string $targetDate): LocationDailyAvailabilityStatus
+    {
+        if ($location->is_all_day) {
+            return LocationDailyAvailabilityStatus::Available;
+        }
+
+        $targetDateStr = $targetDate instanceof Carbon ? $targetDate->format('Y-m-d') : $targetDate;
+
+        $schedules = $location->relationLoaded('schedules')
+            ? $location->schedules
+            : $location->schedules()->get();
+
+        $todaySlots = $schedules->filter(function (LocationSchedule $s) use ($targetDateStr) {
+            return $s->start_at->format('Y-m-d') === $targetDateStr || $s->end_at->format('Y-m-d') === $targetDateStr;
+        });
+
+        if ($todaySlots->isEmpty()) {
+            return LocationDailyAvailabilityStatus::NoSchedule;
+        }
+
+        $hasUnavailable = $todaySlots->contains(function (LocationSchedule $s) {
+            return ! $s->isAvailable();
+        });
+
+        if ($hasUnavailable) {
+            return LocationDailyAvailabilityStatus::PartiallyUnavailable;
+        }
+
+        return LocationDailyAvailabilityStatus::Available;
     }
 }

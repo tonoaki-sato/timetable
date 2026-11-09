@@ -82,15 +82,11 @@
 
             <!-- 1. 基本仕様カード -->
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="pb-3 border-b border-slate-100">
                     <h2 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
                         <span>📍</span>
                         <span>拠点の基本仕様</span>
                     </h2>
-                    <a href="{{ route('timetables.locations.edit', [$timetable, $location]) }}"
-                        class="text-xs text-indigo-600 hover:text-indigo-800 font-bold transition">
-                        ✏️ 編集する
-                    </a>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
@@ -146,25 +142,16 @@
                             </span>
                         </h2>
                         <p class="text-xs text-slate-500 mt-0.5">
-                            年月日時分単位で利用枠を登録し、申請状況（承認済/申請中/規制中など）を管理します。
+                            申請状況の確認と利用ステータスの更新ができます。枠の追加・削除は「基本情報を編集」から行えます。
                         </p>
                     </div>
-
-                    <button type="button"
-                            data-action="open-schedule-modal"
-                            data-mode="create"
-                            data-store-url="{{ route('timetables.locations.schedules.store', [$timetable, $location]) }}"
-                            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
-                        <span>➕</span>
-                        <span>時間帯を追加</span>
-                    </button>
                 </div>
 
                 @if($location->schedules->isEmpty())
                 <div class="p-8 text-center space-y-2">
                     <span class="text-3xl block">📭</span>
                     <p class="text-xs font-bold text-slate-600">利用可能時間帯がまだ登録されていません。</p>
-                    <p class="text-[11px] text-slate-400">右上の「➕ 時間帯を追加」ボタンから年月日時分単位で利用枠を登録してください。</p>
+                    <p class="text-[11px] text-slate-400">ヘッダーの「基本情報を編集」から利用可能時間帯スロットを登録してください。</p>
                 </div>
                 @else
                 <div class="overflow-x-auto">
@@ -211,15 +198,6 @@
                                     {{ $schedule->note ?: '—' }}
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-right space-x-1">
-                                    <button type="button"
-                                            data-action="open-schedule-modal"
-                                            data-mode="edit"
-                                            data-update-url="{{ route('timetables.locations.schedules.update', [$timetable, $location, $schedule]) }}"
-                                            data-schedule="{{ json_encode($schedule) }}"
-                                            class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1 shadow-2xs cursor-pointer">
-                                        <span>✏️</span>
-                                        <span>編集</span>
-                                    </button>
                                     <form method="POST" action="{{ route('timetables.locations.schedules.destroy', [$timetable, $location, $schedule]) }}"
                                           data-confirm="この時間帯枠を削除しますか？" class="inline">
                                         @csrf
@@ -241,7 +219,7 @@
 
         </div>
 
-        <!-- 右カラム (1/3): 現在のステータス評価 & 拠点削除 -->
+        <!-- 右カラム (1/3): 現在のステータス評価 -->
         <div class="space-y-4">
 
             <!-- 3. 現在のステータス評価カード -->
@@ -267,98 +245,10 @@
                 </div>
             </div>
 
-            <!-- 4. 拠点削除カード -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
-                <h2 class="font-bold text-sm text-rose-700 flex items-center space-x-1.5">
-                    <span>⚠️</span>
-                    <span>拠点の削除</span>
-                </h2>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    拠点「{{ $location->name }}」を削除すると、登録済みのすべての時間帯枠データも合わせて削除されます。
-                </p>
-                <form action="{{ route('timetables.locations.destroy', [$timetable, $location]) }}" method="POST"
-                    data-confirm="拠点「{{ $location->name }}」を削除しますか？&#10;（関連する時間帯データもすべて削除されます）">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                        class="w-full px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
-                        <span>🗑️</span>
-                        <span>この拠点を完全に削除する</span>
-                    </button>
-                </form>
-            </div>
-
         </div>
 
     </div>
 
-</div>
-
-<!-- スケジュール登録・編集モーダル -->
-<div id="schedule-modal" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-left space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 id="schedule-modal-title" class="text-sm sm:text-base font-bold text-slate-900 flex items-center space-x-2">
-                <span>⏱️</span>
-                <span>利用時間帯の追加</span>
-            </h3>
-            <button type="button" data-action="close-schedule-modal" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">✕</button>
-        </div>
-
-        <form id="schedule-modal-form" method="POST" action="{{ route('timetables.locations.schedules.store', [$timetable, $location]) }}" class="space-y-4">
-            @csrf
-            <div id="schedule-form-method"></div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label for="modal_start_at" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">開始日時 <span class="text-rose-500">*</span></label>
-                    <input type="datetime-local" name="start_at" id="modal_start_at" required
-                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
-                </div>
-                <div>
-                    <label for="modal_end_at" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">終了日時 <span class="text-rose-500">*</span></label>
-                    <input type="datetime-local" name="end_at" id="modal_end_at" required
-                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
-                </div>
-            </div>
-
-            <div>
-                <label for="modal_availability_status" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">
-                    利用可否ステータス <span class="text-rose-500">*</span>
-                </label>
-                <select name="availability_status" id="modal_availability_status" required
-                        class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    @foreach(\App\Models\LocationSchedule::AVAILABILITY_STATUSES as $statusKey => $statusLabel)
-                        <option value="{{ $statusKey }}">{{ $statusLabel }}</option>
-                    @endforeach
-                </select>
-                <p class="text-[11px] text-slate-500 mt-1">※「利用不可」の場合は実行委員会として利用不可状態となります。</p>
-            </div>
-
-            <div>
-                <label for="modal_title" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">枠名 / タイトル（任意）</label>
-                <input type="text" name="title" id="modal_title" placeholder="例: 午前枠, 夜間保管枠, 昼間設営枠"
-                       class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-
-            <div>
-                <label for="modal_note" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">申請メモ / 特記事項（任意）</label>
-                <textarea name="note" id="modal_note" rows="2" placeholder="例: 道路使用許可申請中、区役所許可番号など"
-                          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed"></textarea>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                <button type="button" data-action="close-schedule-modal"
-                        class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
-                    キャンセル
-                </button>
-                <button type="submit"
-                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
-                    保存する
-                </button>
-            </div>
-        </form>
-    </div>
 </div>
 
 @vite(['resources/js/locations.js'])

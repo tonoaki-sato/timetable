@@ -2,114 +2,195 @@
  * 拠点管理機能スクリプト (CSP準拠・外部JavaScriptモジュール)
  */
 document.addEventListener('DOMContentLoaded', () => {
-    initScheduleModal();
+    initDragAndDropReorder();
+    initScheduleFormRows();
     initTypeModal();
     initAutoSubmitSelects();
     initConfirmForms();
 });
 
 /**
- * 1. スケジュール（時間帯スロット）登録・編集モーダル
+ * 1. ドラッグ＆ドロップによる表示順並び替え
  */
-function initScheduleModal() {
-    const modal = document.getElementById('schedule-modal');
-    const form = document.getElementById('schedule-modal-form');
-    const modalTitle = document.getElementById('schedule-modal-title');
-    const methodContainer = document.getElementById('schedule-form-method');
+function initDragAndDropReorder() {
+    const container = document.getElementById('locations-container');
+    if (!container) return;
 
-    if (!modal || !form) {
-        return;
-    }
+    let draggedItem = null;
 
-    // 開くボタン（新規追加 / 編集）
-    document.querySelectorAll('[data-action="open-schedule-modal"]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const mode = btn.dataset.mode;
-            const storeUrl = btn.dataset.storeUrl;
-            const updateUrl = btn.dataset.updateUrl;
+    container.addEventListener('dragstart', (e) => {
+        const item = e.target.closest('[data-location-id]');
+        if (!item) return;
 
-            if (mode === 'create') {
-                if (modalTitle) {
-                    modalTitle.innerHTML = '<span>⏱️</span><span>利用時間帯の追加</span>';
-                }
-                form.action = storeUrl || form.action;
-                if (methodContainer) {
-                    methodContainer.innerHTML = '';
-                }
-                form.reset();
+        draggedItem = item;
+        item.classList.add('opacity-40', 'bg-indigo-50/70');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', item.dataset.locationId || '');
+    });
 
-                // デフォルト日時を現在日時の正時にセット
-                const now = new Date();
-                now.setMinutes(0, 0, 0);
-                const startStr = formatLocalDateTime(now);
-                now.setHours(now.getHours() + 3);
-                const endStr = formatLocalDateTime(now);
+    container.addEventListener('dragend', (e) => {
+        const item = e.target.closest('[data-location-id]');
+        if (item) {
+            item.classList.remove('opacity-40', 'bg-indigo-50/70');
+        }
+        draggedItem = null;
+    });
 
-                const startInput = document.getElementById('modal_start_at');
-                const endInput = document.getElementById('modal_end_at');
-                const statusInput = document.getElementById('modal_availability_status');
+    container.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
 
-                if (startInput) startInput.value = startStr;
-                if (endInput) endInput.value = endStr;
-                if (statusInput) statusInput.value = 'available';
-            } else if (mode === 'edit') {
-                if (modalTitle) {
-                    modalTitle.innerHTML = '<span>⏱️</span><span>利用時間帯の編集</span>';
-                }
-                form.action = updateUrl;
-                if (methodContainer) {
-                    methodContainer.innerHTML = '<input type="hidden" name="_method" value="PUT">';
-                }
+        const targetItem = e.target.closest('[data-location-id]');
+        if (!targetItem || targetItem === draggedItem) return;
 
-                try {
-                    const schedule = JSON.parse(btn.dataset.schedule || '{}');
-                    const startInput = document.getElementById('modal_start_at');
-                    const endInput = document.getElementById('modal_end_at');
-                    const statusInput = document.getElementById('modal_availability_status');
-                    const titleInput = document.getElementById('modal_title');
-                    const noteInput = document.getElementById('modal_note');
+        const rect = targetItem.getBoundingClientRect();
+        const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+        container.insertBefore(draggedItem, next ? targetItem.nextSibling : targetItem);
+    });
 
-                    if (startInput && schedule.start_at) {
-                        startInput.value = schedule.start_at.slice(0, 16);
-                    }
-                    if (endInput && schedule.end_at) {
-                        endInput.value = schedule.end_at.slice(0, 16);
-                    }
-                    if (statusInput) {
-                        statusInput.value = schedule.availability_status || 'available';
-                    }
-                    if (titleInput) {
-                        titleInput.value = schedule.title || '';
-                    }
-                    if (noteInput) {
-                        noteInput.value = schedule.note || '';
-                    }
-                } catch (e) {
-                    console.error('Failed to parse schedule data', e);
-                }
+    container.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        if (!draggedItem) return;
+
+        const items = Array.from(container.querySelectorAll('[data-location-id]'));
+        const locationIds = items.map(el => parseInt(el.dataset.locationId, 10)).filter(Boolean);
+        const reorderUrl = container.dataset.reorderUrl;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        if (!reorderUrl || !csrfToken) return;
+
+        try {
+            const res = await fetch(reorderUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ location_ids: locationIds }),
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                showToast(data.message || '拠点の表示順を更新しました。', 'success');
+            } else {
+                showToast(data.message || '並び順の更新に失敗しました。', 'error');
             }
-
-            modal.classList.remove('hidden');
-        });
-    });
-
-    // 閉じるボタン
-    document.querySelectorAll('[data-action="close-schedule-modal"]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
-    });
-
-    // 背景クリックで閉じる
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.add('hidden');
+        } catch (err) {
+            console.error('Reorder error:', err);
+            showToast('通信エラーが発生しました。', 'error');
         }
     });
 }
 
 /**
- * 2. 拠点タイプ（マスタ）追加・編集モーダル
+ * 2. 登録・編集フォームでの利用可能時間帯行の動的追加・削除制御
+ */
+function initScheduleFormRows() {
+    const isAllDayCheckbox = document.getElementById('is_all_day');
+    const schedulesContainer = document.getElementById('schedules-form-container');
+    const tableBody = document.getElementById('schedules-form-body');
+    const addBtn = document.getElementById('add-schedule-row-btn');
+
+    if (!schedulesContainer || !tableBody) {
+        return;
+    }
+
+    // 終日利用可能トグルに応じて表示切り替え
+    const toggleSchedulesVisibility = () => {
+        if (isAllDayCheckbox && isAllDayCheckbox.checked) {
+            schedulesContainer.classList.add('hidden');
+        } else {
+            schedulesContainer.classList.remove('hidden');
+        }
+    };
+
+    if (isAllDayCheckbox) {
+        isAllDayCheckbox.addEventListener('change', toggleSchedulesVisibility);
+        toggleSchedulesVisibility();
+    }
+
+    // 行削除ハンドラーの設定
+    const bindRemoveButtons = () => {
+        tableBody.querySelectorAll('[data-action="remove-schedule-row"]').forEach(btn => {
+            btn.onclick = () => {
+                const row = btn.closest('[data-schedule-row]');
+                if (row) {
+                    row.remove();
+                    checkEmptyState();
+                }
+            };
+        });
+    };
+
+    const checkEmptyState = () => {
+        const rows = tableBody.querySelectorAll('[data-schedule-row]');
+        const emptyMsg = document.getElementById('schedules-empty-message');
+        if (emptyMsg) {
+            if (rows.length === 0) {
+                emptyMsg.classList.remove('hidden');
+            } else {
+                emptyMsg.classList.add('hidden');
+            }
+        }
+    };
+
+    bindRemoveButtons();
+    checkEmptyState();
+
+    // 新規行追加
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            const index = Date.now();
+            const targetDateStr = addBtn.dataset.targetDate || '';
+            const defaultStart = targetDateStr ? `${targetDateStr}T09:00` : '';
+            const defaultEnd = targetDateStr ? `${targetDateStr}T17:00` : '';
+
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-schedule-row', 'true');
+            tr.className = 'border-b border-slate-100 hover:bg-slate-50/60 transition';
+            tr.innerHTML = `
+                <td class="py-2.5 px-3">
+                    <div class="flex items-center space-x-1 font-mono">
+                        <input type="datetime-local" name="schedules[${index}][start_at]" value="${defaultStart}" required
+                            class="px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono">
+                        <span class="text-slate-400">〜</span>
+                        <input type="datetime-local" name="schedules[${index}][end_at]" value="${defaultEnd}" required
+                            class="px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono">
+                    </div>
+                </td>
+                <td class="py-2.5 px-3">
+                    <select name="schedules[${index}][availability_status]" required
+                        class="px-2 py-1 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <option value="available" selected>利用可（確保済）</option>
+                        <option value="unavailable">未確保（調整中）</option>
+                    </select>
+                </td>
+                <td class="py-2.5 px-3">
+                    <input type="text" name="schedules[${index}][title]" placeholder="例: 午前設営枠, 夜間枠"
+                        class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                </td>
+                <td class="py-2.5 px-3">
+                    <input type="text" name="schedules[${index}][note]" placeholder="例: 道路使用許可申請中"
+                        class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                </td>
+                <td class="py-2.5 px-3 text-right">
+                    <button type="button" data-action="remove-schedule-row"
+                        class="px-2 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded text-xs font-bold transition cursor-pointer">
+                        ✕ 削除
+                    </button>
+                </td>
+            `;
+
+            tableBody.appendChild(tr);
+            bindRemoveButtons();
+            checkEmptyState();
+        });
+    }
+}
+
+/**
+ * 3. 拠点タイプ（種別マスタ）登録・編集モーダル
  */
 function initTypeModal() {
     const modal = document.getElementById('type-modal');
@@ -121,7 +202,7 @@ function initTypeModal() {
         return;
     }
 
-    // 開くボタン（新規追加 / 編集）
+    // 開くボタン
     document.querySelectorAll('[data-action="open-type-modal"]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const mode = btn.dataset.mode;
@@ -130,18 +211,13 @@ function initTypeModal() {
 
             if (mode === 'create') {
                 if (modalTitle) {
-                    modalTitle.innerHTML = '<span>🏷️</span><span>拠点タイプの追加</span>';
+                    modalTitle.innerHTML = '<span>🏷️</span><span>新しい拠点タイプの追加</span>';
                 }
                 form.action = storeUrl || form.action;
                 if (methodContainer) {
                     methodContainer.innerHTML = '';
                 }
                 form.reset();
-
-                const activeInput = document.getElementById('type_is_active');
-                const orderInput = document.getElementById('type_display_order');
-                if (activeInput) activeInput.checked = true;
-                if (orderInput) orderInput.value = 10;
             } else if (mode === 'edit') {
                 if (modalTitle) {
                     modalTitle.innerHTML = '<span>🏷️</span><span>拠点タイプの編集</span>';
@@ -189,7 +265,7 @@ function initTypeModal() {
 }
 
 /**
- * 3. 申請ステータスの自動送信セレクトボックス
+ * 4. 申請ステータスの自動送信セレクトボックス
  */
 function initAutoSubmitSelects() {
     document.querySelectorAll('select[data-action="auto-submit-status"]').forEach((select) => {
@@ -203,7 +279,7 @@ function initAutoSubmitSelects() {
 }
 
 /**
- * 4. 削除確認等の確認ダイアログ
+ * 5. 削除確認等の確認ダイアログ
  */
 function initConfirmForms() {
     document.querySelectorAll('form[data-confirm]').forEach((form) => {
@@ -217,15 +293,30 @@ function initConfirmForms() {
 }
 
 /**
- * 日時オブジェクトを YYYY-MM-DDTHH:mm 形式にフォーマット (ローカル時刻)
+ * トースト通知の表示
  */
-function formatLocalDateTime(date) {
-    const pad = (n) => String(n).padStart(2, '0');
-    const y = date.getFullYear();
-    const m = pad(date.getMonth() + 1);
-    const d = pad(date.getDate());
-    const h = pad(date.getHours());
-    const min = pad(date.getMinutes());
-    return `${y}-${m}-${d}T${h}:${min}`;
-}
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none';
+        document.body.appendChild(container);
+    }
 
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-emerald-800' : 'bg-rose-800';
+    toast.className = `${bgColor} text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all transform translate-y-2 opacity-0 pointer-events-auto flex items-center space-x-2`;
+    toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span><span>${message}</span>`;
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+    });
+
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}

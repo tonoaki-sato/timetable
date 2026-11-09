@@ -34,7 +34,7 @@ class LocationPolicy
     /**
      * 拠点更新権限
      */
-    public function update(User $user, Location $location): bool
+    public function update(User $user, ?Location $location = null): bool
     {
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }
@@ -42,7 +42,7 @@ class LocationPolicy
     /**
      * 拠点削除権限
      */
-    public function delete(User $user, Location $location): bool
+    public function delete(User $user, ?Location $location = null): bool
     {
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }

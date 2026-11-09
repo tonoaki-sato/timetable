@@ -38,4 +38,23 @@ interface LocationRepositoryInterface
      * 拠点を削除
      */
     public function delete(Location $location): bool;
+
+    /**
+     * 指定タイムテーブルの拠点表示順を一括更新
+     *
+     * @param  array<int, int>  $locationIds
+     */
+    public function reorder(Timetable $timetable, array $locationIds): void;
+
+    /**
+     * 指定タイムテーブルにおける最大の表示順を取得
+     */
+    public function getMaxDisplayOrder(Timetable $timetable): int;
+
+    /**
+     * 拠点の利用可能時間帯スケジュールを一括同期（作成・更新・削除）
+     *
+     * @param  array<int, array<string, mixed>>  $schedulesData
+     */
+    public function syncSchedules(Location $location, array $schedulesData): void;
 }
