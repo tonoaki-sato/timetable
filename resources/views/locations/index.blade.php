@@ -124,14 +124,12 @@
                             <!-- 現在の状態 -->
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex items-center space-x-1.5">
-                                    <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $eval->badgeClass() }}">
+                                    <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $eval->badgeClass() }}"
+                                        title="{{ $eval->detail }}">
                                         <span>{{ $eval->icon() }}</span>
                                         <span>{{ $eval->label() }}</span>
                                     </span>
                                 </div>
-                                <p class="text-[10px] text-slate-500 truncate max-w-[200px] mt-0.5" title="{{ $eval->detail }}">
-                                    {{ $eval->detail }}
-                                </p>
                             </td>
 
                             <!-- 本日の利用可能枠 -->

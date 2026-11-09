@@ -61,6 +61,7 @@ class LocationManagementTest extends TestCase
             ->assertSee('拠点一覧')
             ->assertSee('番所')
             ->assertDontSee('<th>種別</th>', false)
+            ->assertDontSee('class="text-[10px] text-slate-500 truncate max-w-[200px]', false)
             ->assertSee(route('timetables.locations.show', [$this->timetable, $location]))
             ->assertSee('編集')
             ->assertSee('削除');
