@@ -52,7 +52,8 @@ class TimetableRepository implements TimetableRepositoryInterface
                 $q->orderBy('start_time', 'asc')
                     ->with(['assignments.staff']);
             },
-        ])->find($id);
+            'logisticsPlans.equipment',
+        ])->withCount(['logisticsPlans'])->find($id);
     }
 
     /**

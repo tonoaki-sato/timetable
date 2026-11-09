@@ -7,9 +7,18 @@
         icon="🚚"
         description="資材の搬出入・設営・保管計画を設定・確認するタイムテーブル（日程）を選択してください。">
         <x-slot:breadcrumbs>
-            <span class="text-slate-700 font-bold truncate">🚚 搬出入計画</span>
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>⏱️</span>
+                <span>運行情報一覧</span>
+            </a>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">🚚 搬出入計画 - タイムテーブル選択</span>
         </x-slot:breadcrumbs>
     </x-page-header>
+
+    @php
+        $targetLogisticsUrl = fn($tt) => route('timetables.logistics.index', array_merge(['timetable' => $tt], $queryParams ?? []));
+    @endphp
 
     <!-- アラートメッセージ -->
     @if(session('info'))
@@ -82,7 +91,7 @@
                                     </span>
                                 </div>
                                 <div class="font-bold text-sm text-slate-900 group-hover:text-indigo-600 transition">
-                                    <a href="{{ route('timetables.logistics.index', $timetable) }}">
+                                    <a href="{{ $targetLogisticsUrl($timetable) }}">
                                         {{ $timetable->name }}
                                     </a>
                                 </div>
@@ -106,7 +115,7 @@
 
                         <!-- 操作 -->
                         <td class="px-4 py-3.5 text-right whitespace-nowrap">
-                            <a href="{{ route('timetables.logistics.index', $timetable) }}"
+                            <a href="{{ $targetLogisticsUrl($timetable) }}"
                                 class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center space-x-1 shadow-2xs">
                                 <span>🚚</span>
                                 <span>計画を確認・編集</span>

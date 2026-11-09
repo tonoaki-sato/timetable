@@ -38,11 +38,15 @@ class EquipmentLogisticsController extends Controller
         }
 
         if ($timetables->count() === 1) {
-            return redirect()->route('timetables.logistics.index', $timetables->first());
+            return redirect()->route('timetables.logistics.index', array_merge(
+                ['timetable' => $timetables->first()],
+                $request->query()
+            ));
         }
 
         return view('logistics.select', [
             'timetables' => $timetables,
+            'queryParams' => $request->query(),
         ]);
     }
 
@@ -54,20 +58,37 @@ class EquipmentLogisticsController extends Controller
         $this->authorize('viewAny', Equipment::class);
 
         $tab = $request->query('tab', 'plans');
+        $typeFilter = $request->query('type');
+        $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
+
         $patterns = $this->logisticsService->getPatternsData();
         $locations = Location::forTimetable($timetable)->active()->ordered()->get();
+        $lanes = $timetable->lanes()->ordered()->get();
         $equipments = $this->logisticsService->getEquipmentsFlowData(
-            type: $request->query('type'),
-            laneId: $request->query('lane_id') ? (int) $request->query('lane_id') : null,
+            type: $typeFilter,
+            laneId: $laneFilter,
             timetable: $timetable
         );
+
+        $allPlans = $timetable->logisticsPlans()->get();
+        $stats = [
+            'total_equipments' => Equipment::count(),
+            'planned_equipments' => $allPlans->pluck('equipment_id')->unique()->count(),
+            'total_steps' => $allPlans->count(),
+            'completed_steps' => $allPlans->where('status', 'completed')->count(),
+            'witness_required_steps' => $allPlans->where('witness_required', true)->count(),
+        ];
 
         return view('logistics.index', compact(
             'timetable',
             'tab',
             'patterns',
             'locations',
-            'equipments'
+            'lanes',
+            'equipments',
+            'stats',
+            'typeFilter',
+            'laneFilter'
         ));
     }
 

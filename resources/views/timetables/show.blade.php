@@ -47,6 +47,13 @@
         $shortageTasks = $totalTasks - $satisfiedTasks;
         $totalRequired = $timetable->tasks->sum('required_people_count');
         $totalAssigned = $timetable->tasks->sum(fn($t) => $t->assigned_count);
+
+        // 搬出入計画集計
+        $totalLogisticsPlans = $timetable->logisticsPlans->count();
+        $completedLogisticsPlans = $timetable->logisticsPlans->where('status', 'completed')->count();
+        $witnessRequiredPlans = $timetable->logisticsPlans->where('witness_required', true)->count();
+        $uniqueEquipmentCount = $timetable->logisticsPlans->pluck('equipment_id')->unique()->count();
+        $logisticsProgressPercent = $totalLogisticsPlans > 0 ? (int) round(($completedLogisticsPlans / $totalLogisticsPlans) * 100) : 0;
     @endphp
 
     <!-- 1. 運行基本枠カード -->
@@ -325,7 +332,65 @@
         </div>
     </div>
 
-    <!-- 4. フッターエリア（削除等の管理者操作） -->
+    <!-- 4. 搬出入・資材配備サマリーカード -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+            <div>
+                <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
+                    <span>🚚</span>
+                    <span>資材搬出入・物流配備サマリー</span>
+                </h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">当日の設営・本番・夜間保管・撤収における資材ステップ進捗です。</p>
+            </div>
+            <a href="{{ route('timetables.logistics.index', $timetable) }}"
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <span>搬出入計画へ</span>
+                <span>→</span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-500 block">配備資材数</span>
+                <strong class="text-xl font-bold font-mono text-slate-900">{{ $uniqueEquipmentCount }}</strong>
+                <span class="text-xs text-slate-500 ml-0.5">種</span>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-500 block">計画ステップ総数</span>
+                <strong class="text-xl font-bold font-mono text-slate-900">{{ $totalLogisticsPlans }}</strong>
+                <span class="text-xs text-slate-500 ml-0.5">件</span>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-500 block">完了ステップ</span>
+                <strong class="text-xl font-bold font-mono {{ $completedLogisticsPlans === $totalLogisticsPlans && $totalLogisticsPlans > 0 ? 'text-emerald-600' : 'text-indigo-600' }}">
+                    {{ $completedLogisticsPlans }} / {{ $totalLogisticsPlans }}
+                </strong>
+                <span class="text-xs text-slate-500 ml-0.5 font-mono">({{ $logisticsProgressPercent }}%)</span>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-500 block">幹事立会必須</span>
+                <strong class="text-xl font-bold font-mono {{ $witnessRequiredPlans > 0 ? 'text-rose-600' : 'text-slate-700' }}">{{ $witnessRequiredPlans }}</strong>
+                <span class="text-xs text-slate-500 ml-0.5">件</span>
+            </div>
+        </div>
+
+        @if($totalLogisticsPlans === 0)
+        <div class="p-3 bg-indigo-50/70 rounded-xl border border-indigo-100 text-xs text-indigo-900 flex items-center justify-between flex-wrap gap-2">
+            <span class="flex items-center space-x-1">
+                <span>💡</span>
+                <span>この運行日の搬出入計画ステップがまだ作成されていません。</span>
+            </span>
+            <a href="{{ route('timetables.logistics.index', $timetable) }}" class="text-indigo-700 font-bold underline">
+                パターン適用・計画作成 →
+            </a>
+        </div>
+        @endif
+    </div>
+
+    <!-- 5. フッターエリア（削除等の管理者操作） -->
     @can('delete', $timetable)
     <div class="pt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
         <div>

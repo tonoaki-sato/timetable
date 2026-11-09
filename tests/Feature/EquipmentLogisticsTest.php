@@ -89,17 +89,29 @@ class EquipmentLogisticsTest extends TestCase
     }
 
     /**
-     * 搬出入パターン管理画面が表示されること
+     * 搬出入計画一覧画面（デフォルトタブ）が表示されること
      */
     public function test_logistics_dashboard_displays_correctly(): void
     {
         $this->actingAs($this->operator);
 
+        $equipment = Equipment::factory()->committee()->create([
+            'name' => 'テストパイプ椅子',
+            'storage_location' => '番所地下倉庫',
+        ]);
+        $equipment->plans()->create([
+            'timetable_id' => $this->timetable1->id,
+            'title' => '前日会場搬入',
+            'day_phase' => 'pre_day',
+            'action_type' => 'staging_move',
+        ]);
+
         $response = $this->get(route('timetables.logistics.index', $this->timetable1));
         $response->assertStatus(200);
         $response->assertSee('搬出入計画・パターン管理');
-        $response->assertSee('テスト標準パターンA');
-        $response->assertSee('前日倉庫出し');
+        $response->assertSee('搬出入計画一覧');
+        $response->assertSee('テストパイプ椅子');
+        $response->assertSee('前日会場搬入');
     }
 
     /**
@@ -111,8 +123,28 @@ class EquipmentLogisticsTest extends TestCase
 
         $response = $this->get(route('timetables.logistics.index', ['timetable' => $this->timetable1, 'tab' => 'patterns']));
         $response->assertStatus(200);
+        $response->assertSee('搬出入パターン管理');
         $response->assertSee('テスト標準パターンA');
         $response->assertSee('税務署前駐車場');
+        $response->assertSee('前日倉庫出し');
+    }
+
+    /**
+     * 運行情報一覧および運行詳細に搬出入計画への導線が存在すること
+     */
+    public function test_timetable_pages_include_logistics_navigation(): void
+    {
+        $this->actingAs($this->operator);
+
+        $this->get(route('timetables.index'))
+            ->assertStatus(200)
+            ->assertSee(route('timetables.logistics.index', $this->timetable1))
+            ->assertSee('搬出入');
+
+        $this->get(route('timetables.show', $this->timetable1))
+            ->assertStatus(200)
+            ->assertSee('資材搬出入・物流配備サマリー')
+            ->assertSee(route('timetables.logistics.index', $this->timetable1));
     }
 
     /**

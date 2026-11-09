@@ -1,10 +1,6 @@
 <x-layouts.app :title="$equipment->name . ' - 搬出入計画'">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
-    @if(isset($timetable))
-        <x-timetable-context-bar :timetable="$timetable" active="logistics" />
-    @endif
-
     @php
         $clearAction = isset($timetable) ? route('timetables.logistics.plans.clear', [$timetable, $equipment]) : route('logistics.plans.clear', $equipment);
         $updateStatusUrl = fn($p) => isset($timetable) ? route('timetables.logistics.plans.update-status', [$timetable, $p]) : route('logistics.plans.update-status', $p);
@@ -25,18 +21,24 @@
                 ? '個人持ち込み私物（定常保管: ' . ($equipment->storage_location ?: '自宅') . '）'
                 : '実行委員会保有備品（定常保管: ' . ($equipment->storage_location ?: '番所地下倉庫') . '）')">
         <x-slot:breadcrumbs>
+            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>⏱️</span>
+                <span>運行情報一覧</span>
+            </a>
             @if(isset($timetable))
-                <a href="{{ route('timetables.index') }}" class="hover:underline shrink-0">運行日程</a>
-                <span class="shrink-0 text-slate-300">/</span>
-                <a href="{{ $backLogisticsUrl }}" class="hover:underline shrink-0">搬出入計画</a>
-                <span class="shrink-0 text-slate-300">/</span>
-            @else
-                <a href="{{ route('equipments.index') }}" class="hover:underline shrink-0">資材管理</a>
-                <span class="shrink-0 text-slate-300">/</span>
+                <span class="text-slate-300">/</span>
+                <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                    <span>📅</span>
+                    <span>{{ $timetable->name }}</span>
+                </a>
             @endif
-            <a href="{{ route('equipments.show', $equipment) }}" class="hover:underline truncate max-w-[160px]">{{ $equipment->name }}</a>
-            <span class="shrink-0 text-slate-300">/</span>
-            <span class="text-slate-800 font-bold shrink-0">搬出入ステップ</span>
+            <span class="text-slate-300">/</span>
+            <a href="{{ $backLogisticsUrl }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>🚚</span>
+                <span>搬出入計画</span>
+            </a>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate">📦 {{ $equipment->name }}</span>
         </x-slot:breadcrumbs>
 
         <x-slot:badges>
@@ -60,6 +62,11 @@
         </x-slot:badges>
 
         <x-slot:actions>
+            <a href="{{ $backLogisticsUrl }}"
+                class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">
+                <span>←</span>
+                <span>搬出入計画へ戻る</span>
+            </a>
             <button type="button" data-action="open-apply-template-modal"
                 class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
                 <span>⚡</span>
@@ -84,6 +91,10 @@
             </a>
         </x-slot:actions>
     </x-page-header>
+
+    @if(isset($timetable))
+        <x-timetable-context-bar :timetable="$timetable" active="logistics" />
+    @endif
 
     @if (session('status'))
         <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between">
