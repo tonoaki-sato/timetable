@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReorderEquipmentLogisticsPatternStepsRequest;
 use App\Http\Requests\StoreEquipmentLogisticsPatternStepRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPatternStepRequest;
 use App\Models\EquipmentLogisticsPattern;
@@ -53,6 +54,19 @@ class EquipmentLogisticsPatternStepController extends Controller
 
         return redirect()->route('equipment-patterns.index')
             ->with('status', "ステップ「{$step->title}」を更新しました。");
+    }
+
+    /**
+     * パターン内ステップの表示順一括更新（ドラッグ＆ドロップ用）
+     */
+    public function reorder(ReorderEquipmentLogisticsPatternStepsRequest $request, EquipmentLogisticsPattern $pattern): JsonResponse
+    {
+        $this->logisticsService->reorderPatternSteps($pattern, $request->validated('step_ids'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ステップの表示順を更新しました。',
+        ]);
     }
 
     /**

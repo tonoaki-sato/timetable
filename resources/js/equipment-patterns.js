@@ -5,6 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     initEquipmentPatternModals();
+    initPatternStepsDragAndDropReorder();
 });
 
 function initEquipmentPatternModals() {
@@ -83,9 +84,33 @@ function initEquipmentPatternModals() {
             setField('action_type', stepData.action_type || 'staging_move');
             setField('title', stepData.title || '');
             setField('operator_type', stepData.operator_type || 'committee');
+            setField('from_location', stepData.from_location || '');
             setField('from_location_id', stepData.from_location_id || '');
+            setField('to_location', stepData.to_location || '');
             setField('to_location_id', stepData.to_location_id || '');
             setField('witness_required', stepData.witness_required);
+        }
+
+        const fromLocSelect = row.querySelector('[data-field="from_location_id"]');
+        const fromLocInput = row.querySelector('[data-field="from_location"]');
+        if (fromLocSelect && fromLocInput) {
+            fromLocSelect.addEventListener('change', () => {
+                const opt = fromLocSelect.options[fromLocSelect.selectedIndex];
+                if (opt && opt.dataset.name) {
+                    fromLocInput.value = opt.dataset.name;
+                }
+            });
+        }
+
+        const toLocSelect = row.querySelector('[data-field="to_location_id"]');
+        const toLocInput = row.querySelector('[data-field="to_location"]');
+        if (toLocSelect && toLocInput) {
+            toLocSelect.addEventListener('change', () => {
+                const opt = toLocSelect.options[toLocSelect.selectedIndex];
+                if (opt && opt.dataset.name) {
+                    toLocInput.value = opt.dataset.name;
+                }
+            });
         }
 
         const removeBtn = row.querySelector('[data-action="remove-pattern-step"]');
@@ -213,6 +238,28 @@ function initEquipmentPatternModals() {
     // ==========================================
     const stepCreateForm = document.getElementById('pattern-step-create-form');
     const stepCreatePatternName = document.getElementById('step_create_pattern_name');
+    const stepCreateFromLoc = document.getElementById('step_create_from_location_id');
+    const stepCreateFromText = document.getElementById('step_create_from_location');
+    const stepCreateToLoc = document.getElementById('step_create_to_location_id');
+    const stepCreateToText = document.getElementById('step_create_to_location');
+
+    if (stepCreateFromLoc && stepCreateFromText) {
+        stepCreateFromLoc.addEventListener('change', () => {
+            const opt = stepCreateFromLoc.options[stepCreateFromLoc.selectedIndex];
+            if (opt && opt.dataset.name) {
+                stepCreateFromText.value = opt.dataset.name;
+            }
+        });
+    }
+
+    if (stepCreateToLoc && stepCreateToText) {
+        stepCreateToLoc.addEventListener('change', () => {
+            const opt = stepCreateToLoc.options[stepCreateToLoc.selectedIndex];
+            if (opt && opt.dataset.name) {
+                stepCreateToText.value = opt.dataset.name;
+            }
+        });
+    }
 
     document.querySelectorAll('[data-action="open-step-create"]').forEach((btn) => {
         btn.addEventListener('click', (e) => {
@@ -241,9 +288,28 @@ function initEquipmentPatternModals() {
     const stepEditOperatorType = document.getElementById('step_edit_operator_type');
     const stepEditTitle = document.getElementById('step_edit_title');
     const stepEditFromLoc = document.getElementById('step_edit_from_location_id');
+    const stepEditFromText = document.getElementById('step_edit_from_location');
     const stepEditToLoc = document.getElementById('step_edit_to_location_id');
-    const stepEditDisplayOrder = document.getElementById('step_edit_display_order');
+    const stepEditToText = document.getElementById('step_edit_to_location');
     const stepEditWitness = document.getElementById('step_edit_witness_required');
+
+    if (stepEditFromLoc && stepEditFromText) {
+        stepEditFromLoc.addEventListener('change', () => {
+            const opt = stepEditFromLoc.options[stepEditFromLoc.selectedIndex];
+            if (opt && opt.dataset.name) {
+                stepEditFromText.value = opt.dataset.name;
+            }
+        });
+    }
+
+    if (stepEditToLoc && stepEditToText) {
+        stepEditToLoc.addEventListener('change', () => {
+            const opt = stepEditToLoc.options[stepEditToLoc.selectedIndex];
+            if (opt && opt.dataset.name) {
+                stepEditToText.value = opt.dataset.name;
+            }
+        });
+    }
 
     document.querySelectorAll('[data-action="open-step-edit"]').forEach((btn) => {
         btn.addEventListener('click', (e) => {
@@ -267,8 +333,9 @@ function initEquipmentPatternModals() {
             if (stepEditOperatorType) stepEditOperatorType.value = stepData.operator_type || 'committee';
             if (stepEditTitle) stepEditTitle.value = stepData.title || '';
             if (stepEditFromLoc) stepEditFromLoc.value = stepData.from_location_id || '';
+            if (stepEditFromText) stepEditFromText.value = stepData.from_location || (stepData.from_location_name || '');
             if (stepEditToLoc) stepEditToLoc.value = stepData.to_location_id || '';
-            if (stepEditDisplayOrder) stepEditDisplayOrder.value = stepData.display_order ?? '';
+            if (stepEditToText) stepEditToText.value = stepData.to_location || (stepData.to_location_name || '');
             if (stepEditWitness) stepEditWitness.checked = Boolean(stepData.witness_required);
 
             openModal(stepEditModal);
@@ -299,4 +366,117 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+/**
+ * 6. パターン内ステップのドラッグ＆ドロップ並び替え
+ */
+function initPatternStepsDragAndDropReorder() {
+    const containers = document.querySelectorAll('.pattern-steps-tbody');
+    if (!containers.length) return;
+
+    containers.forEach((container) => {
+        let draggedItem = null;
+
+        container.addEventListener('dragstart', (e) => {
+            const item = e.target.closest('[data-step-id]');
+            if (!item) return;
+
+            draggedItem = item;
+            item.classList.add('opacity-40', 'bg-indigo-50/70');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', item.dataset.stepId || '');
+        });
+
+        container.addEventListener('dragend', (e) => {
+            const item = e.target.closest('[data-step-id]');
+            if (item) {
+                item.classList.remove('opacity-40', 'bg-indigo-50/70');
+            }
+            draggedItem = null;
+        });
+
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            const targetItem = e.target.closest('[data-step-id]');
+            if (!targetItem || targetItem === draggedItem) return;
+
+            // 同一パターン内でのみ並び替えを許可
+            if (targetItem.parentElement !== container) return;
+
+            const rect = targetItem.getBoundingClientRect();
+            const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+            container.insertBefore(draggedItem, next ? targetItem.nextSibling : targetItem);
+        });
+
+        container.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            if (!draggedItem) return;
+
+            // 即座にDOM上の #1, #2... を再採番
+            const items = Array.from(container.querySelectorAll('[data-step-id]'));
+            items.forEach((item, index) => {
+                const numLabel = item.querySelector('.step-order-number');
+                if (numLabel) {
+                    numLabel.textContent = `#${index + 1}`;
+                }
+            });
+
+            const stepIds = items.map((el) => parseInt(el.dataset.stepId, 10)).filter(Boolean);
+            const reorderUrl = container.dataset.reorderUrl;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            if (!reorderUrl || !csrfToken) return;
+
+            try {
+                const res = await fetch(reorderUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ step_ids: stepIds }),
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || 'ステップの表示順を更新しました。', 'success');
+                } else {
+                    showToast(data.message || '表示順の更新に失敗しました。', 'error');
+                }
+            } catch (err) {
+                console.error('Pattern step reorder error:', err);
+                showToast('通信エラーが発生しました。', 'error');
+            }
+        });
+    });
+}
+
+function showToast(message, type = 'success') {
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none';
+        document.body.appendChild(toastContainer);
+    }
+
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-emerald-800' : 'bg-rose-800';
+    toast.className = `${bgColor} text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all transform translate-y-2 opacity-0 pointer-events-auto flex items-center space-x-2`;
+    toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span><span>${escapeHtml(message)}</span>`;
+
+    toastContainer.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+    });
+
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }

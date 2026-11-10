@@ -34,7 +34,7 @@ class EquipmentLogisticsPatternSeeder extends Seeder
                     [
                         'day_phase' => 'pre_day',
                         'action_type' => 'storage_out',
-                        'title' => '前日倉庫出し（地下倉庫➔番所前スペース）',
+                        'title' => '前日倉庫出し',
                         'from_location_id' => $banshoUnderground?->id,
                         'to_location_id' => $banshoSpace?->id,
                         'operator_type' => 'committee',
@@ -45,7 +45,7 @@ class EquipmentLogisticsPatternSeeder extends Seeder
                     [
                         'day_phase' => 'pre_day',
                         'action_type' => 'staging_move',
-                        'title' => '中継待機移動（番所前スペース➔貸切駐車場）',
+                        'title' => '中継待機移動',
                         'from_location_id' => $banshoSpace?->id,
                         'to_location_id' => $taxOfficeParking?->id,
                         'operator_type' => 'committee',
@@ -56,7 +56,7 @@ class EquipmentLogisticsPatternSeeder extends Seeder
                     [
                         'day_phase' => 'day1_morning',
                         'action_type' => 'staging_move',
-                        'title' => '1日目 通行止め用仮設置（事前配備）',
+                        'title' => '通行止め用仮設置',
                         'from_location_id' => $taxOfficeParking?->id,
                         'to_location_id' => null,
                         'operator_type' => 'committee',
@@ -67,7 +67,7 @@ class EquipmentLogisticsPatternSeeder extends Seeder
                     [
                         'day_phase' => 'day1_morning',
                         'action_type' => 'setup',
-                        'title' => '1日目 通行止め開始・本設置',
+                        'title' => '本設置',
                         'from_location_id' => null,
                         'to_location_id' => null,
                         'operator_type' => 'committee',
@@ -78,7 +78,7 @@ class EquipmentLogisticsPatternSeeder extends Seeder
                     [
                         'day_phase' => 'day1_evening',
                         'action_type' => 'night_storage',
-                        'title' => '1日目 通行止め解除後 夜間保管移動',
+                        'title' => '通行止め解除後 夜間保管移動',
                         'from_location_id' => null,
                         'to_location_id' => $taxOfficeParking?->id,
                         'operator_type' => 'committee',
@@ -113,7 +113,7 @@ class EquipmentLogisticsPatternSeeder extends Seeder
                         'action_type' => 'staging_move',
                         'title' => '2日目 通行止め解除後 撤去・集約移動',
                         'from_location_id' => null,
-                        'to_location_id' => $banshoSpace?->id,
+                        'to_location_id' => null,
                         'operator_type' => 'committee',
                         'witness_required' => false,
                         'notes' => '規制解除直後にクリティカルポイントから最優先で撤去（業者トラック進入路の開放）し番所前スペースへ集約',
@@ -123,7 +123,7 @@ class EquipmentLogisticsPatternSeeder extends Seeder
                         'day_phase' => 'day2_evening',
                         'action_type' => 'return_storage',
                         'title' => '番所地下倉庫格納完了',
-                        'from_location_id' => $banshoSpace?->id,
+                        'from_location_id' => null,
                         'to_location_id' => $banshoUnderground?->id,
                         'operator_type' => 'committee',
                         'witness_required' => false,

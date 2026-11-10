@@ -179,6 +179,7 @@ Route::middleware('auth')->group(function () {
         ->only(['index', 'store', 'update', 'destroy']);
 
     Route::post('equipment-patterns/{pattern}/steps', [EquipmentLogisticsPatternStepController::class, 'store'])->name('equipment-patterns.steps.store');
+    Route::post('equipment-patterns/{pattern}/steps/reorder', [EquipmentLogisticsPatternStepController::class, 'reorder'])->name('equipment-patterns.steps.reorder');
     Route::put('equipment-patterns/{pattern}/steps/{step}', [EquipmentLogisticsPatternStepController::class, 'update'])->name('equipment-patterns.steps.update');
     Route::delete('equipment-patterns/{pattern}/steps/{step}', [EquipmentLogisticsPatternStepController::class, 'destroy'])->name('equipment-patterns.steps.destroy');
 

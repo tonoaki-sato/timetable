@@ -107,7 +107,9 @@ class EquipmentLogisticsPatternRepository implements EquipmentLogisticsPatternRe
             'day_phase' => $data['day_phase'],
             'action_type' => $data['action_type'],
             'title' => $data['title'],
+            'from_location' => $data['from_location'] ?? null,
             'from_location_id' => $data['from_location_id'] ?? null,
+            'to_location' => $data['to_location'] ?? null,
             'to_location_id' => $data['to_location_id'] ?? null,
             'operator_type' => $data['operator_type'] ?? 'committee',
             'witness_required' => (bool) ($data['witness_required'] ?? false),
@@ -123,8 +125,10 @@ class EquipmentLogisticsPatternRepository implements EquipmentLogisticsPatternRe
             'day_phase' => $data['day_phase'],
             'action_type' => $data['action_type'],
             'title' => $data['title'],
-            'from_location_id' => $data['from_location_id'] ?? null,
-            'to_location_id' => $data['to_location_id'] ?? null,
+            'from_location' => array_key_exists('from_location', $data) ? $data['from_location'] : $step->from_location,
+            'from_location_id' => array_key_exists('from_location_id', $data) ? $data['from_location_id'] : $step->from_location_id,
+            'to_location' => array_key_exists('to_location', $data) ? $data['to_location'] : $step->to_location,
+            'to_location_id' => array_key_exists('to_location_id', $data) ? $data['to_location_id'] : $step->to_location_id,
             'operator_type' => $data['operator_type'] ?? 'committee',
             'witness_required' => (bool) ($data['witness_required'] ?? false),
             'notes' => array_key_exists('notes', $data) ? $data['notes'] : $step->notes,
@@ -142,5 +146,19 @@ class EquipmentLogisticsPatternRepository implements EquipmentLogisticsPatternRe
     public function findStep(int $stepId): ?EquipmentLogisticsPatternStep
     {
         return EquipmentLogisticsPatternStep::find($stepId);
+    }
+
+    #[Override]
+    public function reorderSteps(EquipmentLogisticsPattern $pattern, array $stepIds): void
+    {
+        DB::transaction(function () use ($pattern, $stepIds): void {
+            $order = 10;
+            foreach ($stepIds as $stepId) {
+                $pattern->steps()->where('id', $stepId)->update([
+                    'display_order' => $order,
+                ]);
+                $order += 10;
+            }
+        });
     }
 }

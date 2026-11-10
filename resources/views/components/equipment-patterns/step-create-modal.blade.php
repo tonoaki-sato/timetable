@@ -81,52 +81,45 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div class="p-2.5 rounded-xl bg-slate-50/70 border border-slate-200 space-y-1">
+                        <div class="p-2.5 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2">
                             <label for="step_create_from_location_id" class="block text-[11px] font-bold text-slate-700 flex items-center space-x-1">
                                 <span>📍</span>
                                 <span>移動元拠点 (From)</span>
                             </label>
                             <select id="step_create_from_location_id" name="from_location_id"
                                 class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                                <option value="">未指定（現場または各資材設定を参照）</option>
+                                <option value="">未指定（または場所名を自由入力）</option>
                                 @foreach($locations as $loc)
-                                <option value="{{ $loc->id }}">{{ $loc->name }}</option>
+                                <option value="{{ $loc->id }}" data-name="{{ $loc->name }}">{{ $loc->name }}</option>
                                 @endforeach
                             </select>
+                            <input type="text" id="step_create_from_location" name="from_location" placeholder="または場所名を自由入力 (例: 自宅, 番所前)"
+                                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                         </div>
 
-                        <div class="p-2.5 rounded-xl bg-slate-50/70 border border-slate-200 space-y-1">
+                        <div class="p-2.5 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2">
                             <label for="step_create_to_location_id" class="block text-[11px] font-bold text-slate-700 flex items-center space-x-1">
                                 <span>🏁</span>
                                 <span>移動先拠点 (To)</span>
                             </label>
                             <select id="step_create_to_location_id" name="to_location_id"
                                 class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                                <option value="">未指定（現場または各資材設定を参照）</option>
+                                <option value="">未指定（または場所名を自由入力）</option>
                                 @foreach($locations as $loc)
-                                <option value="{{ $loc->id }}">{{ $loc->name }}</option>
+                                <option value="{{ $loc->id }}" data-name="{{ $loc->name }}">{{ $loc->name }}</option>
                                 @endforeach
                             </select>
+                            <input type="text" id="step_create_to_location" name="to_location" placeholder="または場所名を自由入力 (例: 現地指定, 会場南側)"
+                                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                        <div>
-                            <label for="step_create_display_order" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                表示順序（任意、空欄時は末尾に自動配置）
-                            </label>
-                            <input type="number" id="step_create_display_order" name="display_order" min="0" step="10"
-                                placeholder="例: 10, 20..."
-                                class="w-full px-3 py-2 bg-slate-50/60 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                        </div>
-
-                        <div class="pt-4 sm:pt-3">
-                            <label class="inline-flex items-center space-x-2 cursor-pointer select-none">
-                                <input type="checkbox" id="step_create_witness_required" name="witness_required" value="1"
-                                    class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
-                                <span class="font-bold text-slate-700 text-xs">👁️ 幹事・スタッフ立会必須</span>
-                            </label>
-                        </div>
+                    <div class="pt-1">
+                        <label class="inline-flex items-center space-x-2 cursor-pointer select-none">
+                            <input type="checkbox" id="step_create_witness_required" name="witness_required" value="1"
+                                class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                            <span class="font-bold text-slate-700 text-xs">👁️ 幹事・スタッフ立会必須</span>
+                        </label>
                     </div>
                 </div>
 

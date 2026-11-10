@@ -140,12 +140,21 @@
                                 <th class="px-3.5 py-2.5 text-center whitespace-nowrap w-28">操作</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-slate-100 pattern-steps-tbody"
+                            data-pattern-id="{{ $pattern->id }}"
+                            data-reorder-url="{{ route('equipment-patterns.steps.reorder', $pattern) }}">
                             @foreach($pattern->steps as $step)
-                            <tr class="hover:bg-slate-50/70 transition">
+                            <tr data-step-id="{{ $step->id }}"
+                                draggable="true"
+                                class="hover:bg-slate-50/70 transition cursor-default">
                                 <!-- 順序 -->
                                 <td class="px-3.5 py-2.5 text-center font-mono text-slate-400 font-bold whitespace-nowrap">
-                                    #{{ $loop->iteration }}
+                                    <div class="flex items-center justify-center space-x-1.5">
+                                        @can('update', $pattern)
+                                        <span class="cursor-grab active:cursor-grabbing text-slate-400 hover:text-indigo-600 select-none font-bold text-sm" title="ドラッグして並び替え">⋮⋮</span>
+                                        @endcan
+                                        <span class="step-order-number">#{{ $loop->iteration }}</span>
+                                    </div>
                                 </td>
 
                                 <!-- フェーズ -->
@@ -172,10 +181,14 @@
                                 </td>
 
                                 <!-- 移動元 ➔ 移動先 -->
-                                <td class="px-3.5 py-2.5 text-slate-700 font-mono text-[11px]">
-                                    <span class="text-slate-500">{{ $step->fromLocationModel?->name ?: '（資材定常保管場所）' }}</span>
+                                <td class="px-3.5 py-2.5 font-mono text-[11px] whitespace-nowrap">
+                                    <span class="{{ filled($step->from_location) || $step->from_location_id ? 'text-slate-600 font-medium' : 'text-slate-400 italic' }}">
+                                        {{ $step->from_location_display }}
+                                    </span>
                                     <span class="text-indigo-600 font-bold px-1">➔</span>
-                                    <span class="font-bold text-slate-800">{{ $step->toLocationModel?->name ?: '（現地指定）' }}</span>
+                                    <span class="{{ filled($step->to_location) || $step->to_location_id ? 'text-slate-900 font-bold' : 'text-slate-400 italic' }}">
+                                        {{ $step->to_location_display }}
+                                    </span>
                                 </td>
 
                                 <!-- 作業主体 -->
@@ -292,11 +305,13 @@
                         <span>移動元拠点 (From)</span>
                     </label>
                     <select data-field="from_location_id" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium text-slate-800">
-                        <option value="">未指定（現場または各資材設定を参照）</option>
+                        <option value="">未指定（または場所名を自由入力）</option>
                         @foreach($locations as $loc)
-                        <option value="{{ $loc->id }}">{{ $loc->name }}</option>
+                        <option value="{{ $loc->id }}" data-name="{{ $loc->name }}">{{ $loc->name }}</option>
                         @endforeach
                     </select>
+                    <input type="text" data-field="from_location" placeholder="または場所名を自由入力 (例: 自宅, 番所前)"
+                        class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800">
                 </div>
                 <div class="p-2 rounded-lg bg-white border border-slate-200 space-y-1">
                     <label class="block text-[10px] font-bold text-slate-600 flex items-center space-x-1">
@@ -304,11 +319,13 @@
                         <span>移動先拠点 (To)</span>
                     </label>
                     <select data-field="to_location_id" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium text-slate-800">
-                        <option value="">未指定（現場または各資材設定を参照）</option>
+                        <option value="">未指定（または場所名を自由入力）</option>
                         @foreach($locations as $loc)
-                        <option value="{{ $loc->id }}">{{ $loc->name }}</option>
+                        <option value="{{ $loc->id }}" data-name="{{ $loc->name }}">{{ $loc->name }}</option>
                         @endforeach
                     </select>
+                    <input type="text" data-field="to_location" placeholder="または場所名を自由入力 (例: 現地指定, 会場南側)"
+                        class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800">
                 </div>
             </div>
 

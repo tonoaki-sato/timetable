@@ -113,9 +113,9 @@ class EquipmentLogisticsService
 
         foreach ($pattern->steps as $step) {
             $fromLocId = $step->from_location_id;
-            $fromLocText = $step->fromLocationModel?->name ?? $storageLocationName;
+            $fromLocText = $step->from_location ?: ($step->fromLocationModel?->name ?? $storageLocationName);
             $toLocId = $step->to_location_id;
-            $toLocText = $step->toLocationModel?->name ?? ($stagingLocation?->name ?? '（未定）');
+            $toLocText = $step->to_location ?: ($step->toLocationModel?->name ?? ($stagingLocation?->name ?? '（未定）'));
 
             // 拠点が別運行日マスタの場合、同一名拠点を対象運行日から解決
             if ($fromLocId && $step->fromLocationModel?->timetable_id !== $targetTimetable->id && $step->fromLocationModel?->name) {
@@ -338,6 +338,16 @@ class EquipmentLogisticsService
     public function deletePatternStep(EquipmentLogisticsPatternStep $step): bool
     {
         return $this->patternRepository->deleteStep($step);
+    }
+
+    /**
+     * パターン内ステップの表示順を一括更新
+     *
+     * @param  array<int>  $stepIds
+     */
+    public function reorderPatternSteps(EquipmentLogisticsPattern $pattern, array $stepIds): void
+    {
+        $this->patternRepository->reorderSteps($pattern, $stepIds);
     }
 
     /**

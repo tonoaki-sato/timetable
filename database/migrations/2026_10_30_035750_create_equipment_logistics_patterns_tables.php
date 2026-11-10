@@ -28,7 +28,9 @@ return new class extends Migration
             $table->string('day_phase', 30)->default('pre_day')->comment('フェーズ: other, pre_day, day1_morning, day1_evening, day2_morning, day2_evening, post_day');
             $table->string('action_type', 30)->default('staging_move')->comment('アクション種別');
             $table->string('title')->comment('ステップ表示名テンプレート');
+            $table->string('from_location')->nullable()->comment('移動元テキスト');
             $table->foreignId('from_location_id')->nullable()->constrained('locations')->nullOnDelete();
+            $table->string('to_location')->nullable()->comment('移動先テキスト');
             $table->foreignId('to_location_id')->nullable()->constrained('locations')->nullOnDelete();
             $table->string('operator_type', 30)->default('committee')->comment('committee, event_company');
             $table->boolean('witness_required')->default(false)->comment('立会要否フラグ');

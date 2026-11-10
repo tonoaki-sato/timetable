@@ -14,7 +14,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'day_phase',
     'action_type',
     'title',
+    'from_location',
     'from_location_id',
+    'to_location',
     'to_location_id',
     'operator_type',
     'witness_required',
@@ -119,7 +121,11 @@ class EquipmentLogisticsPatternStep extends Model
      */
     public function getFromLocationDisplayAttribute(): string
     {
-        return $this->fromLocationModel?->name ?? '（未指定）';
+        if (filled($this->from_location)) {
+            return $this->from_location;
+        }
+
+        return $this->fromLocationModel?->name ?? '（資材定常保管場所）';
     }
 
     /**
@@ -127,7 +133,11 @@ class EquipmentLogisticsPatternStep extends Model
      */
     public function getToLocationDisplayAttribute(): string
     {
-        return $this->toLocationModel?->name ?? '（未指定）';
+        if (filled($this->to_location)) {
+            return $this->to_location;
+        }
+
+        return $this->toLocationModel?->name ?? '（現地指定）';
     }
 
     /**
@@ -144,8 +154,14 @@ class EquipmentLogisticsPatternStep extends Model
             'day_phase' => $this->day_phase,
             'action_type' => $this->action_type,
             'title' => $this->title,
+            'from_location' => $this->from_location ?? '',
             'from_location_id' => $this->from_location_id,
+            'from_location_name' => $this->fromLocationModel?->name ?? '',
+            'from_location_display' => $this->from_location_display,
+            'to_location' => $this->to_location ?? '',
             'to_location_id' => $this->to_location_id,
+            'to_location_name' => $this->toLocationModel?->name ?? '',
+            'to_location_display' => $this->to_location_display,
             'operator_type' => $this->operator_type,
             'witness_required' => (bool) $this->witness_required,
             'display_order' => $this->display_order,

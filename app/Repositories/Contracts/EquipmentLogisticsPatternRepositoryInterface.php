@@ -69,4 +69,11 @@ interface EquipmentLogisticsPatternRepositoryInterface
      * IDでステップを検索
      */
     public function findStep(int $stepId): ?EquipmentLogisticsPatternStep;
+
+    /**
+     * パターン内ステップの表示順を一括更新
+     *
+     * @param  array<int>  $stepIds
+     */
+    public function reorderSteps(EquipmentLogisticsPattern $pattern, array $stepIds): void;
 }

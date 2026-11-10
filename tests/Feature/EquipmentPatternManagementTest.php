@@ -120,6 +120,22 @@ class EquipmentPatternManagementTest extends TestCase
         $response->assertSee('id="tpl-pattern-step-row"', false);
         $response->assertSee('equipment-patterns');
 
+        // D&D並び替え属性およびドラッグハンドルの存在検証
+        $response->assertSee('class="divide-y divide-slate-100 pattern-steps-tbody"', false);
+        $response->assertSee('data-reorder-url="'.route('equipment-patterns.steps.reorder', $pattern).'"', false);
+        $response->assertSee('draggable="true"', false);
+        $response->assertSee('⋮⋮');
+        $response->assertSee('step-order-number');
+
+        // モーダル内に表示順（display_order）入力フィールドが存在しないこと
+        $response->assertDontSee('name="display_order"', false);
+        $response->assertDontSee('id="step_create_display_order"', false);
+        $response->assertDontSee('id="step_edit_display_order"', false);
+
+        // モーダル内に拠点フリーテキスト入力欄が存在すること
+        $response->assertSee('name="from_location"', false);
+        $response->assertSee('name="to_location"', false);
+
         // CSP準拠検証（Blade内にインライン style="..." や onclick="..." が出力されていないこと）
         $content = $response->getContent();
         $this->assertDoesNotMatchRegularExpression('/\sstyle=/i', $content, 'CSP違反: インラインスタイル属性が含まれています。');
@@ -425,5 +441,139 @@ class EquipmentPatternManagementTest extends TestCase
 
         // 削除禁止
         $this->delete(route('equipment-patterns.steps.destroy', [$pattern, $step]))->assertForbidden();
+
+        // 並び替え禁止
+        $this->postJson(route('equipment-patterns.steps.reorder', $pattern), ['step_ids' => [$step->id]])->assertForbidden();
+    }
+
+    /**
+     * パターン内ステップのドラッグ＆ドロップ並び替え（一括表示順更新）ができること
+     */
+    public function test_can_reorder_pattern_steps(): void
+    {
+        $this->actingAs($this->operator);
+
+        $pattern = EquipmentLogisticsPattern::create([
+            'name' => '並び替えテストパターン',
+            'target_type' => 'committee',
+        ]);
+
+        $step1 = $pattern->steps()->create([
+            'title' => 'ステップ1',
+            'display_order' => 10,
+            'day_phase' => 'pre_day',
+            'action_type' => 'storage_out',
+        ]);
+        $step2 = $pattern->steps()->create([
+            'title' => 'ステップ2',
+            'display_order' => 20,
+            'day_phase' => 'day1_morning',
+            'action_type' => 'setup',
+        ]);
+        $step3 = $pattern->steps()->create([
+            'title' => 'ステップ3',
+            'display_order' => 30,
+            'day_phase' => 'day2_evening',
+            'action_type' => 'return_storage',
+        ]);
+
+        // 3 -> 1 -> 2 の順序に並び替え
+        $response = $this->postJson(route('equipment-patterns.steps.reorder', $pattern), [
+            'step_ids' => [$step3->id, $step1->id, $step2->id],
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'message' => 'ステップの表示順を更新しました。',
+        ]);
+
+        $this->assertSame(10, $step3->fresh()->display_order);
+        $this->assertSame(20, $step1->fresh()->display_order);
+        $this->assertSame(30, $step2->fresh()->display_order);
+    }
+
+    /**
+     * フリーテキストの移動元・移動先を指定してステップを追加できること
+     */
+    public function test_can_add_step_with_free_text_locations(): void
+    {
+        $this->actingAs($this->operator);
+
+        $pattern = EquipmentLogisticsPattern::create([
+            'name' => 'フリーテキスト追加テスト',
+            'target_type' => 'committee',
+        ]);
+
+        $payload = [
+            'day_phase' => 'day1_morning',
+            'action_type' => 'setup',
+            'title' => '自宅から直接搬入',
+            'from_location' => '自宅',
+            'from_location_id' => null,
+            'to_location' => '会場南側ブース',
+            'to_location_id' => null,
+            'operator_type' => 'committee',
+            'witness_required' => 0,
+        ];
+
+        $response = $this->post(route('equipment-patterns.steps.store', $pattern), $payload);
+        $response->assertRedirect(route('equipment-patterns.index'));
+
+        $this->assertDatabaseHas('equipment_logistics_pattern_steps', [
+            'pattern_id' => $pattern->id,
+            'title' => '自宅から直接搬入',
+            'from_location' => '自宅',
+            'from_location_id' => null,
+            'to_location' => '会場南側ブース',
+            'to_location_id' => null,
+        ]);
+
+        $step = $pattern->steps()->where('title', '自宅から直接搬入')->firstOrFail();
+        $this->assertSame('自宅', $step->from_location_display);
+        $this->assertSame('会場南側ブース', $step->to_location_display);
+    }
+
+    /**
+     * ステップの移動元・移動先テキストを更新できること
+     */
+    public function test_can_update_step_with_free_text_locations(): void
+    {
+        $this->actingAs($this->operator);
+
+        $pattern = EquipmentLogisticsPattern::create([
+            'name' => 'フリーテキスト更新テスト',
+            'target_type' => 'committee',
+        ]);
+
+        $step = $pattern->steps()->create([
+            'title' => '更新前ステップ',
+            'display_order' => 10,
+            'day_phase' => 'pre_day',
+            'action_type' => 'storage_out',
+            'from_location' => '旧移動元',
+            'to_location' => '旧移動先',
+        ]);
+
+        $updatePayload = [
+            'day_phase' => 'pre_day',
+            'action_type' => 'storage_out',
+            'title' => '更新前ステップ',
+            'from_location' => '新移動元（〇〇倉庫）',
+            'from_location_id' => null,
+            'to_location' => '新移動先（番所前北側）',
+            'to_location_id' => null,
+            'operator_type' => 'committee',
+            'witness_required' => 0,
+        ];
+
+        $response = $this->put(route('equipment-patterns.steps.update', [$pattern, $step]), $updatePayload);
+        $response->assertRedirect(route('equipment-patterns.index'));
+
+        $step->refresh();
+        $this->assertSame('新移動元（〇〇倉庫）', $step->from_location);
+        $this->assertSame('新移動先（番所前北側）', $step->to_location);
+        $this->assertSame('新移動元（〇〇倉庫）', $step->from_location_display);
+        $this->assertSame('新移動先（番所前北側）', $step->to_location_display);
     }
 }
