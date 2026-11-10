@@ -98,7 +98,7 @@
     <!-- 資材別 計画ステップ一覧 -->
     <div class="space-y-3">
             @forelse($equipments as $equipment)
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3 hover:border-slate-300 transition">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3 hover:border-slate-300 transition overflow-hidden">
                     <!-- 資材ヘッダー行 -->
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                         <div class="flex items-center space-x-2.5 flex-wrap">
@@ -145,9 +145,9 @@
                     <!-- ステップ一覧（時系列ステップフロー） -->
                     @if($equipment->plans->isNotEmpty())
                         <div class="pt-1">
-                            <ol class="flex flex-col md:flex-row md:flex-wrap items-stretch gap-3">
+                            <ol class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                                 @foreach($equipment->plans as $plan)
-                                    <li class="flex-1 min-w-[260px] max-w-full md:max-w-xs relative flex flex-col justify-between p-3 rounded-xl border {{ $plan->isCompleted() ? 'border-emerald-200 bg-emerald-50/25' : ($plan->status === 'in_progress' ? 'border-amber-300 bg-amber-50/20 shadow-2xs' : 'border-slate-200 bg-slate-50/60') }} space-y-2">
+                                    <li class="min-w-0 relative flex flex-col justify-between p-3 rounded-xl border {{ $plan->isCompleted() ? 'border-emerald-200 bg-emerald-50/25' : ($plan->status === 'in_progress' ? 'border-amber-300 bg-amber-50/20 shadow-2xs' : 'border-slate-200 bg-slate-50/60') }} space-y-2">
                                         <!-- ステップヘッダー: 順序番号・フェーズ・ステータス -->
                                         <div class="flex items-center justify-between gap-1 flex-wrap">
                                             <div class="flex items-center space-x-1.5 font-bold">
