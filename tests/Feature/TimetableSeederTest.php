@@ -50,7 +50,7 @@ class TimetableSeederTest extends TestCase
 
         // 3. 各日のタスク・レーンが存在し、リレーションが機能していること
         $timetableDay1 = Timetable::where('target_date', '2026-10-11')->firstOrFail();
-        $this->assertSame('active', $timetableDay1->status);
+        $this->assertSame('completed', $timetableDay1->status);
         $this->assertSame(24, $timetableDay1->tasks()->count());
 
         // レーン表示順のカスタム設定（衛生=20, カラーコーン=40等）が反映されていること

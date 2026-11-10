@@ -17,7 +17,7 @@ class FeatureSettingSeeder extends Seeder
             [
                 'name' => 'スタッフセルフ登録',
                 'description' => 'ボランティア・現場スタッフによるWebセルフ登録受付機能',
-                'is_enabled' => true,
+                'is_enabled' => false,
                 'opened_at' => null,
                 'closed_at' => null,
                 'notice_message' => null,

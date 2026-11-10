@@ -30,7 +30,7 @@ class TimetableSeeder extends Seeder
                 'description' => 'テスト',
                 'start_time' => '07:00:00',
                 'end_time' => '20:00:00',
-                'status' => 'active',
+                'status' => 'completed',
                 'road_periods' => [
                     0 => [
                         'label' => '通行止め',
@@ -916,7 +916,7 @@ class TimetableSeeder extends Seeder
                 'description' => '宿場まつりの反省会',
                 'start_time' => '19:00:00',
                 'end_time' => '23:00:00',
-                'status' => 'draft',
+                'status' => 'completed',
                 'road_periods' => null,
                 'festival_periods' => null,
                 'created_by' => $admin->id,
