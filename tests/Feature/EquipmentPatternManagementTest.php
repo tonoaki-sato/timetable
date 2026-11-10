@@ -102,15 +102,22 @@ class EquipmentPatternManagementTest extends TestCase
         // パターンアコーディオンとテーブル
         $response->assertSee('カラーコーン標準動態');
         $response->assertSee('実行委員会管理（自前）');
-        $response->assertSee('2 ステップ');
+        $response->assertDontSee('2 ステップ');
+        $response->assertSee('data-action="open-pattern-detail"', false);
+        $response->assertSee('data-action="open-step-create"', false);
+        $response->assertSee('data-action="open-step-edit"', false);
         $response->assertSee('前日地下倉庫出し');
         $response->assertSee('1日目夕方倉庫返還');
         $response->assertSee('番所地下倉庫');
         $response->assertSee('必須');
+        $response->assertDontSee('注意事項・申し送り');
 
         // モーダルコンポーネント & スクリプト
         $response->assertSee('id="pattern-create-modal"', false);
-        $response->assertSee('id="pattern-edit-modal"', false);
+        $response->assertDontSee('id="pattern-edit-modal"', false);
+        $response->assertSee('id="pattern-detail-modal"', false);
+        $response->assertSee('id="pattern-step-create-modal"', false);
+        $response->assertSee('id="pattern-step-edit-modal"', false);
         $response->assertSee('id="tpl-pattern-step-row"', false);
         $response->assertSee('equipment-patterns');
 
@@ -278,5 +285,146 @@ class EquipmentPatternManagementTest extends TestCase
 
         // 削除禁止
         $this->delete(route('equipment-patterns.destroy', $pattern))->assertForbidden();
+    }
+
+    /**
+     * パターンにステップを新規追加できること
+     */
+    public function test_can_add_step_to_pattern(): void
+    {
+        $this->actingAs($this->operator);
+
+        $pattern = EquipmentLogisticsPattern::create([
+            'name' => 'ステップ追加テストパターン',
+            'target_type' => 'committee',
+        ]);
+
+        $payload = [
+            'day_phase' => 'day1_morning',
+            'action_type' => 'setup',
+            'title' => '朝の配置作業',
+            'from_location_id' => $this->location->id,
+            'to_location_id' => null,
+            'operator_type' => 'committee',
+            'witness_required' => 1,
+            'display_order' => 10,
+        ];
+
+        $response = $this->post(route('equipment-patterns.steps.store', $pattern), $payload);
+        $response->assertRedirect(route('equipment-patterns.index'));
+        $response->assertSessionHas('status');
+
+        $this->assertDatabaseHas('equipment_logistics_pattern_steps', [
+            'pattern_id' => $pattern->id,
+            'title' => '朝の配置作業',
+            'day_phase' => 'day1_morning',
+            'action_type' => 'setup',
+            'witness_required' => true,
+        ]);
+    }
+
+    /**
+     * パターンのステップを更新できること
+     */
+    public function test_can_update_pattern_step(): void
+    {
+        $this->actingAs($this->operator);
+
+        $pattern = EquipmentLogisticsPattern::create([
+            'name' => 'ステップ更新テストパターン',
+            'target_type' => 'committee',
+        ]);
+        $step = $pattern->steps()->create([
+            'display_order' => 10,
+            'day_phase' => 'pre_day',
+            'action_type' => 'storage_out',
+            'title' => '更新前ステップ',
+            'operator_type' => 'committee',
+        ]);
+
+        $updatePayload = [
+            'day_phase' => 'day2_evening',
+            'action_type' => 'return_storage',
+            'title' => '更新後ステップ（撤収）',
+            'from_location_id' => null,
+            'to_location_id' => $this->location->id,
+            'operator_type' => 'event_company',
+            'witness_required' => 0,
+            'display_order' => 20,
+        ];
+
+        $response = $this->put(route('equipment-patterns.steps.update', [$pattern, $step]), $updatePayload);
+        $response->assertRedirect(route('equipment-patterns.index'));
+        $response->assertSessionHas('status');
+
+        $step->refresh();
+        $this->assertSame('更新後ステップ（撤収）', $step->title);
+        $this->assertSame('day2_evening', $step->day_phase);
+        $this->assertSame('return_storage', $step->action_type);
+        $this->assertSame('event_company', $step->operator_type);
+        $this->assertFalse($step->witness_required);
+        $this->assertSame(20, $step->display_order);
+    }
+
+    /**
+     * パターンのステップを削除できること
+     */
+    public function test_can_delete_pattern_step(): void
+    {
+        $this->actingAs($this->operator);
+
+        $pattern = EquipmentLogisticsPattern::create([
+            'name' => 'ステップ削除テストパターン',
+            'target_type' => 'committee',
+        ]);
+        $step = $pattern->steps()->create([
+            'display_order' => 10,
+            'day_phase' => 'pre_day',
+            'action_type' => 'storage_out',
+            'title' => '削除対象ステップ',
+            'operator_type' => 'committee',
+        ]);
+
+        $response = $this->delete(route('equipment-patterns.steps.destroy', [$pattern, $step]));
+        $response->assertRedirect(route('equipment-patterns.index'));
+        $response->assertSessionHas('status');
+
+        $this->assertDatabaseMissing('equipment_logistics_pattern_steps', ['id' => $step->id]);
+    }
+
+    /**
+     * 一般閲覧者（viewer）はステップの追加・更新・削除が禁止されること
+     */
+    public function test_viewer_cannot_modify_pattern_steps(): void
+    {
+        $this->actingAs($this->viewer);
+
+        $pattern = EquipmentLogisticsPattern::create([
+            'name' => '閲覧専用パターン',
+            'target_type' => 'committee',
+        ]);
+        $step = $pattern->steps()->create([
+            'display_order' => 10,
+            'day_phase' => 'pre_day',
+            'action_type' => 'storage_out',
+            'title' => '閲覧ステップ',
+            'operator_type' => 'committee',
+        ]);
+
+        $stepPayload = [
+            'day_phase' => 'pre_day',
+            'action_type' => 'storage_out',
+            'title' => '不正追加ステップ',
+            'operator_type' => 'committee',
+        ];
+
+        // 追加禁止
+        $this->post(route('equipment-patterns.steps.store', $pattern), $stepPayload)->assertForbidden();
+
+        // 更新禁止
+        $this->put(route('equipment-patterns.steps.update', [$pattern, $step]), $stepPayload)->assertForbidden();
+
+        // 削除禁止
+        $this->delete(route('equipment-patterns.steps.destroy', [$pattern, $step]))->assertForbidden();
     }
 }

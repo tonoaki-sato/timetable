@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DTOs\ApplyEquipmentPatternDTO;
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
+use App\Models\EquipmentLogisticsPatternStep;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
 use App\Models\Timetable;
@@ -309,6 +310,34 @@ class EquipmentLogisticsService
     public function deletePattern(EquipmentLogisticsPattern $pattern): bool
     {
         return $this->patternRepository->delete($pattern);
+    }
+
+    /**
+     * 搬出入パターンにステップを単体追加
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function addPatternStep(EquipmentLogisticsPattern $pattern, array $data): EquipmentLogisticsPatternStep
+    {
+        return $this->patternRepository->createStep($pattern, $data);
+    }
+
+    /**
+     * 搬出入パターンのステップを単体更新
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function updatePatternStep(EquipmentLogisticsPatternStep $step, array $data): bool
+    {
+        return $this->patternRepository->updateStep($step, $data);
+    }
+
+    /**
+     * 搬出入パターンのステップを単体削除
+     */
+    public function deletePatternStep(EquipmentLogisticsPatternStep $step): bool
+    {
+        return $this->patternRepository->deleteStep($step);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\EquipmentLogisticsPattern;
+use App\Models\EquipmentLogisticsPatternStep;
 use Illuminate\Database\Eloquent\Collection;
 
 interface EquipmentLogisticsPatternRepositoryInterface
@@ -44,4 +45,28 @@ interface EquipmentLogisticsPatternRepositoryInterface
      * 最大の表示順を取得
      */
     public function getMaxDisplayOrder(): int;
+
+    /**
+     * パターンにステップを単体追加
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function createStep(EquipmentLogisticsPattern $pattern, array $data): EquipmentLogisticsPatternStep;
+
+    /**
+     * ステップを単体更新
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function updateStep(EquipmentLogisticsPatternStep $step, array $data): bool;
+
+    /**
+     * ステップを単体削除
+     */
+    public function deleteStep(EquipmentLogisticsPatternStep $step): bool;
+
+    /**
+     * IDでステップを検索
+     */
+    public function findStep(int $stepId): ?EquipmentLogisticsPatternStep;
 }

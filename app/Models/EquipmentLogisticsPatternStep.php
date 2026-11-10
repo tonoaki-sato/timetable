@@ -129,4 +129,29 @@ class EquipmentLogisticsPatternStep extends Model
     {
         return $this->toLocationModel?->name ?? '（未指定）';
     }
+
+    /**
+     * ステップ編集モーダル用のJSONペイロード配列を取得
+     *
+     * @return array<string, mixed>
+     */
+    public function toModalPayload(EquipmentLogisticsPattern $pattern): array
+    {
+        return [
+            'id' => $this->id,
+            'pattern_id' => $pattern->id,
+            'pattern_name' => $pattern->name,
+            'day_phase' => $this->day_phase,
+            'action_type' => $this->action_type,
+            'title' => $this->title,
+            'from_location_id' => $this->from_location_id,
+            'to_location_id' => $this->to_location_id,
+            'operator_type' => $this->operator_type,
+            'witness_required' => (bool) $this->witness_required,
+            'display_order' => $this->display_order,
+            'notes' => $this->notes ?? '',
+            'update_url' => route('equipment-patterns.steps.update', [$pattern, $this]),
+            'delete_url' => route('equipment-patterns.steps.destroy', [$pattern, $this]),
+        ];
+    }
 }

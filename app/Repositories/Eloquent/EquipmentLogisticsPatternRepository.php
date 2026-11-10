@@ -3,6 +3,7 @@
 namespace App\Repositories\Eloquent;
 
 use App\Models\EquipmentLogisticsPattern;
+use App\Models\EquipmentLogisticsPatternStep;
 use App\Repositories\Contracts\EquipmentLogisticsPatternRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -95,5 +96,51 @@ class EquipmentLogisticsPatternRepository implements EquipmentLogisticsPatternRe
     public function getMaxDisplayOrder(): int
     {
         return (int) EquipmentLogisticsPattern::max('display_order');
+    }
+
+    #[Override]
+    public function createStep(EquipmentLogisticsPattern $pattern, array $data): EquipmentLogisticsPatternStep
+    {
+        $displayOrder = $data['display_order'] ?? (($pattern->steps()->max('display_order') ?? 0) + 10);
+
+        return $pattern->steps()->create([
+            'day_phase' => $data['day_phase'],
+            'action_type' => $data['action_type'],
+            'title' => $data['title'],
+            'from_location_id' => $data['from_location_id'] ?? null,
+            'to_location_id' => $data['to_location_id'] ?? null,
+            'operator_type' => $data['operator_type'] ?? 'committee',
+            'witness_required' => (bool) ($data['witness_required'] ?? false),
+            'notes' => $data['notes'] ?? null,
+            'display_order' => $displayOrder,
+        ]);
+    }
+
+    #[Override]
+    public function updateStep(EquipmentLogisticsPatternStep $step, array $data): bool
+    {
+        return $step->update([
+            'day_phase' => $data['day_phase'],
+            'action_type' => $data['action_type'],
+            'title' => $data['title'],
+            'from_location_id' => $data['from_location_id'] ?? null,
+            'to_location_id' => $data['to_location_id'] ?? null,
+            'operator_type' => $data['operator_type'] ?? 'committee',
+            'witness_required' => (bool) ($data['witness_required'] ?? false),
+            'notes' => array_key_exists('notes', $data) ? $data['notes'] : $step->notes,
+            'display_order' => $data['display_order'] ?? $step->display_order,
+        ]);
+    }
+
+    #[Override]
+    public function deleteStep(EquipmentLogisticsPatternStep $step): bool
+    {
+        return (bool) $step->delete();
+    }
+
+    #[Override]
+    public function findStep(int $stepId): ?EquipmentLogisticsPatternStep
+    {
+        return EquipmentLogisticsPatternStep::find($stepId);
     }
 }

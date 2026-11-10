@@ -89,7 +89,7 @@ class EquipmentLogisticsPattern extends Model
     }
 
     /**
-     * 編集モーダル用のJSONペイロード配列を取得
+     * 詳細モーダル等用のJSONペイロード配列を取得
      *
      * @return array<string, mixed>
      */
@@ -99,16 +99,23 @@ class EquipmentLogisticsPattern extends Model
             'id' => $this->id,
             'name' => $this->name,
             'target_type' => $this->target_type,
+            'target_type_label' => $this->target_type_label,
             'description' => $this->description ?? '',
             'update_url' => route('equipment-patterns.update', $this),
             'steps' => $this->steps->map(fn (EquipmentLogisticsPatternStep $step) => [
                 'id' => $step->id,
+                'display_order' => $step->display_order,
                 'day_phase' => $step->day_phase,
+                'phase_label' => $step->phase_label,
                 'action_type' => $step->action_type,
+                'action_label' => $step->action_label,
                 'title' => $step->title,
                 'operator_type' => $step->operator_type,
+                'operator_type_label' => $step->operator_type_label,
                 'from_location_id' => $step->from_location_id,
+                'from_location_display' => $step->from_location_display,
                 'to_location_id' => $step->to_location_id,
+                'to_location_display' => $step->to_location_display,
                 'witness_required' => (bool) $step->witness_required,
                 'notes' => $step->notes ?? '',
             ])->values()->all(),

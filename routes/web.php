@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentLogisticsController;
 use App\Http\Controllers\EquipmentLogisticsPatternController;
+use App\Http\Controllers\EquipmentLogisticsPatternStepController;
 use App\Http\Controllers\EquipmentLogisticsPlanController;
 use App\Http\Controllers\FeatureSettingController;
 use App\Http\Controllers\LaneController;
@@ -176,6 +177,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('equipment-patterns', EquipmentLogisticsPatternController::class)
         ->parameters(['equipment-patterns' => 'pattern'])
         ->only(['index', 'store', 'update', 'destroy']);
+
+    Route::post('equipment-patterns/{pattern}/steps', [EquipmentLogisticsPatternStepController::class, 'store'])->name('equipment-patterns.steps.store');
+    Route::put('equipment-patterns/{pattern}/steps/{step}', [EquipmentLogisticsPatternStepController::class, 'update'])->name('equipment-patterns.steps.update');
+    Route::delete('equipment-patterns/{pattern}/steps/{step}', [EquipmentLogisticsPatternStepController::class, 'destroy'])->name('equipment-patterns.steps.destroy');
 
     // 搬出入計画既存互換フォールバック
     Route::prefix('logistics')->name('logistics.')->group(function () {

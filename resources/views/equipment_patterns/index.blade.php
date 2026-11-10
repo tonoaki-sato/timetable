@@ -94,12 +94,16 @@
                         <!-- 1. 開閉トグルアイコン (固定幅) -->
                         <span class="w-4 shrink-0 text-center text-slate-400 group-open:rotate-90 transition-transform duration-150 inline-block text-xs">▶</span>
 
-                        <!-- 2. パターン名バッジ -->
-                        <div class="w-44 sm:w-56 md:w-64 shrink-0">
-                            <span class="inline-flex items-center max-w-full px-2 py-0.5 rounded text-xs font-bold border bg-indigo-50 text-indigo-700 border-indigo-200" title="{{ $pattern->name }}">
-                                <span class="mr-1 shrink-0">🧩</span>
-                                <span class="truncate">{{ $pattern->name }}</span>
-                            </span>
+                        <!-- 2. パターン名テキスト & 詳細リンク -->
+                        <div class="w-44 sm:w-56 md:w-64 shrink-0 flex items-center min-w-0">
+                            <span class="mr-1.5 shrink-0 text-slate-500">🧩</span>
+                            <button type="button"
+                                data-action="open-pattern-detail"
+                                data-pattern='@json($pattern->toModalPayload())'
+                                class="text-indigo-600 hover:text-indigo-800 font-bold text-xs truncate hover:underline text-left cursor-pointer"
+                                title="パターンの詳細・全ステップを表示">
+                                {{ $pattern->name }}
+                            </button>
                         </div>
 
                         <!-- 3. 主な対象区分 -->
@@ -113,25 +117,20 @@
                         <div class="flex-1 min-w-0 hidden md:block text-xs text-slate-500 truncate" title="{{ $pattern->description }}">
                             {{ $pattern->description ?: '-' }}
                         </div>
-
-                        <!-- 5. ステップ件数バッジ (固定幅・中央揃え) -->
-                        <div class="w-20 sm:w-24 shrink-0 text-left sm:text-center">
-                            <span class="inline-flex items-center justify-center min-w-[60px] text-[11px] px-2 py-0.5 rounded-full font-mono font-bold {{ $pattern->has_steps ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-400' }}">
-                                {{ $pattern->steps->count() }} ステップ
-                            </span>
-                        </div>
                     </div>
 
-                    <!-- 6. アクションボタン (右寄せ) -->
+                    <!-- 5. アクションボタン (右寄せ) -->
                     <div class="flex items-center space-x-1.5 shrink-0 ml-auto" data-pattern-row data-pattern='@json($pattern->toModalPayload())'>
                         @can('update', $pattern)
                         <button type="button"
-                            data-action="open-pattern-edit"
+                            data-action="open-step-create"
                             data-pattern-id="{{ $pattern->id }}"
-                            class="inline-flex items-center space-x-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition cursor-pointer"
-                            title="パターンを編集">
-                            <span>✏️</span>
-                            <span>編集</span>
+                            data-pattern-name="{{ $pattern->name }}"
+                            data-store-url="{{ route('equipment-patterns.steps.store', $pattern) }}"
+                            class="inline-flex items-center space-x-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                            title="ステップを追加">
+                            <span>➕</span>
+                            <span>ステップ追加</span>
                         </button>
                         @endcan
 
@@ -154,7 +153,7 @@
                 @if($pattern->steps->isEmpty())
                 <div class="px-4 py-8 text-center text-slate-400 text-xs">
                     <span class="text-2xl block mb-1">📋</span>
-                    <p>このパターンにはステップが登録されていません。「編集」からステップを追加してください。</p>
+                    <p>このパターンにはステップが登録されていません。「ステップ追加」からステップを追加してください。</p>
                 </div>
                 @else
                 <div class="overflow-x-auto">
@@ -168,7 +167,7 @@
                                 <th class="px-3.5 py-2.5 min-w-[180px]">移動元 ➔ 移動先</th>
                                 <th class="px-3.5 py-2.5 whitespace-nowrap w-28">作業主体</th>
                                 <th class="px-3.5 py-2.5 text-center whitespace-nowrap w-16">立会</th>
-                                <th class="px-3.5 py-2.5 max-w-[200px]">注意事項・申し送り</th>
+                                <th class="px-3.5 py-2.5 text-center whitespace-nowrap w-28">操作</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -223,15 +222,32 @@
                                     @endif
                                 </td>
 
-                                <!-- 注意事項 -->
-                                <td class="px-3.5 py-2.5 text-slate-500 text-xs">
-                                    @if($step->notes)
-                                    <div class="truncate max-w-[200px]" title="{{ $step->notes }}">
-                                        {{ $step->notes }}
-                                    </div>
+                                <!-- 操作 -->
+                                <td class="px-3.5 py-2.5 text-center whitespace-nowrap space-x-1">
+                                    @can('update', $pattern)
+                                    <button type="button"
+                                        data-action="open-step-edit"
+                                        data-step='@json($step->toModalPayload($pattern))'
+                                        class="inline-flex items-center space-x-1 px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded text-xs font-bold transition cursor-pointer"
+                                        title="ステップを編集">
+                                        <span>✏️</span>
+                                        <span>編集</span>
+                                    </button>
+
+                                    <form action="{{ route('equipment-patterns.steps.destroy', [$pattern, $step]) }}" method="POST" class="inline"
+                                        data-confirm="ステップ「{{ $step->title }}」を削除しますか？">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="inline-flex items-center space-x-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded text-xs font-bold transition cursor-pointer"
+                                            title="ステップを削除">
+                                            <span>🗑️</span>
+                                            <span>削除</span>
+                                        </button>
+                                    </form>
                                     @else
-                                    <span class="text-slate-300">-</span>
-                                    @endif
+                                    <span class="text-slate-300 text-xs">-</span>
+                                    @endcan
                                 </td>
                             </tr>
                             @endforeach
@@ -251,7 +267,9 @@
 
         <!-- 各種パターン操作モーダル (独立コンポーネント) -->
         <x-equipment-patterns.create-modal :locations="$locations" />
-        <x-equipment-patterns.edit-modal :locations="$locations" />
+        <x-equipment-patterns.detail-modal />
+        <x-equipment-patterns.step-create-modal :locations="$locations" />
+        <x-equipment-patterns.step-edit-modal :locations="$locations" />
 
     </div>
 
