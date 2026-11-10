@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTimetableRequest;
 use App\Http\Requests\UpdateTimetableRequest;
 use App\Models\Timetable;
+use App\Services\TimetableOverviewService;
 use App\Services\TimetableService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,8 @@ use Illuminate\View\View;
 class TimetableController extends Controller
 {
     public function __construct(
-        protected TimetableService $timetableService
+        protected TimetableService $timetableService,
+        protected TimetableOverviewService $timetableOverviewService
     ) {}
 
     /**
@@ -67,9 +69,11 @@ class TimetableController extends Controller
         $this->authorize('view', $timetable);
 
         $detailedTimetable = $this->timetableService->getTimetableDetails($timetable->id) ?? $timetable;
+        $overview = $this->timetableOverviewService->getOverview($detailedTimetable);
 
         return view('timetables.show', [
             'timetable' => $detailedTimetable,
+            'overview' => $overview,
         ]);
     }
 
