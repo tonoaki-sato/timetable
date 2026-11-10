@@ -76,4 +76,3 @@ class EquipmentLogisticsPatternStepController extends Controller
             ->with('status', "ステップ「{$title}」を削除しました。");
     }
 }
-

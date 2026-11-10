@@ -88,10 +88,10 @@ class EquipmentPatternManagementTest extends TestCase
 
         // ヘッダー & ナビゲーション検証
         $response->assertSee('搬出入パターン一覧');
-        $response->assertSee('全 1 パターン');
+        $response->assertDontSee('全 1 パターン');
         $response->assertSee('新規パターン作成');
-        $response->assertSee(route('equipments.index'));
-        $response->assertSee(route('logistics.index'));
+        $response->assertDontSee('title="機材・備品一覧へ"', false);
+        $response->assertDontSee('title="運行日別搬出入計画へ"', false);
 
         // セクションヘッダー & アコーディオン一括トグル
         $response->assertSee('登録済み搬出入パターン一覧 (ステップ構成)');
@@ -101,7 +101,6 @@ class EquipmentPatternManagementTest extends TestCase
 
         // パターンアコーディオンとテーブル
         $response->assertSee('カラーコーン標準動態');
-        $response->assertSee('実行委員会管理（自前）');
         $response->assertDontSee('2 ステップ');
         $response->assertSee('data-action="open-pattern-detail"', false);
         $response->assertSee('data-action="open-step-create"', false);

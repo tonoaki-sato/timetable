@@ -20,12 +20,6 @@
                 <span class="text-slate-700 font-bold truncate">🧩 搬出入パターン一覧</span>
             </x-slot:breadcrumbs>
 
-            <x-slot:badges>
-                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
-                    全 {{ $patterns->count() }} パターン
-                </span>
-            </x-slot:badges>
-
             <x-slot:actions>
                 <button type="button"
                     data-action="open-pattern-create"
@@ -33,18 +27,6 @@
                     <span>➕</span>
                     <span>新規パターン作成</span>
                 </button>
-                <a href="{{ route('equipments.index') }}"
-                    class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
-                    title="機材・備品一覧へ">
-                    <span>📦</span>
-                    <span>機材・備品一覧</span>
-                </a>
-                <a href="{{ route('logistics.index') }}"
-                    class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
-                    title="運行日別搬出入計画へ">
-                    <span>🚚</span>
-                    <span>搬出入計画</span>
-                </a>
             </x-slot:actions>
         </x-page-header>
 
@@ -90,32 +72,20 @@
             @forelse($patterns as $pattern)
             <details id="pattern-{{ $pattern->id }}" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group" {{ $pattern->has_steps ? 'open' : '' }}>
                 <summary class="px-3.5 sm:px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 sm:gap-3 cursor-pointer hover:bg-slate-100/70 transition select-none">
-                    <div class="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
+                    <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                         <!-- 1. 開閉トグルアイコン (固定幅) -->
                         <span class="w-4 shrink-0 text-center text-slate-400 group-open:rotate-90 transition-transform duration-150 inline-block text-xs">▶</span>
 
                         <!-- 2. パターン名テキスト & 詳細リンク -->
-                        <div class="w-44 sm:w-56 md:w-64 shrink-0 flex items-center min-w-0">
+                        <div class="flex items-center min-w-0 flex-1">
                             <span class="mr-1.5 shrink-0 text-slate-500">🧩</span>
                             <button type="button"
                                 data-action="open-pattern-detail"
                                 data-pattern='@json($pattern->toModalPayload())'
-                                class="text-indigo-600 hover:text-indigo-800 font-bold text-xs truncate hover:underline text-left cursor-pointer"
+                                class="text-indigo-600 hover:text-indigo-800 font-bold text-xs sm:text-sm truncate hover:underline text-left cursor-pointer"
                                 title="パターンの詳細・全ステップを表示">
                                 {{ $pattern->name }}
                             </button>
-                        </div>
-
-                        <!-- 3. 主な対象区分 -->
-                        <div class="w-20 sm:w-24 shrink-0 hidden sm:flex items-center text-xs">
-                            <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                {{ $pattern->target_type_label }}
-                            </span>
-                        </div>
-
-                        <!-- 4. 説明文 (truncate) -->
-                        <div class="flex-1 min-w-0 hidden md:block text-xs text-slate-500 truncate" title="{{ $pattern->description }}">
-                            {{ $pattern->description ?: '-' }}
                         </div>
                     </div>
 
