@@ -380,28 +380,13 @@ class EquipmentLogisticsService
      */
     public function getLogisticsIndexViewData(Timetable $timetable, ?string $typeFilter = null, ?int $laneFilter = null): array
     {
-        $locations = $this->locationRepository->getActiveOrderedForTimetable($timetable);
         $lanes = $this->laneRepository->getOrderedWithLeadForTimetable($timetable);
         $equipments = $this->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable);
 
-        $allPlans = $this->planRepository->getForTimetable($timetable);
-        $totalSteps = $allPlans->count();
-        $completedSteps = $allPlans->where('status', 'completed')->count();
-        $stats = [
-            'total_equipments' => $this->equipmentRepository->getTotalCount(),
-            'planned_equipments' => $allPlans->pluck('equipment_id')->unique()->count(),
-            'total_steps' => $totalSteps,
-            'completed_steps' => $completedSteps,
-            'witness_required_steps' => $allPlans->where('witness_required', true)->count(),
-            'progress_percent' => $totalSteps > 0 ? (int) round(($completedSteps / $totalSteps) * 100) : 0,
-        ];
-
         return [
             'timetable' => $timetable,
-            'locations' => $locations,
             'lanes' => $lanes,
             'equipments' => $equipments,
-            'stats' => $stats,
             'typeFilter' => $typeFilter,
             'laneFilter' => $laneFilter,
         ];

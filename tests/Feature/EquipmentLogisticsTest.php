@@ -108,8 +108,14 @@ class EquipmentLogisticsTest extends TestCase
         $response = $this->get(route('timetables.logistics.index', $this->timetable1));
         $response->assertStatus(200);
         $response->assertSee('搬出入計画一覧');
+        $response->assertSee('搬出入指示書PDF');
+        $response->assertDontSee('配備資材数');
+        $response->assertDontSee('計画ステップ総数');
+        $response->assertDontSee('完了ステップ進捗');
+        $response->assertDontSee('幹事立会必須</span>\n                <div', false);
         $response->assertSee('テストパイプ椅子');
         $response->assertSee('前日会場搬入');
+        $response->assertSee('前日（準備日）');
     }
 
     /**
@@ -354,7 +360,7 @@ class EquipmentLogisticsTest extends TestCase
         $this->get(route('timetables.logistics.index', $this->timetable1))
             ->assertStatus(200)
             ->assertSee('搬出入計画一覧')
-            ->assertSee('全 0 資材');
+            ->assertSee('条件に該当する資材はありません');
 
         $this->get(route('timetables.logistics.print', ['timetable' => $this->timetable1, 'preview' => 1]))
             ->assertStatus(200)

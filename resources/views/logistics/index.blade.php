@@ -20,35 +20,12 @@
             <span class="text-slate-700 font-bold truncate">🚚 搬出入計画</span>
         </x-slot:breadcrumbs>
 
-        <x-slot:badges>
-            <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
-                対象日: {{ $timetable->target_date?->format('Y/m/d') }}
-            </span>
-            <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
-                全 {{ $stats['total_equipments'] }} 資材
-            </span>
-            <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
-                配備済 {{ $stats['planned_equipments'] }} 資材
-            </span>
-        </x-slot:badges>
-
         <x-slot:actions>
-            <a href="{{ route('equipment-patterns.index') }}"
-               class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0"
-               title="全運行日共通の搬出入ステップ・テンプレートを管理">
-                <span>🧩</span>
-                <span>搬出入パターンマスター</span>
-            </a>
             <a href="{{ $printUrl }}"
                class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0"
                title="搬出入指示書兼現場チェックリストをPDFでダウンロード">
                 <span>📄</span>
                 <span>搬出入指示書PDF</span>
-            </a>
-            <a href="{{ route('equipments.index') }}"
-               class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0">
-                <span>📦</span>
-                <span>機材・備品一覧</span>
             </a>
         </x-slot:actions>
     </x-page-header>
@@ -80,115 +57,46 @@
         </div>
     @endif
 
-    <!-- 2. サブナビゲーションバー -->
-    <div class="flex items-center space-x-2 border-b border-slate-200 pb-2 overflow-x-auto flex-nowrap text-xs">
-        <a href="{{ route('timetables.logistics.index', $timetable) }}"
-           class="px-3.5 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-2xs transition whitespace-nowrap flex items-center space-x-1.5">
-            <span>🚚</span>
-            <span>搬出入計画一覧</span>
-            <span class="text-[10px] opacity-80 font-mono">({{ $stats['planned_equipments'] }} / {{ $stats['total_equipments'] }} 配備)</span>
-        </a>
+    <!-- 絞り込みツールバー -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-2xs p-3">
+        <form method="GET" action="{{ route('timetables.logistics.index', $timetable) }}" class="flex items-center justify-between flex-wrap gap-2 text-xs">
+            <div class="flex items-center space-x-2 flex-wrap gap-y-1.5">
+                <span class="font-bold text-slate-600 flex items-center space-x-1">
+                    <span>🔍</span>
+                    <span>絞り込み:</span>
+                </span>
 
-        <a href="{{ route('equipment-patterns.index') }}"
-           class="px-3.5 py-1.5 rounded-lg font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition whitespace-nowrap flex items-center space-x-1.5">
-            <span>🧩</span>
-            <span>搬出入パターンマスター</span>
-            <span class="text-[10px] text-slate-400">↗</span>
-        </a>
+                <!-- 担当班フィルタ -->
+                <select name="lane_id" data-auto-submit class="px-2.5 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800">
+                    <option value="">すべての担当班</option>
+                    @foreach($lanes as $lane)
+                        <option value="{{ $lane->id }}" {{ $laneFilter === $lane->id ? 'selected' : '' }}>
+                            {{ $lane->icon ?: '🏷️' }} {{ $lane->name }}
+                        </option>
+                    @endforeach
+                </select>
 
-        <a href="{{ $printUrl }}"
-           class="px-3.5 py-1.5 rounded-lg font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition whitespace-nowrap flex items-center space-x-1 shrink-0 ml-auto"
-           title="搬出入指示書兼現場チェックリストをPDFでプレビュー・ダウンロード">
-            <span>📄</span>
-            <span>搬出入指示書PDF</span>
-            <span class="text-[10px] text-slate-400">↗</span>
-        </a>
+                <!-- 資材区分フィルタ -->
+                <select name="type" data-auto-submit class="px-2.5 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800">
+                    <option value="">すべての区分</option>
+                    <option value="committee" {{ $typeFilter === 'committee' ? 'selected' : '' }}>自前備品 (委員会)</option>
+                    <option value="rental" {{ $typeFilter === 'rental' ? 'selected' : '' }}>レンタル機材 (イベント会社)</option>
+                    <option value="personal" {{ $typeFilter === 'personal' ? 'selected' : '' }}>私物 (個人持ち込み)</option>
+                </select>
+            </div>
+
+            @if($laneFilter || $typeFilter)
+                <a href="{{ route('timetables.logistics.index', $timetable) }}"
+                   class="text-xs text-rose-600 hover:text-rose-800 font-bold transition flex items-center space-x-1">
+                    <span>✕</span>
+                    <span>フィルタ解除</span>
+                </a>
+            @endif
+        </form>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- 🚚 搬出入計画一覧（資材別進捗） -->
-    <!-- ========================================================================= -->
-
-        <!-- KPIサマリーカード -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-                <span class="text-[11px] font-bold text-slate-500 block">配備資材数</span>
-                <div class="flex items-baseline space-x-1">
-                    <strong class="text-xl font-bold font-mono text-slate-900">{{ $stats['planned_equipments'] }}</strong>
-                    <span class="text-xs text-slate-500">/ {{ $stats['total_equipments'] }} 種</span>
-                </div>
-            </div>
-
-            <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-                <span class="text-[11px] font-bold text-slate-500 block">計画ステップ総数</span>
-                <div class="flex items-baseline space-x-1">
-                    <strong class="text-xl font-bold font-mono text-slate-900">{{ $stats['total_steps'] }}</strong>
-                    <span class="text-xs text-slate-500">ステップ</span>
-                </div>
-            </div>
-
-            <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-                <span class="text-[11px] font-bold text-slate-500 block">完了ステップ進捗</span>
-                <div class="flex items-baseline space-x-1">
-                    <strong class="text-xl font-bold font-mono {{ $stats['completed_steps'] === $stats['total_steps'] && $stats['total_steps'] > 0 ? 'text-emerald-600' : 'text-indigo-600' }}">
-                        {{ $stats['completed_steps'] }}
-                    </strong>
-                    <span class="text-xs text-slate-500">/ {{ $stats['total_steps'] }} ({{ $stats['progress_percent'] }}%)</span>
-                </div>
-            </div>
-
-            <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-                <span class="text-[11px] font-bold text-slate-500 block">幹事立会必須</span>
-                <div class="flex items-baseline space-x-1">
-                    <strong class="text-xl font-bold font-mono {{ $stats['witness_required_steps'] > 0 ? 'text-rose-600' : 'text-slate-700' }}">
-                        {{ $stats['witness_required_steps'] }}
-                    </strong>
-                    <span class="text-xs text-slate-500">ステップ</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 絞り込みツールバー -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-2xs p-3">
-            <form method="GET" action="{{ route('timetables.logistics.index', $timetable) }}" class="flex items-center justify-between flex-wrap gap-2 text-xs">
-                <input type="hidden" name="tab" value="plans">
-                <div class="flex items-center space-x-2 flex-wrap gap-y-1.5">
-                    <span class="font-bold text-slate-600 flex items-center space-x-1">
-                        <span>🔍</span>
-                        <span>絞り込み:</span>
-                    </span>
-
-                    <!-- 担当班フィルタ -->
-                    <select name="lane_id" data-auto-submit class="px-2.5 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800">
-                        <option value="">すべての担当班</option>
-                        @foreach($lanes as $lane)
-                            <option value="{{ $lane->id }}" {{ $laneFilter === $lane->id ? 'selected' : '' }}>
-                                {{ $lane->icon ?: '🏷️' }} {{ $lane->name }}
-                            </option>
-                        @endforeach
-                    </select>
-
-                    <!-- 資材区分フィルタ -->
-                    <select name="type" data-auto-submit class="px-2.5 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800">
-                        <option value="">すべての区分</option>
-                        <option value="committee" {{ $typeFilter === 'committee' ? 'selected' : '' }}>自前備品 (委員会)</option>
-                        <option value="rental" {{ $typeFilter === 'rental' ? 'selected' : '' }}>レンタル機材 (イベント会社)</option>
-                        <option value="personal" {{ $typeFilter === 'personal' ? 'selected' : '' }}>私物 (個人持ち込み)</option>
-                    </select>
-                </div>
-
-                @if($laneFilter || $typeFilter)
-                    <a href="{{ route('timetables.logistics.index', ['timetable' => $timetable, 'tab' => 'plans']) }}"
-                       class="text-xs text-rose-600 hover:text-rose-800 font-bold transition flex items-center space-x-1">
-                        <span>✕</span>
-                        <span>フィルタ解除</span>
-                    </a>
-                @endif
-            </form>
-        </div>
-
-        <!-- 資材別 計画ステップ一覧 -->
-        <div class="space-y-3">
+    <!-- 資材別 計画ステップ一覧 -->
+    <div class="space-y-3">
             @forelse($equipments as $equipment)
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3 hover:border-slate-300 transition">
                     <!-- 資材ヘッダー行 -->
@@ -234,52 +142,92 @@
                         </div>
                     </div>
 
-                    <!-- ステップ一覧チップス -->
+                    <!-- ステップ一覧（時系列ステップフロー） -->
                     @if($equipment->plans->isNotEmpty())
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
-                            @foreach($equipment->plans as $plan)
-                                <div class="p-2.5 rounded-xl border {{ $plan->isCompleted() ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-100 bg-slate-50/70' }} space-y-1.5 text-xs">
-                                    <div class="flex items-center justify-between gap-1">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold border
-                                            @if($plan->day_phase === 'pre_day') bg-purple-50 text-purple-700 border-purple-200
-                                            @elseif($plan->day_phase === 'day1_morning') bg-sky-50 text-sky-700 border-sky-200
-                                            @elseif($plan->day_phase === 'day1_evening') bg-indigo-50 text-indigo-700 border-indigo-200
-                                            @elseif($plan->day_phase === 'day2_morning') bg-teal-50 text-teal-700 border-teal-200
-                                            @elseif($plan->day_phase === 'day2_evening') bg-amber-50 text-amber-700 border-amber-200
-                                            @else bg-slate-100 text-slate-700 border-slate-200 @endif">
-                                            {{ $plan->phase_label }}
-                                        </span>
+                        <div class="pt-1">
+                            <ol class="flex flex-col md:flex-row md:flex-wrap items-stretch gap-3">
+                                @foreach($equipment->plans as $plan)
+                                    <li class="flex-1 min-w-[260px] max-w-full md:max-w-xs relative flex flex-col justify-between p-3 rounded-xl border {{ $plan->isCompleted() ? 'border-emerald-200 bg-emerald-50/25' : ($plan->status === 'in_progress' ? 'border-amber-300 bg-amber-50/20 shadow-2xs' : 'border-slate-200 bg-slate-50/60') }} space-y-2">
+                                        <!-- ステップヘッダー: 順序番号・フェーズ・ステータス -->
+                                        <div class="flex items-center justify-between gap-1 flex-wrap">
+                                            <div class="flex items-center space-x-1.5 font-bold">
+                                                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-mono font-bold {{ $plan->isCompleted() ? 'bg-emerald-600 text-white' : ($plan->status === 'in_progress' ? 'bg-amber-500 text-white' : 'bg-slate-700 text-white') }}">
+                                                    {{ $loop->iteration }}
+                                                </span>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold border {{ $plan->phase_badge_class }}">
+                                                    {{ $plan->phase_label }}
+                                                </span>
+                                            </div>
 
-                                        <span class="text-[10px] font-bold {{ $plan->isCompleted() ? 'text-emerald-700' : ($plan->status === 'in_progress' ? 'text-amber-700 font-bold' : 'text-slate-500') }}">
-                                            @if($plan->isCompleted())
-                                                ✅ 完了
-                                            @elseif($plan->status === 'in_progress')
-                                                🏃 進行中
-                                            @else
-                                                ⚪ 計画中
-                                            @endif
-                                        </span>
-                                    </div>
-
-                                    <div class="font-bold text-slate-900 truncate" title="{{ $plan->title }}">
-                                        {{ $plan->title }}
-                                    </div>
-
-                                    <div class="text-[11px] text-slate-600 flex items-center space-x-1 truncate">
-                                        <span class="text-slate-400">場所:</span>
-                                        <span class="truncate">{{ $plan->from_location ?: '定常場所' }}</span>
-                                        <span>➔</span>
-                                        <span class="truncate font-bold text-slate-800">{{ $plan->to_location ?: '現場' }}</span>
-                                    </div>
-
-                                    @if($plan->witness_required)
-                                        <div class="text-[10px] text-rose-600 font-bold flex items-center space-x-1">
-                                            <span>⚠️</span>
-                                            <span>幹事立会必須</span>
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded {{ $plan->isCompleted() ? 'text-emerald-700 bg-emerald-100/70' : ($plan->status === 'in_progress' ? 'text-amber-700 bg-amber-100/70' : 'text-slate-600 bg-slate-200/60') }}">
+                                                @if($plan->isCompleted())
+                                                    ✅ 完了
+                                                @elseif($plan->status === 'in_progress')
+                                                    🏃 進行中
+                                                @else
+                                                    ⚪ 計画中
+                                                @endif
+                                            </span>
                                         </div>
-                                    @endif
-                                </div>
-                            @endforeach
+
+                                        <!-- 日時・時刻 (時系列情報) -->
+                                        @if($plan->target_date || $plan->formatted_time_range)
+                                            <div class="flex items-center space-x-2 text-[11px] font-mono text-slate-600">
+                                                @if($plan->target_date)
+                                                    <span class="font-bold">📅 {{ $plan->target_date->format('m/d') }}</span>
+                                                @endif
+                                                @if($plan->formatted_time_range)
+                                                    <span class="text-indigo-700 font-bold bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-100">
+                                                        ⏱️ {{ $plan->formatted_time_range }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @endif
+
+                                        <!-- ステップタイトル -->
+                                        <div class="font-bold text-xs text-slate-900 truncate" title="{{ $plan->title }}">
+                                            {{ $plan->title }}
+                                        </div>
+
+                                        <!-- 移動ルート（移動元 ➔ 移動先） -->
+                                        <div class="text-[11px] text-slate-600 bg-white p-2 rounded-lg border border-slate-200/80 space-y-1">
+                                            <div class="flex items-center justify-between text-slate-400 text-[10px]">
+                                                <span>移動ルート</span>
+                                                @if($plan->formatted_quantity !== '')
+                                                    <span class="font-mono text-indigo-700 font-bold">{{ $plan->formatted_quantity }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="flex items-center space-x-1.5 font-medium truncate">
+                                                <span class="truncate text-slate-700" title="{{ $plan->resolved_from_location }}">{{ $plan->resolved_from_location ?: '定常保管場所' }}</span>
+                                                <span class="text-indigo-500 font-bold shrink-0">➔</span>
+                                                <span class="truncate font-bold text-slate-900" title="{{ $plan->resolved_to_location }}">{{ $plan->resolved_to_location ?: '現地会場' }}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- フッター情報（作業主体・立会・次へ案内） -->
+                                        <div class="flex items-center justify-between gap-1 text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
+                                            <div class="flex items-center space-x-1 flex-wrap">
+                                                @if($plan->operator_type === 'event_company')
+                                                    <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold px-1.5 py-0.2 rounded">🏢 業者</span>
+                                                @else
+                                                    <span class="bg-slate-100 text-slate-600 font-bold px-1.5 py-0.2 rounded">👥 委員会</span>
+                                                @endif
+
+                                                @if($plan->witness_required)
+                                                    <span class="text-rose-600 font-bold flex items-center space-x-0.5">
+                                                        <span>⚠️</span>
+                                                        <span>立会必須</span>
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            @if(! $loop->last)
+                                                <span class="text-slate-400 font-bold text-xs" title="次のステップへ">次へ ➔</span>
+                                            @endif
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ol>
                         </div>
                     @else
                         <div class="p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">

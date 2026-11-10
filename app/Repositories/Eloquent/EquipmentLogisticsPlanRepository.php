@@ -34,7 +34,11 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
                     'fromLocationModel.schedules',
                     'toLocationModel.schedules',
                     'witnessStaff',
-                ])->orderBy('display_order')->orderBy('id');
+                ])
+                    ->orderBy('target_date', 'asc')
+                    ->orderBy('start_time', 'asc')
+                    ->orderBy('display_order', 'asc')
+                    ->orderBy('id', 'asc');
             },
         ])->ordered();
 
