@@ -2,20 +2,22 @@
 
 namespace App\Actions\Timetable;
 
-use App\Models\Lane;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
+use App\Repositories\Contracts\LaneRepositoryInterface;
+use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use App\Services\PdfService;
 use App\Services\TimetableGridService;
 use Illuminate\Http\Response;
-use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class DownloadTimetableMatrixPdfAction
 {
     public function __construct(
         protected PdfService $pdfService,
-        protected TimetableGridService $gridService
+        protected TimetableGridService $gridService,
+        protected LaneRepositoryInterface $laneRepository,
+        protected TimetableTaskRepositoryInterface $taskRepository
     ) {}
 
     /**
@@ -59,29 +61,12 @@ class DownloadTimetableMatrixPdfAction
      */
     public function buildViewData(Timetable $timetable, ?array $laneIds = null): array
     {
-        if ($timetable->lanes()->doesntExist()) {
-            $timetable->createDefaultLanes();
-        }
-
-        $lanesQuery = $timetable->lanes()
-            ->with('leadStaff')
-            ->ordered();
-
-        if (! empty($laneIds)) {
-            $lanesQuery->whereIn('id', $laneIds);
-        }
-
-        /** @var Collection<int, Lane> $lanes */
-        $lanes = $lanesQuery->get();
-
-        $tasks = TimetableTask::with(['assignments.staff', 'laneRelation'])
-            ->where('timetable_id', $timetable->id)
-            ->orderBy('start_time')
-            ->get();
+        $lanes = $this->laneRepository->getOrderedWithLeadForTimetable($timetable, $laneIds);
+        $tasks = $this->taskRepository->getWithAssignmentsAndLaneByTimetableId($timetable->id);
 
         $tasksByLane = [];
         foreach ($lanes as $lane) {
-            $tasksByLane[$lane->id] = $tasks->filter(function (TimetableTask $t) use ($lane) {
+            $tasksByLane[$lane->id] = $tasks->filter(function (TimetableTask $t) use ($lane): bool {
                 return $t->lane_id === $lane->id;
             })->values();
         }

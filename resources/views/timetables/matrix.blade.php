@@ -88,11 +88,6 @@
     </div>
     @else
 
-    @php
-        $hasRoad = $selectedTimetable?->hasRoadPeriods() ?? false;
-        $hasFestival = $selectedTimetable?->hasFestivalPeriods() ?? false;
-    @endphp
-
     <!-- 3. 担当班随時追加対応: 絞り込みフィルターバー & 横スクロールナビゲーション -->
     <div class="print:hidden bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
         <!-- プリセット切り替え & 班チップ -->
@@ -118,9 +113,6 @@
             <!-- 各班のチップ（ON/OFF トグル） -->
             <div class="flex flex-wrap items-center gap-1.5" id="lane-filter-chips">
                 @foreach($lanes as $lane)
-                @php
-                    $leadName = $lane->leadStaff ? (explode(' ', $lane->leadStaff->name)[0] ?? $lane->leadStaff->name) : '';
-                @endphp
                 <button type="button"
                     id="chip-lane-{{ $lane->id }}"
                     data-lane-id="{{ $lane->id }}"
@@ -129,8 +121,8 @@
                     class="lane-chip inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border transition bg-white text-slate-800 border-slate-300 hover:border-indigo-400 whitespace-nowrap shrink-0">
                     <span class="mr-1 text-[10px] text-emerald-600 font-bold">✔</span>
                     <span>{{ $lane->name }}</span>
-                    @if($leadName)
-                    <span class="text-slate-400 text-[10px] ml-0.5">({{ $leadName }})</span>
+                    @if($lane->lead_short_name)
+                    <span class="text-slate-400 text-[10px] ml-0.5">({{ $lane->lead_short_name }})</span>
                     @endif
                 </button>
                 @endforeach
@@ -208,10 +200,6 @@
 
                     <!-- 5. 各担当班列ヘッダー -->
                     @foreach($lanes as $lane)
-                    @php
-                        $leadStaff = $lane->leadStaff;
-                        $leadName = $leadStaff ? (explode(' ', $leadStaff->name)[0] ?? $leadStaff->name) : '';
-                    @endphp
                     <th scope="col"
                         data-lane-id="{{ $lane->id }}"
                         class="lane-col-{{ $lane->id }} border-r border-b-2 border-slate-800 bg-slate-100 p-2 font-bold min-w-[190px] w-[210px] print:min-w-[140px] print:w-auto print:border-black">
@@ -220,8 +208,8 @@
                                 <span>{{ $lane->icon ?: '📋' }}</span>
                                 <span class="text-xs text-slate-900 font-bold truncate">
                                     {{ $lane->name }}
-                                    @if($leadName)
-                                    <span class="text-indigo-800 font-semibold font-sans">（{{ $leadName }}さん）</span>
+                                    @if($lane->lead_short_name)
+                                    <span class="text-indigo-800 font-semibold font-sans">（{{ $lane->lead_short_name }}さん）</span>
                                     @endif
                                 </span>
                             </div>
@@ -284,17 +272,9 @@
 
                     <!-- 5. 各担当班のセル -->
                     @foreach($lanes as $lane)
-                    @php
-                        $cell = $grid[$sIdx][$lane->id] ?? ['type' => 'empty', 'rowspan' => 1];
-                    @endphp
-
+                    @foreach([$grid[$sIdx][$lane->id] ?? ['type' => 'empty', 'rowspan' => 1]] as $cell)
                     @if($cell['type'] === 'task')
-                    @php
-                        $task = $cell['task'];
-                        $reqCount = $task->required_people_count;
-                        $isAtLeast = $task->is_at_least;
-                        $peopleLabel = $reqCount ? ($isAtLeast ? "【{$reqCount}名以上】" : "【{$reqCount}名】") : '';
-                    @endphp
+                    @foreach([$cell['task']] as $task)
                     <td rowspan="{{ $cell['rowspan'] }}"
                         data-lane-id="{{ $lane->id }}"
                         class="lane-col-{{ $lane->id }} border-r border-slate-700 p-2 align-top bg-white hover:bg-indigo-50/50 transition border-b border-b-slate-700 print:border-black print:p-1.5">
@@ -306,8 +286,8 @@
                                         class="hover:text-indigo-600 transition hover:underline">
                                         {{ $task->title }}
                                     </a>
-                                    @if($peopleLabel)
-                                    <span class="font-bold text-indigo-700 ml-1">{{ $peopleLabel }}</span>
+                                    @if($task->matrix_people_label)
+                                    <span class="font-bold text-indigo-700 ml-1">{{ $task->matrix_people_label }}</span>
                                     @endif
                                 </div>
 
@@ -376,6 +356,7 @@
                             @endif
                         </div>
                     </td>
+                    @endforeach
 
                     @elseif($cell['type'] === 'empty')
                     <!-- 空きスロット（PDF準拠: ハイフン表示 & ホバーでタスク作成リンク） -->
@@ -398,6 +379,7 @@
                     @elseif($cell['type'] === 'skip')
                     <!-- rowspanで上位セルに結合されているためセルを描画しない -->
                     @endif
+                    @endforeach
                     @endforeach
 
                     <!-- 6. ➕ 末尾列の空枠 -->

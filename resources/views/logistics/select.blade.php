@@ -16,10 +16,6 @@
         </x-slot:breadcrumbs>
     </x-page-header>
 
-    @php
-        $targetLogisticsUrl = fn($tt) => route('timetables.logistics.index', array_merge(['timetable' => $tt], $queryParams ?? []));
-    @endphp
-
     <!-- アラートメッセージ -->
     @if(session('info'))
     <div class="p-4 bg-sky-50 border border-sky-200 text-sky-800 text-xs font-bold rounded-xl flex items-center space-x-2">
@@ -63,13 +59,6 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($timetables as $timetable)
-                    @php
-                        $statusBadge = match($timetable->status) {
-                            'active' => 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold',
-                            'completed' => 'bg-slate-100 text-slate-600 border-slate-200',
-                            default => 'bg-blue-50 text-blue-700 border-blue-200',
-                        };
-                    @endphp
                     <tr class="hover:bg-slate-50/70 transition group">
                         <!-- 運行日程・名称 -->
                         <td class="px-4 py-3.5 whitespace-nowrap">
@@ -78,12 +67,12 @@
                                     <span>📅 {{ $timetable->target_date?->format('Y年m月d日') }}</span>
                                     @if($timetable->target_date)
                                     <span class="text-[11px] font-bold text-slate-500">
-                                        ({{ ['日','月','火','水','木','金','土'][$timetable->target_date->dayOfWeek] }})
+                                        ({{ $timetable->weekday_label }})
                                     </span>
                                     @endif
                                 </div>
                                 <div>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] border {{ $statusBadge }}">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] border {{ $timetable->status_badge_class }}">
                                         @if($timetable->status === 'active')
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1"></span>
                                         @endif
@@ -91,7 +80,7 @@
                                     </span>
                                 </div>
                                 <div class="font-bold text-sm text-slate-900 group-hover:text-indigo-600 transition">
-                                    <a href="{{ $targetLogisticsUrl($timetable) }}">
+                                    <a href="{{ $timetable->logisticsUrl($queryParams ?? []) }}">
                                         {{ $timetable->name }}
                                     </a>
                                 </div>
@@ -115,7 +104,7 @@
 
                         <!-- 操作 -->
                         <td class="px-4 py-3.5 text-right whitespace-nowrap">
-                            <a href="{{ $targetLogisticsUrl($timetable) }}"
+                            <a href="{{ $timetable->logisticsUrl($queryParams ?? []) }}"
                                 class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center space-x-1 shadow-2xs">
                                 <span>🚚</span>
                                 <span>計画を確認・編集</span>

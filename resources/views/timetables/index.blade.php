@@ -71,13 +71,8 @@
                                 <span class="font-mono font-bold text-slate-800 text-xs">
                                     {{ $timetable->target_date?->format('Y/m/d') }}
                                 </span>
-                                @php
-                                    $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
-                                    $weekday = $timetable->target_date ? $weekdayNames[$timetable->target_date->dayOfWeek] : '';
-                                    $isWeekend = in_array($timetable->target_date?->dayOfWeek, [0, 6], true);
-                                @endphp
-                                <span class="text-[11px] font-bold {{ $isWeekend ? 'text-rose-600' : 'text-slate-500' }}">
-                                    ({{ $weekday }})
+                                <span class="text-[11px] font-bold {{ $timetable->is_weekend ? 'text-rose-600' : 'text-slate-500' }}">
+                                    ({{ $timetable->weekday_label }})
                                 </span>
                             </div>
                         </td>
@@ -89,14 +84,7 @@
 
                         <!-- 状態 -->
                         <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
-                            @php
-                                $statusBadge = match($timetable->status) {
-                                    'active' => 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold animate-pulse',
-                                    'completed' => 'bg-slate-100 text-slate-600 border-slate-200',
-                                    default => 'bg-blue-50 text-blue-700 border-blue-200',
-                                };
-                            @endphp
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] border whitespace-nowrap {{ $statusBadge }}">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] border whitespace-nowrap {{ $timetable->status_badge_class }} {{ $timetable->is_active ? 'animate-pulse' : '' }}">
                                 {{ $timetable->status_label }}
                             </span>
                         </td>

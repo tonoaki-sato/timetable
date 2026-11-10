@@ -152,30 +152,13 @@
                                     📍 {{ $task->location ?: '未定' }}
                                 </td>
                                 <td class="p-3.5 text-center whitespace-nowrap">
-                                    @php
-                                        $assignedCount = $task->assigned_count;
-                                        $reqCount = $task->required_people_count;
-                                        $isFulfilled = $task->is_satisfied;
-                                    @endphp
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-bold {{ $isFulfilled ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200' }}">
-                                        {{ $assignedCount }} / {{ $reqCount }}名
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-bold {{ $task->is_satisfied ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200' }}">
+                                        {{ $task->assigned_count }} / {{ $task->required_people_count }}名
                                     </span>
                                 </td>
                                 <td class="p-3.5 text-center whitespace-nowrap">
-                                    @php
-                                        $statusClasses = match($task->status) {
-                                            'completed' => 'bg-slate-100 text-slate-600',
-                                            'in_progress' => 'bg-indigo-100 text-indigo-800 font-bold',
-                                            default => 'bg-amber-100 text-amber-800',
-                                        };
-                                        $statusLabels = [
-                                            'pending' => '未着手',
-                                            'in_progress' => '進行中',
-                                            'completed' => '完了',
-                                        ];
-                                    @endphp
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $statusClasses }}">
-                                        {{ $statusLabels[$task->status] ?? $task->status }}
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $task->status_badge_class }}">
+                                        {{ $task->status_label }}
                                     </span>
                                 </td>
                                 <td class="p-3.5 pr-5 text-right whitespace-nowrap">

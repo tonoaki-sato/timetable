@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Models\Lane;
 use App\Models\TaskStaffAssignment;
 use App\Models\TimetableTask;
 use Illuminate\Database\Eloquent\Collection;
@@ -19,6 +20,65 @@ interface TimetableTaskRepositoryInterface
      * @return Collection<int, TimetableTask>
      */
     public function getByTimetableId(int $timetableId): Collection;
+
+    /**
+     * スタッフタイムライン画面用に指定タイムテーブルのタスク一覧を取得
+     *
+     * @return Collection<int, TimetableTask>
+     */
+    public function getForTimelineByTimetableId(int $timetableId): Collection;
+
+    /**
+     * マトリクス進行表用に指定タイムテーブルのタスク一覧（アサイン・班情報付き）を取得
+     *
+     * @return Collection<int, TimetableTask>
+     */
+    public function getWithAssignmentsAndLaneByTimetableId(int $timetableId): Collection;
+
+    /**
+     * 指定タスクと時間帯が重複し、指定スタッフが有効アサインされている他タスク一覧を取得
+     *
+     * @return Collection<int, TimetableTask>
+     */
+    public function getConflictingTasksForStaff(TimetableTask $task, int $staffId): Collection;
+
+    /**
+     * 指定タスクと時間帯が重複し、指定スタッフID群のいずれかが有効アサインされている他タスク一覧を取得
+     *
+     * @param  array<int, int>  $staffIds
+     * @return Collection<int, TimetableTask>
+     */
+    public function getOverlappingTasksForStaffIds(TimetableTask $task, array $staffIds): Collection;
+
+    /**
+     * 指定レーンの有効（キャンセル以外）なタスク一覧をアサイン付きで取得
+     *
+     * @return Collection<int, TimetableTask>
+     */
+    public function getActiveForLaneWithAssignments(int $laneId): Collection;
+
+    /**
+     * 指定レーンの有効タスク一覧（除外タスクID指定対応）を取得
+     *
+     * @param  array<int, int>  $ignoredTaskIds
+     * @return Collection<int, TimetableTask>
+     */
+    public function getActiveForLaneExcludingIds(int $laneId, array $ignoredTaskIds = []): Collection;
+
+    /**
+     * 指定レーンに紐づくタスク件数を取得
+     */
+    public function countByLane(Lane $lane): int;
+
+    /**
+     * 指定レーンの全タスクを別レーンへ一括移行
+     */
+    public function migrateLaneTasks(Lane $sourceLane, Lane $targetLane): int;
+
+    /**
+     * 指定レーンに紐づく全タスクを削除
+     */
+    public function deleteByLane(Lane $lane): int;
 
     /**
      * 新規タスク作成

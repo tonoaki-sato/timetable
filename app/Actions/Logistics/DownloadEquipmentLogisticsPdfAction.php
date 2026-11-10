@@ -2,8 +2,8 @@
 
 namespace App\Actions\Logistics;
 
-use App\Models\Lane;
 use App\Models\Timetable;
+use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Services\EquipmentLogisticsService;
 use App\Services\PdfService;
 use Illuminate\Http\Request;
@@ -13,7 +13,8 @@ class DownloadEquipmentLogisticsPdfAction
 {
     public function __construct(
         protected PdfService $pdfService,
-        protected EquipmentLogisticsService $logisticsService
+        protected EquipmentLogisticsService $logisticsService,
+        protected LaneRepositoryInterface $laneRepository
     ) {}
 
     /**
@@ -32,9 +33,11 @@ class DownloadEquipmentLogisticsPdfAction
         $onsiteNightPlans = $this->logisticsService->getOnsiteNightStoragePlans($timetable);
         $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData($timetable);
         $festivalDates = $this->logisticsService->resolveFestivalDates();
-        $lanes = $timetable ? $timetable->lanes()->ordered()->get() : Lane::ordered()->get();
+        $lanes = $timetable
+            ? $this->laneRepository->getOrderedWithLeadForTimetable($timetable)
+            : $this->laneRepository->getAllOrdered();
 
-        $selectedLane = $laneFilter ? Lane::find($laneFilter) : null;
+        $selectedLane = $laneFilter ? $this->laneRepository->findById($laneFilter) : null;
         $laneSuffix = $selectedLane ? '_'.preg_replace('/[^\p{L}\p{N}_-]+/u', '_', $selectedLane->name) : '';
         $filename = "equipment_logistics_plan{$laneSuffix}_".now()->format('Ymd_His').'.pdf';
 

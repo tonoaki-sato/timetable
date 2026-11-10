@@ -356,4 +356,92 @@ class EquipmentLogisticsPlan extends Model
 
         return $query;
     }
+
+    /**
+     * フェーズバッジのCSSクラスアクセサ
+     */
+    public function getPhaseBadgeClassAttribute(): string
+    {
+        return match ($this->day_phase) {
+            'pre_day' => 'bg-purple-50 text-purple-700 border-purple-200',
+            'day1_morning' => 'bg-sky-50 text-sky-700 border-sky-200',
+            'day1_evening' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+            'day2_morning' => 'bg-teal-50 text-teal-700 border-teal-200',
+            'day2_evening' => 'bg-amber-50 text-amber-700 border-amber-200',
+            'post_day' => 'bg-rose-50 text-rose-700 border-rose-200',
+            default => 'bg-slate-50 text-slate-700 border-slate-200',
+        };
+    }
+
+    /**
+     * 進捗ステータスバッジのCSSクラスアクセサ
+     */
+    public function getStatusBadgeClassAttribute(): string
+    {
+        return match ($this->status) {
+            'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200 line-through opacity-75',
+            'in_progress' => 'bg-amber-50 text-amber-800 border-amber-300 ring-1 ring-amber-200',
+            default => 'bg-white text-slate-700 border-slate-200',
+        };
+    }
+
+    /**
+     * ステータス更新アクションのURLを取得
+     */
+    public function updateStatusUrl(?Timetable $timetable = null): string
+    {
+        return $timetable
+            ? route('timetables.logistics.plans.update-status', [$timetable, $this])
+            : route('logistics.plans.update-status', $this);
+    }
+
+    /**
+     * ステップ更新アクションのURLを取得
+     */
+    public function updateUrl(?Timetable $timetable = null): string
+    {
+        return $timetable
+            ? route('timetables.logistics.plans.update', [$timetable, $this])
+            : route('logistics.plans.update', $this);
+    }
+
+    /**
+     * ステップ削除アクションのURLを取得
+     */
+    public function destroyUrl(?Timetable $timetable = null): string
+    {
+        return $timetable
+            ? route('timetables.logistics.plans.destroy', [$timetable, $this])
+            : route('logistics.plans.destroy', $this);
+    }
+
+    /**
+     * モーダル編集用のJSONペイロード配列を取得
+     *
+     * @return array<string, mixed>
+     */
+    public function toModalPayload(): array
+    {
+        return [
+            'id' => $this->id,
+            'status' => $this->status,
+            'day_phase' => $this->day_phase,
+            'action_type' => $this->action_type,
+            'title' => $this->title,
+            'target_date' => $this->target_date?->format('Y-m-d'),
+            'start_time' => $this->start_time ? substr($this->start_time, 0, 5) : '',
+            'end_time' => $this->end_time ? substr($this->end_time, 0, 5) : '',
+            'from_location_id' => $this->from_location_id,
+            'from_location' => $this->from_location,
+            'to_location_id' => $this->to_location_id,
+            'to_location' => $this->to_location,
+            'quantity' => $this->quantity,
+            'quantity_note' => $this->quantity_note,
+            'operator_type' => $this->operator_type,
+            'witness_required' => $this->witness_required ? 1 : 0,
+            'witness_staff_id' => $this->witness_staff_id,
+            'notes' => $this->notes,
+            'display_order' => $this->display_order,
+        ];
+    }
 }

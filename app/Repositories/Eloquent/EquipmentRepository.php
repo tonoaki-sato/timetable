@@ -18,7 +18,7 @@ class EquipmentRepository implements EquipmentRepositoryInterface
     {
         $query = Equipment::query()
             ->with([
-                'plans' => function ($q) use ($timetable) {
+                'plans' => function ($q) use ($timetable): void {
                     if ($timetable) {
                         $q->where('timetable_id', $timetable->id);
                     }
@@ -26,7 +26,7 @@ class EquipmentRepository implements EquipmentRepositoryInterface
             ])
             ->when($filter->type, fn ($q) => $q->where('type', $filter->type))
             ->when($filter->checkoutRule, fn ($q) => $q->where('checkout_rule', $filter->checkoutRule))
-            ->when($filter->keyword, fn ($q) => $q->where(function ($sub) use ($filter) {
+            ->when($filter->keyword, fn ($q) => $q->where(function ($sub) use ($filter): void {
                 $sub->where('name', 'like', "%{$filter->keyword}%")
                     ->orWhere('storage_location', 'like', "%{$filter->keyword}%")
                     ->orWhere('description', 'like', "%{$filter->keyword}%");
@@ -48,9 +48,41 @@ class EquipmentRepository implements EquipmentRepositoryInterface
     }
 
     #[Override]
+    public function getTotalCount(): int
+    {
+        return Equipment::count();
+    }
+
+    #[Override]
     public function findWithDetails(int $id, ?Timetable $timetable = null): ?Equipment
     {
         return Equipment::find($id);
+    }
+
+    #[Override]
+    public function loadLogisticsShowDetails(Equipment $equipment, Timetable $timetable): Equipment
+    {
+        return $equipment->load([
+            'creator',
+            'plans' => fn ($q) => $q->where('timetable_id', $timetable->id)->with([
+                'equipment',
+                'fromLocationModel.schedules',
+                'toLocationModel.schedules',
+                'witnessStaff',
+            ])->orderBy('display_order')->orderBy('id'),
+        ]);
+    }
+
+    #[Override]
+    public function getPlansOrdered(Equipment $equipment): Collection
+    {
+        return $equipment->plans()->orderBy('display_order', 'asc')->orderBy('id', 'asc')->get();
+    }
+
+    #[Override]
+    public function countPlans(Equipment $equipment): int
+    {
+        return $equipment->plans()->count();
     }
 
     #[Override]
@@ -74,7 +106,7 @@ class EquipmentRepository implements EquipmentRepositoryInterface
     #[Override]
     public function delete(Equipment $equipment): bool
     {
-        return $equipment->delete();
+        return (bool) $equipment->delete();
     }
 
     #[Override]

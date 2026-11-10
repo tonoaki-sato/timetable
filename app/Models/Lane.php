@@ -62,6 +62,42 @@ class Lane extends Model
     ];
 
     /**
+     * カラーパレット選択肢のボタンスタイル・ドット色・バッジ色定義
+     *
+     * @var array<string, array{btn: string, dot: string, badge: string}>
+     */
+    public const array COLOR_PALETTE_MAP = [
+        'amber' => ['btn' => 'border-amber-300 bg-amber-50 text-amber-800', 'dot' => 'bg-amber-500', 'badge' => 'bg-amber-100 text-amber-800 border-amber-300'],
+        'sky' => ['btn' => 'border-sky-300 bg-sky-50 text-sky-800', 'dot' => 'bg-sky-500', 'badge' => 'bg-sky-100 text-sky-800 border-sky-300'],
+        'emerald' => ['btn' => 'border-emerald-300 bg-emerald-50 text-emerald-800', 'dot' => 'bg-emerald-500', 'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300'],
+        'purple' => ['btn' => 'border-purple-300 bg-purple-50 text-purple-800', 'dot' => 'bg-purple-500', 'badge' => 'bg-purple-100 text-purple-800 border-purple-300'],
+        'pink' => ['btn' => 'border-pink-300 bg-pink-50 text-pink-800', 'dot' => 'bg-pink-500', 'badge' => 'bg-pink-100 text-pink-800 border-pink-300'],
+        'red' => ['btn' => 'border-rose-300 bg-rose-50 text-rose-800', 'dot' => 'bg-rose-500', 'badge' => 'bg-rose-100 text-rose-800 border-rose-300'],
+        'orange' => ['btn' => 'border-orange-300 bg-orange-50 text-orange-800', 'dot' => 'bg-orange-500', 'badge' => 'bg-orange-100 text-orange-800 border-orange-300'],
+        'indigo' => ['btn' => 'border-indigo-300 bg-indigo-50 text-indigo-800', 'dot' => 'bg-indigo-500', 'badge' => 'bg-indigo-100 text-indigo-800 border-indigo-300'],
+        'teal' => ['btn' => 'border-teal-300 bg-teal-50 text-teal-800', 'dot' => 'bg-teal-500', 'badge' => 'bg-teal-100 text-teal-800 border-teal-300'],
+        'yellow' => ['btn' => 'border-yellow-300 bg-yellow-50 text-yellow-800', 'dot' => 'bg-yellow-400', 'badge' => 'bg-yellow-100 text-yellow-800 border-yellow-300'],
+        'slate' => ['btn' => 'border-slate-300 bg-slate-50 text-slate-800', 'dot' => 'bg-slate-500', 'badge' => 'bg-slate-100 text-slate-800 border-slate-300'],
+    ];
+
+    /**
+     * アイコン絵文字プリセット一覧
+     *
+     * @var array<int, string>
+     */
+    public const array EMOJI_PRESETS = ['🔺', '🚰', '🚻', '🚨', '🎈', '🏮', '🧺', '🏛️', '🧹', '🪧', '🚚', '📢', '🎪', '🛡️', '⚡', '📦', '🚑', '🅿️'];
+
+    /**
+     * 指定カラーキーのパレット定義を取得
+     *
+     * @return array{btn: string, dot: string}
+     */
+    public static function paletteFor(string $colorKey): array
+    {
+        return self::COLOR_PALETTE_MAP[$colorKey] ?? self::COLOR_PALETTE_MAP['slate'];
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -205,5 +241,77 @@ class Lane extends Model
                 'text' => 'text-slate-800',
             ],
         };
+    }
+
+    /**
+     * アイコン表示用アクセサ（未設定時は '📋'）
+     */
+    public function getIconLabelAttribute(): string
+    {
+        return $this->icon ?: '📋';
+    }
+
+    /**
+     * 進行表マトリクス・PDF用のアイコン表示アクセサ（未設定時は '◆'）
+     */
+    public function getMatrixIconLabelAttribute(): string
+    {
+        return $this->icon ?: '◆';
+    }
+
+    /**
+     * 班長の苗字（短縮名）アクセサ
+     */
+    public function getLeadShortNameAttribute(): string
+    {
+        return $this->leadStaff
+            ? (explode(' ', $this->leadStaff->name)[0] ?? $this->leadStaff->name)
+            : '';
+    }
+
+    /**
+     * PDF進行表ヘッダー用の班長表記（例: '（佐藤さん）'）
+     */
+    public function getPdfLeadSuffixAttribute(): string
+    {
+        $leadName = $this->lead_short_name;
+        if ($leadName === '') {
+            return '';
+        }
+
+        return (str_ends_with($leadName, 'さん') || str_ends_with($leadName, '外'))
+            ? "（{$leadName}）"
+            : "（{$leadName}さん）";
+    }
+
+    /**
+     * 新規タスク追加時の推奨開始時刻（最遅終了時刻または '08:00'）
+     */
+    public function getSuggestedStartTimeAttribute(): string
+    {
+        $latestTask = $this->tasks->sortByDesc('end_time')->first();
+
+        return $latestTask ? substr((string) $latestTask->end_time, 0, 5) : '08:00';
+    }
+
+    /**
+     * 固定スタッフID配列アクセサ
+     *
+     * @return array<int, int>
+     */
+    public function getFixedStaffIdsAttribute(): array
+    {
+        return $this->fixedStaff->pluck('id')->all();
+    }
+
+    /**
+     * 編集フォーム表示用の選択済み固定スタッフID配列を取得
+     *
+     * @param  array<int, int|string>|null  $oldFixedIds
+     * @return array<int, int|string>
+     */
+    public function resolveSelectedFixedIds(?array $oldFixedIds = null): array
+    {
+        return $oldFixedIds !== null ? $oldFixedIds : $this->fixed_staff_ids;
     }
 }

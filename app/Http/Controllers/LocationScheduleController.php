@@ -8,12 +8,17 @@ use App\Http\Requests\UpdateLocationScheduleStatusRequest;
 use App\Models\Location;
 use App\Models\LocationSchedule;
 use App\Models\Timetable;
+use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class LocationScheduleController extends Controller
 {
+    public function __construct(
+        protected LocationService $locationService
+    ) {}
+
     /**
      * スケジュール枠の新規登録
      */
@@ -22,10 +27,7 @@ class LocationScheduleController extends Controller
         abort_if($location->timetable_id !== $timetable->id, 404);
         $this->authorize('create', LocationSchedule::class);
 
-        $validated = $request->validated();
-        $validated['location_id'] = $location->id;
-
-        $schedule = LocationSchedule::create($validated);
+        $schedule = $this->locationService->createSchedule($location, $request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -47,7 +49,7 @@ class LocationScheduleController extends Controller
         abort_if($location->timetable_id !== $timetable->id || $schedule->location_id !== $location->id, 404);
         $this->authorize('update', $schedule);
 
-        $schedule->update($request->validated());
+        $schedule = $this->locationService->updateSchedule($schedule, $request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -69,9 +71,10 @@ class LocationScheduleController extends Controller
         abort_if($location->timetable_id !== $timetable->id || $schedule->location_id !== $location->id, 404);
         $this->authorize('update', $schedule);
 
-        $schedule->update([
-            'availability_status' => $request->validated('availability_status'),
-        ]);
+        $schedule = $this->locationService->updateScheduleStatus(
+            $schedule,
+            $request->validated('availability_status')
+        );
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -93,7 +96,7 @@ class LocationScheduleController extends Controller
         abort_if($location->timetable_id !== $timetable->id || $schedule->location_id !== $location->id, 404);
         $this->authorize('delete', $schedule);
 
-        $schedule->delete();
+        $this->locationService->deleteSchedule($schedule);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -140,8 +143,6 @@ class LocationScheduleController extends Controller
 
     protected function resolveFallbackTimetable(): Timetable
     {
-        return Timetable::where('status', 'active')->orderBy('target_date', 'asc')->first()
-            ?? Timetable::orderBy('target_date', 'asc')->first()
-            ?? Timetable::factory()->create(['name' => '既定運行計画', 'target_date' => now()->toDateString()]);
+        return $this->locationService->resolveFallbackTimetable();
     }
 }

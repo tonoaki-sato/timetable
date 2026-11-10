@@ -1,30 +1,10 @@
 @props(['plan', 'compact' => false])
 
-@php
-    $warnings = $plan->location_warnings;
-    $statusColors = [
-        'planned' => 'bg-slate-100 text-slate-700 border-slate-300',
-        'in_progress' => 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse',
-        'completed' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
-        'cancelled' => 'bg-rose-100 text-rose-700 border-rose-300 line-through',
-    ];
-
-    $phaseColors = [
-        'other' => 'bg-slate-50 text-slate-700 border-slate-200',
-        'pre_day' => 'bg-purple-50 text-purple-700 border-purple-200',
-        'day1_morning' => 'bg-sky-50 text-sky-700 border-sky-200',
-        'day1_evening' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-        'day2_morning' => 'bg-teal-50 text-teal-700 border-teal-200',
-        'day2_evening' => 'bg-amber-50 text-amber-700 border-amber-200',
-        'post_day' => 'bg-rose-50 text-rose-700 border-rose-200',
-    ];
-@endphp
-
 <div class="relative bg-white border rounded-xl p-3 shadow-xs hover:shadow-md transition text-xs space-y-2 {{ $plan->status === 'completed' ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200' }}">
     <!-- ヘッダー行: フェーズ & 時刻 & ステータス -->
     <div class="flex items-center justify-between gap-1 flex-wrap">
         <div class="flex items-center space-x-1.5 flex-wrap">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold border {{ $phaseColors[$plan->day_phase] ?? 'bg-slate-50 text-slate-700 border-slate-200' }}">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold border {{ $plan->phase_badge_class }}">
                 {{ $plan->phase_label }}
             </span>
             @if($plan->start_time)
@@ -77,7 +57,7 @@
     </div>
 
     <!-- 貸切期間・整合性アラート（該当時） -->
-    @foreach($warnings as $warning)
+    @foreach($plan->location_warnings as $warning)
         <div class="p-1.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-[10px] flex items-start space-x-1.5">
             <span class="shrink-0 text-amber-600 font-bold">⚠️</span>
             <span class="leading-tight">{{ $warning['message'] }}</span>

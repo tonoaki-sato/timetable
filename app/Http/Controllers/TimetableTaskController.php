@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTimetableTaskRequest;
 use App\Http\Requests\UpdateTimetableTaskRequest;
-use App\Models\Lane;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Services\ConflictDetectionService;
 use App\Services\StaffAllocationService;
+use App\Services\TimetableService;
 use App\Services\TimetableTaskService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +19,8 @@ class TimetableTaskController extends Controller
     public function __construct(
         protected TimetableTaskService $taskService,
         protected ConflictDetectionService $conflictService,
-        protected StaffAllocationService $allocationService
+        protected StaffAllocationService $allocationService,
+        protected TimetableService $timetableService
     ) {}
 
     /**
@@ -28,13 +29,12 @@ class TimetableTaskController extends Controller
     public function index(Request $request): View|RedirectResponse
     {
         if ($request->filled('timetable_id')) {
-            $timetable = Timetable::findOrFail($request->integer('timetable_id'));
+            $timetable = $this->timetableService->findOrFail($request->integer('timetable_id'));
 
             return $this->indexByTimetable($timetable);
         }
 
-        $currentTimetable = Timetable::where('status', 'active')->orderBy('target_date')->first()
-            ?? Timetable::orderBy('target_date')->first();
+        $currentTimetable = $this->timetableService->findFirstActiveOrEarliest();
 
         if ($currentTimetable) {
             return redirect()->route('timetables.tasks.index', $currentTimetable);
@@ -50,24 +50,7 @@ class TimetableTaskController extends Controller
     {
         $this->authorize('viewAny', TimetableTask::class);
 
-        $timetable->load([
-            'lanes' => function ($q) {
-                $q->orderBy('display_order')->with([
-                    'leadStaff',
-                    'tasks' => function ($tQuery) {
-                        $tQuery->orderBy('start_time', 'asc')
-                            ->orderBy('end_time', 'asc');
-                    },
-                ]);
-            },
-        ]);
-
-        return view('timetable_tasks.index', [
-            'timetable' => $timetable,
-            'lanes' => $timetable->lanes,
-            'tasks' => $timetable->lanes->flatMap->tasks,
-            'statuses' => TimetableTask::STATUSES,
-        ]);
+        return view('timetable_tasks.index', $this->taskService->getTasksIndexViewData($timetable));
     }
 
     /**
@@ -97,7 +80,7 @@ class TimetableTaskController extends Controller
             $firstTask = $createdTasks->first();
             $message = "作業タスク「{$firstTask->title}」を登録しました。";
         } else {
-            $lane = Lane::find($laneId);
+            $lane = $this->taskService->findLaneById($laneId);
             $laneName = $lane?->name ?? '選択した担当班';
             $message = "「{$laneName}」に {$count} 件の作業タスクを登録しました。";
         }

@@ -15,11 +15,11 @@
             <a href="{{ route('staff.index') }}" class="btn-back">← スタッフ管理一覧に戻る</a>
             <h2 class="page-title">{{ $title }}</h2>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-            <a href="{{ url()->current() }}" class="btn-print" style="text-decoration: none; display: inline-block;">
+        <div class="action-buttons">
+            <a href="{{ url()->current() }}" class="btn-print btn-download">
                 📄 PDFをダウンロード (A4縦)
             </a>
-            <button type="button" data-action="print" class="btn-print" style="background-color: #64748b;">
+            <button type="button" data-action="print" class="btn-print btn-browser-print">
                 🖨️ ブラウザ印刷
             </button>
         </div>
@@ -29,14 +29,13 @@
     <div class="print-sheet">
         <div class="card-grid">
             @forelse($cards as $card)
-            @php $staff = $card['staff']; @endphp
             <div class="badge-card">
                 <!-- ヘッダー -->
                 <div class="badge-header">
                     <span class="event-title">保土ケ谷宿場まつり STAFF</span>
                     <div class="badge-header-right">
-                        @if($staff->is_reissued)
-                        <span class="reissue-tag">再発行 (Ver.{{ $staff->reissue_count + 1 }})</span>
+                        @if($card['staff']->is_reissued)
+                        <span class="reissue-tag">再発行 (Ver.{{ $card['staff']->reissue_count + 1 }})</span>
                         @endif
                     </div>
                 </div>
@@ -44,8 +43,8 @@
                 <!-- ボディ -->
                 <div class="badge-body">
                     <div class="info-col">
-                        <div class="staff-kana">{{ $staff->kana ?: 'ー' }}</div>
-                        <div class="staff-name">{{ $staff->name }}</div>
+                        <div class="staff-kana">{{ $card['staff']->kana ?: 'ー' }}</div>
+                        <div class="staff-name">{{ $card['staff']->name }}</div>
                     </div>
 
                     <!-- QRコード -->

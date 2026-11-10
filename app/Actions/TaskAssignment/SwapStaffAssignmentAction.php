@@ -4,6 +4,8 @@ namespace App\Actions\TaskAssignment;
 
 use App\Models\Staff;
 use App\Models\TimetableTask;
+use App\Repositories\Contracts\StaffRepositoryInterface;
+use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
 use App\Services\ConflictDetectionService;
 use App\Services\TimetableTaskService;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +14,9 @@ class SwapStaffAssignmentAction
 {
     public function __construct(
         protected TimetableTaskService $taskService,
-        protected ConflictDetectionService $conflictService
+        protected ConflictDetectionService $conflictService,
+        protected StaffRepositoryInterface $staffRepository,
+        protected TaskStaffAssignmentRepositoryInterface $assignmentRepository
     ) {}
 
     /**
@@ -36,7 +40,7 @@ class SwapStaffAssignmentAction
         ?string $roleDescription = null,
         bool $isForced = false
     ): array {
-        $oldAssignment = $task->assignments()->where('staff_id', $oldStaffId)->first();
+        $oldAssignment = $this->assignmentRepository->findByTaskAndStaff($task->id, $oldStaffId);
         if (! $oldAssignment) {
             return [
                 'success' => false,
@@ -45,11 +49,11 @@ class SwapStaffAssignmentAction
             ];
         }
 
-        $oldStaff = Staff::findOrFail($oldStaffId);
-        $newStaff = Staff::findOrFail($newStaffId);
+        $oldStaff = $this->staffRepository->findOrFail($oldStaffId);
+        $newStaff = $this->staffRepository->findOrFail($newStaffId);
 
         // 既に新スタッフがこのタスクにアサインされていないか確認
-        if ($task->assignments()->where('staff_id', $newStaff->id)->exists()) {
+        if ($this->assignmentRepository->existsByTaskAndStaff($task->id, $newStaff->id)) {
             return [
                 'success' => false,
                 'status_code' => 422,
@@ -83,7 +87,7 @@ class SwapStaffAssignmentAction
             ? $roleDescription
             : ($oldAssignment->role_description ?: '担当');
 
-        DB::transaction(function () use ($task, $oldStaff, $newStaff, $role) {
+        DB::transaction(function () use ($task, $oldStaff, $newStaff, $role): void {
             $this->taskService->removeStaff($task, $oldStaff->id);
             $this->taskService->bulkAssignStaff($task, [$newStaff->id], $role);
         });

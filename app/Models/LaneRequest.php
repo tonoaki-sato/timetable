@@ -89,14 +89,6 @@ class LaneRequest extends Model
     }
 
     /**
-     * 対応した管理者ユーザーとのリレーション
-     */
-    public function resolvedByUser(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'resolved_by_user_id');
-    }
-
-    /**
      * 種別の日本語表示ラベル
      */
     public function getTypeLabelAttribute(): string

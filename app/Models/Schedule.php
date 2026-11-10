@@ -128,11 +128,49 @@ class Schedule extends Model
     }
 
     /**
+     * 指定カテゴリキーに対する絵文字アイコンを取得
+     */
+    public static function categoryFilterIcon(string $categoryKey): string
+    {
+        return match ($categoryKey) {
+            'committee' => '🤝',
+            'permit' => '📑',
+            'briefing' => '📢',
+            'operation' => '🎪',
+            default => '📌',
+        };
+    }
+
+    /**
+     * カテゴリのバッジ表示用アイコン（連動時も純粋なカテゴリアイコン）
+     */
+    public function getCategoryBadgeIconAttribute(): string
+    {
+        return self::categoryFilterIcon((string) $this->category);
+    }
+
+    /**
+     * カテゴリのバッジ表示用CSSクラス
+     */
+    public function getCategoryBadgeClassAttribute(): string
+    {
+        return (new SchedulePresenter($this))->categoryBadgeClass();
+    }
+
+    /**
      * ステータスの日本語表示
      */
     public function getStatusLabelAttribute(): string
     {
         return self::STATUSES[$this->status] ?? $this->status;
+    }
+
+    /**
+     * ステータスのバッジ表示用CSSクラス
+     */
+    public function getStatusBadgeClassAttribute(): string
+    {
+        return (new SchedulePresenter($this))->statusBadgeClass();
     }
 
     /**
@@ -235,14 +273,6 @@ class Schedule extends Model
         }
 
         return $query;
-    }
-
-    /**
-     * 主催スタッフによるスコープ（scopeAssigneeのエイリアス）
-     */
-    public function scopeHost(Builder $query, ?int $staffId): Builder
-    {
-        return $this->scopeAssignee($query, $staffId);
     }
 
     /**

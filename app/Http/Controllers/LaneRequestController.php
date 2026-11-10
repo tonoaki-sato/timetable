@@ -5,11 +5,16 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateLaneRequestStatusRequest;
 use App\Models\Lane;
 use App\Models\LaneRequest;
+use App\Services\LaneService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
 class LaneRequestController extends Controller
 {
+    public function __construct(
+        protected LaneService $laneService
+    ) {}
+
     /**
      * 班長からの人員応援要請・必要機材申請の対応ステータス更新（管理者・本部オペレーター用）
      */
@@ -19,12 +24,11 @@ class LaneRequestController extends Controller
 
         $validated = $request->validated();
 
-        $status = $validated['status'];
-        $laneRequest->update([
-            'status' => $status,
-            'resolved_by_user_id' => $request->user()?->id,
-            'resolved_at' => in_array($status, ['approved', 'resolved', 'rejected'], true) ? now() : null,
-        ]);
+        $laneRequest = $this->laneService->updateLaneRequestStatus(
+            $laneRequest,
+            $validated['status'],
+            $request->user()?->id
+        );
 
         if ($request->wantsJson()) {
             return response()->json([

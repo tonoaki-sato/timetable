@@ -57,18 +57,9 @@
                 <span>運行スケジュール</span>
             </a>
             @foreach($categories as $key => $label)
-            @php
-                $catIcon = match($key) {
-                    'committee' => '🤝',
-                    'permit' => '📑',
-                    'briefing' => '📢',
-                    'operation' => '🎪',
-                    default => '📌',
-                };
-            @endphp
             <a href="{{ route('schedules.index', array_merge(request()->except('page'), ['category' => $key])) }}"
                 class="px-3 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center space-x-1 {{ $currentCategory === $key ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                <span>{{ $catIcon }}</span>
+                <span>{{ \App\Models\Schedule::categoryFilterIcon($key) }}</span>
                 <span>{{ $label }}</span>
             </a>
             @endforeach
@@ -188,16 +179,7 @@
 
                         <!-- 状態 -->
                         <td class="px-4 py-2.5 whitespace-nowrap text-center">
-                            @php
-                                $statusClass = match($schedule->status) {
-                                    'planned' => 'bg-blue-50 text-blue-700 border-blue-200',
-                                    'in_progress' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                    'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                    'cancelled' => 'bg-slate-100 text-slate-500 border-slate-200',
-                                    default => 'bg-slate-100 text-slate-600 border-slate-200',
-                                };
-                            @endphp
-                            <span class="px-2 py-0.5 rounded text-[11px] font-bold border {{ $statusClass }}">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold border {{ $schedule->status_badge_class }}">
                                 {{ $schedule->status_label }}
                             </span>
                         </td>

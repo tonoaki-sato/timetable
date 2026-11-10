@@ -85,6 +85,9 @@ class TimetableSeeder extends Seeder
                 'display_order' => 50,
                 'lead_staff_id' => 6,
                 'fixed_staff_ids' => [
+                    0 => 6,
+                    1 => 18,
+                    2 => 28,
                 ],
                 'description' => '給水タンク・仮設手洗い場・配管ホース設置',
             ],
@@ -180,9 +183,7 @@ class TimetableSeeder extends Seeder
                 ]
             );
 
-            if (! empty($laneItem['fixed_staff_ids'])) {
-                $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
-            }
+            $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
 
             $lanesDay1[$laneItem['name']] = $lane;
         }
@@ -260,6 +261,16 @@ class TimetableSeeder extends Seeder
                     0 => [
                         'staff_id' => 6,
                         'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    1 => [
+                        'staff_id' => 18,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                    2 => [
+                        'staff_id' => 28,
+                        'role_description' => '固定スタッフ',
                         'attendance_status' => 'assigned',
                     ],
                 ],
@@ -362,6 +373,16 @@ class TimetableSeeder extends Seeder
                         'role_description' => '班長',
                         'attendance_status' => 'assigned',
                     ],
+                    1 => [
+                        'staff_id' => 18,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                    2 => [
+                        'staff_id' => 28,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
                 ],
             ],
             [
@@ -458,6 +479,16 @@ class TimetableSeeder extends Seeder
                         'role_description' => '班長',
                         'attendance_status' => 'assigned',
                     ],
+                    1 => [
+                        'staff_id' => 18,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                    2 => [
+                        'staff_id' => 28,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
                 ],
             ],
             [
@@ -534,6 +565,16 @@ class TimetableSeeder extends Seeder
                     0 => [
                         'staff_id' => 6,
                         'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    1 => [
+                        'staff_id' => 18,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                    2 => [
+                        'staff_id' => 28,
+                        'role_description' => '固定スタッフ',
                         'attendance_status' => 'assigned',
                     ],
                 ],
@@ -860,9 +901,7 @@ class TimetableSeeder extends Seeder
                 ]
             );
 
-            if (! empty($laneItem['fixed_staff_ids'])) {
-                $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
-            }
+            $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
 
             $lanesDay2[$laneItem['name']] = $lane;
         }
@@ -932,9 +971,7 @@ class TimetableSeeder extends Seeder
                 ]
             );
 
-            if (! empty($laneItem['fixed_staff_ids'])) {
-                $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
-            }
+            $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
 
             $lanesDay3[$laneItem['name']] = $lane;
         }
@@ -1387,9 +1424,7 @@ class TimetableSeeder extends Seeder
                 ]
             );
 
-            if (! empty($laneItem['fixed_staff_ids'])) {
-                $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
-            }
+            $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
 
             $lanesDay4[$laneItem['name']] = $lane;
         }

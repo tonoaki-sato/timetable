@@ -337,20 +337,11 @@
                         <th class="col-festival th-control col-boundary">まつり</th>
                     @endif
                     @foreach($lanes as $lane)
-                        @php
-                            $leadStaff = $lane->leadStaff;
-                            $leadName = $leadStaff ? (explode(' ', $leadStaff->name)[0] ?? $leadStaff->name) : '';
-                            $leadSuffix = '';
-                            if ($leadName) {
-                                $leadSuffix = (str_ends_with($leadName, 'さん') || str_ends_with($leadName, '外')) ? "（{$leadName}）" : "（{$leadName}さん）";
-                            }
-                            $laneIcon = $lane->icon ?: '◆';
-                        @endphp
                         <th class="th-lane">
-                            <span class="lane-header-icon">{{ $laneIcon }}</span>
+                            <span class="lane-header-icon">{{ $lane->matrix_icon_label }}</span>
                             <span class="lane-header-title">{{ $lane->name }}</span>
-                            @if($leadSuffix)
-                                <span class="lane-header-lead">{{ $leadSuffix }}</span>
+                            @if($lane->pdf_lead_suffix)
+                                <span class="lane-header-lead">{{ $lane->pdf_lead_suffix }}</span>
                             @endif
                         </th>
                     @endforeach
@@ -380,21 +371,14 @@
                     @endif
 
                     @foreach($lanes as $lane)
-                        @php
-                            $cell = $grid[$sIdx][$lane->id] ?? ['type' => 'empty'];
-                        @endphp
-
+                        @foreach([$grid[$sIdx][$lane->id] ?? ['type' => 'empty']] as $cell)
                         @if($cell['type'] === 'task')
-                            @php
-                                $task = $cell['task'];
-                                $reqCount = $task->required_people_count;
-                                $peopleLabel = $reqCount ? ($task->is_at_least ? "【{$reqCount}名以上】" : "【{$reqCount}名】") : '';
-                            @endphp
+                            @foreach([$cell['task']] as $task)
                             <td class="cell-task {{ ($cell['has_next'] ?? false) ? 'cell-task-has-next' : '' }}">
                                 <div class="task-card">
                                     <!-- タイトル ＋ 人員規模 -->
                                     <div class="task-header">
-                                        <span class="task-title">{{ $task->title }}</span>@if($peopleLabel)<span class="task-people">{{ $peopleLabel }}</span>@endif
+                                        <span class="task-title">{{ $task->title }}</span>@if($task->matrix_people_label)<span class="task-people">{{ $task->matrix_people_label }}</span>@endif
                                     </div>
 
                                     <!-- 作業内容（箇条書き等） -->
@@ -435,6 +419,7 @@
                                     @endif
                                 </div>
                             </td>
+                            @endforeach
                         @elseif($cell['type'] === 'task_continue')
                             <td class="cell-task-continue {{ ($cell['has_next'] ?? false) ? 'cell-task-has-next' : '' }}"></td>
                         @elseif($cell['type'] === 'empty')
@@ -442,6 +427,7 @@
                         @elseif($cell['type'] === 'skip')
                             <td class="cell-empty">-</td>
                         @endif
+                        @endforeach
                     @endforeach
                 </tr>
                 @endforeach

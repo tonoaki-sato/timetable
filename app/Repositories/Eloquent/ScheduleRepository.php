@@ -7,12 +7,11 @@ use App\Models\Timetable;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Override;
 
 class ScheduleRepository implements ScheduleRepositoryInterface
 {
-    /**
-     * 条件付きスケジュール一覧の取得
-     */
+    #[Override]
     public function paginateFiltered(
         ?string $category = null,
         ?string $status = null,
@@ -50,11 +49,7 @@ class ScheduleRepository implements ScheduleRepositoryInterface
         return $query->paginate($perPage)->withQueryString();
     }
 
-    /**
-     * 指定月のスケジュール一覧の取得（カレンダー用）
-     *
-     * @return Collection<int, Schedule>
-     */
+    #[Override]
     public function getForMonth(
         int $year,
         int $month,
@@ -67,9 +62,9 @@ class ScheduleRepository implements ScheduleRepositoryInterface
         $endOfMonth = date('Y-m-t', strtotime($startOfMonth));
 
         $query = Schedule::with(['assignee', 'creator'])
-            ->where(function ($q) use ($startOfMonth, $endOfMonth) {
+            ->where(function ($q) use ($startOfMonth, $endOfMonth): void {
                 $q->whereBetween('start_date', [$startOfMonth, $endOfMonth])
-                    ->orWhere(function ($sub) use ($startOfMonth, $endOfMonth) {
+                    ->orWhere(function ($sub) use ($startOfMonth, $endOfMonth): void {
                         $sub->whereNotNull('end_date')
                             ->where('start_date', '<=', $endOfMonth)
                             ->where('end_date', '>=', $startOfMonth);
@@ -95,11 +90,7 @@ class ScheduleRepository implements ScheduleRepositoryInterface
         return $query->orderBy('start_date')->orderBy('start_time')->get();
     }
 
-    /**
-     * 直近の会議・打ち合わせ一覧を取得
-     *
-     * @return Collection<int, Schedule>
-     */
+    #[Override]
     public function getUpcomingMeetings(int $limit = 3): Collection
     {
         return Schedule::with(['assignee'])
@@ -109,11 +100,43 @@ class ScheduleRepository implements ScheduleRepositoryInterface
             ->get();
     }
 
-    /**
-     * 全体のステータス別集計の取得
-     *
-     * @return array{total: int, planned: int, in_progress: int, completed: int}
-     */
+    #[Override]
+    public function getUpcomingPermits(int $limit = 3): Collection
+    {
+        return Schedule::with(['assignee'])
+            ->whereIn('category', ['permit', 'briefing'])
+            ->upcoming()
+            ->limit($limit)
+            ->get();
+    }
+
+    #[Override]
+    public function findNextUpcomingTask(string $todayStr): ?Schedule
+    {
+        return Schedule::where('start_date', '>=', $todayStr)
+            ->where('status', '!=', 'completed')
+            ->orderBy('start_date', 'asc')
+            ->first();
+    }
+
+    #[Override]
+    public function countPendingInMonthsAndYear(array $months, int $year): int
+    {
+        if (empty($months)) {
+            return 0;
+        }
+
+        return Schedule::where(function ($query) use ($months): void {
+            foreach ($months as $m) {
+                $query->orWhereMonth('start_date', $m);
+            }
+        })
+            ->whereYear('start_date', $year)
+            ->where('status', '!=', 'completed')
+            ->count();
+    }
+
+    #[Override]
     public function getStatusSummary(): array
     {
         return [
@@ -124,33 +147,25 @@ class ScheduleRepository implements ScheduleRepositoryInterface
         ];
     }
 
-    /**
-     * 新規スケジュールの永続化
-     */
+    #[Override]
     public function create(array $attributes): Schedule
     {
         return Schedule::create($attributes);
     }
 
-    /**
-     * スケジュールの更新
-     */
+    #[Override]
     public function update(Schedule $schedule, array $attributes): bool
     {
         return $schedule->update($attributes);
     }
 
-    /**
-     * スケジュールの削除
-     */
+    #[Override]
     public function delete(Schedule $schedule): bool
     {
         return (bool) $schedule->delete();
     }
 
-    /**
-     * 運行スケジュール（タイムテーブル）に対応するスケジュールを同期
-     */
+    #[Override]
     public function syncForTimetable(Timetable $timetable): Schedule
     {
         $statusMap = [
@@ -180,9 +195,7 @@ class ScheduleRepository implements ScheduleRepositoryInterface
         );
     }
 
-    /**
-     * 運行スケジュール（タイムテーブル）に紐づくスケジュールを削除
-     */
+    #[Override]
     public function deleteForTimetable(int $timetableId): bool
     {
         return (bool) Schedule::where('timetable_id', $timetableId)->delete();

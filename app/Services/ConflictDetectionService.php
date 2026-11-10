@@ -4,10 +4,19 @@ namespace App\Services;
 
 use App\Models\Staff;
 use App\Models\TimetableTask;
+use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use Illuminate\Support\Collection;
 
 class ConflictDetectionService
 {
+    protected TimetableTaskRepositoryInterface $taskRepository;
+
+    public function __construct(
+        ?TimetableTaskRepositoryInterface $taskRepository = null
+    ) {
+        $this->taskRepository = $taskRepository ?? app(TimetableTaskRepositoryInterface::class);
+    }
+
     /**
      * 指定したタスクと時間帯が重複し、同一スタッフが割り当てられているタスク一覧を取得
      *
@@ -19,21 +28,7 @@ class ConflictDetectionService
             return new Collection;
         }
 
-        // 同一運行日（timetable_id）かつ自分以外のタスクで、該当スタッフが有効アサイン（absent以外）されているもの
-        return TimetableTask::where('timetable_id', $task->timetable_id)
-            ->where('id', '!=', $task->id)
-            ->whereHas('assignments', function ($query) use ($staffId) {
-                $query->where('staff_id', $staffId)
-                    ->where('attendance_status', '!=', 'absent');
-            })
-            ->where(function ($query) use ($task) {
-                // 時間重複条件:
-                // task.start_time < other.end_time AND task.end_time > other.start_time
-                $query->where('start_time', '<', $task->end_time)
-                    ->where('end_time', '>', $task->start_time);
-            })
-            ->with(['lane', 'assignments'])
-            ->get();
+        return $this->taskRepository->getConflictingTasksForStaff($task, $staffId);
     }
 
     /**
@@ -56,35 +51,9 @@ class ConflictDetectionService
             return [];
         }
 
-        $staffIds = $activeStaff->pluck('id')->all();
+        $staffIds = $activeStaff->pluck('id')->map(fn ($id): int => (int) $id)->all();
 
-        // 該当運行日・該当時間帯にアサインされているタスクを取得
-        $overlappingTasks = TimetableTask::where('timetable_id', $task->timetable_id)
-            ->where('id', '!=', $task->id)
-            ->where('start_time', '<', $task->end_time)
-            ->where('end_time', '>', $task->start_time)
-            ->whereHas('assignments', function ($query) use ($staffIds) {
-                $query->whereIn('staff_id', $staffIds)
-                    ->where('attendance_status', '!=', 'absent');
-            })
-            ->with(['lane', 'assignments' => function ($query) use ($staffIds) {
-                $query->whereIn('staff_id', $staffIds)
-                    ->where('attendance_status', '!=', 'absent');
-            }])
-            ->get();
-
-        $conflictsMap = [];
-
-        foreach ($overlappingTasks as $ovTask) {
-            foreach ($ovTask->assignments as $assignment) {
-                // 最初の重複タスクを保持
-                if (! isset($conflictsMap[$assignment->staff_id])) {
-                    $conflictsMap[$assignment->staff_id] = $ovTask;
-                }
-            }
-        }
-
-        return $conflictsMap;
+        return $this->checkConflictsForStaffIds($task, $staffIds);
     }
 
     /**
@@ -100,20 +69,7 @@ class ConflictDetectionService
         }
 
         $intStaffIds = array_map('intval', $staffIds);
-
-        $overlappingTasks = TimetableTask::where('timetable_id', $task->timetable_id)
-            ->where('id', '!=', $task->id)
-            ->where('start_time', '<', $task->end_time)
-            ->where('end_time', '>', $task->start_time)
-            ->whereHas('assignments', function ($query) use ($intStaffIds) {
-                $query->whereIn('staff_id', $intStaffIds)
-                    ->where('attendance_status', '!=', 'absent');
-            })
-            ->with(['lane', 'assignments' => function ($query) use ($intStaffIds) {
-                $query->whereIn('staff_id', $intStaffIds)
-                    ->where('attendance_status', '!=', 'absent');
-            }])
-            ->get();
+        $overlappingTasks = $this->taskRepository->getOverlappingTasksForStaffIds($task, $intStaffIds);
 
         $conflictsMap = [];
         foreach ($overlappingTasks as $ovTask) {

@@ -35,4 +35,3 @@ readonly class GlobalDashboardDTO
         public PhaseContext $phaseContext,
     ) {}
 }
-

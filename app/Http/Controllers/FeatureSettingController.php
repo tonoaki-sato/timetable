@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ToggleFeatureSettingRequest;
 use App\Http\Requests\UpdateFeatureSettingRequest;
 use App\Services\FeatureSettingService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 class FeatureSettingController extends Controller
 {
@@ -28,13 +28,8 @@ class FeatureSettingController extends Controller
     /**
      * 機能の即時有効/無効切り替え
      */
-    public function toggle(Request $request, string $featureKey): RedirectResponse
+    public function toggle(ToggleFeatureSettingRequest $request, string $featureKey): RedirectResponse
     {
-        $user = $request->user();
-        if (! $user || ! $user->is_active || (! $user->isAdmin() && ! $user->isOperator())) {
-            abort(403, 'この操作を行う権限がありません。');
-        }
-
         $feature = $this->featureSettingService->toggleFeature($featureKey);
         $status = $this->featureSettingService->getFeatureStatus($featureKey);
         $stateText = $status['label'];

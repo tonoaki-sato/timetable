@@ -1,9 +1,3 @@
-@php
-    $backUrl = isset($timetable) ? route('timetables.logistics.index', $timetable) : route('logistics.index');
-    $downloadUrl = isset($timetable) ? route('timetables.logistics.print', array_merge(['timetable' => $timetable], request()->except('preview'))) : route('logistics.print', request()->except('preview'));
-    $formAction = isset($timetable) ? route('timetables.logistics.print', $timetable) : route('logistics.print');
-    $resetUrl = isset($timetable) ? route('timetables.logistics.print', ['timetable' => $timetable, 'preview' => 1]) : route('logistics.print');
-@endphp
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -104,14 +98,13 @@
             </h2>
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
                 @forelse($locationsData as $locItem)
-                    @php $l = $locItem['location']; @endphp
                     <div class="p-2 rounded-lg border border-slate-200 bg-slate-50">
-                        <div class="font-bold text-slate-900 truncate">{{ $l->name }}</div>
-                        <div class="text-[10px] font-mono mt-0.5 {{ $l->is_all_day ? 'text-emerald-700 font-bold' : 'text-amber-800' }}">
-                            @if($l->is_all_day)
+                        <div class="font-bold text-slate-900 truncate">{{ $locItem['location']->name }}</div>
+                        <div class="text-[10px] font-mono mt-0.5 {{ $locItem['location']->is_all_day ? 'text-emerald-700 font-bold' : 'text-amber-800' }}">
+                            @if($locItem['location']->is_all_day)
                                 終日常時使用可
-                            @elseif($l->schedules->isNotEmpty())
-                                @foreach($l->schedules as $s)
+                            @elseif($locItem['location']->schedules->isNotEmpty())
+                                @foreach($locItem['location']->schedules as $s)
                                     <div>{{ $s->start_at->format('n/j H:i') }}〜{{ $s->end_at->format($s->start_at->isSameDay($s->end_at) ? 'H:i' : 'n/j H:i') }}</div>
                                 @endforeach
                             @else
@@ -149,15 +142,6 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @forelse($equipments as $eq)
-                        @php
-                            $plans = $eq->plans;
-                            $preDayPlans = $plans->whereIn('day_phase', ['other', 'pre_day']);
-                            $day1MPlans = $plans->where('day_phase', 'day1_morning');
-                            $day1EPlans = $plans->where('day_phase', 'day1_evening');
-                            $day2MPlans = $plans->where('day_phase', 'day2_morning');
-                            $day2EPlans = $plans->where('day_phase', 'day2_evening');
-                            $postDayPlans = $plans->where('day_phase', 'post_day');
-                        @endphp
                         <tr class="align-top">
                             <!-- 資材名 -->
                             <td class="p-2 border-r border-slate-300 font-bold text-slate-900">
@@ -174,7 +158,7 @@
 
                             <!-- 事前・前日 -->
                             <td class="p-2 border-r border-slate-300 space-y-1">
-                                @forelse($preDayPlans as $p)
+                                @forelse($eq->plansForPhases(['other', 'pre_day']) as $p)
                                     <div class="bg-slate-50 p-1.5 rounded border border-slate-200 leading-tight">
                                         <div class="font-bold text-slate-800">{{ $p->title }}</div>
                                         <div class="text-[10px] text-slate-600 font-mono">
@@ -195,7 +179,7 @@
 
                             <!-- 1日目 朝 -->
                             <td class="p-2 border-r border-slate-300 space-y-1">
-                                @forelse($day1MPlans as $p)
+                                @forelse($eq->plansForPhases('day1_morning') as $p)
                                     <div class="bg-slate-50 p-1.5 rounded border border-slate-200 leading-tight">
                                         <div class="font-bold text-slate-800">{{ $p->title }}</div>
                                         <div class="text-[10px] text-slate-600 font-mono">
@@ -213,7 +197,7 @@
 
                             <!-- 1日目 夜 (夜間分散保管) -->
                             <td class="p-2 border-r border-slate-300 space-y-1 bg-indigo-50/20">
-                                @forelse($day1EPlans as $p)
+                                @forelse($eq->plansForPhases('day1_evening') as $p)
                                     <div class="bg-indigo-50/80 p-1.5 rounded border border-indigo-200 leading-tight">
                                         <div class="font-bold text-indigo-950">{{ $p->to_location }}</div>
                                         <div class="text-[10px] text-indigo-800 font-mono font-bold">
@@ -231,7 +215,7 @@
 
                             <!-- 2日目 朝 -->
                             <td class="p-2 border-r border-slate-300 space-y-1">
-                                @forelse($day2MPlans as $p)
+                                @forelse($eq->plansForPhases('day2_morning') as $p)
                                     <div class="bg-slate-50 p-1.5 rounded border border-slate-200 leading-tight">
                                         <div class="font-bold text-slate-800">{{ $p->title }}</div>
                                         <div class="text-[10px] text-slate-600 font-mono">
@@ -248,7 +232,7 @@
 
                             <!-- 2日目 夜 -->
                             <td class="p-2 border-r border-slate-300 space-y-1 bg-amber-50/20">
-                                @forelse($day2EPlans as $p)
+                                @forelse($eq->plansForPhases('day2_evening') as $p)
                                     <div class="bg-amber-50 p-1.5 rounded border border-amber-200 leading-tight">
                                         <div class="font-bold text-amber-950">{{ $p->title }}</div>
                                         <div class="text-[10px] text-amber-800 font-mono">
@@ -262,7 +246,7 @@
 
                             <!-- 翌日 -->
                             <td class="p-2 space-y-1">
-                                @forelse($postDayPlans as $p)
+                                @forelse($eq->plansForPhases('post_day') as $p)
                                     <div class="bg-slate-50 p-1.5 rounded border border-slate-200 leading-tight">
                                         <div class="font-bold text-slate-800">{{ $p->title }}</div>
                                         <div class="text-[10px] text-slate-600 font-mono">

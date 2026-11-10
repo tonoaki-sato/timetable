@@ -67,7 +67,7 @@ class StaffController extends Controller
     {
         $this->authorize('view', $staff);
 
-        $staff->load(['assignments.task.timetable']);
+        $staff = $this->staffService->getStaffWithShowDetails($staff);
 
         return view('staff.show', [
             'staff' => $staff,

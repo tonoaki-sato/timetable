@@ -1,10 +1,5 @@
-@php
-    $tag = $actionUrl ? 'a' : 'div';
-    $baseClasses = 'bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between';
-    $interactiveClasses = $actionUrl ? ' hover:border-indigo-300 hover:shadow-sm transition group' : '';
-@endphp
 <{{ $tag }} @if ($actionUrl) href="{{ $actionUrl }}" @endif
-   {{ $attributes->merge(['class' => $baseClasses . $interactiveClasses]) }}>
+   {{ $attributes->merge(['class' => $containerClasses]) }}>
     <div class="min-w-0 pr-2">
         <div class="flex items-center space-x-1.5">
             <p class="text-xs font-medium text-slate-500">

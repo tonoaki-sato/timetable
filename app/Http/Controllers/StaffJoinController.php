@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreStaffJoinRequest;
 use App\Models\FeatureSetting;
-use App\Models\Staff;
 use App\Services\FeatureSettingService;
 use App\Services\StaffService;
 use Illuminate\Http\RedirectResponse;
@@ -100,7 +99,7 @@ class StaffJoinController extends Controller
             return redirect()->route('staff.join');
         }
 
-        $staff = Staff::find($staffId);
+        $staff = $this->staffService->findById((int) $staffId);
         if (! $staff || ! $staff->is_active) {
             return redirect()->route('staff.join');
         }

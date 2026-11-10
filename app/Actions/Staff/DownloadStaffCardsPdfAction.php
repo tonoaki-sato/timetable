@@ -3,6 +3,7 @@
 namespace App\Actions\Staff;
 
 use App\Models\Staff;
+use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Services\PdfService;
 use App\Services\QRCodeService;
 use Illuminate\Http\Request;
@@ -13,7 +14,8 @@ class DownloadStaffCardsPdfAction
 {
     public function __construct(
         protected PdfService $pdfService,
-        protected QRCodeService $qrCodeService
+        protected QRCodeService $qrCodeService,
+        protected StaffRepositoryInterface $staffRepository
     ) {}
 
     /**
@@ -21,18 +23,7 @@ class DownloadStaffCardsPdfAction
      */
     public function execute(Request $request): Response
     {
-        $query = Staff::query()
-            ->where('is_active', true);
-
-        if ($request->has('ids') && is_array($request->input('ids'))) {
-            $ids = array_filter(array_map('intval', $request->input('ids')));
-            if (! empty($ids)) {
-                $query->whereIn('id', $ids);
-            }
-        }
-
-        $staffList = $query->orderBy('kana')->get();
-        $cards = $this->buildCardsData($staffList);
+        $cards = $this->buildCardsForRequest($request);
 
         $filename = 'staff_cards_'.now()->format('Ymd_His').'.pdf';
 
@@ -69,14 +60,34 @@ class DownloadStaffCardsPdfAction
     }
 
     /**
+     * リクエスト条件（ids指定可）に基づいてQRコード付きカードコレクションを構築
+     *
+     * @return Collection<int, array{staff: Staff, shift_url: string, qr_svg: string, qr_data_uri: string}>
+     */
+    public function buildCardsForRequest(Request $request): Collection
+    {
+        $ids = null;
+        if ($request->has('ids') && is_array($request->input('ids'))) {
+            $filtered = array_filter(array_map('intval', $request->input('ids')));
+            if (! empty($filtered)) {
+                $ids = array_values($filtered);
+            }
+        }
+
+        $staffList = $this->staffRepository->getActiveByIds($ids);
+
+        return $this->buildCardsData($staffList);
+    }
+
+    /**
      * スタッフ一覧からQRコード付きカードコレクションを構築
      *
      * @param  Collection<int, Staff>  $staffList
      * @return Collection<int, array{staff: Staff, shift_url: string, qr_svg: string, qr_data_uri: string}>
      */
-    protected function buildCardsData(Collection $staffList, int $qrSize = 100): Collection
+    public function buildCardsData(Collection $staffList, int $qrSize = 100): Collection
     {
-        return $staffList->map(function (Staff $staff) use ($qrSize) {
+        return $staffList->map(function (Staff $staff) use ($qrSize): array {
             $shiftUrl = route('staff.myshift', ['token' => $staff->access_token]);
             $qrSvg = $this->qrCodeService->generateSvg($shiftUrl, $qrSize);
             $qrDataUri = $this->qrCodeService->generatePngDataUri($shiftUrl, $qrSize * 2);

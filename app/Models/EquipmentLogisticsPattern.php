@@ -79,4 +79,39 @@ class EquipmentLogisticsPattern extends Model
     {
         return $query->orderBy('display_order', 'asc')->orderBy('id', 'asc');
     }
+
+    /**
+     * ステップが1件以上登録されているか
+     */
+    public function getHasStepsAttribute(): bool
+    {
+        return $this->steps->isNotEmpty();
+    }
+
+    /**
+     * 編集モーダル用のJSONペイロード配列を取得
+     *
+     * @return array<string, mixed>
+     */
+    public function toModalPayload(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'target_type' => $this->target_type,
+            'description' => $this->description ?? '',
+            'update_url' => route('equipment-patterns.update', $this),
+            'steps' => $this->steps->map(fn (EquipmentLogisticsPatternStep $step) => [
+                'id' => $step->id,
+                'day_phase' => $step->day_phase,
+                'action_type' => $step->action_type,
+                'title' => $step->title,
+                'operator_type' => $step->operator_type,
+                'from_location_id' => $step->from_location_id,
+                'to_location_id' => $step->to_location_id,
+                'witness_required' => (bool) $step->witness_required,
+                'notes' => $step->notes ?? '',
+            ])->values()->all(),
+        ];
+    }
 }

@@ -7,14 +7,33 @@ use App\Models\Timetable;
 use App\Repositories\Contracts\LocationRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Override;
 
 class LocationRepository implements LocationRepositoryInterface
 {
-    /**
-     * 指定タイムテーブルに紐づく拠点一覧をスケジュール付きで取得
-     *
-     * @return Collection<int, Location>
-     */
+    #[Override]
+    public function findById(int $id): ?Location
+    {
+        return Location::find($id);
+    }
+
+    #[Override]
+    public function findFirstByTimetableAndNameLike(int $timetableId, string $keyword): ?Location
+    {
+        return Location::where('timetable_id', $timetableId)
+            ->where('name', 'like', "%{$keyword}%")
+            ->first();
+    }
+
+    #[Override]
+    public function findFirstByTimetableAndExactName(int $timetableId, string $name): ?Location
+    {
+        return Location::where('timetable_id', $timetableId)
+            ->where('name', $name)
+            ->first();
+    }
+
+    #[Override]
     public function getForTimetable(Timetable $timetable): Collection
     {
         return $timetable->locations()
@@ -25,9 +44,46 @@ class LocationRepository implements LocationRepositoryInterface
             ->get();
     }
 
-    /**
-     * 詳細画面用の拠点を取得（スケジュール・関連計画付き）
-     */
+    #[Override]
+    public function getActiveOrderedForTimetable(Timetable $timetable): Collection
+    {
+        return Location::forTimetable($timetable)
+            ->active()
+            ->ordered()
+            ->get();
+    }
+
+    #[Override]
+    public function getActiveWithTypeAndSchedules(?Timetable $timetable = null): Collection
+    {
+        $query = Location::active()->ordered()->with(['type', 'schedules']);
+        if ($timetable) {
+            $query->where('timetable_id', $timetable->id);
+        }
+
+        return $query->get();
+    }
+
+    #[Override]
+    public function getUniqueNamesOrdered(): Collection
+    {
+        /** @var Collection<int, Location> $unique */
+        $unique = Location::select('id', 'name')
+            ->orderBy('display_order')
+            ->get()
+            ->unique('name')
+            ->values();
+
+        return $unique;
+    }
+
+    #[Override]
+    public function getTotalCount(): int
+    {
+        return Location::count();
+    }
+
+    #[Override]
     public function findWithDetails(Timetable $timetable, int $locationId): ?Location
     {
         /** @var Location|null $location */
@@ -46,39 +102,25 @@ class LocationRepository implements LocationRepositoryInterface
         return $location;
     }
 
-    /**
-     * 新規拠点を作成
-     *
-     * @param  array<string, mixed>  $attributes
-     */
+    #[Override]
     public function create(Timetable $timetable, array $attributes): Location
     {
         return $timetable->locations()->create($attributes);
     }
 
-    /**
-     * 拠点を更新
-     *
-     * @param  array<string, mixed>  $attributes
-     */
+    #[Override]
     public function update(Location $location, array $attributes): bool
     {
         return $location->update($attributes);
     }
 
-    /**
-     * 拠点を削除
-     */
+    #[Override]
     public function delete(Location $location): bool
     {
         return (bool) $location->delete();
     }
 
-    /**
-     * 指定タイムテーブルの拠点表示順を一括更新
-     *
-     * @param  array<int, int>  $locationIds
-     */
+    #[Override]
     public function reorder(Timetable $timetable, array $locationIds): void
     {
         DB::transaction(function () use ($timetable, $locationIds): void {
@@ -92,19 +134,13 @@ class LocationRepository implements LocationRepositoryInterface
         });
     }
 
-    /**
-     * 指定タイムテーブルにおける最大の表示順を取得
-     */
+    #[Override]
     public function getMaxDisplayOrder(Timetable $timetable): int
     {
         return (int) ($timetable->locations()->max('display_order') ?? 0);
     }
 
-    /**
-     * 拠点の利用可能時間帯スケジュールを一括同期（作成・更新・削除）
-     *
-     * @param  array<int, array<string, mixed>>  $schedulesData
-     */
+    #[Override]
     public function syncSchedules(Location $location, array $schedulesData): void
     {
         DB::transaction(function () use ($location, $schedulesData): void {

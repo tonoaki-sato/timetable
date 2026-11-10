@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreScheduleRequest;
 use App\Http\Requests\UpdateScheduleRequest;
 use App\Models\Schedule;
-use App\Models\Staff;
 use App\Services\ScheduleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -52,7 +51,7 @@ class ScheduleController extends Controller
         return view('schedules.create', [
             'categories' => Schedule::CATEGORIES,
             'statuses' => Schedule::STATUSES,
-            'staffs' => Staff::active()->orderBy('kana')->get(),
+            'staffs' => $this->scheduleService->getActiveStaffList(),
             'defaultCategory' => $request->input('category', 'other'),
             'defaultDate' => $request->input('date', now()->toDateString()),
         ]);
@@ -107,7 +106,7 @@ class ScheduleController extends Controller
             'schedule' => $schedule,
             'categories' => Schedule::CATEGORIES,
             'statuses' => Schedule::STATUSES,
-            'staffs' => Staff::active()->orderBy('kana')->get(),
+            'staffs' => $this->scheduleService->getActiveStaffList(),
         ]);
     }
 

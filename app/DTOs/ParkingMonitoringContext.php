@@ -86,4 +86,16 @@ readonly class ParkingMonitoringContext
 
         return ParkingConstraintStatus::Standby;
     }
+
+    /**
+     * カード外枠のボーダーCSSクラスを取得
+     */
+    public function cardBorderClass(): string
+    {
+        return match (true) {
+            $this->hasViolations() => 'border-red-300 ring-1 ring-red-200',
+            $this->hasWarnings() => 'border-amber-300 ring-1 ring-amber-200',
+            default => 'border-slate-200 shadow-sm',
+        };
+    }
 }

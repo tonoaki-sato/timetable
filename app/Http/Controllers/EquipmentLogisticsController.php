@@ -4,11 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Actions\Logistics\DownloadEquipmentLogisticsPdfAction;
 use App\Models\Equipment;
-use App\Models\EquipmentLogisticsPattern;
-use App\Models\Location;
-use App\Models\Staff;
 use App\Models\Timetable;
 use App\Services\EquipmentLogisticsService;
+use App\Services\TimetableService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -18,7 +16,8 @@ class EquipmentLogisticsController extends Controller
 {
     public function __construct(
         protected EquipmentLogisticsService $logisticsService,
-        protected DownloadEquipmentLogisticsPdfAction $downloadLogisticsPdfAction
+        protected DownloadEquipmentLogisticsPdfAction $downloadLogisticsPdfAction,
+        protected TimetableService $timetableService
     ) {}
 
     /**
@@ -28,9 +27,7 @@ class EquipmentLogisticsController extends Controller
     {
         $this->authorize('viewAny', Equipment::class);
 
-        $timetables = Timetable::withCount('logisticsPlans')
-            ->orderBy('target_date', 'asc')
-            ->get();
+        $timetables = $this->logisticsService->getTimetablesForSelect();
 
         if ($timetables->isEmpty()) {
             return redirect()->route('timetables.index')
@@ -60,32 +57,13 @@ class EquipmentLogisticsController extends Controller
         $typeFilter = $request->query('type');
         $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
 
-        $locations = Location::forTimetable($timetable)->active()->ordered()->get();
-        $lanes = $timetable->lanes()->ordered()->get();
-        $equipments = $this->logisticsService->getEquipmentsFlowData(
-            type: $typeFilter,
-            laneId: $laneFilter,
-            timetable: $timetable
+        $viewData = $this->logisticsService->getLogisticsIndexViewData($timetable, $typeFilter, $laneFilter);
+        $viewData['printUrl'] = route(
+            'timetables.logistics.print',
+            array_merge(['timetable' => $timetable, 'preview' => 1], $request->only(['type', 'lane_id']))
         );
 
-        $allPlans = $timetable->logisticsPlans()->get();
-        $stats = [
-            'total_equipments' => Equipment::count(),
-            'planned_equipments' => $allPlans->pluck('equipment_id')->unique()->count(),
-            'total_steps' => $allPlans->count(),
-            'completed_steps' => $allPlans->where('status', 'completed')->count(),
-            'witness_required_steps' => $allPlans->where('witness_required', true)->count(),
-        ];
-
-        return view('logistics.index', compact(
-            'timetable',
-            'locations',
-            'lanes',
-            'equipments',
-            'stats',
-            'typeFilter',
-            'laneFilter'
-        ));
+        return view('logistics.index', $viewData);
     }
 
     /**
@@ -96,33 +74,25 @@ class EquipmentLogisticsController extends Controller
         $this->authorize('viewAny', Equipment::class);
 
         if ($request->boolean('preview')) {
-            $format = $request->query('format', 'all');
+            $format = (string) $request->query('format', 'all');
             $typeFilter = $request->query('type');
             $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
             $phaseFilter = $request->query('phase');
 
-            $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable);
-            $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter, $timetable);
-            $locationsData = $this->logisticsService->getLocationsStatusData($timetable);
-            $onsiteNightPlans = $this->logisticsService->getOnsiteNightStoragePlans($timetable);
-            $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData($timetable);
-            $festivalDates = $this->logisticsService->resolveFestivalDates();
-            $lanes = $timetable->lanes()->ordered()->get();
+            $viewData = $this->logisticsService->getLogisticsPrintPreviewData(
+                $timetable,
+                $format,
+                $typeFilter,
+                $laneFilter,
+                $phaseFilter
+            );
 
-            return view('logistics.print', compact(
-                'timetable',
-                'format',
-                'typeFilter',
-                'laneFilter',
-                'phaseFilter',
-                'equipments',
-                'checklistPlans',
-                'locationsData',
-                'onsiteNightPlans',
-                'eventCompanyPlans',
-                'festivalDates',
-                'lanes'
-            ));
+            $viewData['backUrl'] = route('timetables.logistics.index', $timetable);
+            $viewData['downloadUrl'] = route('timetables.logistics.print', array_merge(['timetable' => $timetable], $request->except('preview')));
+            $viewData['formAction'] = route('timetables.logistics.print', $timetable);
+            $viewData['resetUrl'] = route('timetables.logistics.print', ['timetable' => $timetable, 'preview' => 1, 'format' => $format]);
+
+            return view('logistics.print', $viewData);
         }
 
         return $this->downloadLogisticsPdfAction->execute($request, $timetable);
@@ -135,21 +105,7 @@ class EquipmentLogisticsController extends Controller
     {
         $this->authorize('view', $equipment);
 
-        $equipment->load([
-            'creator',
-            'plans' => fn ($q) => $q->where('timetable_id', $timetable->id)->with([
-                'equipment',
-                'fromLocationModel.schedules',
-                'toLocationModel.schedules',
-                'witnessStaff',
-            ])->orderBy('display_order')->orderBy('id'),
-        ]);
-
-        $locations = Location::forTimetable($timetable)->active()->ordered()->get();
-        $staffs = Staff::active()->orderBy('kana')->get();
-        $patterns = EquipmentLogisticsPattern::with('steps')->ordered()->get();
-
-        return view('logistics.show', compact('timetable', 'equipment', 'locations', 'staffs', 'patterns'));
+        return view('logistics.show', $this->logisticsService->getLogisticsShowViewData($timetable, $equipment));
     }
 
     // ==========================================
@@ -172,15 +128,10 @@ class EquipmentLogisticsController extends Controller
 
     protected function resolveFallbackTimetable(?Request $request = null): Timetable
     {
-        if ($request && $request->filled('timetable_id')) {
-            $found = Timetable::find($request->integer('timetable_id'));
-            if ($found) {
-                return $found;
-            }
-        }
+        $timetableId = ($request && $request->filled('timetable_id'))
+            ? $request->integer('timetable_id')
+            : null;
 
-        return Timetable::where('status', 'active')->orderBy('target_date', 'asc')->first()
-            ?? Timetable::orderBy('target_date', 'asc')->first()
-            ?? Timetable::factory()->create(['name' => '既定運行計画', 'target_date' => now()->toDateString()]);
+        return $this->timetableService->resolveFallbackTimetable($timetableId);
     }
 }

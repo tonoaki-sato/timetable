@@ -10,16 +10,42 @@ use App\Models\Location;
 use App\Models\Timetable;
 use App\Repositories\Contracts\EquipmentLogisticsPatternRepositoryInterface;
 use App\Repositories\Contracts\EquipmentLogisticsPlanRepositoryInterface;
+use App\Repositories\Contracts\EquipmentRepositoryInterface;
+use App\Repositories\Contracts\LaneRepositoryInterface;
+use App\Repositories\Contracts\LocationRepositoryInterface;
+use App\Repositories\Contracts\StaffRepositoryInterface;
+use App\Repositories\Contracts\TimetableRepositoryInterface;
 use Carbon\Carbon;
+use DomainException;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
 
 class EquipmentLogisticsService
 {
+    protected EquipmentRepositoryInterface $equipmentRepository;
+
+    protected LocationRepositoryInterface $locationRepository;
+
+    protected TimetableRepositoryInterface $timetableRepository;
+
+    protected LaneRepositoryInterface $laneRepository;
+
+    protected StaffRepositoryInterface $staffRepository;
+
     public function __construct(
         protected EquipmentLogisticsPlanRepositoryInterface $planRepository,
-        protected EquipmentLogisticsPatternRepositoryInterface $patternRepository
-    ) {}
+        protected EquipmentLogisticsPatternRepositoryInterface $patternRepository,
+        ?EquipmentRepositoryInterface $equipmentRepository = null,
+        ?LocationRepositoryInterface $locationRepository = null,
+        ?TimetableRepositoryInterface $timetableRepository = null,
+        ?LaneRepositoryInterface $laneRepository = null,
+        ?StaffRepositoryInterface $staffRepository = null,
+    ) {
+        $this->equipmentRepository = $equipmentRepository ?? app(EquipmentRepositoryInterface::class);
+        $this->locationRepository = $locationRepository ?? app(LocationRepositoryInterface::class);
+        $this->timetableRepository = $timetableRepository ?? app(TimetableRepositoryInterface::class);
+        $this->laneRepository = $laneRepository ?? app(LaneRepositoryInterface::class);
+        $this->staffRepository = $staffRepository ?? app(StaffRepositoryInterface::class);
+    }
 
     /**
      * まつりの代表日程（事前準備、前日、1日目、2日目、翌日）を取得
@@ -28,7 +54,7 @@ class EquipmentLogisticsService
      */
     public function resolveFestivalDates(): array
     {
-        $timetables = Timetable::orderBy('target_date', 'asc')->get();
+        $timetables = $this->timetableRepository->getAll();
         $day1 = $timetables->first()?->target_date?->format('Y-m-d') ?? '2026-10-11';
         $day2 = $timetables->skip(1)->first()?->target_date?->format('Y-m-d') ?? '2026-10-12';
 
@@ -57,7 +83,7 @@ class EquipmentLogisticsService
             : ApplyEquipmentPatternDTO::fromArray(array_merge(['pattern_id' => $pattern->id], $options));
         $override = $dto->overrideExisting;
 
-        $targetTimetable = $timetable ?? Timetable::orderBy('target_date', 'asc')->first();
+        $targetTimetable = $timetable ?? $this->timetableRepository->findFirstActiveOrEarliest();
         if (! $targetTimetable) {
             return 0;
         }
@@ -70,16 +96,8 @@ class EquipmentLogisticsService
         $targetDate = $targetTimetable->target_date?->format('Y-m-d') ?? $dates['day1'];
 
         $stagingLocation = $dto->stagingLocationId
-            ? Location::find($dto->stagingLocationId)
-            : Location::where('timetable_id', $targetTimetable->id)->where('name', 'like', '%税務署%')->first();
-
-        $nightLocation1 = $dto->nightLocation1Id
-            ? Location::find($dto->nightLocation1Id)
-            : $stagingLocation;
-
-        $nightLocation2 = $dto->nightLocation2Id
-            ? Location::find($dto->nightLocation2Id)
-            : null;
+            ? $this->locationRepository->findById($dto->stagingLocationId)
+            : $this->locationRepository->findFirstByTimetableAndNameLike($targetTimetable->id, '税務署');
 
         $storageLocationName = $equipment->storage_location
             ?: ($equipment->isPersonal() ? '所有者（個人持ち込み・持ち帰り）' : '番所地下倉庫');
@@ -96,17 +114,17 @@ class EquipmentLogisticsService
             $fromLocId = $step->from_location_id;
             $fromLocText = $step->fromLocationModel?->name ?? $storageLocationName;
             $toLocId = $step->to_location_id;
-            $toLocText = $step->toLocationModel?->name ?? '（未定）';
+            $toLocText = $step->toLocationModel?->name ?? ($stagingLocation?->name ?? '（未定）');
 
             // 拠点が別運行日マスタの場合、同一名拠点を対象運行日から解決
-            if ($fromLocId && $step->fromLocationModel?->timetable_id !== $targetTimetable->id) {
-                $matched = Location::where('timetable_id', $targetTimetable->id)->where('name', $step->fromLocationModel?->name)->first();
+            if ($fromLocId && $step->fromLocationModel?->timetable_id !== $targetTimetable->id && $step->fromLocationModel?->name) {
+                $matched = $this->locationRepository->findFirstByTimetableAndExactName($targetTimetable->id, $step->fromLocationModel->name);
                 if ($matched) {
                     $fromLocId = $matched->id;
                 }
             }
-            if ($toLocId && $step->toLocationModel?->timetable_id !== $targetTimetable->id) {
-                $matched = Location::where('timetable_id', $targetTimetable->id)->where('name', $step->toLocationModel?->name)->first();
+            if ($toLocId && $step->toLocationModel?->timetable_id !== $targetTimetable->id && $step->toLocationModel?->name) {
+                $matched = $this->locationRepository->findFirstByTimetableAndExactName($targetTimetable->id, $step->toLocationModel->name);
                 if ($matched) {
                     $toLocId = $matched->id;
                 }
@@ -127,8 +145,9 @@ class EquipmentLogisticsService
                 $step->title
             );
 
-            $equipment->plans()->create([
+            $this->planRepository->create([
                 'timetable_id' => $targetTimetable->id,
+                'equipment_id' => $equipment->id,
                 'target_date' => $stepDate,
                 'day_phase' => $step->day_phase,
                 'action_type' => $step->action_type,
@@ -157,42 +176,246 @@ class EquipmentLogisticsService
     }
 
     /**
+     * パターンIDからカスタムパターンを取得して対象資材へ適用
+     *
+     * @return array{pattern: EquipmentLogisticsPattern, count: int, equipment: Equipment}
+     */
+    public function applyPatternById(Equipment $equipment, ApplyEquipmentPatternDTO $dto, Timetable $timetable): array
+    {
+        $pattern = $this->patternRepository->findWithSteps($dto->patternId);
+        if (! $pattern) {
+            throw new DomainException('指定された搬出入パターンが見つかりません。');
+        }
+
+        $count = $this->applyPattern($equipment, $pattern, $dto, $timetable);
+        $this->equipmentRepository->loadLogisticsShowDetails($equipment, $timetable);
+
+        return [
+            'pattern' => $pattern,
+            'count' => $count,
+            'equipment' => $equipment,
+        ];
+    }
+
+    /**
      * 資材に登録済みの計画ステップ群を新しい搬出入パターンとして保存
      *
      * @param  array{name: string, target_type?: ?string, description?: ?string}  $data
      */
     public function saveEquipmentPlansAsPattern(Equipment $equipment, array $data, ?int $userId = null): EquipmentLogisticsPattern
     {
-        return DB::transaction(function () use ($equipment, $data, $userId) {
-            $pattern = EquipmentLogisticsPattern::create([
-                'name' => $data['name'],
-                'target_type' => $data['target_type'] ?: $equipment->type,
-                'description' => $data['description'] ?? "{$equipment->name} の搬出入ステップから作成されたパターン",
-                'display_order' => (int) EquipmentLogisticsPattern::max('display_order') + 10,
-                'created_by' => $userId,
-            ]);
+        $plans = $this->equipmentRepository->getPlansOrdered($equipment);
+        $stepsData = [];
+        $order = 10;
 
-            $plans = $equipment->plans()->orderBy('display_order', 'asc')->orderBy('id', 'asc')->get();
-            $order = 10;
+        foreach ($plans as $plan) {
+            $stepsData[] = [
+                'day_phase' => $plan->day_phase,
+                'action_type' => $plan->action_type,
+                'title' => $plan->title,
+                'from_location_id' => $plan->from_location_id,
+                'to_location_id' => $plan->to_location_id,
+                'operator_type' => $plan->operator_type,
+                'witness_required' => $plan->witness_required,
+                'notes' => $plan->notes,
+                'display_order' => $order,
+            ];
+            $order += 10;
+        }
 
-            foreach ($plans as $plan) {
-                $pattern->steps()->create([
-                    'day_phase' => $plan->day_phase,
-                    'action_type' => $plan->action_type,
-                    'title' => $plan->title,
-                    'from_location_id' => $plan->from_location_id,
-                    'to_location_id' => $plan->to_location_id,
-                    'operator_type' => $plan->operator_type,
-                    'witness_required' => $plan->witness_required,
-                    'notes' => $plan->notes,
-                    'display_order' => $order,
-                ]);
+        return $this->patternRepository->createWithSteps([
+            'name' => $data['name'],
+            'target_type' => $data['target_type'] ?: $equipment->type,
+            'description' => $data['description'] ?? "{$equipment->name} の搬出入ステップから作成されたパターン",
+        ], $stepsData, $userId);
+    }
 
-                $order += 10;
-            }
+    /**
+     * 資材に紐づく搬出入ステップ件数を取得
+     */
+    public function countEquipmentPlans(Equipment $equipment): int
+    {
+        return $this->equipmentRepository->countPlans($equipment);
+    }
 
-            return $pattern->load('steps');
-        });
+    /**
+     * 搬出入計画ステップを作成し関連リレーションをロードして返却
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function createPlan(Timetable $timetable, array $attributes): EquipmentLogisticsPlan
+    {
+        $attributes['timetable_id'] = $timetable->id;
+        $plan = $this->planRepository->create($attributes);
+
+        return $plan->load(['fromLocationModel', 'toLocationModel', 'witnessStaff']);
+    }
+
+    /**
+     * 搬出入計画ステップを更新し関連リレーションをロードして返却
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function updatePlan(EquipmentLogisticsPlan $plan, array $attributes): EquipmentLogisticsPlan
+    {
+        $this->planRepository->update($plan, $attributes);
+
+        return $plan->load(['fromLocationModel', 'toLocationModel', 'witnessStaff']);
+    }
+
+    /**
+     * 搬出入計画ステップを削除
+     */
+    public function deletePlan(EquipmentLogisticsPlan $plan): bool
+    {
+        return $this->planRepository->delete($plan);
+    }
+
+    /**
+     * 特定資材・指定運行日の搬出入計画ステップを一括クリア
+     */
+    public function clearPlansForEquipment(Equipment $equipment, Timetable $timetable): int
+    {
+        return $this->planRepository->clearForEquipment($equipment, $timetable);
+    }
+
+    /**
+     * 搬出入パターンを新規作成
+     *
+     * @param  array{name: string, target_type: string, description?: ?string, display_order?: ?int}  $attributes
+     * @param  array<int, array<string, mixed>>  $stepsData
+     */
+    public function createPatternWithSteps(array $attributes, array $stepsData, ?int $userId = null): EquipmentLogisticsPattern
+    {
+        return $this->patternRepository->createWithSteps($attributes, $stepsData, $userId);
+    }
+
+    /**
+     * 搬出入パターンを更新
+     *
+     * @param  array{name: string, target_type: string, description?: ?string, display_order?: ?int}  $attributes
+     * @param  array<int, array<string, mixed>>  $stepsData
+     */
+    public function updatePatternWithSteps(EquipmentLogisticsPattern $pattern, array $attributes, array $stepsData): EquipmentLogisticsPattern
+    {
+        $this->patternRepository->updateWithSteps($pattern, $attributes, $stepsData);
+
+        return $pattern->load('steps');
+    }
+
+    /**
+     * 搬出入パターンを削除
+     */
+    public function deletePattern(EquipmentLogisticsPattern $pattern): bool
+    {
+        return $this->patternRepository->delete($pattern);
+    }
+
+    /**
+     * パターン一覧画面用のデータを取得
+     *
+     * @return array{patterns: Collection<int, EquipmentLogisticsPattern>, locations: Collection<int, Location>}
+     */
+    public function getPatternIndexViewData(): array
+    {
+        return [
+            'patterns' => $this->patternRepository->getAllWithSteps(),
+            'locations' => $this->locationRepository->getUniqueNamesOrdered(),
+        ];
+    }
+
+    /**
+     * タイムテーブル選択画面用のタイムテーブル一覧を取得
+     *
+     * @return Collection<int, Timetable>
+     */
+    public function getTimetablesForSelect(): Collection
+    {
+        return $this->timetableRepository->getAllWithLogisticsPlansCount();
+    }
+
+    /**
+     * 指定タイムテーブルの搬出入計画一覧画面用データを取得
+     *
+     * @return array<string, mixed>
+     */
+    public function getLogisticsIndexViewData(Timetable $timetable, ?string $typeFilter = null, ?int $laneFilter = null): array
+    {
+        $locations = $this->locationRepository->getActiveOrderedForTimetable($timetable);
+        $lanes = $this->laneRepository->getOrderedWithLeadForTimetable($timetable);
+        $equipments = $this->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable);
+
+        $allPlans = $this->planRepository->getForTimetable($timetable);
+        $totalSteps = $allPlans->count();
+        $completedSteps = $allPlans->where('status', 'completed')->count();
+        $stats = [
+            'total_equipments' => $this->equipmentRepository->getTotalCount(),
+            'planned_equipments' => $allPlans->pluck('equipment_id')->unique()->count(),
+            'total_steps' => $totalSteps,
+            'completed_steps' => $completedSteps,
+            'witness_required_steps' => $allPlans->where('witness_required', true)->count(),
+            'progress_percent' => $totalSteps > 0 ? (int) round(($completedSteps / $totalSteps) * 100) : 0,
+        ];
+
+        return [
+            'timetable' => $timetable,
+            'locations' => $locations,
+            'lanes' => $lanes,
+            'equipments' => $equipments,
+            'stats' => $stats,
+            'typeFilter' => $typeFilter,
+            'laneFilter' => $laneFilter,
+        ];
+    }
+
+    /**
+     * 搬出入計画の印刷プレビュー画面用データを取得
+     *
+     * @return array<string, mixed>
+     */
+    public function getLogisticsPrintPreviewData(
+        Timetable $timetable,
+        string $format = 'all',
+        ?string $typeFilter = null,
+        ?int $laneFilter = null,
+        ?string $phaseFilter = null
+    ): array {
+        return [
+            'timetable' => $timetable,
+            'format' => $format,
+            'typeFilter' => $typeFilter,
+            'laneFilter' => $laneFilter,
+            'phaseFilter' => $phaseFilter,
+            'equipments' => $this->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable),
+            'checklistPlans' => $this->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter, $timetable),
+            'locationsData' => $this->getLocationsStatusData($timetable),
+            'onsiteNightPlans' => $this->getOnsiteNightStoragePlans($timetable),
+            'eventCompanyPlans' => $this->getEventCompanyScheduleData($timetable),
+            'festivalDates' => $this->resolveFestivalDates(),
+            'lanes' => $this->laneRepository->getOrderedWithLeadForTimetable($timetable),
+        ];
+    }
+
+    /**
+     * 個別資材の搬出入計画詳細画面用データを取得
+     *
+     * @return array<string, mixed>
+     */
+    public function getLogisticsShowViewData(Timetable $timetable, Equipment $equipment): array
+    {
+        $this->equipmentRepository->loadLogisticsShowDetails($equipment, $timetable);
+
+        return [
+            'timetable' => $timetable,
+            'equipment' => $equipment,
+            'locations' => $this->locationRepository->getActiveOrderedForTimetable($timetable),
+            'staffs' => $this->staffRepository->getActiveStaffList(),
+            'patterns' => $this->patternRepository->getAllWithSteps(),
+            'clearAction' => $equipment->clearPlansUrl($timetable),
+            'storePlanUrl' => route('timetables.logistics.plans.store', $timetable),
+            'applyTemplateUrl' => $equipment->applyTemplateUrl($timetable),
+            'backLogisticsUrl' => route('timetables.logistics.index', $timetable),
+        ];
     }
 
     /**
@@ -222,28 +445,17 @@ class EquipmentLogisticsService
      */
     public function getLocationsStatusData(?Timetable $timetable = null): array
     {
-        $locationsQuery = Location::active()->ordered()->with(['type', 'schedules']);
-        if ($timetable) {
-            $locationsQuery->where('timetable_id', $timetable->id);
-        }
-        $locations = $locationsQuery->get();
-        $locationIds = $locations->pluck('id')->all();
+        $locations = $this->locationRepository->getActiveWithTypeAndSchedules($timetable);
+        $locationIds = $locations->pluck('id')->map(fn ($id): int => (int) $id)->all();
 
-        $plansQuery = EquipmentLogisticsPlan::with(['equipment'])
-            ->whereIn('to_location_id', $locationIds)
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc');
-
-        if ($timetable) {
-            $plansQuery->where('timetable_id', $timetable->id);
-        }
-
-        $allPlans = $plansQuery->get()->groupBy('to_location_id');
+        $allPlans = $this->planRepository->getByToLocationIdsWithEquipment($locationIds, $timetable)
+            ->groupBy('to_location_id');
 
         $result = [];
 
         foreach ($locations as $loc) {
-            $plansToLocation = $allPlans->get($loc->id, collect());
+            /** @var Collection<int, EquipmentLogisticsPlan> $plansToLocation */
+            $plansToLocation = $allPlans->get($loc->id, new Collection);
 
             $nightPlans = $plansToLocation->where('action_type', 'night_storage');
             $collectionPlans = $plansToLocation->where('action_type', 'collection_staging');
@@ -266,18 +478,7 @@ class EquipmentLogisticsService
      */
     public function getOnsiteNightStoragePlans(?Timetable $timetable = null): Collection
     {
-        $query = EquipmentLogisticsPlan::with(['equipment', 'witnessStaff'])
-            ->where('action_type', 'night_storage')
-            ->whereNull('to_location_id')
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->orderBy('display_order', 'asc');
-
-        if ($timetable) {
-            $query->where('timetable_id', $timetable->id);
-        }
-
-        return $query->get();
+        return $this->planRepository->getOnsiteNightStoragePlans($timetable);
     }
 
     /**
@@ -287,21 +488,7 @@ class EquipmentLogisticsService
      */
     public function getEventCompanyScheduleData(?Timetable $timetable = null): Collection
     {
-        $query = EquipmentLogisticsPlan::with(['equipment', 'witnessStaff', 'fromLocationModel', 'toLocationModel'])
-            ->where(function ($q) {
-                $q->where('operator_type', 'event_company')
-                    ->orWhere('witness_required', true)
-                    ->orWhereHas('equipment', fn ($sub) => $sub->where('type', 'rental'));
-            })
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->orderBy('display_order', 'asc');
-
-        if ($timetable) {
-            $query->where('timetable_id', $timetable->id);
-        }
-
-        return $query->get();
+        return $this->planRepository->getEventCompanyScheduleData($timetable);
     }
 
     /**

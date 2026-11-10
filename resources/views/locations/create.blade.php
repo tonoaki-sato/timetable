@@ -179,10 +179,7 @@
                             </tr>
                         </thead>
                         <tbody id="schedules-form-body" class="divide-y divide-slate-100 bg-white">
-                            @php
-                                $oldSchedules = old('schedules', []);
-                            @endphp
-                            @foreach($oldSchedules as $index => $sch)
+                            @foreach(old('schedules', []) as $index => $sch)
                                 <tr data-schedule-row="true" class="border-b border-slate-100 hover:bg-slate-50/60 transition">
                                     <td class="py-2.5 px-3">
                                         <div class="flex items-center space-x-1 font-mono">
@@ -219,7 +216,7 @@
                             @endforeach
                         </tbody>
                     </table>
-                    <div id="schedules-empty-message" class="p-6 text-center text-slate-400 text-xs {{ !empty($oldSchedules) ? 'hidden' : '' }}">
+                    <div id="schedules-empty-message" class="p-6 text-center text-slate-400 text-xs {{ !empty(old('schedules', [])) ? 'hidden' : '' }}">
                         利用可能時間帯枠がありません。「➕ 時間帯枠を追加」から登録してください。
                     </div>
                 </div>

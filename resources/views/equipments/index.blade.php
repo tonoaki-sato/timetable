@@ -1,24 +1,13 @@
-@php
-    $isScoped = $isTimetableScoped ?? false;
-    $pageTitle = $isScoped ? ($timetable->name . ' 機材・備品一覧') : '機材・備品一覧';
-    $pageDesc = $isScoped
-        ? '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）運行に使用する備品の台帳および配備状況を管理します。'
-        : 'まつり運行全般で使用する自前保有備品、外部レンタル機材、個人持ち込み私物の台帳です。ドラッグ＆ドロップで表示順を変更できます。';
-    $indexRoute = $isScoped ? route('timetables.equipments.index', $timetable) : route('equipments.index');
-    $createRoute = $isScoped ? route('timetables.equipments.create', $timetable) : route('equipments.create');
-    $reorderRoute = $isScoped ? route('timetables.equipments.reorder', $timetable) : route('equipments.reorder');
-@endphp
-
-<x-layouts.app :title="$pageTitle">
+<x-layouts.app :title="$indexTitle">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- 1. ナビゲーション & ヘッダー -->
     <x-page-header
-        :title="$pageTitle"
+        :title="$indexTitle"
         icon="📦"
-        :description="$pageDesc">
+        :description="$indexDesc">
         <x-slot:breadcrumbs>
-            @if($isScoped)
+            @if($isTimetableScoped)
                 <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                     <span>⏱️</span>
                     <span>運行情報一覧</span>
@@ -43,7 +32,7 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            @if($isScoped)
+            @if($isTimetableScoped)
                 <a href="{{ route('timetables.logistics.print', $timetable) }}"
                     class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0"
                     title="搬出入指示書兼現場チェックリストをPDFでダウンロード">
@@ -51,7 +40,7 @@
                     <span>指示書PDF</span>
                 </a>
             @endif
-            <a href="{{ $createRoute }}"
+            <a href="{{ $createUrl }}"
                 class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>➕</span>
                 <span>新規備品を追加</span>
@@ -60,7 +49,7 @@
     </x-page-header>
 
     <!-- タイムテーブルスコープ時のみコンテキストバーを表示 -->
-    @if($isScoped)
+    @if($isTimetableScoped)
         <x-timetable-context-bar :timetable="$timetable" active="logistics" />
     @endif
 
@@ -85,26 +74,26 @@
             <!-- 区分フィルター -->
             <div class="flex items-center space-x-1.5 overflow-x-auto scrollbar-none flex-nowrap py-0.5">
                 <span class="text-xs font-bold text-slate-500 mr-1 whitespace-nowrap shrink-0">区分:</span>
-                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['keyword' => $keyword])) }}"
+                <a href="{{ $indexUrl . '?' . http_build_query(array_filter(['keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ !$typeFilter ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                     すべて ({{ $totalCount }})
                 </a>
-                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'committee', 'keyword' => $keyword])) }}"
+                <a href="{{ $indexUrl . '?' . http_build_query(array_filter(['type' => 'committee', 'keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'committee' ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200' }}">
                     🏛️ 実行委員会 ({{ $committeeCount }})
                 </a>
-                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'rental', 'keyword' => $keyword])) }}"
+                <a href="{{ $indexUrl . '?' . http_build_query(array_filter(['type' => 'rental', 'keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'rental' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200' }}">
                     🏢 イベント会社 ({{ $rentalCount }})
                 </a>
-                <a href="{{ $indexRoute . '?' . http_build_query(array_filter(['type' => 'personal', 'keyword' => $keyword])) }}"
+                <a href="{{ $indexUrl . '?' . http_build_query(array_filter(['type' => 'personal', 'keyword' => $keyword])) }}"
                    class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition {{ $typeFilter === 'personal' ? 'bg-amber-600 text-white shadow-2xs' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200' }}">
                     🎒 私物 ({{ $personalCount }})
                 </a>
             </div>
 
             <!-- キーワード検索フォーム -->
-            <form method="GET" action="{{ $indexRoute }}" class="flex items-center space-x-2 flex-wrap gap-2">
+            <form method="GET" action="{{ $indexUrl }}" class="flex items-center space-x-2 flex-wrap gap-2">
                 @if($typeFilter)
                     <input type="hidden" name="type" value="{{ $typeFilter }}">
                 @endif
@@ -121,7 +110,7 @@
                 </button>
 
                 @if($typeFilter || $keyword)
-                    <a href="{{ $indexRoute }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 underline">
+                    <a href="{{ $indexUrl }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 underline">
                         クリア
                     </a>
                 @endif
@@ -144,21 +133,16 @@
                     </tr>
                 </thead>
                 <tbody id="equipments-container"
-                    data-reorder-url="{{ $reorderRoute }}"
+                    data-reorder-url="{{ $reorderUrl }}"
                     class="divide-y divide-slate-100 bg-white">
                     @forelse($equipments as $item)
-                        @php
-                            $itemShowUrl = $isScoped ? route('timetables.equipments.show', [$timetable, $item]) : route('equipments.show', $item);
-                            $itemEditUrl = $isScoped ? route('timetables.equipments.edit', [$timetable, $item]) : route('equipments.edit', $item);
-                            $itemDestroyUrl = $isScoped ? route('timetables.equipments.destroy', [$timetable, $item]) : route('equipments.destroy', $item);
-                        @endphp
                         <tr data-equipment-id="{{ $item->id }}" draggable="true"
                             class="hover:bg-slate-50/80 transition cursor-default">
                             <!-- 備品名 -->
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex items-center space-x-2">
                                     <span class="cursor-grab active:cursor-grabbing text-slate-400 hover:text-indigo-600 px-1 select-none font-bold text-sm" title="ドラッグして並び替え">⋮⋮</span>
-                                    <a href="{{ $itemShowUrl }}"
+                                    <a href="{{ $item->showUrl($scopedTimetable ?? null) }}"
                                         class="font-bold text-slate-800 hover:text-indigo-600 hover:underline transition"
                                         title="クリックして詳細を表示">
                                         {{ $item->name }}
@@ -204,13 +188,13 @@
 
                             <!-- 操作 -->
                             <td class="px-4 py-3 whitespace-nowrap text-right space-x-1">
-                                <a href="{{ $itemEditUrl }}"
+                                <a href="{{ $item->editUrl($scopedTimetable ?? null) }}"
                                     class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1">
                                     <span>✏️</span>
                                     <span>編集</span>
                                 </a>
                                 @can('delete', $item)
-                                    <form method="POST" action="{{ $itemDestroyUrl }}" class="inline"
+                                    <form method="POST" action="{{ $item->destroyUrl($scopedTimetable ?? null) }}" class="inline"
                                         data-confirm="備品「{{ $item->name }}」を削除しますか？&#10;紐づくすべての搬出入計画ステップも削除されます。">
                                         @csrf
                                         @method('DELETE')

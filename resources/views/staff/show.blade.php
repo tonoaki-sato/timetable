@@ -234,15 +234,7 @@
                                     {{ $assignment->role_description ?: '一般担当' }}
                                 </td>
                                 <td class="px-4 py-2.5 whitespace-nowrap">
-                                    @php
-                                        $statusClass = match($assignment->attendance_status) {
-                                            'checked_in' => 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold',
-                                            'completed' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                                            'absent' => 'bg-red-50 text-red-600 border-red-200 line-through',
-                                            default => 'bg-slate-100 text-slate-600 border-slate-200',
-                                        };
-                                    @endphp
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] border {{ $statusClass }}">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] border {{ $assignment->attendance_badge_class }}">
                                         {{ $assignment->attendance_status_label }}
                                     </span>
                                 </td>

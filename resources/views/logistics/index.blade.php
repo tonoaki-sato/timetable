@@ -1,10 +1,6 @@
 <x-layouts.app :title="$timetable->name . ' 搬出入計画一覧'">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
-    @php
-        $printUrl = route('timetables.logistics.print', array_merge(['timetable' => $timetable], request()->except('preview')));
-    @endphp
-
     <!-- 1. ヘッダーセクション -->
     <x-page-header
         :title="$timetable->name . ' 搬出入計画一覧'"
@@ -112,9 +108,6 @@
     <!-- ========================================================================= -->
     <!-- 🚚 搬出入計画一覧（資材別進捗） -->
     <!-- ========================================================================= -->
-    @php
-        $progressPercent = $stats['total_steps'] > 0 ? (int) round(($stats['completed_steps'] / $stats['total_steps']) * 100) : 0;
-    @endphp
 
         <!-- KPIサマリーカード -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -140,7 +133,7 @@
                     <strong class="text-xl font-bold font-mono {{ $stats['completed_steps'] === $stats['total_steps'] && $stats['total_steps'] > 0 ? 'text-emerald-600' : 'text-indigo-600' }}">
                         {{ $stats['completed_steps'] }}
                     </strong>
-                    <span class="text-xs text-slate-500">/ {{ $stats['total_steps'] }} ({{ $progressPercent }}%)</span>
+                    <span class="text-xs text-slate-500">/ {{ $stats['total_steps'] }} ({{ $stats['progress_percent'] }}%)</span>
                 </div>
             </div>
 
@@ -197,11 +190,6 @@
         <!-- 資材別 計画ステップ一覧 -->
         <div class="space-y-3">
             @forelse($equipments as $equipment)
-                @php
-                    $plans = $equipment->plans;
-                    $completedCount = $plans->where('status', 'completed')->count();
-                    $hasShortage = $plans->isEmpty();
-                @endphp
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3 hover:border-slate-300 transition">
                     <!-- 資材ヘッダー行 -->
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -227,9 +215,9 @@
                         </div>
 
                         <div class="flex items-center space-x-2 shrink-0 self-end sm:self-center">
-                            @if($plans->isNotEmpty())
-                                <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg {{ $completedCount === $plans->count() ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200' }}">
-                                    {{ $completedCount }}/{{ $plans->count() }} ステップ完了
+                            @if($equipment->plans->isNotEmpty())
+                                <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg {{ $equipment->are_all_plans_completed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200' }}">
+                                    {{ $equipment->completed_plans_count }}/{{ $equipment->plans->count() }} ステップ完了
                                 </span>
                             @else
                                 <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200">
@@ -247,9 +235,9 @@
                     </div>
 
                     <!-- ステップ一覧チップス -->
-                    @if($plans->isNotEmpty())
+                    @if($equipment->plans->isNotEmpty())
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
-                            @foreach($plans as $plan)
+                            @foreach($equipment->plans as $plan)
                                 <div class="p-2.5 rounded-xl border {{ $plan->isCompleted() ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-100 bg-slate-50/70' }} space-y-1.5 text-xs">
                                     <div class="flex items-center justify-between gap-1">
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold border

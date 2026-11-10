@@ -159,14 +159,7 @@
                         <span class="text-base">📅</span>
                         <h2 class="text-xs font-bold text-slate-900">運行基本情報</h2>
                     </div>
-                    @php
-                        $statusBadge = match($timetable->status) {
-                            'active' => 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold',
-                            'completed' => 'bg-slate-100 text-slate-600 border-slate-300',
-                            default => 'bg-blue-50 text-blue-700 border-blue-300',
-                        };
-                    @endphp
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border {{ $statusBadge }}">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border {{ $timetable->status_badge_class }}">
                         <span class="w-1.5 h-1.5 rounded-full mr-1 {{ $timetable->status === 'active' ? 'bg-emerald-500 animate-pulse' : ($timetable->status === 'completed' ? 'bg-slate-400' : 'bg-blue-500') }}"></span>
                         {{ $timetable->status_label }}
                     </span>

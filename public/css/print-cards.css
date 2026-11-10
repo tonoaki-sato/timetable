@@ -51,6 +51,21 @@ body {
 .btn-back:hover {
     color: #1e293b;
 }
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+.btn-download {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+.btn-browser-print {
+    background-color: #64748b;
+}
+.btn-browser-print:hover {
+    background-color: #475569;
+}
 
 /* A4印刷用紙シート */
 .print-sheet {

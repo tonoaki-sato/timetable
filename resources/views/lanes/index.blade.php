@@ -91,9 +91,6 @@
                     data-reorder-url="{{ route('timetables.lanes.reorder', $timetable) }}"
                     class="divide-y divide-slate-100 bg-white">
                     @forelse($lanes as $lane)
-                    @php
-                        $classes = $lane->color_classes;
-                    @endphp
                     <tr data-lane-id="{{ $lane->id }}" draggable="true"
                         class="hover:bg-slate-50/80 transition cursor-default">
                         <!-- 班名 -->
@@ -110,7 +107,7 @@
 
                         <!-- バッジ -->
                         <td class="px-4 py-3 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border {{ $classes['badge'] }}">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border {{ $lane->color_classes['badge'] }}">
                                 <span>{{ $lane->icon ?: '📋' }}</span>
                                 <span class="ml-1">{{ $lane->name }}</span>
                             </span>

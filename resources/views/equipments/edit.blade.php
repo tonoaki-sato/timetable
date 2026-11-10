@@ -1,23 +1,13 @@
-@php
-    $isScoped = $isTimetableScoped ?? false;
-    $indexUrl = $isScoped ? route('timetables.equipments.index', $timetable) : route('equipments.index');
-    $updateUrl = $isScoped ? route('timetables.equipments.update', [$timetable, $equipment]) : route('equipments.update', $equipment);
-    $pageTitle = $isScoped ? ($equipment->name . ' の編集 - ' . $timetable->name) : ($equipment->name . ' の編集 - 機材・備品一覧');
-    $pageDesc = $isScoped
-        ? '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）における備品台帳の基本情報を更新します。'
-        : '備品台帳の基本情報、数量、保管場所、主担当班および持出ルールを更新します。';
-@endphp
-
-<x-layouts.app :title="$pageTitle">
+<x-layouts.app :title="$editTitle">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
         :title="$equipment->name . ' の編集'"
         icon="✏️"
-        :description="$pageDesc">
+        :description="$editDesc">
         <x-slot:breadcrumbs>
-            @if($isScoped)
+            @if($isTimetableScoped)
                 <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                     <span>⏱️</span>
                     <span>運行情報一覧</span>
@@ -58,7 +48,7 @@
         </x-slot:actions>
     </x-page-header>
 
-    @if($isScoped)
+    @if($isTimetableScoped)
         <x-timetable-context-bar :timetable="$timetable" active="logistics" />
     @endif
 

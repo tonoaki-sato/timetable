@@ -2,11 +2,15 @@
 
 namespace App\Actions\Staff;
 
-use App\Models\Staff;
+use App\Repositories\Contracts\StaffRepositoryInterface;
 use Illuminate\Http\UploadedFile;
 
 class ImportStaffCsvAction
 {
+    public function __construct(
+        protected StaffRepositoryInterface $staffRepository
+    ) {}
+
     /**
      * CSVファイルからスタッフを一括インポート・更新
      *
@@ -80,9 +84,7 @@ class ImportStaffCsvAction
             }
 
             // 既存スタッフ判定（氏名 + フリガナ一致）
-            $existing = Staff::where('name', $name)
-                ->where('kana', $kana)
-                ->first();
+            $existing = $this->staffRepository->findFirstByNameAndKana($name, $kana);
 
             if ($existing) {
                 $updateData = [];
@@ -91,11 +93,11 @@ class ImportStaffCsvAction
                 }
 
                 if (! empty($updateData)) {
-                    $existing->update($updateData);
+                    $this->staffRepository->update($existing, $updateData);
                     $updatedCount++;
                 }
             } else {
-                Staff::create([
+                $this->staffRepository->create([
                     'name' => $name,
                     'kana' => $kana,
                     'affiliation' => $affiliation !== '' ? $affiliation : null,

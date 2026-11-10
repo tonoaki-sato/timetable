@@ -8,25 +8,45 @@ use App\Models\Timetable;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Override;
 
 class TimetableRepository implements TimetableRepositoryInterface
 {
-    /**
-     * 全タイムテーブル一覧の取得（日付順）
-     *
-     * @return Collection<int, Timetable>
-     */
+    #[Override]
+    public function findById(int $id): ?Timetable
+    {
+        return Timetable::find($id);
+    }
+
+    #[Override]
+    public function findOrFail(int $id): Timetable
+    {
+        return Timetable::findOrFail($id);
+    }
+
+    #[Override]
+    public function findFirstActiveOrEarliest(): ?Timetable
+    {
+        return Timetable::where('status', 'active')->orderBy('target_date', 'asc')->first()
+            ?? Timetable::orderBy('target_date', 'asc')->first();
+    }
+
+    #[Override]
     public function getAll(): Collection
     {
         return Timetable::orderBy('target_date', 'asc')
             ->get();
     }
 
-    /**
-     * ステータス絞り込み付き一覧取得
-     *
-     * @return Collection<int, Timetable>
-     */
+    #[Override]
+    public function getForNavigation(): Collection
+    {
+        return Timetable::where('status', '!=', 'completed')
+            ->orderBy('target_date', 'asc')
+            ->get();
+    }
+
+    #[Override]
     public function getFiltered(?string $status = null): Collection
     {
         $query = Timetable::query()->orderBy('target_date', 'asc');
@@ -38,17 +58,53 @@ class TimetableRepository implements TimetableRepositoryInterface
         return $query->get();
     }
 
-    /**
-     * IDによる取得（タスクおよびスタッフアサイン付き）
-     */
+    #[Override]
+    public function getForMonth(int $year, int $month, ?string $search = null): Collection
+    {
+        $query = Timetable::whereYear('target_date', $year)
+            ->whereMonth('target_date', $month);
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        return $query->orderBy('target_date')->orderBy('start_time')->get();
+    }
+
+    #[Override]
+    public function findForDatePrioritizingActive(string $dateStr): ?Timetable
+    {
+        return Timetable::whereDate('target_date', $dateStr)
+            ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
+            ->orderBy('id')
+            ->first();
+    }
+
+    #[Override]
+    public function getAllWithLanesAndLeadStaff(): Collection
+    {
+        return Timetable::with(['lanes.leadStaff'])
+            ->orderBy('target_date', 'asc')
+            ->get();
+    }
+
+    #[Override]
+    public function getAllWithLogisticsPlansCount(): Collection
+    {
+        return Timetable::withCount('logisticsPlans')
+            ->orderBy('target_date', 'asc')
+            ->get();
+    }
+
+    #[Override]
     public function findWithDetails(int $id): ?Timetable
     {
         return Timetable::with([
             'creator',
-            'lanes' => function ($q) {
+            'lanes' => function ($q): void {
                 $q->orderBy('display_order', 'asc')->with(['leadStaff', 'fixedStaff']);
             },
-            'tasks' => function ($q) {
+            'tasks' => function ($q): void {
                 $q->orderBy('start_time', 'asc')
                     ->with(['assignments.staff']);
             },
@@ -56,40 +112,28 @@ class TimetableRepository implements TimetableRepositoryInterface
         ])->withCount(['logisticsPlans'])->find($id);
     }
 
-    /**
-     * 開催日による取得
-     */
+    #[Override]
     public function findByDate(string $date): ?Timetable
     {
         return Timetable::where('target_date', $date)->first();
     }
 
-    /**
-     * 新規作成
-     *
-     * @param  array<string, mixed>  $attributes
-     */
+    #[Override]
     public function create(array $attributes): Timetable
     {
         return Timetable::create($attributes);
     }
 
-    /**
-     * 更新
-     *
-     * @param  array<string, mixed>  $attributes
-     */
+    #[Override]
     public function update(Timetable $timetable, array $attributes): bool
     {
         return $timetable->update($attributes);
     }
 
-    /**
-     * 削除（関連するタスク、アサイン、レーン等を安全にカスケード削除）
-     */
+    #[Override]
     public function delete(Timetable $timetable): bool
     {
-        return DB::transaction(function () use ($timetable) {
+        return DB::transaction(function () use ($timetable): bool {
             $taskIds = $timetable->tasks()->pluck('id');
 
             if ($taskIds->isNotEmpty()) {
@@ -113,11 +157,7 @@ class TimetableRepository implements TimetableRepositoryInterface
         });
     }
 
-    /**
-     * 運行準備用の進行中・準備中タイムテーブル一覧を取得（日付昇順）
-     *
-     * @return Collection<int, Timetable>
-     */
+    #[Override]
     public function getActiveAndDraftWithWorkflowDetails(): Collection
     {
         return Timetable::with(['lanes.fixedStaff', 'lanes.leadStaff', 'tasks.assignments'])
@@ -126,20 +166,62 @@ class TimetableRepository implements TimetableRepositoryInterface
             ->get();
     }
 
-    /**
-     * タイムテーブルの総登録数を取得
-     */
+    #[Override]
     public function getTotalCount(): int
     {
         return Timetable::count();
     }
 
-    /**
-     * ワークフロー詳細付きで単一タイムテーブルを取得
-     */
+    #[Override]
     public function findWithWorkflowDetails(int $id): ?Timetable
     {
         return Timetable::with(['lanes.fixedStaff', 'lanes.leadStaff', 'tasks.assignments'])
             ->find($id);
+    }
+
+    #[Override]
+    public function loadForAssignmentsPrint(Timetable $timetable): Timetable
+    {
+        return $timetable->load([
+            'lanes' => function ($query): void {
+                $query->orderBy('display_order')->orderBy('id');
+            },
+            'lanes.leadStaff',
+            'lanes.tasks' => function ($query): void {
+                $query->orderBy('start_time')->orderBy('end_time');
+            },
+            'lanes.tasks.assignments.staff',
+        ]);
+    }
+
+    #[Override]
+    public function loadForAssignmentWorkspace(Timetable $timetable): Timetable
+    {
+        return $timetable->load([
+            'lanes' => function ($q): void {
+                $q->orderBy('display_order')->with('leadStaff');
+            },
+            'tasks' => function ($q): void {
+                $q->orderBy('start_time')
+                    ->orderBy('end_time')
+                    ->with(['laneRelation', 'assignments.staff']);
+            },
+        ]);
+    }
+
+    #[Override]
+    public function loadForTasksIndex(Timetable $timetable): Timetable
+    {
+        return $timetable->load([
+            'lanes' => function ($q): void {
+                $q->orderBy('display_order')->with([
+                    'leadStaff',
+                    'tasks' => function ($tQuery): void {
+                        $tQuery->orderBy('start_time', 'asc')
+                            ->orderBy('end_time', 'asc');
+                    },
+                ]);
+            },
+        ]);
     }
 }

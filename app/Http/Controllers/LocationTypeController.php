@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreLocationTypeRequest;
 use App\Http\Requests\UpdateLocationTypeRequest;
 use App\Models\LocationType;
+use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,10 @@ use Illuminate\View\View;
 
 class LocationTypeController extends Controller
 {
+    public function __construct(
+        protected LocationService $locationService
+    ) {}
+
     /**
      * タイプマスタ一覧表示
      */
@@ -19,7 +24,7 @@ class LocationTypeController extends Controller
     {
         $this->authorize('viewAny', LocationType::class);
 
-        $types = LocationType::withCount('locations')->ordered()->get();
+        $types = $this->locationService->getAllLocationTypesWithCounts();
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -38,7 +43,7 @@ class LocationTypeController extends Controller
     {
         $this->authorize('create', LocationType::class);
 
-        $type = LocationType::create($request->validated());
+        $type = $this->locationService->createLocationType($request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -59,7 +64,7 @@ class LocationTypeController extends Controller
     {
         $this->authorize('update', $locationType);
 
-        $locationType->update($request->validated());
+        $locationType = $this->locationService->updateLocationType($locationType, $request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -80,7 +85,7 @@ class LocationTypeController extends Controller
     {
         $this->authorize('delete', $locationType);
 
-        if ($locationType->locations()->exists()) {
+        if ($this->locationService->hasLocationsForType($locationType)) {
             $msg = "拠点タイプ「{$locationType->label}」は既に拠点が紐付いているため削除できません。";
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
@@ -90,7 +95,7 @@ class LocationTypeController extends Controller
         }
 
         $label = $locationType->label;
-        $locationType->delete();
+        $this->locationService->deleteLocationType($locationType);
 
         if ($request->wantsJson()) {
             return response()->json([

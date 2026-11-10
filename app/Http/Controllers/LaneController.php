@@ -7,20 +7,16 @@ use App\Http\Requests\ReorderLanesRequest;
 use App\Http\Requests\StoreLaneRequest;
 use App\Http\Requests\UpdateLaneRequest;
 use App\Models\Lane;
-use App\Models\Staff;
 use App\Models\Timetable;
-use App\Repositories\Contracts\LaneRepositoryInterface;
-use App\Services\TimetableTaskService;
+use App\Services\LaneService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class LaneController extends Controller
 {
     public function __construct(
-        protected TimetableTaskService $taskService,
-        protected LaneRepositoryInterface $laneRepository
+        protected LaneService $laneService
     ) {}
 
     /**
@@ -30,9 +26,7 @@ class LaneController extends Controller
     {
         $this->authorize('viewAny', Lane::class);
 
-        $timetables = Timetable::with(['lanes.leadStaff'])
-            ->orderBy('target_date', 'asc')
-            ->get();
+        $timetables = $this->laneService->getTimetablesForSelect();
 
         if ($timetables->isEmpty()) {
             return redirect()->route('timetables.index')
@@ -55,7 +49,7 @@ class LaneController extends Controller
     {
         $this->authorize('viewAny', Lane::class);
 
-        $lanes = $this->laneRepository->getForTimetable($timetable);
+        $lanes = $this->laneService->getLanesForTimetable($timetable);
 
         return view('lanes.index', [
             'timetable' => $timetable,
@@ -70,7 +64,7 @@ class LaneController extends Controller
     {
         $this->authorize('create', Lane::class);
 
-        $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
+        $activeStaff = $this->laneService->getActiveStaffOrderedByAffiliation();
 
         return view('lanes.create', [
             'timetable' => $timetable,
@@ -84,23 +78,7 @@ class LaneController extends Controller
      */
     public function store(StoreLaneRequest $request, Timetable $timetable): RedirectResponse
     {
-        $data = $request->validated();
-        $fixedStaffIds = $data['fixed_staff_ids'] ?? [];
-        unset($data['fixed_staff_ids']);
-
-        if (! isset($data['display_order']) || $data['display_order'] === null) {
-            $data['display_order'] = $this->laneRepository->getMaxDisplayOrder($timetable) + 10;
-        }
-
-        $lane = $this->laneRepository->create($timetable, $data);
-
-        if ($lane->lead_staff_id && ! in_array((int) $lane->lead_staff_id, array_map('intval', $fixedStaffIds), true)) {
-            $fixedStaffIds[] = (int) $lane->lead_staff_id;
-        }
-
-        if (! empty($fixedStaffIds)) {
-            $this->taskService->syncLaneFixedStaffToTasks($lane, $fixedStaffIds);
-        }
+        $lane = $this->laneService->createLane($timetable, $request->validated());
 
         if ($request->input('redirect_to') === 'matrix') {
             return redirect()->route('timetable.index', ['timetable_id' => $timetable->id])
@@ -118,7 +96,7 @@ class LaneController extends Controller
     {
         $this->authorize('view', $lane);
 
-        $laneWithDetails = $this->laneRepository->findWithDetails($timetable, $lane->id) ?? $lane;
+        $laneWithDetails = $this->laneService->findWithDetails($timetable, $lane->id) ?? $lane;
 
         return view('lanes.show', [
             'timetable' => $timetable,
@@ -133,8 +111,8 @@ class LaneController extends Controller
     {
         $this->authorize('update', $lane);
 
-        $lane->loadMissing(['leadStaff', 'fixedStaff']);
-        $activeStaff = Staff::active()->orderBy('affiliation')->orderBy('name')->get();
+        $this->laneService->loadEditRelations($lane);
+        $activeStaff = $this->laneService->getActiveStaffOrderedByAffiliation();
 
         return view('lanes.edit', [
             'timetable' => $timetable,
@@ -149,32 +127,16 @@ class LaneController extends Controller
      */
     public function update(UpdateLaneRequest $request, Timetable $timetable, Lane $lane): JsonResponse|RedirectResponse
     {
-        $oldLeadStaffId = $lane->lead_staff_id ? (int) $lane->lead_staff_id : null;
         $validated = $request->validated();
         $hasFixedStaffInput = array_key_exists('fixed_staff_ids', $validated) || $request->boolean('sync_fixed_staff');
-        $fixedStaffIds = $validated['fixed_staff_ids'] ?? [];
-        unset($validated['fixed_staff_ids']);
 
-        $this->laneRepository->update($lane, $validated);
-
-        if ($lane->lead_staff_id) {
-            $lane->fixedStaff()->syncWithoutDetaching([$lane->lead_staff_id]);
-            Staff::where('id', $lane->lead_staff_id)->update(['staff_type' => 'fixed']);
-            $this->taskService->syncLaneLeadToTasks($lane, $oldLeadStaffId);
-        }
-
-        if ($hasFixedStaffInput) {
-            if ($lane->lead_staff_id && ! in_array((int) $lane->lead_staff_id, array_map('intval', $fixedStaffIds), true)) {
-                $fixedStaffIds[] = (int) $lane->lead_staff_id;
-            }
-            $this->taskService->syncLaneFixedStaffToTasks($lane, $fixedStaffIds);
-        }
+        $updatedLane = $this->laneService->updateLane($lane, $validated, $hasFixedStaffInput);
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => "担当班「{$lane->name}」を更新しました。",
-                'lane' => $lane->fresh(['leadStaff', 'fixedStaff']),
+                'lane' => $updatedLane,
             ]);
         }
 
@@ -189,7 +151,7 @@ class LaneController extends Controller
     {
         $this->authorize('update', Lane::class);
 
-        $this->laneRepository->reorder($timetable, $request->validated('lane_ids'));
+        $this->laneService->reorderLanes($timetable, $request->validated('lane_ids'));
 
         return response()->json([
             'success' => true,
@@ -204,21 +166,18 @@ class LaneController extends Controller
     {
         $this->authorize('delete', $lane);
 
-        $taskCount = $lane->tasks()->count();
+        $taskCount = $this->laneService->countLaneTasks($lane);
 
         // タスク移行先が指定されている場合
         if ($request->filled('migrate_to_lane_id')) {
             $migrateToLaneId = (int) $request->validated('migrate_to_lane_id');
-            $targetLane = $timetable->lanes()->where('id', $migrateToLaneId)->first();
+            $targetLane = $this->laneService->findTargetLaneForMigration($timetable, $migrateToLaneId);
 
             if (! $targetLane || $targetLane->id === $lane->id) {
                 return back()->with('error', '有効な移行先レーンを選択してください。');
             }
 
-            DB::transaction(function () use ($lane, $targetLane): void {
-                $lane->tasks()->update(['lane_id' => $targetLane->id]);
-                $this->laneRepository->delete($lane);
-            });
+            $this->laneService->migrateTasksAndDeleteLane($lane, $targetLane);
 
             return redirect()->route('timetables.lanes.index', $timetable)
                 ->with('success', "担当班「{$lane->name}」の作業タスク {$taskCount} 件を「{$targetLane->name}」に引き継ぎ、レーンを削除しました。");
@@ -226,10 +185,7 @@ class LaneController extends Controller
 
         // タスクごと削除が明示的に指定されている場合
         if ($request->boolean('cascade_delete_tasks')) {
-            DB::transaction(function () use ($lane): void {
-                $lane->tasks()->delete();
-                $this->laneRepository->delete($lane);
-            });
+            $this->laneService->cascadeDeleteTasksAndLane($lane);
 
             return redirect()->route('timetables.lanes.index', $timetable)
                 ->with('success', "担当班「{$lane->name}」および紐づく作業タスク {$taskCount} 件をすべて削除しました。");
@@ -246,7 +202,7 @@ class LaneController extends Controller
         }
 
         $name = $lane->name;
-        $this->laneRepository->delete($lane);
+        $this->laneService->deleteLane($lane);
 
         return redirect()->route('timetables.lanes.index', $timetable)
             ->with('success', "担当班「{$name}」を削除しました。");

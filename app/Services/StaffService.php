@@ -2,9 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\Lane;
+use App\Models\LaneRequest;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
+use App\Models\TimetableTask;
+use App\Repositories\Contracts\LaneRequestRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
+use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
+use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -12,9 +18,38 @@ use Illuminate\Support\Str;
 
 class StaffService
 {
+    protected TaskStaffAssignmentRepositoryInterface $assignmentRepository;
+
+    protected TimetableTaskRepositoryInterface $taskRepository;
+
+    protected LaneRequestRepositoryInterface $laneRequestRepository;
+
     public function __construct(
-        protected StaffRepositoryInterface $staffRepository
-    ) {}
+        protected StaffRepositoryInterface $staffRepository,
+        ?TaskStaffAssignmentRepositoryInterface $assignmentRepository = null,
+        ?TimetableTaskRepositoryInterface $taskRepository = null,
+        ?LaneRequestRepositoryInterface $laneRequestRepository = null,
+    ) {
+        $this->assignmentRepository = $assignmentRepository ?? app(TaskStaffAssignmentRepositoryInterface::class);
+        $this->taskRepository = $taskRepository ?? app(TimetableTaskRepositoryInterface::class);
+        $this->laneRequestRepository = $laneRequestRepository ?? app(LaneRequestRepositoryInterface::class);
+    }
+
+    /**
+     * IDによるスタッフ取得
+     */
+    public function findById(int $id): ?Staff
+    {
+        return $this->staffRepository->findById($id);
+    }
+
+    /**
+     * スタッフ詳細画面用にリレーションをロードして取得
+     */
+    public function getStaffWithShowDetails(Staff $staff): Staff
+    {
+        return $this->staffRepository->loadShowRelations($staff);
+    }
 
     /**
      * スタッフ一覧画面データの取得
@@ -128,6 +163,35 @@ class StaffService
     }
 
     /**
+     * 現場マイタイムテーブル画面表示用データを構築
+     *
+     * @return array<string, mixed>
+     */
+    public function getMyShiftViewData(Staff $staff): array
+    {
+        $ledLanes = $this->staffRepository->loadShiftRelationsAndGetLedLanes($staff);
+
+        $assignments = $staff->assignments->sortBy([
+            fn (TaskStaffAssignment $a, TaskStaffAssignment $b): int => ($a->task?->timetable?->target_date <=> $b->task?->timetable?->target_date),
+            fn (TaskStaffAssignment $a, TaskStaffAssignment $b): int => ($a->task?->start_time <=> $b->task?->start_time),
+        ]);
+
+        $resolvedTasks = $this->resolveNowAndNextTasks($assignments);
+        $groupedAssignments = $assignments->groupBy(
+            fn (TaskStaffAssignment $a): string => $a->date_header_label
+        );
+
+        return [
+            'staff' => $staff,
+            'assignments' => $assignments,
+            'groupedAssignments' => $groupedAssignments,
+            'currentTask' => $resolvedTasks['current_task'],
+            'nextTask' => $resolvedTasks['next_task'],
+            'ledLanes' => $ledLanes,
+        ];
+    }
+
+    /**
      * 当日現場到着チェックイン（打刻および当日第1タスク出欠連動）
      */
     public function checkInStaff(Staff $staff): bool
@@ -140,17 +204,10 @@ class StaffService
 
         // 当日運行日のタスクの中で最も早いタスクの出欠を checked_in に連動更新
         $todayDate = now()->format('Y-m-d');
-        $firstAssignment = $staff->assignments()
-            ->whereHas('task.timetable', function ($q) use ($todayDate) {
-                $q->whereDate('target_date', $todayDate);
-            })
-            ->join('timetable_tasks', 'task_staff_assignments.timetable_task_id', '=', 'timetable_tasks.id')
-            ->orderBy('timetable_tasks.start_time', 'asc')
-            ->select('task_staff_assignments.*')
-            ->first();
+        $firstAssignment = $this->assignmentRepository->findFirstTodayAssignmentForStaff($staff->id, $todayDate);
 
         if ($firstAssignment && $firstAssignment->attendance_status === 'assigned') {
-            $firstAssignment->update(['attendance_status' => 'checked_in']);
+            $this->assignmentRepository->update($firstAssignment, ['attendance_status' => 'checked_in']);
         }
 
         return true;
@@ -161,12 +218,40 @@ class StaffService
      */
     public function updateStaffAssignmentStatus(Staff $staff, int $assignmentId, string $status): bool
     {
-        $assignment = $staff->assignments()->find($assignmentId);
+        $assignment = $this->assignmentRepository->findForStaffById($staff->id, $assignmentId);
         if (! $assignment) {
             return false;
         }
 
-        return $assignment->update(['attendance_status' => $status]);
+        return $this->assignmentRepository->update($assignment, ['attendance_status' => $status]);
+    }
+
+    /**
+     * 班長による担当班タスク全体のステータス更新
+     */
+    public function updateLaneTaskStatus(TimetableTask $task, string $status): bool
+    {
+        return $this->taskRepository->update($task, ['status' => $status]);
+    }
+
+    /**
+     * 班長による管理者（本部）への人員不足要請・必要機材申請の作成
+     *
+     * @param  array<string, mixed>  $validated
+     */
+    public function createLaneRequestFromLeader(Lane $lane, Staff $staff, array $validated): LaneRequest
+    {
+        return $this->laneRequestRepository->create([
+            'timetable_id' => $lane->timetable_id,
+            'lane_id' => $lane->id,
+            'timetable_task_id' => $validated['timetable_task_id'] ?? null,
+            'requested_by_staff_id' => $staff->id,
+            'request_type' => $validated['request_type'],
+            'requested_count' => (int) $validated['requested_count'],
+            'equipment_name' => $validated['equipment_name'] ?? null,
+            'reason' => $validated['reason'] ?? null,
+            'status' => 'pending',
+        ]);
     }
 
     /**
@@ -190,7 +275,7 @@ class StaffService
      *
      * @return Collection<int, Staff>
      */
-    public function findByNameAndKana(string $name, string $kana)
+    public function findByNameAndKana(string $name, string $kana): Collection
     {
         return $this->staffRepository->findByNameAndKana($name, $kana);
     }

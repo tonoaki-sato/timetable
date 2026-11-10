@@ -25,7 +25,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
     public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null): Collection
     {
         $query = Equipment::with([
-            'plans' => function ($q) use ($timetable) {
+            'plans' => function ($q) use ($timetable): void {
                 if ($timetable) {
                     $q->where('timetable_id', $timetable->id);
                 }
@@ -74,6 +74,62 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
     }
 
     #[Override]
+    public function getByToLocationIdsWithEquipment(array $locationIds, ?Timetable $timetable = null): Collection
+    {
+        if (empty($locationIds)) {
+            return new Collection;
+        }
+
+        $query = EquipmentLogisticsPlan::with(['equipment'])
+            ->whereIn('to_location_id', $locationIds)
+            ->orderBy('target_date', 'asc')
+            ->orderBy('start_time', 'asc');
+
+        if ($timetable) {
+            $query->where('timetable_id', $timetable->id);
+        }
+
+        return $query->get();
+    }
+
+    #[Override]
+    public function getOnsiteNightStoragePlans(?Timetable $timetable = null): Collection
+    {
+        $query = EquipmentLogisticsPlan::with(['equipment', 'witnessStaff'])
+            ->where('action_type', 'night_storage')
+            ->whereNull('to_location_id')
+            ->orderBy('target_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->orderBy('display_order', 'asc');
+
+        if ($timetable) {
+            $query->where('timetable_id', $timetable->id);
+        }
+
+        return $query->get();
+    }
+
+    #[Override]
+    public function getEventCompanyScheduleData(?Timetable $timetable = null): Collection
+    {
+        $query = EquipmentLogisticsPlan::with(['equipment', 'witnessStaff', 'fromLocationModel', 'toLocationModel'])
+            ->where(function ($q): void {
+                $q->where('operator_type', 'event_company')
+                    ->orWhere('witness_required', true)
+                    ->orWhereHas('equipment', fn ($sub) => $sub->where('type', 'rental'));
+            })
+            ->orderBy('target_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->orderBy('display_order', 'asc');
+
+        if ($timetable) {
+            $query->where('timetable_id', $timetable->id);
+        }
+
+        return $query->get();
+    }
+
+    #[Override]
     public function create(array $attributes): EquipmentLogisticsPlan
     {
         return EquipmentLogisticsPlan::create($attributes);
@@ -88,7 +144,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
     #[Override]
     public function delete(EquipmentLogisticsPlan $plan): bool
     {
-        return $plan->delete();
+        return (bool) $plan->delete();
     }
 
     #[Override]

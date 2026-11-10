@@ -5,13 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    public function __construct(
+        protected UserService $userService
+    ) {}
+
     /**
      * ユーザー一覧・検索画面の表示
      */
@@ -19,27 +23,12 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        $query = User::query();
-
-        // 1. 氏名またはメールアドレスのキーワード検索
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        // 2. 権限ロールの絞り込み
-        if ($role = $request->input('role')) {
-            $query->where('role', $role);
-        }
-
-        // 3. 有効・停止ステータスの絞り込み
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->boolean('status'));
-        }
-
-        $users = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
+        $users = $this->userService->paginateFiltered(
+            $request->input('search'),
+            $request->input('role'),
+            $request->filled('status') ? $request->boolean('status') : null,
+            15
+        );
 
         return view('users.index', compact('users'));
     }
@@ -61,13 +50,10 @@ class UserController extends Controller
     {
         $this->authorize('create', User::class);
 
-        User::create([
-            'name' => $request->validated('name'),
-            'email' => $request->validated('email'),
-            'password' => Hash::make($request->validated('password')),
-            'role' => $request->validated('role'),
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+        $this->userService->createUser(
+            $request->validated(),
+            $request->boolean('is_active', true)
+        );
 
         return redirect()->route('users.index')->with('success', 'ユーザーを新規登録しました。');
     }
@@ -99,30 +85,13 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        $data = [
-            'name' => $request->validated('name'),
-            'email' => $request->validated('email'),
-        ];
-
-        // パスワード入力時のみ更新
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->validated('password'));
-        }
-
-        // admin のみロールと有効状態の変更を反映
-        if ($request->user()->isAdmin()) {
-            // 自分自身のアカウント停止・ロール降格を防ぐ
-            if ($user->id === $request->user()->id) {
-                // 自身のロールは admin のまま維持
-                $data['role'] = 'admin';
-                $data['is_active'] = true;
-            } else {
-                $data['role'] = $request->validated('role');
-                $data['is_active'] = $request->boolean('is_active');
-            }
-        }
-
-        $user->update($data);
+        $this->userService->updateUser(
+            $user,
+            $request->user(),
+            $request->validated(),
+            $request->filled('password'),
+            $request->boolean('is_active')
+        );
 
         return redirect()->route('users.show', $user)->with('success', 'ユーザー情報を更新しました。');
     }
@@ -135,7 +104,7 @@ class UserController extends Controller
         $this->authorize('delete', $user);
 
         $userName = $user->name;
-        $user->delete();
+        $this->userService->deleteUser($user);
 
         return redirect()->route('users.index')->with('success', "ユーザー「{$userName}」を削除しました。");
     }

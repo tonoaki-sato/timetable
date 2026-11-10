@@ -31,6 +31,28 @@ interface EquipmentLogisticsPlanRepositoryInterface
     public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null): Collection;
 
     /**
+     * 指定移動先拠点ID群に紐づく計画ステップを資機材情報付きで取得
+     *
+     * @param  array<int, int>  $locationIds
+     * @return Collection<int, EquipmentLogisticsPlan>
+     */
+    public function getByToLocationIdsWithEquipment(array $locationIds, ?Timetable $timetable = null): Collection;
+
+    /**
+     * 会場内現地据置・テント内夜間保管（action_type = 'night_storage' かつ to_location_id = null）のデータ取得
+     *
+     * @return Collection<int, EquipmentLogisticsPlan>
+     */
+    public function getOnsiteNightStoragePlans(?Timetable $timetable = null): Collection;
+
+    /**
+     * イベント会社・立会スケジュール表用のデータ取得
+     *
+     * @return Collection<int, EquipmentLogisticsPlan>
+     */
+    public function getEventCompanyScheduleData(?Timetable $timetable = null): Collection;
+
+    /**
      * 新規計画ステップを作成
      *
      * @param  array<string, mixed>  $attributes

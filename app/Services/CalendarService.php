@@ -3,15 +3,17 @@
 namespace App\Services;
 
 use App\Models\Schedule;
-use App\Models\Staff;
-use App\Models\Timetable;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Repositories\Contracts\StaffRepositoryInterface;
+use App\Repositories\Contracts\TimetableRepositoryInterface;
 use Illuminate\Support\Carbon;
 
 class CalendarService
 {
     public function __construct(
-        protected ScheduleRepositoryInterface $scheduleRepository
+        protected ScheduleRepositoryInterface $scheduleRepository,
+        protected TimetableRepositoryInterface $timetableRepository,
+        protected StaffRepositoryInterface $staffRepository
     ) {}
 
     /**
@@ -39,12 +41,7 @@ class CalendarService
         $schedules = $this->scheduleRepository->getForMonth($year, $month, $category, $status, $staffId, $search);
 
         // 2. 指定月の本番運行日（タイムテーブル）取得
-        $timetableQuery = Timetable::whereYear('target_date', $year)
-            ->whereMonth('target_date', $month);
-        if ($search) {
-            $timetableQuery->where('name', 'like', "%{$search}%");
-        }
-        $timetables = $timetableQuery->orderBy('target_date')->orderBy('start_time')->get();
+        $timetables = $this->timetableRepository->getForMonth($year, $month, $search);
 
         // 日付ごとのイベント辞書を組み立て
         $weeks = [];
@@ -198,7 +195,7 @@ class CalendarService
             'availableYears' => range($year - 2, $year + 2),
             'categories' => Schedule::CATEGORIES,
             'statuses' => Schedule::STATUSES,
-            'staffs' => Staff::active()->orderBy('kana')->get(),
+            'staffs' => $this->staffRepository->getActiveStaffList(),
         ];
     }
 }

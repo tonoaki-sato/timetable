@@ -17,4 +17,3 @@ class ResourcesSummaryCard extends Component
         return view('components.dashboard.resources-summary-card');
     }
 }
-

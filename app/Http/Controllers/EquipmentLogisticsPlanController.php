@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\DTOs\ApplyEquipmentPatternDTO;
 use App\Http\Requests\ApplyEquipmentTemplateRequest;
 use App\Http\Requests\StoreEquipmentLogisticsPlanRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPlanRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPlanStatusRequest;
 use App\Models\Equipment;
-use App\Models\EquipmentLogisticsPattern;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Timetable;
-use App\Repositories\Contracts\EquipmentLogisticsPlanRepositoryInterface;
 use App\Services\EquipmentLogisticsService;
+use App\Services\TimetableService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +20,7 @@ class EquipmentLogisticsPlanController extends Controller
 {
     public function __construct(
         protected EquipmentLogisticsService $logisticsService,
-        protected EquipmentLogisticsPlanRepositoryInterface $planRepository
+        protected TimetableService $timetableService
     ) {}
 
     /**
@@ -30,16 +30,13 @@ class EquipmentLogisticsPlanController extends Controller
     {
         $this->authorize('create', EquipmentLogisticsPlan::class);
 
-        $validated = $request->validated();
-        $validated['timetable_id'] = $timetable->id;
-
-        $plan = $this->planRepository->create($validated);
+        $plan = $this->logisticsService->createPlan($timetable, $request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => "ステップ「{$plan->title}」を登録しました。",
-                'plan' => $plan->load(['fromLocationModel', 'toLocationModel', 'witnessStaff']),
+                'plan' => $plan,
             ]);
         }
 
@@ -54,13 +51,13 @@ class EquipmentLogisticsPlanController extends Controller
         abort_if($plan->timetable_id !== $timetable->id, 404);
         $this->authorize('update', $plan);
 
-        $this->planRepository->update($plan, $request->validated());
+        $plan = $this->logisticsService->updatePlan($plan, $request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => "ステップ「{$plan->title}」を更新しました。",
-                'plan' => $plan->load(['fromLocationModel', 'toLocationModel', 'witnessStaff']),
+                'plan' => $plan,
             ]);
         }
 
@@ -76,7 +73,7 @@ class EquipmentLogisticsPlanController extends Controller
         $this->authorize('delete', $plan);
 
         $title = $plan->title;
-        $this->planRepository->delete($plan);
+        $this->logisticsService->deletePlan($plan);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -98,7 +95,7 @@ class EquipmentLogisticsPlanController extends Controller
 
         $validated = $request->validated();
 
-        $this->planRepository->update($plan, ['status' => $validated['status']]);
+        $plan = $this->logisticsService->updatePlan($plan, ['status' => $validated['status']]);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -118,21 +115,16 @@ class EquipmentLogisticsPlanController extends Controller
     {
         $this->authorize('update', $equipment);
 
-        $validated = $request->validated();
-        $pattern = EquipmentLogisticsPattern::with('steps')->findOrFail($validated['pattern_id']);
-
-        $count = $this->logisticsService->applyPattern(
-            $equipment,
-            $pattern,
-            $validated,
-            $timetable
-        );
+        $dto = ApplyEquipmentPatternDTO::fromArray($request->validated());
+        $result = $this->logisticsService->applyPatternById($equipment, $dto, $timetable);
+        $pattern = $result['pattern'];
+        $count = $result['count'];
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => "パターン「{$pattern->name}」から{$count}件の計画ステップを生成しました。",
-                'equipment' => $equipment->load(['plans' => fn ($q) => $q->where('timetable_id', $timetable->id)]),
+                'equipment' => $result['equipment'],
             ]);
         }
 
@@ -146,7 +138,7 @@ class EquipmentLogisticsPlanController extends Controller
     {
         $this->authorize('update', $equipment);
 
-        $count = $this->planRepository->clearForEquipment($equipment, $timetable);
+        $count = $this->logisticsService->clearPlansForEquipment($equipment, $timetable);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -206,15 +198,10 @@ class EquipmentLogisticsPlanController extends Controller
 
     protected function resolveFallbackTimetable(?Request $request = null): Timetable
     {
-        if ($request && $request->filled('timetable_id')) {
-            $found = Timetable::find($request->integer('timetable_id'));
-            if ($found) {
-                return $found;
-            }
-        }
+        $timetableId = ($request && $request->filled('timetable_id'))
+            ? $request->integer('timetable_id')
+            : null;
 
-        return Timetable::where('status', 'active')->orderBy('target_date', 'asc')->first()
-            ?? Timetable::orderBy('target_date', 'asc')->first()
-            ?? Timetable::factory()->create(['name' => '既定運行計画', 'target_date' => now()->toDateString()]);
+        return $this->timetableService->resolveFallbackTimetable($timetableId);
     }
 }

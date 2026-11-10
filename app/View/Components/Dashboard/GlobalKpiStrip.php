@@ -17,4 +17,3 @@ class GlobalKpiStrip extends Component
         return view('components.dashboard.global-kpi-strip');
     }
 }
-

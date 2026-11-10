@@ -2,8 +2,8 @@
 
 namespace App\Actions\TaskAssignment;
 
-use App\Models\Staff;
 use App\Models\TimetableTask;
+use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Services\ConflictDetectionService;
 use App\Services\TimetableTaskService;
 
@@ -11,7 +11,8 @@ class BulkAssignStaffAction
 {
     public function __construct(
         protected TimetableTaskService $taskService,
-        protected ConflictDetectionService $conflictService
+        protected ConflictDetectionService $conflictService,
+        protected StaffRepositoryInterface $staffRepository
     ) {}
 
     /**
@@ -33,9 +34,10 @@ class BulkAssignStaffAction
         $conflictsMap = $this->conflictService->checkConflictsForStaffIds($task, $staffIds);
 
         if (! empty($conflictsMap) && ! $isForced) {
+            $staffById = $this->staffRepository->findByIds(array_map('intval', array_keys($conflictsMap)))->keyBy('id');
             $conflictStaffList = [];
             foreach ($conflictsMap as $staffId => $conflictingTask) {
-                $staff = Staff::find($staffId);
+                $staff = $staffById->get((int) $staffId);
                 $conflictingLane = $conflictingTask->lane ?: '担当班未設定';
                 $startTime = substr($conflictingTask->start_time, 0, 5);
                 $endTime = substr($conflictingTask->end_time, 0, 5);

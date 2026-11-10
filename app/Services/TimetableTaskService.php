@@ -5,7 +5,12 @@ namespace App\Services;
 use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
+use App\Models\Timetable;
 use App\Models\TimetableTask;
+use App\Repositories\Contracts\LaneRepositoryInterface;
+use App\Repositories\Contracts\StaffRepositoryInterface;
+use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
+use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use DomainException;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,9 +18,26 @@ use Illuminate\Support\Facades\DB;
 
 class TimetableTaskService
 {
+    protected LaneRepositoryInterface $laneRepository;
+
+    protected StaffRepositoryInterface $staffRepository;
+
+    protected TaskStaffAssignmentRepositoryInterface $assignmentRepository;
+
+    protected TimetableRepositoryInterface $timetableRepository;
+
     public function __construct(
-        protected TimetableTaskRepositoryInterface $taskRepository
-    ) {}
+        protected TimetableTaskRepositoryInterface $taskRepository,
+        ?LaneRepositoryInterface $laneRepository = null,
+        ?StaffRepositoryInterface $staffRepository = null,
+        ?TaskStaffAssignmentRepositoryInterface $assignmentRepository = null,
+        ?TimetableRepositoryInterface $timetableRepository = null,
+    ) {
+        $this->laneRepository = $laneRepository ?? app(LaneRepositoryInterface::class);
+        $this->staffRepository = $staffRepository ?? app(StaffRepositoryInterface::class);
+        $this->assignmentRepository = $assignmentRepository ?? app(TaskStaffAssignmentRepositoryInterface::class);
+        $this->timetableRepository = $timetableRepository ?? app(TimetableRepositoryInterface::class);
+    }
 
     /**
      * アサイン情報付きタスク詳細の取得
@@ -26,24 +48,72 @@ class TimetableTaskService
     }
 
     /**
-     * 新規タスクの登録（班長・固定スタッフのデフォルト自動アサイン対応）
-     *
-     * @param  array<string, mixed>  $data
+     * IDによる担当班の取得
      */
-    public function createTask(array $data, bool $autoAssignLead = true): TimetableTask
+    public function findLaneById(int $laneId): ?Lane
     {
-        return DB::transaction(function () use ($data, $autoAssignLead) {
-            $task = $this->taskRepository->create($data);
+        return $this->laneRepository->findById($laneId);
+    }
 
-            if ($autoAssignLead && ! empty($task->lane_id)) {
-                $lane = Lane::with('fixedStaff')->find($task->lane_id);
-                if ($lane) {
-                    $this->autoAssignLaneMembersToTask($task, $lane);
-                }
-            }
+    /**
+     * 運行日別作業タスク一覧画面用データの取得
+     *
+     * @return array<string, mixed>
+     */
+    public function getTasksIndexViewData(Timetable $timetable): array
+    {
+        $this->timetableRepository->loadForTasksIndex($timetable);
 
-            return $task;
-        });
+        return [
+            'timetable' => $timetable,
+            'lanes' => $timetable->lanes,
+            'tasks' => $timetable->lanes->flatMap->tasks,
+            'statuses' => TimetableTask::STATUSES,
+        ];
+    }
+
+    /**
+     * 人員アサイン専用ワークスペース画面用データの取得
+     *
+     * @return array<string, mixed>
+     */
+    public function getAssignmentWorkspaceViewData(Timetable $timetable, ?int $requestedTaskId = null): array
+    {
+        $this->timetableRepository->loadForAssignmentWorkspace($timetable);
+
+        $tasks = $timetable->tasks;
+        $lanes = $timetable->lanes;
+
+        $totalTasks = $tasks->count();
+        $satisfiedTasks = $tasks->filter(fn (TimetableTask $t): bool => $t->is_satisfied)->count();
+        $shortageTasks = $totalTasks - $satisfiedTasks;
+        $totalRequired = $tasks->sum('required_people_count');
+        $totalAssigned = $tasks->sum(fn (TimetableTask $t): int => $t->assigned_count);
+
+        $activeStaff = $this->staffRepository->getActiveOrderedByAffiliation();
+        $affiliations = $activeStaff->pluck('affiliation')->filter()->unique()->values()->all();
+
+        $initialTaskId = null;
+        if ($requestedTaskId && $tasks->contains('id', $requestedTaskId)) {
+            $initialTaskId = $requestedTaskId;
+        } else {
+            $initialTaskId = $tasks->firstWhere('is_satisfied', false)?->id ?? $tasks->first()?->id;
+        }
+
+        return [
+            'timetable' => $timetable,
+            'lanes' => $lanes,
+            'tasks' => $tasks,
+            'totalTasks' => $totalTasks,
+            'satisfiedTasks' => $satisfiedTasks,
+            'shortageTasks' => $shortageTasks,
+            'totalRequired' => $totalRequired,
+            'totalAssigned' => $totalAssigned,
+            'activeStaff' => $activeStaff,
+            'affiliations' => $affiliations,
+            'initialTaskId' => $initialTaskId,
+            'colorOptions' => Lane::COLOR_OPTIONS,
+        ];
     }
 
     /**
@@ -53,7 +123,7 @@ class TimetableTaskService
      */
     public function updateTask(TimetableTask $task, array $data): TimetableTask
     {
-        return DB::transaction(function () use ($task, $data) {
+        return DB::transaction(function () use ($task, $data): TimetableTask {
             $this->taskRepository->update($task, $data);
 
             return $task->fresh(['lane', 'assignments']);
@@ -72,7 +142,7 @@ class TimetableTaskService
         array $tasksData,
         bool $autoAssignLead = true
     ): Collection {
-        return DB::transaction(function () use ($timetableId, $laneId, $tasksData, $autoAssignLead) {
+        return DB::transaction(function () use ($timetableId, $laneId, $tasksData, $autoAssignLead): Collection {
             $attributesList = [];
             foreach ($tasksData as $taskItem) {
                 $attributesList[] = array_merge($taskItem, [
@@ -84,7 +154,7 @@ class TimetableTaskService
             $createdTasks = $this->taskRepository->createMany($attributesList);
 
             if ($autoAssignLead) {
-                $lane = Lane::with('fixedStaff')->find($laneId);
+                $lane = $this->laneRepository->findWithFixedStaff($laneId);
                 if ($lane) {
                     foreach ($createdTasks as $task) {
                         $this->autoAssignLaneMembersToTask($task, $lane);
@@ -97,61 +167,16 @@ class TimetableTaskService
     }
 
     /**
-     * 担当班の作業タスクを一括更新（新規追加枠の自動作成および班長・固定スタッフアサイン対応）
-     *
-     * @param  array<int, array<string, mixed>>  $tasksData
-     * @return array{updated_count: int, created_count: int}
-     */
-    public function updateBulkTasks(Lane $lane, array $tasksData): array
-    {
-        return DB::transaction(function () use ($lane, $tasksData) {
-            $lane->loadMissing('fixedStaff');
-            $existingTasks = $lane->tasks()->get()->keyBy('id');
-
-            $updatedCount = 0;
-            $createdCount = 0;
-
-            foreach ($tasksData as $taskItem) {
-                $taskId = ! empty($taskItem['id']) ? (int) $taskItem['id'] : null;
-
-                if ($taskId && isset($existingTasks[$taskId])) {
-                    $task = $existingTasks[$taskId];
-                    $attributes = $taskItem;
-                    unset($attributes['id']);
-                    $attributes['timetable_id'] = $lane->timetable_id;
-                    $attributes['lane_id'] = $lane->id;
-                    $attributes['lane'] = $lane->name;
-
-                    $this->taskRepository->update($task, $attributes);
-                    $updatedCount++;
-                } else {
-                    $attributes = $taskItem;
-                    unset($attributes['id']);
-                    $attributes['timetable_id'] = $lane->timetable_id;
-                    $attributes['lane_id'] = $lane->id;
-                    $attributes['lane'] = $lane->name;
-
-                    $newTask = $this->taskRepository->create($attributes);
-                    $this->autoAssignLaneMembersToTask($newTask, $lane);
-                    $createdCount++;
-                }
-            }
-
-            return [
-                'updated_count' => $updatedCount,
-                'created_count' => $createdCount,
-            ];
-        });
-    }
-
-    /**
      * 単一タスクに対して班長および固定スタッフを基本アサインする
      */
     protected function autoAssignLaneMembersToTask(TimetableTask $task, Lane $lane): void
     {
         if ($lane->lead_staff_id) {
-            $task->assignments()->firstOrCreate(
-                ['staff_id' => $lane->lead_staff_id],
+            $this->assignmentRepository->firstOrCreate(
+                [
+                    'timetable_task_id' => $task->id,
+                    'staff_id' => $lane->lead_staff_id,
+                ],
                 [
                     'role_description' => '班長',
                     'attendance_status' => 'assigned',
@@ -164,8 +189,11 @@ class TimetableTaskService
                 continue;
             }
 
-            $task->assignments()->firstOrCreate(
-                ['staff_id' => $fixedMember->id],
+            $this->assignmentRepository->firstOrCreate(
+                [
+                    'timetable_task_id' => $task->id,
+                    'staff_id' => $fixedMember->id,
+                ],
                 [
                     'role_description' => '固定スタッフ',
                     'attendance_status' => 'assigned',
@@ -184,11 +212,8 @@ class TimetableTaskService
             return 0;
         }
 
-        return DB::transaction(function () use ($lane, $oldLeadStaffId, $newLeadStaffId) {
-            $tasks = $lane->tasks()
-                ->where('status', '!=', 'cancelled')
-                ->with('assignments')
-                ->get();
+        return DB::transaction(function () use ($lane, $oldLeadStaffId, $newLeadStaffId): int {
+            $tasks = $this->taskRepository->getActiveForLaneWithAssignments($lane->id);
 
             $syncedCount = 0;
 
@@ -205,12 +230,12 @@ class TimetableTaskService
 
                     if ($oldLeadAssignment) {
                         if ($existingNewLeadAssignment) {
-                            $oldLeadAssignment->delete();
+                            $this->assignmentRepository->delete($oldLeadAssignment);
                             if (empty($existingNewLeadAssignment->role_description) || in_array($existingNewLeadAssignment->role_description, ['一般担当', '固定スタッフ', '班リーダー'], true)) {
-                                $existingNewLeadAssignment->update(['role_description' => '班長']);
+                                $this->assignmentRepository->update($existingNewLeadAssignment, ['role_description' => '班長']);
                             }
                         } else {
-                            $oldLeadAssignment->update([
+                            $this->assignmentRepository->update($oldLeadAssignment, [
                                 'staff_id' => $newLeadStaffId,
                                 'role_description' => '班長',
                             ]);
@@ -222,14 +247,15 @@ class TimetableTaskService
                 }
 
                 if (! $existingNewLeadAssignment) {
-                    $task->assignments()->create([
+                    $this->assignmentRepository->create([
+                        'timetable_task_id' => $task->id,
                         'staff_id' => $newLeadStaffId,
                         'role_description' => '班長',
                         'attendance_status' => 'assigned',
                     ]);
                     $syncedCount++;
                 } elseif (in_array($existingNewLeadAssignment->role_description, [null, '', '一般担当', '固定スタッフ', '班リーダー'], true)) {
-                    $existingNewLeadAssignment->update(['role_description' => '班長']);
+                    $this->assignmentRepository->update($existingNewLeadAssignment, ['role_description' => '班長']);
                 }
             }
 
@@ -246,23 +272,17 @@ class TimetableTaskService
     {
         $cleanIds = array_values(array_unique(array_map('intval', array_filter($fixedStaffIds))));
 
-        return DB::transaction(function () use ($lane, $cleanIds) {
-            $previousFixedIds = $lane->fixedStaff()
-                ->pluck('staff.id')
-                ->map(fn ($id) => (int) $id)
-                ->all();
+        return DB::transaction(function () use ($lane, $cleanIds): int {
+            $previousFixedIds = $this->laneRepository->getFixedStaffIds($lane);
 
-            $lane->fixedStaff()->sync($cleanIds);
+            $this->laneRepository->syncFixedStaff($lane, $cleanIds);
 
             if (! empty($cleanIds)) {
-                Staff::whereIn('id', $cleanIds)->update(['staff_type' => 'fixed']);
+                $this->staffRepository->updateStaffTypeByIds($cleanIds, 'fixed');
             }
 
             $removedIds = array_diff($previousFixedIds, $cleanIds);
-            $tasks = $lane->tasks()
-                ->where('status', '!=', 'cancelled')
-                ->with('assignments')
-                ->get();
+            $tasks = $this->taskRepository->getActiveForLaneWithAssignments($lane->id);
 
             // 固定スタッフから外れたメンバーの未着手タスク自動アサインを解除
             if (! empty($removedIds)) {
@@ -274,10 +294,11 @@ class TimetableTaskService
                         if ($lane->lead_staff_id && (int) $lane->lead_staff_id === (int) $removedId) {
                             continue;
                         }
-                        $task->assignments()
-                            ->where('staff_id', $removedId)
-                            ->where('role_description', '固定スタッフ')
-                            ->delete();
+                        $this->assignmentRepository->deleteByTaskAndStaffAndRole(
+                            $task->id,
+                            (int) $removedId,
+                            '固定スタッフ'
+                        );
                     }
                 }
             }
@@ -292,7 +313,8 @@ class TimetableTaskService
 
                     $exists = $task->assignments->contains('staff_id', $staffId);
                     if (! $exists) {
-                        $task->assignments()->create([
+                        $this->assignmentRepository->create([
+                            'timetable_task_id' => $task->id,
                             'staff_id' => $staffId,
                             'role_description' => '固定スタッフ',
                             'attendance_status' => 'assigned',
@@ -361,54 +383,7 @@ class TimetableTaskService
      */
     public function getActiveStaff(): Collection
     {
-        return Staff::active()->orderBy('kana')->get();
-    }
-
-    /**
-     * レーン別および選択レーンに基づく候補開始・終了時刻を算出
-     *
-     * @param  \Illuminate\Support\Collection<int, Lane>  $timetableLanes
-     * @return array{
-     *     suggested_start_time: string,
-     *     suggested_end_time: string,
-     *     lane_suggested_start_times: array<int, string>
-     * }
-     */
-    public function calculateSuggestedTimeRange(
-        $timetableLanes,
-        ?Lane $selectedLane = null,
-        ?string $requestedStartTime = null
-    ): array {
-        $laneSuggestedStartTimes = [];
-        foreach ($timetableLanes as $laneItem) {
-            $latest = $laneItem->tasks->sortByDesc('end_time')->first();
-            $laneSuggestedStartTimes[$laneItem->id] = $latest ? substr($latest->end_time, 0, 5) : '08:00';
-        }
-
-        if (is_string($requestedStartTime) && preg_match('/^\d{2}:\d{2}$/', $requestedStartTime)) {
-            $suggestedStartTime = $requestedStartTime;
-        } elseif ($selectedLane && isset($laneSuggestedStartTimes[$selectedLane->id])) {
-            $suggestedStartTime = $laneSuggestedStartTimes[$selectedLane->id];
-        } else {
-            $suggestedStartTime = '08:00';
-        }
-
-        // 初期終了時刻の算出（開始時刻の60分後、または08:00なら09:30）
-        $suggestedEndTime = '09:30';
-        if (preg_match('/^(\d{2}):(\d{2})$/', $suggestedStartTime, $matches)) {
-            $startMinutes = ((int) $matches[1]) * 60 + ((int) $matches[2]);
-            $endMinutes = min(23 * 60 + 59, $startMinutes + ($suggestedStartTime === '08:00' && ! $requestedStartTime ? 90 : 60));
-            if ($endMinutes <= $startMinutes) {
-                $endMinutes = min(23 * 60 + 59, $startMinutes + 30);
-            }
-            $suggestedEndTime = sprintf('%02d:%02d', intdiv($endMinutes, 60), $endMinutes % 60);
-        }
-
-        return [
-            'suggested_start_time' => $suggestedStartTime,
-            'suggested_end_time' => $suggestedEndTime,
-            'lane_suggested_start_times' => $laneSuggestedStartTimes,
-        ];
+        return $this->staffRepository->getActiveStaffList();
     }
 
     /**
@@ -469,12 +444,7 @@ class TimetableTaskService
      */
     public function checkDatabaseOverlaps(int $laneId, array $tasks, array $ignoredTaskIds = []): array
     {
-        $existingTasks = TimetableTask::where('lane_id', $laneId)
-            ->where('status', '!=', 'cancelled')
-            ->when(! empty($ignoredTaskIds), function ($query) use ($ignoredTaskIds) {
-                $query->whereNotIn('id', $ignoredTaskIds);
-            })
-            ->get();
+        $existingTasks = $this->taskRepository->getActiveForLaneExcludingIds($laneId, $ignoredTaskIds);
 
         if ($existingTasks->isEmpty()) {
             return [];

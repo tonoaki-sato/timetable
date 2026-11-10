@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Lane;
 use App\Models\TimetableTask;
+use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Services\TimetableTaskService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -31,13 +31,12 @@ class StoreTimetableTaskRequest extends FormRequest
         ];
 
         if (! $this->filled('lane_id') && $this->filled('lane')) {
-            $timetableId = $this->input('timetable_id');
+            $timetableId = (int) $this->input('timetable_id');
             $laneName = (string) $this->input('lane');
             $cleanName = str_replace('班', '', $laneName);
-            $lane = Lane::where('timetable_id', $timetableId)
-                ->where(function ($q) use ($laneName, $cleanName) {
-                    $q->where('name', $laneName)->orWhere('name', $cleanName);
-                })->first();
+            /** @var LaneRepositoryInterface $laneRepository */
+            $laneRepository = app(LaneRepositoryInterface::class);
+            $lane = $laneRepository->findByTimetableAndNameOrCleanName($timetableId, $laneName, $cleanName);
             if ($lane) {
                 $mergeData['lane_id'] = $lane->id;
             }
@@ -135,7 +134,7 @@ class StoreTimetableTaskRequest extends FormRequest
      */
     public function withValidator(Validator $validator): void
     {
-        $validator->after(function ($validator) {
+        $validator->after(function ($validator): void {
             if ($validator->errors()->isNotEmpty()) {
                 return;
             }

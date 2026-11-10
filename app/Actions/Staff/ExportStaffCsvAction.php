@@ -2,11 +2,15 @@
 
 namespace App\Actions\Staff;
 
-use App\Models\Staff;
+use App\Repositories\Contracts\StaffRepositoryInterface;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportStaffCsvAction
 {
+    public function __construct(
+        protected StaffRepositoryInterface $staffRepository
+    ) {}
+
     /**
      * スタッフ名簿のCSVエクスポート（UTF-8 with BOM）StreamedResponseを生成
      */
@@ -22,7 +26,7 @@ class ExportStaffCsvAction
             'Expires' => '0',
         ];
 
-        return response()->stream(function () {
+        return response()->stream(function (): void {
             $handle = fopen('php://output', 'w');
 
             // Excel文字化け防止用 UTF-8 BOM
@@ -40,7 +44,7 @@ class ExportStaffCsvAction
                 'マイシフトURL',
             ]);
 
-            Staff::orderBy('id')->chunk(200, function ($staffList) use ($handle) {
+            $this->staffRepository->chunkAllOrderedById(200, function ($staffList) use ($handle): void {
                 $sanitize = function (?string $value): string {
                     if ($value === null || $value === '') {
                         return '';

@@ -1,8 +1,3 @@
-@php
-    $isScoped = $isTimetableScoped ?? false;
-    $indexUrl = $isScoped ? route('timetables.equipments.index', $timetable) : route('equipments.index');
-@endphp
-
 <x-layouts.app :title="$equipment->name . ' - 機材・備品詳細'">
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
@@ -12,7 +7,7 @@
         :icon="$equipment->type_enum->icon()"
         :description="'機材・備品台帳の基本スペックおよび保管情報です。'">
         <x-slot:breadcrumbs>
-            @if($isScoped)
+            @if($isTimetableScoped)
                 <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                     <span>⏱️</span>
                     <span>運行情報一覧</span>
@@ -53,7 +48,7 @@
         </x-slot:actions>
     </x-page-header>
 
-    @if($isScoped)
+    @if($isTimetableScoped)
         <x-timetable-context-bar :timetable="$timetable" active="logistics" />
     @endif
 

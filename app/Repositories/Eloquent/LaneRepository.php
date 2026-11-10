@@ -7,14 +7,48 @@ use App\Models\Timetable;
 use App\Repositories\Contracts\LaneRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Override;
 
 class LaneRepository implements LaneRepositoryInterface
 {
-    /**
-     * 指定タイムテーブルに紐づく担当班一覧を関連リレーション付きで取得（表示順昇順）
-     *
-     * @return Collection<int, Lane>
-     */
+    #[Override]
+    public function findById(int $id): ?Lane
+    {
+        return Lane::find($id);
+    }
+
+    #[Override]
+    public function findWithFixedStaff(int $id): ?Lane
+    {
+        return Lane::with('fixedStaff')->find($id);
+    }
+
+    #[Override]
+    public function findByTimetableAndNameOrCleanName(int $timetableId, string $laneName, string $cleanName): ?Lane
+    {
+        return Lane::where('timetable_id', $timetableId)
+            ->where(function ($q) use ($laneName, $cleanName): void {
+                $q->where('name', $laneName)->orWhere('name', $cleanName);
+            })
+            ->first();
+    }
+
+    #[Override]
+    public function findForTimetableById(Timetable $timetable, int $laneId): ?Lane
+    {
+        /** @var Lane|null $lane */
+        $lane = $timetable->lanes()->where('id', $laneId)->first();
+
+        return $lane;
+    }
+
+    #[Override]
+    public function getAllOrdered(): Collection
+    {
+        return Lane::ordered()->get();
+    }
+
+    #[Override]
     public function getForTimetable(Timetable $timetable): Collection
     {
         return $timetable->lanes()
@@ -29,9 +63,29 @@ class LaneRepository implements LaneRepositoryInterface
             ->get();
     }
 
-    /**
-     * 詳細画面用の担当班を取得（班長・固定スタッフ・タスク・要請・資材リレーション付き）
-     */
+    #[Override]
+    public function getOrderedWithLeadForTimetable(Timetable $timetable, ?array $laneIds = null): Collection
+    {
+        $query = $timetable->lanes()
+            ->with('leadStaff')
+            ->ordered();
+
+        if (! empty($laneIds)) {
+            $query->whereIn('id', $laneIds);
+        }
+
+        return $query->get();
+    }
+
+    #[Override]
+    public function getLeadLanesForTimetable(Timetable $timetable): Collection
+    {
+        return $timetable->lanes()
+            ->whereNotNull('lead_staff_id')
+            ->get(['name', 'lead_staff_id']);
+    }
+
+    #[Override]
     public function findWithDetails(Timetable $timetable, int $laneId): ?Lane
     {
         /** @var Lane|null $lane */
@@ -52,39 +106,25 @@ class LaneRepository implements LaneRepositoryInterface
         return $lane;
     }
 
-    /**
-     * 新規担当班を作成
-     *
-     * @param  array<string, mixed>  $attributes
-     */
+    #[Override]
     public function create(Timetable $timetable, array $attributes): Lane
     {
         return $timetable->lanes()->create($attributes);
     }
 
-    /**
-     * 担当班を更新
-     *
-     * @param  array<string, mixed>  $attributes
-     */
+    #[Override]
     public function update(Lane $lane, array $attributes): bool
     {
         return $lane->update($attributes);
     }
 
-    /**
-     * 担当班を削除
-     */
+    #[Override]
     public function delete(Lane $lane): bool
     {
         return (bool) $lane->delete();
     }
 
-    /**
-     * 担当班の並び順を一括更新
-     *
-     * @param  array<int, int>  $laneIds
-     */
+    #[Override]
     public function reorder(Timetable $timetable, array $laneIds): void
     {
         DB::transaction(function () use ($timetable, $laneIds): void {
@@ -98,11 +138,30 @@ class LaneRepository implements LaneRepositoryInterface
         });
     }
 
-    /**
-     * 指定タイムテーブルにおける最大の表示順を取得
-     */
+    #[Override]
     public function getMaxDisplayOrder(Timetable $timetable): int
     {
         return (int) ($timetable->lanes()->max('display_order') ?? 0);
+    }
+
+    #[Override]
+    public function getFixedStaffIds(Lane $lane): array
+    {
+        return $lane->fixedStaff()
+            ->pluck('staff.id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+    }
+
+    #[Override]
+    public function syncFixedStaff(Lane $lane, array $staffIds): void
+    {
+        $lane->fixedStaff()->sync($staffIds);
+    }
+
+    #[Override]
+    public function syncFixedStaffWithoutDetaching(Lane $lane, array $staffIds): void
+    {
+        $lane->fixedStaff()->syncWithoutDetaching($staffIds);
     }
 }

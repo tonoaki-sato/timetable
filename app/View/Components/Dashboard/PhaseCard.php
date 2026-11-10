@@ -131,6 +131,27 @@ class PhaseCard extends Component
     }
 
     /**
+     * 外枠のHTMLタグ名（actionUrl指定時はaタグ、未指定時はdivタグ）
+     */
+    public function tag(): string
+    {
+        return $this->actionUrl() ? 'a' : 'div';
+    }
+
+    /**
+     * カード外枠のコンテナCSSクラス文字列
+     */
+    public function containerClasses(): string
+    {
+        $baseClasses = 'bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between';
+        $interactiveClasses = $this->actionUrl()
+            ? ' hover:border-indigo-300 hover:shadow-sm transition group'
+            : '';
+
+        return $baseClasses.$interactiveClasses;
+    }
+
+    /**
      * Get the view / contents that represent the component.
      */
     public function render(): View

@@ -7,11 +7,177 @@ use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
+use App\Repositories\Contracts\LaneRepositoryInterface;
+use App\Repositories\Contracts\StaffRepositoryInterface;
+use App\Repositories\Contracts\TimetableRepositoryInterface;
+use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class TimetableGridService
 {
+    protected TimetableRepositoryInterface $timetableRepository;
+
+    protected LaneRepositoryInterface $laneRepository;
+
+    protected TimetableTaskRepositoryInterface $taskRepository;
+
+    protected StaffRepositoryInterface $staffRepository;
+
+    public function __construct(
+        ?TimetableRepositoryInterface $timetableRepository = null,
+        ?LaneRepositoryInterface $laneRepository = null,
+        ?TimetableTaskRepositoryInterface $taskRepository = null,
+        ?StaffRepositoryInterface $staffRepository = null,
+    ) {
+        $this->timetableRepository = $timetableRepository ?? app(TimetableRepositoryInterface::class);
+        $this->laneRepository = $laneRepository ?? app(LaneRepositoryInterface::class);
+        $this->taskRepository = $taskRepository ?? app(TimetableTaskRepositoryInterface::class);
+        $this->staffRepository = $staffRepository ?? app(StaffRepositoryInterface::class);
+    }
+
+    /**
+     * 当日進行表（マトリクス画面）用の全表示データを取得
+     *
+     * @return array<string, mixed>
+     */
+    public function getMatrixViewData(?int $selectedTimetableId = null): array
+    {
+        $timetables = $this->timetableRepository->getAll();
+
+        $selectedTimetable = null;
+        if ($selectedTimetableId && $selectedTimetableId > 0) {
+            $selectedTimetable = $timetables->firstWhere('id', $selectedTimetableId);
+        }
+
+        if ($selectedTimetable === null) {
+            $selectedTimetable = $timetables->firstWhere('status', 'active') ?? $timetables->first();
+        }
+
+        $tasksByLane = [];
+        $lanes = collect();
+        $totalRequired = 0;
+        $totalAssigned = 0;
+        $satisfiedTasksCount = 0;
+        $tasksCount = 0;
+        $shortageTasks = collect();
+
+        if ($selectedTimetable !== null) {
+            $lanes = $this->laneRepository->getOrderedWithLeadForTimetable($selectedTimetable);
+            $tasks = $this->taskRepository->getWithAssignmentsAndLaneByTimetableId($selectedTimetable->id);
+
+            $tasksCount = $tasks->count();
+            $satisfiedTasksCount = $tasks->filter(fn (TimetableTask $t): bool => $t->is_satisfied)->count();
+            $shortageTasks = $tasks->filter(fn (TimetableTask $t): bool => ! $t->is_satisfied)->values();
+            $totalRequired = $tasks->sum('required_people_count');
+            $totalAssigned = $tasks->sum(fn (TimetableTask $t): int => $t->assigned_count);
+
+            foreach ($lanes as $lane) {
+                $tasksByLane[$lane->id] = $tasks->filter(function (TimetableTask $t) use ($lane): bool {
+                    return $t->lane_id === $lane->id;
+                })->values();
+            }
+        }
+
+        $timeSlots = $this->generateTimeSlots($selectedTimetable);
+        $grid = $this->buildMatrixGrid($timeSlots, $lanes, $tasksByLane);
+        $nowTime = Carbon::now('Asia/Tokyo')->format('H:i');
+        $activeStaff = $this->staffRepository->getActiveOrderedByAffiliation();
+
+        return [
+            'timetables' => $timetables,
+            'selectedTimetable' => $selectedTimetable,
+            'hasRoad' => $selectedTimetable !== null && $selectedTimetable->hasRoadPeriods(),
+            'hasFestival' => $selectedTimetable !== null && $selectedTimetable->hasFestivalPeriods(),
+            'lanes' => $lanes,
+            'tasksByLane' => $tasksByLane,
+            'timeSlots' => $timeSlots,
+            'grid' => $grid,
+            'nowTime' => $nowTime,
+            'tasksCount' => $tasksCount,
+            'satisfiedTasksCount' => $satisfiedTasksCount,
+            'shortageTasks' => $shortageTasks,
+            'totalRequired' => $totalRequired,
+            'totalAssigned' => $totalAssigned,
+            'activeStaff' => $activeStaff,
+            'colorOptions' => Lane::COLOR_OPTIONS,
+        ];
+    }
+
+    /**
+     * スタッフ別リソースタイムライン画面用の全表示データを取得
+     *
+     * @return array<string, mixed>
+     */
+    public function getStaffTimelineViewData(Timetable $timetable): array
+    {
+        $activeStaff = $this->staffRepository->getActiveOrderedByAffiliation();
+        $staffIds = $activeStaff->pluck('id')->all();
+
+        $tasks = $this->taskRepository->getForTimelineByTimetableId($timetable->id);
+
+        $assignmentsByStaff = [];
+        foreach ($staffIds as $sId) {
+            $assignmentsByStaff[$sId] = collect();
+        }
+
+        foreach ($tasks as $task) {
+            foreach ($task->assignments as $assignment) {
+                if (isset($assignmentsByStaff[$assignment->staff_id])) {
+                    $assignmentsByStaff[$assignment->staff_id]->push([
+                        'task' => $task,
+                        'assignment' => $assignment,
+                    ]);
+                }
+            }
+        }
+
+        $timeSlots = $this->generateTimeSlots($timetable);
+        $timelineGrid = $this->buildTimelineGrid($timeSlots, $activeStaff, $assignmentsByStaff);
+
+        $totalStaffCount = $activeStaff->count();
+        $assignedStaffCount = collect($assignmentsByStaff)->filter(fn ($items): bool => $items->isNotEmpty())->count();
+        $unassignedStaffCount = $totalStaffCount - $assignedStaffCount;
+        $checkedInCount = $activeStaff->filter(fn (Staff $s): bool => (bool) $s->is_checked_in)->count();
+
+        $tasksWithShortage = $tasks->filter(fn (TimetableTask $t): bool => $t->shortage_count > 0)->map(function (TimetableTask $t): array {
+            return [
+                'id' => $t->id,
+                'title' => $t->title,
+                'lane' => $t->lane ?: ($t->laneRelation?->name ?? '担当班未設定'),
+                'start_time' => substr($t->start_time, 0, 5),
+                'end_time' => substr($t->end_time, 0, 5),
+                'shortage_count' => $t->shortage_count,
+                'assigned_staff_ids' => $t->assignments->pluck('staff_id')->all(),
+            ];
+        })->values();
+
+        $leadLanes = $this->laneRepository->getLeadLanesForTimetable($timetable);
+        $leadStaffIds = $leadLanes->pluck('lead_staff_id')->map(fn ($id): int => (int) $id)->unique()->values()->all();
+        $laneNamesByLeadStaff = $leadLanes->groupBy('lead_staff_id')
+            ->map(fn ($lanes): string => $lanes->pluck('name')->join('・'))
+            ->all();
+
+        $staffMeta = $this->buildStaffRowMeta($activeStaff, $assignmentsByStaff, $leadStaffIds);
+
+        return [
+            'timetable' => $timetable,
+            'activeStaff' => $activeStaff,
+            'timeSlots' => $timeSlots,
+            'timelineGrid' => $timelineGrid,
+            'assignmentsByStaff' => $assignmentsByStaff,
+            'staffMeta' => $staffMeta,
+            'tasksWithShortage' => $tasksWithShortage,
+            'totalStaffCount' => $totalStaffCount,
+            'assignedStaffCount' => $assignedStaffCount,
+            'unassignedStaffCount' => $unassignedStaffCount,
+            'checkedInCount' => $checkedInCount,
+            'leadStaffIds' => $leadStaffIds,
+            'laneNamesByLeadStaff' => $laneNamesByLeadStaff,
+            'colorOptions' => Lane::COLOR_OPTIONS,
+        ];
+    }
+
     /**
      * 運行タイムテーブルの開始・終了時刻から30分刻みの時間スロット配列を生成
      *
@@ -303,6 +469,7 @@ class TimetableGridService
 
                 if ($match) {
                     $task = $match['task'];
+                    $assignment = $match['assignment'];
                     $tEnd = Carbon::createFromFormat('H:i', substr($task->end_time, 0, 5));
                     $diffMinutes = max(30, $slotCarbon->diffInMinutes($tEnd, false));
                     $span = (int) ceil($diffMinutes / 30);
@@ -311,11 +478,30 @@ class TimetableGridService
 
                     $coveredUntil = $sIdx + $span - 1;
 
+                    $laneRel = $task->laneRelation;
+                    $badgeBg = match ($laneRel?->color ?? 'indigo') {
+                        'amber' => 'bg-amber-100 border-amber-300 text-amber-900',
+                        'sky' => 'bg-sky-100 border-sky-300 text-sky-900',
+                        'emerald' => 'bg-emerald-100 border-emerald-300 text-emerald-900',
+                        'purple' => 'bg-purple-100 border-purple-400/30 text-purple-900',
+                        'pink' => 'bg-pink-100 border-pink-300 text-pink-900',
+                        'red' => 'bg-rose-100 border-rose-300 text-rose-900',
+                        'orange' => 'bg-orange-100 border-orange-300 text-orange-900',
+                        'teal' => 'bg-teal-100 border-teal-300 text-teal-900',
+                        default => 'bg-indigo-100 border-indigo-300 text-indigo-900',
+                    };
+
+                    $isSelfTaskLeader = $laneRel && (int) $laneRel->lead_staff_id === (int) $staff->id;
+                    $taskLeaderName = $laneRel?->leadStaff?->name;
+
                     $staffGrid[$sIdx] = [
                         'type' => 'task',
                         'colspan' => $span,
                         'task' => $task,
-                        'assignment' => $match['assignment'],
+                        'assignment' => $assignment,
+                        'badge_bg' => $badgeBg,
+                        'is_self_task_leader' => $isSelfTaskLeader,
+                        'task_leader_name' => $taskLeaderName,
                     ];
                 } else {
                     $staffGrid[$sIdx] = [
@@ -329,5 +515,53 @@ class TimetableGridService
         }
 
         return $grid;
+    }
+
+    /**
+     * スタッフ別タイムライン左列の表示メタ情報を構築
+     *
+     * @param  Collection<int, Staff>  $activeStaff
+     * @param  array<int, Collection<int, array{task: TimetableTask, assignment: TaskStaffAssignment}>>  $assignmentsByStaff
+     * @param  array<int, int>  $leadStaffIds
+     * @return array<int, array{
+     *     assigned_count: int,
+     *     is_checked_in: bool,
+     *     is_leader: bool,
+     *     total_hours_formatted: string
+     * }>
+     */
+    public function buildStaffRowMeta(
+        Collection $activeStaff,
+        array $assignmentsByStaff,
+        array $leadStaffIds,
+    ): array {
+        $meta = [];
+
+        foreach ($activeStaff as $staff) {
+            $staffAssignments = $assignmentsByStaff[$staff->id] ?? collect();
+            $assignedCount = $staffAssignments->count();
+            $isCheckedIn = (bool) $staff->is_checked_in;
+            $isLeader = in_array($staff->id, $leadStaffIds, true);
+
+            $totalMinutes = 0;
+            foreach ($staffAssignments as $item) {
+                $t = $item['task'];
+                if ($t->start_time && $t->end_time) {
+                    $sC = Carbon::parse($t->start_time);
+                    $eC = Carbon::parse($t->end_time);
+                    $totalMinutes += max(0, $sC->diffInMinutes($eC));
+                }
+            }
+            $totalHoursFormatted = round($totalMinutes / 60, 1).'h';
+
+            $meta[$staff->id] = [
+                'assigned_count' => $assignedCount,
+                'is_checked_in' => $isCheckedIn,
+                'is_leader' => $isLeader,
+                'total_hours_formatted' => $totalHoursFormatted,
+            ];
+        }
+
+        return $meta;
     }
 }

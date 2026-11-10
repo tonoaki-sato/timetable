@@ -1,15 +1,3 @@
-@php
-    $currentRoadPeriods = old('road_periods', $timetable->road_periods ?? []);
-    if (!is_array($currentRoadPeriods)) {
-        $currentRoadPeriods = [];
-    }
-
-    $currentFestivalPeriods = old('festival_periods', $timetable->festival_periods ?? []);
-    if (!is_array($currentFestivalPeriods)) {
-        $currentFestivalPeriods = [];
-    }
-@endphp
-
 <!-- 運行状況・時間帯指定セクション -->
 <div class="space-y-6 pt-4 border-t border-slate-200">
 
@@ -34,7 +22,7 @@
 
         <!-- 道路時間帯リスト -->
         <div id="road-periods-container" class="space-y-2">
-            @foreach($currentRoadPeriods as $index => $period)
+            @foreach(\App\Models\Timetable::resolveRoadPeriodsForForm(old('road_periods'), $timetable ?? null) as $index => $period)
             <div class="period-row grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
                 <input type="hidden" name="road_periods[{{ $index }}][status]" value="{{ $period['status'] ?? 'closed' }}">
                 <div class="col-span-3 sm:col-span-3">
@@ -90,7 +78,7 @@
 
         <!-- まつり時間帯リスト -->
         <div id="festival-periods-container" class="space-y-2">
-            @foreach($currentFestivalPeriods as $index => $period)
+            @foreach(\App\Models\Timetable::resolveFestivalPeriodsForForm(old('festival_periods'), $timetable ?? null) as $index => $period)
             <div class="period-row grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
                 <input type="hidden" name="festival_periods[{{ $index }}][status]" value="{{ $period['status'] ?? 'active' }}">
                 <div class="col-span-3 sm:col-span-3">

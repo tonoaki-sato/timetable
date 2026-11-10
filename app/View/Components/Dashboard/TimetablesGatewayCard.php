@@ -21,4 +21,3 @@ class TimetablesGatewayCard extends Component
         return view('components.dashboard.timetables-gateway-card');
     }
 }
-

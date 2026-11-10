@@ -305,4 +305,110 @@ class Timetable extends Model
 
         return $query;
     }
+
+    /**
+     * 本日開催かどうか
+     */
+    public function getIsTodayAttribute(): bool
+    {
+        return $this->target_date !== null && $this->target_date->isToday();
+    }
+
+    /**
+     * 開催中（active）かどうか
+     */
+    public function getIsActiveAttribute(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * 終了（completed）かどうか
+     */
+    public function getIsCompletedAttribute(): bool
+    {
+        return $this->status === 'completed';
+    }
+
+    /**
+     * 対象日の曜日ラベル（例: '土'）
+     */
+    public function getWeekdayLabelAttribute(): string
+    {
+        if (! $this->target_date) {
+            return '';
+        }
+
+        return ['日', '月', '火', '水', '木', '金', '土'][$this->target_date->dayOfWeek] ?? '';
+    }
+
+    /**
+     * 対象日が土日かどうか
+     */
+    public function getIsWeekendAttribute(): bool
+    {
+        return $this->target_date !== null && in_array($this->target_date->dayOfWeek, [0, 6], true);
+    }
+
+    /**
+     * 曜日テキストのカラークラス
+     */
+    public function getWeekdayColorClassAttribute(): string
+    {
+        if (! $this->target_date) {
+            return 'text-slate-400';
+        }
+
+        return match ($this->target_date->dayOfWeek) {
+            0 => 'text-rose-500',
+            6 => 'text-sky-500',
+            default => 'text-slate-400',
+        };
+    }
+
+    /**
+     * ステータスバッジのCSSクラス
+     */
+    public function getStatusBadgeClassAttribute(): string
+    {
+        return match ($this->status) {
+            'active' => 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold',
+            'completed' => 'bg-slate-100 text-slate-600 border-slate-200',
+            default => 'bg-blue-50 text-blue-700 border-blue-200',
+        };
+    }
+
+    /**
+     * 搬出入計画画面のURLを取得
+     *
+     * @param  array<string, mixed>  $queryParams
+     */
+    public function logisticsUrl(array $queryParams = []): string
+    {
+        return route('timetables.logistics.index', array_merge(['timetable' => $this], $queryParams));
+    }
+
+    /**
+     * フォーム表示用の歩行者天国（道路規制）時間帯配列を取得
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function resolveRoadPeriodsForForm(mixed $oldPeriods = null, ?self $timetable = null): array
+    {
+        $periods = $oldPeriods ?? ($timetable?->road_periods ?? []);
+
+        return is_array($periods) ? $periods : [];
+    }
+
+    /**
+     * フォーム表示用のまつり開催時間帯配列を取得
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function resolveFestivalPeriodsForForm(mixed $oldPeriods = null, ?self $timetable = null): array
+    {
+        $periods = $oldPeriods ?? ($timetable?->festival_periods ?? []);
+
+        return is_array($periods) ? $periods : [];
+    }
 }

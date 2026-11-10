@@ -8,6 +8,7 @@ use App\Models\LocationSchedule;
 use App\Models\LocationType;
 use App\Models\Timetable;
 use App\Models\User;
+use App\Services\LocationAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -271,21 +272,23 @@ class LocationManagementTest extends TestCase
             'title' => '夜間枠',
         ]);
 
+        $availabilityService = app(LocationAvailabilityService::class);
+
         // 1. 午前枠内（10:00）: 利用可能
-        $evalMorning = $location->evaluateStatusAt(Carbon::parse('2026-10-10 10:00:00'));
+        $evalMorning = $availabilityService->evaluateLocationStatus($location, Carbon::parse('2026-10-10 10:00:00'));
         $this->assertEquals(LocationCurrentStatus::Available, $evalMorning->status);
 
         // 2. 枠外の時間（14:00）: 利用時間外
-        $evalAfternoon = $location->evaluateStatusAt(Carbon::parse('2026-10-10 14:00:00'));
+        $evalAfternoon = $availabilityService->evaluateLocationStatus($location, Carbon::parse('2026-10-10 14:00:00'));
         $this->assertEquals(LocationCurrentStatus::UnavailableOutOfHours, $evalAfternoon->status);
 
         // 3. 夜間枠内（19:00）: 利用不可設定のため利用不可
-        $evalNight = $location->evaluateStatusAt(Carbon::parse('2026-10-10 19:00:00'));
+        $evalNight = $availabilityService->evaluateLocationStatus($location, Carbon::parse('2026-10-10 19:00:00'));
         $this->assertEquals(LocationCurrentStatus::UnavailablePending, $evalNight->status);
         $this->assertStringContainsString('未確保（調整中）のため利用できません', $evalNight->detail);
 
         // 4. 全期間終了後（10/11 00:00）: 枠未登録（利用期間終了後）
-        $evalEnded = $location->evaluateStatusAt(Carbon::parse('2026-10-11 00:00:00'));
+        $evalEnded = $availabilityService->evaluateLocationStatus($location, Carbon::parse('2026-10-11 00:00:00'));
         $this->assertEquals(LocationCurrentStatus::NoSchedule, $evalEnded->status);
         $this->assertStringContainsString('すべての利用可能期間が終了しました', $evalEnded->detail);
     }
@@ -299,7 +302,7 @@ class LocationManagementTest extends TestCase
             'is_active' => true,
         ]);
 
-        $eval = $location->evaluateStatusAt(Carbon::parse('2026-10-10 14:00:00'));
+        $eval = app(LocationAvailabilityService::class)->evaluateLocationStatus($location, Carbon::parse('2026-10-10 14:00:00'));
         $this->assertEquals(LocationCurrentStatus::Available, $eval->status);
         $this->assertStringContainsString('終日利用可能', $eval->detail);
     }

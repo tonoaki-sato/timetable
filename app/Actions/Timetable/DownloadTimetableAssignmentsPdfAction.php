@@ -3,13 +3,15 @@
 namespace App\Actions\Timetable;
 
 use App\Models\Timetable;
+use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Services\PdfService;
 use Illuminate\Http\Response;
 
 class DownloadTimetableAssignmentsPdfAction
 {
     public function __construct(
-        protected PdfService $pdfService
+        protected PdfService $pdfService,
+        protected TimetableRepositoryInterface $timetableRepository
     ) {}
 
     /**
@@ -17,16 +19,32 @@ class DownloadTimetableAssignmentsPdfAction
      */
     public function execute(Timetable $timetable): Response
     {
-        $timetable->load([
-            'lanes' => function ($query) {
-                $query->orderBy('display_order')->orderBy('id');
-            },
-            'lanes.leadStaff',
-            'lanes.tasks' => function ($query) {
-                $query->orderBy('start_time')->orderBy('end_time');
-            },
-            'lanes.tasks.assignments.staff',
-        ]);
+        $viewData = $this->buildViewData($timetable);
+
+        $sanitizedName = preg_replace('/[^\p{L}\p{N}_-]+/u', '_', $timetable->name);
+        $filename = "assignments_{$sanitizedName}_".now()->format('Ymd_His').'.pdf';
+
+        return $this->pdfService->download(
+            'pdf.timetable_assignments',
+            $viewData,
+            $filename,
+            'landscape'
+        );
+    }
+
+    /**
+     * 人員配置一覧表（PDFおよびHTMLプレビュー共通）のビューデータを構築
+     *
+     * @return array{
+     *     timetable: Timetable,
+     *     totalRequired: int,
+     *     totalAssigned: int,
+     *     title: string
+     * }
+     */
+    public function buildViewData(Timetable $timetable): array
+    {
+        $this->timetableRepository->loadForAssignmentsPrint($timetable);
 
         $totalRequired = 0;
         $totalAssigned = 0;
@@ -38,19 +56,11 @@ class DownloadTimetableAssignmentsPdfAction
             }
         }
 
-        $sanitizedName = preg_replace('/[^\p{L}\p{N}_-]+/u', '_', $timetable->name);
-        $filename = "assignments_{$sanitizedName}_".now()->format('Ymd_His').'.pdf';
-
-        return $this->pdfService->download(
-            'pdf.timetable_assignments',
-            [
-                'timetable' => $timetable,
-                'totalRequired' => $totalRequired,
-                'totalAssigned' => $totalAssigned,
-                'title' => "【人員配置一覧表】{$timetable->name} (".$timetable->target_date?->format('Y/m/d').')',
-            ],
-            $filename,
-            'landscape'
-        );
+        return [
+            'timetable' => $timetable,
+            'totalRequired' => $totalRequired,
+            'totalAssigned' => $totalAssigned,
+            'title' => "【人員配置一覧表】{$timetable->name} (".$timetable->target_date?->format('Y/m/d').')',
+        ];
     }
 }

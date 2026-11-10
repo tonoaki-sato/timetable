@@ -205,56 +205,42 @@
             </div>
             @else
             <div id="myshiftTimelineContainer" class="space-y-2">
-                @php $currentDateHeader = null; @endphp
-                @foreach($assignments as $assignment)
-                @php
-                    $task = $assignment->task;
-                    $timetable = $task?->timetable;
-                    $dateStr = $timetable?->target_date ? $timetable->target_date->format('Y年n月j日') . ' (' . $timetable->target_date->isoFormat('ddd') . ')' : '日程未定';
-                    $isCurrent = ($currentTask && $assignment->id === $currentTask->id);
-                    $isNext = ($nextTask && $assignment->id === $nextTask->id);
-                    $isCompleted = ($assignment->attendance_status === 'completed');
-                    $laneLeadStaff = $task?->laneRelation?->leadStaff;
-                    $hasDetails = !empty($task?->content);
-                @endphp
-
-                @if($currentDateHeader !== $dateStr)
-                    @php $currentDateHeader = $dateStr; @endphp
+                @foreach($groupedAssignments as $dateLabel => $dateAssignments)
                     <div class="pt-2 pb-1">
                         <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-indigo-300 border border-slate-700">
-                            📅 {{ $dateStr }} {{ $timetable?->name ? ' - ' . $timetable->name : '' }}
+                            📅 {{ $dateLabel }} {{ $dateAssignments->first()?->task?->timetable?->name ? ' - ' . $dateAssignments->first()->task->timetable->name : '' }}
                         </span>
                     </div>
-                @endif
 
-                <div class="rounded-xl border transition overflow-hidden {{ $isCurrent ? 'bg-gradient-to-r from-indigo-950/90 via-slate-900 to-indigo-950/80 border-2 border-indigo-400 shadow-lg shadow-indigo-950/60 ring-1 ring-indigo-400/40' : ($isNext ? 'bg-slate-900/90 border-sky-500/50 shadow-sm' : 'bg-slate-900 border-slate-800/90 hover:border-slate-700') }}">
+                @foreach($dateAssignments as $assignment)
+                <div class="rounded-xl border transition overflow-hidden {{ $assignment->isCurrent($currentTask) ? 'bg-gradient-to-r from-indigo-950/90 via-slate-900 to-indigo-950/80 border-2 border-indigo-400 shadow-lg shadow-indigo-950/60 ring-1 ring-indigo-400/40' : ($assignment->isNext($nextTask) ? 'bg-slate-900/90 border-sky-500/50 shadow-sm' : 'bg-slate-900 border-slate-800/90 hover:border-slate-700') }}">
                     <div class="p-3">
                         <!-- 1行メイン表示 -->
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 min-w-0 flex-1">
                                 <!-- 時間帯 -->
-                                <span class="font-mono text-xs font-bold shrink-0 {{ $isCurrent ? 'text-indigo-200' : ($isNext ? 'text-sky-300' : 'text-slate-300') }}">
-                                    {{ substr($task?->start_time, 0, 5) }}〜{{ $task?->end_time ? substr($task?->end_time, 0, 5) : '' }}
+                                <span class="font-mono text-xs font-bold shrink-0 {{ $assignment->isCurrent($currentTask) ? 'text-indigo-200' : ($assignment->isNext($nextTask) ? 'text-sky-300' : 'text-slate-300') }}">
+                                    {{ substr($assignment->task?->start_time, 0, 5) }}〜{{ $assignment->task?->end_time ? substr($assignment->task?->end_time, 0, 5) : '' }}
                                 </span>
 
                                 <!-- タスク名 & 班 & 班長 & 場所 & 役割 -->
                                 <div class="flex items-center gap-1.5 min-w-0 truncate">
-                                    <span class="text-sm font-bold truncate {{ $isCurrent ? 'text-white' : ($isNext ? 'text-slate-100' : 'text-slate-200') }}">
-                                        {{ $task?->title }}
+                                    <span class="text-sm font-bold truncate {{ $assignment->isCurrent($currentTask) ? 'text-white' : ($assignment->isNext($nextTask) ? 'text-slate-100' : 'text-slate-200') }}">
+                                        {{ $assignment->task?->title }}
                                     </span>
-                                    @if($task?->laneRelation || $task?->lane)
+                                    @if($assignment->task?->laneRelation || $assignment->task?->lane)
                                     <span class="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-indigo-300 border border-slate-700">
-                                        {{ $task->laneRelation?->name ?: $task->lane }}
+                                        {{ $assignment->task->laneRelation?->name ?: $assignment->task->lane }}
                                     </span>
                                     @endif
-                                    @if($laneLeadStaff)
+                                    @if($assignment->task?->laneRelation?->leadStaff)
                                     <span class="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-950/70 text-amber-300 border border-amber-800/80 flex items-center gap-0.5">
-                                        <span>👑</span><span>{{ $laneLeadStaff->name }}</span>
+                                        <span>👑</span><span>{{ $assignment->task->laneRelation->leadStaff->name }}</span>
                                     </span>
                                     @endif
-                                    @if($task?->location)
+                                    @if($assignment->task?->location)
                                     <span class="shrink-0 text-xs text-slate-300 font-medium flex items-center gap-0.5">
-                                        <span>📍</span><span>{{ $task->location }}</span>
+                                        <span>📍</span><span>{{ $assignment->task->location }}</span>
                                     </span>
                                     @endif
                                     @if($assignment->role_description)
@@ -267,21 +253,21 @@
 
                             <!-- バッジ & 詳細トグル -->
                             <div class="flex items-center gap-1.5 shrink-0">
-                                @if($isCurrent)
+                                @if($assignment->isCurrent($currentTask))
                                 <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-500 text-white shadow-sm animate-pulse">
                                     <span>●</span><span>NOW 進行中</span>
                                 </span>
-                                @elseif($isNext)
+                                @elseif($assignment->isNext($nextTask))
                                 <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-400/50">
                                     <span>NEXT 次の予定</span>
                                 </span>
-                                @elseif($isCompleted)
+                                @elseif($assignment->is_completed)
                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">
                                     済
                                 </span>
                                 @endif
 
-                                @if($hasDetails)
+                                @if($assignment->has_details)
                                 <button type="button" class="taskDetailToggleBtn p-1 text-slate-400 hover:text-slate-200 transition rounded cursor-pointer" aria-label="詳細を開く">
                                     <svg class="w-4 h-4 transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -292,7 +278,7 @@
                         </div>
 
                         <!-- 現在進行中タスクのクイック操作ボタン (着手・完了) -->
-                        @if($isCurrent && $assignment->attendance_status !== 'completed')
+                        @if($assignment->isCurrent($currentTask) && $assignment->attendance_status !== 'completed')
                         <div class="mt-2.5 pt-2 border-t border-indigo-500/30 flex items-center justify-between text-xs">
                             <div class="flex items-center space-x-1.5">
                                 <span class="text-indigo-300 text-[11px]">出欠・進捗:</span>
@@ -318,18 +304,19 @@
                         @endif
 
                         <!-- 詳細情報アコーディオン (タップ展開: タスク詳細) -->
-                        @if($hasDetails)
+                        @if($assignment->has_details)
                         <div class="taskDetailPanel hidden mt-2.5 pt-2 border-t border-slate-800 text-xs text-slate-400 space-y-1.5">
-                            @if($task?->content)
+                            @if($assignment->task?->content)
                             <div class="flex items-start space-x-1.5">
                                 <span class="text-indigo-400 font-bold shrink-0">詳細:</span>
-                                <span class="text-slate-200 whitespace-pre-line leading-relaxed">{{ $task->content }}</span>
+                                <span class="text-slate-200 whitespace-pre-line leading-relaxed">{{ $assignment->task->content }}</span>
                             </div>
                             @endif
                         </div>
                         @endif
                     </div>
                 </div>
+                @endforeach
                 @endforeach
             </div>
             @endif

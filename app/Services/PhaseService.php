@@ -6,10 +6,24 @@ use App\DTOs\PhaseContext;
 use App\Enums\AnnualPhase;
 use App\Models\Schedule;
 use App\Models\Timetable;
+use App\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Repositories\Contracts\TimetableRepositoryInterface;
 use Carbon\Carbon;
 
 class PhaseService
 {
+    protected TimetableRepositoryInterface $timetableRepository;
+
+    protected ScheduleRepositoryInterface $scheduleRepository;
+
+    public function __construct(
+        ?TimetableRepositoryInterface $timetableRepository = null,
+        ?ScheduleRepositoryInterface $scheduleRepository = null
+    ) {
+        $this->timetableRepository = $timetableRepository ?? app(TimetableRepositoryInterface::class);
+        $this->scheduleRepository = $scheduleRepository ?? app(ScheduleRepositoryInterface::class);
+    }
+
     /**
      * 現在（または指定日時）のフェーズ状況を一括取得
      */
@@ -50,10 +64,7 @@ class PhaseService
      */
     private function getTodaysTimetable(Carbon $now): ?Timetable
     {
-        return Timetable::whereDate('target_date', $now->toDateString())
-            ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
-            ->orderBy('id')
-            ->first();
+        return $this->timetableRepository->findForDatePrioritizingActive($now->toDateString());
     }
 
     /**
@@ -61,10 +72,7 @@ class PhaseService
      */
     private function getNextUpcomingTask(string $todayStr): ?Schedule
     {
-        return Schedule::where('start_date', '>=', $todayStr)
-            ->where('status', '!=', 'completed')
-            ->orderBy('start_date', 'asc')
-            ->first();
+        return $this->scheduleRepository->findNextUpcomingTask($todayStr);
     }
 
     /**
@@ -72,15 +80,6 @@ class PhaseService
      */
     private function countPendingTasksInPhase(AnnualPhase $phase, Carbon $now): int
     {
-        $phaseMonths = $phase->months();
-
-        return Schedule::where(function ($query) use ($phaseMonths) {
-            foreach ($phaseMonths as $m) {
-                $query->orWhereMonth('start_date', $m);
-            }
-        })
-            ->whereYear('start_date', $now->year)
-            ->where('status', '!=', 'completed')
-            ->count();
+        return $this->scheduleRepository->countPendingInMonthsAndYear($phase->months(), $now->year);
     }
 }

@@ -122,25 +122,12 @@
             <!-- タスクリストコンテナ (独立スクロール) -->
             <div id="task-list-container" class="flex-1 overflow-y-auto p-2.5 space-y-2">
                 @forelse($tasks as $task)
-                @php
-                    $lane = $task->laneRelation;
-                    $laneName = $lane?->name ?? '担当班未設定';
-                    $laneIcon = $lane?->icon ?: '📋';
-                    $badgeClass = $lane?->color_classes['badge'] ?? 'bg-slate-100 text-slate-800 border-slate-200';
-                    $isSatisfied = (bool) $task->is_satisfied;
-                    $requiredCount = $task->required_people_count;
-                    $assignedCount = $task->assigned_count;
-                    $shortageCount = $task->shortage_count;
-                    $percent = $requiredCount > 0 ? min(100, round(($assignedCount / $requiredCount) * 100)) : 100;
-                    $progressColor = $isSatisfied ? 'bg-emerald-500' : ($assignedCount > 0 ? 'bg-amber-500' : 'bg-slate-300');
-                    $searchText = mb_strtolower($task->title . ' ' . $laneName . ' ' . ($task->location ?? '') . ' ' . ($task->content ?? ''));
-                @endphp
                 <div data-task-card
                     data-task-id="{{ $task->id }}"
                     data-lane-id="{{ $task->lane_id }}"
-                    data-is-satisfied="{{ $isSatisfied ? '1' : '0' }}"
-                    data-shortage-count="{{ $shortageCount }}"
-                    data-search-text="{{ $searchText }}"
+                    data-is-satisfied="{{ $task->is_satisfied ? '1' : '0' }}"
+                    data-shortage-count="{{ $task->shortage_count }}"
+                    data-search-text="{{ $task->assignment_search_text }}"
                     class="task-card group relative p-3 rounded-xl border transition cursor-pointer select-none {{ $task->id === $initialTaskId ? 'border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20' : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50/70' }}">
 
                     <!-- 時間帯 & 班名 & 最優先バッジ -->
@@ -149,8 +136,8 @@
                             <span class="font-mono font-bold text-xs text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
                                 ⏱️ {{ substr($task->start_time, 0, 5) }}〜{{ substr($task->end_time, 0, 5) }}
                             </span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border truncate max-w-[120px] {{ $badgeClass }}" title="{{ $laneName }}">
-                                {{ $laneIcon }} {{ $laneName }}
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border truncate max-w-[120px] {{ $task->lane_badge_class }}" title="{{ $task->lane_name_label }}">
+                                {{ $task->lane_icon_label }} {{ $task->lane_name_label }}
                             </span>
                         </div>
 
@@ -162,8 +149,8 @@
                             @endif
 
                             <span data-task-status-badge
-                                class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold font-mono border {{ $isSatisfied ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-300' }}">
-                                {{ $isSatisfied ? "✔ 充足 ({$assignedCount})" : "⚠️ 不足 {$shortageCount}名" }}
+                                class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold font-mono border {{ $task->is_satisfied ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-300' }}">
+                                {{ $task->is_satisfied ? "✔ 充足 ({$task->assigned_count})" : "⚠️ 不足 {$task->shortage_count}名" }}
                             </span>
                         </div>
                     </div>
@@ -176,10 +163,10 @@
                     <!-- 進捗プログレスミニバー & 充足カウント -->
                     <div class="flex items-center space-x-2 pt-1">
                         <div class="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div data-task-progress-bar data-percent="{{ $percent }}" class="{{ $progressColor }} h-full transition-all duration-300"></div>
+                            <div data-task-progress-bar data-percent="{{ $task->fulfillment_percent }}" class="{{ $task->progress_color_class }} h-full transition-all duration-300"></div>
                         </div>
                         <span data-task-people-label class="text-[11px] font-mono text-slate-500 shrink-0 font-medium">
-                            👥 {{ $assignedCount }}/{{ $task->required_people_label }}
+                            👥 {{ $task->assigned_count }}/{{ $task->required_people_label }}
                         </span>
                     </div>
 

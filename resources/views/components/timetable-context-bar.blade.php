@@ -1,26 +1,3 @@
-@props([
-    'timetable',
-    'active' => 'matrix',
-])
-
-@php
-    $timetablesList = $navTimetables ?? \App\Models\Timetable::orderBy('target_date')->get();
-    $targetRouteForTimetable = function($tt) use ($active) {
-        return match($active) {
-            'lanes' => route('timetables.lanes.index', $tt),
-            'tasks' => route('timetables.tasks.index', $tt),
-            'assignments' => route('timetables.assignments', $tt),
-            'timeline' => route('timetables.staff-timeline', $tt),
-            'locations' => route('timetables.locations.index', $tt),
-            'equipments' => route('timetables.equipments.index', $tt),
-            'logistics' => route('timetables.logistics.index', $tt),
-            'show' => route('timetables.show', $tt),
-            'print' => route('timetables.print-assignments', $tt),
-            default => route('timetable.index', ['timetable_id' => $tt->id]),
-        };
-    };
-@endphp
-
 @if($timetable)
 <div class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 overflow-x-auto scrollbar-none">
     <!-- 左側: 運行日切り替えセレクト -->
@@ -32,7 +9,7 @@
         <select data-action="navigate-on-change"
             class="bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold py-1 pl-2 pr-7 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer whitespace-nowrap">
             @foreach($timetablesList as $tt)
-                <option value="{{ $targetRouteForTimetable($tt) }}" {{ $tt->id === $timetable->id ? 'selected' : '' }}>
+                <option value="{{ $targetRouteFor($tt) }}" {{ $tt->id === $timetable->id ? 'selected' : '' }}>
                     {{ $tt->target_date ? $tt->target_date->format('m/d') . ' ' : '' }}{{ $tt->name }}
                     {{ $tt->status === 'active' ? '(運行中)' : '' }}
                 </option>

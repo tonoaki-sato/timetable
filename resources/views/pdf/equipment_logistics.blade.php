@@ -214,14 +214,13 @@
     <table class="locations-table">
         <tr>
             @foreach(array_slice($locationsData, 0, 5) as $locItem)
-            @php $l = $locItem['location']; @endphp
             <td>
-                <div class="loc-name">{{ $l->name }}</div>
+                <div class="loc-name">{{ $locItem['location']->name }}</div>
                 <div class="loc-time">
-                    @if($l->is_all_day)
+                    @if($locItem['location']->is_all_day)
                         終日常時使用可
-                    @elseif($l->schedules->isNotEmpty())
-                        @foreach($l->schedules as $s)
+                    @elseif($locItem['location']->schedules->isNotEmpty())
+                        @foreach($locItem['location']->schedules as $s)
                             {{ $s->start_at->format('n/j H:i') }}〜{{ $s->end_at->format($s->start_at->isSameDay($s->end_at) ? 'H:i' : 'n/j H:i') }}<br>
                         @endforeach
                     @else
@@ -250,15 +249,6 @@
         </thead>
         <tbody>
             @forelse($equipments as $eq)
-            @php
-                $plans = $eq->plans;
-                $preDayPlans = $plans->whereIn('day_phase', ['other', 'pre_day']);
-                $day1MPlans = $plans->where('day_phase', 'day1_morning');
-                $day1EPlans = $plans->where('day_phase', 'day1_evening');
-                $day2MPlans = $plans->where('day_phase', 'day2_morning');
-                $day2EPlans = $plans->where('day_phase', 'day2_evening');
-                $postDayPlans = $plans->where('day_phase', 'post_day');
-            @endphp
             <tr>
                 <td class="col-eq">
                     <div class="eq-name">{{ $eq->name }}</div>
@@ -268,7 +258,7 @@
                     <div>{{ $eq->type_label }}</div>
                 </td>
                 <td class="col-phase">
-                    @forelse($preDayPlans as $p)
+                    @forelse($eq->plansForPhases(['other', 'pre_day']) as $p)
                     <div class="plan-box">
                         <div class="plan-title">{{ $p->title }}</div>
                         <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }} ({{ $p->resolved_from_location }}→{{ $p->resolved_to_location }})</div>
@@ -281,7 +271,7 @@
                     @endforelse
                 </td>
                 <td class="col-phase">
-                    @forelse($day1MPlans as $p)
+                    @forelse($eq->plansForPhases('day1_morning') as $p)
                     <div class="plan-box">
                         <div class="plan-title">{{ $p->title }}</div>
                         <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }} ({{ $p->resolved_from_location }}→{{ $p->resolved_to_location }})</div>
@@ -291,7 +281,7 @@
                     @endforelse
                 </td>
                 <td class="col-phase">
-                    @forelse($day1EPlans as $p)
+                    @forelse($eq->plansForPhases('day1_evening') as $p)
                     <div class="plan-box" style="background-color: #eef2ff;">
                         <div class="plan-title" style="color: #312e81;">{{ $p->to_location }}</div>
                         <div class="plan-meta">{{ $p->formatted_quantity !== '' ? $p->formatted_quantity : '全量保管' }} ({{ $p->start_time ? substr($p->start_time, 0, 5) : '' }})</div>
@@ -301,7 +291,7 @@
                     @endforelse
                 </td>
                 <td class="col-phase">
-                    @forelse($day2MPlans as $p)
+                    @forelse($eq->plansForPhases('day2_morning') as $p)
                     <div class="plan-box">
                         <div class="plan-title">{{ $p->title }}</div>
                         <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }}</div>
@@ -311,7 +301,7 @@
                     @endforelse
                 </td>
                 <td class="col-phase">
-                    @forelse($day2EPlans as $p)
+                    @forelse($eq->plansForPhases('day2_evening') as $p)
                     <div class="plan-box" style="background-color: #fffbeb;">
                         <div class="plan-title" style="color: #78350f;">{{ $p->title }}</div>
                         <div class="plan-meta">→ {{ $p->to_location }} ({{ $p->start_time ? substr($p->start_time, 0, 5) : '' }})</div>
@@ -321,7 +311,7 @@
                     @endforelse
                 </td>
                 <td class="col-phase">
-                    @forelse($postDayPlans as $p)
+                    @forelse($eq->plansForPhases('post_day') as $p)
                     <div class="plan-box">
                         <div class="plan-title">{{ $p->title }}</div>
                         <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }}</div>

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 #[Fillable([
     'name',
@@ -211,5 +212,84 @@ class Equipment extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('display_order', 'asc')->orderBy('id', 'asc');
+    }
+
+    /**
+     * 完了済み計画ステップ件数アクセサ
+     */
+    public function getCompletedPlansCountAttribute(): int
+    {
+        return $this->plans->where('status', 'completed')->count();
+    }
+
+    /**
+     * すべての計画ステップが完了しているか判定
+     */
+    public function getAreAllPlansCompletedAttribute(): bool
+    {
+        return $this->plans->isNotEmpty() && $this->completed_plans_count === $this->plans->count();
+    }
+
+    /**
+     * 指定フェーズの計画ステップ一覧を抽出
+     *
+     * @param  array<int, string>|string  $phases
+     * @return Collection<int, EquipmentLogisticsPlan>
+     */
+    public function plansForPhases(array|string $phases): Collection
+    {
+        return is_array($phases)
+            ? $this->plans->whereIn('day_phase', $phases)
+            : $this->plans->where('day_phase', $phases);
+    }
+
+    /**
+     * 資材詳細画面のURLを取得
+     */
+    public function showUrl(?Timetable $timetable = null): string
+    {
+        return $timetable
+            ? route('timetables.equipments.show', [$timetable, $this])
+            : route('equipments.show', $this);
+    }
+
+    /**
+     * 資材編集画面のURLを取得
+     */
+    public function editUrl(?Timetable $timetable = null): string
+    {
+        return $timetable
+            ? route('timetables.equipments.edit', [$timetable, $this])
+            : route('equipments.edit', $this);
+    }
+
+    /**
+     * 資材削除アクションのURLを取得
+     */
+    public function destroyUrl(?Timetable $timetable = null): string
+    {
+        return $timetable
+            ? route('timetables.equipments.destroy', [$timetable, $this])
+            : route('equipments.destroy', $this);
+    }
+
+    /**
+     * 計画ステップ一括クリアアクションのURLを取得
+     */
+    public function clearPlansUrl(?Timetable $timetable = null): string
+    {
+        return $timetable
+            ? route('timetables.logistics.plans.clear', [$timetable, $this])
+            : route('logistics.plans.clear', $this);
+    }
+
+    /**
+     * パターン適用アクションのURLを取得
+     */
+    public function applyTemplateUrl(?Timetable $timetable = null): string
+    {
+        return $timetable
+            ? route('timetables.logistics.apply-template', [$timetable, $this])
+            : route('logistics.apply-template', $this);
     }
 }

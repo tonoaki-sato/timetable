@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Database\Factories\LocationScheduleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -81,13 +80,5 @@ class LocationSchedule extends Model
             'unavailable' => 'bg-amber-100 text-amber-800 border-amber-300',
             default => 'bg-slate-100 text-slate-700 border-slate-300',
         };
-    }
-
-    /**
-     * 開始日時順ソート
-     */
-    public function scopeChronological(Builder $query): Builder
-    {
-        return $query->orderBy('start_at', 'asc')->orderBy('id', 'asc');
     }
 }

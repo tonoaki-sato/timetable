@@ -2,11 +2,8 @@
 
 namespace App\Models;
 
-use App\DTOs\LocationStatusEvaluation;
-use App\Services\LocationAvailabilityService;
 use Carbon\Carbon;
 use Database\Factories\LocationFactory;
-use DateTimeInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -198,38 +195,6 @@ class Location extends Model
     }
 
     /**
-     * 指定日時にこの拠点・駐車場が利用（貸切）可能か判定
-     */
-    public function isAvailableAt(?DateTimeInterface $dateTime = null): bool
-    {
-        if (! $this->is_active) {
-            return false;
-        }
-
-        if ($this->is_all_day) {
-            return true;
-        }
-
-        $dateTime = $dateTime
-            ? Carbon::parse($dateTime)->timezone('Asia/Tokyo')
-            : Carbon::now('Asia/Tokyo');
-
-        $schedules = $this->relationLoaded('schedules')
-            ? $this->schedules
-            : $this->schedules()->get();
-
-        if ($schedules->isEmpty()) {
-            return false;
-        }
-
-        return $schedules->contains(function (LocationSchedule $schedule) use ($dateTime) {
-            $inSlot = $schedule->start_at <= $dateTime && $dateTime <= $schedule->end_at;
-
-            return $inSlot && $schedule->isAvailable();
-        });
-    }
-
-    /**
      * 有効拠点のみ抽出
      */
     public function scopeActive(Builder $query): Builder
@@ -256,10 +221,23 @@ class Location extends Model
     }
 
     /**
-     * 指定された日時（デフォルト: 現在時刻 Asia/Tokyo）における状態を評価
+     * 編集フォーム表示用の利用スケジュール配列を取得
+     *
+     * @param  array<int, array<string, mixed>>|null  $oldSchedules
+     * @return array<int, array{date: string, start_time: string, end_time: string, status: string, note: string}>
      */
-    public function evaluateStatusAt(?DateTimeInterface $dateTime = null): LocationStatusEvaluation
+    public function schedulesForForm(?array $oldSchedules = null): array
     {
-        return app(LocationAvailabilityService::class)->evaluateLocationStatus($this, $dateTime);
+        if ($oldSchedules !== null) {
+            return $oldSchedules;
+        }
+
+        return $this->schedules->map(fn (LocationSchedule $s) => [
+            'date' => $s->start_at ? $s->start_at->format('Y-m-d') : '',
+            'start_time' => $s->start_at ? $s->start_at->format('H:i') : '08:00',
+            'end_time' => $s->end_at ? $s->end_at->format('H:i') : '18:00',
+            'status' => $s->status ?? 'available',
+            'note' => $s->note ?? '',
+        ])->all();
     }
 }

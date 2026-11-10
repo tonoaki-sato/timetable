@@ -3,9 +3,14 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Repositories\Contracts\UserRepositoryInterface;
 
 class UserPolicy
 {
+    public function __construct(
+        protected UserRepositoryInterface $userRepository
+    ) {}
+
     /**
      * ユーザー一覧の閲覧権限
      * 有効な admin または operator のみ
@@ -67,7 +72,7 @@ class UserPolicy
 
         // 最後の有効な管理者の削除は禁止
         if ($model->isAdmin()) {
-            $activeAdminCount = User::where('role', 'admin')->where('is_active', true)->count();
+            $activeAdminCount = $this->userRepository->countActiveAdmins();
             if ($activeAdminCount <= 1) {
                 return false;
             }

@@ -3,16 +3,21 @@
 namespace App\Services;
 
 use App\Models\Staff;
-use App\Models\TaskStaffAssignment;
 use App\Models\TimetableTask;
+use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class StaffAllocationService
 {
+    protected TaskStaffAssignmentRepositoryInterface $assignmentRepository;
+
     public function __construct(
-        protected ConflictDetectionService $conflictService
-    ) {}
+        protected ConflictDetectionService $conflictService,
+        ?TaskStaffAssignmentRepositoryInterface $assignmentRepository = null
+    ) {
+        $this->assignmentRepository = $assignmentRepository ?? app(TaskStaffAssignmentRepositoryInterface::class);
+    }
 
     /**
      * 指定スタッフが別班タスクで「人数余剰（定員超過）」により他班へ融通可能な状態か判定し、
@@ -56,16 +61,10 @@ class StaffAllocationService
         }
 
         $conflictsMap = $this->conflictService->getConflictsMapForStaffList($task, $activeStaff);
-        $staffIds = $activeStaff->pluck('id')->all();
+        $staffIds = $activeStaff->pluck('id')->map(fn ($id): int => (int) $id)->all();
 
         // 当日累計稼働時間の算出（同一運行日）
-        $dayAssignments = TaskStaffAssignment::whereHas('task', function ($query) use ($task) {
-            $query->where('timetable_id', $task->timetable_id);
-        })
-            ->whereIn('staff_id', $staffIds)
-            ->where('attendance_status', '!=', 'absent')
-            ->with('task')
-            ->get();
+        $dayAssignments = $this->assignmentRepository->getActiveByTimetableAndStaffIds((int) $task->timetable_id, $staffIds);
 
         $staffDayMinutes = [];
         foreach ($dayAssignments as $assignment) {
@@ -88,7 +87,7 @@ class StaffAllocationService
             ? (int) $task->laneRelation->lead_staff_id
             : null;
         $taskLaneFixedStaffIds = $task->laneRelation
-            ? $task->laneRelation->fixedStaff->pluck('id')->map(fn ($id) => (int) $id)->all()
+            ? $task->laneRelation->fixedStaff->pluck('id')->map(fn ($id): int => (int) $id)->all()
             : [];
 
         foreach ($activeStaff as $staff) {
@@ -143,7 +142,7 @@ class StaffAllocationService
             $staff->is_checked_in = (bool) $staff->is_checked_in;
         }
 
-        return $activeStaff->sort(function (Staff $a, Staff $b) {
+        return $activeStaff->sort(function (Staff $a, Staff $b): int {
             // 1. 優先度ティア順 (1=推奨同班空き, 2=充足スタッフ空き/余剰固定スタッフ, 3=重複)
             if ($a->priority_tier !== $b->priority_tier) {
                 return $a->priority_tier <=> $b->priority_tier;

@@ -101,22 +101,16 @@
                     data-reorder-url="{{ route('timetables.locations.reorder', $timetable) }}"
                     class="divide-y divide-slate-100 bg-white">
                     @forelse($locationsWithStatus as $item)
-                        @php
-                            $loc = $item->location;
-                            $eval = $item->currentEvaluation;
-                            $dailyStatus = $item->dailyStatus;
-                            $todaySlots = $item->todaySchedules;
-                        @endphp
-                        <tr data-location-id="{{ $loc->id }}" draggable="true"
+                        <tr data-location-id="{{ $item->location->id }}" draggable="true"
                             class="hover:bg-slate-50/80 transition cursor-default">
                             <!-- 拠点名 -->
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex items-center space-x-2">
                                     <span class="cursor-grab active:cursor-grabbing text-slate-400 hover:text-indigo-600 px-1 select-none font-bold text-sm" title="ドラッグして並び替え">⋮⋮</span>
-                                    <a href="{{ route('timetables.locations.show', [$timetable, $loc]) }}"
+                                    <a href="{{ route('timetables.locations.show', [$timetable, $item->location]) }}"
                                         class="font-bold text-slate-800 hover:text-indigo-600 hover:underline transition"
                                         title="クリックして詳細を表示">
-                                        {{ $loc->name }}
+                                        {{ $item->location->name }}
                                     </a>
                                 </div>
                             </td>
@@ -124,10 +118,10 @@
                             <!-- 現在の状態 -->
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex items-center space-x-1.5">
-                                    <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $eval->badgeClass() }}"
-                                        title="{{ $eval->detail }}">
-                                        <span>{{ $eval->icon() }}</span>
-                                        <span>{{ $eval->label() }}</span>
+                                    <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $item->currentEvaluation->badgeClass() }}"
+                                        title="{{ $item->currentEvaluation->detail }}">
+                                        <span>{{ $item->currentEvaluation->icon() }}</span>
+                                        <span>{{ $item->currentEvaluation->label() }}</span>
                                     </span>
                                 </div>
                             </td>
@@ -135,32 +129,32 @@
                             <!-- 本日の利用可能枠 -->
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex items-center space-x-1.5">
-                                    <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $dailyStatus->badgeClass() }}">
-                                        <span>{{ $dailyStatus->icon() }}</span>
-                                        <span>{{ $dailyStatus->label() }}</span>
+                                    <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $item->dailyStatus->badgeClass() }}">
+                                        <span>{{ $item->dailyStatus->icon() }}</span>
+                                        <span>{{ $item->dailyStatus->label() }}</span>
                                     </span>
-                                    @if($todaySlots->isNotEmpty())
-                                        <span class="text-[11px] text-slate-500 font-mono" title="{{ $todaySlots->map(fn($s) => $s->start_at->format('H:i').'-'.$s->end_at->format('H:i').'['.$s->availability_status_label.']')->join(', ') }}">
-                                            ({{ $todaySlots->count() }}枠)
+                                    @if($item->todaySchedules->isNotEmpty())
+                                        <span class="text-[11px] text-slate-500 font-mono" title="{{ $item->todaySchedules->map(fn($s) => $s->start_at->format('H:i').'-'.$s->end_at->format('H:i').'['.$s->availability_status_label.']')->join(', ') }}">
+                                            ({{ $item->todaySchedules->count() }}枠)
                                         </span>
                                     @endif
                                 </div>
                             </td>
 
                             <!-- 備考・メモ -->
-                            <td class="px-4 py-3 whitespace-nowrap max-w-xs truncate text-slate-600" title="{{ $loc->notes }}">
-                                {{ $loc->notes ?: '—' }}
+                            <td class="px-4 py-3 whitespace-nowrap max-w-xs truncate text-slate-600" title="{{ $item->location->notes }}">
+                                {{ $item->location->notes ?: '—' }}
                             </td>
 
                             <!-- 操作 -->
                             <td class="px-4 py-3 whitespace-nowrap text-right space-x-1">
-                                <a href="{{ route('timetables.locations.edit', [$timetable, $loc]) }}"
+                                <a href="{{ route('timetables.locations.edit', [$timetable, $item->location]) }}"
                                     class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1 shadow-2xs">
                                     <span>✏️</span>
                                     <span>編集</span>
                                 </a>
-                                <form action="{{ route('timetables.locations.destroy', [$timetable, $loc]) }}" method="POST" class="inline"
-                                      data-confirm="拠点「{{ $loc->name }}」を削除しますか？&#10;（関連する時間帯データも削除されます）">
+                                <form action="{{ route('timetables.locations.destroy', [$timetable, $item->location]) }}" method="POST" class="inline"
+                                      data-confirm="拠点「{{ $item->location->name }}」を削除しますか？&#10;（関連する時間帯データも削除されます）">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"

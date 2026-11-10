@@ -16,6 +16,56 @@ class TimetableService
     ) {}
 
     /**
+     * IDによるタイムテーブル取得
+     */
+    public function findById(int $id): ?Timetable
+    {
+        return $this->timetableRepository->findById($id);
+    }
+
+    /**
+     * IDによるタイムテーブル取得（存在しない場合は例外）
+     */
+    public function findOrFail(int $id): Timetable
+    {
+        return $this->timetableRepository->findOrFail($id);
+    }
+
+    /**
+     * アクティブ（または最も早い）タイムテーブルを取得
+     */
+    public function findFirstActiveOrEarliest(): ?Timetable
+    {
+        return $this->timetableRepository->findFirstActiveOrEarliest();
+    }
+
+    /**
+     * 対象タイムテーブルの解決（指定モデル ＞ 指定ID ＞ アクティブ運行日 ＞ 最小日付運行日 ＞ デフォルト作成）
+     */
+    public function resolveFallbackTimetable(?int $timetableId = null, ?Timetable $timetable = null): Timetable
+    {
+        if ($timetable && $timetable->exists) {
+            return $timetable;
+        }
+
+        if ($timetableId) {
+            $found = $this->timetableRepository->findById($timetableId);
+            if ($found) {
+                return $found;
+            }
+        }
+
+        return $this->timetableRepository->findFirstActiveOrEarliest()
+            ?? $this->timetableRepository->create([
+                'name' => '既定運行計画',
+                'target_date' => now()->toDateString(),
+                'start_time' => '08:00:00',
+                'end_time' => '18:00:00',
+                'status' => 'active',
+            ]);
+    }
+
+    /**
      * タイムテーブル一覧画面用データの取得
      *
      * @return array{

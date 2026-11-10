@@ -55,14 +55,7 @@
     <!-- 班別アコーディオン一覧 -->
     <div id="lane-task-accordions" class="space-y-3">
         @forelse($lanes as $lane)
-        @php
-            $hasTasks = $lane->tasks->isNotEmpty();
-            $badgeClass = $lane->color_classes['badge'] ?? 'bg-slate-100 text-slate-800 border-slate-200';
-            $laneIcon = $lane->icon ?: '📋';
-            $latestTask = $lane->tasks->sortByDesc('end_time')->first();
-            $suggestedStart = $latestTask ? substr($latestTask->end_time, 0, 5) : '08:00';
-        @endphp
-        <details id="lane-{{ $lane->id }}" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group" {{ $hasTasks ? 'open' : '' }}>
+        <details id="lane-{{ $lane->id }}" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group" {{ $lane->tasks->isNotEmpty() ? 'open' : '' }}>
             <summary class="px-3.5 sm:px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 sm:gap-3 cursor-pointer hover:bg-slate-100/70 transition select-none">
                 <div class="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
                     <!-- 1. 開閉トグルアイコン (固定幅) -->
@@ -70,8 +63,8 @@
 
                     <!-- 2. 班名バッジ (固定幅・長い班名はtruncate) -->
                     <div class="w-36 sm:w-44 md:w-48 shrink-0">
-                        <span class="inline-flex items-center max-w-full px-2 py-0.5 rounded text-xs font-bold border {{ $badgeClass }}" title="{{ $lane->name }}">
-                            <span class="mr-1 shrink-0">{{ $laneIcon }}</span>
+                        <span class="inline-flex items-center max-w-full px-2 py-0.5 rounded text-xs font-bold border {{ $lane->color_classes['badge'] }}" title="{{ $lane->name }}">
+                            <span class="mr-1 shrink-0">{{ $lane->icon_label }}</span>
                             <span class="truncate">{{ $lane->name }}</span>
                         </span>
                     </div>
@@ -89,7 +82,7 @@
 
                     <!-- 4. タスク件数バッジ (固定幅・中央揃え) -->
                     <div class="w-16 sm:w-20 shrink-0 text-left sm:text-center">
-                        <span class="inline-flex items-center justify-center min-w-[52px] sm:min-w-[60px] text-[11px] px-2 py-0.5 rounded-full font-mono font-bold {{ $hasTasks ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-400' }}">
+                        <span class="inline-flex items-center justify-center min-w-[52px] sm:min-w-[60px] text-[11px] px-2 py-0.5 rounded-full font-mono font-bold {{ $lane->tasks->isNotEmpty() ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-400' }}">
                             {{ $lane->tasks->count() }} 件
                         </span>
                     </div>
@@ -102,8 +95,8 @@
                         data-action="open-task-create"
                         data-lane-id="{{ $lane->id }}"
                         data-lane-name="{{ $lane->name }}"
-                        data-lane-icon="{{ $laneIcon }}"
-                        data-suggested-start="{{ $suggestedStart }}"
+                        data-lane-icon="{{ $lane->icon_label }}"
+                        data-suggested-start="{{ $lane->suggested_start_time }}"
                         class="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-indigo-50 text-indigo-700 hover:text-indigo-800 border border-indigo-200 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
                         title="{{ $lane->name }}にタスクを追加">
                         <span>➕</span>
@@ -133,28 +126,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach($lane->tasks as $task)
-                        @php
-                            $taskData = [
-                                'id' => $task->id,
-                                'timetable_id' => $task->timetable_id,
-                                'lane_id' => $task->lane_id,
-                                'lane_name' => $lane->name,
-                                'lane_icon' => $laneIcon,
-                                'lead_staff_name' => $lane->leadStaff?->name,
-                                'title' => $task->title,
-                                'start_time' => substr($task->start_time, 0, 5),
-                                'end_time' => substr($task->end_time, 0, 5),
-                                'required_people_count' => $task->required_people_count,
-                                'is_at_least' => (bool) $task->is_at_least,
-                                'is_critical' => (bool) $task->is_critical,
-                                'location' => $task->location ?? '',
-                                'status' => $task->status,
-                                'status_label' => $task->status_label,
-                                'content' => $task->content ?? '',
-                                'update_url' => route('timetable-tasks.update', $task),
-                            ];
-                        @endphp
-                        <tr class="hover:bg-slate-50/70 transition" data-task-row data-task-id="{{ $task->id }}" data-task='@json($taskData)'>
+                        <tr class="hover:bg-slate-50/70 transition" data-task-row data-task-id="{{ $task->id }}" data-task='@json($task->toModalPayload($lane))'>
                             <!-- 最優先 -->
                             <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
                                 @if($task->is_critical)

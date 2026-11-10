@@ -114,38 +114,19 @@
             </thead>
             <tbody class="divide-y divide-slate-200">
                 @foreach($activeStaff as $staff)
-                @php
-                    $staffAssignments = $assignmentsByStaff[$staff->id] ?? collect();
-                    $assignedCount = $staffAssignments->count();
-                    $isCheckedIn = (bool) $staff->is_checked_in;
-                    $staffGrid = $timelineGrid[$staff->id] ?? [];
-                    $isLeader = in_array($staff->id, $leadStaffIds, true);
-
-                    // 当日累計稼働時間の算出
-                    $totalMinutes = 0;
-                    foreach($staffAssignments as $item) {
-                        $t = $item['task'];
-                        if ($t->start_time && $t->end_time) {
-                            $sC = \Carbon\Carbon::parse($t->start_time);
-                            $eC = \Carbon\Carbon::parse($t->end_time);
-                            $totalMinutes += max(0, $sC->diffInMinutes($eC));
-                        }
-                    }
-                    $totalHoursFormatted = round($totalMinutes / 60, 1) . 'h';
-                @endphp
                 <tr class="staff-row hover:bg-slate-50/80 transition"
                     data-staff-name="{{ $staff->name }}"
                     data-staff-kana="{{ $staff->kana ?? '' }}"
                     data-staff-affiliation="{{ $staff->affiliation ?? '' }}"
-                    data-assigned-count="{{ $assignedCount }}"
-                    data-checked-in="{{ $isCheckedIn ? '1' : '0' }}"
-                    data-is-leader="{{ $isLeader ? '1' : '0' }}">
+                    data-assigned-count="{{ $staffMeta[$staff->id]['assigned_count'] }}"
+                    data-checked-in="{{ $staffMeta[$staff->id]['is_checked_in'] ? '1' : '0' }}"
+                    data-is-leader="{{ $staffMeta[$staff->id]['is_leader'] ? '1' : '0' }}">
 
                     <!-- スタッフ情報セル (Sticky) -->
                     <td class="sticky left-0 z-10 bg-white border-r border-slate-300 px-2.5 py-2 align-middle shadow-xs">
                         <div class="flex items-center justify-between gap-1.5">
                             <div class="flex items-center gap-1.5 min-w-0">
-                                @if($isLeader)
+                                @if($staffMeta[$staff->id]['is_leader'])
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0" title="班長（担当班: {{ $laneNamesByLeadStaff[$staff->id] ?? '' }}）">
                                     班長
                                 </span>
@@ -163,13 +144,13 @@
                             </div>
 
                             <div class="flex items-center gap-1.5 shrink-0 ml-1">
-                                @if($isCheckedIn)
+                                @if($staffMeta[$staff->id]['is_checked_in'])
                                 <span class="px-1 py-0.2 rounded text-[9px] font-bold bg-sky-100 text-sky-800 border border-sky-300 shrink-0" title="現場到着受付済み">
                                     着
                                 </span>
                                 @endif
-                                <span class="font-mono text-slate-600 text-[11px] font-medium shrink-0" title="当日累計稼働時間: {{ $totalHoursFormatted }}">
-                                    {{ $totalHoursFormatted }}
+                                <span class="font-mono text-slate-600 text-[11px] font-medium shrink-0" title="当日累計稼働時間: {{ $staffMeta[$staff->id]['total_hours_formatted'] }}">
+                                    {{ $staffMeta[$staff->id]['total_hours_formatted'] }}
                                 </span>
                             </div>
                         </div>
@@ -177,45 +158,24 @@
 
                     <!-- 各スロットセル -->
                     @foreach($timeSlots as $sIdx => $slot)
-                    @php
-                        $cell = $staffGrid[$sIdx] ?? ['type' => 'empty', 'colspan' => 1];
-                    @endphp
-
+                    @foreach([$timelineGrid[$staff->id][$sIdx] ?? ['type' => 'empty', 'colspan' => 1]] as $cell)
                     @if($cell['type'] === 'task')
-                    @php
-                        $task = $cell['task'];
-                        $assignment = $cell['assignment'];
-                        $laneRel = $task->laneRelation;
-                        $taskLeaderName = $laneRel?->leadStaff?->name;
-                        $isSelfTaskLeader = $laneRel && (int) $laneRel->lead_staff_id === (int) $staff->id;
-                        $badgeBg = match($laneRel?->color ?? 'indigo') {
-                            'amber' => 'bg-amber-100 border-amber-300 text-amber-900',
-                            'sky' => 'bg-sky-100 border-sky-300 text-sky-900',
-                            'emerald' => 'bg-emerald-100 border-emerald-300 text-emerald-900',
-                            'purple' => 'bg-purple-100 border-purple-400/30 text-purple-900',
-                            'pink' => 'bg-pink-100 border-pink-300 text-pink-900',
-                            'red' => 'bg-rose-100 border-rose-300 text-rose-900',
-                            'orange' => 'bg-orange-100 border-orange-300 text-orange-900',
-                            'teal' => 'bg-teal-100 border-teal-300 text-teal-900',
-                            default => 'bg-indigo-100 border-indigo-300 text-indigo-900',
-                        };
-                    @endphp
                     <td colspan="{{ $cell['colspan'] }}"
                         class="p-1 border-r border-slate-300 align-middle">
-                        <div class="p-1.5 rounded-lg border {{ $badgeBg }} text-xs shadow-2xs space-y-0.5">
+                        <div class="p-1.5 rounded-lg border {{ $cell['badge_bg'] }} text-xs shadow-2xs space-y-0.5">
                             <div class="font-bold truncate leading-tight flex items-center justify-between">
-                                <a href="{{ route('timetables.tasks.index', $timetable) }}" class="hover:underline truncate" title="{{ $task->title }}">
-                                    {{ $task->title }}
+                                <a href="{{ route('timetables.tasks.index', $timetable) }}" class="hover:underline truncate" title="{{ $cell['task']->title }}">
+                                    {{ $cell['task']->title }}
                                 </a>
                                 <span class="text-[9px] font-mono shrink-0 ml-1 opacity-75">
-                                    {{ substr($task->start_time, 0, 5) }}〜{{ substr($task->end_time, 0, 5) }}
+                                    {{ substr($cell['task']->start_time, 0, 5) }}〜{{ substr($cell['task']->end_time, 0, 5) }}
                                 </span>
                             </div>
                             <div class="text-[10px] flex items-center justify-between gap-1 opacity-80">
-                                <span class="truncate">{{ $task->lane }}</span>
-                                @if(! $isSelfTaskLeader)
-                                <span class="font-medium truncate shrink-0" title="班長: {{ $taskLeaderName ?: '未定' }}">
-                                    {{ $taskLeaderName ? '班長: ' . $taskLeaderName : '班長未定' }}
+                                <span class="truncate">{{ $cell['task']->lane }}</span>
+                                @if(! $cell['is_self_task_leader'])
+                                <span class="font-medium truncate shrink-0" title="班長: {{ $cell['task_leader_name'] ?: '未定' }}">
+                                    {{ $cell['task_leader_name'] ? '班長: ' . $cell['task_leader_name'] : '班長未定' }}
                                 </span>
                                 @endif
                             </div>
@@ -227,7 +187,7 @@
                         data-staff-id="{{ $staff->id }}"
                         data-staff-name="{{ $staff->name }}"
                         data-slot-time="{{ $slot['time'] }}"
-                        data-is-leader="{{ $isLeader ? '1' : '0' }}"
+                        data-is-leader="{{ $staffMeta[$staff->id]['is_leader'] ? '1' : '0' }}"
                         class="p-1 border-r border-slate-200 text-center align-middle hover:bg-indigo-50/70 group cursor-pointer transition relative"
                         title="クリックしてこの時間枠（{{ $slot['time'] }}）にタスクを配置">
                         <span class="text-slate-300 font-mono text-[10px] group-hover:hidden select-none">-</span>
@@ -239,7 +199,7 @@
                     @elseif($cell['type'] === 'skip')
                     <!-- colspan により結合されているためスキップ -->
                     @endif
-
+                    @endforeach
                     @endforeach
                 </tr>
                 @endforeach

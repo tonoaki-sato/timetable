@@ -7,8 +7,6 @@ use App\Http\Requests\StoreEquipmentLogisticsPatternRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPatternRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
-use App\Models\Location;
-use App\Repositories\Contracts\EquipmentLogisticsPatternRepositoryInterface;
 use App\Services\EquipmentLogisticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,8 +16,7 @@ use Illuminate\View\View;
 class EquipmentLogisticsPatternController extends Controller
 {
     public function __construct(
-        protected EquipmentLogisticsService $logisticsService,
-        protected EquipmentLogisticsPatternRepositoryInterface $patternRepository
+        protected EquipmentLogisticsService $logisticsService
     ) {}
 
     /**
@@ -29,13 +26,7 @@ class EquipmentLogisticsPatternController extends Controller
     {
         $this->authorize('viewAny', EquipmentLogisticsPattern::class);
 
-        $patterns = $this->patternRepository->getAllWithSteps();
-        $locations = Location::select('id', 'name')
-            ->orderBy('display_order')
-            ->get()
-            ->unique('name');
-
-        return view('equipment_patterns.index', compact('patterns', 'locations'));
+        return view('equipment_patterns.index', $this->logisticsService->getPatternIndexViewData());
     }
 
     /**
@@ -49,7 +40,7 @@ class EquipmentLogisticsPatternController extends Controller
         $steps = $validated['steps'];
         unset($validated['steps']);
 
-        $pattern = $this->patternRepository->createWithSteps(
+        $pattern = $this->logisticsService->createPatternWithSteps(
             $validated,
             $steps,
             $request->user()?->id
@@ -78,8 +69,7 @@ class EquipmentLogisticsPatternController extends Controller
         $steps = $validated['steps'];
         unset($validated['steps']);
 
-        $this->patternRepository->updateWithSteps($pattern, $validated, $steps);
-        $pattern->load('steps');
+        $pattern = $this->logisticsService->updatePatternWithSteps($pattern, $validated, $steps);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -101,7 +91,7 @@ class EquipmentLogisticsPatternController extends Controller
         $this->authorize('delete', $pattern);
 
         $name = $pattern->name;
-        $this->patternRepository->delete($pattern);
+        $this->logisticsService->deletePattern($pattern);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -123,7 +113,7 @@ class EquipmentLogisticsPatternController extends Controller
 
         $validated = $request->validated();
 
-        if ($equipment->plans()->count() === 0) {
+        if ($this->logisticsService->countEquipmentPlans($equipment) === 0) {
             return back()->withErrors(['name' => '保存する搬出入ステップが登録されていません。']);
         }
 

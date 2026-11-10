@@ -58,31 +58,6 @@
     </div>
     @endif
 
-    @php
-        $colorClassesMap = [
-            'amber'   => ['dot' => 'bg-amber-500', 'badge' => 'bg-amber-100 text-amber-800 border-amber-300'],
-            'sky'     => ['dot' => 'bg-sky-500', 'badge' => 'bg-sky-100 text-sky-800 border-sky-300'],
-            'emerald' => ['dot' => 'bg-emerald-500', 'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300'],
-            'purple'  => ['dot' => 'bg-purple-500', 'badge' => 'bg-purple-100 text-purple-800 border-purple-300'],
-            'pink'    => ['dot' => 'bg-pink-500', 'badge' => 'bg-pink-100 text-pink-800 border-pink-300'],
-            'red'     => ['dot' => 'bg-rose-500', 'badge' => 'bg-rose-100 text-rose-800 border-rose-300'],
-            'orange'  => ['dot' => 'bg-orange-500', 'badge' => 'bg-orange-100 text-orange-800 border-orange-300'],
-            'indigo'  => ['dot' => 'bg-indigo-500', 'badge' => 'bg-indigo-100 text-indigo-800 border-indigo-300'],
-            'teal'    => ['dot' => 'bg-teal-500', 'badge' => 'bg-teal-100 text-teal-800 border-teal-300'],
-            'yellow'  => ['dot' => 'bg-yellow-400', 'badge' => 'bg-yellow-100 text-yellow-800 border-yellow-300'],
-            'slate'   => ['dot' => 'bg-slate-500', 'badge' => 'bg-slate-100 text-slate-800 border-slate-300'],
-        ];
-        $selectedColor = old('color', $lane->color);
-        $initialBadgeClass = $colorClassesMap[$selectedColor]['badge'] ?? $colorClassesMap['slate']['badge'];
-        $emojiPresets = [
-            '🔺', '🚨', '🪧', '🛑', '🚧', '🛡️',
-            '🚰', '🚻', '💡', '🔧', '🧹', '🎪', '⛺',
-            '📢', '🎤', '🏛️', '📋', '📻', '🎫',
-            '🏮', '🎈', '🧺', '🍱', '🍧', '🎯',
-            '🚚', '📦', '🛒', '🏃‍♂️', '🚲',
-        ];
-    @endphp
-
     <!-- 編集フォームカード -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-5 border-b border-slate-100 flex items-center justify-between">
@@ -145,22 +120,19 @@
                     </div>
 
                     <!-- 4. 固定スタッフ選択エリア -->
-                    @php
-                        $currentFixedStaffIds = $lane->fixedStaff->pluck('id')->all();
-                    @endphp
                     <div class="p-4 bg-indigo-50/40 rounded-xl border border-indigo-200/80 space-y-2">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                             <span class="text-xs font-bold text-indigo-950 flex items-center space-x-1">
                                 <span>📌</span>
                                 <span>固定スタッフ設定（この班のタスクに自動で基本配置されます）</span>
                             </span>
-                            <span class="text-[11px] text-slate-500">現在: {{ count($currentFixedStaffIds) }}名設定中</span>
+                            <span class="text-[11px] text-slate-500">現在: {{ count($lane->fixed_staff_ids) }}名設定中</span>
                         </div>
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-80 sm:max-h-96 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-white">
                             @forelse($activeStaff as $st)
                             <label class="flex items-center space-x-1.5 text-xs text-slate-700 cursor-pointer hover:bg-indigo-50 p-1.5 rounded transition">
                                 <input type="checkbox" name="fixed_staff_ids[]" value="{{ $st->id }}"
-                                    {{ in_array($st->id, old('fixed_staff_ids', $currentFixedStaffIds)) ? 'checked' : '' }}
+                                    {{ in_array($st->id, $lane->resolveSelectedFixedIds(old('fixed_staff_ids'))) ? 'checked' : '' }}
                                     class="w-3.5 h-3.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
                                 <span class="truncate" title="{{ $st->name }} ({{ $st->affiliation ?: '所属なし' }})">
                                     {{ $st->name }}
@@ -185,7 +157,7 @@
                         <div class="flex items-center space-x-3">
                             <span class="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">表示プレビュー:</span>
                             <div id="lane-preview-badge"
-                                class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border transition-all duration-150 {{ $initialBadgeClass }}">
+                                class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border transition-all duration-150 {{ \App\Models\Lane::paletteFor(old('color', $lane->color))['badge'] }}">
                                 <span id="preview-icon" class="mr-1.5 text-sm">{{ old('icon', $lane->icon) ?: '📋' }}</span>
                                 <span id="preview-name">{{ old('name', $lane->name) ?: '担当班名' }}</span>
                             </div>
@@ -222,7 +194,7 @@
                                     <span class="text-[9px] text-slate-400 font-mono">クリック即時</span>
                                 </div>
                                 <div class="flex flex-wrap gap-1" id="emoji-palette">
-                                    @foreach($emojiPresets as $emoji)
+                                    @foreach(\App\Models\Lane::EMOJI_PRESETS as $emoji)
                                     <button type="button"
                                         data-emoji="{{ $emoji }}"
                                         class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 text-xs flex items-center justify-center transition cursor-pointer shadow-2xs">
@@ -243,19 +215,15 @@
                             </div>
                             <div class="grid grid-cols-2 gap-1.5" id="color-options-grid">
                                 @foreach($colorOptions as $colorKey => $colorLabel)
-                                @php
-                                    $colorMeta = $colorClassesMap[$colorKey] ?? $colorClassesMap['slate'];
-                                    $isSelected = $selectedColor === $colorKey;
-                                @endphp
-                                <label class="lane-color-card relative flex items-center justify-between p-2 rounded-xl border cursor-pointer transition select-none hover:bg-slate-50 {{ $isSelected ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-2xs' : 'border-slate-200 bg-white' }}"
+                                <label class="lane-color-card relative flex items-center justify-between p-2 rounded-xl border cursor-pointer transition select-none hover:bg-slate-50 {{ old('color', $lane->color) === $colorKey ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-2xs' : 'border-slate-200 bg-white' }}"
                                     data-color="{{ $colorKey }}"
-                                    data-badge-class="{{ $colorMeta['badge'] }}">
-                                    <input type="radio" name="color" value="{{ $colorKey }}" {{ $isSelected ? 'checked' : '' }} required class="sr-only">
+                                    data-badge-class="{{ \App\Models\Lane::paletteFor($colorKey)['badge'] }}">
+                                    <input type="radio" name="color" value="{{ $colorKey }}" {{ old('color', $lane->color) === $colorKey ? 'checked' : '' }} required class="sr-only">
                                     <div class="flex items-center space-x-1.5 truncate mr-1">
-                                        <span class="w-3 h-3 rounded-full {{ $colorMeta['dot'] }} shrink-0 border border-black/10"></span>
+                                        <span class="w-3 h-3 rounded-full {{ \App\Models\Lane::paletteFor($colorKey)['dot'] }} shrink-0 border border-black/10"></span>
                                         <span class="text-[11px] font-bold text-slate-800 truncate">{{ $colorLabel }}</span>
                                     </div>
-                                    <span class="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold border {{ $colorMeta['badge'] }} shrink-0">
+                                    <span class="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold border {{ \App\Models\Lane::paletteFor($colorKey)['badge'] }} shrink-0">
                                         見本
                                     </span>
                                 </label>

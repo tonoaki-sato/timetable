@@ -3,12 +3,20 @@
 namespace App\Services;
 
 use App\DTOs\TimetableOverviewDTO;
-use App\Models\LaneRequest;
 use App\Models\Timetable;
+use App\Repositories\Contracts\LaneRequestRepositoryInterface;
 use Carbon\Carbon;
 
 class TimetableOverviewService
 {
+    protected LaneRequestRepositoryInterface $laneRequestRepository;
+
+    public function __construct(
+        ?LaneRequestRepositoryInterface $laneRequestRepository = null
+    ) {
+        $this->laneRequestRepository = $laneRequestRepository ?? app(LaneRequestRepositoryInterface::class);
+    }
+
     /**
      * 運行計画に紐づく全体集計コンテキストを生成
      */
@@ -95,25 +103,9 @@ class TimetableOverviewService
         }
 
         // 当該運行計画のレーンまたはタスクに紐づく未完了要請
-        $laneIds = $lanes->pluck('id')->filter()->all();
-        $taskIds = $tasks->pluck('id')->filter()->all();
-        $pendingLaneRequests = [];
-        if (! empty($laneIds) || ! empty($taskIds)) {
-            $pendingLaneRequests = LaneRequest::with(['lane', 'task', 'requestedByStaff'])
-                ->where(function ($query) use ($laneIds, $taskIds) {
-                    if (! empty($laneIds)) {
-                        $query->whereIn('lane_id', $laneIds);
-                    }
-                    if (! empty($taskIds)) {
-                        $query->orWhereIn('timetable_task_id', $taskIds);
-                    }
-                })
-                ->whereIn('status', ['pending', 'approved'])
-                ->orderByDesc('id')
-                ->limit(6)
-                ->get()
-                ->all();
-        }
+        $laneIds = $lanes->pluck('id')->filter()->map(fn ($id): int => (int) $id)->all();
+        $taskIds = $tasks->pluck('id')->filter()->map(fn ($id): int => (int) $id)->all();
+        $pendingLaneRequests = $this->laneRequestRepository->getPendingForLanesOrTasks($laneIds, $taskIds, 6)->all();
 
         return new TimetableOverviewDTO(
             startFormatted: $startFormatted,

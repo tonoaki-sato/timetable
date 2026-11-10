@@ -1,16 +1,6 @@
 <x-layouts.app :title="$equipment->name . ' - 搬出入計画'">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
-    @php
-        $clearAction = isset($timetable) ? route('timetables.logistics.plans.clear', [$timetable, $equipment]) : route('logistics.plans.clear', $equipment);
-        $updateStatusUrl = fn($p) => isset($timetable) ? route('timetables.logistics.plans.update-status', [$timetable, $p]) : route('logistics.plans.update-status', $p);
-        $destroyPlanUrl = fn($p) => isset($timetable) ? route('timetables.logistics.plans.destroy', [$timetable, $p]) : route('logistics.plans.destroy', $p);
-        $storePlanUrl = isset($timetable) ? route('timetables.logistics.plans.store', $timetable) : route('logistics.plans.store');
-        $updatePlanUrl = fn($p) => isset($timetable) ? route('timetables.logistics.plans.update', [$timetable, $p]) : route('logistics.plans.update', $p);
-        $applyTemplateUrl = isset($timetable) ? route('timetables.logistics.apply-template', [$timetable, $equipment]) : route('logistics.apply-template', $equipment);
-        $backLogisticsUrl = isset($timetable) ? route('timetables.logistics.index', $timetable) : route('logistics.index');
-    @endphp
-
     <!-- ヘッダーエリア -->
     <x-page-header
         :title="$equipment->name"
@@ -139,7 +129,7 @@
             </h2>
             <div class="flex items-center space-x-3">
                 <span class="text-xs font-mono text-slate-500">
-                    全 {{ $equipment->plans->count() }} ステップ (完了: {{ $equipment->plans->where('status', 'completed')->count() }})
+                    全 {{ $equipment->plans->count() }} ステップ (完了: {{ $equipment->completed_plans_count }})
                 </span>
                 @if($equipment->plans->isNotEmpty())
                     @can('update', $equipment)
@@ -178,7 +168,6 @@
         @else
             <div class="space-y-3">
                 @foreach($equipment->plans as $plan)
-                    @php $warnings = $plan->location_warnings; @endphp
                     <div class="bg-white rounded-2xl border {{ $plan->isCompleted() ? 'border-emerald-200 bg-emerald-50/15' : 'border-slate-200' }} shadow-xs p-4 sm:p-5 hover:shadow-md transition space-y-3">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                             <div class="flex items-center space-x-2.5 flex-wrap">
@@ -204,7 +193,7 @@
 
                             <!-- ステータス切替ボタン & アクション -->
                             <div class="flex items-center space-x-2 shrink-0 self-end sm:self-center">
-                                <form method="POST" action="{{ $updateStatusUrl($plan) }}" class="inline">
+                                <form method="POST" action="{{ $plan->updateStatusUrl($timetable ?? null) }}" class="inline">
                                     @csrf
                                     @method('PATCH')
                                     @if($plan->isCompleted())
@@ -234,33 +223,13 @@
                                 <button type="button"
                                         data-action="open-step-modal"
                                         data-mode="edit"
-                                        data-update-url="{{ $updatePlanUrl($plan) }}"
-                                        data-plan="{{ json_encode([
-                                            'id' => $plan->id,
-                                            'status' => $plan->status,
-                                            'day_phase' => $plan->day_phase,
-                                            'action_type' => $plan->action_type,
-                                            'title' => $plan->title,
-                                            'target_date' => $plan->target_date?->format('Y-m-d'),
-                                            'start_time' => $plan->start_time ? substr($plan->start_time, 0, 5) : '',
-                                            'end_time' => $plan->end_time ? substr($plan->end_time, 0, 5) : '',
-                                            'from_location_id' => $plan->from_location_id,
-                                            'from_location' => $plan->from_location,
-                                            'to_location_id' => $plan->to_location_id,
-                                            'to_location' => $plan->to_location,
-                                            'quantity' => $plan->quantity,
-                                            'quantity_note' => $plan->quantity_note,
-                                            'operator_type' => $plan->operator_type,
-                                            'witness_required' => $plan->witness_required ? 1 : 0,
-                                            'witness_staff_id' => $plan->witness_staff_id,
-                                            'notes' => $plan->notes,
-                                            'display_order' => $plan->display_order,
-                                        ]) }}"
+                                        data-update-url="{{ $plan->updateUrl($timetable ?? null) }}"
+                                        data-plan="{{ json_encode($plan->toModalPayload()) }}"
                                         class="px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition cursor-pointer">
                                     編集
                                 </button>
 
-                                <form method="POST" action="{{ $destroyPlanUrl($plan) }}" data-confirm="このステップを削除しますか？">
+                                <form method="POST" action="{{ $plan->destroyUrl($timetable ?? null) }}" data-confirm="このステップを削除しますか？">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="px-2 py-1 text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg transition cursor-pointer">
@@ -325,9 +294,9 @@
                         </div>
 
                         <!-- 時間外・重複警告アラート -->
-                        @if(!empty($warnings))
+                        @if(!empty($plan->location_warnings))
                             <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1">
-                                @foreach($warnings as $warn)
+                                @foreach($plan->location_warnings as $warn)
                                     <div class="flex items-center space-x-1.5 font-bold">
                                         <span>⚠️</span>
                                         <span>{{ is_array($warn) ? ($warn['message'] ?? '') : $warn }}</span>

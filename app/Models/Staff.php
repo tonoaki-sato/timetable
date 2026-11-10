@@ -108,14 +108,6 @@ class Staff extends Model
     }
 
     /**
-     * 充足スタッフかどうか
-     */
-    public function isFulfillment(): bool
-    {
-        return ! $this->isFixed();
-    }
-
-    /**
      * アサイン中間情報とのリレーション
      */
     public function assignments(): HasMany

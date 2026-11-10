@@ -8,11 +8,20 @@ use App\Enums\LocationDailyAvailabilityStatus;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
 use App\Models\LocationSchedule;
+use App\Repositories\Contracts\LocationScheduleRepositoryInterface;
 use Carbon\Carbon;
 use DateTimeInterface;
 
 class LocationAvailabilityService
 {
+    protected LocationScheduleRepositoryInterface $scheduleRepository;
+
+    public function __construct(
+        ?LocationScheduleRepositoryInterface $scheduleRepository = null
+    ) {
+        $this->scheduleRepository = $scheduleRepository ?? app(LocationScheduleRepositoryInterface::class);
+    }
+
     /**
      * 移動先拠点の貸切・利用可能期間（中抜け時間帯含む）を判定し、警告があれば配列で返却
      *
@@ -34,7 +43,7 @@ class LocationAvailabilityService
 
         $schedules = $location->relationLoaded('schedules')
             ? $location->schedules
-            : $location->schedules()->orderBy('start_at', 'asc')->get();
+            : $this->scheduleRepository->getForLocationOrdered($location);
 
         if ($schedules->isEmpty()) {
             return [
@@ -49,7 +58,7 @@ class LocationAvailabilityService
         }
 
         // 実施時間帯を完全に包含するスロットを検索
-        $matched = $schedules->first(function (LocationSchedule $schedule) use ($startDateTime, $endDateTime) {
+        $matched = $schedules->first(function (LocationSchedule $schedule) use ($startDateTime, $endDateTime): bool {
             return $schedule->start_at <= $startDateTime && $endDateTime <= $schedule->end_at;
         });
 
@@ -101,7 +110,7 @@ class LocationAvailabilityService
 
         $schedules = $location->relationLoaded('schedules')
             ? $location->schedules
-            : $location->schedules()->orderBy('start_at', 'asc')->get();
+            : $this->scheduleRepository->getForLocationOrdered($location);
 
         if ($schedules->isEmpty()) {
             return [
@@ -115,7 +124,7 @@ class LocationAvailabilityService
             return null;
         }
 
-        $matched = $schedules->first(function (LocationSchedule $schedule) use ($startDateTime, $endDateTime) {
+        $matched = $schedules->first(function (LocationSchedule $schedule) use ($startDateTime, $endDateTime): bool {
             return $schedule->start_at <= $startDateTime && $endDateTime <= $schedule->end_at;
         });
 
@@ -202,7 +211,7 @@ class LocationAvailabilityService
 
         $schedules = $location->relationLoaded('schedules')
             ? $location->schedules
-            : $location->schedules()->orderBy('start_at', 'asc')->get();
+            : $this->scheduleRepository->getForLocationOrdered($location);
 
         if ($schedules->isEmpty()) {
             return new LocationStatusEvaluation(
@@ -212,7 +221,7 @@ class LocationAvailabilityService
         }
 
         // 指定日時を含むスロットを検索
-        $matched = $schedules->first(function (LocationSchedule $schedule) use ($dateTime) {
+        $matched = $schedules->first(function (LocationSchedule $schedule) use ($dateTime): bool {
             return $schedule->start_at <= $dateTime && $dateTime <= $schedule->end_at;
         });
 
@@ -244,7 +253,7 @@ class LocationAvailabilityService
         }
 
         // 次の利用可能枠を検索
-        $next = $schedules->first(function (LocationSchedule $schedule) use ($dateTime) {
+        $next = $schedules->first(function (LocationSchedule $schedule) use ($dateTime): bool {
             return $schedule->start_at > $dateTime;
         });
 
@@ -272,9 +281,9 @@ class LocationAvailabilityService
 
         $schedules = $location->relationLoaded('schedules')
             ? $location->schedules
-            : $location->schedules()->get();
+            : $this->scheduleRepository->getForLocationOrdered($location);
 
-        $todaySlots = $schedules->filter(function (LocationSchedule $s) use ($targetDateStr) {
+        $todaySlots = $schedules->filter(function (LocationSchedule $s) use ($targetDateStr): bool {
             return $s->start_at->format('Y-m-d') === $targetDateStr || $s->end_at->format('Y-m-d') === $targetDateStr;
         });
 
@@ -282,7 +291,7 @@ class LocationAvailabilityService
             return LocationDailyAvailabilityStatus::NoSchedule;
         }
 
-        $hasUnavailable = $todaySlots->contains(function (LocationSchedule $s) {
+        $hasUnavailable = $todaySlots->contains(function (LocationSchedule $s): bool {
             return ! $s->isAvailable();
         });
 

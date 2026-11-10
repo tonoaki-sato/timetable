@@ -31,54 +31,11 @@
                     </a>
 
                     <!-- 主要リンク（5大別ドロップダウン: 当日運行・準備/計画・マスター管理・帳票/印刷・システム/ガイド） -->
-                    @php
-                        $isDayActive = request()->routeIs('dashboard*')
-                            || request()->routeIs('timetable.index')
-                            || request()->routeIs('timetables.staff-timeline')
-                            || request()->routeIs('lane-requests.*');
-
-                        $isPlanActive = (request()->routeIs('timetables.*') && !request()->routeIs('timetables.print*') && !request()->routeIs('timetables.staff-timeline') && !request()->routeIs('timetables.logistics.print'))
-                            || request()->routeIs('timetable-tasks.*')
-                            || request()->routeIs('lanes.*')
-                            || request()->routeIs('calendar.*')
-                            || request()->routeIs('schedules.*')
-                            || (request()->routeIs('logistics.*') && !request()->routeIs('logistics.print'))
-                            || request()->routeIs('timetables.logistics.index')
-                            || request()->routeIs('preparation-navigator.*');
-
-                        $isMasterActive = (request()->routeIs('staff.*') && !request()->routeIs('staff.print*') && !request()->routeIs('staff.export*') && !request()->routeIs('staff.import*'))
-                            || request()->routeIs('equipments.*')
-                            || request()->routeIs('timetables.equipments.*')
-                            || request()->routeIs('locations.*')
-                            || request()->routeIs('location-types.*')
-                            || request()->routeIs('equipment-patterns.*');
-
-                        $isPrintActive = request()->routeIs('staff.print*')
-                            || request()->routeIs('staff.export*')
-                            || request()->routeIs('staff.import*')
-                            || request()->routeIs('logistics.print')
-                            || request()->routeIs('timetables.logistics.print')
-                            || request()->routeIs('timetables.print*');
-
-                        $isGuideActive = request()->routeIs('manual.*')
-                            || request()->routeIs('presentation.*')
-                            || request()->routeIs('staff.join*')
-                            || request()->routeIs('feature-settings.*')
-                            || request()->routeIs('users.*');
-
-                        $targetPrintTimetable = collect($navTimetables ?? [])->firstWhere('status', 'active') ?? collect($navTimetables ?? [])->first();
-                        $targetLogisticsIndexUrl = $targetPrintTimetable ? route('timetables.logistics.index', $targetPrintTimetable) : route('logistics.index');
-                        $targetLogisticsPatternUrl = route('equipment-patterns.index');
-                        $targetLogisticsPrintUrl = $targetPrintTimetable ? route('timetables.logistics.print', $targetPrintTimetable) : route('logistics.print');
-                        $isLogisticsPlansActive = (request()->routeIs('logistics.*') || request()->routeIs('timetables.logistics.*')) && !request()->routeIs('*print*');
-                        $isLogisticsPatternsActive = request()->routeIs('equipment-patterns.*');
-                        $isLogisticsPrintActive = request()->routeIs('logistics.print') || request()->routeIs('timetables.logistics.print');
-                    @endphp
                     <nav class="hidden md:flex items-center space-x-1 pl-2.5 border-l border-slate-800 shrink-0">
                         <!-- 1. ⏱️ 当日運行 ▾ -->
                         <div class="relative nav-dropdown shrink-0">
                             <button type="button"
-                                class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $isDayActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                                class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $nav->isDayActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
                                 <span>⏱️</span>
                                 <span>当日運行</span>
                                 <span class="text-[9px] opacity-75">▼</span>
@@ -106,14 +63,8 @@
 
                                     <!-- 当日進行表 (各日) -->
                                     @forelse($navTimetables ?? [] as $tt)
-                                        @php
-                                            $isCurrentTimetable = request()->routeIs('timetable.index') && (
-                                                request('timetable_id') == $tt->id ||
-                                                (!request('timetable_id') && (collect($navTimetables ?? [])->firstWhere('status', 'active') ?? collect($navTimetables ?? [])->first())?->id == $tt->id)
-                                            );
-                                        @endphp
                                         <a href="{{ route('timetable.index', ['timetable_id' => $tt->id]) }}"
-                                            class="flex items-center space-x-2 p-2 rounded-xl transition {{ $isCurrentTimetable ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                            class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isCurrentTimetable($tt) ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                             <span class="text-base shrink-0">⏱️</span>
                                             <div class="min-w-0 flex-1">
                                                 <div class="text-xs font-bold flex items-center justify-between">
@@ -122,7 +73,7 @@
                                                         <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 shrink-0 ml-1">運行中</span>
                                                     @endif
                                                 </div>
-                                                <p class="text-[10px] {{ $isCurrentTimetable ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">
+                                                <p class="text-[10px] {{ $nav->isCurrentTimetable($tt) ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">
                                                     {{ substr($tt->start_time, 0, 5) }}〜{{ substr($tt->end_time, 0, 5) }} / 進行表
                                                 </p>
                                             </div>
@@ -139,8 +90,8 @@
                                     </div>
 
                                     <!-- 人員当日配置 (稼働タイムライン) -->
-                                    @if($targetPrintTimetable)
-                                    <a href="{{ route('timetables.staff-timeline', $targetPrintTimetable) }}"
+                                    @if($nav->targetPrintTimetable())
+                                    <a href="{{ route('timetables.staff-timeline', $nav->targetPrintTimetable()) }}"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.staff-timeline') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">👥</span>
                                         <div class="min-w-0 flex-1">
@@ -165,7 +116,7 @@
 
                                     <!-- 搬出入チェック -->
                                     <a href="{{ route('logistics.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ $isLogisticsPlansActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isLogisticsPlansActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🚚</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold whitespace-nowrap truncate">搬出入チェック</div>
@@ -179,7 +130,7 @@
                         <!-- 2. 📋 準備・計画 ▾ -->
                         <div class="relative nav-dropdown shrink-0">
                             <button type="button"
-                                class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $isPlanActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                                class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $nav->isPlanActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
                                 <span>📋</span>
                                 <span>準備・計画</span>
                                 <span class="text-[9px] opacity-75">▼</span>
@@ -226,8 +177,8 @@
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">全タスク登録・必要人数設定</p>
                                         </div>
                                     </a>
-                                    @if($targetPrintTimetable)
-                                    <a href="{{ route('timetables.assignments', $targetPrintTimetable) }}"
+                                    @if($nav->targetPrintTimetable())
+                                    <a href="{{ route('timetables.assignments', $nav->targetPrintTimetable()) }}"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.assignments') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">👥</span>
                                         <div class="min-w-0 flex-1">
@@ -240,7 +191,7 @@
                                     </a>
                                     @endif
                                     <a href="{{ route('logistics.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ $isLogisticsPlansActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isLogisticsPlansActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🚚</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold whitespace-nowrap truncate">搬出入計画</div>
@@ -278,7 +229,7 @@
                         <!-- 3. 🗂️ マスター管理 ▾ -->
                         <div class="relative nav-dropdown shrink-0">
                             <button type="button"
-                                class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $isMasterActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                                class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $nav->isMasterActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
                                 <span>🗂️</span>
                                 <span>マスター管理</span>
                                 <span class="text-[9px] opacity-75">▼</span>
@@ -337,7 +288,7 @@
                         <!-- 4. 🖨️ 帳票・印刷 ▾ -->
                         <div class="relative nav-dropdown shrink-0">
                             <button type="button"
-                                class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $isPrintActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                                class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $nav->isPrintActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
                                 <span>🖨️</span>
                                 <span>帳票・印刷</span>
                                 <span class="text-[9px] opacity-75">▼</span>
@@ -348,8 +299,8 @@
                                     <span class="text-[9px] text-emerald-400 font-mono font-bold">当日</span>
                                 </div>
                                 <div class="py-1 space-y-0.5">
-                                    @if($targetPrintTimetable)
-                                    <a href="{{ route('timetables.print-assignments', $targetPrintTimetable) }}" target="_blank"
+                                    @if($nav->targetPrintTimetable())
+                                    <a href="{{ route('timetables.print-assignments', $nav->targetPrintTimetable()) }}" target="_blank"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition text-slate-200 hover:bg-slate-800 hover:text-white">
                                         <span class="text-base shrink-0">🖨️</span>
                                         <div class="min-w-0 flex-1">
@@ -362,7 +313,7 @@
                                     </a>
                                     @endif
                                     <a href="{{ route('logistics.print') }}" target="_blank"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ $isLogisticsPrintActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isLogisticsPrintActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🚚</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold flex items-center space-x-1">
@@ -421,7 +372,7 @@
                         <!-- 5. ⚙️ システム・ガイド ▾ -->
                         <div class="relative nav-dropdown shrink-0">
                             <button type="button"
-                                class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $isGuideActive ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
+                                class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $nav->isGuideActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
                                 <span>⚙️</span>
                                 <span>システム・ガイド</span>
                                 <span class="text-[9px] opacity-75">▼</span>
@@ -594,8 +545,8 @@
                 <span class="text-base">⏱️</span>
                 <span class="text-[10px] mt-0.5">進行表</span>
             </a>
-            @if($targetPrintTimetable)
-            <a href="{{ route('timetables.staff-timeline', $targetPrintTimetable) }}" class="flex flex-col items-center py-1 px-2 whitespace-nowrap {{ request()->routeIs('timetables.staff-timeline') ? 'text-indigo-400 font-bold' : 'text-slate-400 hover:text-white' }}">
+            @if($nav->targetPrintTimetable())
+            <a href="{{ route('timetables.staff-timeline', $nav->targetPrintTimetable()) }}" class="flex flex-col items-center py-1 px-2 whitespace-nowrap {{ request()->routeIs('timetables.staff-timeline') ? 'text-indigo-400 font-bold' : 'text-slate-400 hover:text-white' }}">
                 <span class="text-base">👥</span>
                 <span class="text-[10px] mt-0.5">当日配置</span>
             </a>
@@ -605,8 +556,8 @@
                 <span class="text-[10px] mt-0.5">スタッフ</span>
             </a>
             @endif
-            @if($targetPrintTimetable)
-            <a href="{{ route('timetables.print-assignments', $targetPrintTimetable) }}" target="_blank" class="flex flex-col items-center py-1 px-2 whitespace-nowrap text-slate-400 hover:text-white">
+            @if($nav->targetPrintTimetable())
+            <a href="{{ route('timetables.print-assignments', $nav->targetPrintTimetable()) }}" target="_blank" class="flex flex-col items-center py-1 px-2 whitespace-nowrap text-slate-400 hover:text-white">
                 <span class="text-base">🖨️</span>
                 <span class="text-[10px] mt-0.5">配置表</span>
             </a>
@@ -653,8 +604,8 @@
                                 <span class="text-base shrink-0">⏱️</span>
                                 <span class="font-bold truncate">当日進行表</span>
                             </a>
-                            @if($targetPrintTimetable)
-                            <a href="{{ route('timetables.staff-timeline', $targetPrintTimetable) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-white min-w-0">
+                            @if($nav->targetPrintTimetable())
+                            <a href="{{ route('timetables.staff-timeline', $nav->targetPrintTimetable()) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-white min-w-0">
                                 <span class="text-base shrink-0">👥</span>
                                 <span class="font-bold truncate">人員当日配置</span>
                             </a>
@@ -699,8 +650,8 @@
                                 <span class="text-base shrink-0">📝</span>
                                 <span class="font-bold truncate">作業タスク台帳</span>
                             </a>
-                            @if($targetPrintTimetable)
-                            <a href="{{ route('timetables.assignments', $targetPrintTimetable) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            @if($nav->targetPrintTimetable())
+                            <a href="{{ route('timetables.assignments', $nav->targetPrintTimetable()) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">👥</span>
                                 <span class="font-bold truncate">人員事前配置</span>
                             </a>
@@ -750,8 +701,8 @@
                             <span class="text-[9px] text-slate-400 font-mono">当日 / 準備</span>
                         </div>
                         <div class="grid grid-cols-2 gap-1.5 text-xs">
-                            @if($targetPrintTimetable)
-                            <a href="{{ route('timetables.print-assignments', $targetPrintTimetable) }}" target="_blank" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            @if($nav->targetPrintTimetable())
+                            <a href="{{ route('timetables.print-assignments', $nav->targetPrintTimetable()) }}" target="_blank" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🖨️</span>
                                 <span class="font-bold truncate">人員配置表 ↗</span>
                             </a>

@@ -2,16 +2,38 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Models\Lane;
 use App\Models\Staff;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Override;
 
 class StaffRepository implements StaffRepositoryInterface
 {
-    /**
-     * スタッフ一覧の取得（検索・絞り込み・ページネーション）
-     */
+    #[Override]
+    public function findById(int $id): ?Staff
+    {
+        return Staff::find($id);
+    }
+
+    #[Override]
+    public function findOrFail(int $id): Staff
+    {
+        return Staff::findOrFail($id);
+    }
+
+    #[Override]
+    public function findByIds(array $ids): Collection
+    {
+        if (empty($ids)) {
+            return new Collection;
+        }
+
+        return Staff::whereIn('id', $ids)->get();
+    }
+
+    #[Override]
     public function paginateFiltered(?string $search = null, ?bool $status = null, int $perPage = 15): LengthAwarePaginator
     {
         $query = Staff::query();
@@ -29,47 +51,77 @@ class StaffRepository implements StaffRepositoryInterface
             ->withQueryString();
     }
 
-    /**
-     * 稼働可能な全スタッフの取得（アサイン選択用）
-     *
-     * @return Collection<int, Staff>
-     */
+    #[Override]
     public function getActiveStaffList(): Collection
     {
         return Staff::active()->orderBy('kana', 'asc')->orderBy('name', 'asc')->get();
     }
 
-    /**
-     * スタッフ新規登録
-     *
-     * @param  array<string, mixed>  $attributes
-     */
+    #[Override]
+    public function getActiveOrderedByAffiliation(): Collection
+    {
+        return Staff::active()->orderBy('affiliation', 'asc')->orderBy('name', 'asc')->get();
+    }
+
+    #[Override]
+    public function getActiveByIds(?array $ids = null): Collection
+    {
+        $query = Staff::query()->where('is_active', true);
+
+        if (! empty($ids)) {
+            $query->whereIn('id', $ids);
+        }
+
+        return $query->orderBy('kana', 'asc')->get();
+    }
+
+    #[Override]
+    public function getActiveCount(): int
+    {
+        return Staff::where('is_active', true)->count();
+    }
+
+    #[Override]
+    public function getActiveLeaderCount(): int
+    {
+        return Staff::where('is_active', true)
+            ->where(function ($q): void {
+                $q->where('staff_type', 'fixed')
+                    ->orWhereIn('id', Lane::whereNotNull('lead_staff_id')->pluck('lead_staff_id'));
+            })
+            ->distinct()
+            ->count('id');
+    }
+
+    #[Override]
     public function create(array $attributes): Staff
     {
         return Staff::create($attributes);
     }
 
-    /**
-     * スタッフ情報更新
-     *
-     * @param  array<string, mixed>  $attributes
-     */
+    #[Override]
     public function update(Staff $staff, array $attributes): bool
     {
         return $staff->update($attributes);
     }
 
-    /**
-     * スタッフ削除
-     */
+    #[Override]
+    public function updateStaffTypeByIds(array $ids, string $staffType): int
+    {
+        if (empty($ids)) {
+            return 0;
+        }
+
+        return Staff::whereIn('id', $ids)->update(['staff_type' => $staffType]);
+    }
+
+    #[Override]
     public function delete(Staff $staff): bool
     {
         return (bool) $staff->delete();
     }
 
-    /**
-     * アクセストークンによるスタッフ取得
-     */
+    #[Override]
     public function findByAccessToken(string $token): ?Staff
     {
         return Staff::where('access_token', $token)
@@ -77,16 +129,50 @@ class StaffRepository implements StaffRepositoryInterface
             ->first();
     }
 
-    /**
-     * 氏名・フリガナによるスタッフ検索（照合用）
-     *
-     * @return Collection<int, Staff>
-     */
+    #[Override]
     public function findByNameAndKana(string $name, string $kana): Collection
     {
         return Staff::where('name', $name)
             ->where('kana', $kana)
             ->where('is_active', true)
+            ->get();
+    }
+
+    #[Override]
+    public function findFirstByNameAndKana(string $name, string $kana): ?Staff
+    {
+        return Staff::where('name', $name)
+            ->where('kana', $kana)
+            ->first();
+    }
+
+    #[Override]
+    public function chunkAllOrderedById(int $chunkSize, callable $callback): bool
+    {
+        return Staff::orderBy('id')->chunk($chunkSize, $callback);
+    }
+
+    #[Override]
+    public function loadShowRelations(Staff $staff): Staff
+    {
+        return $staff->load(['assignments.task.timetable']);
+    }
+
+    #[Override]
+    public function loadShiftRelationsAndGetLedLanes(Staff $staff): Collection
+    {
+        $staff->load([
+            'assignments.task.timetable',
+            'assignments.task.laneRelation.leadStaff',
+        ]);
+
+        return $staff->ledLanes()
+            ->with([
+                'timetable',
+                'fixedStaff',
+                'tasks.assignments.staff',
+                'laneRequests.task',
+            ])
             ->get();
     }
 }

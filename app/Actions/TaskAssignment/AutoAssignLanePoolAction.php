@@ -4,6 +4,8 @@ namespace App\Actions\TaskAssignment;
 
 use App\Models\Staff;
 use App\Models\TimetableTask;
+use App\Repositories\Contracts\StaffRepositoryInterface;
+use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
 use App\Services\ConflictDetectionService;
 use App\Services\TimetableTaskService;
 
@@ -11,7 +13,9 @@ class AutoAssignLanePoolAction
 {
     public function __construct(
         protected TimetableTaskService $taskService,
-        protected ConflictDetectionService $conflictService
+        protected ConflictDetectionService $conflictService,
+        protected StaffRepositoryInterface $staffRepository,
+        protected TaskStaffAssignmentRepositoryInterface $assignmentRepository
     ) {}
 
     /**
@@ -52,11 +56,11 @@ class AutoAssignLanePoolAction
         // 当該レーンに所属するアクティブスタッフ（固定スタッフおよび所属一致スタッフ）を取得
         $task->loadMissing('laneRelation.fixedStaff');
         $fixedStaffIds = $task->laneRelation
-            ? $task->laneRelation->fixedStaff->pluck('id')->map(fn ($id) => (int) $id)->all()
+            ? $task->laneRelation->fixedStaff->pluck('id')->map(fn ($id): int => (int) $id)->all()
             : [];
 
-        $activeStaff = Staff::active()->get();
-        $laneMembers = $activeStaff->filter(function (Staff $s) use ($laneName, $fixedStaffIds) {
+        $activeStaff = $this->staffRepository->getActiveStaffList();
+        $laneMembers = $activeStaff->filter(function (Staff $s) use ($laneName, $fixedStaffIds): bool {
             if (in_array((int) $s->id, $fixedStaffIds, true)) {
                 return true;
             }
@@ -78,13 +82,13 @@ class AutoAssignLanePoolAction
         }
 
         // 既にアサイン済みの人を除外
-        $alreadyAssignedIds = $task->assignments()->pluck('staff_id')->all();
-        $unassignedLaneMembers = $laneMembers->reject(fn (Staff $s) => in_array($s->id, $alreadyAssignedIds));
+        $alreadyAssignedIds = $this->assignmentRepository->getStaffIdsForTask($task->id);
+        $unassignedLaneMembers = $laneMembers->reject(fn (Staff $s): bool => in_array($s->id, $alreadyAssignedIds));
 
         // 重複チェック
         $conflictsMap = $this->conflictService->checkConflictsForStaffIds($task, $unassignedLaneMembers->pluck('id')->all());
         // 重複のない空きメンバーを優先
-        $availableMembers = $unassignedLaneMembers->reject(fn (Staff $s) => isset($conflictsMap[$s->id]))->values();
+        $availableMembers = $unassignedLaneMembers->reject(fn (Staff $s): bool => isset($conflictsMap[$s->id]))->values();
 
         if ($availableMembers->isEmpty()) {
             return [

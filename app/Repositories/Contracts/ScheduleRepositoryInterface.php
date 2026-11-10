@@ -43,6 +43,25 @@ interface ScheduleRepositoryInterface
     public function getUpcomingMeetings(int $limit = 3): Collection;
 
     /**
+     * 直近の許認可・申請・協議・説明会一覧を取得
+     *
+     * @return Collection<int, Schedule>
+     */
+    public function getUpcomingPermits(int $limit = 3): Collection;
+
+    /**
+     * 指定日以降の直近の未完了予定を1件取得
+     */
+    public function findNextUpcomingTask(string $todayStr): ?Schedule;
+
+    /**
+     * 指定年および対象月配列における未完了予定件数を取得
+     *
+     * @param  array<int, int>  $months
+     */
+    public function countPendingInMonthsAndYear(array $months, int $year): int;
+
+    /**
      * 全体のステータス別集計の取得
      *
      * @return array{total: int, planned: int, in_progress: int, completed: int}

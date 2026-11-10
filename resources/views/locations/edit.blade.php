@@ -167,22 +167,7 @@
                             </tr>
                         </thead>
                         <tbody id="schedules-form-body" class="divide-y divide-slate-100 bg-white">
-                            @php
-                                $schedulesData = old('schedules');
-                                if ($schedulesData === null) {
-                                    $schedulesData = $location->schedules->map(function ($s) {
-                                        return [
-                                            'id' => $s->id,
-                                            'start_at' => $s->start_at->format('Y-m-d\TH:i'),
-                                            'end_at' => $s->end_at->format('Y-m-d\TH:i'),
-                                            'availability_status' => $s->availability_status,
-                                            'title' => $s->title,
-                                            'note' => $s->note,
-                                        ];
-                                    })->toArray();
-                                }
-                            @endphp
-                            @foreach($schedulesData as $index => $sch)
+                            @foreach($location->schedulesForForm(old('schedules')) as $index => $sch)
                                 <tr data-schedule-row="true" class="border-b border-slate-100 hover:bg-slate-50/60 transition">
                                     <td class="py-2.5 px-3">
                                         @if(!empty($sch['id']))
@@ -222,7 +207,7 @@
                             @endforeach
                         </tbody>
                     </table>
-                    <div id="schedules-empty-message" class="p-6 text-center text-slate-400 text-xs {{ !empty($schedulesData) ? 'hidden' : '' }}">
+                    <div id="schedules-empty-message" class="p-6 text-center text-slate-400 text-xs {{ !empty($location->schedulesForForm(old('schedules'))) ? 'hidden' : '' }}">
                         利用可能時間帯枠がありません。「➕ 時間帯枠を追加」から登録してください。
                     </div>
                 </div>

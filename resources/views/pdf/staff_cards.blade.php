@@ -174,17 +174,12 @@
     </style>
 </head>
 <body>
-    @php
-        $pages = $cards->chunk(8);
-    @endphp
-
-    @forelse($pages as $pageCards)
+    @forelse($cards->chunk(8) as $pageCards)
     <div class="page">
         <table class="grid-table">
             @foreach($pageCards->chunk(2) as $rowCards)
             <tr>
                 @foreach($rowCards as $card)
-                @php $staff = $card['staff']; @endphp
                 <td class="card-cell">
                     <div class="badge-card">
                         <!-- ヘッダー -->
@@ -192,8 +187,8 @@
                             <tr>
                                 <td class="event-title">保土ケ谷宿場まつり STAFF</td>
                                 <td class="header-right">
-                                    @if($staff->is_reissued)
-                                    <span class="reissue-tag">再発行(V.{{ $staff->reissue_count + 1 }})</span>
+                                    @if($card['staff']->is_reissued)
+                                    <span class="reissue-tag">再発行(V.{{ $card['staff']->reissue_count + 1 }})</span>
                                     @endif
                                 </td>
                             </tr>
@@ -203,8 +198,8 @@
                         <table class="body-table">
                             <tr>
                                 <td class="info-col">
-                                    <div class="staff-kana">{{ $staff->kana ?: 'ー' }}</div>
-                                    <div class="staff-name">{{ $staff->name }}</div>
+                                    <div class="staff-kana">{{ $card['staff']->kana ?: 'ー' }}</div>
+                                    <div class="staff-name">{{ $card['staff']->name }}</div>
                                 </td>
                                 <td class="qr-col">
                                     <div class="qr-wrapper">

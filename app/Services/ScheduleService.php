@@ -6,13 +6,19 @@ use App\Models\Schedule;
 use App\Models\Staff;
 use App\Models\User;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Repositories\Contracts\StaffRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class ScheduleService
 {
+    protected StaffRepositoryInterface $staffRepository;
+
     public function __construct(
-        protected ScheduleRepositoryInterface $scheduleRepository
-    ) {}
+        protected ScheduleRepositoryInterface $scheduleRepository,
+        ?StaffRepositoryInterface $staffRepository = null
+    ) {
+        $this->staffRepository = $staffRepository ?? app(StaffRepositoryInterface::class);
+    }
 
     /**
      * スケジュール一覧画面表示用データの組み立て
@@ -37,7 +43,7 @@ class ScheduleService
         );
 
         $statusSummary = $this->scheduleRepository->getStatusSummary();
-        $staffs = Staff::active()->orderBy('kana')->get();
+        $staffs = $this->staffRepository->getActiveStaffList();
 
         return [
             'schedules' => $schedules,
@@ -51,6 +57,16 @@ class ScheduleService
             'currentStaffId' => $staffId,
             'currentTab' => $tab,
         ];
+    }
+
+    /**
+     * 稼働可能なスタッフ一覧を取得（フォーム選択用）
+     *
+     * @return Collection<int, Staff>
+     */
+    public function getActiveStaffList(): Collection
+    {
+        return $this->staffRepository->getActiveStaffList();
     }
 
     /**

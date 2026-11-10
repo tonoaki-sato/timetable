@@ -6,7 +6,6 @@ use App\Http\Requests\StoreLaneRequestFromShiftRequest;
 use App\Http\Requests\UpdateLaneTaskStatusRequest;
 use App\Http\Requests\UpdateStaffAssignmentStatusRequest;
 use App\Models\Lane;
-use App\Models\LaneRequest;
 use App\Models\TaskStaffAssignment;
 use App\Models\TimetableTask;
 use App\Services\StaffService;
@@ -37,38 +36,7 @@ class StaffShiftController extends Controller
         Cookie::queue('staff_token', $staff->access_token, 60 * 24 * 30);
         $request->session()->put('staff_id', $staff->id);
 
-        // アサイン情報を運行日・開始時刻順でロード
-        $staff->load([
-            'assignments.task.timetable',
-            'assignments.task.laneRelation.leadStaff',
-        ]);
-
-        $assignments = $staff->assignments->sortBy([
-            fn (TaskStaffAssignment $a, TaskStaffAssignment $b) => ($a->task?->timetable?->target_date <=> $b->task?->timetable?->target_date),
-            fn (TaskStaffAssignment $a, TaskStaffAssignment $b) => ($a->task?->start_time <=> $b->task?->start_time),
-        ]);
-
-        // 現在時刻に基づく Now & Next タスクの判定
-        $resolvedTasks = $this->staffService->resolveNowAndNextTasks($assignments);
-        $currentTask = $resolvedTasks['current_task'];
-        $nextTask = $resolvedTasks['next_task'];
-
-        $ledLanes = $staff->ledLanes()
-            ->with([
-                'timetable',
-                'fixedStaff',
-                'tasks.assignments.staff',
-                'laneRequests.task',
-            ])
-            ->get();
-
-        return view('staff.myshift', [
-            'staff' => $staff,
-            'assignments' => $assignments,
-            'currentTask' => $currentTask,
-            'nextTask' => $nextTask,
-            'ledLanes' => $ledLanes,
-        ]);
+        return view('staff.myshift', $this->staffService->getMyShiftViewData($staff));
     }
 
     /**
@@ -142,10 +110,7 @@ class StaffShiftController extends Controller
         }
 
         $validated = $request->validated();
-
-        $task->update([
-            'status' => $validated['status'],
-        ]);
+        $this->staffService->updateLaneTaskStatus($task, $validated['status']);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -174,20 +139,7 @@ class StaffShiftController extends Controller
             abort(403, '担当する班の班長のみ管理者への要請・申請を行えます。');
         }
 
-        $validated = $request->validated();
-
-        $laneRequest = LaneRequest::create([
-            'timetable_id' => $lane->timetable_id,
-            'lane_id' => $lane->id,
-            'timetable_task_id' => $validated['timetable_task_id'] ?? null,
-            'requested_by_staff_id' => $staff->id,
-            'request_type' => $validated['request_type'],
-            'requested_count' => (int) $validated['requested_count'],
-            'equipment_name' => $validated['equipment_name'] ?? null,
-            'reason' => $validated['reason'] ?? null,
-            'status' => 'pending',
-        ]);
-
+        $laneRequest = $this->staffService->createLaneRequestFromLeader($lane, $staff, $request->validated());
         $label = $laneRequest->type_label;
 
         if ($request->wantsJson()) {

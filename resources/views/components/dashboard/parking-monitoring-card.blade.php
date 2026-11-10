@@ -1,14 +1,6 @@
 @props(['context'])
 
-@php
-    $cardBorderClass = match (true) {
-        $context->hasViolations() => 'border-red-300 ring-1 ring-red-200',
-        $context->hasWarnings() => 'border-amber-300 ring-1 ring-amber-200',
-        default => 'border-slate-200 shadow-sm',
-    };
-@endphp
-
-<div class="bg-white rounded-xl border {{ $cardBorderClass }} p-5 space-y-3 transition duration-150">
+<div class="bg-white rounded-xl border {{ $context->cardBorderClass() }} p-5 space-y-3 transition duration-150">
     <!-- ヘッダー -->
     <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5 truncate">

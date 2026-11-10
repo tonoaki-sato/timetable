@@ -21,4 +21,3 @@ class UpcomingPermitsCard extends Component
         return view('components.dashboard.upcoming-permits-card');
     }
 }
-

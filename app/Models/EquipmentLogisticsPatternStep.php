@@ -107,6 +107,14 @@ class EquipmentLogisticsPatternStep extends Model
     }
 
     /**
+     * 作業主体ラベルアクセサ
+     */
+    public function getOperatorTypeLabelAttribute(): string
+    {
+        return $this->operator_type_enum->label();
+    }
+
+    /**
      * 移動元表示ラベルアクセサ
      */
     public function getFromLocationDisplayAttribute(): string
