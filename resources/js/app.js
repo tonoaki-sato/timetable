@@ -189,7 +189,7 @@ function initRealtimeClock() {
 }
 
 /**
- * ダッシュボード主要3カード（道路交通規制・NOWタスク・NEXTタスク）のリアルタイム自動同期
+ * ダッシュボードのサーバー時刻・接続同期（軽量ハートビート）
  */
 function initDashboardRealtime() {
     const rootEl = document.getElementById('dashboard-realtime-root');
@@ -199,62 +199,18 @@ function initDashboardRealtime() {
     const realtimeUrl = rootEl.dataset.realtimeUrl;
     if (!realtimeUrl) return;
 
-    const trafficContainer = document.getElementById('dashboard-card-traffic-regulation');
-    const nowTasksContainer = document.getElementById('dashboard-card-now-tasks');
-    const nextTasksContainer = document.getElementById('dashboard-card-next-tasks');
-    const parkingContainer = document.getElementById('dashboard-card-parking-monitoring');
     const statusTextEl = document.getElementById('dashboard-realtime-status');
     const refreshBtn = document.getElementById('dashboard-manual-refresh');
     const refreshIcon = document.getElementById('dashboard-refresh-icon');
 
     let isFetching = false;
-    let lastTriggeredSlotKey = null;
 
-    function getTaskIdsSignature(container) {
-        if (!container) return '';
-        const ids = Array.from(container.querySelectorAll('[data-task-id]'))
-            .map(el => el.getAttribute('data-task-id') || '')
-            .filter(Boolean);
-        return ids.length > 0 ? ids.join(',') : '__empty__';
-    }
-
-    function updateTaskCardWithAnimation(container, html) {
-        if (!container || typeof html !== 'string') return;
-
-        const prevTaskIds = new Set(
-            Array.from(container.querySelectorAll('[data-task-id]'))
-                .map(el => el.getAttribute('data-task-id'))
-                .filter(Boolean)
-        );
-        const prevSignature = getTaskIdsSignature(container);
-
-        container.innerHTML = html;
-
-        const nextSignature = getTaskIdsSignature(container);
-        if (prevSignature !== nextSignature) {
-            container.classList.remove('animate-dashboard-card-swap');
-            void container.offsetWidth;
-            container.classList.add('animate-dashboard-card-swap');
-
-            container.querySelectorAll('[data-task-id]').forEach(el => {
-                const taskId = el.getAttribute('data-task-id');
-                if (taskId && !prevTaskIds.has(taskId)) {
-                    el.classList.add('animate-dashboard-task-enter');
-                }
-            });
-        }
-    }
-
-    async function fetchRealtimeCards() {
+    async function fetchHeartbeat() {
         if (isFetching) return;
         isFetching = true;
 
-        if (refreshIcon) {
-            refreshIcon.classList.add('animate-spin');
-        }
-        if (statusTextEl) {
-            statusTextEl.textContent = '同期中...';
-        }
+        if (refreshIcon) refreshIcon.classList.add('animate-spin');
+        if (statusTextEl) statusTextEl.textContent = '同期中...';
 
         try {
             const response = await fetch(realtimeUrl, {
@@ -266,75 +222,25 @@ function initDashboardRealtime() {
                 credentials: 'same-origin',
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             const data = await response.json();
-
             if (typeof data.server_time_ms === 'number') {
                 window.__dashboardTimeOffset = data.server_time_ms - Date.now();
             }
-
-            if (data.cards) {
-                if (trafficContainer && typeof data.cards.traffic_regulation === 'string') {
-                    trafficContainer.innerHTML = data.cards.traffic_regulation;
-                }
-                if (nowTasksContainer && typeof data.cards.now_tasks === 'string') {
-                    updateTaskCardWithAnimation(nowTasksContainer, data.cards.now_tasks);
-                }
-                if (nextTasksContainer && typeof data.cards.next_tasks === 'string') {
-                    updateTaskCardWithAnimation(nextTasksContainer, data.cards.next_tasks);
-                }
-                if (parkingContainer && typeof data.cards.parking_monitoring === 'string') {
-                    parkingContainer.innerHTML = data.cards.parking_monitoring;
-                }
-            }
-
             if (statusTextEl) {
-                statusTextEl.textContent = data.updated_at_label
-                    ? `${data.updated_at_label} 同期済`
-                    : '自動同期中';
+                statusTextEl.textContent = data.updated_at_label ? `${data.updated_at_label} 同期済` : '正常稼働中';
             }
         } catch (err) {
-            if (statusTextEl) {
-                statusTextEl.textContent = '再接続待機中';
-            }
+            if (statusTextEl) statusTextEl.textContent = '再接続待機中';
         } finally {
             isFetching = false;
-            if (refreshIcon) {
-                refreshIcon.classList.remove('animate-spin');
-            }
+            if (refreshIcon) refreshIcon.classList.remove('animate-spin');
         }
     }
 
-    // 1. 毎分00秒（分境界）および30秒のタイミングで自動同期
-    setInterval(() => {
-        if (document.hidden) return;
-
-        const offset = typeof window.__dashboardTimeOffset === 'number' ? window.__dashboardTimeOffset : 0;
-        const now = new Date(Date.now() + offset);
-        const seconds = now.getSeconds();
-
-        if (seconds === 0 || seconds === 30) {
-            const slotKey = `${now.getHours()}:${now.getMinutes()}:${seconds}`;
-            if (lastTriggeredSlotKey !== slotKey) {
-                lastTriggeredSlotKey = slotKey;
-                fetchRealtimeCards();
-            }
-        }
-    }, 1000);
-
-    // 2. バックグラウンドからタブ復帰した際に即時同期
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            fetchRealtimeCards();
-        }
-    });
-
-    // 3. 手動更新ボタンクリック時に即時同期
     refreshBtn?.addEventListener('click', () => {
-        fetchRealtimeCards();
+        fetchHeartbeat();
     });
 }
 

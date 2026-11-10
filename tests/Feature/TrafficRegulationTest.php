@@ -173,21 +173,20 @@ class TrafficRegulationTest extends TestCase
     }
 
     /**
-     * ダッシュボード画面で道路交通規制カードがリンクなしの非対話カードとして正常に描画されること
+     * 道路交通規制カードがリンクなしの非対話カードとして正常に描画されること（ダッシュボードには非表示）
      */
-    public function test_dashboard_renders_traffic_regulation_card(): void
+    public function test_traffic_regulation_card_renders_cleanly_as_non_interactive_component(): void
     {
         $response = $this->actingAs($this->operator)->get(route('dashboard'));
-
         $response->assertStatus(200);
-        $response->assertSee('道路交通状況');
-        $response->assertSee('通常交通（規制なし）');
-        $response->assertSee('<div id="dashboard-card-traffic-regulation">', false);
+        $response->assertDontSee('id="dashboard-card-traffic-regulation"', false);
 
         $componentHtml = Blade::renderComponent(
             new TrafficRegulationCard(app(TrafficRegulationService::class))
         );
         $this->assertStringStartsWith('<div ', trim($componentHtml));
+        $this->assertStringContainsString('道路交通状況', $componentHtml);
+        $this->assertStringContainsString('通常交通（規制なし）', $componentHtml);
         $this->assertStringNotContainsString('<a ', $componentHtml);
     }
 }

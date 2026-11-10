@@ -7,9 +7,11 @@ use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
-use App\Models\User;
+use App\Services\NextTasksService;
+use App\View\Components\Dashboard\NextTasksCard;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
 use Tests\TestCase;
 
 class NextTasksCardTest extends TestCase
@@ -22,25 +24,26 @@ class NextTasksCardTest extends TestCase
         parent::tearDown();
     }
 
+    private function renderCard(int $limit = 5): string
+    {
+        return Blade::renderComponent(new NextTasksCard(app(NextTasksService::class), $limit));
+    }
+
     public function test_renders_non_event_day_empty_state_without_dummy_next_tasks(): void
     {
         Carbon::setTestNow(Carbon::create(2026, 10, 28, 10, 25, 0, 'Asia/Tokyo'));
 
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
+        $html = $this->renderCard();
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
-
-        $response->assertStatus(200);
-        $response->assertSee('NEXT : 次に控えるタスク');
-        $response->assertDontSee('ゴミ箱チェック（圧縮・袋交換）');
-        $response->assertDontSee('給水設備 定期点検 (第1回)');
+        $this->assertStringContainsString('NEXT : 次に控えるタスク', $html);
+        $this->assertStringNotContainsString('ゴミ箱チェック（圧縮・袋交換）', $html);
+        $this->assertStringNotContainsString('給水設備 定期点検 (第1回)', $html);
     }
 
     public function test_renders_event_day_empty_state_when_no_upcoming_tasks_remain(): void
     {
         Carbon::setTestNow(Carbon::create(2026, 10, 11, 19, 45, 0, 'Asia/Tokyo'));
 
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
         $timetable = Timetable::factory()->create([
             'target_date' => '2026-10-11',
             'status' => 'active',
@@ -58,18 +61,16 @@ class NextTasksCardTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $html = $this->renderCard();
 
-        $response->assertStatus(200);
-        $response->assertSee('以降の予定タスクなし');
-        $response->assertSee('本日これ以降に開始予定のタスクはありません');
+        $this->assertStringContainsString('以降の予定タスクなし', $html);
+        $this->assertStringContainsString('本日これ以降に開始予定のタスクはありません', $html);
     }
 
     public function test_renders_upcoming_next_tasks_with_countdown_lane_leader_and_shortage_alert(): void
     {
         Carbon::setTestNow(Carbon::create(2026, 10, 11, 10, 25, 0, 'Asia/Tokyo'));
 
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
         $timetable = Timetable::factory()->create([
             'target_date' => '2026-10-11',
             'status' => 'active',
@@ -115,20 +116,19 @@ class NextTasksCardTest extends TestCase
             'status' => 'not_started',
         ]);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $html = $this->renderCard();
 
-        $response->assertStatus(200);
-        $response->assertSee('(直近11:00開始)');
-        $response->assertSee('あと 35分後 開始');
-        $response->assertSee('あと 1時間35分後 開始');
-        $response->assertSee('11:00 - 12:00');
-        $response->assertSee('12:00 - 13:00');
-        $response->assertSee('🚻 衛生 (有エ 喜一郎)');
-        $response->assertSee('🚨 最優先');
-        $response->assertDontSee('要確認・立会');
-        $response->assertSee('北川製粉所横ゴミステーション巡回回収');
-        $response->assertSee('午後開始の巡回タスク');
-        $response->assertSee('📍 北川製粉所横');
-        $response->assertSee('⚠️ 1/4名以上 (不足3名)');
+        $this->assertStringContainsString('(直近11:00開始)', $html);
+        $this->assertStringContainsString('あと 35分後 開始', $html);
+        $this->assertStringContainsString('あと 1時間35分後 開始', $html);
+        $this->assertStringContainsString('11:00 - 12:00', $html);
+        $this->assertStringContainsString('12:00 - 13:00', $html);
+        $this->assertStringContainsString('🚻 衛生 (有エ 喜一郎)', $html);
+        $this->assertStringContainsString('🚨 最優先', $html);
+        $this->assertStringNotContainsString('要確認・立会', $html);
+        $this->assertStringContainsString('北川製粉所横ゴミステーション巡回回収', $html);
+        $this->assertStringContainsString('午後開始の巡回タスク', $html);
+        $this->assertStringContainsString('📍 北川製粉所横', $html);
+        $this->assertStringContainsString('⚠️ 1/4名以上 (不足3名)', $html);
     }
 }

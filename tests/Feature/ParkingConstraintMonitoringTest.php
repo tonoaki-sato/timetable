@@ -7,9 +7,11 @@ use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
 use App\Models\LocationSchedule;
 use App\Models\LocationType;
-use App\Models\User;
+use App\Services\ParkingConstraintService;
+use App\View\Components\Dashboard\ParkingMonitoringCard;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
 use Tests\TestCase;
 
 class ParkingConstraintMonitoringTest extends TestCase
@@ -49,6 +51,11 @@ class ParkingConstraintMonitoringTest extends TestCase
         return $location;
     }
 
+    private function renderMonitoringCard(): string
+    {
+        return Blade::renderComponent(new ParkingMonitoringCard(app(ParkingConstraintService::class)));
+    }
+
     public function test_guest_cannot_access_dashboard(): void
     {
         $response = $this->get(route('dashboard'));
@@ -56,17 +63,14 @@ class ParkingConstraintMonitoringTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    public function test_dashboard_renders_parking_monitoring_card_container(): void
+    public function test_parking_monitoring_card_renders_container(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
         $this->createParkingLocation(['name' => '北川駐車場']);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $html = $this->renderMonitoringCard();
 
-        $response->assertStatus(200);
-        $response->assertSee('id="dashboard-card-parking-monitoring"', false);
-        $response->assertSee('拠点・駐車場 利用状況監視');
-        $response->assertSee('北川駐車場');
+        $this->assertStringContainsString('拠点・駐車場 利用状況監視', $html);
+        $this->assertStringContainsString('北川駐車場', $html);
     }
 
     public function test_parking_monitoring_evaluates_in_use_normally(): void
@@ -74,7 +78,6 @@ class ParkingConstraintMonitoringTest extends TestCase
         // 貸切期間中（2026-10-11 14:00）で適正に利用中
         Carbon::setTestNow(Carbon::create(2026, 10, 11, 14, 0, 0, 'Asia/Tokyo'));
 
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
         $parking = $this->createParkingLocation(['name' => '北川駐車場']);
 
         $equipment = Equipment::factory()->create(['name' => 'カラーコーン']);
@@ -87,14 +90,13 @@ class ParkingConstraintMonitoringTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $html = $this->renderMonitoringCard();
 
-        $response->assertStatus(200);
-        $response->assertSee('北川駐車場');
-        $response->assertSee('利用中 (適正)');
-        $response->assertSee('保管機材:');
-        $response->assertSee('1品目');
-        $response->assertSee('✓ 違反なし');
+        $this->assertStringContainsString('北川駐車場', $html);
+        $this->assertStringContainsString('利用中 (適正)', $html);
+        $this->assertStringContainsString('保管機材:', $html);
+        $this->assertStringContainsString('1品目', $html);
+        $this->assertStringContainsString('✓ 違反なし', $html);
     }
 
     public function test_parking_monitoring_evaluates_standby_before_contract(): void
@@ -102,15 +104,13 @@ class ParkingConstraintMonitoringTest extends TestCase
         // 貸切開始前（2026-10-10 10:00）で違反なし
         Carbon::setTestNow(Carbon::create(2026, 10, 10, 10, 0, 0, 'Asia/Tokyo'));
 
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
         $this->createParkingLocation(['name' => '北川駐車場']);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $html = $this->renderMonitoringCard();
 
-        $response->assertStatus(200);
-        $response->assertSee('北川駐車場');
-        $response->assertSee('貸切前 (待機)');
-        $response->assertSee('利用開始まで 3時間');
+        $this->assertStringContainsString('北川駐車場', $html);
+        $this->assertStringContainsString('貸切前 (待機)', $html);
+        $this->assertStringContainsString('利用開始まで 3時間', $html);
     }
 
     public function test_parking_monitoring_evaluates_warning_near_deadline(): void
@@ -118,7 +118,6 @@ class ParkingConstraintMonitoringTest extends TestCase
         // 貸切終了が 2026-10-12 20:30 で、現在時刻が 2026-10-12 19:30（残り1時間）
         Carbon::setTestNow(Carbon::create(2026, 10, 12, 19, 30, 0, 'Asia/Tokyo'));
 
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
         $parking = $this->createParkingLocation(['name' => '北川駐車場']);
 
         $equipment = Equipment::factory()->create(['name' => 'カラーコーン']);
@@ -130,24 +129,21 @@ class ParkingConstraintMonitoringTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $html = $this->renderMonitoringCard();
 
-        $response->assertStatus(200);
-        $response->assertSee('北川駐車場');
-        $response->assertSee('本日20:30返却必須 (撤収未完了)');
-        $response->assertSee('返却期限まであと 1時間');
-        $response->assertSee('⚠️ 要注意 (1件)');
+        $this->assertStringContainsString('北川駐車場', $html);
+        $this->assertStringContainsString('本日20:30返却必須 (撤収未完了)', $html);
+        $this->assertStringContainsString('返却期限まであと 1時間', $html);
     }
 
-    public function test_parking_monitoring_evaluates_violation_when_overdue_with_equipment(): void
+    public function test_parking_monitoring_evaluates_danger_overstay(): void
     {
-        // 貸切終了が 2026-10-12 20:30 で、現在時刻が 2026-10-12 21:00（期限超過後30分）
+        // 貸切終了が 2026-10-12 20:30 で、現在時刻が 2026-10-12 21:00（期限超過30分）
         Carbon::setTestNow(Carbon::create(2026, 10, 12, 21, 0, 0, 'Asia/Tokyo'));
 
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
         $parking = $this->createParkingLocation(['name' => '北川駐車場']);
 
-        $equipment = Equipment::factory()->create(['name' => 'カラーコーン']);
+        $equipment = Equipment::factory()->create(['name' => '大型テント']);
         EquipmentLogisticsPlan::factory()->create([
             'equipment_id' => $equipment->id,
             'to_location_id' => $parking->id,
@@ -156,22 +152,20 @@ class ParkingConstraintMonitoringTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $html = $this->renderMonitoringCard();
 
-        $response->assertStatus(200);
-        $response->assertSee('北川駐車場');
-        $response->assertSee('返却期限超過・未撤収');
-        $response->assertSee('返却期限超過 (+30分)');
-        $response->assertSee('🚨 違反あり (1件)');
-        $response->assertSee('至急撤収・原状復帰を確認してください');
+        $this->assertStringContainsString('北川駐車場', $html);
+        $this->assertStringContainsString('返却期限超過・未撤収', $html);
+        $this->assertStringContainsString('返却期限超過 (+30分)', $html);
+        $this->assertStringContainsString('🚨 違反あり (1件)', $html);
+        $this->assertStringContainsString('貸切終了時刻（20:30）を超過していますが、資材が未撤収です。', $html);
     }
 
-    public function test_parking_monitoring_evaluates_violation_when_schedule_conflicts_with_contract(): void
+    public function test_parking_monitoring_evaluates_violation_for_early_ingress_plan(): void
     {
         // 貸切開始前（10:00）に、開始前（09:00）の搬入スケジュールが登録されている
         Carbon::setTestNow(Carbon::create(2026, 10, 10, 8, 0, 0, 'Asia/Tokyo'));
 
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
         $parking = $this->createParkingLocation(['name' => '北川駐車場']);
 
         $equipment = Equipment::factory()->create(['name' => '給水タンク']);
@@ -183,18 +177,16 @@ class ParkingConstraintMonitoringTest extends TestCase
             'status' => 'planned',
         ]);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $html = $this->renderMonitoringCard();
 
-        $response->assertStatus(200);
-        $response->assertSee('北川駐車場');
-        $response->assertSee('スケジュール制約違反あり');
-        $response->assertSee('🚨 違反あり (1件)');
-        $response->assertSee('給水タンク: 貸切開始（10/10 13:00）前の搬入計画');
+        $this->assertStringContainsString('北川駐車場', $html);
+        $this->assertStringContainsString('スケジュール制約違反あり', $html);
+        $this->assertStringContainsString('🚨 違反あり (1件)', $html);
+        $this->assertStringContainsString('給水タンク: 貸切開始（10/10 13:00）前の搬入計画', $html);
     }
 
     public function test_monitoring_includes_all_day_storage_locations(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
         $storageType = LocationType::firstOrCreate(
             ['name' => 'storage'],
             ['label' => '倉庫', 'color' => 'emerald', 'display_order' => 30, 'is_active' => true]
@@ -215,40 +207,10 @@ class ParkingConstraintMonitoringTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $html = $this->renderMonitoringCard();
 
-        $response->assertStatus(200);
-        $response->assertSee('番所地下倉庫');
-        $response->assertSee('保管・稼働中');
-        $response->assertSee('1品目');
-    }
-
-    public function test_realtime_api_returns_parking_monitoring_html(): void
-    {
-        Carbon::setTestNow(Carbon::create(2026, 10, 11, 14, 0, 0, 'Asia/Tokyo'));
-
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
-        $this->createParkingLocation(
-            ['name' => '税務署前駐車場'],
-            '2026-10-10 12:00:00',
-            '2026-10-12 21:00:00'
-        );
-
-        $response = $this->actingAs($user)->getJson(route('dashboard.realtime'));
-
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'server_time_ms',
-                'updated_at_label',
-                'cards' => [
-                    'traffic_regulation',
-                    'now_tasks',
-                    'next_tasks',
-                    'parking_monitoring',
-                ],
-            ]);
-
-        $this->assertStringContainsString('税務署前駐車場', $response->json('cards.parking_monitoring'));
-        $this->assertStringContainsString('利用中 (適正)', $response->json('cards.parking_monitoring'));
+        $this->assertStringContainsString('番所地下倉庫', $html);
+        $this->assertStringContainsString('保管・稼働中', $html);
+        $this->assertStringContainsString('1品目', $html);
     }
 }

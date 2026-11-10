@@ -41,14 +41,18 @@ class EquipmentLogisticsPlanTest extends TestCase
             'is_active' => true,
         ]);
 
-        Timetable::factory()->create(['target_date' => '2026-10-11', 'name' => '宿場まつり 1日目']);
+        $timetable1 = Timetable::factory()->create(['target_date' => '2026-10-11', 'name' => '宿場まつり 1日目']);
         Timetable::factory()->create(['target_date' => '2026-10-12', 'name' => '宿場まつり 2日目']);
 
-        $this->locationBansho = Location::factory()->allDay()->create(['name' => '番所地下倉庫']);
+        $this->locationBansho = Location::factory()->allDay()->create([
+            'name' => '番所地下倉庫',
+            'timetable_id' => $timetable1->id,
+        ]);
 
         // 番所前スペースは当日昼間が模擬店使用のため、前日枠と翌日枠に分割
         $this->locationBanshoSpace = Location::factory()->create([
             'name' => '番所前スペース',
+            'timetable_id' => $timetable1->id,
             'is_all_day' => false,
         ]);
         LocationSchedule::create([
@@ -68,6 +72,7 @@ class EquipmentLogisticsPlanTest extends TestCase
 
         $this->locationTaxOffice = Location::factory()->create([
             'name' => '税務署前駐車場',
+            'timetable_id' => $timetable1->id,
             'is_all_day' => false,
         ]);
         LocationSchedule::create([
@@ -80,6 +85,7 @@ class EquipmentLogisticsPlanTest extends TestCase
 
         $this->locationKitagawa = Location::factory()->create([
             'name' => '長島駐車場（旧北川駐車場）',
+            'timetable_id' => $timetable1->id,
             'is_all_day' => false,
         ]);
         LocationSchedule::create([

@@ -51,4 +51,3 @@ readonly class TimetableOverviewDTO
         public bool $hasActiveRoadClosure,
     ) {}
 }
-

@@ -17,4 +17,3 @@ class ShowKpiStrip extends Component
         return view('components.timetable.show-kpi-strip');
     }
 }
-

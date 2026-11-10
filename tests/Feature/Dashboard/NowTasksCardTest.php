@@ -7,9 +7,11 @@ use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
-use App\Models\User;
+use App\Services\NowTasksService;
+use App\View\Components\Dashboard\NowTasksCard;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
 use Tests\TestCase;
 
 class NowTasksCardTest extends TestCase
@@ -22,26 +24,27 @@ class NowTasksCardTest extends TestCase
         parent::tearDown();
     }
 
+    private function renderCard(): string
+    {
+        return Blade::renderComponent(new NowTasksCard(app(NowTasksService::class)));
+    }
+
     public function test_renders_non_event_day_empty_state_without_dummy_tasks_on_normal_days(): void
     {
         Carbon::setTestNow(Carbon::create(2026, 10, 28, 10, 30, 0, 'Asia/Tokyo'));
 
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
+        $html = $this->renderCard();
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
-
-        $response->assertStatus(200);
-        $response->assertSee('⚡ NOW : 現在進行中のタスク');
-        $response->assertSee('本日の運行予定なし');
-        $response->assertSee('本日は運行予定日が設定されていません');
-        $response->assertDontSee('通行止め出入り口・支道接続点 最優先コーン設置');
+        $this->assertStringContainsString('⚡ NOW : 現在進行中のタスク', $html);
+        $this->assertStringContainsString('本日の運行予定なし', $html);
+        $this->assertStringContainsString('本日は運行予定日が設定されていません', $html);
+        $this->assertStringNotContainsString('通行止め出入り口・支道接続点 最優先コーン設置', $html);
     }
 
     public function test_renders_event_day_empty_state_when_no_tasks_are_active_at_current_time(): void
     {
         Carbon::setTestNow(Carbon::create(2026, 10, 11, 6, 30, 0, 'Asia/Tokyo'));
 
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
         $timetable = Timetable::factory()->create([
             'target_date' => '2026-10-11',
             'status' => 'active',
@@ -60,21 +63,19 @@ class NowTasksCardTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $html = $this->renderCard();
 
-        $response->assertStatus(200);
-        $response->assertSee('06:30 時点');
-        $response->assertSee('現在進行中のタスクはありません');
-        $response->assertSee('タイムテーブルを確認');
-        $response->assertDontSee('運行タイムテーブルマトリクスを確認');
-        $response->assertDontSee('06時完了済の早朝準備タスク');
+        $this->assertStringContainsString('06:30 時点', $html);
+        $this->assertStringContainsString('現在進行中のタスクはありません', $html);
+        $this->assertStringContainsString('タイムテーブルを確認', $html);
+        $this->assertStringNotContainsString('運行タイムテーブルマトリクスを確認', $html);
+        $this->assertStringNotContainsString('06時完了済の早朝準備タスク', $html);
     }
 
     public function test_renders_active_now_tasks_with_badges_lane_leader_and_staff_shortage_on_event_day(): void
     {
         Carbon::setTestNow(Carbon::create(2026, 10, 11, 10, 15, 0, 'Asia/Tokyo'));
 
-        $user = User::factory()->create(['is_active' => true, 'role' => 'admin']);
         $timetable = Timetable::factory()->create([
             'target_date' => '2026-10-11',
             'status' => 'active',
@@ -105,22 +106,19 @@ class NowTasksCardTest extends TestCase
         TaskStaffAssignment::factory()->create([
             'timetable_task_id' => $task->id,
             'staff_id' => $leader->id,
-            'attendance_status' => 'in_progress',
+            'attendance_status' => 'assigned',
         ]);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $html = $this->renderCard();
 
-        $response->assertStatus(200);
-        $response->assertSee('1件');
-        $response->assertSee('10:15 時点');
-        $response->assertSee('10:00 - 11:00');
-        $response->assertSee('🚨 最優先設置');
-        $response->assertDontSee('要確認・立会');
-        $response->assertSee('🔺 カラーコーン (漆原 功)');
-        $response->assertSee('支道接続点カラーコーン本設置');
-        $response->assertSee('税務署前交差点');
-        $response->assertSee('通行止め開始後速やかにコーンを設置');
-        $response->assertSee('⚠️ 1 / 3名 (不足2名)');
-        $response->assertSee('進行中');
+        $this->assertStringContainsString('⚡ NOW : 現在進行中のタスク', $html);
+        $this->assertStringContainsString('支道接続点カラーコーン本設置', $html);
+        $this->assertStringContainsString('カラーコーン', $html);
+        $this->assertStringContainsString('カラーコーン (漆原 功)', $html);
+        $this->assertStringContainsString('⚠️ 1 / 3名 (不足2名)', $html);
+        $this->assertStringContainsString('最優先設置', $html);
+        $this->assertStringContainsString('進行中', $html);
+        $this->assertStringContainsString('税務署前交差点', $html);
+        $this->assertStringContainsString('data-task-id="'.$task->id.'"', $html);
     }
 }

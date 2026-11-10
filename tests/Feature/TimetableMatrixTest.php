@@ -248,7 +248,7 @@ class TimetableMatrixTest extends TestCase
     }
 
     /**
-     * ダッシュボード画面が実DBタスクと連携して正常表示されること
+     * 運行詳細画面が実DBタスクと連携して正常表示され、ダッシュボードは運行日程ゲートウェイとして機能すること
      */
     public function test_dashboard_renders_with_real_database_tasks(): void
     {
@@ -268,12 +268,16 @@ class TimetableMatrixTest extends TestCase
             'required_people_count' => 4,
         ]);
 
-        $response = $this->get(route('dashboard'));
-        $response->assertStatus(200);
-        $response->assertSee('本部運行総合ダッシュボード');
-        $response->assertSee('重要ゲート封鎖');
-        $response->assertDontSee('現場人員充足状況');
-        $response->assertDontSee('現場機材調整要請');
+        // ダッシュボード側: 運行計画のゲートウェイとして機能し、個別のタスク詳細は非表示
+        $dashboardResponse = $this->get(route('dashboard'));
+        $dashboardResponse->assertStatus(200);
+        $dashboardResponse->assertSee('本祭運行');
+        $dashboardResponse->assertDontSee('重要ゲート封鎖');
+
+        // 運行詳細画面（timetables.show）側: 実際の運行タスク・重点タスクが表示される
+        $showResponse = $this->get(route('timetables.show', $timetable));
+        $showResponse->assertStatus(200);
+        $showResponse->assertSee('重要ゲート封鎖');
     }
 
     /**

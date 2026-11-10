@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Lane;
+use App\Models\LaneRequest;
 use App\Models\Staff;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
@@ -2034,6 +2035,63 @@ class TimetableSeeder extends Seeder
                     ]
                 );
             }
+        }
+
+        // 班長からの応援要請・機材申請サンプルデータのシード化
+        $day1ColorConeLane = Lane::where('timetable_id', $timetableDay1->id)->where('name', 'カラーコーン')->first();
+        $day1HygieneLane = Lane::where('timetable_id', $timetableDay1->id)->where('name', '衛生')->first();
+        $firstTask = TimetableTask::where('timetable_id', $timetableDay1->id)->first();
+
+        if ($day1ColorConeLane) {
+            LaneRequest::updateOrCreate(
+                [
+                    'timetable_id' => $timetableDay1->id,
+                    'lane_id' => $day1ColorConeLane->id,
+                    'request_type' => 'staffing',
+                    'equipment_name' => null,
+                ],
+                [
+                    'timetable_task_id' => $firstTask?->id,
+                    'requested_by_staff_id' => $day1ColorConeLane->lead_staff_id,
+                    'requested_count' => 2,
+                    'reason' => '東口コーン設置の補助要請（通行止め直後の集中配置）',
+                    'status' => 'pending',
+                ]
+            );
+
+            LaneRequest::updateOrCreate(
+                [
+                    'timetable_id' => $timetableDay1->id,
+                    'lane_id' => $day1ColorConeLane->id,
+                    'request_type' => 'equipment',
+                    'equipment_name' => 'トランシーバー',
+                ],
+                [
+                    'timetable_task_id' => $firstTask?->id,
+                    'requested_by_staff_id' => $day1ColorConeLane->lead_staff_id,
+                    'requested_count' => 3,
+                    'reason' => '東口と西口の連絡用に追加手配希望',
+                    'status' => 'approved',
+                ]
+            );
+        }
+
+        if ($day1HygieneLane) {
+            LaneRequest::updateOrCreate(
+                [
+                    'timetable_id' => $timetableDay1->id,
+                    'lane_id' => $day1HygieneLane->id,
+                    'request_type' => 'equipment',
+                    'equipment_name' => 'ゴミ袋（特大）',
+                ],
+                [
+                    'timetable_task_id' => null,
+                    'requested_by_staff_id' => $day1HygieneLane->lead_staff_id,
+                    'requested_count' => 5,
+                    'reason' => '午後用の予備補充申請',
+                    'status' => 'resolved',
+                ]
+            );
         }
 
         // シードされた全タイムテーブルをスケジュール管理（schedules）へ自動同期
