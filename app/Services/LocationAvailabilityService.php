@@ -146,19 +146,6 @@ class LocationAvailabilityService
     }
 
     /**
-     * 移動元・移動先のすべての拠点制約警告リストを取得
-     *
-     * @return array<int, array{level: string, message: string}>
-     */
-    public function getLocationWarnings(EquipmentLogisticsPlan $plan): array
-    {
-        return array_values(array_filter([
-            $this->checkToLocationAvailability($plan),
-            $this->checkFromLocationAvailability($plan),
-        ]));
-    }
-
-    /**
      * ステップの開始・終了予定日時を解決
      *
      * @return array{0: ?Carbon, 1: ?Carbon}

@@ -132,15 +132,14 @@
                         <!-- 開閉トグルアイコン -->
                         <span class="w-4 shrink-0 text-center text-slate-400 group-open:rotate-90 transition-transform duration-150 inline-block text-xs">▶</span>
 
-                        <!-- 資材アイコン・資材名リンク -->
+                        <!-- 資材アイコン・資材名 -->
                         <div class="flex items-center min-w-0">
                             <span class="mr-1.5 shrink-0 text-base">
                                 {{ $equipment->type_enum->icon() }}
                             </span>
-                            <a href="{{ route('timetables.logistics.equipments.show', [$timetable, $equipment]) }}"
-                               class="text-indigo-600 hover:text-indigo-800 font-bold text-xs sm:text-sm truncate hover:underline">
+                            <span class="text-slate-900 font-bold text-xs sm:text-sm truncate">
                                 {{ $equipment->name }}
-                            </a>
+                            </span>
                         </div>
 
                         <!-- 数量・区分・保管場所 -->
@@ -186,13 +185,6 @@
                     <div class="px-4 py-8 text-center text-slate-400 text-xs space-y-2">
                         <span class="text-2xl block mb-1">📋</span>
                         <p>この運行日の搬出入・中継・夜間保管ステップがまだ作成されていません。</p>
-                        <div>
-                            <a href="{{ route('timetables.logistics.equipments.show', [$timetable, $equipment]) }}"
-                               class="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center space-x-1">
-                                <span>⚡ パターン適用・ステップ追加画面を開く</span>
-                                <span>→</span>
-                            </a>
-                        </div>
                     </div>
                 @else
                     <div class="overflow-x-auto">

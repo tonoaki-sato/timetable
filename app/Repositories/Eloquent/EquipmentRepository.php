@@ -60,7 +60,7 @@ class EquipmentRepository implements EquipmentRepositoryInterface
     }
 
     #[Override]
-    public function loadLogisticsShowDetails(Equipment $equipment, Timetable $timetable): Equipment
+    public function loadPlansForTimetable(Equipment $equipment, Timetable $timetable): Equipment
     {
         return $equipment->load([
             'creator',
@@ -71,18 +71,6 @@ class EquipmentRepository implements EquipmentRepositoryInterface
                 'witnessStaff',
             ])->ordered(),
         ]);
-    }
-
-    #[Override]
-    public function getPlansOrdered(Equipment $equipment): Collection
-    {
-        return $equipment->plans()->ordered()->get();
-    }
-
-    #[Override]
-    public function countPlans(Equipment $equipment): int
-    {
-        return $equipment->plans()->count();
     }
 
     #[Override]

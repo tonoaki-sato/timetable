@@ -186,54 +186,13 @@ class EquipmentLogisticsService
         }
 
         $count = $this->applyPattern($equipment, $pattern, $dto, $timetable);
-        $this->equipmentRepository->loadLogisticsShowDetails($equipment, $timetable);
+        $this->equipmentRepository->loadPlansForTimetable($equipment, $timetable);
 
         return [
             'pattern' => $pattern,
             'count' => $count,
             'equipment' => $equipment,
         ];
-    }
-
-    /**
-     * 資材に登録済みの計画ステップ群を新しい搬出入パターンとして保存
-     *
-     * @param  array{name: string, target_type?: ?string, description?: ?string}  $data
-     */
-    public function saveEquipmentPlansAsPattern(Equipment $equipment, array $data, ?int $userId = null): EquipmentLogisticsPattern
-    {
-        $plans = $this->equipmentRepository->getPlansOrdered($equipment);
-        $stepsData = [];
-        $order = 10;
-
-        foreach ($plans as $plan) {
-            $stepsData[] = [
-                'day_phase' => $plan->day_phase,
-                'action_type' => $plan->action_type,
-                'title' => $plan->title,
-                'from_location_id' => $plan->from_location_id,
-                'to_location_id' => $plan->to_location_id,
-                'operator_type' => $plan->operator_type,
-                'witness_required' => $plan->witness_required,
-                'notes' => $plan->notes,
-                'display_order' => $order,
-            ];
-            $order += 10;
-        }
-
-        return $this->patternRepository->createWithSteps([
-            'name' => $data['name'],
-            'target_type' => $data['target_type'] ?: $equipment->type,
-            'description' => $data['description'] ?? "{$equipment->name} の搬出入ステップから作成されたパターン",
-        ], $stepsData, $userId);
-    }
-
-    /**
-     * 資材に紐づく搬出入ステップ件数を取得
-     */
-    public function countEquipmentPlans(Equipment $equipment): int
-    {
-        return $this->equipmentRepository->countPlans($equipment);
     }
 
     /**
@@ -267,14 +226,6 @@ class EquipmentLogisticsService
     public function deletePlan(EquipmentLogisticsPlan $plan): bool
     {
         return $this->planRepository->delete($plan);
-    }
-
-    /**
-     * 特定資材・指定運行日の搬出入計画ステップを一括クリア
-     */
-    public function clearPlansForEquipment(Equipment $equipment, Timetable $timetable): int
-    {
-        return $this->planRepository->clearForEquipment($equipment, $timetable);
     }
 
     /**
@@ -421,28 +372,6 @@ class EquipmentLogisticsService
             'eventCompanyPlans' => $this->getEventCompanyScheduleData($timetable),
             'festivalDates' => $this->resolveFestivalDates(),
             'lanes' => $this->laneRepository->getOrderedWithLeadForTimetable($timetable),
-        ];
-    }
-
-    /**
-     * 個別資材の搬出入計画詳細画面用データを取得
-     *
-     * @return array<string, mixed>
-     */
-    public function getLogisticsShowViewData(Timetable $timetable, Equipment $equipment): array
-    {
-        $this->equipmentRepository->loadLogisticsShowDetails($equipment, $timetable);
-
-        return [
-            'timetable' => $timetable,
-            'equipment' => $equipment,
-            'locations' => $this->locationRepository->getActiveOrderedForTimetable($timetable),
-            'staffs' => $this->staffRepository->getActiveStaffList(),
-            'patterns' => $this->patternRepository->getAllWithSteps(),
-            'clearAction' => $equipment->clearPlansUrl($timetable),
-            'storePlanUrl' => route('timetables.logistics.plans.store', $timetable),
-            'applyTemplateUrl' => $equipment->applyTemplateUrl($timetable),
-            'backLogisticsUrl' => route('timetables.logistics.index', $timetable),
         ];
     }
 

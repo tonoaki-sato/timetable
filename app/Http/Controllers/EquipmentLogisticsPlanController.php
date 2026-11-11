@@ -6,7 +6,6 @@ use App\DTOs\ApplyEquipmentPatternDTO;
 use App\Http\Requests\ApplyEquipmentTemplateRequest;
 use App\Http\Requests\StoreEquipmentLogisticsPlanRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPlanRequest;
-use App\Http\Requests\UpdateEquipmentLogisticsPlanStatusRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Timetable;
@@ -86,29 +85,6 @@ class EquipmentLogisticsPlanController extends Controller
     }
 
     /**
-     * ステータス更新（計画中 ➔ 進行中 ➔ 完了）
-     */
-    public function updateStatus(UpdateEquipmentLogisticsPlanStatusRequest $request, Timetable $timetable, EquipmentLogisticsPlan $plan): RedirectResponse|JsonResponse
-    {
-        abort_if($plan->timetable_id !== $timetable->id, 404);
-        $this->authorize('update', $plan);
-
-        $validated = $request->validated();
-
-        $plan = $this->logisticsService->updatePlan($plan, ['status' => $validated['status']]);
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => "ステップ「{$plan->title}」のステータスを「{$plan->status_label}」に更新しました。",
-                'plan' => $plan,
-            ]);
-        }
-
-        return back()->with('status', "ステップ「{$plan->title}」のステータスを「{$plan->status_label}」に更新しました。");
-    }
-
-    /**
      * 資材へのカスタムパターン一括適用
      */
     public function applyTemplate(ApplyEquipmentTemplateRequest $request, Timetable $timetable, Equipment $equipment): RedirectResponse|JsonResponse
@@ -129,25 +105,6 @@ class EquipmentLogisticsPlanController extends Controller
         }
 
         return back()->with('status', "パターン「{$pattern->name}」から{$count}件の計画ステップを生成しました。");
-    }
-
-    /**
-     * 資材の搬出入ステップを一括削除（全クリア）
-     */
-    public function clear(Request $request, Timetable $timetable, Equipment $equipment): RedirectResponse|JsonResponse
-    {
-        $this->authorize('update', $equipment);
-
-        $count = $this->logisticsService->clearPlansForEquipment($equipment, $timetable);
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => "資材「{$equipment->name}」の搬出入計画ステップ（全{$count}件）を削除しました。",
-            ]);
-        }
-
-        return back()->with('status', "資材「{$equipment->name}」の搬出入計画ステップ（全{$count}件）を削除しました。");
     }
 
     // ==========================================
@@ -175,25 +132,11 @@ class EquipmentLogisticsPlanController extends Controller
         return $this->destroy($request, $timetable, $plan);
     }
 
-    public function updateStatusLegacy(UpdateEquipmentLogisticsPlanStatusRequest $request, EquipmentLogisticsPlan $plan): RedirectResponse|JsonResponse
-    {
-        $timetable = $plan->timetable ?? $this->resolveFallbackTimetable();
-
-        return $this->updateStatus($request, $timetable, $plan);
-    }
-
     public function applyTemplateLegacy(ApplyEquipmentTemplateRequest $request, Equipment $equipment): RedirectResponse|JsonResponse
     {
         $timetable = $this->resolveFallbackTimetable($request);
 
         return $this->applyTemplate($request, $timetable, $equipment);
-    }
-
-    public function clearLegacy(Request $request, Equipment $equipment): RedirectResponse|JsonResponse
-    {
-        $timetable = $this->resolveFallbackTimetable($request);
-
-        return $this->clear($request, $timetable, $equipment);
     }
 
     protected function resolveFallbackTimetable(?Request $request = null): Timetable

@@ -98,26 +98,9 @@ class EquipmentLogisticsController extends Controller
         return $this->downloadLogisticsPdfAction->execute($request, $timetable);
     }
 
-    /**
-     * 指定タイムテーブルにおける個別資材の搬出入計画・ステップ設定画面の表示
-     */
-    public function show(Timetable $timetable, Equipment $equipment): View
-    {
-        $this->authorize('view', $equipment);
-
-        return view('logistics.show', $this->logisticsService->getLogisticsShowViewData($timetable, $equipment));
-    }
-
     // ==========================================
     // 既存互換フォールバックアクション群
     // ==========================================
-
-    public function showLegacy(Equipment $equipment): View
-    {
-        $timetable = $this->resolveFallbackTimetable();
-
-        return $this->show($timetable, $equipment);
-    }
 
     public function printLegacy(Request $request): Response|View
     {

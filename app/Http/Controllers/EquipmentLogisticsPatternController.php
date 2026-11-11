@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SaveEquipmentPatternRequest;
 use App\Http\Requests\StoreEquipmentLogisticsPatternRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPatternRequest;
-use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
 use App\Services\EquipmentLogisticsService;
 use Illuminate\Http\JsonResponse;
@@ -102,35 +100,5 @@ class EquipmentLogisticsPatternController extends Controller
 
         return redirect()->route('equipment-patterns.index')
             ->with('status', "搬出入パターン「{$name}」を削除しました。");
-    }
-
-    /**
-     * 資材に登録済みのステップ群を新しい搬出入パターンとして保存
-     */
-    public function saveFromEquipment(SaveEquipmentPatternRequest $request, Equipment $equipment): RedirectResponse|JsonResponse
-    {
-        $this->authorize('create', EquipmentLogisticsPattern::class);
-
-        $validated = $request->validated();
-
-        if ($this->logisticsService->countEquipmentPlans($equipment) === 0) {
-            return back()->withErrors(['name' => '保存する搬出入ステップが登録されていません。']);
-        }
-
-        $pattern = $this->logisticsService->saveEquipmentPlansAsPattern(
-            $equipment,
-            $validated,
-            $request->user()?->id
-        );
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => "現在のステップ構成を新しいパターン「{$pattern->name}」として保存しました。",
-                'pattern' => $pattern,
-            ]);
-        }
-
-        return back()->with('status', "現在のステップ構成を新しいパターン「{$pattern->name}」として保存しました。");
     }
 }

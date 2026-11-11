@@ -389,16 +389,6 @@ class EquipmentLogisticsPlan extends Model
     }
 
     /**
-     * 移動元・移動先のすべての拠点制約警告リストを取得
-     *
-     * @return array<int, array{level: string, message: string}>
-     */
-    public function getLocationWarningsAttribute(): array
-    {
-        return app(LocationAvailabilityService::class)->getLocationWarnings($this);
-    }
-
-    /**
      * 特定の運行計画に属する計画を抽出
      */
     public function scopeForTimetable(Builder $query, Timetable|int $timetable): Builder
@@ -446,16 +436,6 @@ class EquipmentLogisticsPlan extends Model
             'post_day' => 'bg-rose-50 text-rose-700 border-rose-200',
             default => 'bg-slate-50 text-slate-700 border-slate-200',
         };
-    }
-
-    /**
-     * ステータス更新アクションのURLを取得
-     */
-    public function updateStatusUrl(?Timetable $timetable = null): string
-    {
-        return $timetable
-            ? route('timetables.logistics.plans.update-status', [$timetable, $this])
-            : route('logistics.plans.update-status', $this);
     }
 
     /**

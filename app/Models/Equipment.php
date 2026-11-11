@@ -215,14 +215,6 @@ class Equipment extends Model
     }
 
     /**
-     * 完了済み計画ステップ件数アクセサ
-     */
-    public function getCompletedPlansCountAttribute(): int
-    {
-        return $this->plans->where('status', 'completed')->count();
-    }
-
-    /**
      * 指定フェーズの計画ステップ一覧を抽出
      *
      * @param  array<int, string>|string  $phases
@@ -263,25 +255,5 @@ class Equipment extends Model
         return $timetable
             ? route('timetables.equipments.destroy', [$timetable, $this])
             : route('equipments.destroy', $this);
-    }
-
-    /**
-     * 計画ステップ一括クリアアクションのURLを取得
-     */
-    public function clearPlansUrl(?Timetable $timetable = null): string
-    {
-        return $timetable
-            ? route('timetables.logistics.plans.clear', [$timetable, $this])
-            : route('logistics.plans.clear', $this);
-    }
-
-    /**
-     * パターン適用アクションのURLを取得
-     */
-    public function applyTemplateUrl(?Timetable $timetable = null): string
-    {
-        return $timetable
-            ? route('timetables.logistics.apply-template', [$timetable, $this])
-            : route('logistics.apply-template', $this);
     }
 }

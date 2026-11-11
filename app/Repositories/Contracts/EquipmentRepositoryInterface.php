@@ -4,7 +4,6 @@ namespace App\Repositories\Contracts;
 
 use App\DTOs\EquipmentFilterDTO;
 use App\Models\Equipment;
-use App\Models\EquipmentLogisticsPlan;
 use App\Models\Timetable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -34,21 +33,9 @@ interface EquipmentRepositoryInterface
     public function findWithDetails(int $id, ?Timetable $timetable = null): ?Equipment;
 
     /**
-     * 搬出入計画詳細画面用に資機材のリレーションをロード
+     * 指定運行日の搬出入計画リレーションを資機材へロード
      */
-    public function loadLogisticsShowDetails(Equipment $equipment, Timetable $timetable): Equipment;
-
-    /**
-     * 指定資材に紐づく搬出入計画一覧を表示順で取得
-     *
-     * @return Collection<int, EquipmentLogisticsPlan>
-     */
-    public function getPlansOrdered(Equipment $equipment): Collection;
-
-    /**
-     * 指定資材に紐づく搬出入計画の総数を取得
-     */
-    public function countPlans(Equipment $equipment): int;
+    public function loadPlansForTimetable(Equipment $equipment, Timetable $timetable): Equipment;
 
     /**
      * 全資機材一覧を取得（表示順）

@@ -26,7 +26,7 @@ function initLogisticsPlanModals() {
         return;
     }
 
-    document.querySelectorAll('#logistics-accordions summary a, #logistics-accordions summary button').forEach((el) => {
+    document.querySelectorAll('#logistics-accordions summary button').forEach((el) => {
         el.addEventListener('click', (e) => {
             e.stopPropagation();
         });

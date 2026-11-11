@@ -175,75 +175,6 @@ class EquipmentLogisticsPlanTest extends TestCase
     }
 
     /**
-     * 資材の既存ステップ構成を新しいカスタムパターンとして保存し、別資材へ再利用できること
-     */
-    public function test_save_equipment_plans_as_pattern_and_reuse(): void
-    {
-        $sourceEquipment = Equipment::factory()->rental()->create([
-            'name' => '足踏み式給水設備',
-            'quantity' => 4,
-            'unit' => '台',
-        ]);
-
-        $sourceEquipment->plans()->create([
-            'timetable_id' => Timetable::first()->id,
-            'day_phase' => 'pre_day',
-            'action_type' => 'vendor_receive',
-            'title' => '前日 イベント会社納品・受取立会',
-            'start_time' => '10:00',
-            'end_time' => '11:00',
-            'from_location' => 'イベント会社配送',
-            'to_location' => '番所前スペース',
-            'to_location_id' => $this->locationBanshoSpace->id,
-            'quantity' => 4,
-            'operator_type' => 'committee',
-            'witness_required' => true,
-        ]);
-
-        $sourceEquipment->plans()->create([
-            'timetable_id' => Timetable::first()->id,
-            'day_phase' => 'post_day',
-            'action_type' => 'vendor_pickup',
-            'title' => '翌日 イベント会社回収・引渡立会',
-            'start_time' => '10:00',
-            'end_time' => '11:30',
-            'from_location' => '番所前スペース',
-            'from_location_id' => $this->locationBanshoSpace->id,
-            'to_location' => 'イベント会社回収',
-            'quantity' => 4,
-            'operator_type' => 'committee',
-            'witness_required' => true,
-        ]);
-
-        $savedPattern = $this->service->saveEquipmentPlansAsPattern($sourceEquipment, [
-            'name' => 'レンタル標準受取・回収パターン',
-            'target_type' => 'rental',
-            'description' => '番所前スペースでの受取・回収',
-        ]);
-
-        $this->assertCount(2, $savedPattern->steps);
-        $this->assertEquals($this->locationBanshoSpace->id, $savedPattern->steps[0]->to_location_id);
-        $this->assertEquals($this->locationBanshoSpace->id, $savedPattern->steps[1]->from_location_id);
-
-        // 別資材に適用
-        $targetEquipment = Equipment::factory()->rental()->create([
-            'name' => '折りたたみ長机',
-            'quantity' => 20,
-            'unit' => '脚',
-        ]);
-
-        $appliedCount = $this->service->applyPattern($targetEquipment, $savedPattern, [
-            'witness_staff_id' => $this->staff->id,
-        ]);
-
-        $this->assertEquals(2, $appliedCount);
-        $targetPlans = $targetEquipment->plans()->get();
-        $this->assertEquals(20, $targetPlans[0]->quantity);
-        $this->assertEquals($this->locationBanshoSpace->id, $targetPlans[0]->to_location_id);
-        $this->assertEquals($this->staff->id, $targetPlans[0]->witness_staff_id);
-    }
-
-    /**
      * 数量がnullでquantity_noteのみ設定されている場合のフォーマット表示検証
      */
     public function test_plan_formatted_quantity_with_note_only(): void
@@ -407,30 +338,6 @@ class EquipmentLogisticsPlanTest extends TestCase
     }
 
     /**
-     * ステータス更新（計画中 ➔ 進行中 ➔ 完了）の動作検証
-     */
-    public function test_plan_status_update(): void
-    {
-        $this->actingAs($this->operator);
-
-        $equipment = Equipment::factory()->create();
-        $plan = EquipmentLogisticsPlan::factory()->create([
-            'equipment_id' => $equipment->id,
-            'status' => 'planned',
-        ]);
-
-        $response = $this->patch(route('logistics.plans.update-status', $plan), [
-            'status' => 'completed',
-        ]);
-
-        $response->assertRedirect();
-        $this->assertDatabaseHas('equipment_logistics_plans', [
-            'id' => $plan->id,
-            'status' => 'completed',
-        ]);
-    }
-
-    /**
      * 個別スロット単位での利用可能期間外の警告判定（開始前・終了後・中抜け時間帯・移動元）の検証
      */
     public function test_plan_location_availability_warning_including_middle_gap(): void
@@ -469,26 +376,5 @@ class EquipmentLogisticsPlanTest extends TestCase
         $gapWarning = $planMiddleGap->checkToLocationAvailability();
         $this->assertNotNull($gapWarning);
         $this->assertStringContainsString('利用可能時間外（またはイベントブース使用時間帯）', $gapWarning['message']);
-    }
-
-    /**
-     * 資材別搬出入計画画面で紐づく運行計画の日付がプリセットされ立会表記が統一されていること
-     */
-    public function test_logistics_show_presets_timetable_date_and_displays_updated_witness_labels(): void
-    {
-        $timetable = Timetable::where('target_date', '2026-10-11')->firstOrFail();
-        $equipment = Equipment::factory()->create();
-
-        $this->actingAs($this->operator);
-
-        $response = $this->get(route('timetables.logistics.equipments.show', [$timetable, $equipment]));
-
-        $response->assertStatus(200);
-        $response->assertSee('data-default-target-date="2026-10-11"', false);
-        $response->assertSee('id="step_target_date" name="target_date" value="2026-10-11"', false);
-        $response->assertSee('立会スタッフ');
-        $response->assertSee('スタッフ立会必須');
-        $response->assertDontSee('立会幹事スタッフ');
-        $response->assertDontSee('幹事・スタッフ立会必須');
     }
 }

@@ -350,13 +350,6 @@ class EquipmentManagementTest extends TestCase
             ->assertDontSee('クイック操作')
             ->assertDontSee('主担当班の体制')
             ->assertDontSee('編集する');
-
-        // 計画画面への導線および計画画面の初期表示検証
-        $this->get(route('logistics.equipments.show', $firstEquipment))
-            ->assertStatus(200)
-            ->assertSee('初回登録資材')
-            ->assertSee('搬出入パターンがまだ登録されていません')
-            ->assertSee(route('equipments.show', $firstEquipment));
     }
 
     /**
