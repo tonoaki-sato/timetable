@@ -2,12 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Logistics\DownloadEquipmentLogisticsPdfAction;
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
 use App\Models\Location;
 use App\Models\Timetable;
 use App\Models\User;
+use App\Services\PdfService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Tests\TestCase;
 
 class EquipmentLogisticsTest extends TestCase
@@ -149,7 +152,9 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('搬出入計画一覧');
         $response->assertSee('搬出入指示書PDF');
-        $response->assertSee('id="btn-logistics-pdf-preview"', false);
+        $response->assertSee('id="btn-download-logistics-pdf"', false);
+        $response->assertSee('data-base-print-url="'.route('timetables.logistics.print', $this->timetable1).'"', false);
+        $response->assertDontSee('preview=1', false);
         $response->assertSee('🔍 表示資材:');
         $response->assertSee('data-action="select-all-equipments"', false);
         $response->assertSee('data-action="deselect-all-equipments"', false);
@@ -475,7 +480,7 @@ class EquipmentLogisticsTest extends TestCase
     }
 
     /**
-     * 搬出入指示書兼現場チェックリストPDFダウンロードが正常に動作すること
+     * 搬出入指示書兼現場チェックリストPDFダウンロードが正常に動作し、previewパラメータ指定時も直接PDFを返すこと
      */
     public function test_can_download_logistics_pdf(): void
     {
@@ -485,20 +490,18 @@ class EquipmentLogisticsTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'application/pdf');
-    }
+        $this->assertStringContainsString('equipment_logistics_plan_', (string) $response->headers->get('Content-Disposition'));
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
 
-    /**
-     * A4横 搬出入指示書のプレビュー表示が正常に描画されること
-     */
-    public function test_can_preview_logistics_print_sheet(): void
-    {
-        $this->actingAs($this->operator);
+        // preview=1 が付与されてもプレビューHTMLではなく直接PDFが返却されること
+        $previewQueryResponse = $this->get(route('timetables.logistics.print', [
+            'timetable' => $this->timetable1,
+            'preview' => 1,
+        ]));
 
-        $response = $this->get(route('timetables.logistics.print', ['timetable' => $this->timetable1, 'preview' => 1]));
-
-        $response->assertStatus(200);
-        $response->assertSee('資材搬出入計画書 印刷プレビュー');
-        $response->assertSee('ブラウザ印刷');
+        $previewQueryResponse->assertStatus(200);
+        $previewQueryResponse->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $previewQueryResponse->getContent());
     }
 
     /**
@@ -561,17 +564,20 @@ class EquipmentLogisticsTest extends TestCase
     }
 
     /**
-     * 印刷プレビューで区分によるフィルタリングが正常に動作すること
+     * 搬出入指示書PDF出力で区分によるフィルタリングが正常に動作すること
      */
-    public function test_print_preview_supports_filtering(): void
+    public function test_pdf_download_supports_type_filtering(): void
     {
         $this->actingAs($this->operator);
 
-        $equipment = Equipment::factory()->rental()->create([
+        $rentalEquipment = Equipment::factory()->rental()->create([
             'name' => 'トランシーバー特小',
         ]);
+        $committeeEquipment = Equipment::factory()->committee()->create([
+            'name' => '除外対象パイプ椅子',
+        ]);
 
-        $equipment->plans()->create([
+        $rentalEquipment->plans()->create([
             'timetable_id' => $this->timetable1->id,
             'title' => '前日受取立会',
             'day_phase' => 'pre_day',
@@ -580,20 +586,28 @@ class EquipmentLogisticsTest extends TestCase
             'witness_required' => true,
         ]);
 
+        $action = app(DownloadEquipmentLogisticsPdfAction::class);
+        $viewData = $action->buildViewData(Request::create('/logistics/print', 'GET', ['type' => 'rental']), $this->timetable1);
+        $viewData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
+
+        $html = view('pdf.equipment_logistics', $viewData)->render();
+        $this->assertStringContainsString('トランシーバー特小', $html);
+        $this->assertStringNotContainsString($committeeEquipment->name, $html);
+
         $response = $this->get(route('timetables.logistics.print', [
             'timetable' => $this->timetable1,
-            'preview' => 1,
             'type' => 'rental',
         ]));
 
         $response->assertStatus(200);
-        $response->assertSee('トランシーバー特小');
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
     }
 
     /**
-     * 印刷プレビューとPDF出力が equipment_ids による資材絞り込みに対応していること
+     * 搬出入指示書PDF出力が equipment_ids による資材絞り込みに対応していること
      */
-    public function test_print_preview_and_pdf_respect_equipment_ids_filter(): void
+    public function test_pdf_download_respects_equipment_ids_filter(): void
     {
         $this->actingAs($this->operator);
 
@@ -604,16 +618,17 @@ class EquipmentLogisticsTest extends TestCase
             'name' => '除外対象カラーコーン',
         ]);
 
-        $previewResponse = $this->get(route('timetables.logistics.print', [
-            'timetable' => $this->timetable1,
-            'preview' => 1,
-            'equipment_ids' => (string) $included->id,
-        ]));
+        $action = app(DownloadEquipmentLogisticsPdfAction::class);
+        $viewData = $action->buildViewData(
+            Request::create('/logistics/print', 'GET', ['equipment_ids' => (string) $included->id]),
+            $this->timetable1
+        );
+        $viewData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
 
-        $previewResponse->assertStatus(200);
-        $previewResponse->assertSee('表示対象トランシーバー');
-        $previewResponse->assertSee('表示資材指定: 1件');
-        $previewResponse->assertDontSee('除外対象カラーコーン');
+        $html = view('pdf.equipment_logistics', $viewData)->render();
+        $this->assertStringContainsString('表示対象トランシーバー', $html);
+        $this->assertStringContainsString('表示資材指定: 1件', $html);
+        $this->assertStringNotContainsString('除外対象カラーコーン', $html);
 
         $pdfResponse = $this->get(route('timetables.logistics.print', [
             'timetable' => $this->timetable1,
@@ -622,10 +637,11 @@ class EquipmentLogisticsTest extends TestCase
 
         $pdfResponse->assertStatus(200);
         $pdfResponse->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $pdfResponse->getContent());
     }
 
     /**
-     * パターンデータや拠点が0件の状態でも、搬出入計画一覧や印刷画面が例外なく描画されること
+     * パターンデータや拠点が0件の状態でも、搬出入計画一覧やPDFダウンロードが例外なく動作すること
      */
     public function test_logistics_views_and_print_render_cleanly_when_initial_data_is_empty(): void
     {
@@ -640,13 +656,16 @@ class EquipmentLogisticsTest extends TestCase
             ->assertSee('搬出入計画一覧')
             ->assertSee('条件に該当する資材はありません');
 
-        $this->get(route('timetables.logistics.print', ['timetable' => $this->timetable1, 'preview' => 1]))
-            ->assertStatus(200)
-            ->assertSee('該当する資材または搬出入計画データはありません');
+        $action = app(DownloadEquipmentLogisticsPdfAction::class);
+        $viewData = $action->buildViewData(Request::create('/logistics/print', 'GET'), $this->timetable1);
+        $viewData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
+        $html = view('pdf.equipment_logistics', $viewData)->render();
+        $this->assertStringContainsString('該当する資材または搬出入計画データはありません。', $html);
 
-        $this->get(route('timetables.logistics.print', $this->timetable1))
-            ->assertStatus(200)
-            ->assertHeader('Content-Type', 'application/pdf');
+        $pdfResponse = $this->get(route('timetables.logistics.print', $this->timetable1));
+        $pdfResponse->assertStatus(200);
+        $pdfResponse->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $pdfResponse->getContent());
     }
 
     /**

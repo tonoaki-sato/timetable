@@ -35,7 +35,7 @@ function initEquipmentFilters() {
         }
     });
 
-    const pdfBtn = document.getElementById('btn-logistics-pdf-preview');
+    const pdfBtn = document.getElementById('btn-download-logistics-pdf');
     if (pdfBtn) {
         pdfBtn.addEventListener('click', (e) => {
             const chips = document.querySelectorAll('.equipment-chip');
@@ -105,7 +105,7 @@ function updateEquipmentFilterState() {
         emptyState.classList.toggle('hidden', !(total > 0 && visible === 0));
     }
 
-    const pdfBtn = document.getElementById('btn-logistics-pdf-preview');
+    const pdfBtn = document.getElementById('btn-download-logistics-pdf');
     if (pdfBtn) {
         const basePrintUrl = pdfBtn.getAttribute('data-base-print-url');
         if (basePrintUrl) {

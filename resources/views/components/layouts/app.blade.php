@@ -313,7 +313,7 @@
                                     </a>
                                     @endif
                                     <a href="{{ route('logistics.print') }}" target="_blank"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isLogisticsPrintActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition text-slate-200 hover:bg-slate-800 hover:text-white">
                                         <span class="text-base shrink-0">🚚</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold flex items-center space-x-1">

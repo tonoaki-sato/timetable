@@ -12,7 +12,6 @@ use App\Models\Timetable;
 use App\Repositories\Contracts\EquipmentLogisticsPatternRepositoryInterface;
 use App\Repositories\Contracts\EquipmentLogisticsPlanRepositoryInterface;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
-use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Repositories\Contracts\LocationRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
@@ -28,8 +27,6 @@ class EquipmentLogisticsService
 
     protected TimetableRepositoryInterface $timetableRepository;
 
-    protected LaneRepositoryInterface $laneRepository;
-
     protected StaffRepositoryInterface $staffRepository;
 
     public function __construct(
@@ -38,13 +35,11 @@ class EquipmentLogisticsService
         ?EquipmentRepositoryInterface $equipmentRepository = null,
         ?LocationRepositoryInterface $locationRepository = null,
         ?TimetableRepositoryInterface $timetableRepository = null,
-        ?LaneRepositoryInterface $laneRepository = null,
         ?StaffRepositoryInterface $staffRepository = null,
     ) {
         $this->equipmentRepository = $equipmentRepository ?? app(EquipmentRepositoryInterface::class);
         $this->locationRepository = $locationRepository ?? app(LocationRepositoryInterface::class);
         $this->timetableRepository = $timetableRepository ?? app(TimetableRepositoryInterface::class);
-        $this->laneRepository = $laneRepository ?? app(LaneRepositoryInterface::class);
         $this->staffRepository = $staffRepository ?? app(StaffRepositoryInterface::class);
     }
 
@@ -348,7 +343,7 @@ class EquipmentLogisticsService
      */
     public function getLogisticsIndexViewData(Timetable $timetable, ?array $selectedEquipmentIds = null): array
     {
-        $equipments = $this->getEquipmentsFlowData(null, null, $timetable);
+        $equipments = $this->getEquipmentsFlowData(null, $timetable);
         $visibleEquipmentCount = $selectedEquipmentIds === null
             ? $equipments->count()
             : $equipments->whereIn('id', $selectedEquipmentIds)->count();
@@ -365,56 +360,14 @@ class EquipmentLogisticsService
     }
 
     /**
-     * 搬出入計画の印刷プレビュー画面用データを取得
-     *
-     * @param  array<int, int>|null  $equipmentIds
-     * @return array<string, mixed>
-     */
-    public function getLogisticsPrintPreviewData(
-        Timetable $timetable,
-        string $format = 'all',
-        ?string $typeFilter = null,
-        ?int $laneFilter = null,
-        ?string $phaseFilter = null,
-        ?array $equipmentIds = null
-    ): array {
-        return [
-            'timetable' => $timetable,
-            'format' => $format,
-            'typeFilter' => $typeFilter,
-            'laneFilter' => $laneFilter,
-            'phaseFilter' => $phaseFilter,
-            'equipmentIds' => $equipmentIds,
-            'equipments' => $this->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable, $equipmentIds),
-            'checklistPlans' => $this->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter, $timetable, $equipmentIds),
-            'locationsData' => $this->getLocationsStatusData($timetable),
-            'onsiteNightPlans' => $this->getOnsiteNightStoragePlans($timetable),
-            'eventCompanyPlans' => $this->getEventCompanyScheduleData($timetable),
-            'festivalDates' => $this->resolveFestivalDates(),
-            'lanes' => $this->laneRepository->getOrderedWithLeadForTimetable($timetable),
-        ];
-    }
-
-    /**
      * 資材別フロー一覧用のデータ取得
      *
      * @param  array<int, int>|null  $equipmentIds
      * @return Collection<int, Equipment>
      */
-    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection
+    public function getEquipmentsFlowData(?string $type = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection
     {
-        return $this->planRepository->getEquipmentsFlowData($type, $laneId, $timetable, $equipmentIds);
-    }
-
-    /**
-     * フェーズ別チェックリスト用のデータ取得
-     *
-     * @param  array<int, int>|null  $equipmentIds
-     * @return Collection<int, EquipmentLogisticsPlan>
-     */
-    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection
-    {
-        return $this->planRepository->getPhaseChecklistData($dayPhase, $laneId, $type, $timetable, $equipmentIds);
+        return $this->planRepository->getEquipmentsFlowData($type, $timetable, $equipmentIds);
     }
 
     /**
@@ -448,26 +401,6 @@ class EquipmentLogisticsService
         }
 
         return $result;
-    }
-
-    /**
-     * 会場内現地据置・テント内夜間保管（action_type = 'night_storage' かつ to_location_id = null）のデータ取得
-     *
-     * @return Collection<int, EquipmentLogisticsPlan>
-     */
-    public function getOnsiteNightStoragePlans(?Timetable $timetable = null): Collection
-    {
-        return $this->planRepository->getOnsiteNightStoragePlans($timetable);
-    }
-
-    /**
-     * イベント会社・立会スケジュール表用のデータ取得
-     *
-     * @return Collection<int, EquipmentLogisticsPlan>
-     */
-    public function getEventCompanyScheduleData(?Timetable $timetable = null): Collection
-    {
-        return $this->planRepository->getEventCompanyScheduleData($timetable);
     }
 
     /**

@@ -109,14 +109,6 @@ class NavigationPresenter
     }
 
     /**
-     * 搬出入指示書印刷メニューがアクティブか判定
-     */
-    public function isLogisticsPrintActive(): bool
-    {
-        return request()->routeIs('logistics.print') || request()->routeIs('timetables.logistics.print');
-    }
-
-    /**
      * 指定の運行計画が現在進行表で表示中のものか判定
      */
     public function isCurrentTimetable(Timetable $timetable): bool

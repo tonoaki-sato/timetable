@@ -3,7 +3,6 @@
 namespace App\Actions\Logistics;
 
 use App\Models\Timetable;
-use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Services\EquipmentLogisticsService;
 use App\Services\PdfService;
 use Illuminate\Http\Request;
@@ -14,7 +13,6 @@ class DownloadEquipmentLogisticsPdfAction
     public function __construct(
         protected PdfService $pdfService,
         protected EquipmentLogisticsService $logisticsService,
-        protected LaneRepositoryInterface $laneRepository
     ) {}
 
     /**
@@ -22,45 +20,33 @@ class DownloadEquipmentLogisticsPdfAction
      */
     public function execute(Request $request, ?Timetable $timetable = null): Response
     {
-        $format = $request->query('format', 'all');
-        $typeFilter = $request->query('type');
-        $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
-        $phaseFilter = $request->query('phase');
-        $equipmentIds = $this->logisticsService->parseEquipmentIds($request->input('equipment_ids'));
-
-        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable, $equipmentIds);
-        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter, $timetable, $equipmentIds);
-        $locationsData = $this->logisticsService->getLocationsStatusData($timetable);
-        $onsiteNightPlans = $this->logisticsService->getOnsiteNightStoragePlans($timetable);
-        $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData($timetable);
-        $festivalDates = $this->logisticsService->resolveFestivalDates();
-        $lanes = $timetable
-            ? $this->laneRepository->getOrderedWithLeadForTimetable($timetable)
-            : $this->laneRepository->getAllOrdered();
-
-        $selectedLane = $laneFilter ? $this->laneRepository->findById($laneFilter) : null;
-        $laneSuffix = $selectedLane ? '_'.preg_replace('/[^\p{L}\p{N}_-]+/u', '_', $selectedLane->name) : '';
-        $filename = "equipment_logistics_plan{$laneSuffix}_".now()->format('Ymd_His').'.pdf';
+        $viewData = $this->buildViewData($request, $timetable);
+        $filename = 'equipment_logistics_plan_'.now()->format('Ymd_His').'.pdf';
 
         return $this->pdfService->download(
             'pdf.equipment_logistics',
-            compact(
-                'format',
-                'typeFilter',
-                'laneFilter',
-                'phaseFilter',
-                'equipmentIds',
-                'equipments',
-                'checklistPlans',
-                'locationsData',
-                'onsiteNightPlans',
-                'eventCompanyPlans',
-                'festivalDates',
-                'lanes',
-                'selectedLane'
-            ),
+            $viewData,
             $filename,
             'landscape'
         );
+    }
+
+    /**
+     * 搬出入指示書PDF出力用ビューデータを構築
+     *
+     * @return array<string, mixed>
+     */
+    public function buildViewData(Request $request, ?Timetable $timetable = null): array
+    {
+        $typeFilter = $request->query('type');
+        $equipmentIds = $this->logisticsService->parseEquipmentIds($request->input('equipment_ids'));
+
+        return [
+            'typeFilter' => $typeFilter,
+            'equipmentIds' => $equipmentIds,
+            'equipments' => $this->logisticsService->getEquipmentsFlowData($typeFilter, $timetable, $equipmentIds),
+            'locationsData' => $this->logisticsService->getLocationsStatusData($timetable),
+            'festivalDates' => $this->logisticsService->resolveFestivalDates(),
+        ];
     }
 }

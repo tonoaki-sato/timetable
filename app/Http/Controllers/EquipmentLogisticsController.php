@@ -57,7 +57,7 @@ class EquipmentLogisticsController extends Controller
         $selectedEquipmentIds = $this->logisticsService->parseEquipmentIds($request->input('equipment_ids'));
 
         $viewData = $this->logisticsService->getLogisticsIndexViewData($timetable, $selectedEquipmentIds);
-        $printQuery = ['timetable' => $timetable, 'preview' => 1];
+        $printQuery = ['timetable' => $timetable];
         if (! empty($selectedEquipmentIds)) {
             $printQuery['equipment_ids'] = implode(',', $selectedEquipmentIds);
         }
@@ -67,40 +67,11 @@ class EquipmentLogisticsController extends Controller
     }
 
     /**
-     * 指定タイムテーブルにおけるA4横 搬出入指示書兼チェックリストPDFダウンロード（またはプレビュー表示）
+     * 指定タイムテーブルにおけるA4横 搬出入指示書兼チェックリストPDFダウンロード
      */
-    public function print(Timetable $timetable, Request $request): Response|View
+    public function print(Timetable $timetable, Request $request): Response
     {
         $this->authorize('viewAny', Equipment::class);
-
-        if ($request->boolean('preview')) {
-            $format = (string) $request->query('format', 'all');
-            $typeFilter = $request->query('type');
-            $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
-            $phaseFilter = $request->query('phase');
-            $equipmentIds = $this->logisticsService->parseEquipmentIds($request->input('equipment_ids'));
-
-            $viewData = $this->logisticsService->getLogisticsPrintPreviewData(
-                $timetable,
-                $format,
-                $typeFilter,
-                $laneFilter,
-                $phaseFilter,
-                $equipmentIds
-            );
-
-            $backParams = ['timetable' => $timetable];
-            if (! empty($equipmentIds)) {
-                $backParams['equipment_ids'] = implode(',', $equipmentIds);
-            }
-
-            $viewData['backUrl'] = route('timetables.logistics.index', $backParams);
-            $viewData['downloadUrl'] = route('timetables.logistics.print', array_merge(['timetable' => $timetable], $request->except('preview')));
-            $viewData['formAction'] = route('timetables.logistics.print', $timetable);
-            $viewData['resetUrl'] = route('timetables.logistics.print', ['timetable' => $timetable, 'preview' => 1, 'format' => $format]);
-
-            return view('logistics.print', $viewData);
-        }
 
         return $this->downloadLogisticsPdfAction->execute($request, $timetable);
     }
@@ -109,7 +80,7 @@ class EquipmentLogisticsController extends Controller
     // 既存互換フォールバックアクション群
     // ==========================================
 
-    public function printLegacy(Request $request): Response|View
+    public function printLegacy(Request $request): Response
     {
         $timetable = $this->resolveFallbackTimetable($request);
 

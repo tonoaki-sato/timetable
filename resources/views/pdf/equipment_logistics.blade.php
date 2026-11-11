@@ -194,9 +194,6 @@
         <tr>
             <td>
                 <span class="header-title">資材搬出入・中継・夜間保管計画書</span>
-                @if($laneFilter && ($curLane = $lanes->firstWhere('id', $laneFilter)))
-                    <span class="filter-tag">【{{ $curLane->name }} 担当分】</span>
-                @endif
                 @if($typeFilter)
                     <span class="filter-tag">【区分: {{ $typeFilter }}】</span>
                 @endif
@@ -241,7 +238,7 @@
         <thead>
             <tr>
                 <th class="col-eq">資材名・数量</th>
-                <th class="col-type">区分 / 担当班</th>
+                <th class="col-type">区分</th>
                 <th class="col-phase">事前・前日 (準備)</th>
                 <th class="col-phase">1日目 朝 (設置)</th>
                 <th class="col-phase">1日目 夜 (保管)</th>

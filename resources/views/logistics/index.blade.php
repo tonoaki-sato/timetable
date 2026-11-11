@@ -22,10 +22,10 @@
 
         <x-slot:actions>
             <a href="{{ $printUrl }}"
-               id="btn-logistics-pdf-preview"
-               data-base-print-url="{{ route('timetables.logistics.print', ['timetable' => $timetable, 'preview' => 1]) }}"
+               id="btn-download-logistics-pdf"
+               data-base-print-url="{{ route('timetables.logistics.print', $timetable) }}"
                class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0"
-               title="画面で選択中の資材を反映した搬出入指示書兼現場チェックリストをPDFプレビュー表示">
+               title="画面で選択中の資材を反映した搬出入指示書兼現場チェックリストPDFをダウンロード">
                 <span>📄</span>
                 <span>搬出入指示書PDF</span>
             </a>

@@ -21,7 +21,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
     }
 
     #[Override]
-    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection
+    public function getEquipmentsFlowData(?string $type = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection
     {
         if ($equipmentIds === []) {
             return new Collection;
@@ -54,40 +54,6 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
     }
 
     #[Override]
-    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection
-    {
-        if ($equipmentIds === []) {
-            return new Collection;
-        }
-
-        $query = EquipmentLogisticsPlan::with([
-            'equipment',
-            'fromLocationModel.schedules',
-            'toLocationModel.schedules',
-            'witnessStaff',
-        ])
-            ->ordered();
-
-        if ($timetable) {
-            $query->where('timetable_id', $timetable->id);
-        }
-
-        if ($dayPhase) {
-            $query->where('day_phase', $dayPhase);
-        }
-
-        if ($type) {
-            $query->whereHas('equipment', fn ($q) => $q->where('type', $type));
-        }
-
-        if ($equipmentIds !== null) {
-            $query->whereIn('equipment_id', $equipmentIds);
-        }
-
-        return $query->get();
-    }
-
-    #[Override]
     public function getByToLocationIdsWithEquipment(array $locationIds, ?Timetable $timetable = null): Collection
     {
         if (empty($locationIds)) {
@@ -96,39 +62,6 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
 
         $query = EquipmentLogisticsPlan::with(['equipment'])
             ->whereIn('to_location_id', $locationIds)
-            ->ordered();
-
-        if ($timetable) {
-            $query->where('timetable_id', $timetable->id);
-        }
-
-        return $query->get();
-    }
-
-    #[Override]
-    public function getOnsiteNightStoragePlans(?Timetable $timetable = null): Collection
-    {
-        $query = EquipmentLogisticsPlan::with(['equipment', 'witnessStaff'])
-            ->where('action_type', 'night_storage')
-            ->whereNull('to_location_id')
-            ->ordered();
-
-        if ($timetable) {
-            $query->where('timetable_id', $timetable->id);
-        }
-
-        return $query->get();
-    }
-
-    #[Override]
-    public function getEventCompanyScheduleData(?Timetable $timetable = null): Collection
-    {
-        $query = EquipmentLogisticsPlan::with(['equipment', 'witnessStaff', 'fromLocationModel', 'toLocationModel'])
-            ->where(function ($q): void {
-                $q->where('operator_type', 'event_company')
-                    ->orWhere('witness_required', true)
-                    ->orWhereHas('equipment', fn ($sub) => $sub->where('type', 'rental'));
-            })
             ->ordered();
 
         if ($timetable) {
