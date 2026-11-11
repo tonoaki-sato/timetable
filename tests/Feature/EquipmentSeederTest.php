@@ -47,6 +47,18 @@ class EquipmentSeederTest extends TestCase
         $this->assertSame(10, $cone->display_order);
         $this->assertCount(9, $cone->plans);
 
+        $firstConePlan = $cone->plans->firstWhere('title', '前日倉庫出し');
+        $this->assertNotNull($firstConePlan);
+        $this->assertSame('2027-10-09', $firstConePlan->target_date?->format('Y-m-d'));
+        $this->assertSame('13:00', $firstConePlan->start_time);
+        $this->assertSame('15:00', $firstConePlan->end_time);
+
+        $lastConePlan = $cone->plans->firstWhere('title', '番所地下倉庫格納完了');
+        $this->assertNotNull($lastConePlan);
+        $this->assertSame('2027-10-10', $lastConePlan->target_date?->format('Y-m-d'));
+        $this->assertSame('18:00', $lastConePlan->start_time);
+        $this->assertSame('19:00', $lastConePlan->end_time);
+
         $equipment = Equipment::with('plans')->where('name', '足踏み式給水設備')->first();
         $this->assertNotNull($equipment);
         $this->assertSame('rental', $equipment->type);

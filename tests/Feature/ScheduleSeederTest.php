@@ -38,6 +38,11 @@ class ScheduleSeederTest extends TestCase
             'title' => '第1回幹事会（年間日程案策定）',
             'category' => 'committee',
         ]);
+        $this->assertDatabaseHas('schedules', [
+            'title' => '幹事会反省会 in居酒屋',
+            'category' => 'committee',
+            'status' => 'completed',
+        ]);
 
         // 全レコードのカテゴリとステータスが定義定数に合致していること
         $validCategories = array_keys(Schedule::CATEGORIES);

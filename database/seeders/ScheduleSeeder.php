@@ -29,7 +29,7 @@ class ScheduleSeeder extends Seeder
                 'start_time' => '19:00',
                 'end_time' => '20:00',
                 'location' => '番所',
-                'status' => 'planned',
+                'status' => 'completed',
                 'staff_id' => $yamamichi?->id,
                 'description' => null,
                 'created_by' => $admin->id,
