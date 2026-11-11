@@ -284,15 +284,16 @@ class EquipmentLogisticsTest extends TestCase
         $filteredResponse->assertStatus(200);
         $filteredResponse->assertSee('id="logistics-plan-create-modal"', false);
         $filteredResponse->assertSee('新規計画モーダル用パイプ椅子');
+        $filteredResponse->assertDontSee('id="new_plan_staging_location_id"', false);
+        $filteredResponse->assertDontSee('id="new_plan_night_location_1_id"', false);
+        $filteredResponse->assertDontSee('id="new_plan_night_location_2_id"', false);
+        $filteredResponse->assertDontSee('id="new_plan_pattern_witness_staff_id"', false);
 
         // 一覧画面からパターン一括適用を実行すると一覧画面へリダイレクトし、全ステップが生成されること
         $applyResponse = $this->from(route('timetables.logistics.index', $this->timetable1))
             ->post(route('timetables.logistics.apply-template', [$this->timetable1, $committeeEquipment]), [
                 'pattern_id' => $this->pattern->id,
                 'override_existing' => '1',
-                'staging_location_id' => $this->locationTaxOffice->id,
-                'night_location_1_id' => $this->locationTaxOffice->id,
-                'night_location_2_id' => $this->locationKitagawa->id,
             ]);
 
         $applyResponse->assertRedirect(route('timetables.logistics.index', $this->timetable1));
