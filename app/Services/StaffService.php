@@ -8,14 +8,17 @@ use App\DTOs\Staff\MyShiftViewDataDTO;
 use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\Staff;
+use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Repositories\Contracts\LaneRequestRepositoryInterface;
+use App\Repositories\Contracts\StaffCheckInRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use Carbon\Carbon;
+use DomainException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -29,15 +32,19 @@ class StaffService
 
     protected LaneRequestRepositoryInterface $laneRequestRepository;
 
+    protected StaffCheckInRepositoryInterface $staffCheckInRepository;
+
     public function __construct(
         protected StaffRepositoryInterface $staffRepository,
         ?TaskStaffAssignmentRepositoryInterface $assignmentRepository = null,
         ?TimetableTaskRepositoryInterface $taskRepository = null,
         ?LaneRequestRepositoryInterface $laneRequestRepository = null,
+        ?StaffCheckInRepositoryInterface $staffCheckInRepository = null,
     ) {
         $this->assignmentRepository = $assignmentRepository ?? app(TaskStaffAssignmentRepositoryInterface::class);
         $this->taskRepository = $taskRepository ?? app(TimetableTaskRepositoryInterface::class);
         $this->laneRequestRepository = $laneRequestRepository ?? app(LaneRequestRepositoryInterface::class);
+        $this->staffCheckInRepository = $staffCheckInRepository ?? app(StaffCheckInRepositoryInterface::class);
     }
 
     /**
@@ -172,15 +179,21 @@ class StaffService
      */
     public function getMyShiftViewData(Staff $staff, ?string $timetableFilter = null): MyShiftViewDataDTO
     {
-        $allLedLanes = $this->staffRepository->loadShiftRelationsAndGetLedLanes($staff);
+        // マイシフト画面では運行完了（completed）の運行計画を非表示とする
+        $allLedLanes = $this->staffRepository->loadShiftRelationsAndGetLedLanes($staff)
+            ->filter(fn (Lane $lane): bool => $lane->timetable !== null && ! $lane->timetable->isCompleted())
+            ->values();
 
-        $allAssignments = $staff->assignments->sortBy([
-            fn (TaskStaffAssignment $a, TaskStaffAssignment $b): int => ($a->task?->timetable?->target_date?->format('Y-m-d') ?? '9999-12-31')
-                <=> ($b->task?->timetable?->target_date?->format('Y-m-d') ?? '9999-12-31'),
-            fn (TaskStaffAssignment $a, TaskStaffAssignment $b): int => ($a->task?->start_time ?? '99:99:99')
-                <=> ($b->task?->start_time ?? '99:99:99'),
-            fn (TaskStaffAssignment $a, TaskStaffAssignment $b): int => $a->id <=> $b->id,
-        ])->values();
+        $allAssignments = $staff->assignments
+            ->filter(fn (TaskStaffAssignment $a): bool => $a->task?->timetable !== null && ! $a->task->timetable->isCompleted())
+            ->sortBy([
+                fn (TaskStaffAssignment $a, TaskStaffAssignment $b): int => ($a->task?->timetable?->target_date?->format('Y-m-d') ?? '9999-12-31')
+                    <=> ($b->task?->timetable?->target_date?->format('Y-m-d') ?? '9999-12-31'),
+                fn (TaskStaffAssignment $a, TaskStaffAssignment $b): int => ($a->task?->start_time ?? '99:99:99')
+                    <=> ($b->task?->start_time ?? '99:99:99'),
+                fn (TaskStaffAssignment $a, TaskStaffAssignment $b): int => $a->id <=> $b->id,
+            ])
+            ->values();
 
         $timetables = $this->collectSortedTimetablesForShift($allAssignments, $allLedLanes);
 
@@ -188,6 +201,19 @@ class StaffService
         $activeTimetable = $showAllTimetables
             ? null
             : $this->resolveSelectedTimetable($timetables, $timetableFilter);
+
+        $canOperateActiveTimetable = ! $showAllTimetables
+            && $activeTimetable !== null
+            && $activeTimetable->canOperateOnMyShift();
+        $canCheckInActiveTimetable = $canOperateActiveTimetable;
+        $isBeforeOperationDayActiveTimetable = ! $showAllTimetables
+            && $activeTimetable !== null
+            && ! $activeTimetable->canOperateOnMyShift();
+        $allTimetablesReadOnly = $timetables->isNotEmpty()
+            && $timetables->every(fn (Timetable $t): bool => ! $t->canOperateOnMyShift());
+        $activeTimetableCheckIn = $canCheckInActiveTimetable
+            ? $staff->checkInForTimetable($activeTimetable->id)
+            : null;
 
         $timetableFilterValue = $showAllTimetables
             ? 'all'
@@ -225,6 +251,11 @@ class StaffService
             staff: $staff,
             timetableOptions: $timetableOptions,
             activeTimetable: $activeTimetable,
+            activeTimetableCheckIn: $activeTimetableCheckIn,
+            canCheckInActiveTimetable: $canCheckInActiveTimetable,
+            canOperateActiveTimetable: $canOperateActiveTimetable,
+            isBeforeOperationDayActiveTimetable: $isBeforeOperationDayActiveTimetable,
+            allTimetablesReadOnly: $allTimetablesReadOnly,
             showAllTimetables: $showAllTimetables,
             timetableFilterValue: $timetableFilterValue,
             assignments: $assignments,
@@ -254,14 +285,14 @@ class StaffService
 
         foreach ($assignments as $assignment) {
             $timetable = $assignment->task?->timetable;
-            if ($timetable && ! $byId->has($timetable->id)) {
+            if ($timetable && ! $timetable->isCompleted() && ! $byId->has($timetable->id)) {
                 $byId->put($timetable->id, $timetable);
             }
         }
 
         foreach ($ledLanes as $lane) {
             $timetable = $lane->timetable;
-            if ($timetable && ! $byId->has($timetable->id)) {
+            if ($timetable && ! $timetable->isCompleted() && ! $byId->has($timetable->id)) {
                 $byId->put($timetable->id, $timetable);
             }
         }
@@ -449,25 +480,29 @@ class StaffService
     }
 
     /**
-     * 当日現場到着チェックイン（打刻および当日第1タスク出欠連動）
+     * 運行情報ごとの現場到着チェックイン（打刻および対象運行計画の第1タスク出欠連動）
      */
-    public function checkInStaff(Staff $staff): bool
+    public function checkInStaff(Staff $staff, Timetable $timetable): StaffCheckIn
     {
-        if ($staff->checked_in_at === null) {
-            $this->staffRepository->update($staff, [
-                'checked_in_at' => now(),
-            ]);
-        }
+        $this->ensureTimetableOperableOnMyShift($timetable, '現場到着の受付');
 
-        // 当日運行日のタスクの中で最も早いタスクの出欠を checked_in に連動更新
-        $todayDate = now()->format('Y-m-d');
-        $firstAssignment = $this->assignmentRepository->findFirstTodayAssignmentForStaff($staff->id, $todayDate);
+        $checkIn = $this->staffCheckInRepository->firstOrCreateForTimetableAndStaff(
+            $timetable->id,
+            $staff->id,
+            now()
+        );
+
+        // 対象運行計画のタスクの中で最も早いタスクの出欠を checked_in に連動更新
+        $firstAssignment = $this->assignmentRepository->findFirstAssignmentForStaffInTimetable(
+            $staff->id,
+            $timetable->id
+        );
 
         if ($firstAssignment && $firstAssignment->attendance_status === 'assigned') {
             $this->assignmentRepository->update($firstAssignment, ['attendance_status' => 'checked_in']);
         }
 
-        return true;
+        return $checkIn;
     }
 
     /**
@@ -480,6 +515,9 @@ class StaffService
             return false;
         }
 
+        $assignment->loadMissing('task.timetable');
+        $this->ensureTimetableOperableOnMyShift($assignment->task?->timetable, 'タスク進捗の更新');
+
         return $this->assignmentRepository->update($assignment, ['attendance_status' => $status]);
     }
 
@@ -488,6 +526,9 @@ class StaffService
      */
     public function updateLaneTaskStatus(TimetableTask $task, string $status): bool
     {
+        $task->loadMissing('timetable');
+        $this->ensureTimetableOperableOnMyShift($task->timetable, '班タスクのステータス更新');
+
         return $this->taskRepository->update($task, ['status' => $status]);
     }
 
@@ -498,6 +539,9 @@ class StaffService
      */
     public function createLaneRequestFromLeader(Lane $lane, Staff $staff, array $validated): LaneRequest
     {
+        $lane->loadMissing('timetable');
+        $this->ensureTimetableOperableOnMyShift($lane->timetable, '管理者への要請・申請');
+
         return $this->laneRequestRepository->create([
             'timetable_id' => $lane->timetable_id,
             'lane_id' => $lane->id,
@@ -509,6 +553,26 @@ class StaffService
             'reason' => $validated['reason'] ?? null,
             'status' => 'pending',
         ]);
+    }
+
+    /**
+     * 対象運行計画がマイシフト上で操作可能（運行日当日以降かつ未完了）であることを検証
+     *
+     * @throws DomainException
+     */
+    protected function ensureTimetableOperableOnMyShift(?Timetable $timetable, string $actionLabel): void
+    {
+        if (! $timetable) {
+            throw new DomainException("対象の運行計画が特定できないため、{$actionLabel}は実行できません。");
+        }
+
+        if ($timetable->isCompleted()) {
+            throw new DomainException("運行完了した運行計画では{$actionLabel}を行えません。");
+        }
+
+        if (! $timetable->hasReachedOperationDay()) {
+            throw new DomainException("運行日当日までは閲覧のみのため、{$actionLabel}は行えません。");
+        }
     }
 
     /**

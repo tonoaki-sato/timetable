@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Staff;
+use App\Models\StaffCheckIn;
+use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -156,6 +158,14 @@ class StaffManagementTest extends TestCase
         $staff = Staff::factory()->selfRegistered()->create([
             'name' => '山田 太郎',
         ]);
+        $timetable = Timetable::factory()->create([
+            'name' => '第35回本祭 1日目',
+        ]);
+        StaffCheckIn::create([
+            'timetable_id' => $timetable->id,
+            'staff_id' => $staff->id,
+            'checked_in_at' => now()->setTime(8, 30),
+        ]);
 
         $response = $this->get(route('staff.index'));
         $response->assertStatus(200);
@@ -164,6 +174,8 @@ class StaffManagementTest extends TestCase
         $showResponse = $this->get(route('staff.show', $staff));
         $showResponse->assertStatus(200);
         $showResponse->assertSee('セルフ登録');
+        $showResponse->assertSee('第35回本祭 1日目');
+        $showResponse->assertSee('08:30');
     }
 
     /**

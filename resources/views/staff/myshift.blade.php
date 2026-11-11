@@ -27,20 +27,29 @@
                 </div>
             </div>
 
-            <!-- 到着チェックインエリア -->
+            <!-- 到着チェックイン／閲覧専用ステータスエリア -->
             <div class="shrink-0">
-                @if($staff->is_checked_in)
-                    <div class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                        <span>✅</span>
-                        <span>受付済 ({{ $staff->checked_in_at->format('H:i') }})</span>
+                @if($canCheckInActiveTimetable && $activeTimetable)
+                    @if($activeTimetableCheckIn)
+                        <div class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            <span>✅</span>
+                            <span>受付済 ({{ $activeTimetableCheckIn->checked_in_at->format('H:i') }})</span>
+                        </div>
+                    @else
+                        <button type="button" id="checkInBtn"
+                                data-endpoint="{{ route('staff.myshift.checkin', ['token' => $staff->access_token], false) }}"
+                                data-timetable-id="{{ $activeTimetable->id }}"
+                                class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-950/60 transition transform active:scale-95 flex items-center space-x-1 cursor-pointer">
+                            <span>📍</span>
+                            <span>現場到着（受付）</span>
+                        </button>
+                    @endif
+                @elseif($isBeforeOperationDayActiveTimetable || ($showAllTimetables && $allTimetablesReadOnly))
+                    <div id="readOnlyHeaderBadge"
+                         class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800/90 text-slate-300 border border-slate-700">
+                        <span>👀</span>
+                        <span>運行前・閲覧専用</span>
                     </div>
-                @else
-                    <button type="button" id="checkInBtn"
-                            data-endpoint="{{ route('staff.myshift.checkin', ['token' => $staff->access_token], false) }}"
-                            class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-950/60 transition transform active:scale-95 flex items-center space-x-1 cursor-pointer">
-                        <span>📍</span>
-                        <span>現場到着（受付）</span>
-                    </button>
                 @endif
             </div>
         </div>
@@ -94,6 +103,13 @@
             </div>
         @endif
 
+        @if(session('error'))
+            <div class="p-3.5 bg-rose-950/80 border border-rose-500/50 rounded-2xl text-rose-300 text-xs flex items-center space-x-2">
+                <span>⚠️</span>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
         <div id="myshiftToast" class="hidden p-3 bg-emerald-950/90 border border-emerald-500/50 rounded-2xl text-emerald-200 text-xs font-bold flex items-center justify-between gap-2 shadow-lg">
             <span id="myshiftToastText"></span>
         </div>
@@ -138,6 +154,23 @@
                 <!-- パネル1: マイシフト（個人タイムライン）       -->
                 <!-- ========================================== -->
                 <section id="myshiftModePanel" data-main-panel="shift" class="space-y-3.5">
+
+                    @if($isBeforeOperationDayActiveTimetable || ($showAllTimetables && $allTimetablesReadOnly))
+                        <div id="myshiftReadOnlyBanner"
+                             class="p-3.5 rounded-2xl bg-slate-900/95 border border-indigo-500/40 text-xs text-slate-200 flex items-start gap-2.5 shadow-sm">
+                            <span class="text-base shrink-0 leading-none mt-0.5">👀</span>
+                            <div class="space-y-0.5 leading-relaxed">
+                                <div class="font-bold text-indigo-300">運行日当日までは閲覧専用です</div>
+                                <p class="text-slate-400">
+                                    @if($activeTimetable?->target_date)
+                                        運行予定・担当内容・配置メンバーを事前に確認できます。{{ $activeTimetable->target_date->format('n月j日') }}の運行日当日から、現場到着の受付・作業進捗の報告・班長要請が可能になります。
+                                    @else
+                                        運行予定・担当内容を事前に確認できます。運行日当日から現場到着の受付・作業進捗の報告・班長要請が可能になります。
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+                    @endif
 
                     <!-- 運行日サマリー & 進捗バー -->
                     <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5 shadow-sm">
@@ -256,6 +289,7 @@
                                             $isCurrent = $assignment->isCurrent($currentTask);
                                             $isNext = $assignment->isNext($nextTask);
                                             $isCompleted = $assignment->is_completed;
+                                            $canOperateTask = (bool) $task?->timetable?->canOperateOnMyShift();
                                             $coWorkers = $task
                                                 ? $task->assignments->filter(fn ($a) => $a->attendance_status !== 'absent')
                                                 : collect();
@@ -344,7 +378,7 @@
                                                 </div>
 
                                                 <!-- 現在進行中タスクのクイック操作ボタン (着手・完了) -->
-                                                @if($isCurrent && $assignment->attendance_status !== 'completed')
+                                                @if($canOperateTask && $isCurrent && $assignment->attendance_status !== 'completed')
                                                     <div class="pt-2.5 border-t border-indigo-500/30 flex items-center justify-between text-xs">
                                                         <div class="flex items-center space-x-1.5">
                                                             <span class="text-indigo-300 text-[11px]">出欠・進捗:</span>
@@ -458,6 +492,9 @@
                         @endif
 
                         @foreach($ledLanes as $ledLane)
+                            @php
+                                $canOperateLedLane = (bool) $ledLane->timetable?->canOperateOnMyShift();
+                            @endphp
                             <div data-leader-lane-panel="{{ $ledLane->id }}"
                                  class="{{ $loop->first ? '' : 'hidden ' }}p-4 rounded-2xl bg-gradient-to-br from-amber-950/80 via-slate-900 to-slate-900 border border-amber-500/50 shadow-xl space-y-4">
                                 <div class="flex items-start justify-between gap-2 border-b border-amber-500/30 pb-3">
@@ -477,6 +514,19 @@
                                         <div>タスク: {{ $ledLane->tasks->count() }}件</div>
                                     </div>
                                 </div>
+
+                                @if(! $canOperateLedLane)
+                                    <div class="p-3 rounded-xl bg-slate-950/70 border border-amber-500/30 text-[11px] text-amber-200/90 flex items-start gap-2 leading-relaxed">
+                                        <span class="shrink-0">👀</span>
+                                        <span>
+                                            @if($ledLane->timetable?->target_date)
+                                                {{ $ledLane->timetable->target_date->format('n月j日') }}の運行日当日までは閲覧専用です。班タスクのステータス変更および人員応援・機材申請は当日から行えます。
+                                            @else
+                                                運行日当日までは閲覧専用です。班タスクのステータス変更および人員応援・機材申請は当日から行えます。
+                                            @endif
+                                        </span>
+                                    </div>
+                                @endif
 
                                 <!-- 1. 班のタスク管理（進捗・人員充足確認） -->
                                 <div class="space-y-2">
@@ -507,17 +557,23 @@
                                                         <span class="text-[11px] text-slate-400 leading-relaxed">
                                                             班員: {{ $laneTask->assignments->map(fn($a) => $a->staff?->name . '(' . ($a->role_description ?: '担当') . ')')->implode('、') ?: '未配置' }}
                                                         </span>
-                                                        <form action="{{ route('staff.myshift.lane-task-status', ['token' => $staff->access_token, 'task' => $laneTask->id], false) }}" method="POST" class="shrink-0">
-                                                            @csrf
-                                                            <select name="status"
-                                                                    data-leader-task-select
-                                                                    data-endpoint="{{ route('staff.myshift.lane-task-status', ['token' => $staff->access_token, 'task' => $laneTask->id], false) }}"
-                                                                    class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[11px] font-bold text-slate-100 cursor-pointer">
-                                                                @foreach(\App\Models\TimetableTask::STATUSES as $stKey => $stLabel)
-                                                                    <option value="{{ $stKey }}" {{ $laneTask->status === $stKey ? 'selected' : '' }}>{{ $stLabel }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </form>
+                                                        @if($canOperateLedLane)
+                                                            <form action="{{ route('staff.myshift.lane-task-status', ['token' => $staff->access_token, 'task' => $laneTask->id], false) }}" method="POST" class="shrink-0">
+                                                                @csrf
+                                                                <select name="status"
+                                                                        data-leader-task-select
+                                                                        data-endpoint="{{ route('staff.myshift.lane-task-status', ['token' => $staff->access_token, 'task' => $laneTask->id], false) }}"
+                                                                        class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[11px] font-bold text-slate-100 cursor-pointer">
+                                                                    @foreach(\App\Models\TimetableTask::STATUSES as $stKey => $stLabel)
+                                                                        <option value="{{ $stKey }}" {{ $laneTask->status === $stKey ? 'selected' : '' }}>{{ $stLabel }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </form>
+                                                        @else
+                                                            <span class="shrink-0 px-2 py-1 rounded-lg bg-slate-800/80 border border-slate-700 text-[11px] font-bold text-slate-300">
+                                                                {{ $laneTask->status_label }}
+                                                            </span>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             @endforeach
@@ -525,77 +581,79 @@
                                     @endif
                                 </div>
 
-                                <!-- 2. 管理者への要請・申請（サブタブ切替） -->
-                                <div class="pt-2 border-t border-amber-500/30 space-y-2.5" data-leader-req-group="{{ $ledLane->id }}">
-                                    <div class="grid grid-cols-2 gap-1.5">
-                                        <button type="button"
-                                                data-leader-req-tab="staffing"
-                                                data-lane-id="{{ $ledLane->id }}"
-                                                class="leaderReqTabBtn py-1.5 px-2.5 rounded-xl text-xs font-bold border transition cursor-pointer bg-amber-500/20 text-amber-200 border-amber-500/50">
-                                            🙋 人員応援要請
-                                        </button>
-                                        <button type="button"
-                                                data-leader-req-tab="equipment"
-                                                data-lane-id="{{ $ledLane->id }}"
-                                                class="leaderReqTabBtn py-1.5 px-2.5 rounded-xl text-xs font-bold border transition cursor-pointer bg-slate-900/90 text-slate-400 border-slate-800 hover:text-sky-200">
-                                            🧰 必要機材申請
-                                        </button>
+                                @if($canOperateLedLane)
+                                    <!-- 2. 管理者への要請・申請（サブタブ切替） -->
+                                    <div class="pt-2 border-t border-amber-500/30 space-y-2.5" data-leader-req-group="{{ $ledLane->id }}">
+                                        <div class="grid grid-cols-2 gap-1.5">
+                                            <button type="button"
+                                                    data-leader-req-tab="staffing"
+                                                    data-lane-id="{{ $ledLane->id }}"
+                                                    class="leaderReqTabBtn py-1.5 px-2.5 rounded-xl text-xs font-bold border transition cursor-pointer bg-amber-500/20 text-amber-200 border-amber-500/50">
+                                                🙋 人員応援要請
+                                            </button>
+                                            <button type="button"
+                                                    data-leader-req-tab="equipment"
+                                                    data-lane-id="{{ $ledLane->id }}"
+                                                    class="leaderReqTabBtn py-1.5 px-2.5 rounded-xl text-xs font-bold border transition cursor-pointer bg-slate-900/90 text-slate-400 border-slate-800 hover:text-sky-200">
+                                                🧰 必要機材申請
+                                            </button>
+                                        </div>
+
+                                        <!-- 人員応援要請フォーム -->
+                                        <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'lane' => $ledLane->id], false) }}"
+                                              method="POST"
+                                              data-async-lane-request
+                                              data-leader-req-panel="staffing"
+                                              data-lane-id="{{ $ledLane->id }}"
+                                              class="p-3.5 rounded-xl bg-slate-900/95 border border-slate-800 space-y-2.5">
+                                            @csrf
+                                            <input type="hidden" name="request_type" value="staffing">
+                                            <div class="text-xs font-bold text-amber-300">🙋 人員不足時の管理者への要請</div>
+                                            <div>
+                                                <select name="timetable_task_id" class="w-full px-2.5 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-200">
+                                                    <option value="">-- 対象タスク（班全体の場合は未選択） --</option>
+                                                    @foreach($ledLane->tasks as $laneTask)
+                                                        <option value="{{ $laneTask->id }}">{{ substr($laneTask->start_time, 0, 5) }} {{ $laneTask->title }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <input type="number" name="requested_count" value="1" min="1" max="50" required
+                                                       class="w-20 px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white" placeholder="人数">
+                                                <span class="text-xs text-slate-400">名応援要請</span>
+                                            </div>
+                                            <input type="text" name="reason" placeholder="理由（例: 欠員発生・設営遅れのため）"
+                                                   class="w-full px-2.5 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white">
+                                            <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition cursor-pointer">
+                                                管理者へ人員を要請する
+                                            </button>
+                                        </form>
+
+                                        <!-- 必要機材の申請フォーム -->
+                                        <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'lane' => $ledLane->id], false) }}"
+                                              method="POST"
+                                              data-async-lane-request
+                                              data-leader-req-panel="equipment"
+                                              data-lane-id="{{ $ledLane->id }}"
+                                              class="hidden p-3.5 rounded-xl bg-slate-900/95 border border-slate-800 space-y-2.5">
+                                            @csrf
+                                            <input type="hidden" name="request_type" value="equipment">
+                                            <div class="text-xs font-bold text-sky-300">🧰 必要機材の申請</div>
+                                            <input type="text" name="equipment_name" required placeholder="機材名（例: カラーコーン、台車、給水タンク）"
+                                                   class="w-full px-2.5 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white">
+                                            <div class="flex items-center gap-2">
+                                                <input type="number" name="requested_count" value="1" min="1" max="100" required
+                                                       class="w-20 px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white" placeholder="数量">
+                                                <span class="text-xs text-slate-400">個 / 台</span>
+                                            </div>
+                                            <input type="text" name="reason" placeholder="受け渡し場所・用途メモ"
+                                                   class="w-full px-2.5 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white">
+                                            <button type="submit" class="w-full py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 rounded-xl text-xs font-bold transition cursor-pointer">
+                                                管理者へ機材を申請する
+                                            </button>
+                                        </form>
                                     </div>
-
-                                    <!-- 人員応援要請フォーム -->
-                                    <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'lane' => $ledLane->id], false) }}"
-                                          method="POST"
-                                          data-async-lane-request
-                                          data-leader-req-panel="staffing"
-                                          data-lane-id="{{ $ledLane->id }}"
-                                          class="p-3.5 rounded-xl bg-slate-900/95 border border-slate-800 space-y-2.5">
-                                        @csrf
-                                        <input type="hidden" name="request_type" value="staffing">
-                                        <div class="text-xs font-bold text-amber-300">🙋 人員不足時の管理者への要請</div>
-                                        <div>
-                                            <select name="timetable_task_id" class="w-full px-2.5 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-200">
-                                                <option value="">-- 対象タスク（班全体の場合は未選択） --</option>
-                                                @foreach($ledLane->tasks as $laneTask)
-                                                    <option value="{{ $laneTask->id }}">{{ substr($laneTask->start_time, 0, 5) }} {{ $laneTask->title }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <input type="number" name="requested_count" value="1" min="1" max="50" required
-                                                   class="w-20 px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white" placeholder="人数">
-                                            <span class="text-xs text-slate-400">名応援要請</span>
-                                        </div>
-                                        <input type="text" name="reason" placeholder="理由（例: 欠員発生・設営遅れのため）"
-                                               class="w-full px-2.5 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white">
-                                        <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition cursor-pointer">
-                                            管理者へ人員を要請する
-                                        </button>
-                                    </form>
-
-                                    <!-- 必要機材の申請フォーム -->
-                                    <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'lane' => $ledLane->id], false) }}"
-                                          method="POST"
-                                          data-async-lane-request
-                                          data-leader-req-panel="equipment"
-                                          data-lane-id="{{ $ledLane->id }}"
-                                          class="hidden p-3.5 rounded-xl bg-slate-900/95 border border-slate-800 space-y-2.5">
-                                        @csrf
-                                        <input type="hidden" name="request_type" value="equipment">
-                                        <div class="text-xs font-bold text-sky-300">🧰 必要機材の申請</div>
-                                        <input type="text" name="equipment_name" required placeholder="機材名（例: カラーコーン、台車、給水タンク）"
-                                               class="w-full px-2.5 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white">
-                                        <div class="flex items-center gap-2">
-                                            <input type="number" name="requested_count" value="1" min="1" max="100" required
-                                                   class="w-20 px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white" placeholder="数量">
-                                            <span class="text-xs text-slate-400">個 / 台</span>
-                                        </div>
-                                        <input type="text" name="reason" placeholder="受け渡し場所・用途メモ"
-                                               class="w-full px-2.5 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white">
-                                        <button type="submit" class="w-full py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 rounded-xl text-xs font-bold transition cursor-pointer">
-                                            管理者へ機材を申請する
-                                        </button>
-                                    </form>
-                                </div>
+                                @endif
 
                                 <!-- 送信済み要請・申請ステータス -->
                                 @if($ledLane->laneRequests->isNotEmpty())

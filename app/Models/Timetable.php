@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Database\Factories\TimetableFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -222,6 +223,44 @@ class Timetable extends Model
     public function logisticsPlans(): HasMany
     {
         return $this->hasMany(EquipmentLogisticsPlan::class)->ordered();
+    }
+
+    /**
+     * 紐づくスタッフ到着チェックイン一覧とのリレーション
+     */
+    public function staffCheckIns(): HasMany
+    {
+        return $this->hasMany(StaffCheckIn::class);
+    }
+
+    /**
+     * 運行完了状態かどうか
+     */
+    public function isCompleted(): bool
+    {
+        return $this->status === 'completed';
+    }
+
+    /**
+     * 運行日当日に到達しているか判定（target_date <= 本日）
+     */
+    public function hasReachedOperationDay(?Carbon $now = null): bool
+    {
+        if (! $this->target_date) {
+            return false;
+        }
+
+        $todayDate = ($now ?? now())->format('Y-m-d');
+
+        return $this->target_date->format('Y-m-d') <= $todayDate;
+    }
+
+    /**
+     * マイシフト画面上で現場操作（到着受付・進捗報告・班長要請）が可能か判定
+     */
+    public function canOperateOnMyShift(?Carbon $now = null): bool
+    {
+        return ! $this->isCompleted() && $this->hasReachedOperationDay($now);
     }
 
     /**

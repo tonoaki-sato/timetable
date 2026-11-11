@@ -145,7 +145,6 @@ class ContentSecurityPolicyTest extends TestCase
         $leadStaff = Staff::factory()->create([
             'name' => '班長 スタッフ',
             'is_active' => true,
-            'checked_in_at' => null, // 未チェックイン -> 到着ボタンが表示され data-endpoint が出力される
         ]);
 
         $lane = Lane::factory()->create([
@@ -199,5 +198,46 @@ class ContentSecurityPolicyTest extends TestCase
         $this->assertStringContainsString('data-endpoint="/my/shift/', $content);
         $this->assertStringNotContainsString('data-endpoint="http://', $content);
         $this->assertStringNotContainsString('data-endpoint="https://', $content);
+    }
+
+    /**
+     * 運行日前の閲覧専用モード時におけるマイシフト画面もCSPに準拠していること
+     */
+    public function test_myshift_read_only_before_operation_day_complies_with_csp(): void
+    {
+        $futureTimetable = Timetable::factory()->create([
+            'target_date' => now()->addDays(5)->format('Y-m-d'),
+            'status' => 'draft',
+        ]);
+
+        $leadStaff = Staff::factory()->create([
+            'is_active' => true,
+        ]);
+
+        $lane = Lane::factory()->create([
+            'timetable_id' => $futureTimetable->id,
+            'lead_staff_id' => $leadStaff->id,
+        ]);
+
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $futureTimetable->id,
+            'lane_id' => $lane->id,
+        ]);
+
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $task->id,
+            'staff_id' => $leadStaff->id,
+        ]);
+
+        $response = $this->get(route('staff.myshift', ['token' => $leadStaff->access_token]));
+        $response->assertStatus(200);
+        $response->assertSee('id="readOnlyHeaderBadge"', false);
+        $response->assertSee('id="myshiftReadOnlyBanner"', false);
+
+        $content = $response->getContent();
+        $this->assertDoesNotMatchRegularExpression('/<script(?![^>]*(?:\bsrc=|\bnonce=))[^>]*>/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/\sstyle=/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/href=["\']javascript:/i', $content);
     }
 }

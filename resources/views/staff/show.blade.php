@@ -137,15 +137,19 @@
 
                 <!-- 割当タスク数 & 受付状況 -->
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span class="text-[11px] font-bold text-slate-500 block mb-1">📋 タスク & 当日受付</span>
+                    <span class="text-[11px] font-bold text-slate-500 block mb-1">📋 タスク &amp; 運行別受付</span>
                     <div class="text-sm font-bold text-slate-900">
                         {{ $staff->assignments->count() }} 件
-                        @if($staff->is_checked_in)
-                        <span class="ml-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            受付済 ({{ $staff->checked_in_at->format('H:i') }})
-                        </span>
+                        @if($staff->checkIns->isNotEmpty())
+                            <div class="mt-1.5 flex flex-wrap gap-1.5">
+                                @foreach($staff->checkIns->take(3) as $checkIn)
+                                    <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                        {{ $checkIn->timetable?->name ?? '運行計画#' . $checkIn->timetable_id }} ({{ $checkIn->checked_in_at->format('m/d H:i') }})
+                                    </span>
+                                @endforeach
+                            </div>
                         @else
-                        <span class="ml-2 text-xs font-normal text-slate-400">未受付</span>
+                            <span class="ml-2 text-xs font-normal text-slate-400">未受付</span>
                         @endif
                     </div>
                 </div>

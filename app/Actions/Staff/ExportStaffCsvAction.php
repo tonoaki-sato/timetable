@@ -2,6 +2,7 @@
 
 namespace App\Actions\Staff;
 
+use App\Models\StaffCheckIn;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -58,6 +59,9 @@ class ExportStaffCsvAction
 
                 foreach ($staffList as $staff) {
                     $shiftUrl = route('staff.myshift', ['token' => $staff->access_token]);
+                    $checkInSummary = $staff->checkIns
+                        ->map(fn (StaffCheckIn $checkIn): string => ($checkIn->timetable?->name ?? '運行計画#'.$checkIn->timetable_id).': '.$checkIn->checked_in_at->format('Y-m-d H:i:s'))
+                        ->implode(' / ');
 
                     fputcsv($handle, [
                         $staff->id,
@@ -65,7 +69,7 @@ class ExportStaffCsvAction
                         $sanitize($staff->kana),
                         $sanitize($staff->affiliation),
                         $staff->registered_via === 'self' ? 'セルフ登録' : '本部登録',
-                        $staff->checked_in_at?->format('Y-m-d H:i:s') ?? '',
+                        $sanitize($checkInSummary),
                         $staff->is_active ? '稼働可能' : '停止中',
                         $shiftUrl,
                     ]);

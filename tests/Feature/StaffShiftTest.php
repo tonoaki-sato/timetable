@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lane;
 use App\Models\Staff;
+use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
@@ -129,21 +130,30 @@ class StaffShiftTest extends TestCase
     }
 
     /**
-     * 現場到着チェックインが正常に記録されること
+     * 現場到着チェックインが運行情報に紐づいて正常に記録されること
      */
     public function test_staff_can_check_in_on_site(): void
     {
-        $this->assertFalse($this->staff->is_checked_in);
+        $this->assertNull($this->staff->checkInForTimetable($this->timetable->id));
 
-        // JSONリクエストでのチェックイン
-        $response = $this->postJson(route('staff.myshift.checkin', ['token' => $this->staff->access_token]));
+        // JSONリクエストでのチェックイン（運行計画ID指定）
+        $response = $this->postJson(route('staff.myshift.checkin', ['token' => $this->staff->access_token]), [
+            'timetable_id' => $this->timetable->id,
+        ]);
 
         $response->assertStatus(200)
-            ->assertJson(['success' => true]);
+            ->assertJson([
+                'success' => true,
+                'timetable_id' => $this->timetable->id,
+            ]);
 
         $this->staff->refresh();
-        $this->assertTrue($this->staff->is_checked_in);
-        $this->assertNotNull($this->staff->checked_in_at);
+        $checkIn = $this->staff->checkInForTimetable($this->timetable->id);
+        $this->assertNotNull($checkIn);
+        $this->assertDatabaseHas('staff_check_ins', [
+            'timetable_id' => $this->timetable->id,
+            'staff_id' => $this->staff->id,
+        ]);
     }
 
     /**
@@ -152,12 +162,21 @@ class StaffShiftTest extends TestCase
     public function test_repeated_check_in_preserves_initial_timestamp(): void
     {
         $initialTime = now()->subMinutes(30);
-        $this->staff->update(['checked_in_at' => $initialTime]);
+        StaffCheckIn::create([
+            'timetable_id' => $this->timetable->id,
+            'staff_id' => $this->staff->id,
+            'checked_in_at' => $initialTime,
+        ]);
 
-        $this->postJson(route('staff.myshift.checkin', ['token' => $this->staff->access_token]));
+        $response = $this->postJson(route('staff.myshift.checkin', ['token' => $this->staff->access_token]), [
+            'timetable_id' => $this->timetable->id,
+        ]);
 
-        $this->staff->refresh();
-        $this->assertSame($initialTime->format('Y-m-d H:i:s'), $this->staff->checked_in_at->format('Y-m-d H:i:s'));
+        $response->assertStatus(200);
+
+        $checkIn = $this->staff->fresh()->checkInForTimetable($this->timetable->id);
+        $this->assertNotNull($checkIn);
+        $this->assertSame($initialTime->format('Y-m-d H:i:s'), $checkIn->checked_in_at->format('Y-m-d H:i:s'));
     }
 
     /**
@@ -206,7 +225,9 @@ class StaffShiftTest extends TestCase
             'attendance_status' => 'assigned',
         ]);
 
-        $response = $this->postJson(route('staff.myshift.checkin', ['token' => $this->staff->access_token]));
+        $response = $this->postJson(route('staff.myshift.checkin', ['token' => $this->staff->access_token]), [
+            'timetable_id' => $this->timetable->id,
+        ]);
         $response->assertStatus(200);
 
         $firstAssignment->refresh();
@@ -639,6 +660,439 @@ class StaffShiftTest extends TestCase
         $content = $response->getContent();
         $this->assertDoesNotMatchRegularExpression('/\sstyle=/i', $content);
         $this->assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $content);
+    }
+
+    /**
+     * 運行完了（completed）の運行計画がマイシフト全箇所で非表示になること
+     */
+    public function test_completed_timetables_are_hidden_on_my_shift(): void
+    {
+        $completedTimetable = Timetable::factory()->create([
+            'target_date' => now()->subDay()->format('Y-m-d'),
+            'name' => '完了済み宿場まつり',
+            'status' => 'completed',
+        ]);
+        $completedLane = Lane::factory()->create([
+            'timetable_id' => $completedTimetable->id,
+            'name' => '完了済み誘導班',
+            'lead_staff_id' => $this->staff->id,
+        ]);
+        $completedTask = TimetableTask::factory()->create([
+            'timetable_id' => $completedTimetable->id,
+            'lane_id' => $completedLane->id,
+            'title' => '完了済みタスク',
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $completedTask->id,
+            'staff_id' => $this->staff->id,
+        ]);
+
+        // アクティブ予定がある状態でアクセスすると完了済みは除外されること
+        $activeTask = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $this->lane->id,
+            'title' => '稼働中タスク',
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $activeTask->id,
+            'staff_id' => $this->staff->id,
+        ]);
+
+        // 通常表示・直接指定・all表示すべてで完了済みが非表示
+        foreach ([
+            route('staff.myshift', ['token' => $this->staff->access_token]),
+            route('staff.myshift', ['token' => $this->staff->access_token, 'timetable_id' => $completedTimetable->id]),
+            route('staff.myshift', ['token' => $this->staff->access_token, 'timetable_id' => 'all']),
+        ] as $url) {
+            $res = $this->get($url);
+            $res->assertStatus(200);
+            $res->assertDontSee('完了済み宿場まつり');
+            $res->assertDontSee('完了済みタスク');
+            $res->assertDontSee('完了済み誘導班');
+            $res->assertSee('稼働中タスク');
+        }
+
+        // 未完了が1件もないスタッフでは運行予定・班長コンソール・到着ボタンいずれも非表示
+        $completedOnlyStaff = Staff::factory()->create(['is_active' => true]);
+        $completedLane->update(['lead_staff_id' => $completedOnlyStaff->id]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $completedTask->id,
+            'staff_id' => $completedOnlyStaff->id,
+        ]);
+
+        $emptyRes = $this->get(route('staff.myshift', ['token' => $completedOnlyStaff->access_token]));
+        $emptyRes->assertStatus(200);
+        $emptyRes->assertDontSee('完了済みタスク');
+        $emptyRes->assertDontSee('id="checkInBtn"', false);
+        $emptyRes->assertDontSee('data-main-tab="leader"', false);
+    }
+
+    /**
+     * 現場到着ボタンは特定運行日選択時のみ表示され、すべて表示時は非表示かつ運行情報別に独立管理されること
+     */
+    public function test_check_in_button_visibility_and_per_timetable_isolation(): void
+    {
+        $secondTimetable = Timetable::factory()->create([
+            'target_date' => now()->subDay()->format('Y-m-d'),
+            'name' => '前回運行 予備日',
+            'status' => 'active',
+        ]);
+        $secondLane = Lane::factory()->create([
+            'timetable_id' => $secondTimetable->id,
+            'name' => '次回給水班',
+        ]);
+
+        $firstTask = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $this->lane->id,
+            'start_time' => '09:00:00',
+        ]);
+        $firstAssignment = TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $firstTask->id,
+            'staff_id' => $this->staff->id,
+            'attendance_status' => 'assigned',
+        ]);
+
+        $secondTask = TimetableTask::factory()->create([
+            'timetable_id' => $secondTimetable->id,
+            'lane_id' => $secondLane->id,
+            'start_time' => '09:00:00',
+        ]);
+        $secondAssignment = TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $secondTask->id,
+            'staff_id' => $this->staff->id,
+            'attendance_status' => 'assigned',
+        ]);
+
+        // 1. 特定日程選択時は該当 timetable_id 付きでボタン表示
+        $day1Res = $this->get(route('staff.myshift', [
+            'token' => $this->staff->access_token,
+            'timetable_id' => $this->timetable->id,
+        ]));
+        $day1Res->assertStatus(200);
+        $day1Res->assertSee('id="checkInBtn"', false);
+        $day1Res->assertSee('data-timetable-id="'.$this->timetable->id.'"', false);
+
+        // 2. 「すべて」選択時は到着ボタン非表示
+        $allRes = $this->get(route('staff.myshift', [
+            'token' => $this->staff->access_token,
+            'timetable_id' => 'all',
+        ]));
+        $allRes->assertStatus(200);
+        $allRes->assertDontSee('id="checkInBtn"', false);
+
+        // 3. 1日目のみチェックイン -> 1日目の第1タスクのみ更新され、2日目は未受付・assigned のまま
+        $this->postJson(route('staff.myshift.checkin', ['token' => $this->staff->access_token]), [
+            'timetable_id' => $this->timetable->id,
+        ])->assertStatus(200);
+
+        $this->assertSame('checked_in', $firstAssignment->fresh()->attendance_status);
+        $this->assertSame('assigned', $secondAssignment->fresh()->attendance_status);
+
+        // 1日目ビューは「受付済」、2日目ビューは引き続き到着ボタン表示
+        $day1After = $this->get(route('staff.myshift', [
+            'token' => $this->staff->access_token,
+            'timetable_id' => $this->timetable->id,
+        ]));
+        $day1After->assertSee('受付済 (');
+        $day1After->assertDontSee('id="checkInBtn"', false);
+
+        $day2Res = $this->get(route('staff.myshift', [
+            'token' => $this->staff->access_token,
+            'timetable_id' => $secondTimetable->id,
+        ]));
+        $day2Res->assertSee('id="checkInBtn"', false);
+        $day2Res->assertSee('data-timetable-id="'.$secondTimetable->id.'"', false);
+    }
+
+    /**
+     * 運行完了した運行計画へのチェックインおよび不正パラメータは422エラーで拒否されること
+     */
+    public function test_check_in_rejects_completed_or_invalid_timetable(): void
+    {
+        $completedTimetable = Timetable::factory()->create([
+            'target_date' => now()->subDays(2)->format('Y-m-d'),
+            'status' => 'completed',
+        ]);
+
+        $completedRes = $this->postJson(route('staff.myshift.checkin', ['token' => $this->staff->access_token]), [
+            'timetable_id' => $completedTimetable->id,
+        ]);
+        $completedRes->assertStatus(422);
+        $this->assertDatabaseMissing('staff_check_ins', [
+            'timetable_id' => $completedTimetable->id,
+            'staff_id' => $this->staff->id,
+        ]);
+
+        // timetable_id 未指定
+        $missingRes = $this->postJson(route('staff.myshift.checkin', ['token' => $this->staff->access_token]), []);
+        $missingRes->assertStatus(422)
+            ->assertJsonValidationErrors(['timetable_id']);
+    }
+
+    /**
+     * 運行日当日まではマイシフト画面および班長コンソールが閲覧専用になること
+     */
+    public function test_future_timetable_is_read_only_on_my_shift(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-11 10:00:00'));
+
+        try {
+            $futureStaff = Staff::factory()->create(['is_active' => true]);
+            $futureTimetable = Timetable::factory()->create([
+                'target_date' => '2026-11-20',
+                'name' => '未来の運行計画',
+                'status' => 'draft',
+            ]);
+            $futureLane = Lane::factory()->create([
+                'timetable_id' => $futureTimetable->id,
+                'name' => '未来設営班',
+                'lead_staff_id' => $futureStaff->id,
+            ]);
+            $futureTask = TimetableTask::factory()->create([
+                'timetable_id' => $futureTimetable->id,
+                'lane_id' => $futureLane->id,
+                'title' => '事前準備テント設営',
+                'start_time' => '09:00:00',
+                'end_time' => '11:00:00',
+                'status' => 'not_started',
+            ]);
+            TaskStaffAssignment::factory()->create([
+                'timetable_task_id' => $futureTask->id,
+                'staff_id' => $futureStaff->id,
+                'attendance_status' => 'assigned',
+            ]);
+
+            foreach ([
+                route('staff.myshift', ['token' => $futureStaff->access_token]),
+                route('staff.myshift', ['token' => $futureStaff->access_token, 'timetable_id' => 'all']),
+            ] as $url) {
+                $response = $this->get($url);
+                $response->assertStatus(200);
+
+                // 閲覧専用バッジ・案内バナー・スケジュール本文が表示されること
+                $response->assertSee('id="readOnlyHeaderBadge"', false);
+                $response->assertSee('運行前・閲覧専用');
+                $response->assertSee('id="myshiftReadOnlyBanner"', false);
+                $response->assertSee('運行日当日までは閲覧専用です');
+                $response->assertSee('事前準備テント設営');
+                $response->assertSee('未来設営班');
+
+                // 操作UI（到着受付・進捗ボタン・班長ステータス変更・班長要請フォーム）はすべて非表示であること
+                $response->assertDontSee('id="checkInBtn"', false);
+                $response->assertDontSee('assignmentStatusBtn', false);
+                $response->assertDontSee('data-leader-task-select', false);
+                $response->assertDontSee('data-async-lane-request', false);
+            }
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    /**
+     * timetable_id=all で当日分と未来分の班長担当が混在する場合、当日分のみ班長操作UIが表示されること
+     */
+    public function test_mixed_today_and_future_timetables_in_all_view_only_enables_today_leader_controls(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-11 10:00:00'));
+
+        try {
+            $this->lane->update(['lead_staff_id' => $this->staff->id]);
+            $todayTask = TimetableTask::factory()->create([
+                'timetable_id' => $this->timetable->id,
+                'lane_id' => $this->lane->id,
+                'title' => '本日テント作業',
+            ]);
+
+            $futureTimetable = Timetable::factory()->create([
+                'target_date' => '2026-11-25',
+                'name' => '後日運行計画',
+                'status' => 'draft',
+            ]);
+            $futureLane = Lane::factory()->create([
+                'timetable_id' => $futureTimetable->id,
+                'name' => '後日設営班',
+                'lead_staff_id' => $this->staff->id,
+            ]);
+            $futureTask = TimetableTask::factory()->create([
+                'timetable_id' => $futureTimetable->id,
+                'lane_id' => $futureLane->id,
+                'title' => '後日テント作業',
+            ]);
+
+            $response = $this->get(route('staff.myshift', [
+                'token' => $this->staff->access_token,
+                'timetable_id' => 'all',
+            ]));
+
+            $response->assertStatus(200);
+            $response->assertDontSee('id="readOnlyHeaderBadge"', false);
+            $response->assertSee('本日テント作業');
+            $response->assertSee('後日テント作業');
+
+            // 当日分のみ操作UIが出力され、後日分には出力されないこと
+            $response->assertSee(route('staff.myshift.lane-task-status', ['token' => $this->staff->access_token, 'task' => $todayTask->id], false), false);
+            $response->assertSee(route('staff.myshift.lane-requests.store', ['token' => $this->staff->access_token, 'lane' => $this->lane->id], false), false);
+            $response->assertDontSee(route('staff.myshift.lane-task-status', ['token' => $this->staff->access_token, 'task' => $futureTask->id], false), false);
+            $response->assertDontSee(route('staff.myshift.lane-requests.store', ['token' => $this->staff->access_token, 'lane' => $futureLane->id], false), false);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    /**
+     * 運行日当日前の運行計画に対するすべての書き込みエンドポイントが422で拒否されること
+     */
+    public function test_write_endpoints_reject_before_operation_day_with_422(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-11 10:00:00'));
+
+        try {
+            $futureTimetable = Timetable::factory()->create([
+                'target_date' => '2026-11-20',
+                'status' => 'draft',
+            ]);
+            $futureLane = Lane::factory()->create([
+                'timetable_id' => $futureTimetable->id,
+                'lead_staff_id' => $this->staff->id,
+            ]);
+            $futureTask = TimetableTask::factory()->create([
+                'timetable_id' => $futureTimetable->id,
+                'lane_id' => $futureLane->id,
+                'status' => 'not_started',
+            ]);
+            $futureAssignment = TaskStaffAssignment::factory()->create([
+                'timetable_task_id' => $futureTask->id,
+                'staff_id' => $this->staff->id,
+                'attendance_status' => 'assigned',
+            ]);
+
+            $this->postJson(route('staff.myshift.checkin', ['token' => $this->staff->access_token]), [
+                'timetable_id' => $futureTimetable->id,
+            ])->assertStatus(422);
+
+            $this->postJson(route('staff.myshift.assignment-status', [
+                'token' => $this->staff->access_token,
+                'assignment' => $futureAssignment->id,
+            ]), [
+                'status' => 'in_progress',
+            ])->assertStatus(422);
+
+            $this->postJson(route('staff.myshift.lane-task-status', [
+                'token' => $this->staff->access_token,
+                'task' => $futureTask->id,
+            ]), [
+                'status' => 'in_progress',
+            ])->assertStatus(422);
+
+            $this->postJson(route('staff.myshift.lane-requests.store', [
+                'token' => $this->staff->access_token,
+                'lane' => $futureLane->id,
+            ]), [
+                'request_type' => 'staffing',
+                'requested_count' => 1,
+            ])->assertStatus(422);
+
+            $this->assertDatabaseMissing('staff_check_ins', [
+                'timetable_id' => $futureTimetable->id,
+                'staff_id' => $this->staff->id,
+            ]);
+            $this->assertSame('assigned', $futureAssignment->fresh()->attendance_status);
+            $this->assertSame('not_started', $futureTask->fresh()->status);
+            $this->assertDatabaseMissing('lane_requests', [
+                'lane_id' => $futureLane->id,
+            ]);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    /**
+     * 運行日当日に到達すると閲覧専用が解除され、すべての現場操作が可能になること
+     */
+    public function test_write_endpoints_succeed_when_operation_day_arrives(): void
+    {
+        $tomorrowStaff = Staff::factory()->create(['is_active' => true]);
+        $targetTimetable = Timetable::factory()->create([
+            'target_date' => '2026-11-12',
+            'name' => '翌日移行テスト運行',
+            'status' => 'active',
+        ]);
+        $targetLane = Lane::factory()->create([
+            'timetable_id' => $targetTimetable->id,
+            'lead_staff_id' => $tomorrowStaff->id,
+        ]);
+        $targetTask = TimetableTask::factory()->create([
+            'timetable_id' => $targetTimetable->id,
+            'lane_id' => $targetLane->id,
+            'start_time' => '09:00:00',
+            'end_time' => '11:00:00',
+            'status' => 'not_started',
+        ]);
+        $targetAssignment = TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $targetTask->id,
+            'staff_id' => $tomorrowStaff->id,
+            'attendance_status' => 'assigned',
+        ]);
+
+        try {
+            // 前日は閲覧専用で422
+            Carbon::setTestNow(Carbon::parse('2026-11-11 23:59:00'));
+            $this->get(route('staff.myshift', ['token' => $tomorrowStaff->access_token]))
+                ->assertStatus(200)
+                ->assertSee('id="readOnlyHeaderBadge"', false)
+                ->assertDontSee('id="checkInBtn"', false);
+
+            $this->postJson(route('staff.myshift.checkin', ['token' => $tomorrowStaff->access_token]), [
+                'timetable_id' => $targetTimetable->id,
+            ])->assertStatus(422);
+
+            // 運行日当日に到達後は全操作が成功すること
+            Carbon::setTestNow(Carbon::parse('2026-11-12 09:30:00'));
+            $this->get(route('staff.myshift', ['token' => $tomorrowStaff->access_token]))
+                ->assertStatus(200)
+                ->assertSee('id="checkInBtn"', false)
+                ->assertDontSee('id="readOnlyHeaderBadge"', false);
+
+            $this->postJson(route('staff.myshift.checkin', ['token' => $tomorrowStaff->access_token]), [
+                'timetable_id' => $targetTimetable->id,
+            ])->assertStatus(200);
+
+            $this->postJson(route('staff.myshift.assignment-status', [
+                'token' => $tomorrowStaff->access_token,
+                'assignment' => $targetAssignment->id,
+            ]), [
+                'status' => 'in_progress',
+            ])->assertStatus(200);
+
+            $this->postJson(route('staff.myshift.lane-task-status', [
+                'token' => $tomorrowStaff->access_token,
+                'task' => $targetTask->id,
+            ]), [
+                'status' => 'in_progress',
+            ])->assertStatus(200);
+
+            $this->postJson(route('staff.myshift.lane-requests.store', [
+                'token' => $tomorrowStaff->access_token,
+                'lane' => $targetLane->id,
+            ]), [
+                'request_type' => 'staffing',
+                'requested_count' => 1,
+            ])->assertStatus(200);
+
+            $this->assertSame('in_progress', $targetAssignment->fresh()->attendance_status);
+            $this->assertSame('in_progress', $targetTask->fresh()->status);
+            $this->assertDatabaseHas('staff_check_ins', [
+                'timetable_id' => $targetTimetable->id,
+                'staff_id' => $tomorrowStaff->id,
+            ]);
+            $this->assertDatabaseHas('lane_requests', [
+                'lane_id' => $targetLane->id,
+                'requested_by_staff_id' => $tomorrowStaff->id,
+            ]);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     /**

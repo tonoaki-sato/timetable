@@ -113,7 +113,7 @@ interface StaffRepositoryInterface
     public function chunkAllOrderedById(int $chunkSize, callable $callback): bool;
 
     /**
-     * スタッフ詳細画面用にアサイン・タスク・タイムテーブルのリレーションをロード
+     * スタッフ詳細画面用にアサイン・チェックイン・タイムテーブルのリレーションをロード
      */
     public function loadShowRelations(Staff $staff): Staff;
 

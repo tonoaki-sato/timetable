@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lane;
 use App\Models\Staff;
+use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
@@ -64,14 +65,30 @@ class TimetablePhase3AssignmentTest extends TestCase
         $staff1 = Staff::factory()->create([
             'name' => '山下 達也',
             'affiliation' => '神輿誘導班',
-            'checked_in_at' => now(),
             'is_active' => true,
+        ]);
+
+        StaffCheckIn::create([
+            'timetable_id' => $this->timetable->id,
+            'staff_id' => $staff1->id,
+            'checked_in_at' => now(),
         ]);
 
         $staff2 = Staff::factory()->create([
             'name' => '佐藤 健太',
             'affiliation' => 'ボランティアA',
             'is_active' => true,
+        ]);
+
+        // 別運行日のチェックインはこのタイムラインには混入しないこと
+        $otherTimetable = Timetable::factory()->create([
+            'target_date' => '2027-11-20',
+            'name' => '別日程運行計画',
+        ]);
+        StaffCheckIn::create([
+            'timetable_id' => $otherTimetable->id,
+            'staff_id' => $staff2->id,
+            'checked_in_at' => now(),
         ]);
 
         TaskStaffAssignment::factory()->create([
@@ -210,13 +227,28 @@ class TimetablePhase3AssignmentTest extends TestCase
             'name' => '未着 スタッフ',
             'affiliation' => '一般広報',
             'is_active' => true,
-            'checked_in_at' => null,
         ]);
 
         $staffCheckedIn = Staff::factory()->create([
             'name' => '到着済 スタッフ',
             'affiliation' => '一般広報',
             'is_active' => true,
+        ]);
+
+        StaffCheckIn::create([
+            'timetable_id' => $this->timetable->id,
+            'staff_id' => $staffCheckedIn->id,
+            'checked_in_at' => now(),
+        ]);
+
+        // 別運行計画でのチェックインは対象タスクの優先度に影響しないこと
+        $otherTimetable = Timetable::factory()->create([
+            'target_date' => '2027-11-21',
+            'name' => '別日程イベント',
+        ]);
+        StaffCheckIn::create([
+            'timetable_id' => $otherTimetable->id,
+            'staff_id' => $staffNotCheckedIn->id,
             'checked_in_at' => now(),
         ]);
 

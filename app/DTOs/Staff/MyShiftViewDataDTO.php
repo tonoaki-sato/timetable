@@ -4,6 +4,7 @@ namespace App\DTOs\Staff;
 
 use App\Models\Lane;
 use App\Models\Staff;
+use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use Illuminate\Support\Collection;
@@ -21,6 +22,11 @@ readonly class MyShiftViewDataDTO
         public Staff $staff,
         public Collection $timetableOptions,
         public ?Timetable $activeTimetable,
+        public ?StaffCheckIn $activeTimetableCheckIn,
+        public bool $canCheckInActiveTimetable,
+        public bool $canOperateActiveTimetable,
+        public bool $isBeforeOperationDayActiveTimetable,
+        public bool $allTimetablesReadOnly,
         public bool $showAllTimetables,
         public string $timetableFilterValue,
         public Collection $assignments,
@@ -47,6 +53,11 @@ readonly class MyShiftViewDataDTO
             'staff' => $this->staff,
             'timetableOptions' => $this->timetableOptions,
             'activeTimetable' => $this->activeTimetable,
+            'activeTimetableCheckIn' => $this->activeTimetableCheckIn,
+            'canCheckInActiveTimetable' => $this->canCheckInActiveTimetable,
+            'canOperateActiveTimetable' => $this->canOperateActiveTimetable,
+            'isBeforeOperationDayActiveTimetable' => $this->isBeforeOperationDayActiveTimetable,
+            'allTimetablesReadOnly' => $this->allTimetablesReadOnly,
             'showAllTimetables' => $this->showAllTimetables,
             'timetableFilterValue' => $this->timetableFilterValue,
             'assignments' => $this->assignments,
@@ -62,4 +73,3 @@ readonly class MyShiftViewDataDTO
         ];
     }
 }
-

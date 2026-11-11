@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Staff;
 use App\Models\TimetableTask;
+use App\Repositories\Contracts\StaffCheckInRepositoryInterface;
 use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -12,11 +13,15 @@ class StaffAllocationService
 {
     protected TaskStaffAssignmentRepositoryInterface $assignmentRepository;
 
+    protected StaffCheckInRepositoryInterface $staffCheckInRepository;
+
     public function __construct(
         protected ConflictDetectionService $conflictService,
-        ?TaskStaffAssignmentRepositoryInterface $assignmentRepository = null
+        ?TaskStaffAssignmentRepositoryInterface $assignmentRepository = null,
+        ?StaffCheckInRepositoryInterface $staffCheckInRepository = null,
     ) {
         $this->assignmentRepository = $assignmentRepository ?? app(TaskStaffAssignmentRepositoryInterface::class);
+        $this->staffCheckInRepository = $staffCheckInRepository ?? app(StaffCheckInRepositoryInterface::class);
     }
 
     /**
@@ -62,6 +67,7 @@ class StaffAllocationService
 
         $conflictsMap = $this->conflictService->getConflictsMapForStaffList($task, $activeStaff);
         $staffIds = $activeStaff->pluck('id')->map(fn ($id): int => (int) $id)->all();
+        $checkedInStaffIds = $this->staffCheckInRepository->getStaffIdsCheckedInForTimetable((int) $task->timetable_id);
 
         // 当日累計稼働時間の算出（同一運行日）
         $dayAssignments = $this->assignmentRepository->getActiveByTimetableAndStaffIds((int) $task->timetable_id, $staffIds);
@@ -139,7 +145,7 @@ class StaffAllocationService
             $staff->is_same_lane = $isSameLane;
             $staff->today_assigned_minutes = $minutes;
             $staff->priority_tier = $tier;
-            $staff->is_checked_in = (bool) $staff->is_checked_in;
+            $staff->is_checked_in = in_array((int) $staff->id, $checkedInStaffIds, true);
         }
 
         return $activeStaff->sort(function (Staff $a, Staff $b): int {

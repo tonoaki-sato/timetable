@@ -149,13 +149,13 @@ class StaffRepository implements StaffRepositoryInterface
     #[Override]
     public function chunkAllOrderedById(int $chunkSize, callable $callback): bool
     {
-        return Staff::orderBy('id')->chunk($chunkSize, $callback);
+        return Staff::with(['checkIns.timetable'])->orderBy('id')->chunk($chunkSize, $callback);
     }
 
     #[Override]
     public function loadShowRelations(Staff $staff): Staff
     {
-        return $staff->load(['assignments.task.timetable']);
+        return $staff->load(['assignments.task.timetable', 'checkIns.timetable']);
     }
 
     #[Override]
@@ -166,6 +166,7 @@ class StaffRepository implements StaffRepositoryInterface
             'assignments.task.laneRelation.leadStaff',
             'assignments.task.laneRelation.timetable',
             'assignments.task.assignments.staff',
+            'checkIns',
         ]);
 
         return $staff->ledLanes()

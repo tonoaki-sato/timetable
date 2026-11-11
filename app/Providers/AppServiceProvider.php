@@ -14,6 +14,7 @@ use App\Repositories\Contracts\LocationRepositoryInterface;
 use App\Repositories\Contracts\LocationScheduleRepositoryInterface;
 use App\Repositories\Contracts\LocationTypeRepositoryInterface;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Repositories\Contracts\StaffCheckInRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
@@ -29,6 +30,7 @@ use App\Repositories\Eloquent\LocationRepository;
 use App\Repositories\Eloquent\LocationScheduleRepository;
 use App\Repositories\Eloquent\LocationTypeRepository;
 use App\Repositories\Eloquent\ScheduleRepository;
+use App\Repositories\Eloquent\StaffCheckInRepository;
 use App\Repositories\Eloquent\StaffRepository;
 use App\Repositories\Eloquent\TaskStaffAssignmentRepository;
 use App\Repositories\Eloquent\TimetableRepository;
@@ -53,6 +55,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             StaffRepositoryInterface::class,
             StaffRepository::class
+        );
+
+        $this->app->bind(
+            StaffCheckInRepositoryInterface::class,
+            StaffCheckInRepository::class
         );
 
         $this->app->bind(

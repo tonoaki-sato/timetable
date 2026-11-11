@@ -16,9 +16,9 @@ interface TaskStaffAssignmentRepositoryInterface
     public function getActiveByTimetableAndStaffIds(int $timetableId, array $staffIds): Collection;
 
     /**
-     * 指定スタッフの当日運行日における最初のタスクアサインを取得
+     * 指定運行計画・指定スタッフにおける最初のタスクアサインを取得
      */
-    public function findFirstTodayAssignmentForStaff(int $staffId, string $todayDate): ?TaskStaffAssignment;
+    public function findFirstAssignmentForStaffInTimetable(int $staffId, int $timetableId): ?TaskStaffAssignment;
 
     /**
      * 指定スタッフに紐づく特定アサインをIDで取得

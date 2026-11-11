@@ -20,7 +20,6 @@ use Illuminate\Support\Str;
     'access_token',
     'registered_via',
     'last_accessed_at',
-    'checked_in_at',
     'token_reissued_at',
     'reissue_count',
 ])]
@@ -61,7 +60,6 @@ class Staff extends Model
         return [
             'is_active' => 'boolean',
             'last_accessed_at' => 'datetime',
-            'checked_in_at' => 'datetime',
             'token_reissued_at' => 'datetime',
             'reissue_count' => 'integer',
         ];
@@ -84,11 +82,31 @@ class Staff extends Model
     }
 
     /**
-     * 当日チェックイン済みかどうか
+     * チェックイン済みかどうか（属性が明示設定された場合は運行情報単位の値を優先）
      */
     public function getIsCheckedInAttribute(): bool
     {
-        return $this->checked_in_at !== null;
+        if (array_key_exists('is_checked_in', $this->attributes)) {
+            return (bool) $this->attributes['is_checked_in'];
+        }
+
+        if ($this->relationLoaded('checkIns')) {
+            return $this->checkIns->isNotEmpty();
+        }
+
+        return $this->checkIns()->exists();
+    }
+
+    /**
+     * 指定運行計画に対する到着チェックイン記録を取得
+     */
+    public function checkInForTimetable(int $timetableId): ?StaffCheckIn
+    {
+        if ($this->relationLoaded('checkIns')) {
+            return $this->checkIns->firstWhere('timetable_id', $timetableId);
+        }
+
+        return $this->checkIns()->where('timetable_id', $timetableId)->first();
     }
 
     /**
@@ -105,6 +123,14 @@ class Staff extends Model
     public function isFixed(): bool
     {
         return ($this->staff_type ?? 'fulfillment') === 'fixed';
+    }
+
+    /**
+     * 運行情報ごとの現場到着チェックイン記録一覧とのリレーション
+     */
+    public function checkIns(): HasMany
+    {
+        return $this->hasMany(StaffCheckIn::class)->orderByDesc('checked_in_at');
     }
 
     /**

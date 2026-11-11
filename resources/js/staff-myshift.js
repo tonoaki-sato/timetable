@@ -104,7 +104,8 @@ function initMyShiftPage() {
 
         checkInBtn.addEventListener('click', async () => {
             const endpoint = checkInBtn.dataset.endpoint;
-            if (!endpoint) {
+            const timetableId = Number(checkInBtn.dataset.timetableId);
+            if (!endpoint || !Number.isInteger(timetableId) || timetableId <= 0) {
                 return;
             }
 
@@ -120,6 +121,7 @@ function initMyShiftPage() {
                         'X-CSRF-TOKEN': getCsrfToken(),
                         Accept: 'application/json',
                     },
+                    body: JSON.stringify({ timetable_id: timetableId }),
                 });
 
                 if (response.ok) {
@@ -139,7 +141,8 @@ function initMyShiftPage() {
                     }
                     await fetchRealtimeTimeline({ skipLeaderPanelIfFocused: true });
                 } else {
-                    window.alert('チェックインの記録に失敗しました。電波の良い場所で再度お試しください。');
+                    const errData = await response.json().catch(() => null);
+                    window.alert(errData?.message || 'チェックインの記録に失敗しました。電波の良い場所で再度お試しください。');
                     checkInBtn.disabled = false;
                     checkInBtn.innerHTML = originalHtml;
                 }

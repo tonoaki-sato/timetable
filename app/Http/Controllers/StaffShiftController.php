@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CheckInStaffShiftRequest;
 use App\Http\Requests\ShowStaffShiftRequest;
 use App\Http\Requests\StoreLaneRequestFromShiftRequest;
 use App\Http\Requests\UpdateLaneTaskStatusRequest;
@@ -9,7 +10,9 @@ use App\Http\Requests\UpdateStaffAssignmentStatusRequest;
 use App\Models\Lane;
 use App\Models\TaskStaffAssignment;
 use App\Models\TimetableTask;
+use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Services\StaffService;
+use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,9 +21,14 @@ use Illuminate\View\View;
 
 class StaffShiftController extends Controller
 {
+    protected TimetableRepositoryInterface $timetableRepository;
+
     public function __construct(
-        protected StaffService $staffService
-    ) {}
+        protected StaffService $staffService,
+        ?TimetableRepositoryInterface $timetableRepository = null,
+    ) {
+        $this->timetableRepository = $timetableRepository ?? app(TimetableRepositoryInterface::class);
+    }
 
     /**
      * 現場マイタイムテーブル画面の表示
@@ -44,9 +52,9 @@ class StaffShiftController extends Controller
     }
 
     /**
-     * 当日現場到着チェックイン処理
+     * 運行情報ごとの現場到着チェックイン処理
      */
-    public function checkIn(Request $request, string $token): JsonResponse|RedirectResponse
+    public function checkIn(CheckInStaffShiftRequest $request, string $token): JsonResponse|RedirectResponse
     {
         $staff = $this->staffService->getStaffByToken($token);
 
@@ -54,17 +62,26 @@ class StaffShiftController extends Controller
             abort(404, '指定されたスタッフが見つかりません。');
         }
 
-        $this->staffService->checkInStaff($staff);
+        $timetable = $this->timetableRepository->findOrFail((int) $request->validated('timetable_id'));
+
+        try {
+            $checkIn = $this->staffService->checkInStaff($staff, $timetable);
+        } catch (DomainException $e) {
+            return $this->domainErrorResponse($request, $e);
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'time' => $staff->checked_in_at?->format('H:i') ?? now()->format('H:i'),
+                'time' => $checkIn->checked_in_at->format('H:i'),
+                'timetable_id' => $timetable->id,
             ]);
         }
 
-        return redirect()->route('staff.myshift', ['token' => $token])
-            ->with('success', '現場到着を受付完了しました！');
+        return redirect()->route('staff.myshift', [
+            'token' => $token,
+            'timetable_id' => $timetable->id,
+        ])->with('success', '現場到着を受付完了しました！');
     }
 
     /**
@@ -83,7 +100,12 @@ class StaffShiftController extends Controller
         }
 
         $status = $request->validated('status');
-        $this->staffService->updateStaffAssignmentStatus($staff, $assignment->id, $status);
+
+        try {
+            $this->staffService->updateStaffAssignmentStatus($staff, $assignment->id, $status);
+        } catch (DomainException $e) {
+            return $this->domainErrorResponse($request, $e);
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -114,7 +136,12 @@ class StaffShiftController extends Controller
         }
 
         $validated = $request->validated();
-        $this->staffService->updateLaneTaskStatus($task, $validated['status']);
+
+        try {
+            $this->staffService->updateLaneTaskStatus($task, $validated['status']);
+        } catch (DomainException $e) {
+            return $this->domainErrorResponse($request, $e);
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -143,7 +170,12 @@ class StaffShiftController extends Controller
             abort(403, '担当する班の班長のみ管理者への要請・申請を行えます。');
         }
 
-        $laneRequest = $this->staffService->createLaneRequestFromLeader($lane, $staff, $request->validated());
+        try {
+            $laneRequest = $this->staffService->createLaneRequestFromLeader($lane, $staff, $request->validated());
+        } catch (DomainException $e) {
+            return $this->domainErrorResponse($request, $e);
+        }
+
         $label = $laneRequest->type_label;
 
         if ($request->wantsJson()) {
@@ -156,5 +188,20 @@ class StaffShiftController extends Controller
 
         return redirect()->route('staff.myshift', ['token' => $token])
             ->with('success', "管理者（本部）へ「{$label}」を送信しました。");
+    }
+
+    /**
+     * ドメイン例外時のJSON／リダイレクト共通レスポンス
+     */
+    protected function domainErrorResponse(Request $request, DomainException $e): JsonResponse|RedirectResponse
+    {
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        return back()->with('error', $e->getMessage());
     }
 }

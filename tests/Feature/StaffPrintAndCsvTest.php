@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lane;
 use App\Models\Staff;
+use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
@@ -243,10 +244,19 @@ class StaffPrintAndCsvTest extends TestCase
     {
         $this->actingAs($this->operator);
 
-        Staff::factory()->create([
+        $staffWithFormula = Staff::factory()->create([
             'name' => '=SUM(1+1)',
             'kana' => '+KANA',
             'affiliation' => '@Admin',
+        ]);
+        $timetable = Timetable::factory()->create([
+            'name' => '本祭1日目',
+        ]);
+        $checkedInAt = now()->setTime(8, 15, 0);
+        StaffCheckIn::create([
+            'timetable_id' => $timetable->id,
+            'staff_id' => $staffWithFormula->id,
+            'checked_in_at' => $checkedInAt,
         ]);
 
         $response = $this->get(route('staff.export-csv'));
@@ -259,6 +269,7 @@ class StaffPrintAndCsvTest extends TestCase
         $this->assertStringContainsString("'=SUM(1+1)", $content);
         $this->assertStringContainsString("'+KANA", $content);
         $this->assertStringContainsString("'@Admin", $content);
+        $this->assertStringContainsString('本祭1日目: '.$checkedInAt->format('Y-m-d H:i:s'), $content);
     }
 
     /**

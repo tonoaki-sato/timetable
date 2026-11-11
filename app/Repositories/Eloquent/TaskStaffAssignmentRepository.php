@@ -26,14 +26,16 @@ class TaskStaffAssignmentRepository implements TaskStaffAssignmentRepositoryInte
     }
 
     #[Override]
-    public function findFirstTodayAssignmentForStaff(int $staffId, string $todayDate): ?TaskStaffAssignment
+    public function findFirstAssignmentForStaffInTimetable(int $staffId, int $timetableId): ?TaskStaffAssignment
     {
         return TaskStaffAssignment::where('staff_id', $staffId)
-            ->whereHas('task.timetable', function ($q) use ($todayDate): void {
-                $q->whereDate('target_date', $todayDate);
+            ->where('attendance_status', '!=', 'absent')
+            ->whereHas('task', function ($q) use ($timetableId): void {
+                $q->where('timetable_id', $timetableId);
             })
             ->join('timetable_tasks', 'task_staff_assignments.timetable_task_id', '=', 'timetable_tasks.id')
             ->orderBy('timetable_tasks.start_time', 'asc')
+            ->orderBy('task_staff_assignments.id', 'asc')
             ->select('task_staff_assignments.*')
             ->first();
     }

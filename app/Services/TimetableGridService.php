@@ -8,6 +8,7 @@ use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Repositories\Contracts\LaneRepositoryInterface;
+use App\Repositories\Contracts\StaffCheckInRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
@@ -24,16 +25,20 @@ class TimetableGridService
 
     protected StaffRepositoryInterface $staffRepository;
 
+    protected StaffCheckInRepositoryInterface $staffCheckInRepository;
+
     public function __construct(
         ?TimetableRepositoryInterface $timetableRepository = null,
         ?LaneRepositoryInterface $laneRepository = null,
         ?TimetableTaskRepositoryInterface $taskRepository = null,
         ?StaffRepositoryInterface $staffRepository = null,
+        ?StaffCheckInRepositoryInterface $staffCheckInRepository = null,
     ) {
         $this->timetableRepository = $timetableRepository ?? app(TimetableRepositoryInterface::class);
         $this->laneRepository = $laneRepository ?? app(LaneRepositoryInterface::class);
         $this->taskRepository = $taskRepository ?? app(TimetableTaskRepositoryInterface::class);
         $this->staffRepository = $staffRepository ?? app(StaffRepositoryInterface::class);
+        $this->staffCheckInRepository = $staffCheckInRepository ?? app(StaffCheckInRepositoryInterface::class);
     }
 
     /**
@@ -135,10 +140,13 @@ class TimetableGridService
         $timeSlots = $this->generateTimeSlots($timetable);
         $timelineGrid = $this->buildTimelineGrid($timeSlots, $activeStaff, $assignmentsByStaff);
 
+        $checkedInStaffIds = $this->staffCheckInRepository->getStaffIdsCheckedInForTimetable($timetable->id);
         $totalStaffCount = $activeStaff->count();
         $assignedStaffCount = collect($assignmentsByStaff)->filter(fn ($items): bool => $items->isNotEmpty())->count();
         $unassignedStaffCount = $totalStaffCount - $assignedStaffCount;
-        $checkedInCount = $activeStaff->filter(fn (Staff $s): bool => (bool) $s->is_checked_in)->count();
+        $checkedInCount = $activeStaff->filter(
+            fn (Staff $s): bool => in_array((int) $s->id, $checkedInStaffIds, true)
+        )->count();
 
         $tasksWithShortage = $tasks->filter(fn (TimetableTask $t): bool => $t->shortage_count > 0)->map(function (TimetableTask $t): array {
             return [
@@ -158,7 +166,7 @@ class TimetableGridService
             ->map(fn ($lanes): string => $lanes->pluck('name')->join('・'))
             ->all();
 
-        $staffMeta = $this->buildStaffRowMeta($activeStaff, $assignmentsByStaff, $leadStaffIds);
+        $staffMeta = $this->buildStaffRowMeta($activeStaff, $assignmentsByStaff, $leadStaffIds, $checkedInStaffIds);
 
         return [
             'timetable' => $timetable,
@@ -523,6 +531,7 @@ class TimetableGridService
      * @param  Collection<int, Staff>  $activeStaff
      * @param  array<int, Collection<int, array{task: TimetableTask, assignment: TaskStaffAssignment}>>  $assignmentsByStaff
      * @param  array<int, int>  $leadStaffIds
+     * @param  array<int, int>|null  $checkedInStaffIds
      * @return array<int, array{
      *     assigned_count: int,
      *     is_checked_in: bool,
@@ -534,13 +543,16 @@ class TimetableGridService
         Collection $activeStaff,
         array $assignmentsByStaff,
         array $leadStaffIds,
+        ?array $checkedInStaffIds = null,
     ): array {
         $meta = [];
 
         foreach ($activeStaff as $staff) {
             $staffAssignments = $assignmentsByStaff[$staff->id] ?? collect();
             $assignedCount = $staffAssignments->count();
-            $isCheckedIn = (bool) $staff->is_checked_in;
+            $isCheckedIn = $checkedInStaffIds !== null
+                ? in_array((int) $staff->id, $checkedInStaffIds, true)
+                : (bool) $staff->is_checked_in;
             $isLeader = in_array($staff->id, $leadStaffIds, true);
 
             $totalMinutes = 0;
