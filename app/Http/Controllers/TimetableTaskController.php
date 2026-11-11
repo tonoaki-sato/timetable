@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\TimetableTask\CreateCommonTimetableTasksAction;
+use App\Http\Requests\StoreCommonTimetableTaskRequest;
 use App\Http\Requests\StoreTimetableTaskRequest;
 use App\Http\Requests\UpdateTimetableTaskRequest;
 use App\Models\Timetable;
@@ -87,6 +89,23 @@ class TimetableTaskController extends Controller
 
         return redirect()->route('timetables.tasks.index', $timetableId)
             ->with('success', $message);
+    }
+
+    /**
+     * 複数班・全担当班への共通タスク一括登録処理
+     */
+    public function storeCommon(
+        StoreCommonTimetableTaskRequest $request,
+        CreateCommonTimetableTasksAction $action
+    ): RedirectResponse {
+        $this->authorize('create', TimetableTask::class);
+
+        $dto = $request->toDto();
+        $createdTasks = $action->execute($dto);
+        $count = $createdTasks->count();
+
+        return redirect()->route('timetables.tasks.index', $dto->timetableId)
+            ->with('success', "共通タスク「{$dto->title}」を {$count} 班に一括登録しました。");
     }
 
     /**

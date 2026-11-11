@@ -24,6 +24,20 @@ class LaneRepository implements LaneRepositoryInterface
     }
 
     #[Override]
+    public function getByIdsWithFixedStaff(int $timetableId, array $laneIds): Collection
+    {
+        if (empty($laneIds)) {
+            return new Collection;
+        }
+
+        return Lane::with('fixedStaff')
+            ->where('timetable_id', $timetableId)
+            ->whereIn('id', $laneIds)
+            ->ordered()
+            ->get();
+    }
+
+    #[Override]
     public function findByTimetableAndNameOrCleanName(int $timetableId, string $laneName, string $cleanName): ?Lane
     {
         return Lane::where('timetable_id', $timetableId)

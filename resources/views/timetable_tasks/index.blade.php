@@ -33,6 +33,20 @@
     <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
     <x-timetable-context-bar :timetable="$timetable" active="tasks" />
 
+    @if($errors->any())
+    <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl shadow-2xs">
+        <div class="font-bold flex items-center space-x-1.5 mb-1">
+            <span>⚠️</span>
+            <span>入力内容または時間帯にエラーがあります。</span>
+        </div>
+        <ul class="list-disc list-inside space-y-0.5 text-[11px]">
+            @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
     <!-- 作業タスク一覧セクションヘッダーバー -->
     <div class="flex items-center justify-between gap-2.5 px-1">
         <h2 class="font-bold text-sm sm:text-base text-slate-900 flex items-center space-x-2">
@@ -41,14 +55,25 @@
         </h2>
 
         @if($lanes->isNotEmpty())
-        <button type="button"
-            data-action="toggle-accordions"
-            data-target="#lane-task-accordions"
-            data-state="open"
-            class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer">
-            <span data-icon>🔼</span>
-            <span data-label>すべて折りたたむ</span>
-        </button>
+        <div class="flex items-center gap-2 shrink-0">
+            @can('create', \App\Models\TimetableTask::class)
+            <button type="button"
+                data-action="open-common-task-create"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-600 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer">
+                <span>🌐</span>
+                <span>共通タスク一括登録</span>
+            </button>
+            @endcan
+
+            <button type="button"
+                data-action="toggle-accordions"
+                data-target="#lane-task-accordions"
+                data-state="open"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer">
+                <span data-icon>🔼</span>
+                <span data-label>すべて折りたたむ</span>
+            </button>
+        </div>
         @endif
     </div>
 
@@ -226,6 +251,9 @@
     <!-- 各種タスク操作モーダル (独立コンポーネント) -->
     <x-timetable-tasks.detail-modal />
     <x-timetable-tasks.create-modal :timetable="$timetable" :statuses="$statuses" />
+    @can('create', \App\Models\TimetableTask::class)
+    <x-timetable-tasks.common-create-modal :timetable="$timetable" :lanes="$lanes" :statuses="$statuses" />
+    @endcan
     <x-timetable-tasks.edit-modal :statuses="$statuses" />
 
 </div>

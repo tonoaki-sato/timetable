@@ -19,6 +19,14 @@ interface LaneRepositoryInterface
     public function findWithFixedStaff(int $id): ?Lane;
 
     /**
+     * 指定タイムテーブルに属する複数IDの担当班を固定スタッフ込み・表示順で取得
+     *
+     * @param  array<int, int>  $laneIds
+     * @return Collection<int, Lane>
+     */
+    public function getByIdsWithFixedStaff(int $timetableId, array $laneIds): Collection;
+
+    /**
      * タイムテーブルIDと班名（または「班」を除いた名称）から担当班を取得
      */
     public function findByTimetableAndNameOrCleanName(int $timetableId, string $laneName, string $cleanName): ?Lane;

@@ -66,6 +66,14 @@ interface TimetableTaskRepositoryInterface
     public function getActiveForLaneExcludingIds(int $laneId, array $ignoredTaskIds = []): Collection;
 
     /**
+     * 指定された複数レーンの有効（キャンセル以外）なタスク一覧を取得
+     *
+     * @param  array<int, int>  $laneIds
+     * @return Collection<int, TimetableTask>
+     */
+    public function getActiveForLanes(array $laneIds): Collection;
+
+    /**
      * 指定レーンに紐づくタスク件数を取得
      */
     public function countByLane(Lane $lane): int;

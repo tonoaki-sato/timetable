@@ -25,6 +25,7 @@ function initTimetableTaskModals() {
     // モーダル要素
     const detailModal = document.getElementById('task-detail-modal');
     const createModal = document.getElementById('task-create-modal');
+    const commonCreateModal = document.getElementById('task-common-create-modal');
     const editModal = document.getElementById('task-edit-modal');
 
     // 詳細モーダル内要素
@@ -68,6 +69,25 @@ function initTimetableTaskModals() {
     const editContentInput = document.getElementById('edit-modal-content');
     const editOverlapWarning = document.getElementById('edit-modal-overlap-warning');
 
+    // 共通タスク一括登録モーダル内要素
+    const commonCreateForm = document.getElementById('task-common-create-form');
+    const commonTitleInput = document.getElementById('common-modal-title');
+    const commonStartTimeInput = document.getElementById('common-modal-start-time');
+    const commonEndTimeInput = document.getElementById('common-modal-end-time');
+    const commonPeopleInput = document.getElementById('common-modal-people');
+    const commonAtLeastInput = document.getElementById('common-modal-at-least');
+    const commonCriticalInput = document.getElementById('common-modal-critical');
+    const commonLocationInput = document.getElementById('common-modal-location');
+    const commonStatusSelect = document.getElementById('common-modal-status');
+    const commonAutoAssignLeadInput = document.getElementById('common-modal-auto-assign-lead');
+    const commonContentInput = document.getElementById('common-modal-content');
+    const commonSelectedCount = document.getElementById('common-modal-selected-count');
+    const commonOverlapWarning = document.getElementById('common-modal-overlap-warning');
+    const commonOverlapList = document.getElementById('common-modal-overlap-list');
+    const commonNoLaneWarning = document.getElementById('common-modal-no-lane-warning');
+    const commonServerErrors = document.getElementById('common-modal-server-errors');
+    const commonSubmitBtn = document.getElementById('btn-submit-common-task');
+
     let currentEditingTaskId = null;
 
     /**
@@ -91,14 +111,16 @@ function initTimetableTaskModals() {
     }
 
     /**
-     * 同一レーン内の既存タスクと時間帯重複があるかを判定
+     * 同一レーン内の既存タスクと時間帯重複する一覧を取得
+     * @returns {Array<Object>}
      */
-    function checkOverlapWithLaneTasks(laneId, startTime, endTime, excludeTaskId = null) {
+    function findOverlapsWithLaneTasks(laneId, startTime, endTime, excludeTaskId = null) {
         if (!laneId || !startTime || !endTime || startTime >= endTime) {
-            return null;
+            return [];
         }
 
         const allTasks = getAllTasks();
+        const matches = [];
         for (const task of allTasks) {
             if (String(task.lane_id) !== String(laneId)) continue;
             if (excludeTaskId && String(task.id) === String(excludeTaskId)) continue;
@@ -110,10 +132,18 @@ function initTimetableTaskModals() {
 
             // 重複判定: start < other.end && end > other.start
             if (startTime < tEnd && endTime > tStart) {
-                return task;
+                matches.push(task);
             }
         }
-        return null;
+        return matches;
+    }
+
+    /**
+     * 同一レーン内の既存タスクと時間帯重複があるかを判定
+     */
+    function checkOverlapWithLaneTasks(laneId, startTime, endTime, excludeTaskId = null) {
+        const matches = findOverlapsWithLaneTasks(laneId, startTime, endTime, excludeTaskId);
+        return matches.length > 0 ? matches[0] : null;
     }
 
     /**
@@ -122,6 +152,7 @@ function initTimetableTaskModals() {
     function closeAllModals() {
         detailModal?.classList.add('hidden');
         createModal?.classList.add('hidden');
+        commonCreateModal?.classList.add('hidden');
         editModal?.classList.add('hidden');
         currentEditingTaskId = null;
     }
@@ -309,12 +340,148 @@ function initTimetableTaskModals() {
         }
     }
 
+    /**
+     * 共通タスクモーダル内の担当班チェックボックス一覧を取得
+     * @returns {Array<HTMLInputElement>}
+     */
+    function getCommonLaneCheckboxes() {
+        if (!commonCreateModal) {
+            return [];
+        }
+        return Array.from(commonCreateModal.querySelectorAll('.common-lane-checkbox'));
+    }
+
+    /**
+     * 共通タスクモーダルの選択中班数表示を更新
+     */
+    function updateCommonSelectedCount() {
+        const checkboxes = getCommonLaneCheckboxes();
+        const checkedCount = checkboxes.filter(cb => cb.checked).length;
+
+        if (commonSelectedCount) {
+            commonSelectedCount.textContent = `${checkedCount} / ${checkboxes.length} 班選択中`;
+        }
+        if (commonNoLaneWarning) {
+            commonNoLaneWarning.classList.toggle('hidden', checkedCount > 0);
+        }
+
+        return checkedCount;
+    }
+
+    /**
+     * 共通タスクモーダルの対象全班に対するリアルタイム重複判定
+     * @returns {{ hasOverlap: boolean, hasNoLanes: boolean }}
+     */
+    function validateCommonCreateOverlap() {
+        const checkboxes = getCommonLaneCheckboxes();
+        const checkedCheckboxes = checkboxes.filter(cb => cb.checked);
+        const hasNoLanes = checkedCheckboxes.length === 0;
+
+        const start = commonStartTimeInput?.value || '';
+        const end = commonEndTimeInput?.value || '';
+        const status = commonStatusSelect?.value || 'not_started';
+
+        const conflicts = [];
+        if (status !== 'cancelled' && start && end && start < end) {
+            for (const cb of checkedCheckboxes) {
+                const laneName = cb.dataset.laneName || '担当班';
+                const matches = findOverlapsWithLaneTasks(cb.value, start, end);
+                for (const task of matches) {
+                    conflicts.push({ laneName, task });
+                }
+            }
+        }
+
+        const hasOverlap = conflicts.length > 0;
+
+        if (commonOverlapList) {
+            commonOverlapList.textContent = '';
+            for (const item of conflicts) {
+                const li = document.createElement('li');
+                li.textContent = `【${item.laneName}】${item.task.title}（${item.task.start_time}〜${item.task.end_time}）`;
+                commonOverlapList.appendChild(li);
+            }
+        }
+
+        commonOverlapWarning?.classList.toggle('hidden', !hasOverlap);
+        commonStartTimeInput?.classList.toggle('border-rose-400', hasOverlap);
+        commonStartTimeInput?.classList.toggle('bg-rose-50/20', hasOverlap);
+        commonEndTimeInput?.classList.toggle('border-rose-400', hasOverlap);
+        commonEndTimeInput?.classList.toggle('bg-rose-50/20', hasOverlap);
+
+        if (commonSubmitBtn) {
+            commonSubmitBtn.disabled = hasOverlap || hasNoLanes;
+        }
+
+        return { hasOverlap, hasNoLanes };
+    }
+
+    /**
+     * 共通タスク一括登録モーダルを開く
+     */
+    function openCommonCreateModal() {
+        if (!commonCreateModal) return;
+
+        closeAllModals();
+
+        if (commonServerErrors) {
+            commonServerErrors.classList.add('hidden');
+        }
+        getCommonLaneCheckboxes().forEach((cb) => {
+            cb.checked = true;
+        });
+
+        if (commonTitleInput) commonTitleInput.value = '';
+        if (commonStartTimeInput) commonStartTimeInput.value = '08:00';
+        if (commonEndTimeInput) commonEndTimeInput.value = '08:30';
+        if (commonPeopleInput) commonPeopleInput.value = '0';
+        if (commonAtLeastInput) commonAtLeastInput.checked = false;
+        if (commonCriticalInput) commonCriticalInput.checked = false;
+        if (commonLocationInput) commonLocationInput.value = '';
+        if (commonStatusSelect) commonStatusSelect.value = 'not_started';
+        if (commonAutoAssignLeadInput) commonAutoAssignLeadInput.checked = true;
+        if (commonContentInput) commonContentInput.value = '';
+
+        updateCommonSelectedCount();
+        validateCommonCreateOverlap();
+        commonCreateModal.classList.remove('hidden');
+        commonTitleInput?.focus();
+    }
+
     // イベント委譲（クリック）
     document.addEventListener('click', (e) => {
         // モーダルを閉じる
         if (e.target.closest('[data-action="close-modal"]')) {
             e.preventDefault();
             closeAllModals();
+            return;
+        }
+
+        // 共通タスク一括登録モーダルを開く
+        if (e.target.closest('[data-action="open-common-task-create"]')) {
+            e.preventDefault();
+            openCommonCreateModal();
+            return;
+        }
+
+        // 共通タスクモーダル: 全班選択 / 全解除
+        if (e.target.closest('[data-action="common-select-all-lanes"]')) {
+            e.preventDefault();
+            getCommonLaneCheckboxes().forEach((cb) => {
+                cb.checked = true;
+            });
+            updateCommonSelectedCount();
+            validateCommonCreateOverlap();
+            return;
+        }
+
+        if (e.target.closest('[data-action="common-clear-all-lanes"]')) {
+            e.preventDefault();
+            getCommonLaneCheckboxes().forEach((cb) => {
+                cb.checked = false;
+            });
+            updateCommonSelectedCount();
+            validateCommonCreateOverlap();
             return;
         }
 
@@ -370,6 +537,19 @@ function initTimetableTaskModals() {
         }
     });
 
+    // 共通タスクモーダルの入力・選択監視
+    commonCreateModal?.addEventListener('input', (e) => {
+        if (e.target.matches('#common-modal-start-time, #common-modal-end-time')) {
+            validateCommonCreateOverlap();
+        }
+    });
+    commonCreateModal?.addEventListener('change', (e) => {
+        if (e.target.matches('.common-lane-checkbox, #common-modal-status')) {
+            updateCommonSelectedCount();
+            validateCommonCreateOverlap();
+        }
+    });
+
     // 追加モーダル送信時チェック
     createForm?.addEventListener('submit', (e) => {
         if (validateCreateOverlap()) {
@@ -385,5 +565,26 @@ function initTimetableTaskModals() {
             alert('同一班の他タスクと時間帯が重複しています。開始時刻・終了時刻を確認してください。');
         }
     });
+
+    // 共通タスクモーダル送信時チェック
+    commonCreateForm?.addEventListener('submit', (e) => {
+        const { hasOverlap, hasNoLanes } = validateCommonCreateOverlap();
+        if (hasNoLanes) {
+            e.preventDefault();
+            alert('登録対象の担当班を1つ以上選択してください。');
+            return;
+        }
+        if (hasOverlap) {
+            e.preventDefault();
+            alert('選択した担当班の中に既存タスクと時間帯が重複している班があります。対象班または時間帯を確認してください。');
+        }
+    });
+
+    // サーバー側バリデーションエラー時のモーダル自動再表示
+    if (commonCreateModal?.dataset.reopenOnError === '1') {
+        updateCommonSelectedCount();
+        validateCommonCreateOverlap();
+        commonCreateModal.classList.remove('hidden');
+    }
 }
 

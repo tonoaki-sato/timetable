@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTOs\TimetableTask\CreateCommonTimetableTaskDTO;
 use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
@@ -157,6 +158,43 @@ class TimetableTaskService
                 $lane = $this->laneRepository->findWithFixedStaff($laneId);
                 if ($lane) {
                     foreach ($createdTasks as $task) {
+                        $this->autoAssignLaneMembersToTask($task, $lane);
+                    }
+                }
+            }
+
+            return $createdTasks;
+        });
+    }
+
+    /**
+     * 指定された複数の担当班へ共通タスクを一括作成する
+     *
+     * @return Collection<int, TimetableTask>
+     */
+    public function createCommonTasksForLanes(CreateCommonTimetableTaskDTO $dto): Collection
+    {
+        return DB::transaction(function () use ($dto): Collection {
+            $lanes = $this->laneRepository->getByIdsWithFixedStaff($dto->timetableId, $dto->laneIds);
+            if ($lanes->isEmpty()) {
+                return new Collection;
+            }
+
+            $baseAttributes = $dto->toTaskAttributes();
+            $attributesList = [];
+            foreach ($lanes as $lane) {
+                $attributesList[] = array_merge($baseAttributes, [
+                    'lane_id' => $lane->id,
+                ]);
+            }
+
+            $createdTasks = $this->taskRepository->createMany($attributesList);
+
+            if ($dto->autoAssignLead) {
+                $lanesById = $lanes->keyBy('id');
+                foreach ($createdTasks as $task) {
+                    $lane = $lanesById->get($task->lane_id);
+                    if ($lane instanceof Lane) {
                         $this->autoAssignLaneMembersToTask($task, $lane);
                     }
                 }
@@ -424,7 +462,7 @@ class TimetableTaskService
                 }
 
                 // 重複判定: startA < endB && endA > startB
-                if ($startA < $endB && $endA > $startB) {
+                if ($this->hasTimeRangeOverlap($startA, $endA, $startB, $endB)) {
                     $titleA = ! empty($taskA['title']) ? "「{$taskA['title']}」" : 'タスク #'.($i + 1);
                     $titleB = ! empty($taskB['title']) ? "「{$taskB['title']}」" : 'タスク #'.($j + 1);
                     $errors[] = 'タスク #'.($i + 1)." {$titleA}（{$startA}〜{$endA}）と タスク #".($j + 1)." {$titleB}（{$startB}〜{$endB}）の時間帯が重複しています。";
@@ -468,7 +506,7 @@ class TimetableTaskService
                 $exStart = substr($existing->start_time, 0, 5);
                 $exEnd = substr($existing->end_time, 0, 5);
 
-                if ($start < $exEnd && $end > $exStart) {
+                if ($this->hasTimeRangeOverlap($start, $end, $exStart, $exEnd)) {
                     $itemTitle = ! empty($taskItem['title']) ? "「{$taskItem['title']}」" : 'タスク #'.($index + 1);
                     $errors[] = "{$itemTitle}（{$start}〜{$end}）は、既に登録されているタスク「{$existing->title}」（{$exStart}〜{$exEnd}）と時間帯が重複しています。";
                 }
@@ -476,5 +514,66 @@ class TimetableTaskService
         }
 
         return $errors;
+    }
+
+    /**
+     * 複数の担当班に対する既存タスクとの時間帯重複を一括チェック
+     *
+     * @param  array<int, int>  $laneIds
+     * @return array<int, string> 重複エラーメッセージの配列
+     */
+    public function checkDatabaseOverlapsForLanes(
+        int $timetableId,
+        array $laneIds,
+        string $startTime,
+        string $endTime,
+        string $status = 'not_started'
+    ): array {
+        if ($status === 'cancelled' || empty($laneIds)) {
+            return [];
+        }
+
+        $start = substr($startTime, 0, 5);
+        $end = substr($endTime, 0, 5);
+        if ($start === '' || $end === '' || $start >= $end) {
+            return [];
+        }
+
+        $lanes = $this->laneRepository->getByIdsWithFixedStaff($timetableId, $laneIds);
+        if ($lanes->isEmpty()) {
+            return [];
+        }
+
+        $existingTasksByLane = $this->taskRepository
+            ->getActiveForLanes($laneIds)
+            ->groupBy('lane_id');
+
+        $errors = [];
+
+        foreach ($lanes as $lane) {
+            $laneTasks = $existingTasksByLane->get($lane->id);
+            if (! $laneTasks || $laneTasks->isEmpty()) {
+                continue;
+            }
+
+            foreach ($laneTasks as $existing) {
+                $exStart = substr($existing->start_time, 0, 5);
+                $exEnd = substr($existing->end_time, 0, 5);
+
+                if ($this->hasTimeRangeOverlap($start, $end, $exStart, $exEnd)) {
+                    $errors[] = "「{$lane->name}」の既存タスク「{$existing->title}」（{$exStart}〜{$exEnd}）と時間帯が重複しています。";
+                }
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * 2つの時間帯 (HH:MM) が重複しているかを判定する
+     */
+    private function hasTimeRangeOverlap(string $startA, string $endA, string $startB, string $endB): bool
+    {
+        return $startA < $endB && $endA > $startB;
     }
 }

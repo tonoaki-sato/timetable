@@ -112,6 +112,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('lane-requests/{laneRequest}/status', [LaneRequestController::class, 'updateStatus'])->name('lane-requests.update-status');
 
     // 作業タスクリソースルート（モーダルによる登録・更新対応）
+    Route::post('timetable-tasks/common', [TimetableTaskController::class, 'storeCommon'])->name('timetable-tasks.common.store');
     Route::resource('timetable-tasks', TimetableTaskController::class)
         ->parameters(['timetable-tasks' => 'task'])
         ->only(['index', 'store', 'update', 'destroy']);

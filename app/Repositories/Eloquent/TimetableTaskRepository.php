@@ -105,6 +105,19 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
     }
 
     #[Override]
+    public function getActiveForLanes(array $laneIds): Collection
+    {
+        if (empty($laneIds)) {
+            return new Collection;
+        }
+
+        return TimetableTask::whereIn('lane_id', $laneIds)
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('start_time')
+            ->get();
+    }
+
+    #[Override]
     public function countByLane(Lane $lane): int
     {
         return $lane->tasks()->count();
