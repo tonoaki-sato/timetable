@@ -470,4 +470,25 @@ class EquipmentLogisticsPlanTest extends TestCase
         $this->assertNotNull($gapWarning);
         $this->assertStringContainsString('利用可能時間外（またはイベントブース使用時間帯）', $gapWarning['message']);
     }
+
+    /**
+     * 資材別搬出入計画画面で紐づく運行計画の日付がプリセットされ立会表記が統一されていること
+     */
+    public function test_logistics_show_presets_timetable_date_and_displays_updated_witness_labels(): void
+    {
+        $timetable = Timetable::where('target_date', '2026-10-11')->firstOrFail();
+        $equipment = Equipment::factory()->create();
+
+        $this->actingAs($this->operator);
+
+        $response = $this->get(route('timetables.logistics.equipments.show', [$timetable, $equipment]));
+
+        $response->assertStatus(200);
+        $response->assertSee('data-default-target-date="2026-10-11"', false);
+        $response->assertSee('id="step_target_date" name="target_date" value="2026-10-11"', false);
+        $response->assertSee('立会スタッフ');
+        $response->assertSee('スタッフ立会必須');
+        $response->assertDontSee('立会幹事スタッフ');
+        $response->assertDontSee('幹事・スタッフ立会必須');
+    }
 }

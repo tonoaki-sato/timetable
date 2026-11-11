@@ -67,6 +67,7 @@ function initStepModal() {
     }
 
     const defaultAction = form.action;
+    const defaultTargetDate = form.dataset.defaultTargetDate || '';
 
     // 移動元セレクト変更時にテキスト入力も同期
     if (fromLocationSelect) {
@@ -113,6 +114,7 @@ function initStepModal() {
                 }
                 form.reset();
                 setValue('step_status', 'planned');
+                setValue('step_target_date', defaultTargetDate);
             } else if (mode === 'edit') {
                 if (modalTitle) {
                     modalTitle.innerHTML = '<span>⏱️</span><span>ステップの編集</span>';
@@ -128,7 +130,7 @@ function initStepModal() {
                     setValue('step_day_phase', plan.day_phase || 'pre_day');
                     setValue('step_action_type', plan.action_type || 'staging_move');
                     setValue('step_status', plan.status || 'planned');
-                    setValue('step_target_date', plan.target_date ? plan.target_date.substring(0, 10) : '');
+                    setValue('step_target_date', plan.target_date ? plan.target_date.substring(0, 10) : defaultTargetDate);
                     setValue('step_start_time', plan.start_time ? plan.start_time.substring(0, 5) : '');
                     setValue('step_end_time', plan.end_time ? plan.end_time.substring(0, 5) : '');
                     setValue('step_from_location_id', plan.from_location_id);

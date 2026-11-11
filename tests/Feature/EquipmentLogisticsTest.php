@@ -172,10 +172,17 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertSee('text-slate-900 hover:text-indigo-600', false);
         $response->assertSee('data-action="open-plan-edit"', false);
         $response->assertSee(route('timetables.logistics.plans.destroy', [$this->timetable1, $plan]), false);
-        $response->assertSee('title="幹事・スタッフ立会必須"', false);
+        $response->assertSee('title="スタッフ立会必須"', false);
         $response->assertSee('id="plan-detail-modal"', false);
         $response->assertSee('id="plan-create-modal"', false);
         $response->assertSee('id="plan-edit-modal"', false);
+        $response->assertSee('data-default-target-date="2026-10-11"', false);
+        $response->assertSee('id="create_plan_target_date" name="target_date" value="2026-10-11"', false);
+        $response->assertSee('id="edit_plan_target_date" name="target_date" value="2026-10-11"', false);
+        $response->assertSee('立会スタッフ');
+        $response->assertSee('スタッフ立会必須');
+        $response->assertDontSee('立会幹事スタッフ');
+        $response->assertDontSee('幹事・スタッフ立会必須');
         $response->assertSee('⚠️ 時間未指定');
         $response->assertSee('bg-amber-50/70', false);
         $response->assertSee('border-l-amber-400', false);

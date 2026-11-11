@@ -337,7 +337,7 @@
                 <div class="shrink-0">
                     <label class="inline-flex items-center space-x-1.5 cursor-pointer select-none">
                         <input type="checkbox" data-field="witness_required" value="1" class="rounded border-slate-300 text-indigo-600">
-                        <span class="font-bold text-slate-700 text-xs">👁️ 幹事・スタッフ立会必須</span>
+                        <span class="font-bold text-slate-700 text-xs">👁️ スタッフ立会必須</span>
                     </label>
                 </div>
             </div>

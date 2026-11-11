@@ -279,7 +279,7 @@
                                 </div>
                                 @if($plan->witnessStaff)
                                     <div class="flex items-center space-x-1">
-                                        <span class="text-slate-400">立会幹事:</span>
+                                        <span class="text-slate-400">立会スタッフ:</span>
                                         <span class="font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded text-[11px]">{{ $plan->witnessStaff->name }}</span>
                                     </div>
                                 @endif
@@ -323,7 +323,11 @@
             <button type="button" data-action="close-step-modal" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">✕</button>
         </div>
 
-        <form id="form-step" method="POST" action="{{ $storePlanUrl }}" class="space-y-4">
+        @php
+            $defaultTargetDate = isset($timetable) ? ($timetable->target_date?->format('Y-m-d') ?? '') : '';
+        @endphp
+
+        <form id="form-step" method="POST" action="{{ $storePlanUrl }}" data-default-target-date="{{ $defaultTargetDate }}" class="space-y-4">
             @csrf
             <div id="form-step-method"></div>
             <input type="hidden" name="equipment_id" value="{{ $equipment->id }}">
@@ -369,7 +373,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                     <label for="step_target_date" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">実施予定日</label>
-                    <input type="date" id="step_target_date" name="target_date"
+                    <input type="date" id="step_target_date" name="target_date" value="{{ $defaultTargetDate }}"
                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
@@ -433,7 +437,7 @@
                 </div>
 
                 <div>
-                    <label for="step_witness_staff_id" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">立会幹事スタッフ</label>
+                    <label for="step_witness_staff_id" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">立会スタッフ</label>
                     <select id="step_witness_staff_id" name="witness_staff_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <option value="">（立会い不要）</option>
                         @foreach($staffs as $staff)
@@ -448,7 +452,7 @@
                 <input type="checkbox" id="step_witness_required" name="witness_required" value="1"
                        class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
                 <label for="step_witness_required" class="text-xs font-bold text-slate-700 cursor-pointer">
-                    幹事・スタッフの立会い必須とする（受取・回収時など）
+                    スタッフ立会必須とする（受取・回収時など）
                 </label>
             </div>
 

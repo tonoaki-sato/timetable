@@ -1,4 +1,4 @@
-@props(['locations' => collect(), 'staffs' => collect()])
+@props(['locations' => collect(), 'staffs' => collect(), 'defaultTargetDate' => ''])
 
 <!-- 個別搬出入ステップ追加モーダル -->
 <div id="plan-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
@@ -29,12 +29,12 @@
             </div>
 
             <!-- 入力フォーム (縦スクロール可能ボディ) -->
-            <form id="plan-create-form" action="" method="POST" class="flex-1 flex flex-col min-h-0">
+            <form id="plan-create-form" action="" method="POST" data-default-target-date="{{ $defaultTargetDate }}" class="flex-1 flex flex-col min-h-0">
                 @csrf
                 <input type="hidden" id="create_plan_equipment_id" name="equipment_id" value="">
 
                 <div class="overflow-y-auto flex-1 p-5 space-y-4 text-xs">
-                    <x-logistics.step-form-fields prefix="create_plan" :locations="$locations" :staffs="$staffs" />
+                    <x-logistics.step-form-fields prefix="create_plan" :locations="$locations" :staffs="$staffs" :default-target-date="$defaultTargetDate" />
                 </div>
 
                 <!-- モーダルフッター (固定) -->

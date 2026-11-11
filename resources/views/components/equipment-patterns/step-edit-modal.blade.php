@@ -119,7 +119,7 @@
                         <label class="inline-flex items-center space-x-2 cursor-pointer select-none">
                             <input type="checkbox" id="step_edit_witness_required" name="witness_required" value="1"
                                 class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
-                            <span class="font-bold text-slate-700 text-xs">👁️ 幹事・スタッフ立会必須</span>
+                            <span class="font-bold text-slate-700 text-xs">👁️ スタッフ立会必須</span>
                         </label>
                     </div>
                 </div>

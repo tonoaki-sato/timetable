@@ -346,7 +346,7 @@
                     </div>
 
                     <div class="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                        <span class="text-[10px] font-bold text-slate-500 block">幹事立会必須</span>
+                        <span class="text-[10px] font-bold text-slate-500 block">スタッフ立会必須</span>
                         <div class="flex items-baseline space-x-1">
                             <strong class="text-base font-bold font-mono {{ $overview->witnessRequiredPlans > 0 ? 'text-rose-600' : 'text-slate-700' }}">{{ $overview->witnessRequiredPlans }}</strong>
                             <span class="text-[10px] text-slate-500">件</span>

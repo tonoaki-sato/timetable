@@ -149,11 +149,13 @@ function initLogisticsPlanModals() {
         }
 
         createForm.reset();
+        const defaultTargetDate = createForm.dataset.defaultTargetDate || '';
         setText('create_plan_equipment_name', equipmentName);
         setValue('create_plan_equipment_id', equipmentId);
         setValue('create_plan_day_phase', 'pre_day');
         setValue('create_plan_action_type', 'staging_move');
         setValue('create_plan_status', 'planned');
+        setValue('create_plan_target_date', defaultTargetDate);
         setValue('create_plan_operator_type', equipmentIsRental === '1' ? 'event_company' : 'committee');
         setValue('create_plan_quantity', equipmentQuantity || '');
 
@@ -172,12 +174,13 @@ function initLogisticsPlanModals() {
             editForm.action = plan.update_url;
         }
 
+        const defaultTargetDate = editForm.dataset.defaultTargetDate || '';
         setText('edit_plan_equipment_name', plan.equipment_name || '');
         setValue('edit_plan_day_phase', plan.day_phase || 'pre_day');
         setValue('edit_plan_action_type', plan.action_type || 'staging_move');
         setValue('edit_plan_status', plan.status || 'planned');
         setValue('edit_plan_title', plan.title || '');
-        setValue('edit_plan_target_date', plan.target_date ? plan.target_date.substring(0, 10) : '');
+        setValue('edit_plan_target_date', plan.target_date ? plan.target_date.substring(0, 10) : defaultTargetDate);
         setValue('edit_plan_start_time', plan.start_time ? plan.start_time.substring(0, 5) : '');
         setValue('edit_plan_end_time', plan.end_time ? plan.end_time.substring(0, 5) : '');
         setValue('edit_plan_from_location_id', plan.from_location_id || '');

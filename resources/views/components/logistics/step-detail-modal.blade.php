@@ -66,7 +66,7 @@
                     </div>
                 </div>
 
-                <!-- 作業主体 & 運搬数量 & 立会幹事 -->
+                <!-- 作業主体 & 運搬数量 & 立会スタッフ -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                         <span class="block text-[11px] font-bold text-slate-500 mb-1">作業主体</span>
@@ -79,7 +79,7 @@
                         </div>
                     </div>
                     <div>
-                        <span class="block text-[11px] font-bold text-slate-500 mb-1">立会幹事スタッフ</span>
+                        <span class="block text-[11px] font-bold text-slate-500 mb-1">立会スタッフ</span>
                         <div id="detail_plan_witness_staff" class="font-bold text-slate-800 bg-slate-50/60 px-3 py-2 rounded-lg border border-slate-200/80">
                         </div>
                     </div>

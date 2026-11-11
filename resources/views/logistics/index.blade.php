@@ -220,7 +220,7 @@
                                                     {{ $plan->phase_label }}
                                                 </span>
                                                 @if($plan->witness_required)
-                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200" title="幹事・スタッフ立会必須">
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200" title="スタッフ立会必須">
                                                         立会
                                                     </span>
                                                 @endif
@@ -329,9 +329,12 @@
     </div>
 
     <!-- 個別ステップ詳細・追加・編集モーダル -->
+    @php
+        $defaultTargetDate = $timetable->target_date?->format('Y-m-d') ?? '';
+    @endphp
     <x-logistics.step-detail-modal />
-    <x-logistics.step-create-modal :locations="$locations" :staffs="$staffs" />
-    <x-logistics.step-edit-modal :locations="$locations" :staffs="$staffs" />
+    <x-logistics.step-create-modal :locations="$locations" :staffs="$staffs" :default-target-date="$defaultTargetDate" />
+    <x-logistics.step-edit-modal :locations="$locations" :staffs="$staffs" :default-target-date="$defaultTargetDate" />
 </div>
 
 @vite(['resources/js/logistics.js'])
