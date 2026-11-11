@@ -42,6 +42,7 @@ class TimetableSeederTest extends TestCase
         $this->assertDatabaseHas('staff', ['name' => '有江 浩二']);
         $this->assertDatabaseHas('staff', ['name' => '漆原 拓也']);
         $this->assertDatabaseHas('staff', ['name' => '佐藤 秀樹']);
+        $this->assertDatabaseHas('staff', ['id' => 38, 'name' => '山口 日出夏', 'affiliation' => 'S&S']);
 
         // 2. 運行日（Day 1: 宿場まつり 1日目, Day 2: 宿場まつり 2日目, Day 3: 幹事会反省会（デモ））が登録されていること
         $this->assertDatabaseHas('timetables', ['target_date' => '2026-10-11', 'name' => '宿場まつり 1日目']);
@@ -80,11 +81,25 @@ class TimetableSeederTest extends TestCase
             ->first();
         $this->assertNotNull($criticalTask);
 
+        // 第35回（Day 4）追加レーン（S&S 等）と最新タスクがシードされていること
+        $timetableDay4 = Timetable::where('target_date', '2027-10-10')
+            ->where('name', '第35回保土ケ谷宿場まつり（1日目）')
+            ->firstOrFail();
+        $snsLane = Lane::where('timetable_id', $timetableDay4->id)->where('name', 'S&S')->firstOrFail();
+        $this->assertSame(38, $snsLane->lead_staff_id);
+        $this->assertSame(170, $snsLane->display_order);
+        $this->assertDatabaseHas('timetable_tasks', [
+            'timetable_id' => $timetableDay4->id,
+            'lane_id' => $snsLane->id,
+            'title' => '管理・イベント運営',
+        ]);
+
         // レーンおよびステータスが定義に合致していること
-        $validLanes = array_merge(
+        $validLanes = array_values(array_unique(array_merge(
             collect(Lane::DEFAULT_LANES)->pluck('name')->toArray(),
+            Lane::pluck('name')->toArray(),
             ['幹事会']
-        );
+        )));
         $validStatuses = array_keys(TimetableTask::STATUSES);
 
         foreach (TimetableTask::all() as $task) {

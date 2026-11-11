@@ -198,7 +198,6 @@ class EquipmentLogisticsPlanTest extends TestCase
             'quantity' => 4,
             'operator_type' => 'committee',
             'witness_required' => true,
-            'display_order' => 1,
         ]);
 
         $sourceEquipment->plans()->create([
@@ -214,7 +213,6 @@ class EquipmentLogisticsPlanTest extends TestCase
             'quantity' => 4,
             'operator_type' => 'committee',
             'witness_required' => true,
-            'display_order' => 2,
         ]);
 
         $savedPattern = $this->service->saveEquipmentPlansAsPattern($sourceEquipment, [
@@ -267,7 +265,7 @@ class EquipmentLogisticsPlanTest extends TestCase
     }
 
     /**
-     * 計画ステップの編集更新（タイトル・日時・拠点・数量・表示順・ステータス等）の動作検証
+     * 計画ステップの編集更新（タイトル・日時・拠点・数量・ステータス等）の動作検証
      */
     public function test_plan_can_be_updated_successfully(): void
     {
@@ -281,7 +279,6 @@ class EquipmentLogisticsPlanTest extends TestCase
             'action_type' => 'staging_move',
             'operator_type' => 'committee',
             'status' => 'planned',
-            'display_order' => 10,
         ]);
 
         $response = $this->put(route('logistics.plans.update', $plan), [
@@ -298,7 +295,6 @@ class EquipmentLogisticsPlanTest extends TestCase
             'to_location_id' => $this->locationTaxOffice->id,
             'quantity' => 20,
             'quantity_note' => '本部テント前分',
-            'display_order' => 25,
             'witness_required' => '1',
             'witness_staff_id' => $this->staff->id,
             'notes' => '雨天時はブルーシート養生必須',
@@ -321,11 +317,61 @@ class EquipmentLogisticsPlanTest extends TestCase
             'to_location_id' => $this->locationTaxOffice->id,
             'quantity' => 20,
             'quantity_note' => '本部テント前分',
-            'display_order' => 25,
             'witness_required' => true,
             'witness_staff_id' => $this->staff->id,
             'notes' => '雨天時はブルーシート養生必須',
         ]);
+    }
+
+    /**
+     * ステップの並び順がフェーズ優先・日時昇順（未設定は同フェーズ末尾）となることの検証
+     */
+    public function test_plans_are_ordered_by_phase_then_datetime_with_nulls_last(): void
+    {
+        $equipment = Equipment::factory()->create();
+        $timetable = Timetable::first();
+
+        EquipmentLogisticsPlan::factory()->create([
+            'timetable_id' => $timetable->id,
+            'equipment_id' => $equipment->id,
+            'day_phase' => 'post_day',
+            'target_date' => '2026-10-09',
+            'start_time' => '07:00',
+            'title' => '翌日回収ステップ',
+        ]);
+        EquipmentLogisticsPlan::factory()->create([
+            'timetable_id' => $timetable->id,
+            'equipment_id' => $equipment->id,
+            'day_phase' => 'pre_day',
+            'target_date' => '2026-10-10',
+            'start_time' => null,
+            'title' => '前日時刻未定ステップ',
+        ]);
+        EquipmentLogisticsPlan::factory()->create([
+            'timetable_id' => $timetable->id,
+            'equipment_id' => $equipment->id,
+            'day_phase' => 'pre_day',
+            'target_date' => '2026-10-10',
+            'start_time' => '09:00',
+            'title' => '前日朝ステップ',
+        ]);
+        EquipmentLogisticsPlan::factory()->create([
+            'timetable_id' => $timetable->id,
+            'equipment_id' => $equipment->id,
+            'day_phase' => 'other',
+            'target_date' => null,
+            'start_time' => null,
+            'title' => '事前準備ステップ',
+        ]);
+
+        $titles = $equipment->plans()->pluck('title')->all();
+
+        $this->assertSame([
+            '事前準備ステップ',
+            '前日朝ステップ',
+            '前日時刻未定ステップ',
+            '翌日回収ステップ',
+        ], $titles);
     }
 
     /**

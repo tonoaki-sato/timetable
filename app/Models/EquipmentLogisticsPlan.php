@@ -34,7 +34,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'witness_staff_id',
     'status',
     'notes',
-    'display_order',
 ])]
 class EquipmentLogisticsPlan extends Model
 {
@@ -107,7 +106,6 @@ class EquipmentLogisticsPlan extends Model
             'target_date' => 'date',
             'quantity' => 'integer',
             'witness_required' => 'boolean',
-            'display_order' => 'integer',
         ];
     }
 
@@ -294,6 +292,83 @@ class EquipmentLogisticsPlan extends Model
     }
 
     /**
+     * 中止済み判定
+     */
+    public function isCancelled(): bool
+    {
+        return $this->status === EquipmentPlanStatus::Cancelled || $this->status === 'cancelled';
+    }
+
+    /**
+     * 実施日または開始時刻が未指定かどうかを判定
+     */
+    public function isTimeUnspecified(): bool
+    {
+        return blank($this->target_date) || blank($this->start_time);
+    }
+
+    /**
+     * 時間未指定の警告表示が必要かどうかを判定（完了・中止を除く）
+     */
+    public function needsTimeWarning(): bool
+    {
+        return $this->isTimeUnspecified() && ! $this->isCompleted() && ! $this->isCancelled();
+    }
+
+    /**
+     * 一覧テーブル行のハイライト用CSSクラスアクセサ
+     */
+    public function getRowHighlightClassAttribute(): string
+    {
+        if ($this->isCompleted()) {
+            return 'bg-emerald-50/15 hover:bg-slate-50/70';
+        }
+
+        if ($this->isCancelled()) {
+            return 'bg-slate-50/50 text-slate-400 hover:bg-slate-100/50';
+        }
+
+        if ($this->needsTimeWarning()) {
+            return 'bg-amber-50/70 hover:bg-amber-100/60';
+        }
+
+        if ($this->status === EquipmentPlanStatus::InProgress || $this->status === 'in_progress') {
+            return 'bg-sky-50/25 hover:bg-slate-50/70';
+        }
+
+        return 'hover:bg-slate-50/70';
+    }
+
+    /**
+     * フェーズ優先・実施予定日時順（フェーズ順 → 日付・開始時刻・終了時刻の昇順、未設定は同フェーズ内末尾）でソートするスコープ
+     */
+    public function scopeOrdered(Builder $query): Builder
+    {
+        $phaseCases = [];
+        foreach (EquipmentDayPhase::cases() as $index => $phase) {
+            $order = $index + 1;
+            $phaseCases[] = "WHEN '{$phase->value}' THEN {$order}";
+        }
+
+        $phaseColumn = $this->qualifyColumn('day_phase');
+        $targetDateColumn = $this->qualifyColumn('target_date');
+        $startTimeColumn = $this->qualifyColumn('start_time');
+        $endTimeColumn = $this->qualifyColumn('end_time');
+        $idColumn = $this->qualifyColumn('id');
+
+        $phaseSql = sprintf('CASE %s %s ELSE 99 END ASC', $phaseColumn, implode(' ', $phaseCases));
+
+        return $query->orderByRaw($phaseSql)
+            ->orderByRaw("{$targetDateColumn} IS NULL ASC")
+            ->orderBy($targetDateColumn, 'asc')
+            ->orderByRaw("{$startTimeColumn} IS NULL ASC")
+            ->orderBy($startTimeColumn, 'asc')
+            ->orderByRaw("{$endTimeColumn} IS NULL ASC")
+            ->orderBy($endTimeColumn, 'asc')
+            ->orderBy($idColumn, 'asc');
+    }
+
+    /**
      * 移動先拠点の貸切・利用可能期間（中抜け時間帯含む）を判定し、警告があれば配列で返却
      *
      * @return array{level: string, message: string}|null
@@ -441,7 +516,6 @@ class EquipmentLogisticsPlan extends Model
             'witness_staff_id' => $this->witness_staff_id,
             'witness_staff_name' => $this->witnessStaff?->name ?? '',
             'notes' => $this->notes,
-            'display_order' => $this->display_order,
             'update_url' => $this->updateUrl($timetable),
         ];
     }

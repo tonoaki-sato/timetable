@@ -148,14 +148,29 @@
                         @endif
                     </div>
 
-                    <!-- 未設定ステータスバッジ (右寄せ) -->
-                    @if($equipment->plans->isEmpty())
-                        <div class="flex items-center shrink-0 ml-auto">
+                    <!-- ステータスバッジ・アクションボタン (右寄せ) -->
+                    <div class="flex items-center space-x-2 shrink-0 ml-auto">
+                        @if($equipment->plans->isEmpty())
                             <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                                 ⚠️ ステップ未設定
                             </span>
-                        </div>
-                    @endif
+                        @endif
+
+                        @can('create', \App\Models\EquipmentLogisticsPlan::class)
+                            <button type="button"
+                                data-action="open-plan-create"
+                                data-equipment-id="{{ $equipment->id }}"
+                                data-equipment-name="{{ $equipment->name }}"
+                                data-equipment-quantity="{{ $equipment->quantity }}"
+                                data-equipment-is-rental="{{ $equipment->type_enum === \App\Enums\EquipmentType::Rental ? '1' : '0' }}"
+                                data-store-url="{{ route('timetables.logistics.plans.store', $timetable) }}"
+                                class="inline-flex items-center space-x-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                                title="この資材のステップを追加">
+                                <span>➕</span>
+                                <span>ステップ追加</span>
+                            </button>
+                        @endcan
+                    </div>
                 </summary>
 
                 @if($equipment->plans->isEmpty())
@@ -186,12 +201,15 @@
                             </thead>
                             <tbody class="divide-y divide-slate-100 bg-white">
                                 @foreach($equipment->plans as $plan)
+                                    @php
+                                        $needsTimeWarning = $plan->needsTimeWarning();
+                                    @endphp
                                     <tr data-plan-row
                                         data-plan-id="{{ $plan->id }}"
                                         data-plan='@json($plan->toModalPayload($timetable))'
-                                        class="hover:bg-slate-50/70 transition {{ $plan->isCompleted() ? 'bg-emerald-50/15' : ($plan->status === 'in_progress' ? 'bg-amber-50/15' : '') }}">
+                                        class="transition {{ $plan->row_highlight_class }}">
                                         <!-- 順序 -->
-                                        <td class="px-3.5 py-2.5 text-center font-mono text-slate-400 font-bold whitespace-nowrap">
+                                        <td class="px-3.5 py-2.5 text-center font-mono font-bold whitespace-nowrap {{ $needsTimeWarning ? 'border-l-4 border-l-amber-400 text-amber-700' : 'text-slate-400' }}">
                                             #{{ $loop->iteration }}
                                         </td>
 
@@ -211,12 +229,20 @@
 
                                         <!-- ステップ表示名 (詳細モーダルリンク) -->
                                         <td class="px-3.5 py-2.5">
-                                            <button type="button"
-                                                data-action="open-plan-detail"
-                                                class="font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition text-left cursor-pointer"
-                                                title="ステップの詳細を表示">
-                                                {{ $plan->title }}
-                                            </button>
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <button type="button"
+                                                    data-action="open-plan-detail"
+                                                    class="font-bold text-slate-900 hover:text-indigo-600 hover:underline transition text-left cursor-pointer"
+                                                    title="ステップの詳細を表示">
+                                                    {{ $plan->title }}
+                                                </button>
+                                                @if($needsTimeWarning)
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold shrink-0"
+                                                          title="実施日または開始時刻が未指定です（同フェーズ内の末尾に表示されます）">
+                                                        ⚠️ 時間未指定
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </td>
 
                                         <!-- 移動元 ➔ 移動先 -->
@@ -302,8 +328,9 @@
         @endforelse
     </div>
 
-    <!-- 個別ステップ詳細・編集モーダル -->
+    <!-- 個別ステップ詳細・追加・編集モーダル -->
     <x-logistics.step-detail-modal />
+    <x-logistics.step-create-modal :locations="$locations" :staffs="$staffs" />
     <x-logistics.step-edit-modal :locations="$locations" :staffs="$staffs" />
 </div>
 

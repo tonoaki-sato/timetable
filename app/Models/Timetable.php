@@ -221,7 +221,7 @@ class Timetable extends Model
      */
     public function logisticsPlans(): HasMany
     {
-        return $this->hasMany(EquipmentLogisticsPlan::class)->orderBy('display_order', 'asc')->orderBy('start_time', 'asc');
+        return $this->hasMany(EquipmentLogisticsPlan::class)->ordered();
     }
 
     /**

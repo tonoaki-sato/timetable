@@ -383,6 +383,16 @@ class StaffSeeder extends Seeder
                 'access_token' => 'VQy8fBhyCjqy2JSn5v99hASLru8LBEzn',
                 'registered_via' => 'admin',
             ],
+            [
+                'id' => 38,
+                'name' => '山口 日出夏',
+                'kana' => 'ヤマグチ ヒデカ',
+                'affiliation' => 'S&S',
+                'staff_type' => 'fixed',
+                'is_active' => true,
+                'access_token' => 'fpTkf0LxTGjwMRoN9RoVYmGs7KAf1q8e',
+                'registered_via' => 'admin',
+            ],
         ];
 
         foreach ($staffMembers as $data) {

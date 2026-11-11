@@ -171,7 +171,7 @@ class Equipment extends Model
      */
     public function plans(): HasMany
     {
-        return $this->hasMany(EquipmentLogisticsPlan::class, 'equipment_id')->orderBy('display_order', 'asc')->orderBy('id', 'asc');
+        return $this->hasMany(EquipmentLogisticsPlan::class, 'equipment_id')->ordered();
     }
 
     /**

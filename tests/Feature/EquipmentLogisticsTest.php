@@ -101,10 +101,44 @@ class EquipmentLogisticsTest extends TestCase
         $plan = $equipment->plans()->create([
             'timetable_id' => $this->timetable1->id,
             'title' => '前日会場搬入',
+            'target_date' => '2026-10-10',
             'day_phase' => 'pre_day',
             'action_type' => 'staging_move',
+            'start_time' => null,
             'quantity' => 5,
             'witness_required' => true,
+            'status' => 'planned',
+        ]);
+        // 同フェーズで開始時刻指定あり（先に表示され、警告対象外）
+        $equipment->plans()->create([
+            'timetable_id' => $this->timetable1->id,
+            'title' => '前日朝倉庫出し',
+            'target_date' => '2026-10-10',
+            'day_phase' => 'pre_day',
+            'action_type' => 'storage_out',
+            'start_time' => '09:00',
+            'end_time' => '10:00',
+            'status' => 'planned',
+        ]);
+        // 後続フェーズ（フェーズ優先により pre_day 時間未指定より後）
+        $equipment->plans()->create([
+            'timetable_id' => $this->timetable1->id,
+            'title' => '1日目朝設置',
+            'target_date' => '2026-10-11',
+            'day_phase' => 'day1_morning',
+            'action_type' => 'setup',
+            'start_time' => '08:00',
+            'status' => 'planned',
+        ]);
+        // 完了済みかつ時間未指定（警告バッジ対象外）
+        $equipment->plans()->create([
+            'timetable_id' => $this->timetable1->id,
+            'title' => '翌日完了ステップ',
+            'target_date' => null,
+            'day_phase' => 'post_day',
+            'action_type' => 'return_storage',
+            'start_time' => null,
+            'status' => 'completed',
         ]);
 
         Equipment::factory()->rental()->create([
@@ -131,21 +165,78 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertDontSee('計画・ステップ編集');
         $response->assertDontSee('0/1 完了');
         $response->assertDontSee('数量: 5');
+        $response->assertDontSee('name="display_order"', false);
+        $response->assertSee('data-action="open-plan-create"', false);
+        $response->assertSee('ステップ追加');
         $response->assertSee('data-action="open-plan-detail"', false);
+        $response->assertSee('text-slate-900 hover:text-indigo-600', false);
         $response->assertSee('data-action="open-plan-edit"', false);
         $response->assertSee(route('timetables.logistics.plans.destroy', [$this->timetable1, $plan]), false);
         $response->assertSee('title="幹事・スタッフ立会必須"', false);
         $response->assertSee('id="plan-detail-modal"', false);
+        $response->assertSee('id="plan-create-modal"', false);
         $response->assertSee('id="plan-edit-modal"', false);
+        $response->assertSee('⚠️ 時間未指定');
+        $response->assertSee('bg-amber-50/70', false);
+        $response->assertSee('border-l-amber-400', false);
         $response->assertSee('テストパイプ椅子');
-        $response->assertSee('前日会場搬入');
+        $response->assertSeeInOrder(['前日朝倉庫出し', '前日会場搬入', '1日目朝設置', '翌日完了ステップ']);
         $response->assertSee('前日（準備日）');
         $response->assertSee('ステップ未設定資材');
         $response->assertSee('ステップ未設定');
 
         $content = $response->getContent();
+        $this->assertSame(1, substr_count($content, '⚠️ 時間未指定'));
         $this->assertDoesNotMatchRegularExpression('/\sstyle=/i', $content);
         $this->assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $content);
+    }
+
+    /**
+     * 搬出入計画一覧のアコーディオンヘッダーから個別ステップを新規追加でき、権限のない閲覧者は拒否されること
+     */
+    public function test_store_plan_creates_individual_step_on_logistics_dashboard(): void
+    {
+        $equipment = Equipment::factory()->committee()->create([
+            'name' => 'ステップ個別追加資材',
+            'quantity' => 12,
+        ]);
+
+        $payload = [
+            'equipment_id' => $equipment->id,
+            'day_phase' => 'day1_morning',
+            'action_type' => 'setup',
+            'status' => 'planned',
+            'title' => '1日目朝 会場本設置',
+            'target_date' => '2026-10-11',
+            'start_time' => '08:00',
+            'end_time' => '09:00',
+            'from_location_id' => $this->locationTaxOffice->id,
+            'from_location' => $this->locationTaxOffice->name,
+            'to_location_id' => $this->locationKitagawa->id,
+            'to_location' => $this->locationKitagawa->name,
+            'quantity' => 12,
+            'operator_type' => 'committee',
+            'witness_required' => false,
+        ];
+
+        $this->actingAs($this->operator);
+        $response = $this->post(route('timetables.logistics.plans.store', $this->timetable1), $payload);
+        $response->assertRedirect();
+        $this->assertDatabaseHas('equipment_logistics_plans', [
+            'timetable_id' => $this->timetable1->id,
+            'equipment_id' => $equipment->id,
+            'title' => '1日目朝 会場本設置',
+            'day_phase' => 'day1_morning',
+            'start_time' => '08:00',
+        ]);
+
+        $viewer = User::factory()->create([
+            'role' => 'viewer',
+            'is_active' => true,
+        ]);
+        $this->actingAs($viewer);
+        $this->post(route('timetables.logistics.plans.store', $this->timetable1), $payload)
+            ->assertForbidden();
     }
 
     /**
@@ -490,6 +581,8 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertSee('カラーコーン（個別計画検証）');
         $response->assertSee('前日13時 中継駐車場へ運搬');
         $response->assertSee('搬出入・中継・夜間保管計画ステップ一覧');
+        $response->assertDontSee('表示順: #');
+        $response->assertDontSee('name="display_order"', false);
         $response->assertSee(route('equipments.show', $equipment));
         $response->assertSee(route('timetables.logistics.index', $this->timetable1));
     }

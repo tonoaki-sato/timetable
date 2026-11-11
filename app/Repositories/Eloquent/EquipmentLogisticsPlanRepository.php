@@ -16,8 +16,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
     {
         return $timetable->logisticsPlans()
             ->with(['equipment', 'fromLocationModel', 'toLocationModel', 'witnessStaff'])
-            ->orderBy('display_order')
-            ->orderBy('id')
+            ->ordered()
             ->get();
     }
 
@@ -35,10 +34,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
                     'toLocationModel.schedules',
                     'witnessStaff',
                 ])
-                    ->orderBy('target_date', 'asc')
-                    ->orderBy('start_time', 'asc')
-                    ->orderBy('display_order', 'asc')
-                    ->orderBy('id', 'asc');
+                    ->ordered();
             },
         ])->ordered();
 
@@ -58,9 +54,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
             'toLocationModel.schedules',
             'witnessStaff',
         ])
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->orderBy('display_order', 'asc');
+            ->ordered();
 
         if ($timetable) {
             $query->where('timetable_id', $timetable->id);
@@ -86,8 +80,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
 
         $query = EquipmentLogisticsPlan::with(['equipment'])
             ->whereIn('to_location_id', $locationIds)
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc');
+            ->ordered();
 
         if ($timetable) {
             $query->where('timetable_id', $timetable->id);
@@ -102,9 +95,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
         $query = EquipmentLogisticsPlan::with(['equipment', 'witnessStaff'])
             ->where('action_type', 'night_storage')
             ->whereNull('to_location_id')
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->orderBy('display_order', 'asc');
+            ->ordered();
 
         if ($timetable) {
             $query->where('timetable_id', $timetable->id);
@@ -122,9 +113,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
                     ->orWhere('witness_required', true)
                     ->orWhereHas('equipment', fn ($sub) => $sub->where('type', 'rental'));
             })
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->orderBy('display_order', 'asc');
+            ->ordered();
 
         if ($timetable) {
             $query->where('timetable_id', $timetable->id);

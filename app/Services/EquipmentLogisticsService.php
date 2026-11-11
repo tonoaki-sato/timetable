@@ -109,7 +109,6 @@ class EquipmentLogisticsService
         $pattern->loadMissing(['steps.fromLocationModel', 'steps.toLocationModel']);
 
         $createdCount = 0;
-        $order = 10;
 
         foreach ($pattern->steps as $step) {
             $fromLocId = $step->from_location_id;
@@ -166,11 +165,9 @@ class EquipmentLogisticsService
                 'witness_staff_id' => $step->witness_required ? $witnessStaffId : null,
                 'status' => 'planned',
                 'notes' => $step->notes,
-                'display_order' => $step->display_order ?: $order,
             ]);
 
             $createdCount++;
-            $order += 10;
         }
 
         return $createdCount;

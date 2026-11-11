@@ -32,12 +32,11 @@ return new class extends Migration
             $table->foreignId('witness_staff_id')->nullable()->constrained('staff')->nullOnDelete()->comment('立会スタッフID');
             $table->string('status', 30)->default('planned')->comment('ステータス: planned, in_progress, completed, cancelled');
             $table->text('notes')->nullable()->comment('条件・注意事項メモ');
-            $table->integer('display_order')->default(0)->comment('表示順序');
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
 
             $table->index(['timetable_id', 'equipment_id']);
-            $table->index(['timetable_id', 'start_time']);
+            $table->index(['timetable_id', 'day_phase', 'target_date', 'start_time'], 'eq_plans_tt_phase_date_start_idx');
         });
     }
 

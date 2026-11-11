@@ -45,7 +45,6 @@ class UpdateEquipmentLogisticsPlanRequest extends FormRequest
             'witness_staff_id' => ['nullable', 'exists:staff,id'],
             'status' => ['sometimes', 'required', Rule::enum(EquipmentPlanStatus::class)],
             'notes' => ['nullable', 'string', 'max:2000'],
-            'display_order' => ['nullable', 'integer', 'min:0'],
         ];
     }
 

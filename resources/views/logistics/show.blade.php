@@ -289,8 +289,6 @@
                                     </div>
                                 @endif
                             </div>
-
-                            <span class="text-[10px] text-slate-400 font-mono">表示順: #{{ $plan->display_order }}</span>
                         </div>
 
                         <!-- 時間外・重複警告アラート -->
@@ -360,19 +358,11 @@
                 </div>
             </div>
 
-            <!-- タイトル & 表示順 -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div class="sm:col-span-2">
-                    <label for="step_title" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">ステップ名称 <span class="text-rose-500">*</span></label>
-                    <input type="text" id="step_title" name="title" required placeholder="例: 前日午後 倉庫出し・中継駐車場へ運搬"
-                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-                <div>
-                    <label for="step_display_order" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">表示順序（小さい順）</label>
-                    <input type="number" id="step_display_order" name="display_order" value="10" step="5"
-                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
+            <!-- ステップ名称 -->
+            <div>
+                <label for="step_title" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">ステップ名称 <span class="text-rose-500">*</span></label>
+                <input type="text" id="step_title" name="title" required placeholder="例: 前日午後 倉庫出し・中継駐車場へ運搬"
+                       class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
             <!-- 実施日 & 時間帯 -->

@@ -8,13 +8,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initLogisticsPlanModals() {
     const detailModal = document.getElementById('plan-detail-modal');
+    const createModal = document.getElementById('plan-create-modal');
+    const createForm = document.getElementById('plan-create-form');
     const editModal = document.getElementById('plan-edit-modal');
     const editForm = document.getElementById('plan-edit-form');
-    const allModals = [detailModal, editModal].filter(Boolean);
+    const allModals = [detailModal, createModal, editModal].filter(Boolean);
 
     if (!allModals.length) {
         return;
     }
+
+    document.querySelectorAll('#logistics-accordions summary a, #logistics-accordions summary button').forEach((el) => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    });
 
     let currentDetailPlan = null;
 
@@ -125,6 +133,38 @@ function initLogisticsPlanModals() {
         openModal(detailModal);
     }
 
+    function openCreateModal(trigger) {
+        if (!createModal || !createForm || !trigger) return;
+
+        const {
+            equipmentId = '',
+            equipmentName = '',
+            equipmentQuantity = '',
+            equipmentIsRental = '0',
+            storeUrl = '',
+        } = trigger.dataset;
+
+        if (storeUrl) {
+            createForm.action = storeUrl;
+        }
+
+        createForm.reset();
+        setText('create_plan_equipment_name', equipmentName);
+        setValue('create_plan_equipment_id', equipmentId);
+        setValue('create_plan_day_phase', 'pre_day');
+        setValue('create_plan_action_type', 'staging_move');
+        setValue('create_plan_status', 'planned');
+        setValue('create_plan_operator_type', equipmentIsRental === '1' ? 'event_company' : 'committee');
+        setValue('create_plan_quantity', equipmentQuantity || '');
+
+        const quantityInput = document.getElementById('create_plan_quantity');
+        if (quantityInput) {
+            quantityInput.placeholder = equipmentQuantity ? `例: ${equipmentQuantity}` : '数量';
+        }
+
+        openModal(createModal);
+    }
+
     function openEditModal(plan) {
         if (!editModal || !editForm || !plan) return;
 
@@ -137,7 +177,6 @@ function initLogisticsPlanModals() {
         setValue('edit_plan_action_type', plan.action_type || 'staging_move');
         setValue('edit_plan_status', plan.status || 'planned');
         setValue('edit_plan_title', plan.title || '');
-        setValue('edit_plan_display_order', plan.display_order ?? 10);
         setValue('edit_plan_target_date', plan.target_date ? plan.target_date.substring(0, 10) : '');
         setValue('edit_plan_start_time', plan.start_time ? plan.start_time.substring(0, 5) : '');
         setValue('edit_plan_end_time', plan.end_time ? plan.end_time.substring(0, 5) : '');
@@ -158,6 +197,29 @@ function initLogisticsPlanModals() {
 
         openModal(editModal);
     }
+
+    function bindLocationSync(prefix) {
+        ['from', 'to'].forEach((dir) => {
+            const selectEl = document.getElementById(`${prefix}_${dir}_location_id`);
+            const inputEl = document.getElementById(`${prefix}_${dir}_location`);
+            if (!selectEl || !inputEl) return;
+
+            selectEl.addEventListener('change', () => {
+                const opt = selectEl.options[selectEl.selectedIndex];
+                if (opt && opt.dataset.name) {
+                    inputEl.value = opt.dataset.name;
+                }
+            });
+        });
+    }
+
+    document.querySelectorAll('[data-action="open-plan-create"]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openCreateModal(btn);
+        });
+    });
 
     document.querySelectorAll('[data-action="open-plan-detail"]').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -181,27 +243,8 @@ function initLogisticsPlanModals() {
         });
     });
 
-    const fromSelect = document.getElementById('edit_plan_from_location_id');
-    const fromInput = document.getElementById('edit_plan_from_location');
-    if (fromSelect && fromInput) {
-        fromSelect.addEventListener('change', () => {
-            const opt = fromSelect.options[fromSelect.selectedIndex];
-            if (opt && opt.dataset.name) {
-                fromInput.value = opt.dataset.name;
-            }
-        });
-    }
-
-    const toSelect = document.getElementById('edit_plan_to_location_id');
-    const toInput = document.getElementById('edit_plan_to_location');
-    if (toSelect && toInput) {
-        toSelect.addEventListener('change', () => {
-            const opt = toSelect.options[toSelect.selectedIndex];
-            if (opt && opt.dataset.name) {
-                toInput.value = opt.dataset.name;
-            }
-        });
-    }
+    bindLocationSync('create_plan');
+    bindLocationSync('edit_plan');
 
     document.querySelectorAll('[data-action="close-modal"]').forEach((btn) => {
         btn.addEventListener('click', () => {

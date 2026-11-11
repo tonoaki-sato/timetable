@@ -90,7 +90,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => $witnessStaff?->id,
                 'status' => 'planned',
                 'notes' => 'ペダル動作・付属品員数等を確認',
-                'display_order' => 10,
             ],
             [
                 'timetable_id' => $timetableDay1?->id,
@@ -111,7 +110,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '番所前スペースが翌日ブース化するため、12:00以降駐車場へ移動',
-                'display_order' => 20,
             ],
             [
                 'timetable_id' => $timetableDay1?->id,
@@ -132,7 +130,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '会場各ポイントへ配備し、水漏れ・ペダル動作確認を実施',
-                'display_order' => 30,
             ],
             [
                 'timetable_id' => $timetableDay1?->id,
@@ -153,7 +150,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '2日目の再設置に近い近隣駐車場へ夜間保管',
-                'display_order' => 40,
             ],
             [
                 'timetable_id' => $timetableDay2?->id,
@@ -174,7 +170,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '各ポイントへ再配備し、注水・稼働準備',
-                'display_order' => 50,
             ],
             [
                 'timetable_id' => $timetableDay2?->id,
@@ -195,7 +190,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => 'イベントブース終了後の番所前スペースへ集約',
-                'display_order' => 60,
             ],
             [
                 'timetable_id' => $timetableDay2?->id,
@@ -216,7 +210,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => $witnessStaff?->id,
                 'status' => 'planned',
                 'notes' => '業者トラック積み込みに立ち会い、員数確認の上で返却サイン（立会必須）',
-                'display_order' => 70,
             ],
             // 第35回（Day 4）7ステップ
             [
@@ -238,7 +231,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => 'ペダル動作・付属品員数等を確認',
-                'display_order' => 10,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -259,7 +251,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '番所前スペースが翌日ブース化するため、12:00以降駐車場へ移動',
-                'display_order' => 20,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -280,7 +271,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '会場各ポイントへ配備し、水漏れ・ペダル動作確認を実施',
-                'display_order' => 30,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -301,7 +291,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '2日目の再設置に近い近隣駐車場へ夜間保管',
-                'display_order' => 40,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -322,7 +311,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '各ポイントへ再配備し、注水・稼働準備',
-                'display_order' => 50,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -343,7 +331,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => 'イベントブース終了後の番所前スペースへ集約',
-                'display_order' => 60,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -364,7 +351,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '業者トラック積み込みに立ち会い、員数確認の上で返却サイン（立会必須）',
-                'display_order' => 70,
             ],
         ];
 
@@ -389,7 +375,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '地下倉庫から地上の番所前スペースへ台車等で一旦すべて運び出す',
-                'display_order' => 10,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -410,7 +395,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '駐車場が12:00以降貸切利用可能になり次第、台車で番所前スペースから移動',
-                'display_order' => 20,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -431,7 +415,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '支道出入口等のクリティカルポイント用コーンを交通の妨げにならない場所へ仮置き',
-                'display_order' => 30,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -452,7 +435,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '通行止め開始直後にクリティカルポイントを本配置し、私有地進入禁止用等も順次本設置',
-                'display_order' => 40,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -473,7 +455,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => 'クリティカルポイントから順に撤去し、2日目の設置場所に近い駐車場へ移動保管',
-                'display_order' => 50,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -494,7 +475,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '2日目も通行止め開始前にクリティカルポイント付近の邪魔にならない場所へ仮置き',
-                'display_order' => 60,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -515,7 +495,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '通行止め開始直後にクリティカルポイントを本配置、私有地進入禁止用等も順次設置',
-                'display_order' => 70,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -536,7 +515,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '規制解除直後にクリティカルポイントから最優先で撤去（業者トラック進入路の開放）し番所前スペースへ集約',
-                'display_order' => 80,
             ],
             [
                 'timetable_id' => $timetableDay4?->id,
@@ -557,7 +535,6 @@ class EquipmentSeeder extends Seeder
                 'witness_staff_id' => null,
                 'status' => 'planned',
                 'notes' => '清掃・数量確認の上、番所前スペースから番所地下倉庫の定位置へ格納して完了',
-                'display_order' => 90,
             ],
         ];
 

@@ -43,7 +43,6 @@ class EquipmentLogisticsPlanFactory extends Factory
             'witness_staff_id' => null,
             'status' => 'planned',
             'notes' => fake()->optional()->sentence(),
-            'display_order' => fake()->numberBetween(1, 10),
         ];
     }
 

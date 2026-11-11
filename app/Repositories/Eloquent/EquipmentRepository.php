@@ -69,14 +69,14 @@ class EquipmentRepository implements EquipmentRepositoryInterface
                 'fromLocationModel.schedules',
                 'toLocationModel.schedules',
                 'witnessStaff',
-            ])->orderBy('display_order')->orderBy('id'),
+            ])->ordered(),
         ]);
     }
 
     #[Override]
     public function getPlansOrdered(Equipment $equipment): Collection
     {
-        return $equipment->plans()->orderBy('display_order', 'asc')->orderBy('id', 'asc')->get();
+        return $equipment->plans()->ordered()->get();
     }
 
     #[Override]
