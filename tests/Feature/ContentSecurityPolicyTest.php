@@ -98,6 +98,7 @@ class ContentSecurityPolicyTest extends TestCase
             route('timetables.staff-timeline', $timetable),
             route('staff.index'),
             route('staff.create'),
+            route('staff.show', $staff),
             route('staff.myshift', ['token' => $staff->access_token]),
             route('staff.join'),
             route('users.index'),

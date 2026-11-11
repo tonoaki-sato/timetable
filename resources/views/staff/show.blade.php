@@ -5,11 +5,11 @@
     <x-page-header
         :title="$staff->name"
         icon="👷"
-        :description="($staff->kana ? 'フリガナ: ' . $staff->kana . ' ｜ ' : '') . '所属: ' . ($staff->affiliation ?: '一般・ボランティア')">
+        description="スタッフ台帳の基本情報、マイタイムテーブル確認URL・QRコードおよび名札PDF発行を管理します。">
         <x-slot:breadcrumbs>
-            <a href="{{ route('staff.index') }}" class="hover:underline shrink-0">スタッフ管理</a>
-            <span class="shrink-0 text-slate-300">/</span>
-            <span class="text-slate-800 font-bold shrink-0 truncate max-w-[160px]">{{ $staff->name }}</span>
+            <a href="{{ route('staff.index') }}" class="hover:text-indigo-600 transition shrink-0">スタッフ管理</a>
+            <span class="text-slate-300">/</span>
+            <span class="text-slate-700 font-bold truncate max-w-[160px]">{{ $staff->name }}</span>
         </x-slot:breadcrumbs>
 
         <x-slot:badges>
@@ -29,7 +29,7 @@
             </span>
             @else
             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
-                休止中
+                停止中
             </span>
             @endif
 
@@ -42,32 +42,17 @@
 
         <x-slot:actions>
             <a href="{{ route('staff.print-card', $staff) }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0"
                 title="名札カードをPDFでダウンロード">
                 <span>📄</span>
-                <span>名札PDF</span>
+                <span>名札PDFダウンロード</span>
             </a>
 
-            @can('update', $staff)
-            <a href="{{ route('staff.edit', $staff) }}"
-                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
-                <span>✏️</span>
-                <span>編集</span>
+            <a href="{{ route('staff.index') }}"
+                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+                <span>←</span>
+                <span>一覧に戻る</span>
             </a>
-            @endcan
-
-            @can('delete', $staff)
-            <form action="{{ route('staff.destroy', $staff) }}" method="POST" class="inline"
-                data-confirm="スタッフ「{{ $staff->name }}」を削除しますか？&#10;（関連するタスクのアサインも解除されます）">
-                @csrf
-                @method('DELETE')
-                <button type="submit"
-                    class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs cursor-pointer whitespace-nowrap shrink-0">
-                    <span>🗑️</span>
-                    <span>削除</span>
-                </button>
-            </form>
-            @endcan
         </x-slot:actions>
     </x-page-header>
 
@@ -92,169 +77,168 @@
     </div>
     @endif
 
-    <!-- スタッフ基本情報カード -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
 
-            <div class="flex items-center space-x-2">
-                @if($staff->is_reissued)
-                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                    ⚠️ 再発行 {{ $staff->reissue_count }}回目 ({{ $staff->token_reissued_at?->format('m/d H:i') }})
-                </span>
-                @endif
+        <!-- 左カラム (2/3): 基本情報 & 本人専用マイタイムテーブル確認URL -->
+        <div class="lg:col-span-2 space-y-4">
 
-                @if($staff->is_active)
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    ● 稼働可能
-                </span>
-                @else
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200">
-                    停止中
-                </span>
-                @endif
-            </div>
-        </div>
-
-        <div class="p-6 sm:p-8 space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <!-- 所属団体 -->
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span class="text-[11px] font-bold text-slate-500 block mb-1">🏢 所属団体・地域会等</span>
-                    <div class="text-sm font-bold text-slate-900">
-                        {{ $staff->affiliation ?: '未設定' }}
-                    </div>
+            <!-- 1. 基本情報カード -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+                <div class="pb-3 border-b border-slate-100">
+                    <h2 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                        <span>👷</span>
+                        <span>基本情報</span>
+                    </h2>
                 </div>
 
-                <!-- 登録経路情報 -->
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span class="text-[11px] font-bold text-slate-500 block mb-1">🏷️ 登録情報</span>
-                    <div class="text-sm font-bold text-slate-900">
-                        {{ $staff->registered_via === 'self' ? 'Webセルフ登録' : '本部登録' }}
-                    </div>
-                    <span class="text-[10px] text-slate-400 mt-0.5 block">
-                        登録日: {{ $staff->created_at?->format('Y/m/d') ?? '-' }}
-                    </span>
-                </div>
-
-                <!-- 割当タスク数 & 受付状況 -->
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span class="text-[11px] font-bold text-slate-500 block mb-1">📋 タスク &amp; 運行別受付</span>
-                    <div class="text-sm font-bold text-slate-900">
-                        {{ $staff->assignments->count() }} 件
-                        @if($staff->checkIns->isNotEmpty())
-                            <div class="mt-1.5 flex flex-wrap gap-1.5">
-                                @foreach($staff->checkIns->take(3) as $checkIn)
-                                    <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                        {{ $checkIn->timetable?->name ?? '運行計画#' . $checkIn->timetable_id }} ({{ $checkIn->checked_in_at->format('m/d H:i') }})
-                                    </span>
-                                @endforeach
-                            </div>
-                        @else
-                            <span class="ml-2 text-xs font-normal text-slate-400">未受付</span>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- 専用マイタイムテーブルURL & セキュリティ再発行 -->
-            <div class="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-3">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
                     <div>
-                        <h4 class="text-xs font-bold text-indigo-900 flex items-center space-x-1.5">
+                        <span class="text-slate-400 block text-[11px]">スタッフID</span>
+                        <span class="font-bold font-mono text-slate-800 block mt-0.5">
+                            #{{ $staff->id }}
+                        </span>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-400 block text-[11px]">氏名</span>
+                        <span class="font-bold text-slate-900 text-sm block mt-0.5">
+                            {{ $staff->name }}
+                        </span>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-400 block text-[11px]">フリガナ</span>
+                        <span class="font-bold text-slate-800 block mt-0.5">
+                            {{ $staff->kana ?: '未設定' }}
+                        </span>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-400 block text-[11px]">スタッフ区分</span>
+                        <div class="mt-0.5">
+                            @if($staff->isFixed())
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                📌 固定スタッフ
+                            </span>
+                            @else
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                                🔄 充足スタッフ
+                            </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-400 block text-[11px]">稼働状態</span>
+                        <div class="mt-0.5">
+                            @if($staff->is_active)
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                ● 稼働可能
+                            </span>
+                            @else
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                停止中
+                            </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-400 block text-[11px]">最終アクセス日時</span>
+                        <span class="font-bold font-mono text-slate-800 block mt-0.5">
+                            {{ $staff->last_accessed_at?->format('Y/m/d H:i') ?? '未アクセス' }}
+                        </span>
+                    </div>
+
+                    <div class="col-span-2 sm:col-span-3 pt-3 border-t border-slate-100">
+                        <span class="text-slate-400 block text-[11px]">名札・トークン再発行状況</span>
+                        <div class="mt-1">
+                            @if($staff->is_reissued)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                ⚠️ 再発行 {{ $staff->reissue_count }}回目（{{ $staff->token_reissued_at?->format('Y/m/d H:i') ?? '-' }}）
+                            </span>
+                            @else
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                初回発行（未再発行）
+                            </span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 専用マイタイムテーブルURL & セキュリティ再発行カード -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+                <div class="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h2 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
                             <span>📱</span>
                             <span>本人専用 マイタイムテーブル確認URL</span>
-                        </h4>
-                        <p class="text-[11px] text-indigo-700/80 mt-0.5">
+                        </h2>
+                        <p class="text-[11px] text-slate-500 mt-0.5">
                             パスワード不要でスタッフ本人がスマホから直接確認できる個別URLです。
                         </p>
                     </div>
 
                     @can('update', $staff)
-                    <div class="flex items-center space-x-2">
-                        <form action="{{ route('staff.regenerate-token', $staff) }}" method="POST"
-                              data-confirm="スタッフ「{{ $staff->name }}」の名札紛失・セキュリティ再発行を実行しますか？&#10;&#10;【注意】落とした名札の古いQRコードは即時に無効化（404）され、新しい名札が発行されます。">
-                            @csrf
-                            <button type="submit" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
-                                <span>⚠️</span>
-                                <span>名札紛失・セキュリティ再発行</span>
-                            </button>
-                        </form>
-                    </div>
+                    <form action="{{ route('staff.regenerate-token', $staff) }}" method="POST"
+                          data-confirm="スタッフ「{{ $staff->name }}」の名札紛失・セキュリティ再発行を実行しますか？&#10;&#10;【注意】落とした名札の古いQRコードは即時に無効化（404）され、新しい名札が発行されます。">
+                        @csrf
+                        <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer whitespace-nowrap">
+                            <span>⚠️</span>
+                            <span>名札紛失・セキュリティ再発行</span>
+                        </button>
+                    </form>
                     @endcan
                 </div>
 
-                <div class="flex items-center space-x-2">
-                    <input type="text" id="staffShiftUrlInput" readonly value="{{ $staff->my_shift_url }}"
-                           class="flex-1 px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-mono text-slate-700">
-                    <button type="button" id="copyShiftUrlBtn"
-                            class="px-3 py-1.5 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
-                        <span>📋</span>
-                        <span id="copyShiftUrlBtnText">URLコピー</span>
-                    </button>
-                    <a href="{{ $staff->my_shift_url }}" target="_blank" rel="noopener noreferrer"
-                       class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1">
-                        <span>開く</span>
-                        <span>↗</span>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <input type="text" id="staffShiftUrlInput" readonly value="{{ $shiftUrl }}"
+                           class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-700">
+                    <div class="flex items-center space-x-2 shrink-0">
+                        <button type="button" id="copyShiftUrlBtn"
+                                class="px-3 py-2 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer whitespace-nowrap">
+                            <span>📋</span>
+                            <span id="copyShiftUrlBtnText">URLコピー</span>
+                        </button>
+                        <a href="{{ $shiftUrl }}" target="_blank" rel="noopener noreferrer"
+                           class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap">
+                            <span>開く</span>
+                            <span>↗</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 右カラム (1/3): QRコード & 名札PDF出力 -->
+        <div class="lg:col-span-1 space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+                <div class="pb-3 border-b border-slate-100">
+                    <h2 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                        <span>🔳</span>
+                        <span>マイタイムテーブル QRコード</span>
+                    </h2>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center space-y-2">
+                    <img src="{{ $qrDataUri }}" alt="{{ $staff->name }} マイタイムテーブルQRコード" class="w-48 h-48 mx-auto rounded-lg bg-white p-1.5 border border-slate-200">
+                    <p class="text-[11px] text-slate-500 leading-relaxed">
+                        スタッフ本人のスマートフォンで読み取ると、専用マイタイムテーブルページを直接開けます。
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <a href="{{ route('staff.print-card', $staff) }}"
+                       class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center justify-center space-x-1.5">
+                        <span>📄</span>
+                        <span>名札PDFをダウンロード</span>
                     </a>
                 </div>
             </div>
-
-            <!-- アサイン済みタスク一覧 -->
-            <div>
-                <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center space-x-1.5">
-                    <span>📅</span>
-                    <span>担当タスク・運行シフト一覧</span>
-                </h3>
-
-                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                    <table class="w-full border-collapse text-left text-xs">
-                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-600">
-                            <tr>
-                                <th class="px-4 py-2.5 font-bold">運行日</th>
-                                <th class="px-4 py-2.5 font-bold">時間帯</th>
-                                <th class="px-4 py-2.5 font-bold">担当班</th>
-                                <th class="px-4 py-2.5 font-bold">タスク名</th>
-                                <th class="px-4 py-2.5 font-bold">役割</th>
-                                <th class="px-4 py-2.5 font-bold">出欠状態</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse($staff->assignments as $assignment)
-                            <tr class="hover:bg-slate-50/70 transition">
-                                <td class="px-4 py-2.5 font-mono text-slate-700 whitespace-nowrap">
-                                    {{ $assignment->task?->timetable?->target_date?->format('Y/m/d') ?? '-' }}
-                                </td>
-                                <td class="px-4 py-2.5 font-mono text-slate-600 whitespace-nowrap">
-                                    {{ substr($assignment->task?->start_time ?? '', 0, 5) }} 〜 {{ substr($assignment->task?->end_time ?? '', 0, 5) }}
-                                </td>
-                                <td class="px-4 py-2.5 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                        {{ $assignment->task?->lane ?? '-' }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-2.5 font-bold text-slate-900">
-                                    {{ $assignment->task?->title ?? '-' }}
-                                </td>
-                                <td class="px-4 py-2.5 text-slate-600">
-                                    {{ $assignment->role_description ?: '一般担当' }}
-                                </td>
-                                <td class="px-4 py-2.5 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] border {{ $assignment->attendance_badge_class }}">
-                                        {{ $assignment->attendance_status_label }}
-                                    </span>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-slate-400">
-                                    現在アサインされているタスクはありません。
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
+
     </div>
 
 </div>

@@ -67,11 +67,7 @@ class StaffController extends Controller
     {
         $this->authorize('view', $staff);
 
-        $staff = $this->staffService->getStaffWithShowDetails($staff);
-
-        return view('staff.show', [
-            'staff' => $staff,
-        ]);
+        return view('staff.show', $this->staffService->getShowViewData($staff)->toArray());
     }
 
     /**

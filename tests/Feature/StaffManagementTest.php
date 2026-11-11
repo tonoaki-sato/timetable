@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Staff;
-use App\Models\StaffCheckIn;
-use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -149,22 +147,19 @@ class StaffManagementTest extends TestCase
     }
 
     /**
-     * スタッフ一覧が表示され、詳細画面で登録経路が表示されること
+     * スタッフ詳細画面で基本情報・QRコード・名札PDFダウンロードリンクが表示され、不要情報や編集・削除リンクが非表示であること
      */
-    public function test_admin_staff_index_and_show_displays_registered_via(): void
+    public function test_staff_show_displays_basic_info_qr_code_and_pdf_link_without_edit_delete_or_shift_sections(): void
     {
         $this->actingAs($this->operator);
 
         $staff = Staff::factory()->selfRegistered()->create([
             'name' => '山田 太郎',
-        ]);
-        $timetable = Timetable::factory()->create([
-            'name' => '第35回本祭 1日目',
-        ]);
-        StaffCheckIn::create([
-            'timetable_id' => $timetable->id,
-            'staff_id' => $staff->id,
-            'checked_in_at' => now()->setTime(8, 30),
+            'kana' => 'ヤマダ タロウ',
+            'affiliation' => '中央商店街振興会',
+            'staff_type' => 'fixed',
+            'is_active' => true,
+            'last_accessed_at' => now()->setTime(9, 15),
         ]);
 
         $response = $this->get(route('staff.index'));
@@ -173,9 +168,29 @@ class StaffManagementTest extends TestCase
 
         $showResponse = $this->get(route('staff.show', $staff));
         $showResponse->assertStatus(200);
-        $showResponse->assertSee('セルフ登録');
-        $showResponse->assertSee('第35回本祭 1日目');
-        $showResponse->assertSee('08:30');
+
+        // 基本情報・QRコード・名札PDF・マイシフトURLが表示されること
+        $showResponse->assertSee('基本情報');
+        $showResponse->assertSee("#{$staff->id}");
+        $showResponse->assertSee('山田 太郎');
+        $showResponse->assertSee('ヤマダ タロウ');
+        $showResponse->assertSee('固定スタッフ');
+        $showResponse->assertSee('稼働可能');
+        $showResponse->assertSee('09:15');
+        $showResponse->assertSee('data:image/png;base64,');
+        $showResponse->assertSee(route('staff.print-card', $staff));
+        $showResponse->assertSee('名札PDFをダウンロード');
+        $showResponse->assertSee($staff->my_shift_url);
+
+        // 削除対象セクション・所属情報・編集/削除リンクが表示されないこと
+        $showResponse->assertDontSee('所属団体・地域会等');
+        $showResponse->assertDontSee('中央商店街振興会');
+        $showResponse->assertDontSee('登録情報');
+        $showResponse->assertDontSee('タスク &amp; 運行別受付', false);
+        $showResponse->assertDontSee('担当タスク・運行シフト一覧');
+        $showResponse->assertDontSee(route('staff.edit', $staff));
+        $showResponse->assertDontSee('<form action="'.route('staff.destroy', $staff).'"', false);
+        $showResponse->assertDontSee('name="_method" value="DELETE"', false);
     }
 
     /**

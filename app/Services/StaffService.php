@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DTOs\Staff\MyShiftLaneFilterOptionDTO;
 use App\DTOs\Staff\MyShiftTimetableOptionDTO;
 use App\DTOs\Staff\MyShiftViewDataDTO;
+use App\DTOs\Staff\StaffShowViewDataDTO;
 use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\Staff;
@@ -34,17 +35,21 @@ class StaffService
 
     protected StaffCheckInRepositoryInterface $staffCheckInRepository;
 
+    protected QRCodeService $qrCodeService;
+
     public function __construct(
         protected StaffRepositoryInterface $staffRepository,
         ?TaskStaffAssignmentRepositoryInterface $assignmentRepository = null,
         ?TimetableTaskRepositoryInterface $taskRepository = null,
         ?LaneRequestRepositoryInterface $laneRequestRepository = null,
         ?StaffCheckInRepositoryInterface $staffCheckInRepository = null,
+        ?QRCodeService $qrCodeService = null,
     ) {
         $this->assignmentRepository = $assignmentRepository ?? app(TaskStaffAssignmentRepositoryInterface::class);
         $this->taskRepository = $taskRepository ?? app(TimetableTaskRepositoryInterface::class);
         $this->laneRequestRepository = $laneRequestRepository ?? app(LaneRequestRepositoryInterface::class);
         $this->staffCheckInRepository = $staffCheckInRepository ?? app(StaffCheckInRepositoryInterface::class);
+        $this->qrCodeService = $qrCodeService ?? app(QRCodeService::class);
     }
 
     /**
@@ -56,11 +61,17 @@ class StaffService
     }
 
     /**
-     * スタッフ詳細画面用にリレーションをロードして取得
+     * スタッフ詳細画面用の表示データを構築して取得
      */
-    public function getStaffWithShowDetails(Staff $staff): Staff
+    public function getShowViewData(Staff $staff): StaffShowViewDataDTO
     {
-        return $this->staffRepository->loadShowRelations($staff);
+        $shiftUrl = $staff->my_shift_url;
+
+        return new StaffShowViewDataDTO(
+            staff: $staff,
+            shiftUrl: $shiftUrl,
+            qrDataUri: $this->qrCodeService->generatePngDataUri($shiftUrl, 220),
+        );
     }
 
     /**

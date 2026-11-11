@@ -153,12 +153,6 @@ class StaffRepository implements StaffRepositoryInterface
     }
 
     #[Override]
-    public function loadShowRelations(Staff $staff): Staff
-    {
-        return $staff->load(['assignments.task.timetable', 'checkIns.timetable']);
-    }
-
-    #[Override]
     public function loadShiftRelationsAndGetLedLanes(Staff $staff): Collection
     {
         $staff->load([
