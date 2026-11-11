@@ -27,7 +27,7 @@ class DownloadEquipmentLogisticsPdfAction
             'pdf.equipment_logistics',
             $viewData,
             $filename,
-            'landscape'
+            'portrait'
         );
     }
 
@@ -42,10 +42,10 @@ class DownloadEquipmentLogisticsPdfAction
         $equipmentIds = $this->logisticsService->parseEquipmentIds($request->input('equipment_ids'));
 
         return [
+            'timetable' => $timetable,
             'typeFilter' => $typeFilter,
             'equipmentIds' => $equipmentIds,
             'equipments' => $this->logisticsService->getEquipmentsFlowData($typeFilter, $timetable, $equipmentIds),
-            'locationsData' => $this->logisticsService->getLocationsStatusData($timetable),
             'festivalDates' => $this->logisticsService->resolveFestivalDates(),
         ];
     }

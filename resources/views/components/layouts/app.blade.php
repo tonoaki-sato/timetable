@@ -320,7 +320,7 @@
                                                 <span class="whitespace-nowrap truncate">搬出入指示書印刷 (PDF)</span>
                                                 <span class="text-[10px] text-slate-400">↓</span>
                                             </div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">機材指示書兼現場チェックシート（A4横）</p>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">機材指示書兼現場チェックシート（A4縦）</p>
                                         </div>
                                     </a>
                                     <a href="{{ route('staff.index') }}"

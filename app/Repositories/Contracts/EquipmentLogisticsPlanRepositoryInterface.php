@@ -25,14 +25,6 @@ interface EquipmentLogisticsPlanRepositoryInterface
     public function getEquipmentsFlowData(?string $type = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection;
 
     /**
-     * 指定移動先拠点ID群に紐づく計画ステップを資機材情報付きで取得
-     *
-     * @param  array<int, int>  $locationIds
-     * @return Collection<int, EquipmentLogisticsPlan>
-     */
-    public function getByToLocationIdsWithEquipment(array $locationIds, ?Timetable $timetable = null): Collection;
-
-    /**
      * 新規計画ステップを作成
      *
      * @param  array<string, mixed>  $attributes

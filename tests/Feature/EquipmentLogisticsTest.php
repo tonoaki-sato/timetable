@@ -590,8 +590,16 @@ class EquipmentLogisticsTest extends TestCase
         $viewData = $action->buildViewData(Request::create('/logistics/print', 'GET', ['type' => 'rental']), $this->timetable1);
         $viewData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
 
+        $this->assertArrayNotHasKey('locationsData', $viewData);
+
         $html = view('pdf.equipment_logistics', $viewData)->render();
+        $this->assertStringContainsString('size: A4 portrait;', $html);
+        $this->assertStringContainsString('margin: 12mm;', $html);
+        $this->assertStringNotContainsString('主要中継拠点・保管場所', $html);
         $this->assertStringContainsString('トランシーバー特小', $html);
+        $this->assertStringContainsString('前日受取立会', $html);
+        $this->assertStringContainsString('#1', $html);
+        $this->assertStringContainsString('[立会要]', $html);
         $this->assertStringNotContainsString($committeeEquipment->name, $html);
 
         $response = $this->get(route('timetables.logistics.print', [
@@ -661,6 +669,7 @@ class EquipmentLogisticsTest extends TestCase
         $viewData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
         $html = view('pdf.equipment_logistics', $viewData)->render();
         $this->assertStringContainsString('該当する資材または搬出入計画データはありません。', $html);
+        $this->assertStringNotContainsString('主要中継拠点・保管場所', $html);
 
         $pdfResponse = $this->get(route('timetables.logistics.print', $this->timetable1));
         $pdfResponse->assertStatus(200);

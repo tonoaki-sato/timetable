@@ -67,7 +67,7 @@ class EquipmentLogisticsController extends Controller
     }
 
     /**
-     * 指定タイムテーブルにおけるA4横 搬出入指示書兼チェックリストPDFダウンロード
+     * 指定タイムテーブルにおけるA4縦 搬出入指示書兼チェックリストPDFダウンロード
      */
     public function print(Timetable $timetable, Request $request): Response
     {

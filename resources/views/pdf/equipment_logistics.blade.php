@@ -34,23 +34,11 @@
             font-weight: 700;
             font-style: normal;
         }
-        @font-face {
-            font-family: 'JapaneseFont';
-            src: url('{{ $japaneseFontPath }}') format('truetype');
-            font-weight: 800;
-            font-style: normal;
-        }
-        @font-face {
-            font-family: 'JapaneseFont';
-            src: url('{{ $japaneseFontPath }}') format('truetype');
-            font-weight: 900;
-            font-style: normal;
-        }
         @page {
-            size: A4 landscape;
-            margin: 8mm 8mm;
+            size: A4 portrait;
+            margin: 12mm;
         }
-        *, body, table, th, td, h1, h2, h3, div, span, strong, b, p {
+        body, table, th, td, h1, h2, h3, div, span, strong, b, p {
             font-family: 'JapaneseFont', sans-serif !important;
             box-sizing: border-box;
             margin: 0;
@@ -58,290 +46,381 @@
         }
         body {
             font-family: 'JapaneseFont', sans-serif;
-            color: #1e293b;
-            font-size: 8.5px;
-            line-height: 1.25;
+            color: #0f172a;
+            font-size: 9pt;
+            line-height: 1.35;
         }
         .header-table {
             width: 100%;
-            border-bottom: 2px solid #0f172a;
-            padding-bottom: 4px;
-            margin-bottom: 6px;
+            border-bottom: 1.5pt solid #0f172a;
+            padding-bottom: 3pt;
+            margin-bottom: 8pt;
         }
         .header-title {
-            font-size: 14px;
+            font-size: 13pt;
             font-weight: bold;
             color: #0f172a;
         }
         .filter-tag {
             background-color: #e0e7ff;
             color: #3730a3;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 8.5px;
+            padding: 1pt 5pt;
+            border-radius: 2.5pt;
+            font-size: 7.5pt;
             font-weight: bold;
-            margin-left: 5px;
+            margin-left: 4pt;
         }
         .header-meta {
-            text-align: right;
-            font-size: 8px;
+            font-size: 7.5pt;
             color: #475569;
-            vertical-align: bottom;
+            margin-top: 2pt;
         }
-        .locations-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 8px;
-        }
-        .locations-table td {
-            background-color: #f8fafc;
-            border: 1px solid #cbd5e1;
-            padding: 3px 5px;
-            vertical-align: top;
-            font-size: 8px;
-            width: 20%;
-        }
-        .loc-name {
-            font-weight: bold;
-            color: #0f172a;
-        }
-        .loc-time {
-            color: #047857;
-            font-size: 7.5px;
-            margin-top: 1px;
-        }
-        .table-title {
-            font-weight: bold;
-            font-size: 9px;
+        .header-stats {
+            text-align: right;
+            font-size: 7.5pt;
             color: #334155;
-            margin-bottom: 3px;
+            padding-top: 2pt;
         }
-        .main-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 6px;
-        }
-        .main-table th {
+        .stat-badge {
+            display: inline-block;
             background-color: #f1f5f9;
-            border: 1px solid #cbd5e1;
-            padding: 3px 4px;
-            text-align: left;
+            border: 0.75pt solid #cbd5e1;
+            padding: 2pt 6pt;
+            border-radius: 2.5pt;
             font-weight: bold;
-            color: #334155;
-            font-size: 8px;
+            white-space: nowrap;
         }
-        .main-table td {
-            border: 1px solid #cbd5e1;
-            padding: 3px 4px;
-            vertical-align: top;
-            font-size: 8px;
+        .equipment-section {
+            margin-bottom: 9pt;
         }
-        .col-eq {
-            width: 16%;
+        .equipment-header-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #f8fafc;
+            border: 0.75pt solid #cbd5e1;
+            border-bottom: none;
+            page-break-after: avoid;
         }
-        .col-type {
-            width: 10%;
-        }
-        .col-phase {
-            width: 12.3%;
+        .equipment-header-table td {
+            padding: 4pt 6pt;
+            vertical-align: middle;
         }
         .eq-name {
             font-weight: bold;
+            font-size: 9.5pt;
             color: #0f172a;
         }
-        .eq-qty {
-            color: #4338ca;
+        .eq-badge {
+            display: inline-block;
+            background-color: #eef2ff;
+            color: #3730a3;
+            border: 0.75pt solid #c7d2fe;
+            border-radius: 2pt;
+            padding: 0.5pt 4pt;
+            font-size: 7.5pt;
             font-weight: bold;
-            font-size: 8px;
-            margin-top: 1px;
+            margin-left: 4pt;
         }
-        .plan-box {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 2px;
-            padding: 2px 3px;
-            margin-bottom: 2px;
+        .eq-type-badge {
+            display: inline-block;
+            background-color: #ffffff;
+            color: #334155;
+            border: 0.75pt solid #cbd5e1;
+            border-radius: 2pt;
+            padding: 0.5pt 4pt;
+            font-size: 7.5pt;
+            font-weight: bold;
+            margin-left: 3pt;
         }
-        .plan-title {
+        .eq-storage {
+            font-size: 7.5pt;
+            color: #64748b;
+            margin-left: 5pt;
+        }
+        .eq-count {
+            text-align: right;
+            font-size: 7.5pt;
+            color: #475569;
+            white-space: nowrap;
+            width: 20%;
+        }
+        .eq-empty-count {
+            color: #b45309;
+            font-weight: bold;
+        }
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 8pt;
+        }
+        .steps-table thead {
+            display: table-header-group;
+        }
+        .steps-table tr {
+            page-break-inside: avoid;
+        }
+        .steps-table th {
+            background-color: #f1f5f9;
+            border: 0.75pt solid #cbd5e1;
+            padding: 3.5pt 5pt;
+            text-align: left;
             font-weight: bold;
             color: #1e293b;
+            font-size: 7.5pt;
         }
-        .plan-meta {
-            color: #64748b;
-            font-size: 7.5px;
+        .steps-table td {
+            border: 0.75pt solid #cbd5e1;
+            padding: 3.5pt 5pt;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .col-order {
+            width: 6%;
+            text-align: center !important;
+            color: #475569;
+            font-weight: bold;
+        }
+        .col-phase {
+            width: 17%;
+        }
+        .col-title {
+            width: 28%;
+        }
+        .col-date {
+            width: 11%;
+            white-space: nowrap;
+            color: #334155;
+        }
+        .col-time {
+            width: 12%;
+            white-space: nowrap;
+            color: #334155;
+        }
+        .col-route {
+            width: 26%;
+            color: #1e293b;
+        }
+        .phase-badge {
+            display: inline-block;
+            background-color: #f1f5f9;
+            color: #334155;
+            border: 0.75pt solid #cbd5e1;
+            border-radius: 2pt;
+            padding: 0.5pt 4pt;
+            font-size: 7pt;
+            font-weight: bold;
+        }
+        .phase-pre_day {
+            background-color: #fffbeb;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+        .phase-day1_morning,
+        .phase-day2_morning {
+            background-color: #eef2ff;
+            color: #3730a3;
+            border-color: #c7d2fe;
+        }
+        .phase-day1_evening,
+        .phase-day2_evening {
+            background-color: #f5f3ff;
+            color: #5b21b6;
+            border-color: #ddd6fe;
+        }
+        .phase-post_day {
+            background-color: #f0fdfa;
+            color: #115e59;
+            border-color: #99f6e4;
         }
         .witness-tag {
             color: #b91c1c;
-            font-size: 7.5px;
+            font-size: 7pt;
             font-weight: bold;
+            margin-top: 1.5pt;
+        }
+        .step-title {
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .step-sub {
+            font-size: 7pt;
+            color: #64748b;
+            margin-top: 1pt;
+            line-height: 1.25;
+        }
+        .route-from {
+            color: #475569;
+        }
+        .route-arrow {
+            color: #4338ca;
+            font-weight: bold;
+        }
+        .route-to {
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .empty-step-row {
+            text-align: center;
+            color: #64748b;
+            padding: 8pt !important;
+            font-size: 7.5pt;
+        }
+        .empty-row {
+            text-align: center;
+            padding: 20pt !important;
+            color: #64748b;
         }
         .footer-table {
             width: 100%;
-            border-top: 1px solid #cbd5e1;
-            padding-top: 4px;
-            font-size: 8px;
+            border-top: 0.75pt solid #cbd5e1;
+            padding-top: 4pt;
+            margin-top: 6pt;
+            font-size: 7.5pt;
             color: #64748b;
         }
+        .footer-note {
+            width: 56%;
+            vertical-align: top;
+        }
         .sign-area {
+            width: 44%;
             text-align: right;
             color: #334155;
+            vertical-align: top;
+            white-space: nowrap;
         }
     </style>
 </head>
 <body>
+    @php
+        $totalEquipments = $equipments->count();
+        $totalSteps = $equipments->sum(fn ($eq) => $eq->plans->count());
+    @endphp
+
     <!-- ヘッダー -->
     <table class="header-table">
         <tr>
             <td>
-                <span class="header-title">資材搬出入・中継・夜間保管計画書</span>
-                @if($typeFilter)
-                    <span class="filter-tag">【区分: {{ $typeFilter }}】</span>
-                @endif
-                @if(!empty($equipmentIds))
-                    <span class="filter-tag">【表示資材指定: {{ $equipments->count() }}件】</span>
-                @endif
-            </td>
-            <td class="header-meta">
-                運行日程: {{ $festivalDates['day1'] }} 〜 {{ $festivalDates['day2'] }}<br>
-                出力日時: {{ now()->format('Y/m/d H:i') }} / まつり運行管理システム
-            </td>
-        </tr>
-    </table>
-
-    <!-- 主要中継拠点・保管場所一覧 -->
-    @if(!empty($locationsData))
-    <div class="table-title">■ 主要中継拠点・保管場所 ＆ 利用可能時間</div>
-    <table class="locations-table">
-        <tr>
-            @foreach(array_slice($locationsData, 0, 5) as $locItem)
-            <td>
-                <div class="loc-name">{{ $locItem['location']->name }}</div>
-                <div class="loc-time">
-                    @if($locItem['location']->is_all_day)
-                        終日常時使用可
-                    @elseif($locItem['location']->schedules->isNotEmpty())
-                        @foreach($locItem['location']->schedules as $s)
-                            {{ $s->start_at->format('n/j H:i') }}〜{{ $s->end_at->format($s->start_at->isSameDay($s->end_at) ? 'H:i' : 'n/j H:i') }}<br>
-                        @endforeach
-                    @else
-                        利用枠未設定
+                <div class="header-title">
+                    資材搬出入・中継・夜間保管計画書
+                    @if($typeFilter)
+                        <span class="filter-tag">【区分: {{ $typeFilter }}】</span>
+                    @endif
+                    @if(!empty($equipmentIds))
+                        <span class="filter-tag">【表示資材指定: {{ $totalEquipments }}件】</span>
                     @endif
                 </div>
+                <div class="header-meta">
+                    @if($timetable)
+                        運行枠: <strong>{{ $timetable->name }}</strong> ｜
+                        運行日: <strong>{{ $timetable->target_date?->format('Y年m月d日') ?? '未設定' }}</strong> ｜
+                    @else
+                        運行日程: <strong>{{ $festivalDates['day1'] }} 〜 {{ $festivalDates['day2'] }}</strong> ｜
+                    @endif
+                    出力日時: {{ now()->format('Y/m/d H:i') }}
+                </div>
             </td>
-            @endforeach
+        </tr>
+        <tr>
+            <td class="header-stats">
+                <span class="stat-badge">
+                    対象資材: <strong>{{ $totalEquipments }}件</strong> ／ 総ステップ: <strong>{{ $totalSteps }}件</strong>
+                </span>
+            </td>
         </tr>
     </table>
-    @endif
 
-    <!-- 資材別 搬出入スケジュール -->
-    <table class="main-table">
-        <thead>
+    <!-- 資材別 搬出入計画一覧（タスク一覧形式） -->
+    @forelse($equipments as $eq)
+    <div class="equipment-section">
+        <table class="equipment-header-table">
             <tr>
-                <th class="col-eq">資材名・数量</th>
-                <th class="col-type">区分</th>
-                <th class="col-phase">事前・前日 (準備)</th>
-                <th class="col-phase">1日目 朝 (設置)</th>
-                <th class="col-phase">1日目 夜 (保管)</th>
-                <th class="col-phase">2日目 朝 (設置)</th>
-                <th class="col-phase">2日目 夜 (撤収)</th>
-                <th class="col-phase">翌日 (回収)</th>
+                <td>
+                    <span class="eq-name">{{ $eq->name }}</span>
+                    <span class="eq-badge">{{ $eq->formatted_quantity }}</span>
+                    <span class="eq-type-badge">{{ $eq->type_enum->shortLabel() }}</span>
+                    @if($eq->storage_location)
+                        <span class="eq-storage">保管: {{ $eq->storage_location }}</span>
+                    @endif
+                </td>
+                <td class="eq-count">
+                    @if($eq->plans->isNotEmpty())
+                        ステップ: <strong>{{ $eq->plans->count() }}件</strong>
+                    @else
+                        <span class="eq-empty-count">ステップ未設定</span>
+                    @endif
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @forelse($equipments as $eq)
-            <tr>
-                <td class="col-eq">
-                    <div class="eq-name">{{ $eq->name }}</div>
-                    <div class="eq-qty">{{ $eq->formatted_quantity }}</div>
-                </td>
-                <td class="col-type">
-                    <div>{{ $eq->type_label }}</div>
-                </td>
-                <td class="col-phase">
-                    @forelse($eq->plansForPhases(['other', 'pre_day']) as $p)
-                    <div class="plan-box">
-                        <div class="plan-title">{{ $p->title }}</div>
-                        <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }} ({{ $p->resolved_from_location }}→{{ $p->resolved_to_location }})</div>
-                        @if($p->witness_required)
-                        <div class="witness-tag">【立会要】: {{ $p->witnessStaff?->name ?: '要' }}</div>
+        </table>
+
+        <table class="steps-table">
+            <thead>
+                <tr>
+                    <th class="col-order">順序</th>
+                    <th class="col-phase">フェーズ</th>
+                    <th class="col-title">ステップ表示名</th>
+                    <th class="col-date">日付</th>
+                    <th class="col-time">時間</th>
+                    <th class="col-route">移動元 -> 移動先</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($eq->plans as $plan)
+                <tr>
+                    <td class="col-order">#{{ $loop->iteration }}</td>
+                    <td class="col-phase">
+                        <span class="phase-badge phase-{{ $plan->day_phase }}">{{ $plan->day_phase_enum->shortLabel() }}</span>
+                        @if($plan->witness_required)
+                            <div class="witness-tag">[立会要]{{ $plan->witnessStaff?->name ? ' ' . $plan->witnessStaff->name : '' }}</div>
                         @endif
-                    </div>
-                    @empty
-                    <span style="color: #cbd5e1;">ー</span>
-                    @endforelse
-                </td>
-                <td class="col-phase">
-                    @forelse($eq->plansForPhases('day1_morning') as $p)
-                    <div class="plan-box">
-                        <div class="plan-title">{{ $p->title }}</div>
-                        <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }} ({{ $p->resolved_from_location }}→{{ $p->resolved_to_location }})</div>
-                    </div>
-                    @empty
-                    <span style="color: #cbd5e1;">ー</span>
-                    @endforelse
-                </td>
-                <td class="col-phase">
-                    @forelse($eq->plansForPhases('day1_evening') as $p)
-                    <div class="plan-box" style="background-color: #eef2ff;">
-                        <div class="plan-title" style="color: #312e81;">{{ $p->to_location }}</div>
-                        <div class="plan-meta">{{ $p->formatted_quantity !== '' ? $p->formatted_quantity : '全量保管' }} ({{ $p->start_time ? substr($p->start_time, 0, 5) : '' }})</div>
-                    </div>
-                    @empty
-                    <span style="color: #cbd5e1;">ー</span>
-                    @endforelse
-                </td>
-                <td class="col-phase">
-                    @forelse($eq->plansForPhases('day2_morning') as $p)
-                    <div class="plan-box">
-                        <div class="plan-title">{{ $p->title }}</div>
-                        <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }}</div>
-                    </div>
-                    @empty
-                    <span style="color: #cbd5e1;">ー</span>
-                    @endforelse
-                </td>
-                <td class="col-phase">
-                    @forelse($eq->plansForPhases('day2_evening') as $p)
-                    <div class="plan-box" style="background-color: #fffbeb;">
-                        <div class="plan-title" style="color: #78350f;">{{ $p->title }}</div>
-                        <div class="plan-meta">→ {{ $p->to_location }} ({{ $p->start_time ? substr($p->start_time, 0, 5) : '' }})</div>
-                    </div>
-                    @empty
-                    <span style="color: #cbd5e1;">ー</span>
-                    @endforelse
-                </td>
-                <td class="col-phase">
-                    @forelse($eq->plansForPhases('post_day') as $p)
-                    <div class="plan-box">
-                        <div class="plan-title">{{ $p->title }}</div>
-                        <div class="plan-meta">{{ $p->start_time ? substr($p->start_time, 0, 5) : '' }}</div>
-                    </div>
-                    @empty
-                    <span style="color: #cbd5e1;">ー</span>
-                    @endforelse
-                </td>
-            </tr>
-            @empty
+                    </td>
+                    <td class="col-title">
+                        <div class="step-title">{{ $plan->title }}</div>
+                        @if($plan->formatted_quantity !== '')
+                            <div class="step-sub">数量: {{ $plan->formatted_quantity }}</div>
+                        @endif
+                        @if($plan->notes)
+                            <div class="step-sub">{{ $plan->notes }}</div>
+                        @endif
+                    </td>
+                    <td class="col-date">{{ $plan->target_date?->format('Y-m-d') ?: '-' }}</td>
+                    <td class="col-time">{{ $plan->formatted_time_range ?: '-' }}</td>
+                    <td class="col-route">
+                        <span class="route-from">{{ $plan->resolved_from_location }}</span>
+                        <span class="route-arrow">-&gt;</span>
+                        <span class="route-to">{{ $plan->resolved_to_location }}</span>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" class="empty-step-row">この資材に登録された搬出入ステップはありません。</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    @empty
+    <table class="steps-table">
+        <tbody>
             <tr>
-                <td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">
-                    該当する資材または搬出入計画データはありません。
-                </td>
+                <td class="empty-row">該当する資材または搬出入計画データはありません。</td>
             </tr>
-            @endforelse
         </tbody>
     </table>
+    @endforelse
 
     <!-- 署名欄 -->
     <table class="footer-table">
         <tr>
-            <td>
-                ※駐車場は貸切時間帯以外は一般車両優先となります。貸切開始時刻を確認のうえ搬入してください。
+            <td class="footer-note">
+                注: 駐車場は貸切時間帯以外は一般車両優先となります。貸切開始時刻を確認のうえ搬入してください。
             </td>
             <td class="sign-area">
-                総括幹事 確認印: [ &emsp;&emsp;&emsp;&emsp; ] &emsp; 資材担当責任者: [ &emsp;&emsp;&emsp;&emsp; ]
+                総括幹事 確認印: [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;] &nbsp; 資材担当責任者: [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]
             </td>
         </tr>
     </table>
 </body>
 </html>
-

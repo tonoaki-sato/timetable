@@ -54,24 +54,6 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
     }
 
     #[Override]
-    public function getByToLocationIdsWithEquipment(array $locationIds, ?Timetable $timetable = null): Collection
-    {
-        if (empty($locationIds)) {
-            return new Collection;
-        }
-
-        $query = EquipmentLogisticsPlan::with(['equipment'])
-            ->whereIn('to_location_id', $locationIds)
-            ->ordered();
-
-        if ($timetable) {
-            $query->where('timetable_id', $timetable->id);
-        }
-
-        return $query->get();
-    }
-
-    #[Override]
     public function create(array $attributes): EquipmentLogisticsPlan
     {
         return EquipmentLogisticsPlan::create($attributes);

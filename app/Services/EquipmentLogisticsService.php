@@ -371,39 +371,6 @@ class EquipmentLogisticsService
     }
 
     /**
-     * 拠点別 保管状況 & 貸切スケジュール一覧用のデータ取得
-     *
-     * @return array<int, array{location: Location, plans: Collection<int, EquipmentLogisticsPlan>, nightPlans: Collection<int, EquipmentLogisticsPlan>, collectionPlans: Collection<int, EquipmentLogisticsPlan>}>
-     */
-    public function getLocationsStatusData(?Timetable $timetable = null): array
-    {
-        $locations = $this->locationRepository->getActiveWithTypeAndSchedules($timetable);
-        $locationIds = $locations->pluck('id')->map(fn ($id): int => (int) $id)->all();
-
-        $allPlans = $this->planRepository->getByToLocationIdsWithEquipment($locationIds, $timetable)
-            ->groupBy('to_location_id');
-
-        $result = [];
-
-        foreach ($locations as $loc) {
-            /** @var Collection<int, EquipmentLogisticsPlan> $plansToLocation */
-            $plansToLocation = $allPlans->get($loc->id, new Collection);
-
-            $nightPlans = $plansToLocation->where('action_type', 'night_storage');
-            $collectionPlans = $plansToLocation->where('action_type', 'collection_staging');
-
-            $result[] = [
-                'location' => $loc,
-                'plans' => $plansToLocation,
-                'nightPlans' => $nightPlans,
-                'collectionPlans' => $collectionPlans,
-            ];
-        }
-
-        return $result;
-    }
-
-    /**
      * カスタム搬出入パターン一覧の取得
      *
      * @return Collection<int, EquipmentLogisticsPattern>

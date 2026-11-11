@@ -987,7 +987,7 @@
                                 <span class="font-mono text-indigo-600 bg-white px-1.5 py-0.5 rounded border border-indigo-200 text-[10px]">/logistics/print</span>
                             </div>
                             <p class="text-indigo-900 leading-relaxed text-[11px]">
-                                運搬トラックの運転手や各神輿番所の資材受け取り担当者向けに、日時・拠点・機材名・数量・担当者を網羅した指示書兼チェックリストをA4横向きで印刷できます。
+                                運搬トラックの運転手や各神輿番所の資材受け取り担当者向けに、日時・拠点・機材名・数量・担当者を網羅した指示書兼チェックリストをA4縦向きでPDFダウンロードできます。
                             </p>
                             <p class="text-[10px] text-indigo-700 leading-relaxed">
                                 現場でチェックボックス（☑）をチェックしながら確実に受け渡し・回収作業を行えます。
