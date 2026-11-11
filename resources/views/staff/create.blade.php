@@ -21,7 +21,7 @@
                 <span>当日紹介・飛び入りスタッフの即時オンボーディング手順</span>
             </div>
             <ol class="text-[11px] text-emerald-700/90 list-decimal list-inside space-y-0.5 leading-relaxed">
-                <li><strong>登録 &amp; 配置判定</strong>: 下記のフォームで基本情報を入力し、紹介者と同班で動くなら「固定」、不足タスクの応援・穴埋めなら「充足」を選択して登録。</li>
+                <li><strong>基本情報登録</strong>: 下記のフォームで氏名・フリガナ・所属等を入力してスタッフ台帳へ登録。</li>
                 <li><strong>名札即時印刷</strong>: 登録完了後、画面上の「🖨️ 名札印刷」からQRコード付き名札カードを出力し、名札ケースに入れて本人へ手渡し。</li>
                 <li><strong>スマホで現場マイシフト開始</strong>: 本人がスマホで名札のQRをスキャンすると、即座に所属・担当タスクの確認と出勤チェックインが完了します。</li>
             </ol>
@@ -73,25 +73,6 @@
                     <input type="text" id="affiliation" name="affiliation" value="{{ old('affiliation') }}"
                         placeholder="例: 中央商店街振興会 / 青葉大学ボランティア部 / 一般公募"
                         class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-                <!-- 班員スタッフ区分（固定スタッフ / 充足スタッフ） -->
-                <div>
-                    <label for="staff_type" class="block text-xs font-bold text-slate-700 mb-1">
-                        班員スタッフ区分（人員配置方針）
-                    </label>
-                    <select id="staff_type" name="staff_type"
-                        class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="fixed" {{ old('staff_type') === 'fixed' ? 'selected' : '' }}>
-                            📌 固定スタッフ（紹介者と同じ班に配属／所属班のタスクへ基本アサイン）
-                        </option>
-                        <option value="fulfillment" {{ old('staff_type', 'fulfillment') === 'fulfillment' ? 'selected' : '' }}>
-                            🔄 充足スタッフ（余剰人員として人手不足タスクの穴埋め・応援へ柔軟に割り当て）
-                        </option>
-                    </select>
-                    <p class="text-[11px] text-slate-500 mt-1">
-                        ※ <strong>紹介者と同班で動く場合</strong>は「固定スタッフ」を選び、登録後に担当班管理画面で該当班に配属します。<strong>人手不足タスクの応援に入る場合</strong>は「充足スタッフ」を選び、稼働タイムライン等から空き枠へ臨時配置します。
-                    </p>
                 </div>
 
                 <!-- 稼働状態 -->

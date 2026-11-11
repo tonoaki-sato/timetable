@@ -30,42 +30,12 @@
                 <span>CSV出力</span>
             </a>
 
-            <!-- CSVインポートボタン & 隠しフォーム -->
-            @can('create', App\Models\Staff::class)
-            <form action="{{ route('staff.import-csv') }}" method="POST" enctype="multipart/form-data" class="inline" id="csvImportForm">
-                @csrf
-                <input type="file" name="file" id="csvFileInput" accept=".csv,text/csv" class="hidden">
-                <button type="button" id="csvImportBtn"
-                    class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
-                    <span>📤</span>
-                    <span>CSV取込</span>
-                </button>
-            </form>
-            @endcan
-
             <!-- 登録案内文コピーボタン -->
-            <div class="inline-flex items-center space-x-1 whitespace-nowrap shrink-0">
-                <button type="button" id="copyInviteBtn" data-join-url="{{ route('staff.join') }}"
-                    class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer whitespace-nowrap shrink-0">
-                    <span>📋</span>
-                    <span>登録案内文コピー</span>
-                </button>
-                @if(isset($selfRegistrationStatus) && ! $selfRegistrationStatus['isOpen'])
-                    @if($selfRegistrationStatus['status'] === 'upcoming')
-                        <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 whitespace-nowrap">
-                            ⏳ 開始前
-                        </span>
-                    @elseif($selfRegistrationStatus['status'] === 'closed')
-                        <span class="text-[10px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap">
-                            ⌛ 受付終了
-                        </span>
-                    @else
-                        <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200 whitespace-nowrap">
-                            ⚠️ 停止中（手動）
-                        </span>
-                    @endif
-                @endif
-            </div>
+            <button type="button" id="copyInviteBtn" data-join-url="{{ route('staff.join') }}"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer whitespace-nowrap shrink-0">
+                <span>📋</span>
+                <span>登録案内文コピー</span>
+            </button>
 
             @can('create', App\Models\Staff::class)
             <a href="{{ route('staff.create') }}"
@@ -120,7 +90,6 @@
                         <th class="px-3.5 py-2 font-bold whitespace-nowrap">ID</th>
                         <th class="px-3.5 py-2 font-bold">氏名</th>
                         <th class="px-3.5 py-2 font-bold whitespace-nowrap">フリガナ</th>
-                        <th class="px-3.5 py-2 font-bold whitespace-nowrap">スタッフ区分</th>
                         <th class="px-3.5 py-2 font-bold">所属団体・地域会等</th>
                         <th class="px-3.5 py-2 font-bold whitespace-nowrap">稼働状態</th>
                         <th class="px-3.5 py-2 font-bold text-right whitespace-nowrap">操作</th>
@@ -136,17 +105,6 @@
                             </a>
                         </td>
                         <td class="px-3.5 py-2 text-slate-500 font-mono text-[11px] whitespace-nowrap">{{ $staff->kana ?? '-' }}</td>
-                        <td class="px-3.5 py-2 whitespace-nowrap">
-                            @if($staff->isFixed())
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                📌 固定スタッフ
-                            </span>
-                            @else
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-sky-50 text-sky-700 border border-sky-200">
-                                🔄 充足スタッフ
-                            </span>
-                            @endif
-                        </td>
                         <td class="px-3.5 py-2 text-slate-700">{{ $staff->affiliation ?? '未設定' }}</td>
                         <td class="px-3.5 py-2 whitespace-nowrap">
                             @if($staff->is_active)
@@ -160,22 +118,6 @@
                             @endif
                         </td>
                         <td class="px-3.5 py-2 text-right space-x-1 whitespace-nowrap">
-                            <!-- 名札単票PDFダウンロードボタン -->
-                            <a href="{{ route('staff.print-card', $staff) }}"
-                                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-bold transition whitespace-nowrap inline-flex items-center space-x-0.5"
-                                title="名札カードをPDFでダウンロード">
-                                <span>📄</span>
-                                <span>名札PDF</span>
-                            </a>
-
-                            <!-- QR表示ボタン -->
-                            <button type="button"
-                                    class="open-qr-btn px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[11px] font-bold transition cursor-pointer whitespace-nowrap"
-                                    data-staff-name="{{ $staff->name }}"
-                                    data-staff-url="{{ $staff->my_shift_url }}">
-                                📱 QR
-                            </button>
-
                             @can('update', $staff)
                             <a href="{{ route('staff.edit', $staff) }}"
                                 class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[11px] font-bold transition whitespace-nowrap">
@@ -198,7 +140,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-12 text-center text-slate-400">
+                        <td colspan="6" class="px-4 py-12 text-center text-slate-400">
                             <span class="text-3xl block mb-2">👷</span>
                             登録されているスタッフは見つかりませんでした。
                         </td>
@@ -213,46 +155,6 @@
             {{ $staffMembers->links() }}
         </div>
         @endif
-    </div>
-
-    <!-- 個別QRコード表示モーダル -->
-    <div id="qrModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-        <div id="qrModalBackdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
-        <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white p-6 text-center shadow-2xl transition-all sm:w-full sm:max-w-sm border border-slate-200">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                    <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
-                        <span>📱</span>
-                        <span>マイタイムテーブル用 QRコード</span>
-                    </h3>
-                    <button type="button" id="qrModalCloseBtn" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">✕</button>
-                </div>
-
-                <div class="mb-4">
-                    <p class="text-xs text-slate-500 mb-1">対象スタッフ:</p>
-                    <p id="qrModalStaffName" class="text-base font-bold text-slate-900"></p>
-                </div>
-
-                <!-- QRコード画像 -->
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 inline-block mb-4">
-                    <img id="qrModalImage" src="" alt="QR Code" class="w-48 h-48 mx-auto">
-                </div>
-
-                <p class="text-[11px] text-slate-500 mb-3">
-                    スタッフ本人のスマホカメラで読み取ると、即座にマイタイムテーブルが開きます。
-                </p>
-
-                <!-- URLコピー -->
-                <div class="space-y-2">
-                    <input type="text" id="qrModalStaffUrl" readonly class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600 text-center">
-                    <button type="button" id="qrModalCopyBtn"
-                            class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
-                        <span>📋</span>
-                        <span>URLをコピー</span>
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
 
 </div>

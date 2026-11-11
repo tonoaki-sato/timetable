@@ -85,7 +85,7 @@ class StaffAllocationService
 
         $task->loadMissing('laneRelation.fixedStaff');
         if ($activeStaff instanceof \Illuminate\Database\Eloquent\Collection) {
-            $activeStaff->loadMissing('fixedLanes');
+            $activeStaff->loadMissing(['fixedLanes', 'ledLanes']);
         }
 
         $taskLaneName = $task->lane ?: ($task->laneRelation?->name ?? '');
@@ -107,7 +107,7 @@ class StaffAllocationService
                     || (mb_strpos($taskLaneName, $staff->affiliation) !== false);
             }
 
-            $isOtherLaneFixed = ! $isSameLane && ($staff->isFixed() || $staff->fixedLanes->isNotEmpty());
+            $isOtherLaneFixed = ! $isSameLane && ($staff->fixedLanes->isNotEmpty() || $staff->ledLanes->isNotEmpty());
             $isSurplusFixed = false;
             $surplusType = null;
             $surplusSourceTask = null;

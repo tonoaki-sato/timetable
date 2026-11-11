@@ -354,7 +354,7 @@ class FeatureSettingTest extends TestCase
     }
 
     /**
-     * 各ステータスに応じてスタッフ一覧画面のボタンおよびヘッダーバッジが適切に出し分けられること
+     * 各ステータスに応じてナビメニュー内のボタン・ステータス表示が適切に出し分けられ、スタッフ一覧ヘッダーには旧バッジが出ないこと
      */
     public function test_staff_index_displays_proper_buttons_and_badges_for_each_status(): void
     {
@@ -373,7 +373,8 @@ class FeatureSettingTest extends TestCase
         $resUpcoming = $this->get(route('staff.index'));
         $resUpcoming->assertStatus(200);
         $resUpcoming->assertSee('受付予約を停止');
-        $resUpcoming->assertSee('⏳ 開始前');
+        $resUpcoming->assertSee('受付前(予約)');
+        $resUpcoming->assertDontSee('⏳ 開始前');
 
         // B. closed（受付終了）
         FeatureSetting::updateOrCreate(
@@ -388,7 +389,8 @@ class FeatureSettingTest extends TestCase
         $resClosed = $this->get(route('staff.index'));
         $resClosed->assertStatus(200);
         $resClosed->assertSee('受付期間を再設定');
-        $resClosed->assertSee('⌛ 受付終了');
+        $resClosed->assertSee('受付終了');
+        $resClosed->assertDontSee('⌛ 受付終了');
 
         // C. disabled（手動停止）
         FeatureSetting::updateOrCreate(
@@ -403,7 +405,8 @@ class FeatureSettingTest extends TestCase
         $resDisabled = $this->get(route('staff.index'));
         $resDisabled->assertStatus(200);
         $resDisabled->assertSee('即時再開');
-        $resDisabled->assertSee('⚠️ 停止中（手動）');
+        $resDisabled->assertSee('停止中(手動)');
+        $resDisabled->assertDontSee('⚠️ 停止中（手動）');
     }
 
     /**

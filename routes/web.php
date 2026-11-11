@@ -80,7 +80,6 @@ Route::middleware('auth')->group(function () {
 
     // 現場スタッフ（ボランティア）管理・印刷・CSVルート
     Route::get('staff/export-csv', [StaffCsvController::class, 'export'])->name('staff.export-csv');
-    Route::post('staff/import-csv', [StaffCsvController::class, 'import'])->name('staff.import-csv');
     Route::get('staff/print-cards', [StaffPrintController::class, 'printCards'])->name('staff.print-cards');
     Route::get('staff/{staff}/print-card', [StaffPrintController::class, 'printSingleCard'])->name('staff.print-card');
     Route::post('staff/{staff}/regenerate-token', [StaffController::class, 'regenerateToken'])->name('staff.regenerate-token');

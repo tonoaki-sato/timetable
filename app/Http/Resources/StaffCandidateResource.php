@@ -36,8 +36,6 @@ class StaffCandidateResource extends JsonResource
             'name' => $this->name,
             'kana' => $this->kana ?? '',
             'affiliation' => $this->affiliation ?? '',
-            'staff_type' => $this->staff_type ?? 'fulfillment',
-            'staff_type_label' => $this->staff_type_label,
             'priority_tier' => $this->priority_tier ?? 2,
             'is_conflicted' => $this->conflict_task !== null,
             'conflicted_task_title' => $this->conflict_task?->title ?? '',

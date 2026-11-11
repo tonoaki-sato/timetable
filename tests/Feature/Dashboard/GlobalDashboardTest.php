@@ -95,7 +95,7 @@ class GlobalDashboardTest extends TestCase
         $now = Carbon::create(2026, 6, 1, 10, 0, 0, 'Asia/Tokyo');
         Carbon::setTestNow($now);
 
-        $staff = Staff::factory()->create(['name' => '佐藤 幹事', 'staff_type' => 'fixed', 'is_active' => true]);
+        $staff = Staff::factory()->create(['name' => '佐藤 幹事', 'is_active' => true]);
         Equipment::factory()->create(['name' => 'カラーコーン']);
         Location::factory()->create(['name' => '番所倉庫']);
 

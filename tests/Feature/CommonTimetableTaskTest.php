@@ -23,9 +23,9 @@ class CommonTimetableTaskTest extends TestCase
         ]);
 
         $timetable = Timetable::factory()->create(['created_by' => $admin->id]);
-        $leadStaff1 = Staff::factory()->fixed()->create();
-        $fixedStaff1 = Staff::factory()->fixed()->create();
-        $leadStaff2 = Staff::factory()->fixed()->create();
+        $leadStaff1 = Staff::factory()->create();
+        $fixedStaff1 = Staff::factory()->create();
+        $leadStaff2 = Staff::factory()->create();
 
         $lane1 = Lane::factory()->create([
             'timetable_id' => $timetable->id,
@@ -116,7 +116,7 @@ class CommonTimetableTaskTest extends TestCase
         ]);
 
         $timetable = Timetable::factory()->create(['created_by' => $operator->id]);
-        $leadStaff = Staff::factory()->fixed()->create();
+        $leadStaff = Staff::factory()->create();
 
         $lane1 = Lane::factory()->create([
             'timetable_id' => $timetable->id,
@@ -329,7 +329,7 @@ class CommonTimetableTaskTest extends TestCase
         ]);
 
         $timetable = Timetable::factory()->create(['created_by' => $admin->id]);
-        $staff = Staff::factory()->fixed()->create();
+        $staff = Staff::factory()->create();
 
         $lane1 = Lane::factory()->create([
             'timetable_id' => $timetable->id,

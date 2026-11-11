@@ -228,7 +228,6 @@ class LaneManagementTest extends TestCase
         $lane->refresh();
         $this->assertSame($staff->id, $lane->lead_staff_id);
         $this->assertTrue($lane->fixedStaff->contains($staff));
-        $this->assertSame('fixed', $staff->fresh()->staff_type);
 
         // レーン一覧のHTMLでも班長名「👑 山田 太郎」が表示されていること
         $viewResponse = $this->actingAs($this->operatorUser)

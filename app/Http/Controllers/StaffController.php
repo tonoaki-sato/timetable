@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreStaffRequest;
 use App\Http\Requests\UpdateStaffRequest;
-use App\Models\FeatureSetting;
 use App\Models\Staff;
-use App\Services\FeatureSettingService;
 use App\Services\StaffService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,8 +13,7 @@ use Illuminate\View\View;
 class StaffController extends Controller
 {
     public function __construct(
-        protected StaffService $staffService,
-        protected FeatureSettingService $featureSettingService
+        protected StaffService $staffService
     ) {}
 
     /**
@@ -30,9 +27,6 @@ class StaffController extends Controller
             search: $request->input('search'),
             status: $request->input('status')
         );
-
-        $viewData['selfRegistrationSetting'] = $this->featureSettingService->getFeature(FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION);
-        $viewData['selfRegistrationStatus'] = $this->featureSettingService->getFeatureStatus(FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION);
 
         return view('staff.index', $viewData);
     }

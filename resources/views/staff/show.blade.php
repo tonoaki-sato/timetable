@@ -13,16 +13,6 @@
         </x-slot:breadcrumbs>
 
         <x-slot:badges>
-            @if($staff->isFixed())
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
-                📌 固定スタッフ
-            </span>
-            @else
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200 shrink-0">
-                🔄 充足スタッフ
-            </span>
-            @endif
-
             @if($staff->is_active)
             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
                 ● 稼働可能
@@ -111,21 +101,6 @@
                         <span class="font-bold text-slate-800 block mt-0.5">
                             {{ $staff->kana ?: '未設定' }}
                         </span>
-                    </div>
-
-                    <div>
-                        <span class="text-slate-400 block text-[11px]">スタッフ区分</span>
-                        <div class="mt-0.5">
-                            @if($staff->isFixed())
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                📌 固定スタッフ
-                            </span>
-                            @else
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
-                                🔄 充足スタッフ
-                            </span>
-                            @endif
-                        </div>
                     </div>
 
                     <div>

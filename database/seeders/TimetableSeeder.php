@@ -1206,7 +1206,7 @@ class TimetableSeeder extends Seeder
             ['target_date' => '2027-10-10'],
             [
                 'name' => '第35回保土ケ谷宿場まつり（1日目）',
-                'description' => null,
+                'description' => 'テスト',
                 'start_time' => '07:00:00',
                 'end_time' => '20:00:00',
                 'status' => 'draft',

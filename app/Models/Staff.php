@@ -15,7 +15,6 @@ use Illuminate\Support\Str;
     'name',
     'kana',
     'affiliation',
-    'staff_type',
     'is_active',
     'access_token',
     'registered_via',
@@ -27,16 +26,6 @@ class Staff extends Model
 {
     /** @use HasFactory<StaffFactory> */
     use HasFactory;
-
-    /**
-     * 班員スタッフ区分定義（固定スタッフ / 充足スタッフ）
-     *
-     * @var array<string, string>
-     */
-    public const array STAFF_TYPES = [
-        'fixed' => '固定スタッフ',
-        'fulfillment' => '充足スタッフ',
-    ];
 
     /**
      * モデルの起動処理
@@ -107,22 +96,6 @@ class Staff extends Model
         }
 
         return $this->checkIns()->where('timetable_id', $timetableId)->first();
-    }
-
-    /**
-     * スタッフ区分の日本語表示ラベル
-     */
-    public function getStaffTypeLabelAttribute(): string
-    {
-        return self::STAFF_TYPES[$this->staff_type ?? 'fulfillment'] ?? '充足スタッフ';
-    }
-
-    /**
-     * 固定スタッフかどうか
-     */
-    public function isFixed(): bool
-    {
-        return ($this->staff_type ?? 'fulfillment') === 'fixed';
     }
 
     /**

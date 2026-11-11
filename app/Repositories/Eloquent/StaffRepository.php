@@ -2,7 +2,6 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Models\Lane;
 use App\Models\Staff;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -86,8 +85,8 @@ class StaffRepository implements StaffRepositoryInterface
     {
         return Staff::where('is_active', true)
             ->where(function ($q): void {
-                $q->where('staff_type', 'fixed')
-                    ->orWhereIn('id', Lane::whereNotNull('lead_staff_id')->pluck('lead_staff_id'));
+                $q->whereHas('fixedLanes')
+                    ->orWhereHas('ledLanes');
             })
             ->distinct()
             ->count('id');
@@ -103,16 +102,6 @@ class StaffRepository implements StaffRepositoryInterface
     public function update(Staff $staff, array $attributes): bool
     {
         return $staff->update($attributes);
-    }
-
-    #[Override]
-    public function updateStaffTypeByIds(array $ids, string $staffType): int
-    {
-        if (empty($ids)) {
-            return 0;
-        }
-
-        return Staff::whereIn('id', $ids)->update(['staff_type' => $staffType]);
     }
 
     #[Override]
@@ -136,14 +125,6 @@ class StaffRepository implements StaffRepositoryInterface
             ->where('kana', $kana)
             ->where('is_active', true)
             ->get();
-    }
-
-    #[Override]
-    public function findFirstByNameAndKana(string $name, string $kana): ?Staff
-    {
-        return Staff::where('name', $name)
-            ->where('kana', $kana)
-            ->first();
     }
 
     #[Override]

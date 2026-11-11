@@ -157,7 +157,6 @@ class StaffManagementTest extends TestCase
             'name' => '山田 太郎',
             'kana' => 'ヤマダ タロウ',
             'affiliation' => '中央商店街振興会',
-            'staff_type' => 'fixed',
             'is_active' => true,
             'last_accessed_at' => now()->setTime(9, 15),
         ]);
@@ -165,6 +164,20 @@ class StaffManagementTest extends TestCase
         $response = $this->get(route('staff.index'));
         $response->assertStatus(200);
         $response->assertSee('山田 太郎');
+        // 一覧ヘッダー・テーブル・行操作の不要要素が削除されていること
+        $response->assertSee(route('staff.print-cards'));
+        $response->assertSee(route('staff.export-csv'));
+        $response->assertSee(route('staff.edit', $staff));
+        $response->assertSee('<form action="'.route('staff.destroy', $staff).'"', false);
+        $response->assertDontSee('CSV取込');
+        $response->assertDontSee('/staff/import-csv');
+        $response->assertDontSee('⚠️ 停止中（手動）');
+        $response->assertDontSee('⏳ 開始前');
+        $response->assertDontSee('⌛ 受付終了');
+        $response->assertDontSee(route('staff.print-card', $staff));
+        $response->assertDontSee('open-qr-btn');
+        $response->assertDontSee('id="qrModal"', false);
+        $response->assertDontSee('スタッフ区分');
 
         $showResponse = $this->get(route('staff.show', $staff));
         $showResponse->assertStatus(200);
@@ -174,7 +187,6 @@ class StaffManagementTest extends TestCase
         $showResponse->assertSee("#{$staff->id}");
         $showResponse->assertSee('山田 太郎');
         $showResponse->assertSee('ヤマダ タロウ');
-        $showResponse->assertSee('固定スタッフ');
         $showResponse->assertSee('稼働可能');
         $showResponse->assertSee('09:15');
         $showResponse->assertSee('data:image/png;base64,');
@@ -182,7 +194,8 @@ class StaffManagementTest extends TestCase
         $showResponse->assertSee('名札PDFをダウンロード');
         $showResponse->assertSee($staff->my_shift_url);
 
-        // 削除対象セクション・所属情報・編集/削除リンクが表示されないこと
+        // 削除対象セクション・所属情報・スタッフ区分・編集/削除リンクが表示されないこと
+        $showResponse->assertDontSee('スタッフ区分');
         $showResponse->assertDontSee('所属団体・地域会等');
         $showResponse->assertDontSee('中央商店街振興会');
         $showResponse->assertDontSee('登録情報');

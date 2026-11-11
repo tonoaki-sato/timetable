@@ -79,13 +79,6 @@ interface StaffRepositoryInterface
     public function update(Staff $staff, array $attributes): bool;
 
     /**
-     * 指定ID群のスタッフ種別を一括更新
-     *
-     * @param  array<int, int>  $ids
-     */
-    public function updateStaffTypeByIds(array $ids, string $staffType): int;
-
-    /**
      * スタッフ削除
      */
     public function delete(Staff $staff): bool;
@@ -101,11 +94,6 @@ interface StaffRepositoryInterface
      * @return Collection<int, Staff>
      */
     public function findByNameAndKana(string $name, string $kana): Collection;
-
-    /**
-     * 氏名・フリガナによるスタッフ1件取得（アクティブ状態問わず・CSVインポート用）
-     */
-    public function findFirstByNameAndKana(string $name, string $kana): ?Staff;
 
     /**
      * 全スタッフをID順でチャンク処理（CSVエクスポート用）

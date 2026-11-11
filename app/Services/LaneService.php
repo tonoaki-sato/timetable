@@ -113,7 +113,6 @@ class LaneService
 
         if ($lane->lead_staff_id) {
             $this->laneRepository->syncFixedStaffWithoutDetaching($lane, [(int) $lane->lead_staff_id]);
-            $this->staffRepository->updateStaffTypeByIds([(int) $lane->lead_staff_id], 'fixed');
             $this->taskService->syncLaneLeadToTasks($lane, $oldLeadStaffId);
         }
 

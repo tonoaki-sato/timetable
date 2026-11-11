@@ -21,9 +21,9 @@ class LaneAndStaffSpecificationTest extends TestCase
         $timetable = Timetable::factory()->create(['created_by' => $admin->id]);
 
         $leader = Staff::factory()->create(['name' => '班長 太郎']);
-        $fixedStaff1 = Staff::factory()->fixed()->create(['name' => '固定 一郎']);
-        $fixedStaff2 = Staff::factory()->fixed()->create(['name' => '固定 二郎']);
-        $fulfillmentStaff = Staff::factory()->fulfillment()->create(['name' => '充足 三郎']);
+        $fixedStaff1 = Staff::factory()->create(['name' => '固定 一郎']);
+        $fixedStaff2 = Staff::factory()->create(['name' => '固定 二郎']);
+        $fulfillmentStaff = Staff::factory()->create(['name' => '充足 三郎']);
 
         $lane = Lane::factory()->create([
             'timetable_id' => $timetable->id,
@@ -113,8 +113,8 @@ class LaneAndStaffSpecificationTest extends TestCase
         $timetable = Timetable::factory()->create(['created_by' => $admin->id]);
 
         $leaderA = Staff::factory()->create(['name' => 'A班長']);
-        $fixedA1 = Staff::factory()->fixed()->create(['name' => 'A固定1']);
-        $fixedA2 = Staff::factory()->fixed()->create(['name' => 'A固定2']);
+        $fixedA1 = Staff::factory()->create(['name' => 'A固定1']);
+        $fixedA2 = Staff::factory()->create(['name' => 'A固定2']);
 
         $laneA = Lane::factory()->create([
             'timetable_id' => $timetable->id,

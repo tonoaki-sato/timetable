@@ -10,7 +10,6 @@ use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class StaffPrintAndCsvTest extends TestCase
@@ -273,48 +272,6 @@ class StaffPrintAndCsvTest extends TestCase
     }
 
     /**
-     * CSVファイルをアップロードしてスタッフを一括インポートできること
-     */
-    public function test_can_import_staff_csv(): void
-    {
-        $this->actingAs($this->operator);
-
-        // 既存スタッフ（所属が更新されることを検証）
-        $existingStaff = Staff::factory()->create([
-            'name' => '既存 太郎',
-            'kana' => 'キゾン タロウ',
-            'affiliation' => '旧所属',
-        ]);
-
-        $csvContent = implode("\n", [
-            '氏名,フリガナ,所属',
-            '新着 次郎,シンチャク ジロウ,新町子供会',
-            '既存 太郎,キゾン タロウ,新町青年部',
-        ]);
-
-        $file = UploadedFile::fake()->createWithContent('staff.csv', $csvContent);
-
-        $response = $this->post(route('staff.import-csv'), [
-            'file' => $file,
-        ]);
-
-        $response->assertRedirect(route('staff.index'));
-        $response->assertSessionHas('success');
-
-        // 新規登録確認
-        $this->assertDatabaseHas('staff', [
-            'name' => '新着 次郎',
-            'kana' => 'シンチャク ジロウ',
-            'affiliation' => '新町子供会',
-            'registered_via' => 'admin',
-        ]);
-
-        // 既存更新確認
-        $existingStaff->refresh();
-        $this->assertSame('新町青年部', $existingStaff->affiliation);
-    }
-
-    /**
      * 未ログインユーザーは印刷・CSVルートにアクセスできないこと
      */
     public function test_guest_cannot_access_print_or_csv_routes(): void
@@ -326,6 +283,5 @@ class StaffPrintAndCsvTest extends TestCase
         $this->get(route('staff.print-card', $staff))->assertRedirect(route('login'));
         $this->get(route('timetables.print-assignments', $timetable))->assertRedirect(route('login'));
         $this->get(route('staff.export-csv'))->assertRedirect(route('login'));
-        $this->post(route('staff.import-csv'))->assertRedirect(route('login'));
     }
 }

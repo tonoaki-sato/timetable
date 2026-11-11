@@ -315,10 +315,6 @@ class TimetableTaskService
 
             $this->laneRepository->syncFixedStaff($lane, $cleanIds);
 
-            if (! empty($cleanIds)) {
-                $this->staffRepository->updateStaffTypeByIds($cleanIds, 'fixed');
-            }
-
             $removedIds = array_diff($previousFixedIds, $cleanIds);
             $tasks = $this->taskRepository->getActiveForLaneWithAssignments($lane->id);
 
