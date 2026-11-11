@@ -78,6 +78,15 @@ class LaneRepository implements LaneRepositoryInterface
     }
 
     #[Override]
+    public function getForTimetablePrint(Timetable $timetable): Collection
+    {
+        return $timetable->lanes()
+            ->with(['leadStaff'])
+            ->ordered()
+            ->get();
+    }
+
+    #[Override]
     public function getOrderedWithLeadForTimetable(Timetable $timetable, ?array $laneIds = null): Collection
     {
         $query = $timetable->lanes()

@@ -51,6 +51,13 @@ interface LaneRepositoryInterface
     public function getForTimetable(Timetable $timetable): Collection;
 
     /**
+     * 指定タイムテーブルの担当班一覧をPDF出力用に取得（班長付き、表示順昇順）
+     *
+     * @return Collection<int, Lane>
+     */
+    public function getForTimetablePrint(Timetable $timetable): Collection;
+
+    /**
      * 指定タイムテーブルの担当班を表示順で取得（班長リレーション・ID絞り込み対応）
      *
      * @param  array<int, int>|null  $laneIds

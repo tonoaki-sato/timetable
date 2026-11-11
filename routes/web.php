@@ -10,6 +10,7 @@ use App\Http\Controllers\EquipmentLogisticsPatternStepController;
 use App\Http\Controllers\EquipmentLogisticsPlanController;
 use App\Http\Controllers\FeatureSettingController;
 use App\Http\Controllers\LaneController;
+use App\Http\Controllers\LanePrintController;
 use App\Http\Controllers\LaneRequestController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\LocationScheduleController;
@@ -102,6 +103,7 @@ Route::middleware('auth')->group(function () {
     Route::scopeBindings()->group(function () {
         Route::get('timetables/{timetable}/lanes', [LaneController::class, 'index'])->name('timetables.lanes.index');
         Route::get('timetables/{timetable}/lanes/create', [LaneController::class, 'create'])->name('timetables.lanes.create');
+        Route::get('timetables/{timetable}/lanes/print', [LanePrintController::class, 'print'])->name('timetables.lanes.print');
         Route::post('timetables/{timetable}/lanes', [LaneController::class, 'store'])->name('timetables.lanes.store');
         Route::get('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'show'])->name('timetables.lanes.show');
         Route::get('timetables/{timetable}/lanes/{lane}/edit', [LaneController::class, 'edit'])->name('timetables.lanes.edit');

@@ -21,6 +21,13 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
+            <a href="{{ route('timetables.lanes.print', $timetable) }}"
+                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0"
+                title="担当班一覧をA4縦PDFでダウンロード">
+                <span>📄</span>
+                <span>担当班一覧PDF</span>
+            </a>
+
             <a href="{{ route('timetables.lanes.create', $timetable) }}"
                 class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>➕</span>

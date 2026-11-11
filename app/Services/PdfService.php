@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DomPdfWrapper;
+use Dompdf\Dompdf;
 use Illuminate\Http\Response;
 
 class PdfService
@@ -59,6 +60,29 @@ class PdfService
         ], true);
 
         return $pdf;
+    }
+
+    /**
+     * レンダリング済みDompdfインスタンスを取得（コールバックによるレイアウト計測用途）
+     *
+     * @param  array<string, mixed>  $data
+     * @param  'portrait'|'landscape'  $orientation
+     * @param  array<int, array{event: string, f: callable}>  $callbacks
+     */
+    public function renderDompdf(
+        string $viewPath,
+        array $data,
+        string $orientation = 'portrait',
+        array $callbacks = []
+    ): Dompdf {
+        $pdf = $this->makePdf($viewPath, $data, $orientation);
+        $dompdf = $pdf->getDomPDF();
+        if ($callbacks !== []) {
+            $dompdf->setCallbacks($callbacks);
+        }
+        $dompdf->render();
+
+        return $dompdf;
     }
 
     /**
