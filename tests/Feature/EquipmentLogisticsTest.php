@@ -105,10 +105,22 @@ class EquipmentLogisticsTest extends TestCase
             'action_type' => 'staging_move',
         ]);
 
+        Equipment::factory()->rental()->create([
+            'name' => 'ステップ未設定資材',
+        ]);
+
         $response = $this->get(route('timetables.logistics.index', $this->timetable1));
         $response->assertStatus(200);
         $response->assertSee('搬出入計画一覧');
         $response->assertSee('搬出入指示書PDF');
+        $response->assertSee('すべて折りたたむ');
+        $response->assertSee('<details', false);
+        $response->assertSee('<table', false);
+        $response->assertSee('順序');
+        $response->assertSee('フェーズ');
+        $response->assertSee('ステップ表示名');
+        $response->assertSee('移動元 ➔ 移動先');
+        $response->assertSee('状態');
         $response->assertDontSee('配備資材数');
         $response->assertDontSee('計画ステップ総数');
         $response->assertDontSee('完了ステップ進捗');
@@ -116,6 +128,12 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertSee('テストパイプ椅子');
         $response->assertSee('前日会場搬入');
         $response->assertSee('前日（準備日）');
+        $response->assertSee('ステップ未設定資材');
+        $response->assertSee('ステップ未設定');
+
+        $content = $response->getContent();
+        $this->assertDoesNotMatchRegularExpression('/\sstyle=/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $content);
     }
 
     /**

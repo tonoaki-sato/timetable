@@ -374,18 +374,6 @@ class EquipmentLogisticsPlan extends Model
     }
 
     /**
-     * 進捗ステータスバッジのCSSクラスアクセサ
-     */
-    public function getStatusBadgeClassAttribute(): string
-    {
-        return match ($this->status) {
-            'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200 line-through opacity-75',
-            'in_progress' => 'bg-amber-50 text-amber-800 border-amber-300 ring-1 ring-amber-200',
-            default => 'bg-white text-slate-700 border-slate-200',
-        };
-    }
-
-    /**
      * ステータス更新アクションのURLを取得
      */
     public function updateStatusUrl(?Timetable $timetable = null): string
