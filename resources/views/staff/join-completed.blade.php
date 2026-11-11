@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>登録完了 - まつり運行システム</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/staff-myshift.js'])
 </head>
 <body class="min-h-full flex flex-col justify-center py-6 px-4 font-sans antialiased bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-900 text-slate-100">
 
@@ -80,8 +80,5 @@
             </p>
         </div>
     </div>
-
-    <!-- 外部JS（CSP準拠） -->
-    <script src="{{ asset('js/staff-myshift.js') }}" defer></script>
 </body>
 </html>

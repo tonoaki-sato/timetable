@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ShowStaffShiftRequest;
 use App\Http\Requests\StoreLaneRequestFromShiftRequest;
 use App\Http\Requests\UpdateLaneTaskStatusRequest;
 use App\Http\Requests\UpdateStaffAssignmentStatusRequest;
@@ -24,7 +25,7 @@ class StaffShiftController extends Controller
     /**
      * 現場マイタイムテーブル画面の表示
      */
-    public function show(Request $request, string $token): View
+    public function show(ShowStaffShiftRequest $request, string $token): View
     {
         $staff = $this->staffService->getStaffByToken($token);
 
@@ -36,7 +37,10 @@ class StaffShiftController extends Controller
         Cookie::queue('staff_token', $staff->access_token, 60 * 24 * 30);
         $request->session()->put('staff_id', $staff->id);
 
-        return view('staff.myshift', $this->staffService->getMyShiftViewData($staff));
+        $timetableFilter = $request->validated('timetable_id');
+        $viewData = $this->staffService->getMyShiftViewData($staff, is_string($timetableFilter) ? $timetableFilter : null);
+
+        return view('staff.myshift', $viewData->toArray());
     }
 
     /**

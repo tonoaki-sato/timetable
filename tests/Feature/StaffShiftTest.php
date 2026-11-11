@@ -424,6 +424,224 @@ class StaffShiftTest extends TestCase
     }
 
     /**
+     * 複数運行日が存在する場合の初期選択優先順位（本日 > 最短未来日 > 直近過去日）が正しく機能すること
+     */
+    public function test_default_timetable_selection_prioritizes_today_then_closest_future_then_latest_past(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-11 10:00:00'));
+
+        try {
+            $pastTimetable = Timetable::factory()->create([
+                'target_date' => '2026-10-10',
+                'name' => '過去イベント',
+            ]);
+            $pastLane = Lane::factory()->create(['timetable_id' => $pastTimetable->id, 'name' => '過去班']);
+            $pastTask = TimetableTask::factory()->create(['timetable_id' => $pastTimetable->id, 'lane_id' => $pastLane->id, 'title' => '過去のみタスク']);
+            TaskStaffAssignment::factory()->create(['timetable_task_id' => $pastTask->id, 'staff_id' => $this->staff->id]);
+
+            $farFutureTimetable = Timetable::factory()->create([
+                'target_date' => '2027-10-10',
+                'name' => '来年イベント',
+            ]);
+            $farLane = Lane::factory()->create(['timetable_id' => $farFutureTimetable->id, 'name' => '来年班']);
+            $farTask = TimetableTask::factory()->create(['timetable_id' => $farFutureTimetable->id, 'lane_id' => $farLane->id, 'title' => '来年のタスク']);
+            TaskStaffAssignment::factory()->create(['timetable_task_id' => $farTask->id, 'staff_id' => $this->staff->id]);
+
+            $nearFutureTimetable = Timetable::factory()->create([
+                'target_date' => '2026-12-01',
+                'name' => '来月イベント',
+            ]);
+            $nearLane = Lane::factory()->create(['timetable_id' => $nearFutureTimetable->id, 'name' => '来月班']);
+            $nearTask = TimetableTask::factory()->create(['timetable_id' => $nearFutureTimetable->id, 'lane_id' => $nearLane->id, 'title' => '来月のタスク']);
+            TaskStaffAssignment::factory()->create(['timetable_task_id' => $nearTask->id, 'staff_id' => $this->staff->id]);
+
+            // 1. 本日がなく過去・未来がある場合は最短未来日が初期選択されること
+            $futurePriorityResponse = $this->get(route('staff.myshift', ['token' => $this->staff->access_token]));
+            $futurePriorityResponse->assertStatus(200);
+            $futurePriorityResponse->assertSee('来月のタスク');
+            $futurePriorityResponse->assertDontSee('過去のみタスク');
+            $futurePriorityResponse->assertDontSee('来年のタスク');
+
+            // 2. 本日のタスクが追加された場合は本日（$this->timetable）が最優先で初期選択されること
+            $todayTask = TimetableTask::factory()->create([
+                'timetable_id' => $this->timetable->id,
+                'lane_id' => $this->lane->id,
+                'title' => '本日のタスク',
+            ]);
+            TaskStaffAssignment::factory()->create([
+                'timetable_task_id' => $todayTask->id,
+                'staff_id' => $this->staff->id,
+            ]);
+
+            $todayPriorityResponse = $this->get(route('staff.myshift', ['token' => $this->staff->access_token]));
+            $todayPriorityResponse->assertStatus(200);
+            $todayPriorityResponse->assertSee('本日のタスク');
+            $todayPriorityResponse->assertDontSee('来月のタスク');
+            $todayPriorityResponse->assertDontSee('過去のみタスク');
+
+            // 3. 過去のみ存在する場合は最も新しい過去日が初期選択されること
+            $pastOnlyStaff = Staff::factory()->create(['is_active' => true]);
+            $olderPastTimetable = Timetable::factory()->create([
+                'target_date' => '2025-10-10',
+                'name' => '一昨年イベント',
+            ]);
+            $olderLane = Lane::factory()->create(['timetable_id' => $olderPastTimetable->id, 'name' => '旧班']);
+            $olderTask = TimetableTask::factory()->create(['timetable_id' => $olderPastTimetable->id, 'lane_id' => $olderLane->id, 'title' => '古い過去タスク']);
+            TaskStaffAssignment::factory()->create(['timetable_task_id' => $olderTask->id, 'staff_id' => $pastOnlyStaff->id]);
+
+            $latestPastTask = TimetableTask::factory()->create(['timetable_id' => $pastTimetable->id, 'lane_id' => $pastLane->id, 'title' => '直近の過去タスク']);
+            TaskStaffAssignment::factory()->create(['timetable_task_id' => $latestPastTask->id, 'staff_id' => $pastOnlyStaff->id]);
+
+            $pastPriorityResponse = $this->get(route('staff.myshift', ['token' => $pastOnlyStaff->access_token]));
+            $pastPriorityResponse->assertStatus(200);
+            $pastPriorityResponse->assertSee('直近の過去タスク');
+            $pastPriorityResponse->assertDontSee('古い過去タスク');
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    /**
+     * クエリパラメータ timetable_id で運行日切り替えおよび全日程表示ができること
+     */
+    public function test_can_switch_timetables_and_view_all_with_query_parameter(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-11 10:00:00'));
+
+        try {
+            $pastTimetable = Timetable::factory()->create([
+                'target_date' => '2026-10-11',
+                'name' => '宿場まつり 1日目',
+            ]);
+            $pastLane = Lane::factory()->create([
+                'timetable_id' => $pastTimetable->id,
+                'name' => '巡回班',
+                'lead_staff_id' => $this->staff->id,
+            ]);
+            $pastTask = TimetableTask::factory()->create([
+                'timetable_id' => $pastTimetable->id,
+                'lane_id' => $pastLane->id,
+                'title' => '過去の巡回タスク',
+            ]);
+            TaskStaffAssignment::factory()->create([
+                'timetable_task_id' => $pastTask->id,
+                'staff_id' => $this->staff->id,
+            ]);
+
+            $futureTimetable = Timetable::factory()->create([
+                'target_date' => '2027-10-10',
+                'name' => '次回宿場まつり',
+            ]);
+            $futureLane = Lane::factory()->create([
+                'timetable_id' => $futureTimetable->id,
+                'name' => 'ステカン班',
+            ]);
+            $futureTask = TimetableTask::factory()->create([
+                'timetable_id' => $futureTimetable->id,
+                'lane_id' => $futureLane->id,
+                'title' => '次回の看板設置',
+            ]);
+            TaskStaffAssignment::factory()->create([
+                'timetable_task_id' => $futureTask->id,
+                'staff_id' => $this->staff->id,
+            ]);
+
+            // 過去の運行日を指定表示
+            $pastResponse = $this->get(route('staff.myshift', [
+                'token' => $this->staff->access_token,
+                'timetable_id' => $pastTimetable->id,
+            ]));
+            $pastResponse->assertStatus(200);
+            $pastResponse->assertSee('過去の巡回タスク');
+            $pastResponse->assertDontSee('次回の看板設置');
+            $pastResponse->assertSee('data-main-tab="leader"', false);
+
+            // 全日程表示 (timetable_id=all)
+            $allResponse = $this->get(route('staff.myshift', [
+                'token' => $this->staff->access_token,
+                'timetable_id' => 'all',
+            ]));
+            $allResponse->assertStatus(200);
+            $allResponse->assertSee('過去の巡回タスク');
+            $allResponse->assertSee('次回の看板設置');
+            $allResponse->assertSee('全運行日表示');
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    /**
+     * 担当班フィルター・備考・連携メンバー表示・複数班長の班タブが出力されCSPに違反しないこと
+     */
+    public function test_my_shift_displays_lane_filters_notes_coworkers_and_leader_lane_tabs(): void
+    {
+        $secondLane = Lane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'name' => '清掃誘導班',
+            'lead_staff_id' => $this->staff->id,
+        ]);
+        $this->lane->update(['lead_staff_id' => $this->staff->id]);
+
+        $coWorker = Staff::factory()->create([
+            'name' => '高橋 連帯',
+            'is_active' => true,
+        ]);
+
+        $task1 = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $this->lane->id,
+            'title' => '給水機材搬入',
+            'content' => 'タンク20本を中央へ搬入します。',
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $task1->id,
+            'staff_id' => $this->staff->id,
+            'role_description' => '台車運搬',
+            'notes' => '手袋は本部テント前で受け取ってください。',
+            'attendance_status' => 'completed',
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $task1->id,
+            'staff_id' => $coWorker->id,
+            'role_description' => '積み下ろし補助',
+        ]);
+
+        $task2 = TimetableTask::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $secondLane->id,
+            'title' => '会場周辺巡回清掃',
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $task2->id,
+            'staff_id' => $this->staff->id,
+            'attendance_status' => 'assigned',
+        ]);
+
+        $response = $this->get(route('staff.myshift', ['token' => $this->staff->access_token]));
+
+        $response->assertStatus(200);
+        // 担当班フィルターと進捗率（1/2 = 50%）
+        $response->assertSee('data-lane-filter="'.$this->lane->id.'"', false);
+        $response->assertSee('data-lane-filter="'.$secondLane->id.'"', false);
+        $response->assertSee('data-progress-percent="50"', false);
+
+        // アコーディオン内の備考と連携メンバー名
+        $response->assertSee('手袋は本部テント前で受け取ってください。');
+        $response->assertSee('高橋 連帯');
+
+        // 複数班長の班切り替えタブと班長コンソールパネル
+        $response->assertSee('data-leader-lane-tab="'.$this->lane->id.'"', false);
+        $response->assertSee('data-leader-lane-tab="'.$secondLane->id.'"', false);
+        $response->assertSee('data-leader-lane-panel="'.$this->lane->id.'"', false);
+        $response->assertSee('data-leader-lane-panel="'.$secondLane->id.'"', false);
+
+        // インラインスタイルやイベントハンドラが存在しないこと
+        $content = $response->getContent();
+        $this->assertDoesNotMatchRegularExpression('/\sstyle=/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $content);
+    }
+
+    /**
      * マイシフト関連エンドポイントにレートリミットが適用されていること
      */
     public function test_shift_endpoints_are_rate_limited(): void

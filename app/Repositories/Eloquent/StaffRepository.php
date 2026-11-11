@@ -164,13 +164,17 @@ class StaffRepository implements StaffRepositoryInterface
         $staff->load([
             'assignments.task.timetable',
             'assignments.task.laneRelation.leadStaff',
+            'assignments.task.laneRelation.timetable',
+            'assignments.task.assignments.staff',
         ]);
 
         return $staff->ledLanes()
+            ->ordered()
             ->with([
                 'timetable',
                 'fixedStaff',
                 'tasks.assignments.staff',
+                'tasks.laneRelation',
                 'laneRequests.task',
             ])
             ->get();
