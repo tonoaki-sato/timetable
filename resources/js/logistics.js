@@ -12,7 +12,15 @@ function initLogisticsPlanModals() {
     const createForm = document.getElementById('plan-create-form');
     const editModal = document.getElementById('plan-edit-modal');
     const editForm = document.getElementById('plan-edit-form');
-    const allModals = [detailModal, createModal, editModal].filter(Boolean);
+    const newPlanModal = document.getElementById('logistics-plan-create-modal');
+    const newPlanEquipmentSelect = document.getElementById('new_plan_equipment_select');
+    const newPlanEquipmentError = document.getElementById('new_plan_equipment_error');
+    const newPlanStepPanel = document.getElementById('new-plan-step-panel');
+    const newPlanPatternPanel = document.getElementById('new-plan-pattern-panel');
+    const newPlanStepForm = document.getElementById('new-plan-step-form');
+    const newPlanPatternForm = document.getElementById('new-plan-pattern-form');
+    const newPlanModeTabs = document.querySelectorAll('[data-plan-mode-tab]');
+    const allModals = [detailModal, createModal, editModal, newPlanModal].filter(Boolean);
 
     if (!allModals.length) {
         return;
@@ -201,6 +209,125 @@ function initLogisticsPlanModals() {
         openModal(editModal);
     }
 
+    function switchNewPlanMode(mode) {
+        const isPattern = mode === 'pattern';
+
+        if (newPlanStepPanel) {
+            newPlanStepPanel.classList.toggle('hidden', isPattern);
+        }
+        if (newPlanPatternPanel) {
+            newPlanPatternPanel.classList.toggle('hidden', !isPattern);
+        }
+
+        newPlanModeTabs.forEach((tab) => {
+            const isActive = tab.dataset.planModeTab === mode;
+            tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            tab.classList.toggle('bg-indigo-600', isActive);
+            tab.classList.toggle('text-white', isActive);
+            tab.classList.toggle('shadow-2xs', isActive);
+            tab.classList.toggle('bg-white', !isActive);
+            tab.classList.toggle('text-slate-600', !isActive);
+            tab.classList.toggle('hover:text-slate-900', !isActive);
+        });
+    }
+
+    function syncNewPlanEquipment() {
+        if (!newPlanEquipmentSelect) return;
+
+        const selectedOpt = newPlanEquipmentSelect.options[newPlanEquipmentSelect.selectedIndex];
+        const equipmentId = newPlanEquipmentSelect.value || '';
+
+        if (newPlanEquipmentError && equipmentId) {
+            newPlanEquipmentError.classList.add('hidden');
+        }
+
+        setValue('new_plan_equipment_id', equipmentId);
+
+        const equipmentType = selectedOpt?.dataset.type || '';
+        const equipmentQuantity = selectedOpt?.dataset.quantity || '';
+        const isRental = selectedOpt?.dataset.isRental === '1';
+        const plansCount = Number(selectedOpt?.dataset.plansCount || 0);
+        const applyTemplateUrl = selectedOpt?.dataset.applyTemplateUrl || '';
+
+        setValue('new_plan_operator_type', isRental ? 'event_company' : 'committee');
+        setValue('new_plan_quantity', equipmentQuantity);
+
+        const quantityInput = document.getElementById('new_plan_quantity');
+        if (quantityInput) {
+            quantityInput.placeholder = equipmentQuantity ? `例: ${equipmentQuantity}` : '数量';
+        }
+
+        if (newPlanPatternForm) {
+            newPlanPatternForm.action = applyTemplateUrl;
+        }
+
+        const overrideWarning = document.getElementById('new_plan_override_warning');
+        const overrideCheckbox = document.getElementById('new_plan_override_existing');
+        if (overrideWarning) {
+            overrideWarning.classList.toggle('hidden', !equipmentId || plansCount <= 0);
+            setText('new_plan_existing_count', String(plansCount));
+        }
+        if (overrideCheckbox) {
+            overrideCheckbox.checked = true;
+        }
+
+        const patternSelect = document.getElementById('new_plan_pattern_id');
+        if (patternSelect && equipmentType) {
+            const matchedOption = Array.from(patternSelect.options).find(
+                (opt) => opt.dataset.targetType === equipmentType
+            );
+            if (matchedOption) {
+                patternSelect.value = matchedOption.value;
+            }
+        }
+    }
+
+    function openNewPlanModal() {
+        if (!newPlanModal) return;
+
+        if (newPlanStepForm) {
+            newPlanStepForm.reset();
+            const defaultTargetDate = newPlanStepForm.dataset.defaultTargetDate || '';
+            setValue('new_plan_day_phase', 'pre_day');
+            setValue('new_plan_action_type', 'staging_move');
+            setValue('new_plan_status', 'planned');
+            setValue('new_plan_target_date', defaultTargetDate);
+        }
+
+        if (newPlanPatternForm) {
+            newPlanPatternForm.reset();
+        }
+
+        if (newPlanEquipmentSelect) {
+            newPlanEquipmentSelect.value = '';
+        }
+
+        if (newPlanEquipmentError) {
+            newPlanEquipmentError.classList.add('hidden');
+        }
+
+        syncNewPlanEquipment();
+        switchNewPlanMode('step');
+        openModal(newPlanModal);
+    }
+
+    function bindNewPlanSubmitValidation(form, requireActionUrl = false) {
+        if (!form || !newPlanEquipmentSelect) return;
+
+        form.addEventListener('submit', (e) => {
+            const hasEquipment = Boolean(newPlanEquipmentSelect.value);
+            const hasAction = !requireActionUrl || Boolean(form.getAttribute('action'));
+
+            if (!hasEquipment || !hasAction) {
+                e.preventDefault();
+                if (newPlanEquipmentError) {
+                    newPlanEquipmentError.classList.remove('hidden');
+                }
+                newPlanEquipmentSelect.focus();
+            }
+        });
+    }
+
     function bindLocationSync(prefix) {
         ['from', 'to'].forEach((dir) => {
             const selectEl = document.getElementById(`${prefix}_${dir}_location_id`);
@@ -246,8 +373,29 @@ function initLogisticsPlanModals() {
         });
     });
 
+    document.querySelectorAll('[data-action="open-logistics-plan-create"]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openNewPlanModal();
+        });
+    });
+
+    newPlanModeTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            switchNewPlanMode(tab.dataset.planModeTab || 'step');
+        });
+    });
+
+    if (newPlanEquipmentSelect) {
+        newPlanEquipmentSelect.addEventListener('change', syncNewPlanEquipment);
+    }
+
+    bindNewPlanSubmitValidation(newPlanStepForm, false);
+    bindNewPlanSubmitValidation(newPlanPatternForm, true);
+
     bindLocationSync('create_plan');
     bindLocationSync('edit_plan');
+    bindLocationSync('new_plan');
 
     document.querySelectorAll('[data-action="close-modal"]').forEach((btn) => {
         btn.addEventListener('click', () => {

@@ -379,11 +379,16 @@ class EquipmentLogisticsService
     {
         $lanes = $this->laneRepository->getOrderedWithLeadForTimetable($timetable);
         $equipments = $this->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable);
+        $allEquipments = $typeFilter
+            ? $this->getEquipmentsFlowData(null, null, $timetable)
+            : $equipments;
 
         return [
             'timetable' => $timetable,
             'lanes' => $lanes,
             'equipments' => $equipments,
+            'allEquipments' => $allEquipments,
+            'patterns' => $this->patternRepository->getAllWithSteps(),
             'locations' => $this->locationRepository->getActiveOrderedForTimetable($timetable),
             'staffs' => $this->staffRepository->getActiveStaffList(),
             'typeFilter' => $typeFilter,

@@ -155,19 +155,28 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertSee('順序');
         $response->assertSee('フェーズ');
         $response->assertSee('ステップ表示名');
+        $response->assertSee('>日付</th>', false);
+        $response->assertSee('>時間</th>', false);
         $response->assertSee('移動元 ➔ 移動先');
-        $response->assertSee('作業主体');
-        $response->assertSee('状態');
         $response->assertSee('>操作</th>', false);
+        $response->assertSeeInOrder(['順序', 'フェーズ', 'ステップ表示名', '日付', '時間', '移動元 ➔ 移動先', '操作']);
+        $response->assertDontSee('>作業主体</th>', false);
+        $response->assertDontSee('>状態</th>', false);
         $response->assertDontSee('>日時</th>', false);
         $response->assertDontSee('>種別</th>', false);
         $response->assertDontSee('>立会</th>', false);
+        $response->assertSee('2026-10-10');
+        $response->assertSee('09:00〜10:00');
+        $response->assertSee('2026-10-11');
+        $response->assertSee('08:00');
         $response->assertDontSee('計画・ステップ編集');
         $response->assertDontSee('0/1 完了');
         $response->assertDontSee('数量: 5');
         $response->assertDontSee('name="display_order"', false);
         $response->assertSee('data-action="open-plan-create"', false);
         $response->assertSee('ステップ追加');
+        $response->assertSee('data-action="open-logistics-plan-create"', false);
+        $response->assertSee('計画の新規作成');
         $response->assertSee('data-action="open-plan-detail"', false);
         $response->assertSee('text-slate-900 hover:text-indigo-600', false);
         $response->assertSee('data-action="open-plan-edit"', false);
@@ -176,6 +185,15 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertSee('id="plan-detail-modal"', false);
         $response->assertSee('id="plan-create-modal"', false);
         $response->assertSee('id="plan-edit-modal"', false);
+        $response->assertSee('id="logistics-plan-create-modal"', false);
+        $response->assertSee('data-plan-mode-tab="step"', false);
+        $response->assertSee('data-plan-mode-tab="pattern"', false);
+        $response->assertSee('個別ステップ登録');
+        $response->assertSee('パターンから一括生成');
+        $response->assertSee('id="new_plan_equipment_select"', false);
+        $response->assertSee('id="new_plan_target_date" name="target_date" value="2026-10-11"', false);
+        $response->assertSee(route('timetables.logistics.apply-template', [$this->timetable1, $equipment]), false);
+        $response->assertSee('テスト標準パターンA');
         $response->assertSee('data-default-target-date="2026-10-11"', false);
         $response->assertSee('id="create_plan_target_date" name="target_date" value="2026-10-11"', false);
         $response->assertSee('id="edit_plan_target_date" name="target_date" value="2026-10-11"', false);
@@ -244,6 +262,60 @@ class EquipmentLogisticsTest extends TestCase
         $this->actingAs($viewer);
         $this->post(route('timetables.logistics.plans.store', $this->timetable1), $payload)
             ->assertForbidden();
+    }
+
+    /**
+     * 搬出入計画一覧の「計画の新規作成」モーダルからパターン一括生成でき、絞り込み時でも全資材選択・権限制御が機能すること
+     */
+    public function test_logistics_dashboard_new_plan_modal_supports_pattern_apply_filtering_and_authorization(): void
+    {
+        $committeeEquipment = Equipment::factory()->committee()->create([
+            'name' => '新規計画モーダル用パイプ椅子',
+            'quantity' => 10,
+        ]);
+
+        $this->actingAs($this->operator);
+
+        // 区分フィルタ（rental のみ）を掛けても、モーダル内の対象資材セレクトには自前備品が含まれること
+        $filteredResponse = $this->get(route('timetables.logistics.index', [
+            'timetable' => $this->timetable1,
+            'type' => 'rental',
+        ]));
+        $filteredResponse->assertStatus(200);
+        $filteredResponse->assertSee('id="logistics-plan-create-modal"', false);
+        $filteredResponse->assertSee('新規計画モーダル用パイプ椅子');
+
+        // 一覧画面からパターン一括適用を実行すると一覧画面へリダイレクトし、全ステップが生成されること
+        $applyResponse = $this->from(route('timetables.logistics.index', $this->timetable1))
+            ->post(route('timetables.logistics.apply-template', [$this->timetable1, $committeeEquipment]), [
+                'pattern_id' => $this->pattern->id,
+                'override_existing' => '1',
+                'staging_location_id' => $this->locationTaxOffice->id,
+                'night_location_1_id' => $this->locationTaxOffice->id,
+                'night_location_2_id' => $this->locationKitagawa->id,
+            ]);
+
+        $applyResponse->assertRedirect(route('timetables.logistics.index', $this->timetable1));
+        $this->assertSame(
+            3,
+            $committeeEquipment->plans()->where('timetable_id', $this->timetable1->id)->count()
+        );
+
+        // 閲覧専用ユーザーには新規作成ボタン・モーダルが表示されず、一括適用リクエストも拒否されること
+        $viewer = User::factory()->create([
+            'role' => 'viewer',
+            'is_active' => true,
+        ]);
+        $this->actingAs($viewer);
+
+        $viewerResponse = $this->get(route('timetables.logistics.index', $this->timetable1));
+        $viewerResponse->assertStatus(200);
+        $viewerResponse->assertDontSee('data-action="open-logistics-plan-create"', false);
+        $viewerResponse->assertDontSee('id="logistics-plan-create-modal"', false);
+
+        $this->post(route('timetables.logistics.apply-template', [$this->timetable1, $committeeEquipment]), [
+            'pattern_id' => $this->pattern->id,
+        ])->assertForbidden();
     }
 
     /**

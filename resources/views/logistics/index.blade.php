@@ -27,6 +27,15 @@
                 <span>📄</span>
                 <span>搬出入指示書PDF</span>
             </a>
+
+            @can('create', \App\Models\EquipmentLogisticsPlan::class)
+                <button type="button"
+                    data-action="open-logistics-plan-create"
+                    class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
+                    <span>➕</span>
+                    <span>計画の新規作成</span>
+                </button>
+            @endcan
         </x-slot:actions>
     </x-page-header>
 
@@ -193,9 +202,9 @@
                                     <th scope="col" class="px-3.5 py-2.5 text-center whitespace-nowrap w-14">順序</th>
                                     <th scope="col" class="px-3.5 py-2.5 whitespace-nowrap w-40">フェーズ</th>
                                     <th scope="col" class="px-3.5 py-2.5 min-w-[160px]">ステップ表示名</th>
+                                    <th scope="col" class="px-3.5 py-2.5 whitespace-nowrap w-28">日付</th>
+                                    <th scope="col" class="px-3.5 py-2.5 whitespace-nowrap w-28">時間</th>
                                     <th scope="col" class="px-3.5 py-2.5 min-w-[200px]">移動元 ➔ 移動先</th>
-                                    <th scope="col" class="px-3.5 py-2.5 whitespace-nowrap w-28">作業主体</th>
-                                    <th scope="col" class="px-3.5 py-2.5 text-center whitespace-nowrap w-24">状態</th>
                                     <th scope="col" class="px-3.5 py-2.5 text-center whitespace-nowrap w-32">操作</th>
                                 </tr>
                             </thead>
@@ -245,6 +254,16 @@
                                             </div>
                                         </td>
 
+                                        <!-- 日付 -->
+                                        <td class="px-3.5 py-2.5 font-mono text-xs whitespace-nowrap {{ $plan->target_date ? 'text-slate-700' : 'text-slate-400' }}">
+                                            {{ $plan->target_date?->format('Y-m-d') ?: '-' }}
+                                        </td>
+
+                                        <!-- 時間 -->
+                                        <td class="px-3.5 py-2.5 font-mono text-xs whitespace-nowrap {{ $plan->formatted_time_range ? 'text-slate-700' : 'text-slate-400' }}">
+                                            {{ $plan->formatted_time_range ?: '-' }}
+                                        </td>
+
                                         <!-- 移動元 ➔ 移動先 -->
                                         <td class="px-3.5 py-2.5 font-mono text-[11px] whitespace-nowrap">
                                             <span class="{{ filled($plan->from_location) || $plan->from_location_id ? 'text-slate-600 font-medium' : 'text-slate-400 italic' }}">
@@ -254,32 +273,6 @@
                                             <span class="{{ filled($plan->to_location) || $plan->to_location_id ? 'text-slate-900 font-bold' : 'text-slate-400 italic' }}">
                                                 {{ $plan->resolved_to_location ?: '現地会場' }}
                                             </span>
-                                        </td>
-
-                                        <!-- 作業主体 -->
-                                        <td class="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">
-                                            {{ $plan->operator_label }}
-                                        </td>
-
-                                        <!-- 状態 -->
-                                        <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
-                                            @if($plan->isCompleted())
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                                    ✅ 完了
-                                                </span>
-                                            @elseif($plan->status === 'in_progress')
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                                                    🏃 進行中
-                                                </span>
-                                            @elseif($plan->status === 'cancelled')
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
-                                                    ⛔ 中止
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                                                    ⚪ 計画中
-                                                </span>
-                                            @endif
                                         </td>
 
                                         <!-- 操作 -->
@@ -335,6 +328,15 @@
     <x-logistics.step-detail-modal />
     <x-logistics.step-create-modal :locations="$locations" :staffs="$staffs" :default-target-date="$defaultTargetDate" />
     <x-logistics.step-edit-modal :locations="$locations" :staffs="$staffs" :default-target-date="$defaultTargetDate" />
+    @can('create', \App\Models\EquipmentLogisticsPlan::class)
+        <x-logistics.plan-create-modal
+            :timetable="$timetable"
+            :equipments="$allEquipments"
+            :locations="$locations"
+            :staffs="$staffs"
+            :patterns="$patterns"
+            :default-target-date="$defaultTargetDate" />
+    @endcan
 </div>
 
 @vite(['resources/js/logistics.js'])
