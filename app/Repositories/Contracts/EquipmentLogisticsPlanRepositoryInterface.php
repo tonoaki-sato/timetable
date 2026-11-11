@@ -19,16 +19,18 @@ interface EquipmentLogisticsPlanRepositoryInterface
     /**
      * 資材別フロー一覧用データ（タイムテーブル指定）を取得
      *
+     * @param  array<int, int>|null  $equipmentIds
      * @return Collection<int, Equipment>
      */
-    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null): Collection;
+    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection;
 
     /**
      * フェーズ別チェックリスト用データを取得
      *
+     * @param  array<int, int>|null  $equipmentIds
      * @return Collection<int, EquipmentLogisticsPlan>
      */
-    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null): Collection;
+    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection;
 
     /**
      * 指定移動先拠点ID群に紐づく計画ステップを資機材情報付きで取得

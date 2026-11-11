@@ -322,34 +322,52 @@ class EquipmentLogisticsService
     }
 
     /**
+     * リクエスト入力の equipment_ids を正の整数配列へ正規化（未指定時は null）
+     *
+     * @return array<int, int>|null
+     */
+    public function parseEquipmentIds(mixed $input): ?array
+    {
+        if ($input === null || $input === '' || $input === []) {
+            return null;
+        }
+
+        $rawIds = is_array($input) ? $input : explode(',', (string) $input);
+
+        return array_values(array_unique(array_filter(
+            array_map('intval', $rawIds),
+            fn (int $id): bool => $id > 0
+        )));
+    }
+
+    /**
      * 指定タイムテーブルの搬出入計画一覧画面用データを取得
      *
+     * @param  array<int, int>|null  $selectedEquipmentIds
      * @return array<string, mixed>
      */
-    public function getLogisticsIndexViewData(Timetable $timetable, ?string $typeFilter = null, ?int $laneFilter = null): array
+    public function getLogisticsIndexViewData(Timetable $timetable, ?array $selectedEquipmentIds = null): array
     {
-        $lanes = $this->laneRepository->getOrderedWithLeadForTimetable($timetable);
-        $equipments = $this->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable);
-        $allEquipments = $typeFilter
-            ? $this->getEquipmentsFlowData(null, null, $timetable)
-            : $equipments;
+        $equipments = $this->getEquipmentsFlowData(null, null, $timetable);
+        $visibleEquipmentCount = $selectedEquipmentIds === null
+            ? $equipments->count()
+            : $equipments->whereIn('id', $selectedEquipmentIds)->count();
 
         return [
             'timetable' => $timetable,
-            'lanes' => $lanes,
             'equipments' => $equipments,
-            'allEquipments' => $allEquipments,
+            'selectedEquipmentIds' => $selectedEquipmentIds,
+            'visibleEquipmentCount' => $visibleEquipmentCount,
             'patterns' => $this->patternRepository->getAllWithSteps(),
             'locations' => $this->locationRepository->getActiveOrderedForTimetable($timetable),
             'staffs' => $this->staffRepository->getActiveStaffList(),
-            'typeFilter' => $typeFilter,
-            'laneFilter' => $laneFilter,
         ];
     }
 
     /**
      * 搬出入計画の印刷プレビュー画面用データを取得
      *
+     * @param  array<int, int>|null  $equipmentIds
      * @return array<string, mixed>
      */
     public function getLogisticsPrintPreviewData(
@@ -357,7 +375,8 @@ class EquipmentLogisticsService
         string $format = 'all',
         ?string $typeFilter = null,
         ?int $laneFilter = null,
-        ?string $phaseFilter = null
+        ?string $phaseFilter = null,
+        ?array $equipmentIds = null
     ): array {
         return [
             'timetable' => $timetable,
@@ -365,8 +384,9 @@ class EquipmentLogisticsService
             'typeFilter' => $typeFilter,
             'laneFilter' => $laneFilter,
             'phaseFilter' => $phaseFilter,
-            'equipments' => $this->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable),
-            'checklistPlans' => $this->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter, $timetable),
+            'equipmentIds' => $equipmentIds,
+            'equipments' => $this->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable, $equipmentIds),
+            'checklistPlans' => $this->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter, $timetable, $equipmentIds),
             'locationsData' => $this->getLocationsStatusData($timetable),
             'onsiteNightPlans' => $this->getOnsiteNightStoragePlans($timetable),
             'eventCompanyPlans' => $this->getEventCompanyScheduleData($timetable),
@@ -378,21 +398,23 @@ class EquipmentLogisticsService
     /**
      * 資材別フロー一覧用のデータ取得
      *
+     * @param  array<int, int>|null  $equipmentIds
      * @return Collection<int, Equipment>
      */
-    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null): Collection
+    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection
     {
-        return $this->planRepository->getEquipmentsFlowData($type, $laneId, $timetable);
+        return $this->planRepository->getEquipmentsFlowData($type, $laneId, $timetable, $equipmentIds);
     }
 
     /**
      * フェーズ別チェックリスト用のデータ取得
      *
+     * @param  array<int, int>|null  $equipmentIds
      * @return Collection<int, EquipmentLogisticsPlan>
      */
-    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null): Collection
+    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection
     {
-        return $this->planRepository->getPhaseChecklistData($dayPhase, $laneId, $type, $timetable);
+        return $this->planRepository->getPhaseChecklistData($dayPhase, $laneId, $type, $timetable, $equipmentIds);
     }
 
     /**

@@ -22,8 +22,10 @@
 
         <x-slot:actions>
             <a href="{{ $printUrl }}"
+               id="btn-logistics-pdf-preview"
+               data-base-print-url="{{ route('timetables.logistics.print', ['timetable' => $timetable, 'preview' => 1]) }}"
                class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0"
-               title="搬出入指示書兼現場チェックリストをPDFでダウンロード">
+               title="画面で選択中の資材を反映した搬出入指示書兼現場チェックリストをPDFプレビュー表示">
                 <span>📄</span>
                 <span>搬出入指示書PDF</span>
             </a>
@@ -66,42 +68,56 @@
         </div>
     @endif
 
-    <!-- 絞り込みツールバー -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-2xs p-3">
-        <form method="GET" action="{{ route('timetables.logistics.index', $timetable) }}" class="flex items-center justify-between flex-wrap gap-2 text-xs">
-            <div class="flex items-center space-x-2 flex-wrap gap-y-1.5">
-                <span class="font-bold text-slate-600 flex items-center space-x-1">
-                    <span>🔍</span>
-                    <span>絞り込み:</span>
-                </span>
+    <!-- 表示資材切り替えフィルターバー -->
+    <div class="print:hidden bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+        <!-- 全選択 / 全解除 & 資材チップ -->
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-slate-700 flex items-center mr-1">
+                <span>🔍 表示資材:</span>
+            </span>
 
-                <!-- 担当班フィルタ -->
-                <select name="lane_id" data-auto-submit class="px-2.5 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800">
-                    <option value="">すべての担当班</option>
-                    @foreach($lanes as $lane)
-                        <option value="{{ $lane->id }}" {{ $laneFilter === $lane->id ? 'selected' : '' }}>
-                            {{ $lane->icon ?: '🏷️' }} {{ $lane->name }}
-                        </option>
-                    @endforeach
-                </select>
-
-                <!-- 資材区分フィルタ -->
-                <select name="type" data-auto-submit class="px-2.5 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800">
-                    <option value="">すべての区分</option>
-                    <option value="committee" {{ $typeFilter === 'committee' ? 'selected' : '' }}>自前備品 (委員会)</option>
-                    <option value="rental" {{ $typeFilter === 'rental' ? 'selected' : '' }}>レンタル機材 (イベント会社)</option>
-                    <option value="personal" {{ $typeFilter === 'personal' ? 'selected' : '' }}>私物 (個人持ち込み)</option>
-                </select>
+            <!-- 全選択 / 全解除 ボタン -->
+            <div class="inline-flex rounded border border-slate-300 bg-white p-0.5 mr-1 shrink-0">
+                <button type="button" data-action="select-all-equipments"
+                    title="全資材を表示"
+                    class="px-1.5 py-0.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-[10px] font-bold transition cursor-pointer">
+                    全選択
+                </button>
+                <button type="button" data-action="deselect-all-equipments"
+                    title="全資材を非表示"
+                    class="px-1.5 py-0.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-[10px] font-bold transition cursor-pointer">
+                    全解除
+                </button>
             </div>
 
-            @if($laneFilter || $typeFilter)
-                <a href="{{ route('timetables.logistics.index', $timetable) }}"
-                   class="text-xs text-rose-600 hover:text-rose-800 font-bold transition flex items-center space-x-1">
-                    <span>✕</span>
-                    <span>フィルタ解除</span>
-                </a>
-            @endif
-        </form>
+            <!-- 各資材のチップ（ON/OFF トグル） -->
+            <div class="flex flex-wrap items-center gap-1.5" id="equipment-filter-chips">
+                @foreach($equipments as $equipment)
+                    @php
+                        $isChipVisible = $selectedEquipmentIds === null || in_array($equipment->id, $selectedEquipmentIds, true);
+                    @endphp
+                    <button type="button"
+                        id="chip-equipment-{{ $equipment->id }}"
+                        data-equipment-id="{{ $equipment->id }}"
+                        data-equipment-name="{{ $equipment->name }}"
+                        class="equipment-chip inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border transition {{ $isChipVisible ? 'bg-white text-slate-800 border-slate-300' : 'opacity-40 bg-slate-100 text-slate-800 border-slate-300' }} hover:border-indigo-400 whitespace-nowrap shrink-0 cursor-pointer">
+                        <span class="mr-1 text-[10px] text-emerald-600 font-bold">{{ $isChipVisible ? '✔' : '✕' }}</span>
+                        <span>{{ $equipment->type_enum->icon() }} {{ $equipment->name }}</span>
+                    </button>
+                @endforeach
+            </div>
+        </div>
+
+        <!-- 表示資材数インジケータ -->
+        <div class="flex items-center space-x-2 shrink-0">
+            <span class="text-xs text-slate-500 font-mono" id="equipment-count-indicator">
+                @if($selectedEquipmentIds === null || $visibleEquipmentCount === $equipments->count())
+                    全 {{ $equipments->count() }} 資材表示中
+                @else
+                    全 {{ $equipments->count() }} 資材中 {{ $visibleEquipmentCount }} 資材表示中
+                @endif
+            </span>
+        </div>
     </div>
 
     <!-- セクションヘッダーバー (見出し + 折りたたみトグル) -->
@@ -126,7 +142,13 @@
     <!-- 資材別アコーディオン一覧 -->
     <div id="logistics-accordions" class="space-y-3">
         @forelse($equipments as $equipment)
-            <details id="equipment-{{ $equipment->id }}" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group" {{ $equipment->plans->isNotEmpty() ? 'open' : '' }}>
+            @php
+                $isEquipmentVisible = $selectedEquipmentIds === null || in_array($equipment->id, $selectedEquipmentIds, true);
+            @endphp
+            <details id="equipment-{{ $equipment->id }}"
+                data-equipment-panel="{{ $equipment->id }}"
+                class="equipment-panel-{{ $equipment->id }} bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group {{ $isEquipmentVisible ? '' : 'hidden' }}"
+                {{ $equipment->plans->isNotEmpty() ? 'open' : '' }}>
                 <summary class="px-3.5 sm:px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 sm:gap-3 cursor-pointer hover:bg-slate-100/70 transition select-none">
                     <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1 flex-wrap">
                         <!-- 開閉トグルアイコン -->
@@ -308,9 +330,18 @@
             <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 space-y-2">
                 <span class="text-3xl block">📦</span>
                 <p class="font-bold text-slate-700">条件に該当する資材はありません</p>
-                <p class="text-xs text-slate-400">絞り込み条件を変更するか、資材管理から新しい資材を登録してください。</p>
+                <p class="text-xs text-slate-400">資材管理から新しい資材を登録してください。</p>
             </div>
         @endforelse
+
+        @if($equipments->isNotEmpty())
+            <div id="logistics-filter-empty-state"
+                 class="{{ $visibleEquipmentCount === 0 ? '' : 'hidden ' }}bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 space-y-2">
+                <span class="text-3xl block">🔍</span>
+                <p class="font-bold text-slate-700">表示対象の資材が選択されていません</p>
+                <p class="text-xs text-slate-400">上部の「全選択」または資材チップをクリックして表示を切り替えてください。</p>
+            </div>
+        @endif
     </div>
 
     <!-- 個別ステップ詳細・追加・編集モーダル -->
@@ -323,7 +354,7 @@
     @can('create', \App\Models\EquipmentLogisticsPlan::class)
         <x-logistics.plan-create-modal
             :timetable="$timetable"
-            :equipments="$allEquipments"
+            :equipments="$equipments"
             :locations="$locations"
             :staffs="$staffs"
             :patterns="$patterns"

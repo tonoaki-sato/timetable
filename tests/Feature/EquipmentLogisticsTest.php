@@ -141,7 +141,7 @@ class EquipmentLogisticsTest extends TestCase
             'status' => 'completed',
         ]);
 
-        Equipment::factory()->rental()->create([
+        $rentalEquipment = Equipment::factory()->rental()->create([
             'name' => 'ステップ未設定資材',
         ]);
 
@@ -149,6 +149,20 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('搬出入計画一覧');
         $response->assertSee('搬出入指示書PDF');
+        $response->assertSee('id="btn-logistics-pdf-preview"', false);
+        $response->assertSee('🔍 表示資材:');
+        $response->assertSee('data-action="select-all-equipments"', false);
+        $response->assertSee('data-action="deselect-all-equipments"', false);
+        $response->assertSee('id="equipment-filter-chips"', false);
+        $response->assertSee("id=\"chip-equipment-{$equipment->id}\"", false);
+        $response->assertSee("id=\"chip-equipment-{$rentalEquipment->id}\"", false);
+        $response->assertSee('id="equipment-count-indicator"', false);
+        $response->assertSee('全 2 資材表示中');
+        $response->assertSee('id="logistics-filter-empty-state"', false);
+        $response->assertDontSee('name="lane_id"', false);
+        $response->assertDontSee('name="type"', false);
+        $response->assertDontSee('すべての担当班');
+        $response->assertDontSee('すべての区分');
         $response->assertSee('すべて折りたたむ');
         $response->assertSee('<details', false);
         $response->assertSee('<table', false);
@@ -276,17 +290,24 @@ class EquipmentLogisticsTest extends TestCase
             'name' => '新規計画モーダル用パイプ椅子',
             'quantity' => 10,
         ]);
+        $rentalEquipment = Equipment::factory()->rental()->create([
+            'name' => '絞り込み表示用テント',
+            'quantity' => 2,
+        ]);
 
         $this->actingAs($this->operator);
 
-        // 区分フィルタ（rental のみ）を掛けても、モーダル内の対象資材セレクトには自前備品が含まれること
+        // equipment_ids で一部資材のみ表示指定しても、モーダル内の対象資材セレクトには全資材が含まれ、PDF URLにも連動すること
         $filteredResponse = $this->get(route('timetables.logistics.index', [
             'timetable' => $this->timetable1,
-            'type' => 'rental',
+            'equipment_ids' => (string) $rentalEquipment->id,
         ]));
         $filteredResponse->assertStatus(200);
         $filteredResponse->assertSee('id="logistics-plan-create-modal"', false);
         $filteredResponse->assertSee('新規計画モーダル用パイプ椅子');
+        $filteredResponse->assertSee('全 2 資材中 1 資材表示中');
+        $filteredResponse->assertSee("equipment-panel-{$committeeEquipment->id} bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group hidden", false);
+        $filteredResponse->assertSee('equipment_ids='.$rentalEquipment->id, false);
         $filteredResponse->assertDontSee('id="new_plan_staging_location_id"', false);
         $filteredResponse->assertDontSee('id="new_plan_night_location_1_id"', false);
         $filteredResponse->assertDontSee('id="new_plan_night_location_2_id"', false);
@@ -567,6 +588,40 @@ class EquipmentLogisticsTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('トランシーバー特小');
+    }
+
+    /**
+     * 印刷プレビューとPDF出力が equipment_ids による資材絞り込みに対応していること
+     */
+    public function test_print_preview_and_pdf_respect_equipment_ids_filter(): void
+    {
+        $this->actingAs($this->operator);
+
+        $included = Equipment::factory()->rental()->create([
+            'name' => '表示対象トランシーバー',
+        ]);
+        $excluded = Equipment::factory()->committee()->create([
+            'name' => '除外対象カラーコーン',
+        ]);
+
+        $previewResponse = $this->get(route('timetables.logistics.print', [
+            'timetable' => $this->timetable1,
+            'preview' => 1,
+            'equipment_ids' => (string) $included->id,
+        ]));
+
+        $previewResponse->assertStatus(200);
+        $previewResponse->assertSee('表示対象トランシーバー');
+        $previewResponse->assertSee('表示資材指定: 1件');
+        $previewResponse->assertDontSee('除外対象カラーコーン');
+
+        $pdfResponse = $this->get(route('timetables.logistics.print', [
+            'timetable' => $this->timetable1,
+            'equipment_ids' => (string) $included->id,
+        ]));
+
+        $pdfResponse->assertStatus(200);
+        $pdfResponse->assertHeader('Content-Type', 'application/pdf');
     }
 
     /**

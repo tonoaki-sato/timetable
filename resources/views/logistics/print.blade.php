@@ -43,6 +43,9 @@
         <!-- 印刷絞り込みフィルタ（画面のみ） -->
         <form method="GET" action="{{ $formAction }}" class="flex items-center space-x-3 pt-2 border-t border-slate-800 text-xs flex-wrap gap-y-2">
             <input type="hidden" name="preview" value="1">
+            @if(!empty($equipmentIds))
+                <input type="hidden" name="equipment_ids" value="{{ implode(',', $equipmentIds) }}">
+            @endif
             <span class="text-slate-400 font-bold">小分け印刷フィルタ:</span>
 
             <select name="lane_id" data-auto-submit class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200">
@@ -61,7 +64,7 @@
                 <option value="personal" {{ $typeFilter === 'personal' ? 'selected' : '' }}>私物のみ</option>
             </select>
 
-            @if($laneFilter || $typeFilter)
+            @if($laneFilter || $typeFilter || !empty($equipmentIds))
                 <a href="{{ $resetUrl }}" class="text-indigo-400 hover:underline">
                     フィルタ解除
                 </a>
@@ -79,6 +82,9 @@
                     <span>宿場まつり 運行本部 公式帳票</span>
                     @if($laneFilter && ($curLane = $lanes->firstWhere('id', $laneFilter)))
                         <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">【{{ $curLane->name }} 担当分】</span>
+                    @endif
+                    @if(!empty($equipmentIds))
+                        <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">【表示資材指定: {{ $equipments->count() }}件】</span>
                     @endif
                 </div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tight">資材・機材 搬出入・中継・夜間保管計画書</h1>

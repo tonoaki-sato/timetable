@@ -26,9 +26,10 @@ class DownloadEquipmentLogisticsPdfAction
         $typeFilter = $request->query('type');
         $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
         $phaseFilter = $request->query('phase');
+        $equipmentIds = $this->logisticsService->parseEquipmentIds($request->input('equipment_ids'));
 
-        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable);
-        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter, $timetable);
+        $equipments = $this->logisticsService->getEquipmentsFlowData($typeFilter, $laneFilter, $timetable, $equipmentIds);
+        $checklistPlans = $this->logisticsService->getPhaseChecklistData($phaseFilter, $laneFilter, $typeFilter, $timetable, $equipmentIds);
         $locationsData = $this->logisticsService->getLocationsStatusData($timetable);
         $onsiteNightPlans = $this->logisticsService->getOnsiteNightStoragePlans($timetable);
         $eventCompanyPlans = $this->logisticsService->getEventCompanyScheduleData($timetable);
@@ -48,6 +49,7 @@ class DownloadEquipmentLogisticsPdfAction
                 'typeFilter',
                 'laneFilter',
                 'phaseFilter',
+                'equipmentIds',
                 'equipments',
                 'checklistPlans',
                 'locationsData',

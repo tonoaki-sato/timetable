@@ -200,6 +200,9 @@
                 @if($typeFilter)
                     <span class="filter-tag">【区分: {{ $typeFilter }}】</span>
                 @endif
+                @if(!empty($equipmentIds))
+                    <span class="filter-tag">【表示資材指定: {{ $equipments->count() }}件】</span>
+                @endif
             </td>
             <td class="header-meta">
                 運行日程: {{ $festivalDates['day1'] }} 〜 {{ $festivalDates['day2'] }}<br>

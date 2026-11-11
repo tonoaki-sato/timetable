@@ -54,14 +54,14 @@ class EquipmentLogisticsController extends Controller
     {
         $this->authorize('viewAny', Equipment::class);
 
-        $typeFilter = $request->query('type');
-        $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
+        $selectedEquipmentIds = $this->logisticsService->parseEquipmentIds($request->input('equipment_ids'));
 
-        $viewData = $this->logisticsService->getLogisticsIndexViewData($timetable, $typeFilter, $laneFilter);
-        $viewData['printUrl'] = route(
-            'timetables.logistics.print',
-            array_merge(['timetable' => $timetable, 'preview' => 1], $request->only(['type', 'lane_id']))
-        );
+        $viewData = $this->logisticsService->getLogisticsIndexViewData($timetable, $selectedEquipmentIds);
+        $printQuery = ['timetable' => $timetable, 'preview' => 1];
+        if (! empty($selectedEquipmentIds)) {
+            $printQuery['equipment_ids'] = implode(',', $selectedEquipmentIds);
+        }
+        $viewData['printUrl'] = route('timetables.logistics.print', $printQuery);
 
         return view('logistics.index', $viewData);
     }
@@ -78,16 +78,23 @@ class EquipmentLogisticsController extends Controller
             $typeFilter = $request->query('type');
             $laneFilter = $request->query('lane_id') ? (int) $request->query('lane_id') : null;
             $phaseFilter = $request->query('phase');
+            $equipmentIds = $this->logisticsService->parseEquipmentIds($request->input('equipment_ids'));
 
             $viewData = $this->logisticsService->getLogisticsPrintPreviewData(
                 $timetable,
                 $format,
                 $typeFilter,
                 $laneFilter,
-                $phaseFilter
+                $phaseFilter,
+                $equipmentIds
             );
 
-            $viewData['backUrl'] = route('timetables.logistics.index', $timetable);
+            $backParams = ['timetable' => $timetable];
+            if (! empty($equipmentIds)) {
+                $backParams['equipment_ids'] = implode(',', $equipmentIds);
+            }
+
+            $viewData['backUrl'] = route('timetables.logistics.index', $backParams);
             $viewData['downloadUrl'] = route('timetables.logistics.print', array_merge(['timetable' => $timetable], $request->except('preview')));
             $viewData['formAction'] = route('timetables.logistics.print', $timetable);
             $viewData['resetUrl'] = route('timetables.logistics.print', ['timetable' => $timetable, 'preview' => 1, 'format' => $format]);

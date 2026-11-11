@@ -21,8 +21,12 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
     }
 
     #[Override]
-    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null): Collection
+    public function getEquipmentsFlowData(?string $type = null, ?int $laneId = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection
     {
+        if ($equipmentIds === []) {
+            return new Collection;
+        }
+
         $query = Equipment::with([
             'plans' => function ($q) use ($timetable): void {
                 if ($timetable) {
@@ -42,12 +46,20 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
             $query->where('type', $type);
         }
 
+        if ($equipmentIds !== null) {
+            $query->whereIn('id', $equipmentIds);
+        }
+
         return $query->get();
     }
 
     #[Override]
-    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null): Collection
+    public function getPhaseChecklistData(?string $dayPhase = null, ?int $laneId = null, ?string $type = null, ?Timetable $timetable = null, ?array $equipmentIds = null): Collection
     {
+        if ($equipmentIds === []) {
+            return new Collection;
+        }
+
         $query = EquipmentLogisticsPlan::with([
             'equipment',
             'fromLocationModel.schedules',
@@ -66,6 +78,10 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
 
         if ($type) {
             $query->whereHas('equipment', fn ($q) => $q->where('type', $type));
+        }
+
+        if ($equipmentIds !== null) {
+            $query->whereIn('equipment_id', $equipmentIds);
         }
 
         return $query->get();
