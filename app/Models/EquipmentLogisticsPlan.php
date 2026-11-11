@@ -404,32 +404,45 @@ class EquipmentLogisticsPlan extends Model
     }
 
     /**
-     * モーダル編集用のJSONペイロード配列を取得
+     * モーダル表示・編集用のJSONペイロード配列を取得
      *
      * @return array<string, mixed>
      */
-    public function toModalPayload(): array
+    public function toModalPayload(?Timetable $timetable = null): array
     {
         return [
             'id' => $this->id,
+            'equipment_id' => $this->equipment_id,
+            'equipment_name' => $this->equipment?->name ?? '',
             'status' => $this->status,
+            'status_label' => $this->status_label,
             'day_phase' => $this->day_phase,
+            'phase_label' => $this->phase_label,
+            'phase_badge_class' => $this->phase_badge_class,
             'action_type' => $this->action_type,
+            'action_label' => $this->action_label,
             'title' => $this->title,
             'target_date' => $this->target_date?->format('Y-m-d'),
             'start_time' => $this->start_time ? substr($this->start_time, 0, 5) : '',
             'end_time' => $this->end_time ? substr($this->end_time, 0, 5) : '',
+            'formatted_time_range' => $this->formatted_time_range,
             'from_location_id' => $this->from_location_id,
             'from_location' => $this->from_location,
+            'resolved_from_location' => $this->resolved_from_location,
             'to_location_id' => $this->to_location_id,
             'to_location' => $this->to_location,
+            'resolved_to_location' => $this->resolved_to_location,
             'quantity' => $this->quantity,
             'quantity_note' => $this->quantity_note,
+            'formatted_quantity' => $this->formatted_quantity,
             'operator_type' => $this->operator_type,
+            'operator_label' => $this->operator_label,
             'witness_required' => $this->witness_required ? 1 : 0,
             'witness_staff_id' => $this->witness_staff_id,
+            'witness_staff_name' => $this->witnessStaff?->name ?? '',
             'notes' => $this->notes,
             'display_order' => $this->display_order,
+            'update_url' => $this->updateUrl($timetable),
         ];
     }
 }

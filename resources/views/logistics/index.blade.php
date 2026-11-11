@@ -148,25 +148,14 @@
                         @endif
                     </div>
 
-                    <!-- 進捗・編集ボタン (右寄せ) -->
-                    <div class="flex items-center space-x-1.5 shrink-0 ml-auto">
-                        @if($equipment->plans->isNotEmpty())
-                            <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full {{ $equipment->are_all_plans_completed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200' }}">
-                                {{ $equipment->completed_plans_count }}/{{ $equipment->plans->count() }} 完了
-                            </span>
-                        @else
+                    <!-- 未設定ステータスバッジ (右寄せ) -->
+                    @if($equipment->plans->isEmpty())
+                        <div class="flex items-center shrink-0 ml-auto">
                             <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                                 ⚠️ ステップ未設定
                             </span>
-                        @endif
-
-                        <a href="{{ route('timetables.logistics.equipments.show', [$timetable, $equipment]) }}"
-                           class="inline-flex items-center space-x-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition whitespace-nowrap">
-                            <span>✏️</span>
-                            <span>計画・ステップ編集</span>
-                            <span>→</span>
-                        </a>
-                    </div>
+                        </div>
+                    @endif
                 </summary>
 
                 @if($equipment->plans->isEmpty())
@@ -187,60 +176,47 @@
                             <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold select-none text-xs">
                                 <tr>
                                     <th scope="col" class="px-3.5 py-2.5 text-center whitespace-nowrap w-14">順序</th>
-                                    <th scope="col" class="px-3.5 py-2.5 whitespace-nowrap w-28">フェーズ</th>
-                                    <th scope="col" class="px-3.5 py-2.5 whitespace-nowrap w-36">日時</th>
-                                    <th scope="col" class="px-3.5 py-2.5 whitespace-nowrap w-32">種別</th>
+                                    <th scope="col" class="px-3.5 py-2.5 whitespace-nowrap w-40">フェーズ</th>
                                     <th scope="col" class="px-3.5 py-2.5 min-w-[160px]">ステップ表示名</th>
                                     <th scope="col" class="px-3.5 py-2.5 min-w-[200px]">移動元 ➔ 移動先</th>
                                     <th scope="col" class="px-3.5 py-2.5 whitespace-nowrap w-28">作業主体</th>
-                                    <th scope="col" class="px-3.5 py-2.5 text-center whitespace-nowrap w-16">立会</th>
                                     <th scope="col" class="px-3.5 py-2.5 text-center whitespace-nowrap w-24">状態</th>
+                                    <th scope="col" class="px-3.5 py-2.5 text-center whitespace-nowrap w-32">操作</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 bg-white">
                                 @foreach($equipment->plans as $plan)
-                                    <tr class="hover:bg-slate-50/70 transition {{ $plan->isCompleted() ? 'bg-emerald-50/15' : ($plan->status === 'in_progress' ? 'bg-amber-50/15' : '') }}">
+                                    <tr data-plan-row
+                                        data-plan-id="{{ $plan->id }}"
+                                        data-plan='@json($plan->toModalPayload($timetable))'
+                                        class="hover:bg-slate-50/70 transition {{ $plan->isCompleted() ? 'bg-emerald-50/15' : ($plan->status === 'in_progress' ? 'bg-amber-50/15' : '') }}">
                                         <!-- 順序 -->
                                         <td class="px-3.5 py-2.5 text-center font-mono text-slate-400 font-bold whitespace-nowrap">
                                             #{{ $loop->iteration }}
                                         </td>
 
-                                        <!-- フェーズ -->
+                                        <!-- フェーズ + 立会バッジ -->
                                         <td class="px-3.5 py-2.5 whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border {{ $plan->phase_badge_class }}">
-                                                {{ $plan->phase_label }}
-                                            </span>
+                                            <div class="inline-flex items-center space-x-1">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border {{ $plan->phase_badge_class }}">
+                                                    {{ $plan->phase_label }}
+                                                </span>
+                                                @if($plan->witness_required)
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200" title="幹事・スタッフ立会必須">
+                                                        立会
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </td>
 
-                                        <!-- 日時 -->
-                                        <td class="px-3.5 py-2.5 font-mono text-[11px] text-slate-600 whitespace-nowrap">
-                                            @if($plan->target_date || $plan->formatted_time_range)
-                                                <div class="flex items-center space-x-1.5">
-                                                    @if($plan->target_date)
-                                                        <span class="font-bold">{{ $plan->target_date->format('m/d') }}</span>
-                                                    @endif
-                                                    @if($plan->formatted_time_range)
-                                                        <span class="text-indigo-700 font-bold">{{ $plan->formatted_time_range }}</span>
-                                                    @endif
-                                                </div>
-                                            @else
-                                                <span class="text-slate-300">-</span>
-                                            @endif
-                                        </td>
-
-                                        <!-- 種別 -->
-                                        <td class="px-3.5 py-2.5 font-medium text-slate-800 whitespace-nowrap">
-                                            {{ $plan->action_label }}
-                                        </td>
-
-                                        <!-- ステップ表示名 -->
-                                        <td class="px-3.5 py-2.5 font-bold text-slate-900">
-                                            <div>{{ $plan->title }}</div>
-                                            @if($plan->formatted_quantity !== '')
-                                                <div class="text-[10px] font-mono text-indigo-700 font-bold mt-0.5">
-                                                    数量: {{ $plan->formatted_quantity }}
-                                                </div>
-                                            @endif
+                                        <!-- ステップ表示名 (詳細モーダルリンク) -->
+                                        <td class="px-3.5 py-2.5">
+                                            <button type="button"
+                                                data-action="open-plan-detail"
+                                                class="font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition text-left cursor-pointer"
+                                                title="ステップの詳細を表示">
+                                                {{ $plan->title }}
+                                            </button>
                                         </td>
 
                                         <!-- 移動元 ➔ 移動先 -->
@@ -259,15 +235,6 @@
                                             {{ $plan->operator_label }}
                                         </td>
 
-                                        <!-- 立会 -->
-                                        <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
-                                            @if($plan->witness_required)
-                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200">必須</span>
-                                            @else
-                                                <span class="text-slate-300 text-xs">-</span>
-                                            @endif
-                                        </td>
-
                                         <!-- 状態 -->
                                         <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
                                             @if($plan->isCompleted())
@@ -278,10 +245,45 @@
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
                                                     🏃 進行中
                                                 </span>
+                                            @elseif($plan->status === 'cancelled')
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
+                                                    ⛔ 中止
+                                                </span>
                                             @else
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
                                                     ⚪ 計画中
                                                 </span>
+                                            @endif
+                                        </td>
+
+                                        <!-- 操作 -->
+                                        <td class="px-3.5 py-2.5 text-center whitespace-nowrap space-x-1">
+                                            @can('update', $plan)
+                                                <button type="button"
+                                                    data-action="open-plan-edit"
+                                                    class="inline-flex items-center space-x-1 px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded text-xs font-bold transition cursor-pointer"
+                                                    title="ステップを編集">
+                                                    <span>✏️</span>
+                                                    <span>編集</span>
+                                                </button>
+                                            @endcan
+
+                                            @can('delete', $plan)
+                                                <form action="{{ $plan->destroyUrl($timetable) }}" method="POST" class="inline"
+                                                    data-confirm="ステップ「{{ $plan->title }}」を削除しますか？">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                        class="inline-flex items-center space-x-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded text-xs font-bold transition cursor-pointer"
+                                                        title="ステップを削除">
+                                                        <span>🗑️</span>
+                                                        <span>削除</span>
+                                                    </button>
+                                                </form>
+                                            @endcan
+
+                                            @if(auth()->user()?->cannot('update', $plan) && auth()->user()?->cannot('delete', $plan))
+                                                <span class="text-slate-300 text-xs">-</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -299,5 +301,11 @@
             </div>
         @endforelse
     </div>
+
+    <!-- 個別ステップ詳細・編集モーダル -->
+    <x-logistics.step-detail-modal />
+    <x-logistics.step-edit-modal :locations="$locations" :staffs="$staffs" />
 </div>
+
+@vite(['resources/js/logistics.js'])
 </x-layouts.app>

@@ -223,14 +223,6 @@ class Equipment extends Model
     }
 
     /**
-     * すべての計画ステップが完了しているか判定
-     */
-    public function getAreAllPlansCompletedAttribute(): bool
-    {
-        return $this->plans->isNotEmpty() && $this->completed_plans_count === $this->plans->count();
-    }
-
-    /**
      * 指定フェーズの計画ステップ一覧を抽出
      *
      * @param  array<int, string>|string  $phases

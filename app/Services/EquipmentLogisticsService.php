@@ -387,6 +387,8 @@ class EquipmentLogisticsService
             'timetable' => $timetable,
             'lanes' => $lanes,
             'equipments' => $equipments,
+            'locations' => $this->locationRepository->getActiveOrderedForTimetable($timetable),
+            'staffs' => $this->staffRepository->getActiveStaffList(),
             'typeFilter' => $typeFilter,
             'laneFilter' => $laneFilter,
         ];

@@ -98,11 +98,13 @@ class EquipmentLogisticsTest extends TestCase
             'name' => 'テストパイプ椅子',
             'storage_location' => '番所地下倉庫',
         ]);
-        $equipment->plans()->create([
+        $plan = $equipment->plans()->create([
             'timetable_id' => $this->timetable1->id,
             'title' => '前日会場搬入',
             'day_phase' => 'pre_day',
             'action_type' => 'staging_move',
+            'quantity' => 5,
+            'witness_required' => true,
         ]);
 
         Equipment::factory()->rental()->create([
@@ -120,11 +122,21 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertSee('フェーズ');
         $response->assertSee('ステップ表示名');
         $response->assertSee('移動元 ➔ 移動先');
+        $response->assertSee('作業主体');
         $response->assertSee('状態');
-        $response->assertDontSee('配備資材数');
-        $response->assertDontSee('計画ステップ総数');
-        $response->assertDontSee('完了ステップ進捗');
-        $response->assertDontSee('幹事立会必須</span>\n                <div', false);
+        $response->assertSee('>操作</th>', false);
+        $response->assertDontSee('>日時</th>', false);
+        $response->assertDontSee('>種別</th>', false);
+        $response->assertDontSee('>立会</th>', false);
+        $response->assertDontSee('計画・ステップ編集');
+        $response->assertDontSee('0/1 完了');
+        $response->assertDontSee('数量: 5');
+        $response->assertSee('data-action="open-plan-detail"', false);
+        $response->assertSee('data-action="open-plan-edit"', false);
+        $response->assertSee(route('timetables.logistics.plans.destroy', [$this->timetable1, $plan]), false);
+        $response->assertSee('title="幹事・スタッフ立会必須"', false);
+        $response->assertSee('id="plan-detail-modal"', false);
+        $response->assertSee('id="plan-edit-modal"', false);
         $response->assertSee('テストパイプ椅子');
         $response->assertSee('前日会場搬入');
         $response->assertSee('前日（準備日）');
@@ -312,6 +324,45 @@ class EquipmentLogisticsTest extends TestCase
 
         $this->assertDatabaseHas('equipments', ['id' => $equipment->id]);
         $this->assertSame(0, $equipment->plans()->where('timetable_id', $this->timetable1->id)->count());
+    }
+
+    /**
+     * 個別の搬出入ステップを更新できること
+     */
+    public function test_update_plan_updates_individual_step(): void
+    {
+        $this->actingAs($this->operator);
+
+        $equipment = Equipment::factory()->committee()->create();
+        $plan = $equipment->plans()->create([
+            'timetable_id' => $this->timetable1->id,
+            'title' => '更新前ステップ名',
+            'day_phase' => 'pre_day',
+            'action_type' => 'staging_move',
+            'operator_type' => 'committee',
+            'witness_required' => false,
+        ]);
+
+        $response = $this->from(route('timetables.logistics.index', $this->timetable1))
+            ->put(route('timetables.logistics.plans.update', [$this->timetable1, $plan]), [
+                'day_phase' => 'day1_morning',
+                'action_type' => 'setup',
+                'status' => 'completed',
+                'title' => '更新後ステップ名',
+                'operator_type' => 'event_company',
+                'witness_required' => '1',
+                'notes' => '立会確認メモ',
+            ]);
+
+        $response->assertRedirect(route('timetables.logistics.index', $this->timetable1));
+
+        $plan->refresh();
+        $this->assertSame('更新後ステップ名', $plan->title);
+        $this->assertSame('day1_morning', $plan->day_phase);
+        $this->assertSame('setup', $plan->action_type);
+        $this->assertSame('completed', $plan->status);
+        $this->assertTrue($plan->witness_required);
+        $this->assertSame('立会確認メモ', $plan->notes);
     }
 
     /**

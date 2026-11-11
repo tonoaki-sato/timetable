@@ -20,6 +20,7 @@ export default defineConfig({
                 'resources/js/locations.js',
                 'resources/js/equipments.js',
                 'resources/js/equipment-patterns.js',
+                'resources/js/logistics.js',
             ],
             refresh: true,
             fonts: [
