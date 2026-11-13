@@ -17,14 +17,14 @@ class OrganizationSeederTest extends TestCase
 
     /**
      * StaffSeeder および OrganizationSeeder が正常に動作し、
-     * 全64件の組織ユニットと全82件の所属スタッフが正しく登録されること
+     * 全67件の組織ユニットと全83件の所属スタッフが正しく登録されること
      */
     public function test_organization_seeder_seeds_all_units_and_staff_correctly(): void
     {
         $this->seed([StaffSeeder::class, OrganizationSeeder::class]);
 
-        // 1. スタッフ全43名（追加されたID 39〜43を含む）が登録されていること
-        $this->assertSame(43, Staff::count());
+        // 1. スタッフ全44名（追加されたID 39〜44を含む）が登録されていること
+        $this->assertSame(44, Staff::count());
         $this->assertDatabaseHas('staff', [
             'id' => 39,
             'name' => '譲原 純孝',
@@ -34,9 +34,13 @@ class OrganizationSeederTest extends TestCase
             'id' => 43,
             'name' => 'ひきじ',
         ]);
+        $this->assertDatabaseHas('staff', [
+            'id' => 44,
+            'name' => '伊藤 さきこ',
+        ]);
 
-        // 2. 組織ユニット全64件が登録されていること
-        $this->assertSame(64, OrganizationUnit::count());
+        // 2. 組織ユニット全67件が登録されていること
+        $this->assertSame(67, OrganizationUnit::count());
 
         // ルート役員（実行委員長、福実行委員長、会計、議長、顧問、相談役）
         $rootNames = OrganizationUnit::whereNull('parent_id')->pluck('name')->toArray();
@@ -47,10 +51,14 @@ class OrganizationSeederTest extends TestCase
         $this->assertContains('顧問', $rootNames);
         $this->assertContains('相談役', $rootNames);
 
-        // 3. 組織所属スタッフ全82件が登録されていること
-        $this->assertSame(82, OrganizationUnitStaff::count());
+        // 新設ユニット（イベント会社、図面）が登録されていること
+        $this->assertDatabaseHas('organization_units', ['id' => 86, 'name' => 'イベント会社']);
+        $this->assertDatabaseHas('organization_units', ['id' => 87, 'name' => '図面']);
 
-        // 新規スタッフ（ID 39〜43）の組織割当が正しいこと
+        // 3. 組織所属スタッフ全83件が登録されていること
+        $this->assertSame(83, OrganizationUnitStaff::count());
+
+        // 新規スタッフ（ID 39〜44）の組織割当が正しいこと
         $yuzuharaAssignment = OrganizationUnitStaff::where('staff_id', 39)->first();
         $this->assertNotNull($yuzuharaAssignment);
         $this->assertSame('警備', $yuzuharaAssignment->organizationUnit->name);
@@ -58,6 +66,10 @@ class OrganizationSeederTest extends TestCase
         $hikijiAssignment = OrganizationUnitStaff::where('staff_id', 43)->first();
         $this->assertNotNull($hikijiAssignment);
         $this->assertSame('巡回', $hikijiAssignment->organizationUnit->name);
+
+        $itoAssignment = OrganizationUnitStaff::where('staff_id', 44)->first();
+        $this->assertNotNull($itoAssignment);
+        $this->assertSame('アシスタント', $itoAssignment->organizationUnit->name);
 
         // 4. 親子階層関係が正しく保持されていること
         $soumu = OrganizationUnit::where('name', '総務')->first();
@@ -67,6 +79,11 @@ class OrganizationSeederTest extends TestCase
         $honjin = OrganizationUnit::where('name', '本陣')->first();
         $this->assertNotNull($honjin);
         $this->assertSame($soumu->id, $honjin->parent_id);
+
+        $setsubi = OrganizationUnit::where('name', '設営・設備')->first();
+        $this->assertNotNull($setsubi);
+        $eventKaisha = OrganizationUnit::where('name', 'イベント会社')->first();
+        $this->assertSame($setsubi->id, $eventKaisha->parent_id);
     }
 
     /**
@@ -76,9 +93,9 @@ class OrganizationSeederTest extends TestCase
     {
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertSame(43, Staff::count());
-        $this->assertSame(64, OrganizationUnit::count());
-        $this->assertSame(82, OrganizationUnitStaff::count());
+        $this->assertSame(44, Staff::count());
+        $this->assertSame(67, OrganizationUnit::count());
+        $this->assertSame(83, OrganizationUnitStaff::count());
     }
 
     /**
@@ -87,12 +104,12 @@ class OrganizationSeederTest extends TestCase
     public function test_organization_seeder_is_idempotent(): void
     {
         $this->seed([StaffSeeder::class, OrganizationSeeder::class]);
-        $this->assertSame(64, OrganizationUnit::count());
-        $this->assertSame(82, OrganizationUnitStaff::count());
+        $this->assertSame(67, OrganizationUnit::count());
+        $this->assertSame(83, OrganizationUnitStaff::count());
 
         // 再実行
         $this->seed(OrganizationSeeder::class);
-        $this->assertSame(64, OrganizationUnit::count());
-        $this->assertSame(82, OrganizationUnitStaff::count());
+        $this->assertSame(67, OrganizationUnit::count());
+        $this->assertSame(83, OrganizationUnitStaff::count());
     }
 }
