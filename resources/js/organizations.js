@@ -14,27 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDetailModal();
     initFormModal();
     initDeleteAction();
-    initPrintPageActions();
 });
-
-/**
- * 0. 印刷ページボタン制御
- */
-function initPrintPageActions() {
-    const btnPrint = document.getElementById('btn-print-page');
-    if (btnPrint) {
-        btnPrint.addEventListener('click', () => {
-            window.print();
-        });
-    }
-
-    const btnClose = document.getElementById('btn-close-page');
-    if (btnClose) {
-        btnClose.addEventListener('click', () => {
-            window.close();
-        });
-    }
-}
 
 /**
  * 1. タブ切り替え制御

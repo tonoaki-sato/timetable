@@ -307,16 +307,16 @@
                                     <span class="text-[9px] text-indigo-300 font-mono font-bold">年間・共通</span>
                                 </div>
                                 <div class="py-1 space-y-0.5">
-                                    <!-- 組織図印刷 -->
-                                    <a href="{{ route('organizations.print') }}" target="_blank"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('organizations.print*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                    <!-- 組織図PDF -->
+                                    <a href="{{ route('organizations.print') }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition text-slate-200 hover:bg-slate-800 hover:text-white"
+                                        title="実行委員会組織体制のA4縦帳票PDFをダウンロード">
                                         <span class="text-base shrink-0">🏛️</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold flex items-center space-x-1">
-                                                <span class="whitespace-nowrap truncate">組織図印刷 (PDF)</span>
-                                                <span class="text-[10px] text-slate-400">↗</span>
+                                                <span class="whitespace-nowrap truncate">組織図 (PDF)</span>
                                             </div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">実行委員会組織体制の横向き帳票印刷</p>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">実行委員会組織体制のA4縦帳票PDFダウンロード</p>
                                         </div>
                                     </a>
 

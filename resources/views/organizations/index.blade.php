@@ -18,10 +18,9 @@
             </x-slot:breadcrumbs>
 
             <x-slot:actions>
-                <a href="{{ route('organizations.print') }}" target="_blank" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
-                    <span>🖨️</span>
-                    <span>PDF印刷</span>
-                    <span class="text-[10px] text-slate-400">↗</span>
+                <a href="{{ route('organizations.print') }}" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer" title="組織図をA4縦PDFでダウンロード">
+                    <span>📄</span>
+                    <span>組織図PDF</span>
                 </a>
                 <button type="button" id="btn-open-create-modal" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
                     <span>➕</span>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Organization\DownloadOrganizationPdfAction;
 use App\DTOs\Organization\OrganizationUnitData;
 use App\Http\Requests\StoreOrganizationUnitRequest;
 use App\Http\Requests\UpdateOrganizationUnitRequest;
@@ -10,12 +11,14 @@ use App\Services\OrganizationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class OrganizationController extends Controller
 {
     public function __construct(
-        protected OrganizationService $organizationService
+        protected OrganizationService $organizationService,
+        protected DownloadOrganizationPdfAction $downloadOrganizationPdfAction
     ) {}
 
     /**
@@ -140,14 +143,12 @@ class OrganizationController extends Controller
     }
 
     /**
-     * 組織図PDF印刷画面の表示
+     * 組織図A4縦PDFのダウンロード
      */
-    public function print(): View
+    public function print(): Response
     {
         $this->authorize('viewAny', OrganizationUnit::class);
 
-        $viewData = $this->organizationService->getPrintViewData();
-
-        return view('organizations.print', $viewData);
+        return $this->downloadOrganizationPdfAction->execute();
     }
 }

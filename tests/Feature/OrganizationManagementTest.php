@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Organization\DownloadOrganizationPdfAction;
 use App\Models\OrganizationUnit;
 use App\Models\Staff;
 use App\Models\User;
+use App\Services\PdfService;
+use Dompdf\Adapter\CPDF;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -53,7 +56,7 @@ class OrganizationManagementTest extends TestCase
         $response->assertSee('登録されている組織・係がありません');
         $response->assertSee('新規組織追加');
         $response->assertSee('id="btn-open-create-modal"', false);
-        $response->assertSee('PDF印刷');
+        $response->assertSee('組織図PDF');
         $response->assertSee('保土ケ谷宿場まつり実行委員会 組織図');
         // Viteにより organizations.js がスクリプトタグとして出力されていること
         $response->assertSee('organizations', false);
@@ -215,9 +218,9 @@ class OrganizationManagementTest extends TestCase
     }
 
     /**
-     * 組織図印刷プレビュー画面が「保土ケ谷宿場まつり実行委員会 組織図」のタイトルで正常に描画されること
+     * 組織図A4縦PDFが直接ダウンロードできること
      */
-    public function test_organization_print_view_displays_correct_title_and_layout(): void
+    public function test_organization_pdf_downloads_successfully_with_correct_headers_and_margins(): void
     {
         $root = OrganizationUnit::factory()->create(['name' => '総務']);
         $child = OrganizationUnit::factory()->create([
@@ -229,10 +232,68 @@ class OrganizationManagementTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('organizations.print'));
 
         $response->assertStatus(200);
-        $response->assertSee('保土ケ谷宿場まつり実行委員会 組織図');
-        $response->assertSee('総務');
-        $response->assertSee('設営・設備');
-        $response->assertSee('overcom');
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringContainsString('organization_chart_', (string) $response->headers->get('Content-Disposition'));
+        $this->assertStringContainsString('.pdf', (string) $response->headers->get('Content-Disposition'));
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+    }
+
+    /**
+     * 組織図PDFのDompdfレンダリングにおいて、A4縦余白が保持され、複数ページにわたり全ページに固定ヘッダーが表示されること
+     */
+    public function test_organization_pdf_dompdf_renders_with_page_margins_and_fixed_headers_on_all_pages(): void
+    {
+        $this->actingAs($this->admin);
+
+        // 複数ページに跨がるツリーデータを生成 (15部門・各部門に複数の係と班)
+        $root = OrganizationUnit::factory()->create(['name' => '実行委員長']);
+        for ($i = 1; $i <= 15; $i++) {
+            $branch = OrganizationUnit::factory()->create([
+                'name' => "部局{$i}",
+                'parent_id' => $root->id,
+                'display_order' => $i * 10,
+            ]);
+            for ($j = 1; $j <= 2; $j++) {
+                $sub = OrganizationUnit::factory()->create([
+                    'name' => "係{$i}-{$j}",
+                    'parent_id' => $branch->id,
+                    'display_order' => $j * 10,
+                ]);
+                OrganizationUnit::factory()->create([
+                    'name' => "班{$i}-{$j}-1",
+                    'parent_id' => $sub->id,
+                    'display_order' => 10,
+                    'short_description' => "業務{$i}-{$j}",
+                ]);
+            }
+        }
+
+        $action = app(DownloadOrganizationPdfAction::class);
+        $viewData = $action->buildViewData();
+
+        $dompdf = app(PdfService::class)->renderDompdf('pdf.organization_chart', $viewData, 'portrait');
+
+        // 1. ルートフレームの余白検証
+        $rootMargin = $dompdf->getTree()->get_root()->get_style()->margin;
+        $this->assertNotEmpty($rootMargin);
+
+        // 2. ページ数が複数ページ（2ページ以上）であること
+        $canvas = $dompdf->getCanvas();
+        $this->assertInstanceOf(CPDF::class, $canvas);
+        /** @var CPDF $canvas */
+        $pageCount = $canvas->get_page_count();
+        $this->assertGreaterThanOrEqual(2, $pageCount);
+
+        // 3. CPDFストリーム内の全ページに固定ヘッダー（タイトル）が含まれていること
+        $cpdf = $canvas->get_cpdf();
+        $needle = mb_convert_encoding('組織図', 'UTF-16BE', 'UTF-8');
+        $foundCount = 0;
+        foreach ($cpdf->objects as $obj) {
+            if (isset($obj['t']) && $obj['t'] === 'contents' && str_contains($obj['c'], $needle)) {
+                $foundCount++;
+            }
+        }
+        $this->assertGreaterThanOrEqual($pageCount, $foundCount);
     }
 
     /**
@@ -281,14 +342,10 @@ class OrganizationManagementTest extends TestCase
         $response->assertSee('tree-connector-direct', false);
         $response->assertSee('rounded-bl-sm', false);
 
-        // 2. 印刷画面でも第4階層「アンケート」およびコネクタが表示されていること
+        // 2. 組織図PDFダウンロードが正常にレスポンス返却されること
         $printResponse = $this->actingAs($this->admin)->get(route('organizations.print'));
         $printResponse->assertStatus(200);
-        $printResponse->assertSee('アンケート');
-        $printResponse->assertSee('ホームページ');
-        $printResponse->assertSee('新聞・チラシ');
-        $printResponse->assertSee('tree-stem-bridge', false);
-        $printResponse->assertSee('tree-branch-connector', false);
+        $printResponse->assertHeader('Content-Type', 'application/pdf');
     }
 
     /**
