@@ -456,4 +456,80 @@ class OrganizationManagementTest extends TestCase
         $this->assertStringContainsString('leaf-group', $html);
         $this->assertStringContainsString('leaf-card', $html);
     }
+
+    /**
+     * 組織図PDFの各カードに詳細テキスト（short_description）が出力されないこと
+     */
+    public function test_organization_pdf_does_not_render_card_descriptions(): void
+    {
+        $this->actingAs($this->admin);
+
+        // 実行委員長（ルート役員）
+        $root = OrganizationUnit::factory()->create([
+            'name' => '実行委員長',
+            'display_order' => 10,
+            'short_description' => '本部統括業務説明テキスト',
+        ]);
+        // 直属幹部（副実行委員長）
+        $vice = OrganizationUnit::factory()->create([
+            'name' => '副実行委員長',
+            'parent_id' => $root->id,
+            'display_order' => 20,
+            'short_description' => '副委員長業務説明テキスト',
+        ]);
+        // 部門（総務）
+        $soumu = OrganizationUnit::factory()->create([
+            'name' => '総務部',
+            'parent_id' => $root->id,
+            'display_order' => 30,
+            'short_description' => '総務部業務説明テキスト',
+        ]);
+        // 中間ノード（設営係: 子を持つ）
+        $setsuei = OrganizationUnit::factory()->create([
+            'name' => '設営係',
+            'parent_id' => $soumu->id,
+            'display_order' => 10,
+            'short_description' => '設営係業務説明テキスト',
+        ]);
+        // 末端組織（看板班: 子を持たない）
+        $kanban = OrganizationUnit::factory()->create([
+            'name' => '看板班',
+            'parent_id' => $setsuei->id,
+            'display_order' => 10,
+            'short_description' => '看板班業務説明テキスト',
+        ]);
+        // 単独ルート（顧問）
+        $advisor = OrganizationUnit::factory()->create([
+            'name' => '顧問',
+            'parent_id' => null,
+            'display_order' => 40,
+            'short_description' => '顧問業務説明テキスト',
+        ]);
+
+        $action = app(DownloadOrganizationPdfAction::class);
+        $viewData = $action->buildViewData();
+        $viewData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
+
+        $html = view('pdf.organization_chart', $viewData)->render();
+
+        // 1. 各組織名は正しく出力されていること
+        $this->assertStringContainsString('実行委員長', $html);
+        $this->assertStringContainsString('副実行委員長', $html);
+        $this->assertStringContainsString('総務部', $html);
+        $this->assertStringContainsString('設営係', $html);
+        $this->assertStringContainsString('看板班', $html);
+        $this->assertStringContainsString('顧問', $html);
+
+        // 2. 詳細テキストがPDF HTML内に出力されていないこと
+        $this->assertStringNotContainsString('本部統括業務説明テキスト', $html);
+        $this->assertStringNotContainsString('副委員長業務説明テキスト', $html);
+        $this->assertStringNotContainsString('総務部業務説明テキスト', $html);
+        $this->assertStringNotContainsString('設営係業務説明テキスト', $html);
+        $this->assertStringNotContainsString('看板班業務説明テキスト', $html);
+        $this->assertStringNotContainsString('顧問業務説明テキスト', $html);
+
+        // 3. 詳細テキスト用のCSSクラス・タグが出力されていないこと
+        $this->assertStringNotContainsString('card-desc', $html);
+        $this->assertStringNotContainsString('leaf-desc', $html);
+    }
 }

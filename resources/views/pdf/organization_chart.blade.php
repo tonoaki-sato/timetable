@@ -227,12 +227,6 @@
             margin-top: 1pt;
             line-height: 1.15;
         }
-        .card-desc {
-            font-size: 6pt;
-            color: #64748b;
-            margin-top: 1pt;
-            line-height: 1.15;
-        }
 
         /* 末端組織グループまとめ枠 */
         .leaf-group {
@@ -262,11 +256,6 @@
         .leaf-staff {
             font-size: 6pt;
             color: #4338ca;
-            line-height: 1.1;
-        }
-        .leaf-desc {
-            font-size: 5.5pt;
-            color: #64748b;
             line-height: 1.1;
         }
     </style>
@@ -318,9 +307,6 @@
                                     @if($root->staff->isNotEmpty())
                                         <div class="card-staff">{{ $root->staffNamesDisplay }}</div>
                                     @endif
-                                    @if($root->short_description)
-                                        <div class="card-desc">{{ $root->short_description }}</div>
-                                    @endif
                                 </div>
                             </td>
                             @if($executiveOfficers->isNotEmpty())
@@ -334,9 +320,6 @@
                                                 <div class="card-title">{{ $officer->name }}</div>
                                                 @if($officer->staff->isNotEmpty())
                                                     <div class="card-staff">{{ $officer->staffNamesDisplay }}</div>
-                                                @endif
-                                                @if($officer->short_description)
-                                                    <div class="card-desc">{{ $officer->short_description }}</div>
                                                 @endif
                                             </div>
                                         </div>

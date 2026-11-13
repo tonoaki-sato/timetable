@@ -17,9 +17,6 @@
         @if($unit->staff->isNotEmpty())
             <div class="card-staff">{{ $unit->staffNamesDisplay }}</div>
         @endif
-        @if($unit->short_description)
-            <div class="card-desc">{{ $unit->short_description }}</div>
-        @endif
     </div>
 @else
     <table class="node-table" cellpadding="0" cellspacing="0">
@@ -29,9 +26,6 @@
                     <div class="card-title">{{ $unit->name }}</div>
                     @if($unit->staff->isNotEmpty())
                         <div class="card-staff">{{ $unit->staffNamesDisplay }}</div>
-                    @endif
-                    @if($unit->short_description)
-                        <div class="card-desc">{{ $unit->short_description }}</div>
                     @endif
                 </div>
             </td>
@@ -91,9 +85,6 @@
                                             <div class="leaf-title">{{ $leaf->name }}</div>
                                             @if($leaf->staff->isNotEmpty())
                                                 <div class="leaf-staff">{{ $leaf->staffNamesDisplay }}</div>
-                                            @endif
-                                            @if($leaf->short_description)
-                                                <div class="leaf-desc">{{ $leaf->short_description }}</div>
                                             @endif
                                         </div>
                                     @endforeach
