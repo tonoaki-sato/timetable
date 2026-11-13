@@ -13,6 +13,7 @@ use App\Repositories\Contracts\LaneRequestRepositoryInterface;
 use App\Repositories\Contracts\LocationRepositoryInterface;
 use App\Repositories\Contracts\LocationScheduleRepositoryInterface;
 use App\Repositories\Contracts\LocationTypeRepositoryInterface;
+use App\Repositories\Contracts\OrganizationUnitRepositoryInterface;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\Contracts\StaffCheckInRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
@@ -29,6 +30,7 @@ use App\Repositories\Eloquent\LaneRequestRepository;
 use App\Repositories\Eloquent\LocationRepository;
 use App\Repositories\Eloquent\LocationScheduleRepository;
 use App\Repositories\Eloquent\LocationTypeRepository;
+use App\Repositories\Eloquent\OrganizationUnitRepository;
 use App\Repositories\Eloquent\ScheduleRepository;
 use App\Repositories\Eloquent\StaffCheckInRepository;
 use App\Repositories\Eloquent\StaffRepository;
@@ -125,6 +127,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             TaskStaffAssignmentRepositoryInterface::class,
             TaskStaffAssignmentRepository::class
+        );
+
+        $this->app->bind(
+            OrganizationUnitRepositoryInterface::class,
+            OrganizationUnitRepository::class
         );
     }
 

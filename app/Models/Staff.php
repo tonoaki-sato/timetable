@@ -180,6 +180,17 @@ class Staff extends Model
     }
 
     /**
+     * 所属・担当する組織ユニット一覧との多対多リレーション
+     */
+    public function organizationUnits(): BelongsToMany
+    {
+        return $this->belongsToMany(OrganizationUnit::class, 'organization_unit_staff')
+            ->withPivot(['id', 'role', 'display_order'])
+            ->orderByPivot('display_order')
+            ->withTimestamps();
+    }
+
+    /**
      * 稼働可能スタッフのスコープ
      */
     public function scopeActive(Builder $query): Builder

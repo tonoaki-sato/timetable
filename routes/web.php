@@ -16,6 +16,7 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\LocationScheduleController;
 use App\Http\Controllers\LocationTypeController;
 use App\Http\Controllers\ManualController;
+use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PreparationNavigatorController;
 use App\Http\Controllers\PresentationController;
 use App\Http\Controllers\ScheduleController;
@@ -84,6 +85,11 @@ Route::middleware('auth')->group(function () {
     Route::get('staff/{staff}/print-card', [StaffPrintController::class, 'printSingleCard'])->name('staff.print-card');
     Route::post('staff/{staff}/regenerate-token', [StaffController::class, 'regenerateToken'])->name('staff.regenerate-token');
     Route::resource('staff', StaffController::class);
+
+    // 組織管理 (Organization Management)
+    Route::post('organizations/reorder', [OrganizationController::class, 'reorder'])->name('organizations.reorder');
+    Route::get('organizations/print', [OrganizationController::class, 'print'])->name('organizations.print');
+    Route::resource('organizations', OrganizationController::class)->except(['create']);
 
     // 汎用機能オン・オフ＆日時設定ルート
     Route::put('features/{featureKey}', [FeatureSettingController::class, 'update'])->name('feature-settings.update');

@@ -236,10 +236,18 @@
                             </button>
                             <div class="dropdown-menu hidden absolute left-0 mt-1.5 w-76 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 z-50">
                                 <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
-                                    <span>👥 人員マスター</span>
-                                    <span class="text-[9px] text-indigo-300 font-mono font-bold">名簿</span>
+                                    <span>👥 組織・人員マスター</span>
+                                    <span class="text-[9px] text-indigo-300 font-mono font-bold">体制</span>
                                 </div>
                                 <div class="py-1 space-y-0.5">
+                                    <a href="{{ route('organizations.index') }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('organizations.*') && !request()->routeIs('organizations.print*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">🏛️</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">組織管理</div>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">実行委員会の部門・係・役職・担当者体制</p>
+                                        </div>
+                                    </a>
                                     <a href="{{ route('staff.index') }}"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('staff.*') && !request()->routeIs('staff.print*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">👷</span>
@@ -299,6 +307,19 @@
                                     <span class="text-[9px] text-indigo-300 font-mono font-bold">年間・共通</span>
                                 </div>
                                 <div class="py-1 space-y-0.5">
+                                    <!-- 組織図印刷 -->
+                                    <a href="{{ route('organizations.print') }}" target="_blank"
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('organizations.print*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">🏛️</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold flex items-center space-x-1">
+                                                <span class="whitespace-nowrap truncate">組織図印刷 (PDF)</span>
+                                                <span class="text-[10px] text-slate-400">↗</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">実行委員会組織体制の横向き帳票印刷</p>
+                                        </div>
+                                    </a>
+
                                     <!-- スタッフカード一括印刷 (実装済み) -->
                                     <a href="{{ route('staff.print-cards') }}" target="_blank"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('staff.print*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
@@ -677,6 +698,10 @@
                     <div>
                         <div class="text-[11px] font-bold text-slate-400 mb-1.5">🗂️ 台帳・マスター (Master Data)</div>
                         <div class="grid grid-cols-2 gap-1.5 text-xs">
+                            <a href="{{ route('organizations.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                                <span class="text-base shrink-0">🏛️</span>
+                                <span class="font-bold truncate">組織管理</span>
+                            </a>
                             <a href="{{ route('staff.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">👷</span>
                                 <span class="font-bold truncate">スタッフ名簿</span>

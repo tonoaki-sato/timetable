@@ -121,7 +121,8 @@ class NavigationMenuStructureTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // スタッフ・資材・拠点タイプ・パターンが存在すること
+        // スタッフ・組織管理・資材・拠点タイプ・パターンが存在すること
+        $response->assertSee(route('organizations.index'));
         $response->assertSee(route('staff.index'));
         $response->assertSee(route('equipments.index'));
         $response->assertSee(route('location-types.index'));
@@ -142,6 +143,7 @@ class NavigationMenuStructureTest extends TestCase
 
         // グローバルメニュー内: 区分A（全体・マスター帳票）
         $response->assertSee('全体・マスター帳票 (区分A)');
+        $response->assertSee(route('organizations.print'));
         $response->assertSee(route('staff.print-cards'));
         $response->assertSee(route('staff.export-csv'));
         $response->assertSee('年間スケジュール表 (PDF)');

@@ -57,6 +57,7 @@ class NavigationPresenter
             && ! request()->routeIs('staff.export*')
             && ! request()->routeIs('staff.import*')
         )
+            || (request()->routeIs('organizations.*') && ! request()->routeIs('organizations.print*'))
             || request()->routeIs('equipments.*')
             || request()->routeIs('timetables.equipments.*')
             || request()->routeIs('locations.*')
@@ -74,7 +75,8 @@ class NavigationPresenter
             || request()->routeIs('staff.import*')
             || request()->routeIs('logistics.print')
             || request()->routeIs('timetables.logistics.print')
-            || request()->routeIs('timetables.print*');
+            || request()->routeIs('timetables.print*')
+            || request()->routeIs('organizations.print*');
     }
 
     /**

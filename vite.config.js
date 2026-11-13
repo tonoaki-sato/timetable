@@ -22,6 +22,7 @@ export default defineConfig({
                 'resources/js/equipment-patterns.js',
                 'resources/js/logistics.js',
                 'resources/js/staff-myshift.js',
+                'resources/js/organizations.js',
             ],
             refresh: true,
             fonts: [

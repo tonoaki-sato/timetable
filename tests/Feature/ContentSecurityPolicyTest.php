@@ -104,6 +104,8 @@ class ContentSecurityPolicyTest extends TestCase
             route('users.index'),
             route('presentation.index'),
             route('equipments.index'),
+            route('organizations.index'),
+            route('organizations.print'),
         ];
 
         foreach ($routesToTest as $url) {
