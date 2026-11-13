@@ -128,6 +128,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
 - When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
 - CSP検証や画面レンダリングテストでは、空モデルだけでなく子レコード（タスク、アサイン等）を登録した状態で検証し、ループ（`@foreach` / `@forelse`）や条件分岐（`@if`）内部のHTMLブロックが実際にレンダリングされた状態でインラインスタイル・イベントハンドラの不在を検証する。
+- **PDFレンダリングテスト**: PDFを生成・検証するFeature/Unitテストでは、レスポンスのContent-Typeやバイナリヘッダー（`%PDF-`）だけでなく、必要に応じてDomPDFインスタンスのページ余白（`$dompdf->getCss()->get_page_styles()['base']->margin_top > 0`）が0にリセットされず維持されていることを検証し、余白喪失の再発を防止する。
 
 === pint/core rules ===
 
@@ -160,6 +161,9 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
    - BladeテンプレートによるSSR描画。UI表示の加工は `app/Presenters/` や View Component に委譲し、Blade内に複雑なロジックを直接記述しない。
    - フロントエンドは Vanilla JS (ES Modules) + Vite + Print CSS。厳格な CSP（インラインスクリプト/スタイルの禁止）を遵守する。
    - 動的な幅・位置の計算（プログレスバー等）においてインラインスタイル属性（`style="..."` や動的生成文字列）をBlade内に出力しない。`data-*` 属性に値を保持させ、JavaScript (CSSOM: `element.style.width = ...`) 経由で初期化・更新する。
+   - **PDFテンプレート (DomPDF) のCSS・テーブル規約**:
+     - 全称セレクタ `*` をリセットスタイル等で使用しないこと（DomPDF内部で `@page` にマッチしてページ余白が `0` にリセットされ、`position: fixed` の固定ヘッダーを用紙外へ押し出すため）。リセットは `table, th, td, h1, h2, h3, div, span, strong, b, p` など具体的なタグ名を列挙して指定する。
+     - テーブル列幅に `<colgroup>` / `<col>` を使用しないこと（DomPDF未サポートのため無視され均等幅にフォールバックする）。列幅は `<style>` ブロック内で `th`（または `td`）のクラスセレクタ（例: `.table th.col-name { width: ...; }`）に対して指定する。
 
 2. **HTTP / Delivery Layer (Controller / FormRequest)**:
    - **Thin Controller の徹底**: コントローラーはリクエストの受付、バリデーション済みデータの受け渡し、Service/Actionの呼び出し、レスポンス返却のみを行い、業務ロジックを直接記述しない。

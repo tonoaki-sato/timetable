@@ -87,17 +87,7 @@
             text-align: left;
         }
         .staff-list-table th.col-no {
-            width: {{ $columnWidths['no'] }};
             text-align: center;
-        }
-        .staff-list-table th.col-name {
-            width: {{ $columnWidths['name'] }};
-        }
-        .staff-list-table th.col-staff {
-            width: {{ $columnWidths['staff'] }};
-        }
-        .staff-list-table th.col-description {
-            width: {{ $columnWidths['description'] }};
         }
 
         /* データ行: 高さ2行分 */
@@ -142,6 +132,17 @@
             color: #475569;
         }
     </style>
+    @php
+        $styleOpen = '<' . 'style>';
+        $styleClose = '</' . 'style>';
+        $dynamicColumnCss = "
+            .staff-list-table th.col-no { width: {$columnWidths['no']}; }
+            .staff-list-table th.col-name { width: {$columnWidths['name']}; }
+            .staff-list-table th.col-staff { width: {$columnWidths['staff']}; }
+            .staff-list-table th.col-description { width: {$columnWidths['description']}; }
+        ";
+    @endphp
+    {!! $styleOpen . $dynamicColumnCss . $styleClose !!}
 </head>
 <body>
     {{-- 全ページ共通固定ヘッダー --}}
