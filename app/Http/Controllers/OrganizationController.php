@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Organization\DownloadOrganizationPdfAction;
+use App\Actions\Organization\DownloadOrganizationStaffListPdfAction;
 use App\DTOs\Organization\OrganizationUnitData;
 use App\Http\Requests\StoreOrganizationUnitRequest;
 use App\Http\Requests\UpdateOrganizationUnitRequest;
@@ -18,7 +19,8 @@ class OrganizationController extends Controller
 {
     public function __construct(
         protected OrganizationService $organizationService,
-        protected DownloadOrganizationPdfAction $downloadOrganizationPdfAction
+        protected DownloadOrganizationPdfAction $downloadOrganizationPdfAction,
+        protected DownloadOrganizationStaffListPdfAction $downloadOrganizationStaffListPdfAction
     ) {}
 
     /**
@@ -150,5 +152,15 @@ class OrganizationController extends Controller
         $this->authorize('viewAny', OrganizationUnit::class);
 
         return $this->downloadOrganizationPdfAction->execute();
+    }
+
+    /**
+     * 組織別所属スタッフ一覧A4縦PDFのダウンロード
+     */
+    public function staffListPdf(): Response
+    {
+        $this->authorize('viewAny', OrganizationUnit::class);
+
+        return $this->downloadOrganizationStaffListPdfAction->execute();
     }
 }

@@ -89,6 +89,7 @@ Route::middleware('auth')->group(function () {
     // 組織管理 (Organization Management)
     Route::post('organizations/reorder', [OrganizationController::class, 'reorder'])->name('organizations.reorder');
     Route::get('organizations/print', [OrganizationController::class, 'print'])->name('organizations.print');
+    Route::get('organizations/staff-list-pdf', [OrganizationController::class, 'staffListPdf'])->name('organizations.staff-list-pdf');
     Route::resource('organizations', OrganizationController::class)->except(['create']);
 
     // 汎用機能オン・オフ＆日時設定ルート
