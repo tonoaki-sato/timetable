@@ -284,16 +284,36 @@ class OrganizationManagementTest extends TestCase
         $pageCount = $canvas->get_page_count();
         $this->assertGreaterThanOrEqual(2, $pageCount);
 
-        // 3. CPDFストリーム内の全ページに固定ヘッダー（タイトル）が含まれていること
+        // 3. CPDFストリーム内の全ページに固定ヘッダー（タイトル）が含まれ、上部余白内 (y > 800pt) に配置されていること
         $cpdf = $canvas->get_cpdf();
         $needle = mb_convert_encoding('組織図', 'UTF-16BE', 'UTF-8');
         $foundCount = 0;
+        $hasCorrectHeaderY = false;
         foreach ($cpdf->objects as $obj) {
             if (isset($obj['t']) && $obj['t'] === 'contents' && str_contains($obj['c'], $needle)) {
                 $foundCount++;
+                // ヘッダーの日時またはタイトルの Y 座標が上部余白内 (800pt 以上 840pt 以下) に描画されていることを検証
+                if (preg_match('/BT\s+[0-9\.\-]+\s+([0-9\.\-]+)\s+Td.*?組織図/s', $obj['c'], $matches)) {
+                    $y = (float) $matches[1];
+                    if ($y >= 800.0 && $y <= 840.0) {
+                        $hasCorrectHeaderY = true;
+                    }
+                }
             }
         }
         $this->assertGreaterThanOrEqual($pageCount, $foundCount);
+
+        // 4. 左マージン (12mm ≒ 34pt) が保持されていること (最低X座標 >= 34pt)
+        $firstPageStream = $cpdf->objects[7]['c'] ?? '';
+        $minX = 999.0;
+        foreach (explode("\n", $firstPageStream) as $line) {
+            if (preg_match('/^([0-9\.\-]+)\s+([0-9\.\-]+)\s+m\s+([0-9\.\-]+)\s+([0-9\.\-]+)\s+l\s+S/', trim($line), $m)) {
+                if ($m[1] === $m[3]) {
+                    $minX = min($minX, (float) $m[1]);
+                }
+            }
+        }
+        $this->assertGreaterThanOrEqual(34.0, $minX, 'Page left margin should be at least 34pt (~12mm)');
     }
 
     /**
@@ -381,5 +401,43 @@ class OrganizationManagementTest extends TestCase
         $response->assertStatus(200);
         // 親組織セレクトボックスに「　└─ 本陣係」のoptionが存在すること
         $response->assertSee('　└─ 本陣係');
+    }
+
+    /**
+     * 組織図PDFテンプレートが本部役員（実行委員長・福実行委員長・会計）と部門を分離し、顧問・相談役を独立エリアに描画すること
+     */
+    public function test_organization_pdf_renders_executive_officers_and_departments_and_advisors(): void
+    {
+        $root = OrganizationUnit::factory()->create(['name' => '実行委員長', 'display_order' => 10]);
+        $fuku = OrganizationUnit::factory()->create(['name' => '福実行委員長', 'parent_id' => $root->id, 'display_order' => 20]);
+        $kaikei = OrganizationUnit::factory()->create(['name' => '会計', 'parent_id' => $root->id, 'display_order' => 30]);
+        $soumu = OrganizationUnit::factory()->create(['name' => '総務', 'parent_id' => $root->id, 'display_order' => 40]);
+        $honjin = OrganizationUnit::factory()->create(['name' => '本陣', 'parent_id' => $soumu->id, 'display_order' => 50]);
+        $advisor = OrganizationUnit::factory()->create(['name' => '顧問', 'parent_id' => null, 'display_order' => 60]);
+
+        $action = app(DownloadOrganizationPdfAction::class);
+        $viewData = $action->buildViewData();
+        $viewData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
+
+        $html = view('pdf.organization_chart', $viewData)->render();
+
+        // 1. 本部役員テーブルと役員カードが存在すること
+        $this->assertStringContainsString('root-header-table', $html);
+        $this->assertStringContainsString('card-officer', $html);
+        $this->assertStringContainsString('福実行委員長', $html);
+        $this->assertStringContainsString('会計', $html);
+
+        // 2. 部門（総務）がbranch-sectionとして描画されていること
+        $this->assertStringContainsString('branch-section', $html);
+        $this->assertStringContainsString('総務', $html);
+
+        // 3. 独立役員エリア（顧問・相談役）が存在すること
+        $this->assertStringContainsString('standalone-roots-container', $html);
+        $this->assertStringContainsString('【顧問・相談役】', $html);
+        $this->assertStringContainsString('顧問', $html);
+
+        // 4. 末端組織グループがインラインブロックのleaf-groupとして描画されていること
+        $this->assertStringContainsString('leaf-group', $html);
+        $this->assertStringContainsString('leaf-card', $html);
     }
 }

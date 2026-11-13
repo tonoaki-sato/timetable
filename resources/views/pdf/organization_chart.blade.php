@@ -20,7 +20,7 @@
             size: A4 portrait;
             margin: 18mm 12mm 12mm 12mm;
         }
-        *, body, table, th, td, h1, h2, h3, div, span, p {
+        table, th, td, h1, h2, h3, div, span, p {
             font-family: 'JapaneseFont', sans-serif !important;
             box-sizing: border-box;
             margin: 0;
@@ -66,24 +66,52 @@
             width: 100%;
         }
         .root-header-section {
-            margin-bottom: 8pt;
-            padding-bottom: 6pt;
-            border-bottom: 1pt solid #cbd5e1;
+            margin-bottom: 7pt;
+            padding-bottom: 5pt;
+            border-bottom: 1.2pt solid #94a3b8;
+        }
+        table.root-header-table {
+            border-collapse: collapse;
+        }
+        td.root-leader-td {
+            vertical-align: middle;
+            width: 85pt;
+            padding: 0;
+        }
+        td.root-bridge-td {
+            vertical-align: middle;
+            width: 12pt;
+            padding: 0;
+        }
+        td.root-officers-td {
+            vertical-align: middle;
+            padding: 0;
+        }
+        .officer-card-wrapper {
+            display: inline-block;
+            margin-right: 5pt;
+            vertical-align: middle;
         }
         .branch-section {
-            margin-bottom: 7pt;
+            margin-bottom: 6pt;
             page-break-inside: avoid;
         }
         .standalone-roots-container {
-            margin-top: 10pt;
-            padding-top: 8pt;
-            border-top: 1pt dashed #cbd5e1;
+            margin-top: 9pt;
+            padding-top: 5pt;
+            border-top: 1pt dashed #94a3b8;
             page-break-inside: avoid;
+        }
+        .standalone-roots-title {
+            font-size: 7.5pt;
+            font-weight: bold;
+            color: #475569;
+            margin-bottom: 4pt;
         }
         .standalone-card-item {
             display: inline-block;
             margin-right: 6pt;
-            margin-bottom: 6pt;
+            margin-bottom: 4pt;
             vertical-align: top;
         }
 
@@ -171,6 +199,11 @@
             border-color: #047857;
             background-color: #ecfdf5;
         }
+        .card-officer {
+            border-color: #0284c7;
+            background-color: #f0f9ff;
+            width: 80pt;
+        }
         .card-level-2 {
             border-color: #2563eb;
             background-color: #eff6ff;
@@ -200,6 +233,8 @@
 
         /* 末端組織グループまとめ枠 */
         .leaf-group {
+            display: inline-block;
+            max-width: 100%;
             border: 0.8pt dashed #94a3b8;
             border-radius: 3pt;
             padding: 2pt;
@@ -209,11 +244,11 @@
             display: inline-block;
             border: 0.8pt solid #cbd5e1;
             border-radius: 2pt;
-            padding: 1.5pt 3pt;
+            padding: 2pt 3pt;
             margin: 1.5pt;
             background-color: #ffffff;
             vertical-align: top;
-            width: 56pt;
+            width: 60pt;
         }
         .leaf-title {
             font-weight: bold;
@@ -258,20 +293,59 @@
         @else
             {{-- 子を持つルートノード（実行委員長等）の展開 --}}
             @foreach($rootWithChildren as $root)
+                @php
+                    // 直属の本部幹部（福実行委員長、会計等: 子組織を持たず、委員長/会計等の役職名を含む組織）
+                    $executiveOfficers = $root->children->filter(function ($c) {
+                        return (! $c->children || $c->children->isEmpty())
+                            && (str_contains($c->name, '委員長') || str_contains($c->name, '会計') || str_contains($c->name, '事務局長'));
+                    });
+                    // 各担当部門（総務、渉外、イベント、広報等）
+                    $departmentUnits = $root->children->reject(function ($c) use ($executiveOfficers) {
+                        return $executiveOfficers->contains('id', $c->id);
+                    });
+                @endphp
+
+                <!-- 本部役員（実行委員長 + 直属幹部）セクション -->
                 <div class="root-header-section">
-                    <div class="card card-level-1">
-                        <div class="card-title">{{ $root->name }}</div>
-                        @if($root->staff->isNotEmpty())
-                            <div class="card-staff">{{ $root->staffNamesDisplay }}</div>
-                        @endif
-                        @if($root->short_description)
-                            <div class="card-desc">{{ $root->short_description }}</div>
-                        @endif
-                    </div>
+                    <table class="root-header-table" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td class="root-leader-td">
+                                <div class="card card-level-1">
+                                    <div class="card-title">{{ $root->name }}</div>
+                                    @if($root->staff->isNotEmpty())
+                                        <div class="card-staff">{{ $root->staffNamesDisplay }}</div>
+                                    @endif
+                                    @if($root->short_description)
+                                        <div class="card-desc">{{ $root->short_description }}</div>
+                                    @endif
+                                </div>
+                            </td>
+                            @if($executiveOfficers->isNotEmpty())
+                                <td class="root-bridge-td">
+                                    <div class="stem-bridge"></div>
+                                </td>
+                                <td class="root-officers-td">
+                                    @foreach($executiveOfficers as $officer)
+                                        <div class="officer-card-wrapper">
+                                            <div class="card card-officer">
+                                                <div class="card-title">{{ $officer->name }}</div>
+                                                @if($officer->staff->isNotEmpty())
+                                                    <div class="card-staff">{{ $officer->staffNamesDisplay }}</div>
+                                                @endif
+                                                @if($officer->short_description)
+                                                    <div class="card-desc">{{ $officer->short_description }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </td>
+                            @endif
+                        </tr>
+                    </table>
                 </div>
 
                 {{-- 各部門・ブランチ（総務、渉外、イベント、広報等）を独立ブロックとして描画（自動改ページ対応） --}}
-                @foreach($root->children as $child)
+                @foreach($departmentUnits as $child)
                     <div class="branch-section">
                         @include('pdf.components.tree-node', ['unit' => $child, 'level' => 2])
                     </div>
@@ -281,6 +355,7 @@
             {{-- 単独ルートノード群（顧問、相談役等） --}}
             @if($standaloneRoots->isNotEmpty())
                 <div class="standalone-roots-container">
+                    <div class="standalone-roots-title">【顧問・相談役】</div>
                     @foreach($standaloneRoots as $standalone)
                         <div class="standalone-card-item">
                             @include('pdf.components.tree-node', ['unit' => $standalone, 'level' => 1])
