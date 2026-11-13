@@ -274,12 +274,21 @@ class OrganizationManagementTest extends TestCase
         $response->assertSee('ポスター');
         $response->assertSee('tree-leaf-group', false);
 
-        // 2. 印刷画面でも第4階層「アンケート」が表示されていること
+        // コネクタの最適化（親幹ブリッジ・エルボー・直線・角丸終端）の検証
+        $response->assertSee('tree-stem-bridge', false);
+        $response->assertSee('tree-branch-connector', false);
+        $response->assertSee('tree-connector-horizontal', false);
+        $response->assertSee('tree-connector-direct', false);
+        $response->assertSee('rounded-bl-sm', false);
+
+        // 2. 印刷画面でも第4階層「アンケート」およびコネクタが表示されていること
         $printResponse = $this->actingAs($this->admin)->get(route('organizations.print'));
         $printResponse->assertStatus(200);
         $printResponse->assertSee('アンケート');
         $printResponse->assertSee('ホームページ');
         $printResponse->assertSee('新聞・チラシ');
+        $printResponse->assertSee('tree-stem-bridge', false);
+        $printResponse->assertSee('tree-branch-connector', false);
     }
 
     /**
