@@ -17,4 +17,3 @@ readonly class MyShiftTimetableOptionDTO
         public bool $isSelected,
     ) {}
 }
-

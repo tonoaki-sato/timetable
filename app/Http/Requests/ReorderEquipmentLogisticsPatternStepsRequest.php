@@ -33,4 +33,3 @@ class ReorderEquipmentLogisticsPatternStepsRequest extends FormRequest
         ];
     }
 }
-

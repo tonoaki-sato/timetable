@@ -169,4 +169,3 @@ class StoreCommonTimetableTaskRequest extends FormRequest
         );
     }
 }
-

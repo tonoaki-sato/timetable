@@ -54,4 +54,3 @@ readonly class CreateCommonTimetableTaskDTO
         ];
     }
 }
-

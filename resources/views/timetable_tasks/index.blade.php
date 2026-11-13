@@ -25,7 +25,7 @@
                 class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
                 title="運行日別人員配置一覧表をPDFでダウンロード">
                 <span>📄</span>
-                <span>人員配置表PDF</span>
+                <span>人員配置表印刷</span>
             </a>
         </x-slot:actions>
     </x-page-header>

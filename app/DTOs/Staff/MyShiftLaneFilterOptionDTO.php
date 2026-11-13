@@ -11,4 +11,3 @@ readonly class MyShiftLaneFilterOptionDTO
         public int $assignmentCount,
     ) {}
 }
-

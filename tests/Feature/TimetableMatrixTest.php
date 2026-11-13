@@ -393,14 +393,14 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('拠点タイプ管理');
         $response->assertSee(route('location-types.index'));
 
-        // 帳票・印刷グループ
+        // 帳票・印刷グループ (区分A: 全体・マスター帳票)
         $response->assertSee('帳票・印刷');
         $response->assertSee('名札一括印刷');
         $response->assertSee(route('staff.print-cards'));
-        $response->assertSee('搬出入指示書印刷');
-        $response->assertSee(route('logistics.print'));
         $response->assertSee('スタッフCSV出力');
         $response->assertSee(route('staff.export-csv'));
+        $response->assertSee('年間スケジュール表 (PDF)');
+        $response->assertSee('スタッフ名簿一覧 (PDF)');
 
         // システム管理グループ（マニュアル・資料 ＆ システム設定）
         $response->assertSee('システム・ガイド');

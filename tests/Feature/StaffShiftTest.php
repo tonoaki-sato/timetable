@@ -897,6 +897,7 @@ class StaffShiftTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-11-11 10:00:00'));
 
         try {
+            $this->timetable->update(['target_date' => '2026-11-11']);
             $this->lane->update(['lead_staff_id' => $this->staff->id]);
             $todayTask = TimetableTask::factory()->create([
                 'timetable_id' => $this->timetable->id,

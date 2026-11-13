@@ -23,4 +23,3 @@ class CreateCommonTimetableTasksAction
         return $this->taskService->createCommonTasksForLanes($dto);
     }
 }
-

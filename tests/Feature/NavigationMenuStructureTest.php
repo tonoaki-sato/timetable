@@ -133,21 +133,34 @@ class NavigationMenuStructureTest extends TestCase
     }
 
     /**
-     * 帳票・印刷メニューが当日用と事前準備用にセクション化されていること
+     * 帳票・印刷メニューが区分A（全体・マスター帳票）専用に構成されていること
      */
     public function test_reports_menu_is_properly_sectioned(): void
     {
         $response = $this->actingAs($this->admin)->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // 現場・当日用帳票
-        $response->assertSee(route('timetables.print-assignments', $this->timetable));
-        $response->assertSee(route('logistics.print'));
-        $response->assertSee('個別名札緊急印刷');
-
-        // 事前準備用帳票
+        // グローバルメニュー内: 区分A（全体・マスター帳票）
+        $response->assertSee('全体・マスター帳票 (区分A)');
         $response->assertSee(route('staff.print-cards'));
         $response->assertSee(route('staff.export-csv'));
+        $response->assertSee('年間スケジュール表 (PDF)');
+        $response->assertSee('スタッフ名簿一覧 (PDF)');
+        $response->assertSee('レンタル機材一覧 (PDF)');
+
+        // グローバルメニューからは区分B（当日現場用）および個別名札緊急印刷が除外されていること
+        $response->assertDontSee('個別名札緊急印刷');
+        $response->assertDontSee(route('logistics.print'));
+
+        // 運行詳細画面側で区分B専用カードが表示されること
+        $timetableResponse = $this->actingAs($this->admin)->get(route('timetables.show', $this->timetable));
+        $timetableResponse->assertStatus(200);
+        $timetableResponse->assertSee('運行日別・現場帳票（PDF印刷）');
+        $timetableResponse->assertSee(route('timetables.print-matrix', $this->timetable));
+        $timetableResponse->assertSee(route('timetables.lanes.print', $this->timetable));
+        $timetableResponse->assertSee(route('timetables.logistics.print', $this->timetable));
+        $timetableResponse->assertSee(route('timetables.print-assignments', $this->timetable));
+        $timetableResponse->assertSee('スタッフ別タスク一覧');
     }
 
     /**
