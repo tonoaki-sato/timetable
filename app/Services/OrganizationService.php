@@ -119,33 +119,33 @@ class OrganizationService
      */
     public function calculateDynamicColumnWidths(Collection $units): array
     {
-        $noWidth = 6.0;
-        $remainingWidth = 100.0 - $noWidth; // 94.0%
+        $noWidth = 4.5;
 
         if ($units->isEmpty()) {
             return [
-                'no' => '6%',
-                'name' => '34%',
-                'staff' => '30%',
-                'description' => '30%',
+                'no' => '4.5%',
+                'name' => '18.5%',
+                'staff' => '36.0%',
+                'description' => '41.0%',
             ];
         }
 
-        // 各列の最大表示文字幅（半角=1, 全角=2）を測定
-        $maxName = (float) ($units->max(fn (OrganizationUnit $u) => mb_strwidth(str_repeat('  ', (int) ($u->depth ?? 0)).$u->name)) ?: 10);
+        // 名前列の最大必要幅を文字幅・インデントに基づき計算してテキスト幅に寄せる (約17%〜20%)
+        $maxNameWidth = (float) ($units->max(fn (OrganizationUnit $u) => mb_strwidth(str_repeat(' ', (int) ($u->depth ?? 0)).$u->name)) ?: 10);
+        $nameWidth = max(17.0, min(20.0, round($maxNameWidth * 0.8, 1)));
+
+        // 残りの幅を所属スタッフと詳細で文字量に応じて配分
+        $remainingWidth = 100.0 - $noWidth - $nameWidth; // 約77.0%
+
         $maxStaff = (float) ($units->max(fn (OrganizationUnit $u) => mb_strwidth($u->staffNamesDisplay ?: '')) ?: 10);
         $maxDesc = (float) ($units->max(fn (OrganizationUnit $u) => mb_strwidth($u->cleaned_description ?: '')) ?: 10);
 
-        // 各列の重み付け（過小・過大にならないよう下限・上限ガード）
-        $weightName = max(15.0, min(40.0, $maxName));
-        $weightStaff = max(15.0, min(40.0, $maxStaff));
-        $weightDesc = max(15.0, min(40.0, $maxDesc));
+        $weightStaff = max(20.0, $maxStaff);
+        $weightDesc = max(20.0, $maxDesc);
+        $totalWeight = $weightStaff + $weightDesc;
 
-        $totalWeight = $weightName + $weightStaff + $weightDesc;
-
-        $nameWidth = round(($weightName / $totalWeight) * $remainingWidth, 1);
         $staffWidth = round(($weightStaff / $totalWeight) * $remainingWidth, 1);
-        $descWidth = round($remainingWidth - $nameWidth - $staffWidth, 1);
+        $descWidth = round($remainingWidth - $staffWidth, 1);
 
         return [
             'no' => $noWidth.'%',

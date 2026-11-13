@@ -18,9 +18,9 @@
         }
         @page {
             size: A4 portrait;
-            margin: 12mm 10mm;
+            margin: 18mm 12mm 12mm 12mm;
         }
-        *, body, table, th, td, h1, h2, h3, div, span, strong, b, p {
+        table, th, td, h1, h2, h3, div, span, strong, b, p {
             font-family: 'JapaneseFont', sans-serif !important;
             box-sizing: border-box;
             margin: 0;
@@ -34,12 +34,19 @@
             background-color: #ffffff;
         }
 
-        /* ページヘッダー */
+        /* 全ページ共通固定ヘッダー (上部18mm余白内に配置) */
+        .page-header {
+            position: fixed;
+            top: -14mm;
+            left: 0;
+            right: 0;
+            height: 10mm;
+            border-bottom: 1.5pt solid #0f172a;
+            padding-bottom: 2mm;
+        }
         .header-table {
             width: 100%;
-            border-bottom: 1.5pt solid #0f172a;
-            padding-bottom: 4pt;
-            margin-bottom: 6pt;
+            border-collapse: collapse;
         }
         .header-title-main {
             font-size: 13pt;
@@ -59,6 +66,7 @@
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
+            margin-top: 1mm;
         }
         .staff-list-table tr {
             page-break-inside: avoid;
@@ -79,7 +87,17 @@
             text-align: left;
         }
         .staff-list-table th.col-no {
+            width: {{ $columnWidths['no'] }};
             text-align: center;
+        }
+        .staff-list-table th.col-name {
+            width: {{ $columnWidths['name'] }};
+        }
+        .staff-list-table th.col-staff {
+            width: {{ $columnWidths['staff'] }};
+        }
+        .staff-list-table th.col-description {
+            width: {{ $columnWidths['description'] }};
         }
 
         /* データ行: 高さ2行分 */
@@ -106,48 +124,44 @@
 
         /* 名前列の階層字下げインデント */
         .indent-level-0 {
-            padding-left: 3pt;
+            padding-left: 2pt;
             font-weight: bold;
             color: #0f172a;
         }
         .indent-level-1 {
-            padding-left: 13pt;
+            padding-left: 10pt;
             font-weight: bold;
             color: #1e293b;
         }
         .indent-level-2 {
-            padding-left: 23pt;
+            padding-left: 18pt;
             color: #334155;
         }
         .indent-level-3 {
-            padding-left: 33pt;
+            padding-left: 26pt;
             color: #475569;
         }
     </style>
 </head>
 <body>
-    {{-- 固定ヘッダー --}}
-    <table class="header-table" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="header-title-main">{{ $title }}</td>
-            <td class="header-meta">出力日時: {{ $generatedAt }}</td>
-        </tr>
-    </table>
+    {{-- 全ページ共通固定ヘッダー --}}
+    <div class="page-header">
+        <table class="header-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="header-title-main">{{ $title }}</td>
+                <td class="header-meta">出力日時: {{ $generatedAt }}</td>
+            </tr>
+        </table>
+    </div>
 
     {{-- 組織別所属スタッフ一覧テーブル --}}
     <table class="staff-list-table" cellpadding="0" cellspacing="0">
-        <colgroup>
-            <col style="width: {{ $columnWidths['no'] }};">
-            <col style="width: {{ $columnWidths['name'] }};">
-            <col style="width: {{ $columnWidths['staff'] }};">
-            <col style="width: {{ $columnWidths['description'] }};">
-        </colgroup>
         <thead>
             <tr>
                 <th class="col-no">No.</th>
-                <th>名前</th>
-                <th>所属スタッフ</th>
-                <th>詳細</th>
+                <th class="col-name">名前</th>
+                <th class="col-staff">所属スタッフ</th>
+                <th class="col-description">詳細</th>
             </tr>
         </thead>
         <tbody>
@@ -170,4 +184,3 @@
     </table>
 </body>
 </html>
-

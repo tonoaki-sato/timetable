@@ -7,6 +7,7 @@ use App\Models\OrganizationUnit;
 use App\Models\Staff;
 use App\Models\User;
 use App\Services\PdfService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -113,9 +114,9 @@ class OrganizationStaffListPdfTest extends TestCase
 
         // 1. タイトルとヘッダー列名が出力されていること
         $this->assertStringContainsString('保土ケ谷宿場まつり実行委員会 組織別所属スタッフ一覧', $html);
-        $this->assertStringContainsString('<th>名前</th>', $html);
-        $this->assertStringContainsString('<th>所属スタッフ</th>', $html);
-        $this->assertStringContainsString('<th>詳細</th>', $html);
+        $this->assertStringContainsString('<th class="col-name">名前</th>', $html);
+        $this->assertStringContainsString('<th class="col-staff">所属スタッフ</th>', $html);
+        $this->assertStringContainsString('<th class="col-description">詳細</th>', $html);
 
         // 2. 「全〇〇組織」が出力されていないこと
         $this->assertStringNotContainsString('全4組織', $html);
@@ -149,12 +150,28 @@ class OrganizationStaffListPdfTest extends TestCase
         $this->assertStringContainsString('height: 16pt;', $html);
         $this->assertStringContainsString('height: 26pt;', $html);
 
-        // 8. 動的列幅（colgroup）が出力されていること
-        $this->assertStringContainsString('<colgroup>', $html);
-        $this->assertStringContainsString($viewData['columnWidths']['no'], $html);
-        $this->assertStringContainsString($viewData['columnWidths']['name'], $html);
-        $this->assertStringContainsString($viewData['columnWidths']['staff'], $html);
-        $this->assertStringContainsString($viewData['columnWidths']['description'], $html);
+        // 8. 他のPDFと同様の余白（18mm 12mm 12mm 12mm）および固定ヘッダー（page-header）が存在すること
+        $this->assertStringContainsString('margin: 18mm 12mm 12mm 12mm;', $html);
+        $this->assertStringContainsString('class="page-header"', $html);
+
+        // 9. 動的列幅が各thクラスに適用され、No.と名前がテキスト幅に寄せられていること
+        $this->assertStringContainsString('.staff-list-table th.col-no', $html);
+        $this->assertStringContainsString('.staff-list-table th.col-name', $html);
+        $this->assertStringContainsString('.staff-list-table th.col-staff', $html);
+        $this->assertStringContainsString('.staff-list-table th.col-description', $html);
+        $this->assertSame('4.5%', $viewData['columnWidths']['no']);
+        $this->assertLessThanOrEqual(20.0, (float) rtrim($viewData['columnWidths']['name'], '%'));
+        $this->assertStringContainsString('width: '.$viewData['columnWidths']['no'].';', $html);
+        $this->assertStringContainsString('width: '.$viewData['columnWidths']['name'].';', $html);
+        $this->assertStringContainsString('width: '.$viewData['columnWidths']['staff'].';', $html);
+        $this->assertStringContainsString('width: '.$viewData['columnWidths']['description'].';', $html);
+
+        // 10. DomPDFレンダリング後に@pageの余白（18mm/12mm）が0にリセットされず維持されていること
+        $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
+        $dompdf = $pdf->getDomPDF();
+        $dompdf->render();
+        $pageStyles = $dompdf->getCss()->get_page_styles();
+        $this->assertGreaterThan(50.0, (float) $pageStyles['base']->margin_top);
+        $this->assertGreaterThan(30.0, (float) $pageStyles['base']->margin_left);
     }
 }
-
