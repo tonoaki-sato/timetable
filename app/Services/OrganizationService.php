@@ -119,4 +119,3 @@ class OrganizationService
         $this->repository->updateDisplayOrders($orderedIds);
     }
 }
-

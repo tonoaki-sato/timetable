@@ -19,4 +19,3 @@ class DeleteOrganizationUnitAction
         return $this->repository->delete($unit);
     }
 }
-

@@ -28,4 +28,3 @@ class OrganizationUnitFactory extends Factory
         ];
     }
 }
-

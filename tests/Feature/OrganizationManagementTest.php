@@ -41,7 +41,7 @@ class OrganizationManagementTest extends TestCase
     }
 
     /**
-     * 組織管理一覧画面が正常に表示され、空状態メッセージが表示されること
+     * 組織管理一覧画面が正常に表示され、共通ラッパー、新規組織追加ボタン、JSスクリプトが出力されること
      */
     public function test_organization_index_displays_empty_state_when_no_units_exist(): void
     {
@@ -49,10 +49,15 @@ class OrganizationManagementTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('組織管理');
+        $response->assertSee('max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5', false);
         $response->assertSee('登録されている組織・係がありません');
         $response->assertSee('新規組織追加');
+        $response->assertSee('id="btn-open-create-modal"', false);
         $response->assertSee('PDF印刷');
         $response->assertSee('保土ケ谷宿場まつり実行委員会 組織図');
+        // Viteにより organizations.js がスクリプトタグとして出力されていること
+        $response->assertSee('organizations', false);
+        $response->assertSee('<script', false);
     }
 
     /**
@@ -230,4 +235,3 @@ class OrganizationManagementTest extends TestCase
         $response->assertSee('overcom');
     }
 }
-

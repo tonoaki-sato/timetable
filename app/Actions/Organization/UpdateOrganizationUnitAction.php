@@ -56,4 +56,3 @@ class UpdateOrganizationUnitAction
         $unit->staff()->sync($syncData);
     }
 }
-

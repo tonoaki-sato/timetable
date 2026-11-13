@@ -47,4 +47,3 @@ class OrganizationUnitPolicy
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }
 }
-

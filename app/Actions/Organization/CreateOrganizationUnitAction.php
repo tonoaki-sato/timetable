@@ -56,4 +56,3 @@ class CreateOrganizationUnitAction
         $unit->staff()->sync($syncData);
     }
 }
-

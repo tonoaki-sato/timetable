@@ -66,4 +66,3 @@ class UpdateOrganizationUnitRequest extends FormRequest
         ];
     }
 }
-

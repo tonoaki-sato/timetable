@@ -1,9 +1,5 @@
 <x-layouts.app :title="'🏛️ 組織管理'">
-    @push('scripts')
-        @vite('resources/js/organizations.js')
-    @endpush
-
-    <div class="space-y-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
         <!-- ページヘッダー -->
         <x-page-header
             title="組織管理"
@@ -11,16 +7,23 @@
             description="祭り実行委員会の組織体制・部門・係・担当スタッフの管理"
         >
             <x-slot:breadcrumbs>
-                <span class="text-slate-800 font-medium">組織管理</span>
+                <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                    <span>🏮</span>
+                    <span>本部</span>
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-500">🗂️ マスター管理</span>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-700 font-bold truncate">🏛️ 組織管理</span>
             </x-slot:breadcrumbs>
 
             <x-slot:actions>
-                <a href="{{ route('organizations.print') }}" target="_blank" class="px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded-xl shadow-xs hover:bg-slate-50 transition flex items-center space-x-1 cursor-pointer">
+                <a href="{{ route('organizations.print') }}" target="_blank" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
                     <span>🖨️</span>
                     <span>PDF印刷</span>
                     <span class="text-[10px] text-slate-400">↗</span>
                 </a>
-                <button type="button" id="btn-open-create-modal" class="px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition flex items-center space-x-1 cursor-pointer">
+                <button type="button" id="btn-open-create-modal" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
                     <span>➕</span>
                     <span>新規組織追加</span>
                 </button>
@@ -50,7 +53,7 @@
 
         <!-- 1. 組織一覧テーブル (デフォルト表示) -->
         <div id="tab-list" class="tab-content space-y-3">
-            <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
@@ -218,5 +221,7 @@
     <!-- モーダルインクルード -->
     @include('organizations.components.form-modal')
     @include('organizations.components.detail-modal')
+
+    @vite(['resources/js/organizations.js'])
 </x-layouts.app>
 

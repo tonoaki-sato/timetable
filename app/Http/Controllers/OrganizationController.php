@@ -151,4 +151,3 @@ class OrganizationController extends Controller
         return view('organizations.print', $viewData);
     }
 }
-

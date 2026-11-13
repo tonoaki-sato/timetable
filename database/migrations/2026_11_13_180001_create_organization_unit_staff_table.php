@@ -36,4 +36,3 @@ return new class extends Migration
         Schema::dropIfExists('organization_unit_staff');
     }
 };
-
