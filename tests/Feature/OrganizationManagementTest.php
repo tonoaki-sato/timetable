@@ -314,6 +314,22 @@ class OrganizationManagementTest extends TestCase
             }
         }
         $this->assertGreaterThanOrEqual(34.0, $minX, 'Page left margin should be at least 34pt (~12mm)');
+
+        // 5. コネクタ縦線がページ下部まで突き抜けていないこと (100pt以上の長大な細い縦線が存在しないこと)
+        $hasPenetratingLine = false;
+        foreach (explode("\n", $firstPageStream) as $line) {
+            if (preg_match('/^([0-9\.\-]+)\s+([0-9\.\-]+)\s+m\s+([0-9\.\-]+)\s+([0-9\.\-]+)\s+l\s+S/', trim($line), $m)) {
+                if ($m[1] === $m[3] && abs((float) $m[2] - (float) $m[4]) > 100.0) {
+                    $hasPenetratingLine = true;
+                }
+            }
+            if (preg_match('/^([0-9\.\-]+)\s+([0-9\.\-]+)\s+([0-9\.\-]+)\s+([0-9\.\-]+)\s+re\s+f/', trim($line), $m)) {
+                if ((float) $m[3] <= 2.0 && (float) $m[4] > 100.0) {
+                    $hasPenetratingLine = true;
+                }
+            }
+        }
+        $this->assertFalse($hasPenetratingLine, 'No penetrating vertical connector line should exist in the PDF');
     }
 
     /**

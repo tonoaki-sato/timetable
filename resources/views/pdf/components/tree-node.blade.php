@@ -48,15 +48,14 @@
                             $childIndex++;
                         @endphp
                         <tr>
-                            <td class="connector-td">
+                            <td class="connector-td {{ (! $isLast && $totalChildrenCount > 1) ? 'connector-stem-border' : '' }}">
                                 @if($totalChildrenCount === 1)
                                     <div class="connector-line-direct"></div>
                                 @else
-                                    @if(! $isFirst)
+                                    @if($isFirst)
+                                        <div class="connector-mask-top"></div>
+                                    @else
                                         <div class="connector-vertical-top"></div>
-                                    @endif
-                                    @if(! $isLast)
-                                        <div class="connector-vertical-bottom"></div>
                                     @endif
                                     <div class="connector-horizontal"></div>
                                 @endif
@@ -73,11 +72,13 @@
                             $isLast = true;
                         @endphp
                         <tr>
-                            <td class="connector-td">
+                            <td class="connector-td {{ (! $isLast && $totalChildrenCount > 1) ? 'connector-stem-border' : '' }}">
                                 @if($totalChildrenCount === 1)
                                     <div class="connector-line-direct"></div>
                                 @else
-                                    @if(! $isFirst)
+                                    @if($isFirst)
+                                        <div class="connector-mask-top"></div>
+                                    @else
                                         <div class="connector-vertical-top"></div>
                                     @endif
                                     <div class="connector-horizontal"></div>

@@ -152,8 +152,19 @@
             position: relative;
             padding: 0;
         }
+        td.connector-stem-border {
+            border-left: 1.2pt solid #64748b;
+        }
 
         /* コネクタ線 */
+        .connector-mask-top {
+            position: absolute;
+            left: -1.5pt;
+            top: 0;
+            width: 3pt;
+            height: 8pt;
+            background: #ffffff;
+        }
         .connector-horizontal {
             position: absolute;
             left: 0;
@@ -167,15 +178,7 @@
             left: 0;
             top: 0;
             width: 1.2pt;
-            height: 8pt;
-            background: #64748b;
-        }
-        .connector-vertical-bottom {
-            position: absolute;
-            left: 0;
-            top: 8pt;
-            bottom: 0;
-            width: 1.2pt;
+            height: 8.6pt;
             background: #64748b;
         }
         .connector-line-direct {
