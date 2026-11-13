@@ -231,6 +231,13 @@ function initFormModal() {
             errorAlert.classList.add('hidden');
             staffListContainer.innerHTML = '';
 
+            const parentSelect = document.getElementById('form-parent-id');
+            if (parentSelect) {
+                Array.from(parentSelect.options).forEach(opt => {
+                    opt.disabled = false;
+                });
+            }
+
             modal.classList.remove('hidden');
         });
     }
@@ -261,6 +268,13 @@ function initFormModal() {
             errorAlert.classList.add('hidden');
 
             document.getElementById('form-parent-id').value = unit.parent_id || '';
+            const parentSelect = document.getElementById('form-parent-id');
+            if (parentSelect) {
+                Array.from(parentSelect.options).forEach(opt => {
+                    opt.disabled = (opt.value === String(unit.id));
+                });
+            }
+
             document.getElementById('form-name').value = unit.name || '';
             document.getElementById('form-short-description').value = unit.short_description || '';
             document.getElementById('form-description').value = unit.description || '';

@@ -75,14 +75,18 @@
                                         </span>
                                     </td>
 
-                                    <!-- 名前 (クリックで詳細モーダル起動) -->
-                                    <td class="py-2.5 px-3 font-bold text-slate-900">
-                                        <button type="button" class="text-indigo-600 hover:text-indigo-800 hover:underline transition font-bold text-left cursor-pointer" data-open-detail-modal="{{ $unit->id }}">
-                                            {{ $unit->name }}
-                                        </button>
-                                        @if($unit->parent)
-                                            <span class="block text-[10px] text-slate-400 font-normal">親: {{ $unit->parent->name }}</span>
-                                        @endif
+                                    <!-- 名前 (クリックで詳細モーダル起動、階層順に字下げ) -->
+                                    <td class="py-2.5 px-3 text-slate-900">
+                                        <div class="flex items-center">
+                                            @if(($unit->depth ?? 0) > 0)
+                                                <span class="text-slate-400 font-mono select-none mr-1.5" aria-hidden="true">
+                                                    {{ str_repeat('　', (int) $unit->depth - 1) }}└─
+                                                </span>
+                                            @endif
+                                            <button type="button" class="text-indigo-600 hover:text-indigo-800 hover:underline transition font-bold text-left cursor-pointer" data-open-detail-modal="{{ $unit->id }}">
+                                                {{ $unit->name }}
+                                            </button>
+                                        </div>
                                     </td>
 
                                     <!-- 説明 -->
@@ -144,67 +148,10 @@
                         <p class="text-xs text-slate-400 mt-1">「新規組織追加」から組織や係を登録すると、ここに水平ツリーが表示されます。</p>
                     </div>
                 @else
-                    <!-- 水平ツリーコンテナ (親から子へ横につながるレイアウト) -->
+                    <!-- 水平ツリーコンテナ (親から子へ横につながるレイアウト: 第4階層以下＆末端グループ化対応) -->
                     <div class="horizontal-tree-container flex flex-col space-y-8 min-w-[800px]">
                         @foreach($treeUnits as $rootUnit)
-                            <div class="horizontal-tree-branch flex items-start space-x-6">
-                                <!-- ルート組織カード (左端) -->
-                                <div class="org-node-card shrink-0 w-48 p-3 rounded-xl border border-slate-300 bg-emerald-50/70 hover:border-emerald-500 hover:shadow-md transition cursor-pointer" data-open-detail-modal="{{ $rootUnit->id }}">
-                                    <div class="font-bold text-xs text-emerald-950 truncate">{{ $rootUnit->name }}</div>
-                                    @if($rootUnit->staff->isNotEmpty())
-                                        <div class="text-[11px] text-emerald-800 mt-1 truncate">{{ $rootUnit->staffNamesDisplay }}</div>
-                                    @endif
-                                    @if($rootUnit->short_description)
-                                        <div class="text-[10px] text-slate-500 mt-0.5 truncate">{{ $rootUnit->short_description }}</div>
-                                    @endif
-                                </div>
-
-                                <!-- 子組織群 (右へ横に展開) -->
-                                @if($rootUnit->children->isNotEmpty())
-                                    <div class="tree-children-connector relative pl-6 border-l-2 border-slate-300 flex flex-col space-y-3 flex-1">
-                                        @foreach($rootUnit->children as $childUnit)
-                                            <div class="flex items-start space-x-6 relative">
-                                                <!-- 水平接続線 -->
-                                                <div class="absolute -left-6 top-4 w-6 h-0.5 bg-slate-300"></div>
-
-                                                <!-- 子カード (第1階層) -->
-                                                <div class="org-node-card shrink-0 w-48 p-2.5 rounded-xl border border-slate-200 bg-white hover:border-indigo-400 hover:shadow-md transition cursor-pointer" data-open-detail-modal="{{ $childUnit->id }}">
-                                                    <div class="font-bold text-xs text-slate-900 truncate">{{ $childUnit->name }}</div>
-                                                    @if($childUnit->staff->isNotEmpty())
-                                                        <div class="text-[11px] text-indigo-700 mt-0.5 truncate">{{ $childUnit->staffNamesDisplay }}</div>
-                                                    @endif
-                                                    @if($childUnit->short_description)
-                                                        <div class="text-[10px] text-slate-500 mt-0.5 truncate">{{ $childUnit->short_description }}</div>
-                                                    @endif
-                                                </div>
-
-                                                <!-- 孫組織群 (さらに右へ横に展開) -->
-                                                @if($childUnit->children->isNotEmpty())
-                                                    <div class="tree-subchildren-connector relative pl-6 border-l-2 border-slate-200 flex flex-col space-y-2 flex-1">
-                                                        @foreach($childUnit->children as $grandChild)
-                                                            <div class="flex items-center space-x-2 relative">
-                                                                <!-- 水平接続線 -->
-                                                                <div class="absolute -left-6 top-3 w-6 h-0.5 bg-slate-200"></div>
-
-                                                                <!-- 孫カード (第2階層) -->
-                                                                <div class="org-node-card p-2 rounded-lg border border-slate-200 bg-slate-50/80 hover:bg-white hover:border-indigo-400 hover:shadow-xs transition cursor-pointer min-w-36 max-w-56" data-open-detail-modal="{{ $grandChild->id }}">
-                                                                    <div class="font-bold text-[11px] text-slate-800 truncate">{{ $grandChild->name }}</div>
-                                                                    @if($grandChild->staff->isNotEmpty())
-                                                                        <div class="text-[10px] text-indigo-600 truncate">{{ $grandChild->staffNamesDisplay }}</div>
-                                                                    @endif
-                                                                    @if($grandChild->short_description)
-                                                                        <div class="text-[9px] text-slate-400 truncate">{{ $grandChild->short_description }}</div>
-                                                                    @endif
-                                                                </div>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
+                            @include('organizations.components.tree-node', ['unit' => $rootUnit, 'level' => 1, 'isPrint' => false])
                         @endforeach
                     </div>
                 @endif

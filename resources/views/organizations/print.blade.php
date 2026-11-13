@@ -37,66 +37,11 @@
                 <p class="font-bold">登録されている組織・係がありません</p>
             </div>
         @else
-            <!-- 横つながり水平ツリー -->
+            <!-- 横つながり水平ツリー (第4階層以下＆末端グループ化対応) -->
             <div class="space-y-6">
                 @foreach($treeUnits as $rootUnit)
-                    <div class="flex items-start space-x-6 pb-4 border-b border-slate-200 last:border-b-0">
-                        <!-- ルート組織カード (左端) -->
-                        <div class="shrink-0 w-44 p-3 rounded-lg border-2 border-slate-800 bg-emerald-50 print:bg-slate-100">
-                            <div class="font-bold text-xs text-slate-900">{{ $rootUnit->name }}</div>
-                            @if($rootUnit->staff->isNotEmpty())
-                                <div class="text-[11px] text-slate-700 mt-1">{{ $rootUnit->staffNamesDisplay }}</div>
-                            @endif
-                            @if($rootUnit->short_description)
-                                <div class="text-[10px] text-slate-500 mt-0.5">{{ $rootUnit->short_description }}</div>
-                            @endif
-                        </div>
-
-                        <!-- 子組織群 (右へ横に展開) -->
-                        @if($rootUnit->children->isNotEmpty())
-                            <div class="relative pl-6 border-l-2 border-slate-400 flex flex-col space-y-3 flex-1">
-                                @foreach($rootUnit->children as $childUnit)
-                                    <div class="flex items-start space-x-6 relative">
-                                        <!-- 水平接続線 -->
-                                        <div class="absolute -left-6 top-3 w-6 h-0.5 bg-slate-400"></div>
-
-                                        <!-- 子カード (第1階層) -->
-                                        <div class="shrink-0 w-44 p-2 rounded-lg border border-slate-700 bg-white">
-                                            <div class="font-bold text-xs text-slate-900">{{ $childUnit->name }}</div>
-                                            @if($childUnit->staff->isNotEmpty())
-                                                <div class="text-[11px] text-slate-700 mt-0.5">{{ $childUnit->staffNamesDisplay }}</div>
-                                            @endif
-                                            @if($childUnit->short_description)
-                                                <div class="text-[10px] text-slate-500 mt-0.5">{{ $childUnit->short_description }}</div>
-                                            @endif
-                                        </div>
-
-                                        <!-- 孫組織群 (さらに右へ横に展開) -->
-                                        @if($childUnit->children->isNotEmpty())
-                                            <div class="relative pl-6 border-l-2 border-slate-300 flex flex-col space-y-2 flex-1">
-                                                @foreach($childUnit->children as $grandChild)
-                                                    <div class="flex items-center space-x-2 relative">
-                                                        <!-- 水平接続線 -->
-                                                        <div class="absolute -left-6 top-2.5 w-6 h-0.5 bg-slate-300"></div>
-
-                                                        <!-- 孫カード (第2階層) -->
-                                                        <div class="p-1.5 rounded-md border border-slate-400 bg-slate-50 min-w-32 max-w-52">
-                                                            <div class="font-bold text-[11px] text-slate-800">{{ $grandChild->name }}</div>
-                                                            @if($grandChild->staff->isNotEmpty())
-                                                                <div class="text-[10px] text-slate-600">{{ $grandChild->staffNamesDisplay }}</div>
-                                                            @endif
-                                                            @if($grandChild->short_description)
-                                                                <div class="text-[9px] text-slate-500">{{ $grandChild->short_description }}</div>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
+                    <div class="pb-4 border-b border-slate-200 last:border-b-0">
+                        @include('organizations.components.tree-node', ['unit' => $rootUnit, 'level' => 1, 'isPrint' => true])
                     </div>
                 @endforeach
             </div>

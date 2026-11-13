@@ -28,16 +28,31 @@ class OrganizationService
      * @return array{
      *     units: Collection<int, OrganizationUnit>,
      *     treeUnits: Collection<int, OrganizationUnit>,
-     *     parentOptions: Collection<int, OrganizationUnit>,
+     *     parentOptions: Collection<int, object>,
      *     availableStaff: Collection<int, Staff>
      * }
      */
     public function getIndexViewData(): array
     {
+        $treeUnits = $this->repository->getTreeWithStaff();
+        $flattenedUnits = $this->flattenTree($treeUnits);
+
+        $parentOptions = $flattenedUnits->map(function (OrganizationUnit $unit) {
+            $depth = (int) ($unit->depth ?? 0);
+            $prefix = str_repeat('　', $depth).($depth > 0 ? '└─ ' : '');
+
+            return (object) [
+                'id' => $unit->id,
+                'name' => $prefix.$unit->name,
+                'raw_name' => $unit->name,
+                'parent_id' => $unit->parent_id,
+            ];
+        });
+
         return [
-            'units' => $this->repository->getAllOrderedWithStaff(),
-            'treeUnits' => $this->repository->getTreeWithStaff(),
-            'parentOptions' => $this->repository->getParentOptions(),
+            'units' => $flattenedUnits,
+            'treeUnits' => $treeUnits,
+            'parentOptions' => $parentOptions,
             'availableStaff' => Staff::active()->orderBy('kana')->orderBy('name')->get(['id', 'name', 'kana']),
         ];
     }
@@ -52,10 +67,36 @@ class OrganizationService
      */
     public function getPrintViewData(): array
     {
+        $treeUnits = $this->repository->getTreeWithStaff();
+
         return [
-            'treeUnits' => $this->repository->getTreeWithStaff(),
-            'units' => $this->repository->getAllOrderedWithStaff(),
+            'treeUnits' => $treeUnits,
+            'units' => $this->flattenTree($treeUnits),
         ];
+    }
+
+    /**
+     * ツリー構造を深さ優先探索（DFS）でフラット化し、各ユニットに depth 属性を付与
+     *
+     * @param  Collection<int, OrganizationUnit>  $tree
+     * @return Collection<int, OrganizationUnit>
+     */
+    public function flattenTree(Collection $tree, int $depth = 0): Collection
+    {
+        $flattened = new Collection;
+
+        foreach ($tree as $unit) {
+            $unit->setAttribute('depth', $depth);
+            $flattened->push($unit);
+
+            /** @var Collection<int, OrganizationUnit>|null $children */
+            $children = $unit->children;
+            if ($children && $children->isNotEmpty()) {
+                $flattened = $flattened->concat($this->flattenTree($children, $depth + 1));
+            }
+        }
+
+        return $flattened;
     }
 
     /**

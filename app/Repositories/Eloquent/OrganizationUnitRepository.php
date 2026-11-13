@@ -39,17 +39,29 @@ class OrganizationUnitRepository implements OrganizationUnitRepositoryInterface
     }
 
     /**
-     * 最上位（ルート）組織ユニットを子組織および担当スタッフ込みで取得
+     * 最上位（ルート）組織ユニットを深さ無制限の子孫組織および担当スタッフ込みで取得
      *
      * @return Collection<int, OrganizationUnit>
      */
     public function getTreeWithStaff(): Collection
     {
-        return OrganizationUnit::rootOnly()
-            ->with(['staff', 'children.staff', 'children.children.staff'])
+        $allUnits = OrganizationUnit::with(['staff', 'parent'])
             ->orderBy('display_order')
             ->orderBy('id')
             ->get();
+
+        $grouped = $allUnits->groupBy(fn (OrganizationUnit $unit) => $unit->parent_id ?? 0);
+
+        foreach ($allUnits as $unit) {
+            /** @var Collection<int, OrganizationUnit> $children */
+            $children = $grouped->get($unit->id, new Collection);
+            $unit->setRelation('children', $children);
+        }
+
+        /** @var Collection<int, OrganizationUnit> $roots */
+        $roots = $grouped->get(0, new Collection);
+
+        return $roots;
     }
 
     /**

@@ -234,4 +234,86 @@ class OrganizationManagementTest extends TestCase
         $response->assertSee('設営・設備');
         $response->assertSee('overcom');
     }
+
+    /**
+     * 組織図ビューで第4階層以下が正しく描画され、末端組織が横並びグループ化されること
+     */
+    public function test_organization_tree_renders_fourth_level_and_groups_leaf_units(): void
+    {
+        // 第1階層: 総務
+        $level1 = OrganizationUnit::factory()->create(['name' => '総務', 'display_order' => 10]);
+        // 第2階層: 調査
+        $level2 = OrganizationUnit::factory()->create(['name' => '調査', 'parent_id' => $level1->id, 'display_order' => 10]);
+        // 第3階層: 来場者数
+        $level3 = OrganizationUnit::factory()->create(['name' => '来場者数', 'parent_id' => $level2->id, 'display_order' => 10]);
+        // 第4階層: アンケート
+        $level4 = OrganizationUnit::factory()->create(['name' => 'アンケート', 'parent_id' => $level3->id, 'display_order' => 10]);
+
+        // 広報配下（非末端組織と末端組織の組み合わせ）
+        $kouhou = OrganizationUnit::factory()->create(['name' => '広報', 'display_order' => 20]);
+        $it = OrganizationUnit::factory()->create(['name' => 'ＩＴ部', 'parent_id' => $kouhou->id, 'display_order' => 10]);
+        $hp = OrganizationUnit::factory()->create(['name' => 'ホームページ', 'parent_id' => $it->id, 'display_order' => 10]);
+        $chirashi = OrganizationUnit::factory()->create(['name' => '新聞・チラシ', 'parent_id' => $kouhou->id, 'display_order' => 20]);
+        $poster = OrganizationUnit::factory()->create(['name' => 'ポスター', 'parent_id' => $kouhou->id, 'display_order' => 30]);
+
+        // 1. 組織図ビュー（index画面）の検証
+        $response = $this->actingAs($this->admin)->get(route('organizations.index'));
+        $response->assertStatus(200);
+
+        // 第4階層「アンケート」が表示されていること
+        $response->assertSee('総務');
+        $response->assertSee('調査');
+        $response->assertSee('来場者数');
+        $response->assertSee('アンケート');
+
+        // 広報および末端組織グループの検証
+        $response->assertSee('広報');
+        $response->assertSee('ＩＴ部');
+        $response->assertSee('ホームページ');
+        $response->assertSee('新聞・チラシ');
+        $response->assertSee('ポスター');
+        $response->assertSee('tree-leaf-group', false);
+
+        // 2. 印刷画面でも第4階層「アンケート」が表示されていること
+        $printResponse = $this->actingAs($this->admin)->get(route('organizations.print'));
+        $printResponse->assertStatus(200);
+        $printResponse->assertSee('アンケート');
+        $printResponse->assertSee('ホームページ');
+        $printResponse->assertSee('新聞・チラシ');
+    }
+
+    /**
+     * 一覧画面で親組織名が非表示になり、階層順に字下げ記号が表示されること
+     */
+    public function test_organization_index_displays_hierarchical_indent_and_hides_parent_name(): void
+    {
+        $parent = OrganizationUnit::factory()->create(['name' => '親組織部', 'display_order' => 10]);
+        $child = OrganizationUnit::factory()->create(['name' => '子組織係', 'parent_id' => $parent->id, 'display_order' => 20]);
+        $grandchild = OrganizationUnit::factory()->create(['name' => '孫組織班', 'parent_id' => $child->id, 'display_order' => 30]);
+
+        $response = $this->actingAs($this->admin)->get(route('organizations.index'));
+
+        $response->assertStatus(200);
+        // 名前列の下の「親: 親組織名」が表示されないこと
+        $response->assertDontSee('親: 親組織部');
+        $response->assertDontSee('親: 子組織係');
+
+        // 字下げ記号「└─」が表示されていること
+        $response->assertSee('└─', false);
+    }
+
+    /**
+     * モーダルの親組織選択肢が階層順に字下げ（└─）されて出力されること
+     */
+    public function test_organization_modal_displays_hierarchical_options_with_indent(): void
+    {
+        $parent = OrganizationUnit::factory()->create(['name' => '総務部', 'display_order' => 10]);
+        $child = OrganizationUnit::factory()->create(['name' => '本陣係', 'parent_id' => $parent->id, 'display_order' => 20]);
+
+        $response = $this->actingAs($this->admin)->get(route('organizations.index'));
+
+        $response->assertStatus(200);
+        // 親組織セレクトボックスに「　└─ 本陣係」のoptionが存在すること
+        $response->assertSee('　└─ 本陣係');
+    }
 }
