@@ -63,23 +63,23 @@
 
                                     <!-- 当日進行表 (各日) -->
                                     @forelse($navTimetables ?? [] as $tt)
-                                        <a href="{{ route('timetable.index', ['timetable_id' => $tt->id]) }}"
-                                            class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isCurrentTimetable($tt) ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                            <span class="text-base shrink-0">⏱️</span>
-                                            <div class="min-w-0 flex-1">
-                                                <div class="text-xs font-bold flex items-center justify-between">
-                                                    <span class="truncate">{{ $tt->target_date ? $tt->target_date->format('m/d') . ' ' : '' }}{{ $tt->name }}</span>
-                                                    @if($tt->status === 'active')
-                                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 shrink-0 ml-1">運行中</span>
-                                                    @endif
-                                                </div>
-                                                <p class="text-[10px] {{ $nav->isCurrentTimetable($tt) ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">
-                                                    {{ substr($tt->start_time, 0, 5) }}〜{{ substr($tt->end_time, 0, 5) }} / 進行表
-                                                </p>
+                                    <a href="{{ route('timetable.index', ['timetable_id' => $tt->id]) }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isCurrentTimetable($tt) ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">⏱️</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold flex items-center justify-between">
+                                                <span class="truncate">{{ $tt->target_date ? $tt->target_date->format('m/d') . ' ' : '' }}{{ $tt->name }}</span>
+                                                @if($tt->status === 'active')
+                                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 shrink-0 ml-1">運行中</span>
+                                                @endif
                                             </div>
-                                        </a>
+                                            <p class="text-[10px] {{ $nav->isCurrentTimetable($tt) ? 'text-indigo-100' : 'text-slate-400' }} truncate mt-0.5">
+                                                {{ substr($tt->start_time, 0, 5) }}〜{{ substr($tt->end_time, 0, 5) }} / 進行表
+                                            </p>
+                                        </div>
+                                    </a>
                                     @empty
-                                        <div class="p-2 text-center text-xs text-slate-400">現在予定の運行日はありません</div>
+                                    <div class="p-2 text-center text-xs text-slate-400">現在予定の運行日はありません</div>
                                     @endforelse
 
                                     <div class="border-t border-slate-800/80 my-1"></div>
@@ -360,17 +360,19 @@
                                         </div>
                                     </a>
 
-                                    <!-- スタッフ一覧 (未実装: テキストのみ表示) -->
-                                    <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-70 cursor-not-allowed">
-                                        <span class="text-base shrink-0">👥</span>
+                                    <!-- スタッフ一覧 (PDF) -->
+                                    <a href="{{ route('staff.pdf') }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition group cursor-pointer"
+                                        title="全登録スタッフ一覧のA4縦・2段組帳票PDFをダウンロード">
+                                        <span class="text-base shrink-0 group-hover:scale-110 transition-transform">👥</span>
                                         <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold flex items-center justify-between">
+                                            <div class="text-xs font-bold flex items-center space-x-1">
                                                 <span class="whitespace-nowrap truncate">スタッフ名簿一覧 (PDF)</span>
-                                                <span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.2 rounded font-mono">準備中</span>
+                                                <span class="text-[10px] text-slate-400">↓</span>
                                             </div>
-                                            <p class="text-[10px] text-slate-500 truncate mt-0.5">ボランティア・幹事の一覧印刷帳票</p>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">全スタッフ名簿一覧表 (A4縦・2段組)</p>
                                         </div>
-                                    </div>
+                                    </a>
 
                                     <!-- レンタル機材一覧 (未実装: テキストのみ表示) -->
                                     <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-70 cursor-not-allowed">
@@ -463,54 +465,54 @@
                                                 <span>Webセルフ登録受付</span>
                                             </span>
                                             @if($selfRegistrationStatus['status'] === 'open')
-                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center space-x-1">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                                    <span>受付中</span>
-                                                </span>
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center space-x-1">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                <span>受付中</span>
+                                            </span>
                                             @elseif($selfRegistrationStatus['status'] === 'upcoming')
-                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
-                                                    受付前(予約)
-                                                </span>
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                                                受付前(予約)
+                                            </span>
                                             @elseif($selfRegistrationStatus['status'] === 'closed')
-                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-600/30 text-slate-300 border border-slate-500/30">
-                                                    受付終了
-                                                </span>
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-600/30 text-slate-300 border border-slate-500/30">
+                                                受付終了
+                                            </span>
                                             @else
-                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30">
-                                                    停止中(手動)
-                                                </span>
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30">
+                                                停止中(手動)
+                                            </span>
                                             @endif
                                         </div>
 
                                         <div class="flex items-center space-x-1.5 pt-1">
                                             @if($selfRegistrationStatus['status'] === 'closed')
-                                                <button type="button" data-toggle-target="#registrationSettingModal"
-                                                    class="w-full py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
-                                                    <span>⚙️</span>
-                                                    <span>受付期間を再設定</span>
-                                                </button>
+                                            <button type="button" data-toggle-target="#registrationSettingModal"
+                                                class="w-full py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
+                                                <span>⚙️</span>
+                                                <span>受付期間を再設定</span>
+                                            </button>
                                             @else
-                                                <form action="{{ route('feature-settings.toggle', 'staff_self_registration') }}" method="POST" class="flex-1">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    @if($selfRegistrationSetting->is_enabled)
-                                                        <button type="submit" class="w-full py-1 px-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
-                                                            <span>⏹️</span>
-                                                            <span>{{ $selfRegistrationStatus['status'] === 'upcoming' ? '受付予約を停止' : '即時停止' }}</span>
-                                                        </button>
-                                                    @else
-                                                        <button type="submit" class="w-full py-1 px-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
-                                                            <span>▶️</span>
-                                                            <span>即時再開</span>
-                                                        </button>
-                                                    @endif
-                                                </form>
-
-                                                <button type="button" data-toggle-target="#registrationSettingModal"
-                                                    class="py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 rounded-lg text-[10px] font-bold transition flex items-center space-x-1 cursor-pointer whitespace-nowrap">
-                                                    <span>⚙️</span>
-                                                    <span>詳細設定</span>
+                                            <form action="{{ route('feature-settings.toggle', 'staff_self_registration') }}" method="POST" class="flex-1">
+                                                @csrf
+                                                @method('PATCH')
+                                                @if($selfRegistrationSetting->is_enabled)
+                                                <button type="submit" class="w-full py-1 px-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
+                                                    <span>⏹️</span>
+                                                    <span>{{ $selfRegistrationStatus['status'] === 'upcoming' ? '受付予約を停止' : '即時停止' }}</span>
                                                 </button>
+                                                @else
+                                                <button type="submit" class="w-full py-1 px-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
+                                                    <span>▶️</span>
+                                                    <span>即時再開</span>
+                                                </button>
+                                                @endif
+                                            </form>
+
+                                            <button type="button" data-toggle-target="#registrationSettingModal"
+                                                class="py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 rounded-lg text-[10px] font-bold transition flex items-center space-x-1 cursor-pointer whitespace-nowrap">
+                                                <span>⚙️</span>
+                                                <span>詳細設定</span>
+                                            </button>
                                             @endif
                                         </div>
                                     </div>
@@ -745,13 +747,12 @@
                                 </div>
                                 <span class="text-[9px] bg-slate-800 text-slate-400 px-1 rounded font-mono shrink-0">準備中</span>
                             </div>
-                            <div class="p-2 bg-slate-800/40 rounded-xl flex items-center justify-between text-slate-500 min-w-0 opacity-70">
-                                <div class="flex items-center space-x-1.5 truncate">
-                                    <span class="text-base shrink-0">👥</span>
-                                    <span class="truncate">スタッフ名簿</span>
-                                </div>
-                                <span class="text-[9px] bg-slate-800 text-slate-400 px-1 rounded font-mono shrink-0">準備中</span>
-                            </div>
+                            <a href="{{ route('staff.pdf') }}"
+                                class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0 hover:bg-slate-700/80 transition"
+                                title="全登録スタッフ一覧のA4縦・2段組帳票PDFをダウンロード">
+                                <span class="text-base shrink-0">👥</span>
+                                <span class="font-bold truncate">スタッフ名簿 (PDF) ↓</span>
+                            </a>
                             <div class="col-span-2 p-2 bg-slate-800/40 rounded-xl flex items-center justify-between text-slate-500 min-w-0 opacity-70">
                                 <div class="flex items-center space-x-1.5 truncate">
                                     <span class="text-base shrink-0">📦</span>
@@ -796,54 +797,54 @@
                                         <span>Webセルフ登録機能</span>
                                     </span>
                                     @if($selfRegistrationStatus['status'] === 'open')
-                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center space-x-1">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                            <span>受付中</span>
-                                        </span>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center space-x-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                        <span>受付中</span>
+                                    </span>
                                     @elseif($selfRegistrationStatus['status'] === 'upcoming')
-                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
-                                            受付前(予約)
-                                        </span>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                                        受付前(予約)
+                                    </span>
                                     @elseif($selfRegistrationStatus['status'] === 'closed')
-                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-600/30 text-slate-300 border border-slate-500/30">
-                                            受付終了
-                                        </span>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-600/30 text-slate-300 border border-slate-500/30">
+                                        受付終了
+                                    </span>
                                     @else
-                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30">
-                                            停止中(手動)
-                                        </span>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30">
+                                        停止中(手動)
+                                    </span>
                                     @endif
                                 </div>
 
                                 <div class="flex items-center space-x-1.5 pt-1">
                                     @if($selfRegistrationStatus['status'] === 'closed')
-                                        <button type="button" data-toggle-target="#registrationSettingModal"
-                                            class="w-full py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
-                                            <span>⚙️</span>
-                                            <span>受付期間を再設定</span>
-                                        </button>
+                                    <button type="button" data-toggle-target="#registrationSettingModal"
+                                        class="w-full py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
+                                        <span>⚙️</span>
+                                        <span>受付期間を再設定</span>
+                                    </button>
                                     @else
-                                        <form action="{{ route('feature-settings.toggle', 'staff_self_registration') }}" method="POST" class="flex-1">
-                                            @csrf
-                                            @method('PATCH')
-                                            @if($selfRegistrationSetting->is_enabled)
-                                                <button type="submit" class="w-full py-1 px-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
-                                                    <span>⏹️</span>
-                                                    <span>{{ $selfRegistrationStatus['status'] === 'upcoming' ? '受付予約を停止' : '即時停止' }}</span>
-                                                </button>
-                                            @else
-                                                <button type="submit" class="w-full py-1 px-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
-                                                    <span>▶️</span>
-                                                    <span>即時再開</span>
-                                                </button>
-                                            @endif
-                                        </form>
-
-                                        <button type="button" data-toggle-target="#registrationSettingModal"
-                                            class="py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 rounded-lg text-[10px] font-bold transition flex items-center space-x-1 cursor-pointer whitespace-nowrap">
-                                            <span>⚙️</span>
-                                            <span>詳細設定</span>
+                                    <form action="{{ route('feature-settings.toggle', 'staff_self_registration') }}" method="POST" class="flex-1">
+                                        @csrf
+                                        @method('PATCH')
+                                        @if($selfRegistrationSetting->is_enabled)
+                                        <button type="submit" class="w-full py-1 px-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
+                                            <span>⏹️</span>
+                                            <span>{{ $selfRegistrationStatus['status'] === 'upcoming' ? '受付予約を停止' : '即時停止' }}</span>
                                         </button>
+                                        @else
+                                        <button type="submit" class="w-full py-1 px-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
+                                            <span>▶️</span>
+                                            <span>即時再開</span>
+                                        </button>
+                                        @endif
+                                    </form>
+
+                                    <button type="button" data-toggle-target="#registrationSettingModal"
+                                        class="py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 rounded-lg text-[10px] font-bold transition flex items-center space-x-1 cursor-pointer whitespace-nowrap">
+                                        <span>⚙️</span>
+                                        <span>詳細設定</span>
+                                    </button>
                                     @endif
                                 </div>
                             </div>
@@ -891,7 +892,7 @@
                             <input type="hidden" name="is_enabled" value="0">
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="is_enabled" value="1" class="sr-only peer"
-                                       {{ old('is_enabled', $selfRegistrationSetting->is_enabled) ? 'checked' : '' }}>
+                                    {{ old('is_enabled', $selfRegistrationSetting->is_enabled) ? 'checked' : '' }}>
                                 <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                             </label>
                         </div>
@@ -907,8 +908,8 @@
                                 </button>
                             </div>
                             <input type="datetime-local" id="opened_at" name="opened_at"
-                                   value="{{ old('opened_at', $selfRegistrationSetting->opened_at?->timezone('Asia/Tokyo')->format('Y-m-d\TH:i')) }}"
-                                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                value="{{ old('opened_at', $selfRegistrationSetting->opened_at?->timezone('Asia/Tokyo')->format('Y-m-d\TH:i')) }}"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
 
                         <!-- 受付終了日時 -->
@@ -922,8 +923,8 @@
                                 </button>
                             </div>
                             <input type="datetime-local" id="closed_at" name="closed_at"
-                                   value="{{ old('closed_at', $selfRegistrationSetting->closed_at?->timezone('Asia/Tokyo')->format('Y-m-d\TH:i')) }}"
-                                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                value="{{ old('closed_at', $selfRegistrationSetting->closed_at?->timezone('Asia/Tokyo')->format('Y-m-d\TH:i')) }}"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
 
                         <!-- 停止時・期間外メッセージ -->
@@ -932,17 +933,17 @@
                                 特記事項・案内メッセージ（任意）
                             </label>
                             <textarea id="notice_message" name="notice_message" rows="3"
-                                      placeholder="受付停止中や期間外に表示したい案内文があれば入力してください（未入力の場合は自動生成メッセージを表示）。"
-                                      class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ old('notice_message', $selfRegistrationSetting->notice_message ?? '') }}</textarea>
+                                placeholder="受付停止中や期間外に表示したい案内文があれば入力してください（未入力の場合は自動生成メッセージを表示）。"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ old('notice_message', $selfRegistrationSetting->notice_message ?? '') }}</textarea>
                         </div>
 
                         <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
                             <button type="button" data-close-target="#registrationSettingModal"
-                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
+                                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
                                 キャンセル
                             </button>
                             <button type="submit"
-                                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
+                                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
                                 設定を保存
                             </button>
                         </div>

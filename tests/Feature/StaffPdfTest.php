@@ -49,6 +49,18 @@ class StaffPdfTest extends TestCase
     }
 
     /**
+     * グローバルメニュー（ナビゲーション）にスタッフ名簿一覧PDFへのリンクが含まれていること
+     */
+    public function test_global_navigation_includes_staff_pdf_link(): void
+    {
+        $response = $this->actingAs($this->admin)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee(route('staff.pdf'), false);
+        $response->assertSee('スタッフ名簿一覧 (PDF)');
+    }
+
+    /**
      * 認証済みユーザーが正常にPDFをダウンロードでき、ヘッダーおよびバイナリが返却されること
      */
     public function test_authenticated_user_can_download_staff_pdf(): void
