@@ -16,6 +16,7 @@ class ScheduleSeeder extends Seeder
     {
         $admin = User::where('role', 'admin')->first() ?? User::factory()->create(['role' => 'admin']);
         $yamamichi = Staff::find(13) ?? Staff::where('name', '山道 在明')->first();
+        $terai = Staff::find(24) ?? Staff::where('name', '寺井 智之')->first();
 
         $schedules = [
             // =========================================================================
@@ -38,12 +39,12 @@ class ScheduleSeeder extends Seeder
                 'title' => '総会／反省会・慰労会（打ち上げ）',
                 'category' => 'committee',
                 'start_date' => '2026-11-21',
-                'end_date' => null,
+                'end_date' => '2026-11-21',
                 'start_time' => '18:00',
                 'end_time' => '20:30',
                 'location' => 'コミュニティルーム',
                 'status' => 'planned',
-                'staff_id' => null,
+                'staff_id' => $terai?->id,
                 'description' => '各部門の反省・総括報告、次年度への申し送り事項まとめ、各スタッフで洗濯・乾燥した陣羽織の回収・点検。',
                 'created_by' => $admin->id,
             ],

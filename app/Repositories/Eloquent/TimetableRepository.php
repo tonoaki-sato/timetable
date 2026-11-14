@@ -57,8 +57,8 @@ class TimetableRepository implements TimetableRepositoryInterface
     protected function calculateTimeDistanceToNow(Timetable $timetable, Carbon $now): int
     {
         $targetDateStr = $timetable->target_date?->format('Y-m-d') ?? (string) $timetable->target_date;
-        $startDateTime = Carbon::parse($targetDateStr . ' ' . $timetable->start_time);
-        $endDateTime = Carbon::parse($targetDateStr . ' ' . $timetable->end_time);
+        $startDateTime = Carbon::parse($targetDateStr.' '.$timetable->start_time);
+        $endDateTime = Carbon::parse($targetDateStr.' '.$timetable->end_time);
 
         if ($timetable->status === 'active' || ($now->gte($startDateTime) && $now->lte($endDateTime))) {
             return 0;

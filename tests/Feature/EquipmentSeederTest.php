@@ -53,9 +53,9 @@ class EquipmentSeederTest extends TestCase
         $this->assertSame('13:00', $firstConePlan->start_time);
         $this->assertSame('15:00', $firstConePlan->end_time);
 
-        $lastConePlan = $cone->plans->firstWhere('title', '番所地下倉庫格納完了');
+        $lastConePlan = $cone->plans->firstWhere('title', '撤去・格納完了');
         $this->assertNotNull($lastConePlan);
-        $this->assertSame('2027-10-10', $lastConePlan->target_date?->format('Y-m-d'));
+        $this->assertSame('2027-10-11', $lastConePlan->target_date?->format('Y-m-d'));
         $this->assertSame('18:00', $lastConePlan->start_time);
         $this->assertSame('19:00', $lastConePlan->end_time);
 

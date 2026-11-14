@@ -3,6 +3,7 @@
 namespace App\Presenters;
 
 use App\Models\Timetable;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class NavigationPresenter
@@ -120,12 +121,12 @@ class NavigationPresenter
             return null;
         }
 
-        $now = \Carbon\Carbon::now();
+        $now = Carbon::now();
 
         return $this->navTimetables->sortBy(function (Timetable $t) use ($now): int {
             $targetDateStr = $t->target_date?->format('Y-m-d') ?? (string) $t->target_date;
-            $startDateTime = \Carbon\Carbon::parse($targetDateStr . ' ' . $t->start_time);
-            $endDateTime = \Carbon\Carbon::parse($targetDateStr . ' ' . $t->end_time);
+            $startDateTime = Carbon::parse($targetDateStr.' '.$t->start_time);
+            $endDateTime = Carbon::parse($targetDateStr.' '.$t->end_time);
 
             if ($t->status === 'active' || ($now->gte($startDateTime) && $now->lte($endDateTime))) {
                 return 0;

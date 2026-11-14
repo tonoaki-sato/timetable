@@ -92,8 +92,7 @@ class OrganizationSeeder extends Seeder
                 'parent_id' => 4,
                 'name' => 'ステカン',
                 'short_description' => 'ステカンの準備と設置、撤去',
-                'description' => '外周設置、撤去: 萩原 繁夫、荘司 稔
-内周撤去: 長澤 友希',
+                'description' => "外周設置、撤去: 萩原 繁夫、荘司 稔\r\n内周撤去: 長澤 友希",
                 'display_order' => 110,
             ],
             [
@@ -101,8 +100,7 @@ class OrganizationSeeder extends Seeder
                 'parent_id' => 4,
                 'name' => 'カラーコーン',
                 'short_description' => 'カラーコーン搬出入、設置',
-                'description' => '主担当: Jouko
-計画: 佐藤 外亮',
+                'description' => "主担当: Jouko\r\n計画: 佐藤 外亮",
                 'display_order' => 120,
             ],
             [
