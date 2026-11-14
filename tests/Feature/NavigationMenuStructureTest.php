@@ -57,7 +57,7 @@ class NavigationMenuStructureTest extends TestCase
     }
 
     /**
-     * 「当日運行」メニューに当日進行表・人員当日配置・当日スタッフ登録・搬出入チェックが含まれること
+     * 「当日運行」メニューに当日進行表・スタッフタイムライン・搬出入チェックが含まれ、当日スタッフ登録が含まれないこと
      */
     public function test_day_operations_menu_contains_expected_items(): void
     {
@@ -67,13 +67,14 @@ class NavigationMenuStructureTest extends TestCase
         // 進行表
         $response->assertSee(route('timetable.index', ['timetable_id' => $this->timetable->id]));
 
-        // 人員当日配置
+        // スタッフタイムライン（旧：人員当日配置）
         $response->assertSee(route('timetables.staff-timeline', $this->timetable));
-        $response->assertSee('人員当日配置');
+        $response->assertSee('スタッフタイムライン');
+        $response->assertDontSee('人員当日配置');
 
-        // 当日スタッフ登録
-        $response->assertSee(route('staff.create'));
-        $response->assertSee('当日スタッフ登録');
+        // 当日スタッフ登録リンクはメニューから削除されていること
+        $response->assertDontSee('当日スタッフ登録');
+        $response->assertDontSee(route('staff.create'));
 
         // 搬出入チェック
         $response->assertSee(route('logistics.index'));

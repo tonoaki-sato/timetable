@@ -85,34 +85,21 @@
                                     <div class="border-t border-slate-800/80 my-1"></div>
 
                                     <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
-                                        <span>👥 人員当日配置・動態調整</span>
+                                        <span>👥 スタッフタイムライン・動態調整</span>
                                         <span class="text-[9px] text-amber-300 font-mono font-bold">現場対応</span>
                                     </div>
 
-                                    <!-- 人員当日配置 (稼働タイムライン) -->
+                                    <!-- スタッフタイムライン (稼働タイムライン) -->
                                     @if($nav->targetPrintTimetable())
                                     <a href="{{ route('timetables.staff-timeline', $nav->targetPrintTimetable()) }}"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.staff-timeline') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">👥</span>
                                         <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">人員当日配置</div>
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">スタッフタイムライン</div>
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">タイムライン・空き枠特定・動態調整</p>
                                         </div>
                                     </a>
                                     @endif
-
-                                    <!-- 当日スタッフ登録（紹介・飛び入り） -->
-                                    <a href="{{ route('staff.create') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('staff.create') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">👷</span>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold flex items-center justify-between gap-1">
-                                                <span class="whitespace-nowrap truncate">当日スタッフ登録</span>
-                                                <span class="text-[9px] font-mono font-bold px-1.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 shrink-0">即時受付</span>
-                                            </div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">紹介者同班配属 / 不足タスク充当 / 名札発行</p>
-                                        </div>
-                                    </a>
 
                                     <!-- 搬出入チェック -->
                                     @if($nav->hasTimetables())
@@ -692,16 +679,9 @@
                             @if($nav->targetPrintTimetable())
                             <a href="{{ route('timetables.staff-timeline', $nav->targetPrintTimetable()) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-white min-w-0">
                                 <span class="text-base shrink-0">👥</span>
-                                <span class="font-bold truncate">人員当日配置</span>
+                                <span class="font-bold truncate">スタッフタイムライン</span>
                             </a>
                             @endif
-                            <a href="{{ route('staff.create') }}" class="col-span-2 p-2 bg-emerald-950/40 border border-emerald-600/40 rounded-xl flex items-center justify-between text-emerald-200">
-                                <span class="flex items-center space-x-2 min-w-0">
-                                    <span class="text-base shrink-0">👷</span>
-                                    <span class="font-bold truncate">当日スタッフ登録</span>
-                                </span>
-                                <span class="text-[9px] font-mono text-emerald-300 shrink-0">名札手渡し直通 →</span>
-                            </a>
                             @if($nav->hasTimetables())
                             <a href="{{ route('logistics.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🚚</span>
