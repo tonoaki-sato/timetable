@@ -134,4 +134,32 @@ class SchedulePresenter
 
         return implode("\n", $lines);
     }
+
+    /**
+     * PDF表示用の日時・期間フォーマット
+     */
+    public function pdfDatePeriod(): string
+    {
+        if (! $this->schedule->start_date) {
+            return '-';
+        }
+
+        $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
+        $startWeekday = $weekdayNames[$this->schedule->start_date->dayOfWeek] ?? '';
+        $startDateStr = $this->schedule->start_date->format('Y/m/d')."({$startWeekday})";
+
+        if ($this->schedule->end_date && $this->schedule->end_date->ne($this->schedule->start_date)) {
+            $endWeekday = $weekdayNames[$this->schedule->end_date->dayOfWeek] ?? '';
+            $endDateStr = $this->schedule->end_date->format('Y/m/d')."({$endWeekday})";
+
+            return "{$startDateStr} 〜 {$endDateStr}";
+        }
+
+        $timeRange = $this->formattedTimeRange();
+        if ($timeRange) {
+            return "{$startDateStr} {$timeRange}";
+        }
+
+        return $startDateStr;
+    }
 }

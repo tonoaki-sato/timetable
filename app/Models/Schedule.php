@@ -190,6 +190,14 @@ class Schedule extends Model
     }
 
     /**
+     * PDF用の日時・期間フォーマット表示
+     */
+    public function getPdfDatePeriodAttribute(): string
+    {
+        return (new SchedulePresenter($this))->pdfDatePeriod();
+    }
+
+    /**
      * 開催案内用の全体共有テキスト（LINE告知等）
      */
     public function getShareTextAttribute(): string

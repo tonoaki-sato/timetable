@@ -22,6 +22,20 @@ interface ScheduleRepositoryInterface
     ): LengthAwarePaginator;
 
     /**
+     * PDF出力用スケジュール一覧を取得
+     *
+     * @param  array<int, string>|null  $categories
+     * @return Collection<int, Schedule>
+     */
+    public function getFilteredForPdf(
+        ?array $categories = null,
+        ?string $status = null,
+        ?string $search = null,
+        ?int $staffId = null,
+        ?string $tab = null
+    ): Collection;
+
+    /**
      * 指定月のスケジュール一覧の取得（カレンダー用）
      *
      * @return Collection<int, Schedule>

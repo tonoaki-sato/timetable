@@ -4,6 +4,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initScheduleCopyButtons();
     initCategoryFilters();
+    initSchedulePdfButton();
 });
 
 /**
@@ -114,6 +115,39 @@ function updateCategoryFilterState() {
                 .join(',');
         }
     }
+
+    // PDFダウンロードボタンとの同期
+    const pdfButton = document.getElementById('btn-download-schedule-pdf');
+    if (pdfButton) {
+        const pdfUrl = new URL(pdfButton.href, window.location.origin);
+        if (total === 0 || visible === total || visible === 0) {
+            pdfUrl.searchParams.delete('category');
+        } else {
+            const selectedIds = visibleChips
+                .map((chip) => chip.getAttribute('data-category-id'))
+                .filter(Boolean)
+                .join(',');
+            pdfUrl.searchParams.set('category', selectedIds);
+        }
+        pdfButton.href = pdfUrl.pathname + (pdfUrl.search ? pdfUrl.search : '');
+    }
+}
+
+/**
+ * PDFダウンロードボタンのクエリ同期ハンドラ初期化
+ */
+function initSchedulePdfButton() {
+    const pdfButton = document.getElementById('btn-download-schedule-pdf');
+    if (!pdfButton) return;
+
+    pdfButton.addEventListener('click', () => {
+        const currentParams = new URLSearchParams(window.location.search);
+        const pdfUrl = new URL(pdfButton.getAttribute('href'), window.location.origin);
+        currentParams.forEach((value, key) => {
+            pdfUrl.searchParams.set(key, value);
+        });
+        pdfButton.href = pdfUrl.pathname + (pdfUrl.search ? pdfUrl.search : '');
+    });
 }
 
 /**

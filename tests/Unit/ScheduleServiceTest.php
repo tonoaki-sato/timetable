@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Services\ScheduleService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
@@ -118,5 +119,39 @@ class ScheduleServiceTest extends TestCase
         $service = new ScheduleService($mockRepo);
 
         $this->assertTrue($service->deleteSchedule($schedule));
+    }
+
+    /**
+     * getPdfViewData がリポジトリの getFilteredForPdf を呼び出し、整形したPDFデータを返すこと
+     */
+    public function test_get_pdf_view_data(): void
+    {
+        $mockCollection = new Collection([
+            new Schedule(['title' => '幹事会']),
+        ]);
+
+        $mockRepo = Mockery::mock(ScheduleRepositoryInterface::class);
+        $mockRepo->shouldReceive('getFilteredForPdf')
+            ->once()
+            ->with(['committee'], 'planned', '検索語', 5, 'upcoming')
+            ->andReturn($mockCollection);
+
+        $service = new ScheduleService($mockRepo);
+
+        $result = $service->getPdfViewData(
+            category: 'committee',
+            status: 'planned',
+            search: '検索語',
+            staffId: 5,
+            tab: 'upcoming'
+        );
+
+        $this->assertSame('保土ケ谷宿場まつり実行委員会 年間スケジュール一覧', $result['title']);
+        $this->assertSame($mockCollection, $result['schedules']);
+        $this->assertStringContainsString('対象期間: 今後の予定', $result['subtitle']);
+        $this->assertStringContainsString('区分: 会議・打ち合わせ', $result['subtitle']);
+        $this->assertStringContainsString('状態: 予定', $result['subtitle']);
+        $this->assertStringContainsString('検索: 「検索語」', $result['subtitle']);
+        $this->assertNotEmpty($result['generatedAt']);
     }
 }

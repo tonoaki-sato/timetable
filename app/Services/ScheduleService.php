@@ -149,4 +149,64 @@ class ScheduleService
     {
         return $this->scheduleRepository->delete($schedule);
     }
+
+    /**
+     * 年間スケジュール一覧PDF用のビューデータを取得
+     *
+     * @return array<string, mixed>
+     */
+    public function getPdfViewData(
+        mixed $category = null,
+        ?string $status = null,
+        ?string $search = null,
+        ?int $staffId = null,
+        ?string $tab = 'upcoming',
+    ): array {
+        $selectedCategories = $this->parseCategories($category);
+
+        $schedules = $this->scheduleRepository->getFilteredForPdf(
+            categories: $selectedCategories,
+            status: $status,
+            search: $search,
+            staffId: $staffId,
+            tab: $tab
+        );
+
+        $tabLabel = match ($tab) {
+            'past' => '過去の記録',
+            'all' => 'すべての期間',
+            default => '今後の予定',
+        };
+
+        $subtitleParts = ["対象期間: {$tabLabel}"];
+
+        if ($selectedCategories !== null) {
+            $catLabels = [];
+            foreach ($selectedCategories as $catKey) {
+                if ($catKey === 'timetable') {
+                    $catLabels[] = '運行スケジュール';
+                } elseif (isset(Schedule::CATEGORIES[$catKey])) {
+                    $catLabels[] = Schedule::CATEGORIES[$catKey];
+                }
+            }
+            if ($catLabels !== []) {
+                $subtitleParts[] = '区分: '.implode('、', $catLabels);
+            }
+        }
+
+        if ($status && isset(Schedule::STATUSES[$status])) {
+            $subtitleParts[] = '状態: '.Schedule::STATUSES[$status];
+        }
+
+        if ($search) {
+            $subtitleParts[] = "検索: 「{$search}」";
+        }
+
+        return [
+            'title' => '保土ケ谷宿場まつり実行委員会 年間スケジュール一覧',
+            'subtitle' => implode(' | ', $subtitleParts),
+            'schedules' => $schedules,
+            'generatedAt' => now()->format('Y年n月j日 H:i'),
+        ];
+    }
 }

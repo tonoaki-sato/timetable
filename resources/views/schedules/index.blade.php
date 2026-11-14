@@ -16,6 +16,13 @@
                 <span>📅</span>
                 <span>カレンダー表示に切替</span>
             </a>
+            <a href="{{ route('schedules.pdf', request()->query()) }}"
+                id="btn-download-schedule-pdf"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0 cursor-pointer"
+                title="現在の表示条件でスケジュール一覧をA4縦PDFダウンロード">
+                <span>📄</span>
+                <span>年間スケジュール一覧PDF</span>
+            </a>
             @can('create', App\Models\Schedule::class)
             <a href="{{ route('schedules.create') }}"
                 class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">

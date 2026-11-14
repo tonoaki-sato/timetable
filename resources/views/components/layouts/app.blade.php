@@ -346,17 +346,19 @@
                                         </div>
                                     </a>
 
-                                    <!-- 年間スケジュール表 (未実装: テキストのみ表示) -->
-                                    <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-70 cursor-not-allowed">
-                                        <span class="text-base shrink-0">📅</span>
+                                    <!-- 年間スケジュール表 (PDF) -->
+                                    <a href="{{ route('schedules.pdf') }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition group cursor-pointer"
+                                        title="年間スケジュール一覧のA4縦帳票PDFをダウンロード">
+                                        <span class="text-base shrink-0 group-hover:scale-110 transition-transform">📅</span>
                                         <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold flex items-center justify-between">
+                                            <div class="text-xs font-bold flex items-center space-x-1">
                                                 <span class="whitespace-nowrap truncate">年間スケジュール表 (PDF)</span>
-                                                <span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.2 rounded font-mono">準備中</span>
+                                                <span class="text-[10px] text-slate-400">↓</span>
                                             </div>
-                                            <p class="text-[10px] text-slate-500 truncate mt-0.5">年間工程・会議日程一覧表</p>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">年間工程・会議日程一覧表 (A4縦)</p>
                                         </div>
-                                    </div>
+                                    </a>
 
                                     <!-- スタッフ一覧 (未実装: テキストのみ表示) -->
                                     <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-70 cursor-not-allowed">

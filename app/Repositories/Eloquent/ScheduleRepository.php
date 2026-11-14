@@ -6,6 +6,7 @@ use App\Models\Schedule;
 use App\Models\Timetable;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Override;
 
@@ -49,6 +50,63 @@ class ScheduleRepository implements ScheduleRepositoryInterface
         }
 
         return $query->paginate($perPage)->withQueryString();
+    }
+
+    #[Override]
+    public function getFilteredForPdf(
+        ?array $categories = null,
+        ?string $status = null,
+        ?string $search = null,
+        ?int $staffId = null,
+        ?string $tab = null
+    ): Collection {
+        if ($categories !== null && $categories === []) {
+            return new Collection;
+        }
+
+        $query = Schedule::with(['assignee', 'creator']);
+
+        if ($tab === 'upcoming') {
+            $query->upcoming();
+        } elseif ($tab === 'past') {
+            $query->past();
+        } else {
+            $query->orderBy('start_date', 'asc')->orderBy('start_time', 'asc');
+        }
+
+        if ($categories !== null) {
+            $hasTimetable = in_array('timetable', $categories, true);
+            $plainCategories = array_values(array_diff($categories, ['timetable']));
+
+            $query->where(function (Builder $q) use ($hasTimetable, $plainCategories): void {
+                if ($hasTimetable && $plainCategories !== []) {
+                    $q->whereNotNull('timetable_id')
+                        ->orWhere(function (Builder $sub) use ($plainCategories): void {
+                            $sub->whereNull('timetable_id')
+                                ->whereIn('category', $plainCategories);
+                        });
+                } elseif ($hasTimetable) {
+                    $q->whereNotNull('timetable_id');
+                } else {
+                    $q->whereNull('timetable_id')
+                        ->whereIn('category', $plainCategories);
+                }
+            });
+        }
+
+        if ($status) {
+            $query->status($status);
+        }
+
+        if ($staffId) {
+            $query->assignee($staffId);
+        }
+
+        if ($search) {
+            $query->search($search);
+        }
+
+        return $query->get();
     }
 
     #[Override]

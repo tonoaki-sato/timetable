@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Schedule\DownloadSchedulesPdfAction;
 use App\Http\Requests\StoreScheduleRequest;
 use App\Http\Requests\UpdateScheduleRequest;
 use App\Models\Schedule;
@@ -9,12 +10,14 @@ use App\Services\ScheduleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class ScheduleController extends Controller
 {
     public function __construct(
-        protected ScheduleService $scheduleService
+        protected ScheduleService $scheduleService,
+        protected DownloadSchedulesPdfAction $downloadSchedulesPdfAction
     ) {}
 
     /**
@@ -40,6 +43,28 @@ class ScheduleController extends Controller
         );
 
         return view('schedules.index', $viewData);
+    }
+
+    /**
+     * 年間スケジュール一覧 A4縦PDFのダウンロード
+     */
+    public function pdf(Request $request): Response
+    {
+        $this->authorize('viewAny', Schedule::class);
+
+        $category = $request->input('category');
+        $status = $request->input('status');
+        $search = $request->input('search');
+        $staffId = $request->filled('staff_id') ? (int) $request->input('staff_id') : null;
+        $tab = $request->input('tab', 'upcoming');
+
+        return $this->downloadSchedulesPdfAction->execute(
+            category: $category,
+            status: $status,
+            search: $search,
+            staffId: $staffId,
+            tab: $tab
+        );
     }
 
     /**

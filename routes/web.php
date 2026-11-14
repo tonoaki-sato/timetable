@@ -77,6 +77,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class);
 
     // スケジュール管理リソースルート
+    Route::get('schedules/pdf', [ScheduleController::class, 'pdf'])->name('schedules.pdf');
     Route::resource('schedules', ScheduleController::class);
 
     // 現場スタッフ（ボランティア）管理・印刷・CSVルート
