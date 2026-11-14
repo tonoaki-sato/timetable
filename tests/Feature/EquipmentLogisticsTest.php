@@ -702,4 +702,16 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertRedirect();
         $this->assertSame(3, $equipment->plans()->where('timetable_id', $this->timetable1->id)->count());
     }
+
+    /**
+     * 旧 /logistics ルート（タイムテーブル選択ハブ）が廃止され、404 Not Found を返すこと
+     */
+    public function test_legacy_logistics_select_route_returns_not_found(): void
+    {
+        $this->actingAs($this->operator);
+
+        $response = $this->get('/logistics');
+
+        $response->assertNotFound();
+    }
 }

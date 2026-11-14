@@ -56,13 +56,6 @@ interface TimetableRepositoryInterface
     public function findForDatePrioritizingActive(string $dateStr): ?Timetable;
 
     /**
-     * 搬出入計画ステップ数カウント付きで全タイムテーブルを取得（日付順）
-     *
-     * @return Collection<int, Timetable>
-     */
-    public function getAllWithLogisticsPlansCount(): Collection;
-
-    /**
      * IDによる取得（タスクおよびスタッフアサイン付き）
      */
     public function findWithDetails(int $id): ?Timetable;

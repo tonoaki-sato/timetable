@@ -307,16 +307,6 @@ class EquipmentLogisticsService
     }
 
     /**
-     * タイムテーブル選択画面用のタイムテーブル一覧を取得
-     *
-     * @return Collection<int, Timetable>
-     */
-    public function getTimetablesForSelect(): Collection
-    {
-        return $this->timetableRepository->getAllWithLogisticsPlansCount();
-    }
-
-    /**
      * リクエスト入力の equipment_ids を正の整数配列へ正規化（未指定時は null）
      *
      * @return array<int, int>|null

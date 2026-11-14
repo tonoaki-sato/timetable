@@ -81,14 +81,6 @@ class TimetableRepository implements TimetableRepositoryInterface
     }
 
     #[Override]
-    public function getAllWithLogisticsPlansCount(): Collection
-    {
-        return Timetable::withCount('logisticsPlans')
-            ->orderBy('target_date', 'asc')
-            ->get();
-    }
-
-    #[Override]
     public function findWithDetails(int $id): ?Timetable
     {
         return Timetable::with([

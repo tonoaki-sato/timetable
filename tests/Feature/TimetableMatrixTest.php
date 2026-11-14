@@ -325,7 +325,7 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('運行日程管理');
         $response->assertSee('搬出入計画');
         $response->assertSee(route('timetables.index'));
-        $response->assertSee(route('logistics.index'));
+        $response->assertSee(route('timetables.logistics.index', 4));
 
         // セクション3: 日程・スケジュール
         $response->assertSee('日程・スケジュール');

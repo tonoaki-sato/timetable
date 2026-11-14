@@ -168,7 +168,6 @@ Route::middleware('auth')->group(function () {
     });
 
     // 2. 搬出入計画・カスタムパターン管理 (Logistics & Operations)
-    Route::get('/logistics', [EquipmentLogisticsController::class, 'select'])->name('logistics.index');
     Route::group([], function () {
         Route::get('timetables/{timetable}/logistics', [EquipmentLogisticsController::class, 'index'])->name('timetables.logistics.index');
         Route::get('timetables/{timetable}/logistics/print', [EquipmentLogisticsController::class, 'print'])->name('timetables.logistics.print');

@@ -7,7 +7,6 @@ use App\Models\Equipment;
 use App\Models\Timetable;
 use App\Services\EquipmentLogisticsService;
 use App\Services\TimetableService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
@@ -19,33 +18,6 @@ class EquipmentLogisticsController extends Controller
         protected DownloadEquipmentLogisticsPdfAction $downloadLogisticsPdfAction,
         protected TimetableService $timetableService
     ) {}
-
-    /**
-     * 搬出入計画管理の対象タイムテーブル選択画面の表示
-     */
-    public function select(Request $request): View|RedirectResponse
-    {
-        $this->authorize('viewAny', Equipment::class);
-
-        $timetables = $this->logisticsService->getTimetablesForSelect();
-
-        if ($timetables->isEmpty()) {
-            return redirect()->route('timetables.index')
-                ->with('info', '搬出入計画を管理する前に、運行日を登録してください。');
-        }
-
-        if ($timetables->count() === 1) {
-            return redirect()->route('timetables.logistics.index', array_merge(
-                ['timetable' => $timetables->first()],
-                $request->query()
-            ));
-        }
-
-        return view('logistics.select', [
-            'timetables' => $timetables,
-            'queryParams' => $request->query(),
-        ]);
-    }
 
     /**
      * 指定タイムテーブルにおける搬出入計画一覧画面の表示

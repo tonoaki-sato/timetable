@@ -115,7 +115,7 @@
                                     </a>
 
                                     <!-- 搬出入チェック -->
-                                    <a href="{{ route('logistics.index') }}"
+                                    <a href="{{ route('timetables.logistics.index', 4) }}"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isLogisticsPlansActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🚚</span>
                                         <div class="min-w-0 flex-1">
@@ -190,7 +190,7 @@
                                         </div>
                                     </a>
                                     @endif
-                                    <a href="{{ route('logistics.index') }}"
+                                    <a href="{{ route('timetables.logistics.index', 4) }}"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isLogisticsPlansActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🚚</span>
                                         <div class="min-w-0 flex-1">
@@ -644,7 +644,7 @@
                                 </span>
                                 <span class="text-[9px] font-mono text-emerald-300 shrink-0">名札手渡し直通 →</span>
                             </a>
-                            <a href="{{ route('logistics.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            <a href="{{ route('timetables.logistics.index', 4) }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🚚</span>
                                 <span class="font-bold truncate">搬出入チェック</span>
                             </a>
@@ -683,7 +683,7 @@
                                 <span class="font-bold truncate">人員事前配置</span>
                             </a>
                             @endif
-                            <a href="{{ route('logistics.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            <a href="{{ route('timetables.logistics.index', 4) }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🚚</span>
                                 <span class="font-bold truncate">搬出入計画</span>
                             </a>

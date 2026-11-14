@@ -76,7 +76,7 @@ class NavigationMenuStructureTest extends TestCase
         $response->assertSee('当日スタッフ登録');
 
         // 搬出入チェック
-        $response->assertSee(route('logistics.index'));
+        $response->assertSee(route('timetables.logistics.index', 4));
         $response->assertSee('搬出入チェック');
     }
 
@@ -208,7 +208,7 @@ class NavigationMenuStructureTest extends TestCase
             route('timetable.index', ['timetable_id' => $this->timetable->id]),
             route('timetables.staff-timeline', $this->timetable),
             route('staff.create'),
-            route('logistics.index'),
+            route('timetables.logistics.index', $this->timetable),
             route('preparation-navigator.index'),
             route('timetables.index'),
             route('timetables.lanes.index', $this->timetable),
