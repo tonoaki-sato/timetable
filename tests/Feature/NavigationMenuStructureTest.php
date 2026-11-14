@@ -57,7 +57,7 @@ class NavigationMenuStructureTest extends TestCase
     }
 
     /**
-     * 「当日運行」メニューに当日進行表・スタッフタイムライン・搬出入チェックが含まれ、当日スタッフ登録が含まれないこと
+     * 「当日運行」メニューに当日進行表・スタッフタイムライン・搬出入タイムラインが含まれ、当日スタッフ登録が含まれないこと
      */
     public function test_day_operations_menu_contains_expected_items(): void
     {
@@ -76,9 +76,10 @@ class NavigationMenuStructureTest extends TestCase
         $response->assertDontSee('当日スタッフ登録');
         $response->assertDontSee(route('staff.create'));
 
-        // 搬出入チェック
-        $response->assertSee(route('logistics.index'));
-        $response->assertSee('搬出入チェック');
+        // 搬出入タイムライン（旧：搬出入チェック）
+        $response->assertSee(route('logistics-timeline.index'));
+        $response->assertSee('搬出入タイムライン');
+        $response->assertDontSee('搬出入チェック');
     }
 
     /**
@@ -259,13 +260,14 @@ class NavigationMenuStructureTest extends TestCase
         $response->assertDontSee(route('timetable-tasks.index'));
         $response->assertDontSee(route('assignments.index'));
         $response->assertDontSee(route('logistics.index'));
+        $response->assertDontSee(route('logistics-timeline.index'));
 
         // メニューの表示テキスト自体は存在すること
         $response->assertSee('担当班編成');
         $response->assertSee('作業タスク台帳');
         $response->assertSee('人員事前配置');
         $response->assertSee('搬出入計画');
-        $response->assertSee('搬出入チェック');
+        $response->assertSee('搬出入タイムライン');
 
         // グレーアウト用のクラス・属性が存在すること
         $response->assertSee('cursor-not-allowed');
@@ -276,5 +278,6 @@ class NavigationMenuStructureTest extends TestCase
         $this->get(route('timetable-tasks.index'))->assertRedirect(route('timetables.index'));
         $this->get(route('assignments.index'))->assertRedirect(route('timetables.index'));
         $this->get(route('logistics.index'))->assertRedirect(route('timetables.index'));
+        $this->get(route('logistics-timeline.index'))->assertRedirect(route('timetables.index'));
     }
 }

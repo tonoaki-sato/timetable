@@ -8,6 +8,7 @@ use App\Http\Controllers\EquipmentLogisticsController;
 use App\Http\Controllers\EquipmentLogisticsPatternController;
 use App\Http\Controllers\EquipmentLogisticsPatternStepController;
 use App\Http\Controllers\EquipmentLogisticsPlanController;
+use App\Http\Controllers\EquipmentLogisticsTimelineController;
 use App\Http\Controllers\FeatureSettingController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LanePrintController;
@@ -168,6 +169,10 @@ Route::middleware('auth')->group(function () {
         Route::put('timetables/{timetable}/equipments/{equipment}', [EquipmentController::class, 'timetableUpdate'])->name('timetables.equipments.update');
         Route::delete('timetables/{timetable}/equipments/{equipment}', [EquipmentController::class, 'timetableDestroy'])->name('timetables.equipments.destroy');
     });
+
+    // 搬出入タイムライン (Logistics Timeline)
+    Route::get('/logistics-timeline', [EquipmentLogisticsTimelineController::class, 'redirect'])->name('logistics-timeline.index');
+    Route::get('timetables/{timetable}/logistics-timeline', [EquipmentLogisticsTimelineController::class, 'index'])->name('timetables.logistics-timeline');
 
     // 2. 搬出入計画・カスタムパターン管理 (Logistics & Operations)
     Route::get('/logistics', [EquipmentLogisticsController::class, 'redirect'])->name('logistics.index');

@@ -23,6 +23,8 @@ class NavigationPresenter
         return request()->routeIs('dashboard*')
             || request()->routeIs('timetable.index')
             || request()->routeIs('timetables.staff-timeline')
+            || request()->routeIs('timetables.logistics-timeline')
+            || request()->routeIs('logistics-timeline.*')
             || request()->routeIs('lane-requests.*');
     }
 
@@ -35,6 +37,7 @@ class NavigationPresenter
             request()->routeIs('timetables.*')
             && ! request()->routeIs('timetables.print*')
             && ! request()->routeIs('timetables.staff-timeline')
+            && ! request()->routeIs('timetables.logistics-timeline')
             && ! request()->routeIs('timetables.logistics.print')
         )
             || request()->routeIs('timetable-tasks.*')
@@ -116,6 +119,14 @@ class NavigationPresenter
     {
         return (request()->routeIs('logistics.*') || request()->routeIs('timetables.logistics.*'))
             && ! request()->routeIs('*print*');
+    }
+
+    /**
+     * 搬出入タイムラインメニューがアクティブか判定
+     */
+    public function isLogisticsTimelineActive(): bool
+    {
+        return request()->routeIs('logistics-timeline.*') || request()->routeIs('timetables.logistics-timeline');
     }
 
     /**

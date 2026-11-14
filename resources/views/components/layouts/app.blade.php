@@ -101,22 +101,22 @@
                                     </a>
                                     @endif
 
-                                    <!-- 搬出入チェック -->
+                                    <!-- 搬出入タイムライン -->
                                     @if($nav->hasTimetables())
-                                    <a href="{{ route('logistics.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isLogisticsPlansActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                    <a href="{{ route('logistics-timeline.index') }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isLogisticsTimelineActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🚚</span>
                                         <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">搬出入チェック</div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">設営・本番・撤収の資材追跡チェック</p>
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">搬出入タイムライン</div>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">資材・機材の搬出入ガントチャート</p>
                                         </div>
                                     </a>
                                     @else
                                     <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
                                         <span class="text-base shrink-0 grayscale opacity-60">🚚</span>
                                         <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">搬出入チェック</div>
-                                            <p class="text-[10px] text-slate-500 truncate mt-0.5">設営・本番・撤収の資材追跡チェック</p>
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">搬出入タイムライン</div>
+                                            <p class="text-[10px] text-slate-500 truncate mt-0.5">資材・機材の搬出入ガントチャート</p>
                                         </div>
                                     </div>
                                     @endif
@@ -683,14 +683,14 @@
                             </a>
                             @endif
                             @if($nav->hasTimetables())
-                            <a href="{{ route('logistics.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            <a href="{{ route('logistics-timeline.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🚚</span>
-                                <span class="font-bold truncate">搬出入チェック</span>
+                                <span class="font-bold truncate">搬出入タイムライン</span>
                             </a>
                             @else
                             <div class="col-span-2 p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
                                 <span class="text-base shrink-0 grayscale opacity-60">🚚</span>
-                                <span class="font-bold truncate">搬出入チェック</span>
+                                <span class="font-bold truncate">搬出入タイムライン</span>
                             </div>
                             @endif
                         </div>

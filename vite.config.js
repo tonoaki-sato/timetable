@@ -21,6 +21,7 @@ export default defineConfig({
                 'resources/js/equipments.js',
                 'resources/js/equipment-patterns.js',
                 'resources/js/logistics.js',
+                'resources/js/logistics-timeline.js',
                 'resources/js/staff-myshift.js',
                 'resources/js/organizations.js',
             ],
