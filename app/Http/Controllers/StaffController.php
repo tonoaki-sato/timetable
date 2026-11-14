@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Staff\DownloadStaffListPdfAction;
 use App\Http\Requests\StoreStaffRequest;
 use App\Http\Requests\UpdateStaffRequest;
 use App\Models\Staff;
 use App\Services\StaffService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class StaffController extends Controller
 {
     public function __construct(
-        protected StaffService $staffService
+        protected StaffService $staffService,
+        protected DownloadStaffListPdfAction $downloadStaffListPdfAction
     ) {}
 
     /**
@@ -29,6 +32,19 @@ class StaffController extends Controller
         );
 
         return view('staff.index', $viewData);
+    }
+
+    /**
+     * スタッフ一覧 A4縦・2段組PDFのダウンロード
+     */
+    public function pdf(Request $request): Response
+    {
+        $this->authorize('viewAny', Staff::class);
+
+        return $this->downloadStaffListPdfAction->execute(
+            search: $request->input('search'),
+            status: $request->input('status')
+        );
     }
 
     /**

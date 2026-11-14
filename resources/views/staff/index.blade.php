@@ -15,6 +15,15 @@
             </span>
         </x-slot:badges>
         <x-slot:actions>
+            <!-- スタッフ一覧PDFダウンロード -->
+            <a href="{{ route('staff.pdf', request()->query()) }}"
+                id="btn-download-staff-pdf"
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0 cursor-pointer"
+                title="現在の検索・絞り込み条件でスタッフ一覧をA4縦PDFダウンロード">
+                <span>📄</span>
+                <span>スタッフ一覧PDF</span>
+            </a>
+
             <!-- 名札一括PDFダウンロード -->
             <a href="{{ route('staff.print-cards') }}"
                 class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0"

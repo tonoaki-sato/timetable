@@ -84,6 +84,7 @@ Route::middleware('auth')->group(function () {
     Route::get('staff/export-csv', [StaffCsvController::class, 'export'])->name('staff.export-csv');
     Route::get('staff/print-cards', [StaffPrintController::class, 'printCards'])->name('staff.print-cards');
     Route::get('staff/{staff}/print-card', [StaffPrintController::class, 'printSingleCard'])->name('staff.print-card');
+    Route::get('staff/pdf', [StaffController::class, 'pdf'])->name('staff.pdf');
     Route::post('staff/{staff}/regenerate-token', [StaffController::class, 'regenerateToken'])->name('staff.regenerate-token');
     Route::resource('staff', StaffController::class);
 

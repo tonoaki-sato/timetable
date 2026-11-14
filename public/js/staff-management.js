@@ -97,5 +97,35 @@
                 }
             }
         });
+
+        // 4. スタッフ一覧PDFダウンロードボタンと検索フォーム入力値の同期
+        const pdfButton = document.getElementById('btn-download-staff-pdf');
+        if (pdfButton) {
+            pdfButton.addEventListener('click', function () {
+                const pdfUrl = new URL(pdfButton.href, window.location.origin);
+                const searchInput = document.getElementById('search');
+                const statusSelect = document.getElementById('status');
+
+                if (searchInput) {
+                    const searchValue = searchInput.value.trim();
+                    if (searchValue !== '') {
+                        pdfUrl.searchParams.set('search', searchValue);
+                    } else {
+                        pdfUrl.searchParams.delete('search');
+                    }
+                }
+
+                if (statusSelect) {
+                    const statusValue = statusSelect.value;
+                    if (statusValue !== '') {
+                        pdfUrl.searchParams.set('status', statusValue);
+                    } else {
+                        pdfUrl.searchParams.delete('status');
+                    }
+                }
+
+                pdfButton.href = pdfUrl.pathname + (pdfUrl.search ? pdfUrl.search : '');
+            });
+        }
     });
 })();

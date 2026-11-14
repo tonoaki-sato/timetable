@@ -102,6 +102,61 @@ class StaffService
     }
 
     /**
+     * スタッフ一覧PDF用の表示データを構築
+     *
+     * @return array{
+     *     title: string,
+     *     pages: SupportCollection<int, array{left: SupportCollection<int, Staff>, right: SupportCollection<int, Staff>, rowCount: int}>,
+     *     totalCount: int,
+     *     filterText: string,
+     *     generatedAt: string
+     * }
+     */
+    public function getPdfViewData(?string $search = null, ?string $status = null): array
+    {
+        $statusBool = null;
+        if ($status === '1') {
+            $statusBool = true;
+        } elseif ($status === '0') {
+            $statusBool = false;
+        }
+
+        $staffs = $this->staffRepository->getFiltered($search, $statusBool);
+
+        // 1ページあたり最大60名（30行×2段組）でページ分割し、各ページ内で左右列に均等バランス配置
+        $maxRowsPerColumn = 30;
+        $maxPerPage = $maxRowsPerColumn * 2;
+        $pages = $staffs->chunk($maxPerPage)->map(function ($pageStaffs) {
+            $count = $pageStaffs->count();
+            $half = (int) ceil($count / 2);
+
+            return [
+                'left' => $pageStaffs->slice(0, $half)->values(),
+                'right' => $pageStaffs->slice($half)->values(),
+                'rowCount' => $half,
+            ];
+        });
+
+        $filterDescriptions = [];
+        if ($search !== null && $search !== '') {
+            $filterDescriptions[] = "検索: 「{$search}」";
+        }
+        if ($status === '1') {
+            $filterDescriptions[] = '状態: 稼働可能';
+        } elseif ($status === '0') {
+            $filterDescriptions[] = '状態: 停止中';
+        }
+
+        return [
+            'title' => 'スタッフ一覧',
+            'pages' => $pages,
+            'totalCount' => $staffs->count(),
+            'filterText' => ! empty($filterDescriptions) ? implode(' ｜ ', $filterDescriptions) : '全スタッフ',
+            'generatedAt' => now()->format('Y年m月d日 H:i'),
+        ];
+    }
+
+    /**
      * スタッフ新規登録
      *
      * @param  array<string, mixed>  $data

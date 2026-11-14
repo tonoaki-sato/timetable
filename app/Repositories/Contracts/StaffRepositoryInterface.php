@@ -33,6 +33,13 @@ interface StaffRepositoryInterface
     public function paginateFiltered(?string $search = null, ?bool $status = null, int $perPage = 15): LengthAwarePaginator;
 
     /**
+     * スタッフ一覧の取得（検索・絞り込み・全件取得・フリガナ順）
+     *
+     * @return Collection<int, Staff>
+     */
+    public function getFiltered(?string $search = null, ?bool $status = null): Collection;
+
+    /**
      * 稼働可能な全スタッフの取得（アサイン選択用・フリガナ順）
      *
      * @return Collection<int, Staff>

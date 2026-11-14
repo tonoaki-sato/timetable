@@ -51,6 +51,22 @@ class StaffRepository implements StaffRepositoryInterface
     }
 
     #[Override]
+    public function getFiltered(?string $search = null, ?bool $status = null): Collection
+    {
+        $query = Staff::query();
+
+        if ($search) {
+            $query->search($search);
+        }
+
+        if ($status !== null) {
+            $query->where('is_active', $status);
+        }
+
+        return $query->orderBy('kana', 'asc')->orderBy('name', 'asc')->get();
+    }
+
+    #[Override]
     public function getActiveStaffList(): Collection
     {
         return Staff::active()->orderBy('kana', 'asc')->orderBy('name', 'asc')->get();
