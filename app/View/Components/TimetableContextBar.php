@@ -37,6 +37,7 @@ class TimetableContextBar extends Component
             'equipments' => route('timetables.equipments.index', $tt),
             'logistics' => route('timetables.logistics.index', $tt),
             'logistics-timeline' => route('timetables.logistics-timeline', $tt),
+            'layouts', 'layouts-booths', 'layouts-facilities', 'goza-stores' => route('timetables.layouts.index', $tt),
             'show' => route('timetables.show', $tt),
             'print' => route('timetables.print-assignments', $tt),
             default => route('timetable.index', ['timetable_id' => $tt->id]),

@@ -8,8 +8,10 @@ use App\Repositories\Contracts\EquipmentLogisticsPatternRepositoryInterface;
 use App\Repositories\Contracts\EquipmentLogisticsPlanRepositoryInterface;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
 use App\Repositories\Contracts\FeatureSettingRepositoryInterface;
+use App\Repositories\Contracts\GozaStoreRepositoryInterface;
 use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Repositories\Contracts\LaneRequestRepositoryInterface;
+use App\Repositories\Contracts\LayoutMapRepositoryInterface;
 use App\Repositories\Contracts\LocationRepositoryInterface;
 use App\Repositories\Contracts\LocationScheduleRepositoryInterface;
 use App\Repositories\Contracts\LocationTypeRepositoryInterface;
@@ -25,8 +27,10 @@ use App\Repositories\Eloquent\EquipmentLogisticsPatternRepository;
 use App\Repositories\Eloquent\EquipmentLogisticsPlanRepository;
 use App\Repositories\Eloquent\EquipmentRepository;
 use App\Repositories\Eloquent\FeatureSettingRepository;
+use App\Repositories\Eloquent\GozaStoreRepository;
 use App\Repositories\Eloquent\LaneRepository;
 use App\Repositories\Eloquent\LaneRequestRepository;
+use App\Repositories\Eloquent\LayoutMapRepository;
 use App\Repositories\Eloquent\LocationRepository;
 use App\Repositories\Eloquent\LocationScheduleRepository;
 use App\Repositories\Eloquent\LocationTypeRepository;
@@ -132,6 +136,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             OrganizationUnitRepositoryInterface::class,
             OrganizationUnitRepository::class
+        );
+
+        $this->app->bind(
+            LayoutMapRepositoryInterface::class,
+            LayoutMapRepository::class
+        );
+
+        $this->app->bind(
+            GozaStoreRepositoryInterface::class,
+            GozaStoreRepository::class
         );
     }
 

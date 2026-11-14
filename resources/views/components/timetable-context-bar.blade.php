@@ -70,6 +70,11 @@
                 <span class="text-[10px] opacity-75 font-mono">({{ $timetable->logistics_plans_count ?? $timetable->logisticsPlans->count() }})</span>
             @endif
         </a>
+        <a href="{{ route('timetables.layouts.index', $timetable) }}"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['layouts', 'layouts-booths', 'layouts-facilities', 'goza-stores'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+            <span>🗺️</span>
+            <span>現場配置</span>
+        </a>
         <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'matrix' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>⏱️</span>

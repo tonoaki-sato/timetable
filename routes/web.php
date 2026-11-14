@@ -10,6 +10,7 @@ use App\Http\Controllers\EquipmentLogisticsPatternStepController;
 use App\Http\Controllers\EquipmentLogisticsPlanController;
 use App\Http\Controllers\EquipmentLogisticsTimelineController;
 use App\Http\Controllers\FeatureSettingController;
+use App\Http\Controllers\GozaStoreController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LanePrintController;
 use App\Http\Controllers\LaneRequestController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PreparationNavigatorController;
 use App\Http\Controllers\PresentationController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\SiteLayoutController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffCsvController;
 use App\Http\Controllers\StaffJoinController;
@@ -223,6 +225,19 @@ Route::middleware('auth')->group(function () {
         Route::put('timetables/{timetable}/locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'update'])->name('timetables.locations.schedules.update');
         Route::patch('timetables/{timetable}/locations/{location}/schedules/{schedule}/status', [LocationScheduleController::class, 'updateStatus'])->name('timetables.locations.schedules.update-status');
         Route::delete('timetables/{timetable}/locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'destroy'])->name('timetables.locations.schedules.destroy');
+
+        // 現場配置計画 (Site Layout)
+        Route::get('timetables/{timetable}/layouts', [SiteLayoutController::class, 'index'])->name('timetables.layouts.index');
+        Route::get('timetables/{timetable}/layouts/booths', [SiteLayoutController::class, 'booths'])->name('timetables.layouts.booths');
+        Route::put('timetables/{timetable}/layouts/booths/{booth}', [SiteLayoutController::class, 'updateBooth'])->name('timetables.layouts.booths.update');
+        Route::get('timetables/{timetable}/layouts/facilities', [SiteLayoutController::class, 'facilities'])->name('timetables.layouts.facilities');
+        Route::put('timetables/{timetable}/layouts/facilities/{facility}', [SiteLayoutController::class, 'updateFacility'])->name('timetables.layouts.facilities.update');
+
+        // ござ市出店者管理 (Goza Stores)
+        Route::get('timetables/{timetable}/goza-stores', [GozaStoreController::class, 'index'])->name('timetables.goza-stores.index');
+        Route::post('timetables/{timetable}/goza-stores', [GozaStoreController::class, 'store'])->name('timetables.goza-stores.store');
+        Route::put('timetables/{timetable}/goza-stores/{gozaStore}', [GozaStoreController::class, 'update'])->name('timetables.goza-stores.update');
+        Route::delete('timetables/{timetable}/goza-stores/{gozaStore}', [GozaStoreController::class, 'destroy'])->name('timetables.goza-stores.destroy');
     });
 
     // 拠点管理 既存互換フォールバック

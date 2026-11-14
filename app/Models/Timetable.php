@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
@@ -215,6 +216,46 @@ class Timetable extends Model
     public function locations(): HasMany
     {
         return $this->hasMany(Location::class)->orderBy('display_order', 'asc');
+    }
+
+    /**
+     * 現場配置図面一覧とのリレーション
+     */
+    public function layoutMaps(): HasMany
+    {
+        return $this->hasMany(LayoutMap::class)->orderBy('id', 'asc');
+    }
+
+    /**
+     * 最新の現場配置図面
+     */
+    public function latestLayoutMap(): HasOne
+    {
+        return $this->hasOne(LayoutMap::class)->latestOfMany();
+    }
+
+    /**
+     * 現場配置図面を経由した全コマ割り（ブース）一覧
+     */
+    public function booths(): HasManyThrough
+    {
+        return $this->hasManyThrough(LayoutBooth::class, LayoutMap::class);
+    }
+
+    /**
+     * 現場配置図面を経由した全現場設備一覧
+     */
+    public function facilities(): HasManyThrough
+    {
+        return $this->hasManyThrough(LayoutFacility::class, LayoutMap::class);
+    }
+
+    /**
+     * ござ市出店者一覧とのリレーション
+     */
+    public function gozaStores(): HasMany
+    {
+        return $this->hasMany(GozaStore::class)->orderBy('id', 'asc');
     }
 
     /**
