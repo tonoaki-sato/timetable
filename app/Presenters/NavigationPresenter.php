@@ -103,13 +103,39 @@ class NavigationPresenter
     }
 
     /**
-     * 印刷・当日配置対象のデフォルト運行計画を取得
+     * 印刷・当日配置対象のデフォルト運行計画を取得（アクティブ運行日または現在日時に最も近い運行日）
      */
     public function targetPrintTimetable(): ?Timetable
     {
-        return $this->activeTimetable
-            ?? $this->navTimetables->firstWhere('status', 'active')
-            ?? $this->navTimetables->first();
+        if ($this->activeTimetable) {
+            return $this->activeTimetable;
+        }
+
+        $active = $this->navTimetables->firstWhere('status', 'active');
+        if ($active) {
+            return $active;
+        }
+
+        if ($this->navTimetables->isEmpty()) {
+            return null;
+        }
+
+        $now = \Carbon\Carbon::now();
+
+        return $this->navTimetables->sortBy(function (Timetable $t) use ($now): int {
+            $targetDateStr = $t->target_date?->format('Y-m-d') ?? (string) $t->target_date;
+            $startDateTime = \Carbon\Carbon::parse($targetDateStr . ' ' . $t->start_time);
+            $endDateTime = \Carbon\Carbon::parse($targetDateStr . ' ' . $t->end_time);
+
+            if ($t->status === 'active' || ($now->gte($startDateTime) && $now->lte($endDateTime))) {
+                return 0;
+            }
+
+            return min(
+                abs($now->diffInSeconds($startDateTime, false)),
+                abs($now->diffInSeconds($endDateTime, false))
+            );
+        })->first();
     }
 
     /**

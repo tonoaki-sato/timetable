@@ -6,6 +6,7 @@ use App\Models\LaneRequest;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Override;
@@ -25,10 +26,48 @@ class TimetableRepository implements TimetableRepositoryInterface
     }
 
     #[Override]
-    public function findFirstActiveOrEarliest(): ?Timetable
+    public function findFirstActiveOrEarliest(?Carbon $now = null): ?Timetable
     {
-        return Timetable::where('status', 'active')->orderBy('target_date', 'asc')->first()
-            ?? Timetable::orderBy('target_date', 'asc')->first();
+        $selectable = $this->getSelectableTimetables();
+
+        if ($selectable->isEmpty()) {
+            return Timetable::orderBy('target_date', 'desc')->first()
+                ?? Timetable::orderBy('target_date', 'asc')->first();
+        }
+
+        $now ??= Carbon::now();
+
+        return $selectable->sortBy(function (Timetable $t) use ($now): int {
+            return $this->calculateTimeDistanceToNow($t, $now);
+        })->first();
+    }
+
+    #[Override]
+    public function getSelectableTimetables(): Collection
+    {
+        return Timetable::whereIn('status', ['draft', 'active'])
+            ->orderBy('target_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->get();
+    }
+
+    /**
+     * 運行情報と現在日時との時間差（距離・秒数）を算出
+     */
+    protected function calculateTimeDistanceToNow(Timetable $timetable, Carbon $now): int
+    {
+        $targetDateStr = $timetable->target_date?->format('Y-m-d') ?? (string) $timetable->target_date;
+        $startDateTime = Carbon::parse($targetDateStr . ' ' . $timetable->start_time);
+        $endDateTime = Carbon::parse($targetDateStr . ' ' . $timetable->end_time);
+
+        if ($timetable->status === 'active' || ($now->gte($startDateTime) && $now->lte($endDateTime))) {
+            return 0;
+        }
+
+        return min(
+            abs($now->diffInSeconds($startDateTime, false)),
+            abs($now->diffInSeconds($endDateTime, false))
+        );
     }
 
     #[Override]
@@ -41,9 +80,7 @@ class TimetableRepository implements TimetableRepositoryInterface
     #[Override]
     public function getForNavigation(): Collection
     {
-        return Timetable::where('status', '!=', 'completed')
-            ->orderBy('target_date', 'asc')
-            ->get();
+        return $this->getSelectableTimetables();
     }
 
     #[Override]

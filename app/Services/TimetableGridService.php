@@ -48,15 +48,15 @@ class TimetableGridService
      */
     public function getMatrixViewData(?int $selectedTimetableId = null): array
     {
-        $timetables = $this->timetableRepository->getAll();
+        $timetables = $this->timetableRepository->getSelectableTimetables();
 
         $selectedTimetable = null;
         if ($selectedTimetableId && $selectedTimetableId > 0) {
-            $selectedTimetable = $timetables->firstWhere('id', $selectedTimetableId);
+            $selectedTimetable = $this->timetableRepository->findById($selectedTimetableId);
         }
 
         if ($selectedTimetable === null) {
-            $selectedTimetable = $timetables->firstWhere('status', 'active') ?? $timetables->first();
+            $selectedTimetable = $this->timetableRepository->findFirstActiveOrEarliest();
         }
 
         $tasksByLane = [];

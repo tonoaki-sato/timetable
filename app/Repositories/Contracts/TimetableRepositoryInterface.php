@@ -3,6 +3,7 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\Timetable;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
 interface TimetableRepositoryInterface
@@ -18,9 +19,16 @@ interface TimetableRepositoryInterface
     public function findOrFail(int $id): Timetable;
 
     /**
-     * アクティブな運行日（なければ日付順で最初の運行日）を取得
+     * デフォルト運行日（準備中・運行中のうち現在日時に最も近い運行日）を取得
      */
-    public function findFirstActiveOrEarliest(): ?Timetable;
+    public function findFirstActiveOrEarliest(?Carbon $now = null): ?Timetable;
+
+    /**
+     * 運行情報セレクタ用の準備中・運行中タイムテーブル一覧を取得（時系列順）
+     *
+     * @return Collection<int, Timetable>
+     */
+    public function getSelectableTimetables(): Collection;
 
     /**
      * 全タイムテーブル一覧の取得（日付順）

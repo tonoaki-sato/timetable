@@ -20,7 +20,7 @@ class TimetableContextBar extends Component
         public ?Timetable $timetable = null,
         public string $active = 'matrix',
     ) {
-        $this->timetablesList = $timetableRepository->getAll();
+        $this->timetablesList = $timetableRepository->getSelectableTimetables();
     }
 
     /**

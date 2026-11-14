@@ -6,6 +6,7 @@ use App\Models\Timetable;
 use App\Models\User;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
 class TimetableService
@@ -32,11 +33,11 @@ class TimetableService
     }
 
     /**
-     * アクティブ（または最も早い）タイムテーブルを取得
+     * デフォルト運行日（準備中・運行中のうち現在日時に最も近い運行日）を取得
      */
-    public function findFirstActiveOrEarliest(): ?Timetable
+    public function findFirstActiveOrEarliest(?Carbon $now = null): ?Timetable
     {
-        return $this->timetableRepository->findFirstActiveOrEarliest();
+        return $this->timetableRepository->findFirstActiveOrEarliest($now);
     }
 
     /**
