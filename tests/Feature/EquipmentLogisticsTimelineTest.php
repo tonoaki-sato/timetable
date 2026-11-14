@@ -146,6 +146,31 @@ class EquipmentLogisticsTimelineTest extends TestCase
             'status' => 'planned',
         ]);
 
+        // 別の運行情報（他日程）の計画：混入して表示されてはならない
+        $otherTimetable = Timetable::factory()->create([
+            'name' => '本祭2日目',
+            'status' => 'upcoming',
+            'target_date' => '2026-10-12',
+            'start_time' => '08:00:00',
+            'end_time' => '18:00:00',
+        ]);
+
+        EquipmentLogisticsPlan::factory()->create([
+            'timetable_id' => $otherTimetable->id,
+            'equipment_id' => $equipment1->id,
+            'target_date' => '2026-10-12',
+            'day_phase' => 'day2_morning',
+            'action_type' => 'staging_move',
+            'title' => '他運行日限定の資材移動作業',
+            'start_time' => '10:00',
+            'end_time' => '11:00',
+            'from_location' => '別会場',
+            'to_location' => '本部テント',
+            'from_location_id' => null,
+            'to_location_id' => null,
+            'status' => 'planned',
+        ]);
+
         $response = $this->actingAs($this->operator)
             ->get(route('timetables.logistics-timeline', $this->timetable));
 
@@ -175,6 +200,19 @@ class EquipmentLogisticsTimelineTest extends TestCase
         $response->assertSee('夜間片付け（時間未定）');
         $response->assertSee('実施日未指定の搬出入計画');
         $response->assertSee('翌日回収（日付未定）');
+
+        // 別運行日の計画が混入しないこと
+        $response->assertDontSee('他運行日限定の資材移動作業');
+
+        // 別運行日に切り替えた場合は、その運行日の計画のみが表示されること
+        $otherResponse = $this->actingAs($this->operator)
+            ->get(route('timetables.logistics-timeline', $otherTimetable));
+
+        $otherResponse->assertStatus(200);
+        $otherResponse->assertSee('本祭2日目 搬出入タイムライン');
+        $otherResponse->assertSee('他運行日限定の資材移動作業');
+        $otherResponse->assertDontSee('倉庫出し事前移動');
+        $otherResponse->assertDontSee('業者受取・設置');
 
         // CSP準拠チェック（インラインスタイル・イベントハンドラの不在）
         $content = $response->getContent();

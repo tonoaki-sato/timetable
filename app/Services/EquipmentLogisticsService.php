@@ -381,7 +381,7 @@ class EquipmentLogisticsService
     public function getLogisticsTimelineViewData(Timetable $timetable): array
     {
         $equipments = $this->getEquipmentsFlowData(null, $timetable);
-        $allPlans = $equipments->flatMap(fn (Equipment $equipment) => $equipment->plans);
+        $allPlans = $this->planRepository->getForTimetable($timetable);
 
         $timetableDateStr = $timetable->target_date?->format('Y-m-d');
 
