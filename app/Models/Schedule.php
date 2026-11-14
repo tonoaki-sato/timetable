@@ -198,6 +198,22 @@ class Schedule extends Model
     }
 
     /**
+     * PDF用の日付・期間フォーマット表示
+     */
+    public function getPdfDateAttribute(): string
+    {
+        return (new SchedulePresenter($this))->pdfDate();
+    }
+
+    /**
+     * PDF用の時間フォーマット表示
+     */
+    public function getPdfTimeAttribute(): string
+    {
+        return (new SchedulePresenter($this))->pdfTime();
+    }
+
+    /**
      * 開催案内用の全体共有テキスト（LINE告知等）
      */
     public function getShareTextAttribute(): string

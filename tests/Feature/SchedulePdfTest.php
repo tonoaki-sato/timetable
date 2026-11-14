@@ -71,9 +71,9 @@ class SchedulePdfTest extends TestCase
     }
 
     /**
-     * スケジュール一覧PDFのHTMLビューが仕様通りの5列およびデータをレンダリングすること
+     * スケジュール一覧PDFのHTMLビューが仕様通りの6列およびデータをレンダリングすること
      */
-    public function test_schedules_pdf_view_renders_correctly_with_specified_five_columns_and_data(): void
+    public function test_schedules_pdf_view_renders_correctly_with_specified_six_columns_and_data(): void
     {
         $staff = Staff::factory()->create(['name' => '寺井 智之']);
         $schedule = Schedule::factory()->create([
@@ -94,26 +94,28 @@ class SchedulePdfTest extends TestCase
 
         $html = view('pdf.schedules', $viewData)->render();
 
-        // 1. タイトルと指定5列ヘッダーが出力されていること
+        // 1. タイトルと指定6列ヘッダー（日付、時間、名前、場所、担当、詳細）が出力されていること
         $this->assertStringContainsString('保土ケ谷宿場まつり実行委員会 年間スケジュール一覧', $html);
-        $this->assertStringContainsString('<th class="col-datetime">日時・期間</th>', $html);
+        $this->assertStringContainsString('<th class="col-date">日付</th>', $html);
+        $this->assertStringContainsString('<th class="col-time">時間</th>', $html);
         $this->assertStringContainsString('<th class="col-name">名前</th>', $html);
         $this->assertStringContainsString('<th class="col-location">場所</th>', $html);
         $this->assertStringContainsString('<th class="col-staff">担当</th>', $html);
         $this->assertStringContainsString('<th class="col-description">詳細</th>', $html);
 
-        // 2. スケジュールデータが出力されていること
-        $this->assertStringContainsString('2027/01/10', $html);
-        $this->assertStringContainsString('18:00 〜 20:00', $html);
+        // 2. スケジュールデータ（日付と時間が分離）が出力されていること
+        $this->assertStringContainsString('<td class="col-date">2027/01/10(日)</td>', $html);
+        $this->assertStringContainsString('<td class="col-time">18:00 〜 20:00</td>', $html);
         $this->assertStringContainsString('第1回幹事会（年間日程案策定）', $html);
         $this->assertStringContainsString('コミュニティルーム会議室', $html);
         $this->assertStringContainsString('寺井 智之', $html);
         $this->assertStringContainsString("年間日程案の策定<br />\n前年度運営課題の整理", $html);
 
-        // 3. A4縦のページ設定および固定ヘッダーが含まれていること
-        $this->assertStringContainsString('size: A4 portrait;', $html);
-        $this->assertStringContainsString('margin: 18mm 12mm 12mm 12mm;', $html);
+        // 3. A4横のページ設定および固定ヘッダーが含まれていること
+        $this->assertStringContainsString('size: A4 landscape;', $html);
+        $this->assertStringContainsString('margin: 24mm 12mm 12mm 12mm;', $html);
         $this->assertStringContainsString('class="page-header"', $html);
+        $this->assertStringContainsString('border-bottom: 1.5pt solid #0f172a;', $html);
     }
 
     /**
@@ -173,9 +175,9 @@ class SchedulePdfTest extends TestCase
     }
 
     /**
-     * DomPDFレンダリング後に@pageの余白が0にリセットされず維持されていること
+     * DomPDFレンダリング後に@pageの余白が0にリセットされず維持されていること（A4横）
      */
-    public function test_dompdf_retains_page_margins_for_portrait(): void
+    public function test_dompdf_retains_page_margins_for_landscape(): void
     {
         $action = app(DownloadSchedulesPdfAction::class);
         $viewData = $action->buildViewData();
@@ -183,7 +185,7 @@ class SchedulePdfTest extends TestCase
 
         $html = view('pdf.schedules', $viewData)->render();
 
-        $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
+        $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
         $dompdf = $pdf->getDomPDF();
         $dompdf->render();
 

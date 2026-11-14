@@ -17,8 +17,8 @@
             font-style: normal;
         }
         @page {
-            size: A4 portrait;
-            margin: 18mm 12mm 12mm 12mm;
+            size: A4 landscape;
+            margin: 24mm 12mm 12mm 12mm;
         }
         table, th, td, h1, h2, h3, div, span, strong, b, p {
             font-family: 'JapaneseFont', sans-serif !important;
@@ -35,26 +35,29 @@
         }
         .page-header {
             position: fixed;
-            top: -14mm;
+            top: -19mm;
             left: 0;
             right: 0;
-            height: 10mm;
-            border-bottom: 1.5pt solid #0f172a;
-            padding-bottom: 2mm;
         }
         .header-table {
             width: 100%;
             border-collapse: collapse;
+            border-bottom: 1.5pt solid #0f172a;
+        }
+        .header-table td {
+            padding-bottom: 3mm;
         }
         .header-title-main {
-            font-size: 12pt;
+            font-size: 13pt;
             font-weight: bold;
             color: #0f172a;
+            line-height: 1.2;
+            margin-bottom: 1.5mm;
         }
         .header-subtitle {
             font-size: 7.5pt;
             color: #475569;
-            margin-top: 1pt;
+            line-height: 1.2;
         }
         .header-meta {
             text-align: right;
@@ -62,6 +65,7 @@
             color: #475569;
             vertical-align: bottom;
             white-space: nowrap;
+            line-height: 1.2;
         }
         .schedule-table {
             width: 100%;
@@ -97,11 +101,12 @@
             word-wrap: break-word;
             overflow: hidden;
         }
-        .schedule-table th.col-datetime { width: 22%; }
-        .schedule-table th.col-name { width: 24%; }
-        .schedule-table th.col-location { width: 15%; }
-        .schedule-table th.col-staff { width: 12%; }
-        .schedule-table th.col-description { width: 27%; }
+        .schedule-table th.col-date { width: 18%; }
+        .schedule-table th.col-time { width: 11%; }
+        .schedule-table th.col-name { width: 20%; }
+        .schedule-table th.col-location { width: 14%; }
+        .schedule-table th.col-staff { width: 11%; }
+        .schedule-table th.col-description { width: 26%; }
     </style>
 </head>
 <body>
@@ -122,7 +127,8 @@
     <table class="schedule-table" cellpadding="0" cellspacing="0">
         <thead>
             <tr>
-                <th class="col-datetime">日時・期間</th>
+                <th class="col-date">日付</th>
+                <th class="col-time">時間</th>
                 <th class="col-name">名前</th>
                 <th class="col-location">場所</th>
                 <th class="col-staff">担当</th>
@@ -132,7 +138,8 @@
         <tbody>
             @forelse($schedules as $schedule)
                 <tr>
-                    <td class="col-datetime">{{ $schedule->pdf_date_period }}</td>
+                    <td class="col-date">{{ $schedule->pdf_date }}</td>
+                    <td class="col-time">{{ $schedule->pdf_time }}</td>
                     <td class="col-name font-bold">{{ $schedule->title }}</td>
                     <td class="col-location">{{ $schedule->location ?: '-' }}</td>
                     <td class="col-staff">{{ $schedule->assignee?->name ?: '-' }}</td>
@@ -140,7 +147,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 12pt; color: #64748b;">
+                    <td colspan="6" style="text-align: center; padding: 12pt; color: #64748b;">
                         該当するスケジュールはありません。
                     </td>
                 </tr>

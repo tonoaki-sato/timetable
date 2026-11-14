@@ -7,7 +7,7 @@ use App\Services\ScheduleService;
 use Illuminate\Http\Response;
 
 /**
- * 年間スケジュール一覧 A4縦PDFダウンロードを実行するアクション
+ * 年間スケジュール一覧 A4横PDFダウンロードを実行するアクション
  */
 class DownloadSchedulesPdfAction
 {
@@ -40,7 +40,7 @@ class DownloadSchedulesPdfAction
             'pdf.schedules',
             $viewData,
             $filename,
-            'portrait'
+            'landscape'
         );
     }
 
