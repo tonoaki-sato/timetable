@@ -9,15 +9,38 @@ use App\Http\Requests\UpdateLaneRequest;
 use App\Models\Lane;
 use App\Models\Timetable;
 use App\Services\LaneService;
+use App\Services\TimetableService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class LaneController extends Controller
 {
     public function __construct(
-        protected LaneService $laneService
+        protected LaneService $laneService,
+        protected TimetableService $timetableService
     ) {}
+
+    /**
+     * 担当班編成一覧へのリダイレクト（アクティブまたは直近の運行日へ）
+     */
+    public function redirect(Request $request): RedirectResponse
+    {
+        if ($request->filled('timetable_id')) {
+            $timetable = $this->timetableService->findOrFail($request->integer('timetable_id'));
+
+            return redirect()->route('timetables.lanes.index', $timetable);
+        }
+
+        $currentTimetable = $this->timetableService->findFirstActiveOrEarliest();
+
+        if ($currentTimetable) {
+            return redirect()->route('timetables.lanes.index', $currentTimetable);
+        }
+
+        return redirect()->route('timetables.index');
+    }
 
     /**
      * レーン一覧・管理画面の表示

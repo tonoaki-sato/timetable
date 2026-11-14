@@ -115,7 +115,8 @@
                                     </a>
 
                                     <!-- 搬出入チェック -->
-                                    <a href="{{ route('timetables.logistics.index', 4) }}"
+                                    @if($nav->hasTimetables())
+                                    <a href="{{ route('logistics.index') }}"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isLogisticsPlansActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🚚</span>
                                         <div class="min-w-0 flex-1">
@@ -123,6 +124,15 @@
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">設営・本番・撤収の資材追跡チェック</p>
                                         </div>
                                     </a>
+                                    @else
+                                    <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
+                                        <span class="text-base shrink-0 grayscale opacity-60">🚚</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">搬出入チェック</div>
+                                            <p class="text-[10px] text-slate-500 truncate mt-0.5">設営・本番・撤収の資材追跡チェック</p>
+                                        </div>
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -161,14 +171,28 @@
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">各日の運行日程・基本情報台帳</p>
                                         </div>
                                     </a>
-                                    <a href="{{ route('timetables.lanes.index', 4) }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.lanes.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                    <!-- 担当班編成 -->
+                                    @if($nav->hasTimetables())
+                                    <a href="{{ route('lanes.index') }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.lanes.*') || request()->routeIs('lanes.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🏷️</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold whitespace-nowrap truncate">担当班編成</div>
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">各日の班編成・現場リーダー指名</p>
                                         </div>
                                     </a>
+                                    @else
+                                    <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
+                                        <span class="text-base shrink-0 grayscale opacity-60">🏷️</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">担当班編成</div>
+                                            <p class="text-[10px] text-slate-500 truncate mt-0.5">各日の班編成・現場リーダー指名</p>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    <!-- 作業タスク台帳 -->
+                                    @if($nav->hasTimetables())
                                     <a href="{{ route('timetable-tasks.index') }}"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetable-tasks.*') || request()->routeIs('timetables.tasks.index') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">📝</span>
@@ -177,9 +201,20 @@
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">全タスク登録・必要人数設定</p>
                                         </div>
                                     </a>
-                                    @if($nav->targetPrintTimetable())
-                                    <a href="{{ route('timetables.assignments', $nav->targetPrintTimetable()) }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.assignments') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                    @else
+                                    <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
+                                        <span class="text-base shrink-0 grayscale opacity-60">📝</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">作業タスク台帳</div>
+                                            <p class="text-[10px] text-slate-500 truncate mt-0.5">全タスク登録・必要人数設定</p>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    <!-- 人員事前配置 -->
+                                    @if($nav->hasTimetables())
+                                    <a href="{{ route('assignments.index') }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.assignments') || request()->routeIs('assignments.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">👥</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold flex items-center justify-between gap-1">
@@ -189,8 +224,22 @@
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">タスク定員充足率100%に向けた計画割当</p>
                                         </div>
                                     </a>
+                                    @else
+                                    <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
+                                        <span class="text-base shrink-0 grayscale opacity-60">👥</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold flex items-center justify-between gap-1">
+                                                <span class="whitespace-nowrap truncate">人員事前配置</span>
+                                                <span class="text-[9px] font-mono font-bold px-1.5 rounded bg-slate-800 text-slate-500 shrink-0">事前計画</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-500 truncate mt-0.5">タスク定員充足率100%に向けた計画割当</p>
+                                        </div>
+                                    </div>
                                     @endif
-                                    <a href="{{ route('timetables.logistics.index', 4) }}"
+
+                                    <!-- 搬出入計画 -->
+                                    @if($nav->hasTimetables())
+                                    <a href="{{ route('logistics.index') }}"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ $nav->isLogisticsPlansActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🚚</span>
                                         <div class="min-w-0 flex-1">
@@ -198,6 +247,15 @@
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">6大フェーズ運行・資材物流計画</p>
                                         </div>
                                     </a>
+                                    @else
+                                    <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
+                                        <span class="text-base shrink-0 grayscale opacity-60">🚚</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">搬出入計画</div>
+                                            <p class="text-[10px] text-slate-500 truncate mt-0.5">6大フェーズ運行・資材物流計画</p>
+                                        </div>
+                                    </div>
+                                    @endif
                                 </div>
 
                                 <div class="border-t border-slate-800/80 my-1"></div>
@@ -644,10 +702,17 @@
                                 </span>
                                 <span class="text-[9px] font-mono text-emerald-300 shrink-0">名札手渡し直通 →</span>
                             </a>
-                            <a href="{{ route('timetables.logistics.index', 4) }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            @if($nav->hasTimetables())
+                            <a href="{{ route('logistics.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🚚</span>
                                 <span class="font-bold truncate">搬出入チェック</span>
                             </a>
+                            @else
+                            <div class="col-span-2 p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
+                                <span class="text-base shrink-0 grayscale opacity-60">🚚</span>
+                                <span class="font-bold truncate">搬出入チェック</span>
+                            </div>
+                            @endif
                         </div>
                     </div>
 
@@ -669,24 +734,57 @@
                                 <span class="text-base shrink-0">📅</span>
                                 <span class="font-bold truncate">運行日程管理</span>
                             </a>
-                            <a href="{{ route('timetables.lanes.index', 4) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            <!-- 担当班編成 -->
+                            @if($nav->hasTimetables())
+                            <a href="{{ route('lanes.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🏷️</span>
                                 <span class="font-bold truncate">担当班編成</span>
                             </a>
+                            @else
+                            <div class="p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
+                                <span class="text-base shrink-0 grayscale opacity-60">🏷️</span>
+                                <span class="font-bold truncate">担当班編成</span>
+                            </div>
+                            @endif
+
+                            <!-- 作業タスク台帳 -->
+                            @if($nav->hasTimetables())
                             <a href="{{ route('timetable-tasks.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">📝</span>
                                 <span class="font-bold truncate">作業タスク台帳</span>
                             </a>
-                            @if($nav->targetPrintTimetable())
-                            <a href="{{ route('timetables.assignments', $nav->targetPrintTimetable()) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            @else
+                            <div class="p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
+                                <span class="text-base shrink-0 grayscale opacity-60">📝</span>
+                                <span class="font-bold truncate">作業タスク台帳</span>
+                            </div>
+                            @endif
+
+                            <!-- 人員事前配置 -->
+                            @if($nav->hasTimetables())
+                            <a href="{{ route('assignments.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">👥</span>
                                 <span class="font-bold truncate">人員事前配置</span>
                             </a>
+                            @else
+                            <div class="p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
+                                <span class="text-base shrink-0 grayscale opacity-60">👥</span>
+                                <span class="font-bold truncate">人員事前配置</span>
+                            </div>
                             @endif
-                            <a href="{{ route('timetables.logistics.index', 4) }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+
+                            <!-- 搬出入計画 -->
+                            @if($nav->hasTimetables())
+                            <a href="{{ route('logistics.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🚚</span>
                                 <span class="font-bold truncate">搬出入計画</span>
                             </a>
+                            @else
+                            <div class="col-span-2 p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
+                                <span class="text-base shrink-0 grayscale opacity-60">🚚</span>
+                                <span class="font-bold truncate">搬出入計画</span>
+                            </div>
+                            @endif
                             <a href="{{ route('calendar.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">📅</span>
                                 <span class="font-bold truncate">総合カレンダー</span>

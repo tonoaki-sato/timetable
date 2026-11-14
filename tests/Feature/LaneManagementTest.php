@@ -90,7 +90,7 @@ class LaneManagementTest extends TestCase
         $response->assertSee(route('timetables.index'));
         $response->assertSee(route('timetables.show', $this->timetable));
         $response->assertSee('担当班編成');
-        $response->assertSee(route('timetables.lanes.index', 4));
+        $response->assertSee(route('lanes.index'));
         $response->assertDontSee('他日程からコピー');
         $response->assertDontSee('運行マトリクスを見る');
         $response->assertDontSee('copy-lane-modal');
@@ -555,13 +555,13 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 14. 旧 /lanes（担当班選択ハブ画面）が削除され 404 が返却されること
+     * 14. /lanes（lanes.index）がアクティブな運行日へリダイレクトされること
      */
-    public function test_legacy_lanes_select_route_returns_not_found(): void
+    public function test_lanes_route_redirects_to_active_timetable_lanes(): void
     {
         $response = $this->actingAs($this->adminUser)->get('/lanes');
 
-        $response->assertStatus(404);
+        $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
     }
 
     /**
@@ -736,5 +736,27 @@ class LaneManagementTest extends TestCase
         $response->assertSee(route('timetables.lanes.edit', [$this->timetable, $lane]));
         $response->assertSee('詳細');
         $response->assertSee('編集');
+    }
+
+    /**
+     * 23. /lanes（lanes.index）がアクティブな運行日または指定運行日のレーン一覧へリダイレクトされること
+     */
+    public function test_lanes_resource_index_redirects_appropriately(): void
+    {
+        // 1. timetable_id パラメータ指定時
+        $this->actingAs($this->operatorUser)
+            ->get(route('lanes.index', ['timetable_id' => $this->timetable->id]))
+            ->assertRedirect(route('timetables.lanes.index', $this->timetable));
+
+        // 2. timetable_id パラメータなし（アクティブ運行日へリダイレクト）
+        $this->actingAs($this->operatorUser)
+            ->get(route('lanes.index'))
+            ->assertRedirect(route('timetables.lanes.index', $this->timetable));
+
+        // 3. 運行日程が0件の場合は timetables.index へリダイレクト
+        Timetable::query()->delete();
+        $this->actingAs($this->operatorUser)
+            ->get(route('lanes.index'))
+            ->assertRedirect(route('timetables.index'));
     }
 }

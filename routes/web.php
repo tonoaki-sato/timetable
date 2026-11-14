@@ -99,6 +99,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('features/{featureKey}/toggle', [FeatureSettingController::class, 'toggle'])->name('feature-settings.toggle');
 
     // タイムテーブル基本運行日リソースルート & 帳票印刷
+    Route::get('/assignments', [TimetableAssignmentWorkspaceController::class, 'redirect'])->name('assignments.index');
     Route::get('timetables/{timetable}/assignments', [TimetableAssignmentWorkspaceController::class, 'index'])->name('timetables.assignments');
     Route::get('timetables/{timetable}/print-assignments', [TimetablePrintController::class, 'printAssignments'])->name('timetables.print-assignments');
     Route::get('timetables/{timetable}/print-matrix', [TimetablePrintController::class, 'printMatrix'])->name('timetables.print-matrix');
@@ -107,6 +108,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('timetables', TimetableController::class);
 
     // 担当班管理
+    Route::get('/lanes', [LaneController::class, 'redirect'])->name('lanes.index');
     Route::scopeBindings()->group(function () {
         Route::get('timetables/{timetable}/lanes', [LaneController::class, 'index'])->name('timetables.lanes.index');
         Route::get('timetables/{timetable}/lanes/create', [LaneController::class, 'create'])->name('timetables.lanes.create');
@@ -168,6 +170,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // 2. 搬出入計画・カスタムパターン管理 (Logistics & Operations)
+    Route::get('/logistics', [EquipmentLogisticsController::class, 'redirect'])->name('logistics.index');
     Route::group([], function () {
         Route::get('timetables/{timetable}/logistics', [EquipmentLogisticsController::class, 'index'])->name('timetables.logistics.index');
         Route::get('timetables/{timetable}/logistics/print', [EquipmentLogisticsController::class, 'print'])->name('timetables.logistics.print');

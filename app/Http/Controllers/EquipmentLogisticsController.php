@@ -7,6 +7,7 @@ use App\Models\Equipment;
 use App\Models\Timetable;
 use App\Services\EquipmentLogisticsService;
 use App\Services\TimetableService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
@@ -18,6 +19,26 @@ class EquipmentLogisticsController extends Controller
         protected DownloadEquipmentLogisticsPdfAction $downloadLogisticsPdfAction,
         protected TimetableService $timetableService
     ) {}
+
+    /**
+     * 搬出入計画一覧へのリダイレクト（アクティブまたは直近の運行日へ）
+     */
+    public function redirect(Request $request): RedirectResponse
+    {
+        if ($request->filled('timetable_id')) {
+            $timetable = $this->timetableService->findOrFail($request->integer('timetable_id'));
+
+            return redirect()->route('timetables.logistics.index', $timetable);
+        }
+
+        $currentTimetable = $this->timetableService->findFirstActiveOrEarliest();
+
+        if ($currentTimetable) {
+            return redirect()->route('timetables.logistics.index', $currentTimetable);
+        }
+
+        return redirect()->route('timetables.index');
+    }
 
     /**
      * 指定タイムテーブルにおける搬出入計画一覧画面の表示

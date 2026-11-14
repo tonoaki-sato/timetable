@@ -704,14 +704,23 @@ class EquipmentLogisticsTest extends TestCase
     }
 
     /**
-     * 旧 /logistics ルート（タイムテーブル選択ハブ）が廃止され、404 Not Found を返すこと
+     * /logistics（logistics.index）がアクティブな運行日または指定運行日の搬出入計画一覧へリダイレクトされること
      */
-    public function test_legacy_logistics_select_route_returns_not_found(): void
+    public function test_logistics_route_redirects_to_active_timetable_logistics(): void
     {
         $this->actingAs($this->operator);
 
-        $response = $this->get('/logistics');
+        // 1. timetable_id パラメータ指定時
+        $this->get(route('logistics.index', ['timetable_id' => $this->timetable1->id]))
+            ->assertRedirect(route('timetables.logistics.index', $this->timetable1));
 
-        $response->assertNotFound();
+        // 2. timetable_id パラメータなし（アクティブ運行日へリダイレクト）
+        $this->get('/logistics')
+            ->assertRedirect(route('timetables.logistics.index', $this->timetable1));
+
+        // 3. 運行日程が0件の場合は timetables.index へリダイレクト
+        Timetable::query()->delete();
+        $this->get('/logistics')
+            ->assertRedirect(route('timetables.index'));
     }
 }

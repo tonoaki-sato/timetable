@@ -137,4 +137,26 @@ class TimetableAssignmentWorkspaceTest extends TestCase
         $response = $this->actingAs($inactiveUser)->get(route('timetables.assignments', $this->timetable));
         $response->assertForbidden();
     }
+
+    /**
+     * /assignments（assignments.index）がアクティブな運行日または指定運行日の人員事前配置へリダイレクトされること
+     */
+    public function test_assignments_index_redirects_appropriately(): void
+    {
+        // 1. timetable_id パラメータ指定時
+        $this->actingAs($this->user)
+            ->get(route('assignments.index', ['timetable_id' => $this->timetable->id]))
+            ->assertRedirect(route('timetables.assignments', $this->timetable));
+
+        // 2. timetable_id パラメータなし（アクティブ運行日へリダイレクト）
+        $this->actingAs($this->user)
+            ->get(route('assignments.index'))
+            ->assertRedirect(route('timetables.assignments', $this->timetable));
+
+        // 3. 運行日程が0件の場合は timetables.index へリダイレクト
+        Timetable::query()->delete();
+        $this->actingAs($this->user)
+            ->get(route('assignments.index'))
+            ->assertRedirect(route('timetables.index'));
+    }
 }

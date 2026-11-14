@@ -92,6 +92,14 @@ class NavigationPresenter
     }
 
     /**
+     * 登録されている運行計画が存在するか判定
+     */
+    public function hasTimetables(): bool
+    {
+        return $this->navTimetables->isNotEmpty();
+    }
+
+    /**
      * 印刷・当日配置対象のデフォルト運行計画を取得
      */
     public function targetPrintTimetable(): ?Timetable
