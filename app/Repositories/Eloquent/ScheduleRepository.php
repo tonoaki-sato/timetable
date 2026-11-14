@@ -26,6 +26,8 @@ class ScheduleRepository implements ScheduleRepositoryInterface
             $query->upcoming();
         } elseif ($tab === 'past') {
             $query->past();
+        } elseif ($tab === 'all') {
+            $query->orderBy('start_date', 'asc')->orderBy('start_time', 'asc');
         } else {
             $query->orderBy('start_date', 'asc')->orderBy('start_time', 'asc');
         }

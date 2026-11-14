@@ -57,16 +57,21 @@ class ScheduleManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('本祭パレード設営');
         $response->assertSee('定例幹事会ミーティング');
+        $response->assertSee('🔍 表示区分:');
+        $response->assertSee('data-action="select-all-categories"', false);
+        $response->assertSee('data-action="deselect-all-categories"', false);
 
-        // カテゴリ絞り込み
+        // カテゴリ絞り込み（トグル方式: 指定カテゴリ行が表示、非指定カテゴリ行に hidden が付与されること）
         $catResponse = $this->get(route('schedules.index', ['category' => 'committee']));
         $catResponse->assertStatus(200);
         $catResponse->assertSee('定例幹事会ミーティング');
-        $catResponse->assertDontSee('本祭パレード設営');
+        $catResponse->assertSee('schedule-category-committee hover:bg-slate-50/70 transition ', false);
+        $catResponse->assertSee('schedule-category-operation hover:bg-slate-50/70 transition hidden', false);
 
         // 運行スケジュール（timetable）での絞り込み
         $timetable = Timetable::factory()->create([
             'name' => '宵宮運行タイムテーブル',
+            'target_date' => '2027-10-11',
         ]);
         $timetableSchedule = Schedule::factory()->create([
             'title' => '宵宮運行タイムテーブル',
@@ -77,8 +82,9 @@ class ScheduleManagementTest extends TestCase
         $timetableCatResponse = $this->get(route('schedules.index', ['category' => 'timetable']));
         $timetableCatResponse->assertStatus(200);
         $timetableCatResponse->assertSee('宵宮運行タイムテーブル');
-        $timetableCatResponse->assertDontSee('定例幹事会ミーティング');
-        $timetableCatResponse->assertDontSee('本祭パレード設営');
+        $timetableCatResponse->assertSee('schedule-category-timetable hover:bg-slate-50/70 transition ', false);
+        $timetableCatResponse->assertSee('schedule-category-committee hover:bg-slate-50/70 transition hidden', false);
+        $timetableCatResponse->assertSee('schedule-category-operation hover:bg-slate-50/70 transition hidden', false);
 
         // 新規登録文言・操作列文言（編集・削除）の表示確認、および詳細ボタン・PKIサマリー非表示の確認
         $indexResponse = $this->get(route('schedules.index'));
@@ -95,7 +101,7 @@ class ScheduleManagementTest extends TestCase
     }
 
     /**
-     * タブ切り替え（今後の予定 / 過去ログ）ができること
+     * タブ切り替え（今後の予定 / 過去ログ / すべての期間）ができること
      */
     public function test_index_can_switch_tabs(): void
     {
@@ -111,6 +117,12 @@ class ScheduleManagementTest extends TestCase
             'start_date' => now()->subDays(10)->toDateString(),
         ]);
 
+        // デフォルト（tab未指定）は「今後の予定」
+        $resDefault = $this->get(route('schedules.index'));
+        $resDefault->assertStatus(200);
+        $resDefault->assertSee('来月の定例会');
+        $resDefault->assertDontSee('先月の反省会');
+
         // 今後の予定タブ
         $resUpcoming = $this->get(route('schedules.index', ['tab' => 'upcoming']));
         $resUpcoming->assertStatus(200);
@@ -122,6 +134,12 @@ class ScheduleManagementTest extends TestCase
         $resPast->assertStatus(200);
         $resPast->assertSee('先月の反省会');
         $resPast->assertDontSee('来月の定例会');
+
+        // すべての期間タブ
+        $resAll = $this->get(route('schedules.index', ['tab' => 'all']));
+        $resAll->assertStatus(200);
+        $resAll->assertSee('来月の定例会');
+        $resAll->assertSee('先月の反省会');
     }
 
     /**

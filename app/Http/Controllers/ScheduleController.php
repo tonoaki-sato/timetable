@@ -28,7 +28,7 @@ class ScheduleController extends Controller
         $status = $request->input('status');
         $search = $request->input('search');
         $staffId = $request->filled('staff_id') ? (int) $request->input('staff_id') : null;
-        $tab = $request->input('tab');
+        $tab = $request->input('tab', 'upcoming');
 
         $viewData = $this->scheduleService->getIndexViewData(
             category: $category,
@@ -36,6 +36,7 @@ class ScheduleController extends Controller
             search: $search,
             staffId: $staffId,
             tab: $tab,
+            perPage: 100,
         );
 
         return view('schedules.index', $viewData);

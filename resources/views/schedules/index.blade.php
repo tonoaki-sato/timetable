@@ -26,13 +26,9 @@
         </x-slot:actions>
     </x-page-header>
 
-    <!-- 2. タブ切り替え（全期間 / 直近予定 / 過去ログ） -->
+    <!-- 2. タブ切り替え（今後の予定 / 過去ログ / すべての期間） -->
     <div class="flex items-center space-x-1.5 border-b border-slate-200 pb-1.5 overflow-x-auto scrollbar-none flex-nowrap">
         <a href="{{ route('schedules.index', array_merge(request()->except('page', 'tab'), [])) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ empty($currentTab) ? 'bg-slate-900 text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
-            <span>📋 すべての期間</span>
-        </a>
-        <a href="{{ route('schedules.index', array_merge(request()->except('page'), ['tab' => 'upcoming'])) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $currentTab === 'upcoming' ? 'bg-slate-900 text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
             <span>📅 今後の予定</span>
         </a>
@@ -40,35 +36,57 @@
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $currentTab === 'past' ? 'bg-slate-900 text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
             <span>📁 過去の記録</span>
         </a>
+        <a href="{{ route('schedules.index', array_merge(request()->except('page'), ['tab' => 'all'])) }}"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $currentTab === 'all' ? 'bg-slate-900 text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+            <span>📋 すべての期間</span>
+        </a>
     </div>
 
-    <!-- 3. 検索・絞り込みフォーム & カテゴリクイックフィルター -->
+    <!-- 3. 検索・絞り込みフォーム & 表示区分トグルフィルター -->
     <div class="bg-white p-3 sm:p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-3">
-        <!-- カテゴリクイックボタン -->
-        <div class="flex items-center space-x-2 border-b border-slate-100 pb-3 overflow-x-auto">
-            <span class="text-xs font-bold text-slate-500 whitespace-nowrap">区分:</span>
-            <a href="{{ route('schedules.index', array_merge(request()->except('page', 'category'), [])) }}"
-                class="px-3 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap {{ empty($currentCategory) ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                すべて
-            </a>
-            <a href="{{ route('schedules.index', array_merge(request()->except('page'), ['category' => 'timetable'])) }}"
-                class="px-3 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center space-x-1 {{ $currentCategory === 'timetable' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                <span>🏮</span>
-                <span>運行スケジュール</span>
-            </a>
-            @foreach($categories as $key => $label)
-            <a href="{{ route('schedules.index', array_merge(request()->except('page'), ['category' => $key])) }}"
-                class="px-3 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center space-x-1 {{ $currentCategory === $key ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                <span>{{ \App\Models\Schedule::categoryFilterIcon($key) }}</span>
-                <span>{{ $label }}</span>
-            </a>
-            @endforeach
+        <!-- 表示区分切り替えフィルターバー（トグル方式） -->
+        <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-3">
+            <span class="text-xs font-bold text-slate-700 flex items-center mr-1">
+                <span>🔍 表示区分:</span>
+            </span>
+
+            <!-- 全選択 / 全解除 ボタン -->
+            <div class="inline-flex rounded border border-slate-300 bg-white p-0.5 mr-1 shrink-0">
+                <button type="button" data-action="select-all-categories"
+                    title="全区分を表示"
+                    class="px-1.5 py-0.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-[10px] font-bold transition cursor-pointer">
+                    全選択
+                </button>
+                <button type="button" data-action="deselect-all-categories"
+                    title="全区分を非表示"
+                    class="px-1.5 py-0.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-[10px] font-bold transition cursor-pointer">
+                    全解除
+                </button>
+            </div>
+
+            <!-- 各区分のチップ（ON/OFF トグル） -->
+            <div class="flex flex-wrap items-center gap-1.5" id="category-filter-chips">
+                @foreach($displayCategories as $key => $cat)
+                    @php
+                        $isChipVisible = $selectedCategories === null || in_array($key, $selectedCategories, true);
+                    @endphp
+                    <button type="button"
+                        id="chip-category-{{ $key }}"
+                        data-category-id="{{ $key }}"
+                        data-category-name="{{ $cat['label'] }}"
+                        class="category-chip inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border transition {{ $isChipVisible ? 'bg-white text-slate-800 border-slate-300 hover:border-indigo-400' : 'opacity-40 bg-slate-100 text-slate-800 border-slate-300' }} whitespace-nowrap shrink-0 cursor-pointer">
+                        <span class="mr-1 text-[10px] text-emerald-600 font-bold">{{ $isChipVisible ? '✔' : '✕' }}</span>
+                        <span>{{ $cat['icon'] }} {{ $cat['label'] }}</span>
+                    </button>
+                @endforeach
+            </div>
         </div>
 
         <form method="GET" action="{{ route('schedules.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            @if($currentTab)
+            @if($currentTab && $currentTab !== 'upcoming')
             <input type="hidden" name="tab" value="{{ $currentTab }}">
             @endif
+            <input type="hidden" name="category" id="search-form-category" value="{{ is_array($selectedCategories) ? implode(',', $selectedCategories) : '' }}">
 
             <!-- キーワード -->
             <div>
@@ -133,7 +151,12 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($schedules as $schedule)
-                    <tr class="hover:bg-slate-50/70 transition">
+                    @php
+                        $scheduleCategoryKey = $schedule->is_linked_to_timetable ? 'timetable' : (string) $schedule->category;
+                        $isRowVisible = $selectedCategories === null || in_array($scheduleCategoryKey, $selectedCategories, true);
+                    @endphp
+                    <tr class="schedule-row schedule-category-{{ $scheduleCategoryKey }} hover:bg-slate-50/70 transition {{ $isRowVisible ? '' : 'hidden' }}"
+                        data-category="{{ $scheduleCategoryKey }}">
                         <!-- 日時 -->
                         <td class="px-4 py-2.5 whitespace-nowrap">
                             <div class="flex items-center space-x-1.5 font-mono text-xs">
@@ -228,6 +251,15 @@
                         </td>
                     </tr>
                     @endforelse
+
+                    @if($schedules->isNotEmpty())
+                    <tr id="schedule-filter-empty-state" class="{{ ($selectedCategories !== null && count($selectedCategories) === 0) ? '' : 'hidden' }}">
+                        <td colspan="6" class="px-4 py-8 text-center text-slate-400">
+                            <span class="text-2xl block mb-2">🔍</span>
+                            表示対象の区分が選択されていません。上部の「全選択」または区分チップをクリックして表示を切り替えてください。
+                        </td>
+                    </tr>
+                    @endif
                 </tbody>
             </table>
         </div>
@@ -240,4 +272,6 @@
     </div>
 
 </div>
+
+@vite(['resources/js/schedules.js'])
 </x-layouts.app>

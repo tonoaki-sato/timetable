@@ -25,7 +25,7 @@ class ScheduleServiceTest extends TestCase
         $mockRepo = Mockery::mock(ScheduleRepositoryInterface::class);
         $mockRepo->shouldReceive('paginateFiltered')
             ->once()
-            ->with('committee', 'planned', '検索語', null, 'upcoming', 15)
+            ->with(null, 'planned', '検索語', null, 'upcoming', 15)
             ->andReturn($mockPaginator);
 
         $mockRepo->shouldReceive('getStatusSummary')
@@ -46,6 +46,8 @@ class ScheduleServiceTest extends TestCase
         $this->assertArrayHasKey('committee', $result['categories']);
         $this->assertArrayHasKey('planned', $result['statuses']);
         $this->assertArrayHasKey('staffs', $result);
+        $this->assertSame(['committee'], $result['selectedCategories']);
+        $this->assertArrayHasKey('timetable', $result['displayCategories']);
         $this->assertSame('committee', $result['currentCategory']);
         $this->assertSame('planned', $result['currentStatus']);
         $this->assertSame('検索語', $result['currentSearch']);

@@ -21,6 +21,28 @@ class ScheduleService
     }
 
     /**
+     * リクエスト入力の category を有効な区分キー配列へ正規化（未指定またはすべて選択時は null）
+     *
+     * @return array<int, string>|null
+     */
+    public function parseCategories(mixed $input): ?array
+    {
+        if ($input === null || $input === '' || $input === []) {
+            return null;
+        }
+
+        $raw = is_array($input) ? $input : explode(',', (string) $input);
+        $validKeys = array_merge(['timetable'], array_keys(Schedule::CATEGORIES));
+
+        $filtered = array_values(array_unique(array_filter(
+            array_map('trim', $raw),
+            fn (string $key): bool => in_array($key, $validKeys, true)
+        )));
+
+        return empty($filtered) ? null : $filtered;
+    }
+
+    /**
      * スケジュール一覧画面表示用データの組み立て
      *
      * @return array<string, mixed>
@@ -33,8 +55,10 @@ class ScheduleService
         ?string $tab = null,
         int $perPage = 15
     ): array {
+        $selectedCategories = $this->parseCategories($category);
+
         $schedules = $this->scheduleRepository->paginateFiltered(
-            category: $category,
+            category: null,
             status: $status,
             search: $search,
             staffId: $staffId,
@@ -45,12 +69,27 @@ class ScheduleService
         $statusSummary = $this->scheduleRepository->getStatusSummary();
         $staffs = $this->staffRepository->getActiveStaffList();
 
+        $displayCategories = [
+            'timetable' => [
+                'label' => '運行スケジュール',
+                'icon' => '🏮',
+            ],
+        ];
+        foreach (Schedule::CATEGORIES as $key => $label) {
+            $displayCategories[$key] = [
+                'label' => $label,
+                'icon' => Schedule::categoryFilterIcon($key),
+            ];
+        }
+
         return [
             'schedules' => $schedules,
             'statusSummary' => $statusSummary,
             'categories' => Schedule::CATEGORIES,
+            'displayCategories' => $displayCategories,
             'statuses' => Schedule::STATUSES,
             'staffs' => $staffs,
+            'selectedCategories' => $selectedCategories,
             'currentCategory' => $category,
             'currentStatus' => $status,
             'currentSearch' => $search,
