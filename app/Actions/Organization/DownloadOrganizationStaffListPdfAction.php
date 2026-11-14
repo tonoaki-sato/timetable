@@ -43,4 +43,3 @@ class DownloadOrganizationStaffListPdfAction
         return $this->organizationService->getStaffListPdfViewData();
     }
 }
-

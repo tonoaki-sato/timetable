@@ -9,7 +9,6 @@ use App\Models\Timetable;
 use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Repositories\Contracts\LaneRequestRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
-use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -18,22 +17,11 @@ class LaneService
 {
     public function __construct(
         protected LaneRepositoryInterface $laneRepository,
-        protected TimetableRepositoryInterface $timetableRepository,
         protected TimetableTaskRepositoryInterface $taskRepository,
         protected StaffRepositoryInterface $staffRepository,
         protected LaneRequestRepositoryInterface $laneRequestRepository,
         protected TimetableTaskService $taskService,
     ) {}
-
-    /**
-     * 担当班管理の対象タイムテーブル選択画面用一覧を取得
-     *
-     * @return Collection<int, Timetable>
-     */
-    public function getTimetablesForSelect(): Collection
-    {
-        return $this->timetableRepository->getAllWithLanesAndLeadStaff();
-    }
 
     /**
      * 指定タイムテーブルに紐づく担当班一覧を取得

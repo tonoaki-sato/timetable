@@ -336,33 +336,6 @@ class TimetableMatrixTest extends TestCase
     }
 
     /**
-     * /lanes ショートカットがアクティブ運行日へ正常にリダイレクトすること
-     */
-    public function test_lanes_shortcut_redirects_to_active_or_first_timetable_lanes(): void
-    {
-        $this->actingAs($this->operator);
-
-        // 運行日が存在する場合
-        $timetable = Timetable::factory()->create([
-            'status' => 'active',
-        ]);
-
-        $response = $this->get(route('lanes.index'));
-        $response->assertRedirect(route('timetables.lanes.index', $timetable));
-    }
-
-    /**
-     * 運行日が0件の場合、/lanes は運行日管理へリダイレクトすること
-     */
-    public function test_lanes_shortcut_redirects_to_timetables_index_when_no_timetables(): void
-    {
-        $this->actingAs($this->operator);
-
-        $response = $this->get(route('lanes.index'));
-        $response->assertRedirect(route('timetables.index'));
-    }
-
-    /**
      * マスター管理、帳票・印刷、システム管理メニューが正しく整理・表示されること
      */
     public function test_navigation_displays_resource_and_system_menu_sections(): void

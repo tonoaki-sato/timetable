@@ -85,7 +85,7 @@
                 </div>
 
                 <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <a href="{{ route('lanes.index') }}" class="text-indigo-600 hover:text-indigo-800 font-bold">
+                    <a href="{{ route('timetables.lanes.index', $firstActiveTimetable?->id ?? 4) }}" class="text-indigo-600 hover:text-indigo-800 font-bold">
                         班編成一覧へ →
                     </a>
                 </div>

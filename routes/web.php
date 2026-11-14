@@ -107,7 +107,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('timetables', TimetableController::class);
 
     // 担当班管理
-    Route::get('/lanes', [LaneController::class, 'select'])->name('lanes.index');
     Route::scopeBindings()->group(function () {
         Route::get('timetables/{timetable}/lanes', [LaneController::class, 'index'])->name('timetables.lanes.index');
         Route::get('timetables/{timetable}/lanes/create', [LaneController::class, 'create'])->name('timetables.lanes.create');

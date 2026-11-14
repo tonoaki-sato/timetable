@@ -81,14 +81,6 @@ class TimetableRepository implements TimetableRepositoryInterface
     }
 
     #[Override]
-    public function getAllWithLanesAndLeadStaff(): Collection
-    {
-        return Timetable::with(['lanes.leadStaff'])
-            ->orderBy('target_date', 'asc')
-            ->get();
-    }
-
-    #[Override]
     public function getAllWithLogisticsPlansCount(): Collection
     {
         return Timetable::withCount('logisticsPlans')

@@ -282,6 +282,7 @@ class ScheduleManagementTest extends TestCase
             'title' => '本宮本番運行',
             'category' => 'operation',
             'timetable_id' => $timetable->id,
+            'start_date' => now()->addDays(7)->toDateString(),
         ]);
 
         // 一覧画面で削除ボタンではなく「連動中」バッジが表示されていること

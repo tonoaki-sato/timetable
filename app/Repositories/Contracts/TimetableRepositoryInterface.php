@@ -56,13 +56,6 @@ interface TimetableRepositoryInterface
     public function findForDatePrioritizingActive(string $dateStr): ?Timetable;
 
     /**
-     * レーン・班長情報付きで全タイムテーブルを取得（日付順）
-     *
-     * @return Collection<int, Timetable>
-     */
-    public function getAllWithLanesAndLeadStaff(): Collection;
-
-    /**
      * 搬出入計画ステップ数カウント付きで全タイムテーブルを取得（日付順）
      *
      * @return Collection<int, Timetable>

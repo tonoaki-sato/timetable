@@ -161,8 +161,8 @@
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">各日の運行日程・基本情報台帳</p>
                                         </div>
                                     </a>
-                                    <a href="{{ route('lanes.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('lanes.*') || request()->routeIs('timetables.lanes.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                    <a href="{{ route('timetables.lanes.index', 4) }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.lanes.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🏷️</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold whitespace-nowrap truncate">担当班編成</div>
@@ -669,7 +669,7 @@
                                 <span class="text-base shrink-0">📅</span>
                                 <span class="font-bold truncate">運行日程管理</span>
                             </a>
-                            <a href="{{ route('lanes.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            <a href="{{ route('timetables.lanes.index', 4) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🏷️</span>
                                 <span class="font-bold truncate">担当班編成</span>
                             </a>

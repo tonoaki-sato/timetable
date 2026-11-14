@@ -90,7 +90,7 @@ class LaneManagementTest extends TestCase
         $response->assertSee(route('timetables.index'));
         $response->assertSee(route('timetables.show', $this->timetable));
         $response->assertSee('担当班編成');
-        $response->assertSee(route('lanes.index'));
+        $response->assertSee(route('timetables.lanes.index', 4));
         $response->assertDontSee('他日程からコピー');
         $response->assertDontSee('運行マトリクスを見る');
         $response->assertDontSee('copy-lane-modal');
@@ -555,63 +555,13 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 14. 運行計画が複数ある場合、/lanes で選択ハブ画面が表示されること
+     * 14. 旧 /lanes（担当班選択ハブ画面）が削除され 404 が返却されること
      */
-    public function test_lanes_index_shows_timetable_selection_hub_when_multiple_timetables_exist(): void
+    public function test_legacy_lanes_select_route_returns_not_found(): void
     {
-        $secondTimetable = Timetable::factory()->create([
-            'name' => '本祭2日目',
-            'target_date' => '2027-10-18',
-        ]);
-        $this->timetable->createDefaultLanes();
-        $secondTimetable->createDefaultLanes();
+        $response = $this->actingAs($this->adminUser)->get('/lanes');
 
-        $response = $this->actingAs($this->adminUser)
-            ->get(route('lanes.index'));
-
-        $response->assertStatus(200);
-        $response->assertSee('担当班編成');
-        $response->assertSee('班編成や現場リーダー設定を行うタイムテーブル（日程）を選択してください。');
-        $response->assertDontSee('新規タイムテーブルを登録');
-        $response->assertSee('運行日別 担当班編成一覧');
-        $response->assertDontSee('全 2 日程');
-        $response->assertSee('担当班を編成する');
-        $response->assertDontSee('マトリクス');
-        $response->assertDontSee('担当班を管理');
-        $response->assertDontSee('編成レーン例');
-        $response->assertDontSee('現場リーダー設定状況');
-        $response->assertDontSee('編成レーン数');
-        $response->assertSee($this->timetable->name);
-        $response->assertSee($secondTimetable->name);
-        $response->assertSee(route('timetables.lanes.index', $this->timetable));
-        $response->assertSee(route('timetables.lanes.index', $secondTimetable));
-        $response->assertDontSee('タイムテーブル・タスク台帳');
-    }
-
-    /**
-     * 15. 運行計画が1件のみの場合、/lanes からその日程へ自動リダイレクトされること
-     */
-    public function test_lanes_index_redirects_directly_when_only_one_timetable_exists(): void
-    {
-        // setUpで $this->timetable の1件のみ作成されている
-        $response = $this->actingAs($this->adminUser)
-            ->get(route('lanes.index'));
-
-        $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
-    }
-
-    /**
-     * 16. 運行計画が0件の場合、/lanes から運行日管理へ案内付きでリダイレクトされること
-     */
-    public function test_lanes_index_redirects_to_timetables_index_when_no_timetables_exist(): void
-    {
-        $this->timetable->delete();
-
-        $response = $this->actingAs($this->adminUser)
-            ->get(route('lanes.index'));
-
-        $response->assertRedirect(route('timetables.index'));
-        $response->assertSessionHas('info', '担当班を編成する前に、運行日を登録してください。');
+        $response->assertStatus(404);
     }
 
     /**

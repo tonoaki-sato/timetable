@@ -97,7 +97,7 @@ class NavigationMenuStructureTest extends TestCase
         $response->assertSee('運行日程管理');
 
         // 担当班編成
-        $response->assertSee(route('lanes.index'));
+        $response->assertSee(route('timetables.lanes.index', 4));
         $response->assertSee('担当班編成');
 
         // タスク台帳
@@ -130,7 +130,7 @@ class NavigationMenuStructureTest extends TestCase
 
         // マスター管理内に担当班が重複登録されていないこと（デスクトップ・モバイル各1箇所のみ）
         $html = $response->getContent();
-        $this->assertSame(2, substr_count($html, route('lanes.index')));
+        $this->assertSame(2, substr_count($html, route('timetables.lanes.index', 4)));
     }
 
     /**
@@ -189,7 +189,7 @@ class NavigationMenuStructureTest extends TestCase
     {
         $this->actingAs($this->admin);
 
-        // 複数運行日を作成して lanes.index の単一リダイレクトを回避
+        // 複数運行日を作成
         Timetable::factory()->create([
             'name' => '前夜祭2026',
             'status' => 'planning',
@@ -211,7 +211,7 @@ class NavigationMenuStructureTest extends TestCase
             route('logistics.index'),
             route('preparation-navigator.index'),
             route('timetables.index'),
-            route('lanes.index'),
+            route('timetables.lanes.index', $this->timetable),
             route('timetables.assignments', $this->timetable),
             route('calendar.index'),
             route('schedules.index'),
