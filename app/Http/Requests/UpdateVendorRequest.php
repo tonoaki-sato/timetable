@@ -2,12 +2,12 @@
 
 namespace App\Http\Requests;
 
-use App\Models\GozaStore;
+use App\Enums\BoothCategory;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateGozaStoreRequest extends FormRequest
+class UpdateVendorRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,12 +25,18 @@ class UpdateGozaStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'store_name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'representative_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact' => ['nullable', 'string', 'max:50'],
-            'product_items' => ['nullable', 'string', 'max:1000'],
-            'status' => ['required', Rule::in(array_keys(GozaStore::STATUSES))],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'booths' => ['nullable', 'array'],
+            'booths.*.id' => ['required_with:booths', 'integer', 'exists:layout_booths,id'],
+            'booths.*.category' => ['nullable', Rule::enum(BoothCategory::class)],
+            'booths.*.product_items' => ['nullable', 'string', 'max:1000'],
+            'booths.*.unassign' => ['nullable', 'boolean'],
+            'add_booth_id' => ['nullable', 'integer', 'exists:layout_booths,id'],
+            'add_category' => ['nullable', Rule::enum(BoothCategory::class)],
+            'add_product_items' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -42,12 +48,13 @@ class UpdateGozaStoreRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'store_name' => '出店名・屋号',
+            'name' => '出店名・屋号',
             'representative_name' => '出店代表者氏名',
             'emergency_contact' => '緊急連絡先',
-            'product_items' => '販売品目',
-            'status' => '出店ステータス',
             'notes' => '備考',
+            'add_booth_id' => '追加割当コマ',
+            'add_category' => '追加出店区分',
+            'add_product_items' => '追加販売品目',
         ];
     }
 }

@@ -4,13 +4,13 @@ namespace App\Services;
 
 use App\Enums\BoothCategory;
 use App\Enums\FacilityType;
-use App\Models\GozaStore;
 use App\Models\LayoutBooth;
 use App\Models\LayoutFacility;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
-use App\Repositories\Contracts\GozaStoreRepositoryInterface;
+use App\Models\Vendor;
 use App\Repositories\Contracts\LayoutMapRepositoryInterface;
+use App\Repositories\Contracts\VendorRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -18,7 +18,7 @@ class SiteLayoutService
 {
     public function __construct(
         protected LayoutMapRepositoryInterface $layoutMapRepository,
-        protected GozaStoreRepositoryInterface $gozaStoreRepository
+        protected VendorRepositoryInterface $vendorRepository
     ) {}
 
     /**
@@ -49,7 +49,7 @@ class SiteLayoutService
         $facilities = $map->facilities;
 
         $totalBooths = $booths->count();
-        $assignedBooths = $booths->filter(fn (LayoutBooth $b) => ! empty($b->name) || $b->goza_store_id !== null)->count();
+        $assignedBooths = $booths->filter(fn (LayoutBooth $b) => ! empty($b->name) || $b->vendor_id !== null)->count();
         $unassignedBooths = $totalBooths - $assignedBooths;
 
         // カテゴリ別集計
@@ -234,42 +234,153 @@ class SiteLayoutService
     }
 
     /**
-     * ござ市出店者一覧をページネーション取得
+     * 出店者一覧をページネーション取得
+     *
+     * @param  array{category?: string|null, search?: string|null}  $filters
+     */
+    public function paginateVendors(Timetable $timetable, array $filters = [], int $perPage = 25): LengthAwarePaginator
+    {
+        return $this->vendorRepository->paginateForTimetable($timetable, $filters, $perPage);
+    }
+
+    /**
+     * タイムテーブルに属する全出店者を取得（セレクトボックス用）
+     */
+    public function getVendorsForSelect(Timetable $timetable): Collection
+    {
+        return $this->vendorRepository->getForTimetable($timetable);
+    }
+
+    /**
+     * タイムテーブルの全ブースを取得（セレクトボックス用）
+     */
+    public function getBoothsForSelect(Timetable $timetable): Collection
+    {
+        $map = $this->layoutMapRepository->getOrCreateForTimetable($timetable);
+
+        return LayoutBooth::with(['area', 'vendor'])
+            ->where('layout_map_id', $map->id)
+            ->orderBy('display_order', 'asc')
+            ->orderBy('booth_code', 'asc')
+            ->get();
+    }
+
+    /**
+     * 出店者の登録（初期ブース割当にも対応）
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function createVendor(Timetable $timetable, array $data, ?int $initialBoothId = null, ?string $initialCategory = null, ?string $initialProductItems = null): Vendor
+    {
+        $vendor = $this->vendorRepository->create($timetable, $data);
+
+        if ($initialBoothId) {
+            $booth = LayoutBooth::find($initialBoothId);
+            if ($booth) {
+                $boothUpdate = ['vendor_id' => $vendor->id];
+                if ($initialCategory) {
+                    $boothUpdate['category'] = $initialCategory;
+                }
+                if ($initialProductItems !== null) {
+                    $boothUpdate['product_items'] = $initialProductItems;
+                }
+                $booth->update($boothUpdate);
+            }
+        }
+
+        return $vendor->fresh(['booths.area']);
+    }
+
+    /**
+     * 出店者の更新（ブース更新・新規コマ割当・解除に対応）
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<int, array{id: int, category?: string, product_items?: string, unassign?: bool}>|null  $booths
+     */
+    public function updateVendor(Vendor $vendor, array $data, ?array $booths = null, ?int $addBoothId = null, ?string $addCategory = null, ?string $addProductItems = null): Vendor
+    {
+        $vendor = $this->vendorRepository->update($vendor, $data);
+
+        // 既存ブースの更新 (category, product_items, 解除)
+        if (is_array($booths)) {
+            foreach ($booths as $bData) {
+                if (empty($bData['id'])) {
+                    continue;
+                }
+                $booth = LayoutBooth::where('id', $bData['id'])->where('vendor_id', $vendor->id)->first();
+                if (! $booth) {
+                    continue;
+                }
+                if (! empty($bData['unassign'])) {
+                    $booth->update(['vendor_id' => null]);
+                } else {
+                    $update = [];
+                    if (isset($bData['category'])) {
+                        $update['category'] = $bData['category'];
+                    }
+                    if (isset($bData['product_items'])) {
+                        $update['product_items'] = $bData['product_items'];
+                    }
+                    if (! empty($update)) {
+                        $booth->update($update);
+                    }
+                }
+            }
+        }
+
+        // 新規ブースの追加割当
+        if ($addBoothId) {
+            $newBooth = LayoutBooth::find($addBoothId);
+            if ($newBooth) {
+                $addUpdate = ['vendor_id' => $vendor->id];
+                if ($addCategory) {
+                    $addUpdate['category'] = $addCategory;
+                }
+                if ($addProductItems !== null) {
+                    $addUpdate['product_items'] = $addProductItems;
+                }
+                $newBooth->update($addUpdate);
+            }
+        }
+
+        return $vendor->fresh(['booths.area']);
+    }
+
+    /**
+     * 出店者の削除
+     */
+    public function deleteVendor(Vendor $vendor): bool
+    {
+        LayoutBooth::where('vendor_id', $vendor->id)->update(['vendor_id' => null]);
+
+        return $this->vendorRepository->delete($vendor);
+    }
+
+    /**
+     * 後方互換用エイリアス
      */
     public function paginateGozaStores(Timetable $timetable, array $filters = [], int $perPage = 25): LengthAwarePaginator
     {
-        return $this->gozaStoreRepository->paginateForTimetable($timetable, $filters, $perPage);
+        return $this->paginateVendors($timetable, $filters, $perPage);
     }
 
-    /**
-     * タイムテーブルに属する全ござ市出店者を取得（セレクトボックス用）
-     */
     public function getGozaStoresForSelect(Timetable $timetable): Collection
     {
-        return $this->gozaStoreRepository->getForTimetable($timetable);
+        return $this->getVendorsForSelect($timetable);
     }
 
-    /**
-     * ござ市出店者の登録
-     */
-    public function createGozaStore(Timetable $timetable, array $data): GozaStore
+    public function createGozaStore(Timetable $timetable, array $data): Vendor
     {
-        return $this->gozaStoreRepository->create($timetable, $data);
+        return $this->createVendor($timetable, $data);
     }
 
-    /**
-     * ござ市出店者の更新
-     */
-    public function updateGozaStore(GozaStore $store, array $data): GozaStore
+    public function updateGozaStore(Vendor $store, array $data): Vendor
     {
-        return $this->gozaStoreRepository->update($store, $data);
+        return $this->updateVendor($store, $data);
     }
 
-    /**
-     * ござ市出店者の削除
-     */
-    public function deleteGozaStore(GozaStore $store): bool
+    public function deleteGozaStore(Vendor $store): bool
     {
-        return $this->gozaStoreRepository->delete($store);
+        return $this->deleteVendor($store);
     }
 }

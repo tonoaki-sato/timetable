@@ -2,12 +2,12 @@
 
 namespace App\Repositories\Contracts;
 
-use App\Models\GozaStore;
 use App\Models\Timetable;
+use App\Models\Vendor;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
-interface GozaStoreRepositoryInterface
+interface VendorRepositoryInterface
 {
     /**
      * タイムテーブルに紐づく出店者一覧を取得
@@ -17,7 +17,7 @@ interface GozaStoreRepositoryInterface
     /**
      * 出店者一覧をページネーション取得（検索・絞り込み）
      *
-     * @param  array{status?: string|null, search?: string|null}  $filters
+     * @param  array{category?: string|null, search?: string|null}  $filters
      */
     public function paginateForTimetable(Timetable $timetable, array $filters = [], int $perPage = 25): LengthAwarePaginator;
 
@@ -26,17 +26,17 @@ interface GozaStoreRepositoryInterface
      *
      * @param  array<string, mixed>  $data
      */
-    public function create(Timetable $timetable, array $data): GozaStore;
+    public function create(Timetable $timetable, array $data): Vendor;
 
     /**
      * 出店者を更新
      *
      * @param  array<string, mixed>  $data
      */
-    public function update(GozaStore $store, array $data): GozaStore;
+    public function update(Vendor $vendor, array $data): Vendor;
 
     /**
      * 出店者を削除
      */
-    public function delete(GozaStore $store): bool;
+    public function delete(Vendor $vendor): bool;
 }

@@ -25,7 +25,7 @@ export default defineConfig({
                 'resources/js/staff-myshift.js',
                 'resources/js/organizations.js',
                 'resources/js/facilities.js',
-                'resources/js/goza_stores.js',
+                'resources/js/vendors.js',
             ],
             refresh: true,
             fonts: [

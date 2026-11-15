@@ -37,10 +37,10 @@
                 <span>🚰</span>
                 <span>インフラ設備一覧</span>
             </a>
-            <a href="{{ route('timetables.goza-stores.index', $timetable) }}"
+            <a href="{{ route('timetables.vendors.index', $timetable) }}"
                 class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
-                <span>🏮</span>
-                <span>ござ市出店者管理</span>
+                <span>🏪</span>
+                <span>出店者マスター管理</span>
             </a>
         </x-slot:actions>
     </x-page-header>

@@ -31,10 +31,10 @@
                 <span>←</span>
                 <span>配置ダッシュボードへ</span>
             </a>
-            <a href="{{ route('timetables.goza-stores.index', $timetable) }}"
+            <a href="{{ route('timetables.vendors.index', $timetable) }}"
                 class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
-                <span>🏮</span>
-                <span>ござ市出店者管理</span>
+                <span>🏪</span>
+                <span>出店者マスター管理</span>
             </a>
         </x-slot:actions>
     </x-page-header>
@@ -156,10 +156,10 @@
                                 </span>
                             </td>
                             <td class="py-2.5 px-3 whitespace-nowrap text-slate-600">
-                                @if($booth->gozaStore)
-                                    <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded text-[10px]">
-                                        <span>🏮</span>
-                                        <span class="truncate max-w-[120px]">{{ $booth->gozaStore->store_name }}</span>
+                                @if($booth->vendor)
+                                    <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 bg-indigo-50 text-indigo-800 border border-indigo-200 rounded text-[10px] font-bold">
+                                        <span>🏪</span>
+                                        <span class="truncate max-w-[120px]">{{ $booth->vendor->name }}</span>
                                     </span>
                                 @else
                                     <span class="text-slate-400 text-[11px]">-</span>
@@ -176,7 +176,9 @@
                                     data-area="{{ $booth->area?->name }}"
                                     data-name="{{ $booth->name }}"
                                     data-category="{{ $booth->category->value }}"
-                                    data-goza-id="{{ $booth->goza_store_id }}"
+                                    data-vendor-id="{{ $booth->vendor_id }}"
+                                    data-goza-id="{{ $booth->vendor_id }}"
+                                    data-items="{{ $booth->product_items }}"
                                     data-landmark="{{ $booth->adjacent_landmark }}"
                                     data-notes="{{ $booth->notes }}"
                                     class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition">
@@ -239,15 +241,20 @@
                 </div>
 
                 <div>
-                    <label for="selectGozaStore" class="block font-bold text-slate-700 mb-1">ござ市出店者の紐付け (任意)</label>
-                    <select id="selectGozaStore" name="goza_store_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                    <label for="selectVendor" class="block font-bold text-slate-700 mb-1">出店者の紐付け (任意)</label>
+                    <select id="selectVendor" name="vendor_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
                         <option value="">(紐付けなし・一般または企業ブース)</option>
-                        @foreach($gozaStores as $gs)
-                            <option value="{{ $gs->id }}">
-                                {{ $gs->store_name }} {{ $gs->representative_name ? '(' . $gs->representative_name . ')' : '' }}
+                        @foreach($vendors as $v)
+                            <option value="{{ $v->id }}">
+                                {{ $v->name }} {{ $v->representative_name ? '(' . $v->representative_name . ')' : '' }}
                             </option>
                         @endforeach
                     </select>
+                </div>
+
+                <div>
+                    <label for="inputBoothProducts" class="block font-bold text-slate-700 mb-1">このコマでの取扱品目・活動内容</label>
+                    <input type="text" id="inputBoothProducts" name="product_items" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: 新鮮野菜、果物直売">
                 </div>
 
                 <div>
@@ -283,7 +290,8 @@
         const areaNameDiv = document.getElementById('modalAreaName');
         const nameInput = document.getElementById('inputBoothName');
         const categorySelect = document.getElementById('selectBoothCategory');
-        const gozaSelect = document.getElementById('selectGozaStore');
+        const vendorSelect = document.getElementById('selectVendor');
+        const productsInput = document.getElementById('inputBoothProducts');
         const landmarkInput = document.getElementById('inputLandmark');
         const notesTextarea = document.getElementById('inputNotes');
         const closeBtn = document.getElementById('modalCloseBtn');
@@ -303,7 +311,8 @@
                 const area = btn.getAttribute('data-area');
                 const name = btn.getAttribute('data-name') || '';
                 const category = btn.getAttribute('data-category');
-                const gozaId = btn.getAttribute('data-goza-id') || '';
+                const vendorId = btn.getAttribute('data-vendor-id') || btn.getAttribute('data-goza-id') || '';
+                const items = btn.getAttribute('data-items') || '';
                 const landmark = btn.getAttribute('data-landmark') || '';
                 const notes = btn.getAttribute('data-notes') || '';
 
@@ -311,7 +320,8 @@
                 areaNameDiv.textContent = area || '-';
                 nameInput.value = name;
                 categorySelect.value = category;
-                gozaSelect.value = gozaId;
+                if (vendorSelect) vendorSelect.value = vendorId;
+                if (productsInput) productsInput.value = items;
                 landmarkInput.value = landmark;
                 notesTextarea.value = notes;
 

@@ -4,13 +4,13 @@ namespace Database\Seeders;
 
 use App\Enums\BoothCategory;
 use App\Enums\FacilityType;
-use App\Models\GozaStore;
 use App\Models\LayoutArea;
 use App\Models\LayoutBooth;
 use App\Models\LayoutFacility;
 use App\Models\LayoutMap;
 use App\Models\Location;
 use App\Models\Timetable;
+use App\Models\Vendor;
 use Illuminate\Database\Seeder;
 
 class SiteLayoutSeeder extends Seeder
@@ -224,30 +224,44 @@ class SiteLayoutSeeder extends Seeder
         }
 
         // 4. 特設・企業ブース
+        // 複数ブース出店者（水浅青果: KC-03, A01, A03 の3ブースを出店）
+        $mizuasaVendor = Vendor::create([
+            'timetable_id' => $timetable->id,
+            'name' => '水浅青果',
+            'representative_name' => '水浅 太郎',
+            'emergency_contact' => '090-1234-1001',
+            'notes' => '北川Pでキッチンカー、メイン通りA列で青果直売および生搾り加工品の計3コマ出店。',
+        ]);
+
         // 北川駐車場（キッチンカー）
         $kitchenCars = [
-            ['code' => 'KC-01', 'name' => 'ハングリータイガー', 'items' => 'ハンバーグ・特製弁当'],
-            ['code' => 'KC-02', 'name' => '横浜屋', 'items' => '横浜ラーメン・餃子'],
-            ['code' => 'KC-03', 'name' => '水浅青果 (生搾りジュース)', 'items' => 'フレッシュフルーツジュース'],
-            ['code' => 'KC-04', 'name' => '牽引車カフェ', 'items' => 'カフェラテ・焼き菓子'],
+            ['code' => 'KC-01', 'name' => 'ハングリータイガー', 'items' => 'ハンバーグ・特製弁当', 'vendor' => null],
+            ['code' => 'KC-02', 'name' => '横浜屋', 'items' => '横浜ラーメン・餃子', 'vendor' => null],
+            ['code' => 'KC-03', 'name' => '水浅青果 (生搾りジュース)', 'items' => 'フレッシュフルーツジュース・生搾りドリンク', 'vendor' => $mizuasaVendor],
+            ['code' => 'KC-04', 'name' => '牽引車カフェ', 'items' => 'カフェラテ・焼き菓子', 'vendor' => null],
         ];
         foreach ($kitchenCars as $idx => $kc) {
-            $store = GozaStore::create([
-                'timetable_id' => $timetable->id,
-                'store_name' => $kc['name'],
-                'representative_name' => '企業出店担当者',
-                'emergency_contact' => '090-0000-00'.str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT),
-                'product_items' => $kc['items'],
-                'status' => 'confirmed',
-            ]);
+            $vendorId = null;
+            if ($kc['vendor']) {
+                $vendorId = $kc['vendor']->id;
+            } else {
+                $vendor = Vendor::create([
+                    'timetable_id' => $timetable->id,
+                    'name' => $kc['name'],
+                    'representative_name' => '企業出店担当者',
+                    'emergency_contact' => '090-0000-00'.str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT),
+                ]);
+                $vendorId = $vendor->id;
+            }
 
             LayoutBooth::create([
                 'layout_map_id' => $map->id,
                 'layout_area_id' => $areaKitagawa->id,
-                'goza_store_id' => $store->id,
+                'vendor_id' => $vendorId,
                 'booth_code' => $kc['code'],
                 'name' => $kc['name'],
                 'category' => BoothCategory::CorporateKitchenCar,
+                'product_items' => $kc['items'],
                 'adjacent_landmark' => '北川駐車場内',
                 'display_order' => 100 + $idx,
             ]);
@@ -255,31 +269,30 @@ class SiteLayoutSeeder extends Seeder
 
         // S&S前駐車場（体験・企業ブース）
         $ssBooths = [
-            ['code' => 'SS-01', 'name' => 'ミニバス体験スペース', 'category' => BoothCategory::SpecialEvent, 'store' => null],
-            ['code' => 'SS-02', 'name' => '横浜エデンの園', 'category' => BoothCategory::CorporateTent, 'store' => '横浜エデンの園'],
-            ['code' => 'SS-03', 'name' => 'S&Sブース', 'category' => BoothCategory::CorporateTent, 'store' => 'S&S'],
+            ['code' => 'SS-01', 'name' => 'ミニバス体験スペース', 'category' => BoothCategory::SpecialEvent, 'store' => null, 'items' => 'フリースロー体験コーナー'],
+            ['code' => 'SS-02', 'name' => '横浜エデンの園', 'category' => BoothCategory::CorporateTent, 'store' => '横浜エデンの園', 'items' => '福祉施設PR・オリジナルグッズ配布'],
+            ['code' => 'SS-03', 'name' => 'S&Sブース', 'category' => BoothCategory::CorporateTent, 'store' => 'S&S', 'items' => '地域協賛企業PR・抽選会'],
         ];
         foreach ($ssBooths as $idx => $sb) {
-            $storeId = null;
+            $vendorId = null;
             if ($sb['store']) {
-                $store = GozaStore::create([
+                $vendor = Vendor::create([
                     'timetable_id' => $timetable->id,
-                    'store_name' => $sb['store'],
+                    'name' => $sb['store'],
                     'representative_name' => '協賛企業責任者',
                     'emergency_contact' => '090-0000-01'.str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT),
-                    'product_items' => '福祉施設PR・グッズ配布',
-                    'status' => 'confirmed',
                 ]);
-                $storeId = $store->id;
+                $vendorId = $vendor->id;
             }
 
             LayoutBooth::create([
                 'layout_map_id' => $map->id,
                 'layout_area_id' => $areaSS->id,
-                'goza_store_id' => $storeId,
+                'vendor_id' => $vendorId,
                 'booth_code' => $sb['code'],
                 'name' => $sb['name'],
                 'category' => $sb['category'],
+                'product_items' => $sb['items'],
                 'adjacent_landmark' => 'S&S前駐車場内',
                 'display_order' => 200 + $idx,
             ]);
@@ -298,7 +311,7 @@ class SiteLayoutSeeder extends Seeder
             LayoutBooth::create([
                 'layout_map_id' => $map->id,
                 'layout_area_id' => $areaTax->id,
-                'goza_store_id' => null,
+                'vendor_id' => null,
                 'booth_code' => $tb['code'],
                 'name' => $tb['name'],
                 'category' => $tb['category'],
@@ -389,26 +402,50 @@ class SiteLayoutSeeder extends Seeder
                 default => ($i % 3 === 0 ? '宿場出店者 '.$code : null),
             };
 
-            $storeId = null;
-            if ($storeName) {
-                $store = GozaStore::create([
+            $vendorId = null;
+            $items = match ($code) {
+                'A01' => '新鮮野菜・旬の果物直売',
+                'A03' => '生搾りジュース・フルーツパフェ',
+                'A04' => '炭火焼き鳥・つくね串',
+                'A05' => '下町風もんじゃ焼き・鉄板スナック',
+                'A06' => '宿場特製大福・和スイーツ',
+                'A07' => '手作り革小物・和小物雑貨',
+                'A09' => '特製味噌ホルモン焼き',
+                'A11' => '富士宮焼きそば・富士山麓ソーセージ',
+                'A12' => '秘伝タレ焼き鳥・串焼き盛り合わせ',
+                'A14' => '焼きたてクレープ各種',
+                'A17' => '大玉たこ焼き',
+                'A19' => '大阪名物浪花焼きそば',
+                'A25' => 'メガネクリーニング・フレーム調整無料体験',
+                'A35' => '血圧測定・健康相談',
+                'A39' => 'スパイシースープカレー',
+                'A41' => '高級座布団・寝具特価フェア',
+                'A42' => '懐かしの駄菓子・昭和レトロ玩具',
+                'A47' => '地域物産品・特産加工品',
+                'A48' => '手作りアクセサリー・ワークショップ',
+                default => ($isCooking ? '温かい調理品・鉄板フード' : '加工食品または手芸品・物販'),
+            };
+
+            if ($code === 'A01' || $code === 'A03') {
+                $vendorId = $mizuasaVendor->id;
+            } elseif ($storeName) {
+                $vendor = Vendor::create([
                     'timetable_id' => $timetable->id,
-                    'store_name' => $storeName,
+                    'name' => $storeName,
                     'representative_name' => '出店担当 '.$code,
                     'emergency_contact' => '090-1234-'.str_pad((string) (1000 + $i), 4, '0', STR_PAD_LEFT),
-                    'product_items' => $isCooking ? '調理食品・ドリンク販売' : '加工食品または物販',
-                    'status' => 'confirmed',
                 ]);
-                $storeId = $store->id;
+                $vendorId = $vendor->id;
             }
 
             LayoutBooth::create([
                 'layout_map_id' => $map->id,
                 'layout_area_id' => $areaA->id,
-                'goza_store_id' => $storeId,
+                'vendor_id' => $vendorId,
                 'booth_code' => $code,
                 'name' => $storeName,
                 'category' => $category,
+                'product_items' => $storeName ? $items : null,
                 'adjacent_landmark' => $landmark,
                 'display_order' => 1000 + $i,
             ]);
@@ -441,26 +478,45 @@ class SiteLayoutSeeder extends Seeder
                 default => ($i % 3 === 0 ? '宿場出店者 '.$code : null),
             };
 
-            $storeId = null;
+            $vendorId = null;
+            $items = match ($code) {
+                'B01' => '案内パンフレット配布・総合案内',
+                'B04' => '伝統和菓子・どら焼き・草餅',
+                'B05' => '厚切り牛串・豚バラ串焼き',
+                'B06' => '広島風お好み焼き',
+                'B07' => '特製欧風カレー・ナン',
+                'B08' => '昭和レトロ古着・リサイクル雑貨',
+                'B09' => 'ジャンボ宿場フランクフルト',
+                'B10' => '特製ソースお好み焼き・焼きそば',
+                'B12' => '特製発酵食品・味噌・甘酒',
+                'B13' => '自家焙煎ドリップ珈琲・珈琲豆販売',
+                'B14' => '秘伝タレ漬け込み鶏唐揚げ',
+                'B15' => '本格炭火地鶏焼き・手羽先',
+                'B20' => '交通安全グッズ配布・バス模型展示',
+                'B22' => '秘伝ソース焼きそば',
+                'B26' => 'ハンドケア体験・リラクゼーション',
+                'B30' => '季節のお惣菜・手作り弁当',
+                default => ($isCooking ? '温かい調理品・鉄板焼き' : '日用品・和菓子・珈琲豆'),
+            };
+
             if ($storeName) {
-                $store = GozaStore::create([
+                $vendor = Vendor::create([
                     'timetable_id' => $timetable->id,
-                    'store_name' => $storeName,
+                    'name' => $storeName,
                     'representative_name' => '出店代表 '.$code,
                     'emergency_contact' => '080-5678-'.str_pad((string) (1000 + $i), 4, '0', STR_PAD_LEFT),
-                    'product_items' => $isCooking ? '温かい調理品・鉄板焼き' : '日用品・和菓子・珈琲豆',
-                    'status' => 'confirmed',
                 ]);
-                $storeId = $store->id;
+                $vendorId = $vendor->id;
             }
 
             LayoutBooth::create([
                 'layout_map_id' => $map->id,
                 'layout_area_id' => $areaB->id,
-                'goza_store_id' => $storeId,
+                'vendor_id' => $vendorId,
                 'booth_code' => $code,
                 'name' => $storeName,
                 'category' => $category,
+                'product_items' => $storeName ? $items : null,
                 'adjacent_landmark' => $landmark,
                 'display_order' => 2000 + $i,
             ]);

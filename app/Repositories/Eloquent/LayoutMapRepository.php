@@ -40,7 +40,7 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
         return LayoutMap::with([
             'timetable',
             'areas.location',
-            'booths.gozaStore',
+            'booths.vendor',
             'booths.area',
             'facilities.area',
         ])->find($id);
@@ -51,7 +51,7 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
      */
     public function paginateBooths(LayoutMap $map, array $filters = [], int $perPage = 25): LengthAwarePaginator
     {
-        $query = LayoutBooth::with(['area', 'gozaStore'])
+        $query = LayoutBooth::with(['area', 'vendor'])
             ->where('layout_map_id', $map->id);
 
         if (! empty($filters['area_id'])) {
@@ -68,9 +68,10 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
                 $q->where('booth_code', 'like', $search)
                     ->orWhere('name', 'like', $search)
                     ->orWhere('adjacent_landmark', 'like', $search)
-                    ->orWhereHas('gozaStore', function (Builder $sq) use ($search) {
-                        $sq->where('store_name', 'like', $search)
-                            ->orWhere('product_items', 'like', $search);
+                    ->orWhere('product_items', 'like', $search)
+                    ->orWhereHas('vendor', function (Builder $sq) use ($search) {
+                        $sq->where('name', 'like', $search)
+                            ->orWhere('representative_name', 'like', $search);
                     });
             });
         }
@@ -88,7 +89,7 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
     {
         $booth->update($data);
 
-        return $booth->fresh(['area', 'gozaStore']);
+        return $booth->fresh(['area', 'vendor']);
     }
 
     /**

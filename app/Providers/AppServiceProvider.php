@@ -8,7 +8,6 @@ use App\Repositories\Contracts\EquipmentLogisticsPatternRepositoryInterface;
 use App\Repositories\Contracts\EquipmentLogisticsPlanRepositoryInterface;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
 use App\Repositories\Contracts\FeatureSettingRepositoryInterface;
-use App\Repositories\Contracts\GozaStoreRepositoryInterface;
 use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Repositories\Contracts\LaneRequestRepositoryInterface;
 use App\Repositories\Contracts\LayoutMapRepositoryInterface;
@@ -23,11 +22,11 @@ use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Contracts\VendorRepositoryInterface;
 use App\Repositories\Eloquent\EquipmentLogisticsPatternRepository;
 use App\Repositories\Eloquent\EquipmentLogisticsPlanRepository;
 use App\Repositories\Eloquent\EquipmentRepository;
 use App\Repositories\Eloquent\FeatureSettingRepository;
-use App\Repositories\Eloquent\GozaStoreRepository;
 use App\Repositories\Eloquent\LaneRepository;
 use App\Repositories\Eloquent\LaneRequestRepository;
 use App\Repositories\Eloquent\LayoutMapRepository;
@@ -42,6 +41,7 @@ use App\Repositories\Eloquent\TaskStaffAssignmentRepository;
 use App\Repositories\Eloquent\TimetableRepository;
 use App\Repositories\Eloquent\TimetableTaskRepository;
 use App\Repositories\Eloquent\UserRepository;
+use App\Repositories\Eloquent\VendorRepository;
 use App\Services\FeatureSettingService;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -144,8 +144,8 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
-            GozaStoreRepositoryInterface::class,
-            GozaStoreRepository::class
+            VendorRepositoryInterface::class,
+            VendorRepository::class
         );
     }
 

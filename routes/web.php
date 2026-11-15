@@ -10,7 +10,6 @@ use App\Http\Controllers\EquipmentLogisticsPatternStepController;
 use App\Http\Controllers\EquipmentLogisticsPlanController;
 use App\Http\Controllers\EquipmentLogisticsTimelineController;
 use App\Http\Controllers\FeatureSettingController;
-use App\Http\Controllers\GozaStoreController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LanePrintController;
 use App\Http\Controllers\LaneRequestController;
@@ -36,6 +35,7 @@ use App\Http\Controllers\TimetablePrintController;
 use App\Http\Controllers\TimetableTaskAssignmentController;
 use App\Http\Controllers\TimetableTaskController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VendorController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -235,11 +235,17 @@ Route::middleware('auth')->group(function () {
         Route::put('timetables/{timetable}/layouts/facilities/{facility}', [SiteLayoutController::class, 'updateFacility'])->name('timetables.layouts.facilities.update');
         Route::delete('timetables/{timetable}/layouts/facilities/{facility}', [SiteLayoutController::class, 'destroyFacility'])->name('timetables.layouts.facilities.destroy');
 
-        // ござ市出店者管理 (Goza Stores)
-        Route::get('timetables/{timetable}/goza-stores', [GozaStoreController::class, 'index'])->name('timetables.goza-stores.index');
-        Route::post('timetables/{timetable}/goza-stores', [GozaStoreController::class, 'store'])->name('timetables.goza-stores.store');
-        Route::put('timetables/{timetable}/goza-stores/{gozaStore}', [GozaStoreController::class, 'update'])->name('timetables.goza-stores.update');
-        Route::delete('timetables/{timetable}/goza-stores/{gozaStore}', [GozaStoreController::class, 'destroy'])->name('timetables.goza-stores.destroy');
+        // 商業出店者管理 (Vendors)
+        Route::get('timetables/{timetable}/vendors', [VendorController::class, 'index'])->name('timetables.vendors.index');
+        Route::post('timetables/{timetable}/vendors', [VendorController::class, 'store'])->name('timetables.vendors.store');
+        Route::put('timetables/{timetable}/vendors/{vendor}', [VendorController::class, 'update'])->name('timetables.vendors.update');
+        Route::delete('timetables/{timetable}/vendors/{vendor}', [VendorController::class, 'destroy'])->name('timetables.vendors.destroy');
+
+        // ござ市出店者管理 (旧ルート互換)
+        Route::get('timetables/{timetable}/goza-stores', [VendorController::class, 'index'])->name('timetables.goza-stores.index');
+        Route::post('timetables/{timetable}/goza-stores', [VendorController::class, 'store'])->name('timetables.goza-stores.store');
+        Route::put('timetables/{timetable}/goza-stores/{vendor}', [VendorController::class, 'update'])->name('timetables.goza-stores.update');
+        Route::delete('timetables/{timetable}/goza-stores/{vendor}', [VendorController::class, 'destroy'])->name('timetables.goza-stores.destroy');
     });
 
     // 拠点管理 既存互換フォールバック

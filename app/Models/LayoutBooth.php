@@ -11,10 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'layout_map_id',
     'layout_area_id',
-    'goza_store_id',
+    'vendor_id',
     'booth_code',
     'name',
     'category',
+    'product_items',
     'adjacent_landmark',
     'notes',
     'display_order',
@@ -55,15 +56,23 @@ class LayoutBooth extends Model
     }
 
     /**
-     * ござ市出店者とのリレーション
+     * 出店者とのリレーション
      */
-    public function gozaStore(): BelongsTo
+    public function vendor(): BelongsTo
     {
-        return $this->belongsTo(GozaStore::class);
+        return $this->belongsTo(Vendor::class);
     }
 
     /**
-     * 表示用の名称（直接の名称またはござ市出店名）
+     * 後方互換用エイリアス
+     */
+    public function gozaStore(): BelongsTo
+    {
+        return $this->vendor();
+    }
+
+    /**
+     * 表示用の名称（直接の名称または出店者名）
      */
     public function getDisplayNameAttribute(): string
     {
@@ -71,8 +80,8 @@ class LayoutBooth extends Model
             return $this->name;
         }
 
-        if ($this->gozaStore !== null && ! empty($this->gozaStore->store_name)) {
-            return $this->gozaStore->store_name;
+        if ($this->vendor !== null && ! empty($this->vendor->name)) {
+            return $this->vendor->name;
         }
 
         return '(未割当)';

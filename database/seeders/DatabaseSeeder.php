@@ -38,5 +38,8 @@ class DatabaseSeeder extends Seeder
 
         // 9. 機能設定初期データ
         $this->call(FeatureSettingSeeder::class);
+
+        // 10. 現場配置・コマ割り・出店者初期データ
+        $this->call(SiteLayoutSeeder::class);
     }
 }

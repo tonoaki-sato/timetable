@@ -50,13 +50,14 @@ class SiteLayoutController extends Controller
         ];
 
         $booths = $this->siteLayoutService->paginateBooths($map, $filters, 25);
-        $gozaStores = $this->siteLayoutService->getGozaStoresForSelect($timetable);
+        $vendors = $this->siteLayoutService->getVendorsForSelect($timetable);
 
         return view('site_layouts.booths', [
             'timetable' => $timetable,
             'map' => $map,
             'booths' => $booths,
-            'gozaStores' => $gozaStores,
+            'vendors' => $vendors,
+            'gozaStores' => $vendors,
             'filters' => $filters,
             'areas' => $map->areas,
         ]);

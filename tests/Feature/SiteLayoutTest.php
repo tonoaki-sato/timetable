@@ -5,12 +5,12 @@ namespace Tests\Feature;
 use App\Enums\BoothCategory;
 use App\Enums\FacilityCategory;
 use App\Enums\FacilityType;
-use App\Models\GozaStore;
 use App\Models\LayoutBooth;
 use App\Models\LayoutFacility;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
 use App\Models\User;
+use App\Models\Vendor;
 use Database\Seeders\SiteLayoutSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -225,76 +225,112 @@ class SiteLayoutTest extends TestCase
     }
 
     /**
-     * ござ市出店者のCRUDができること
+     * 商業出店者のCRUDおよび複数ブース割当ができること
      */
-    public function test_goza_store_crud(): void
+    public function test_vendor_crud_and_multi_booth_assignment(): void
     {
-        // 一覧
+        // 1. 一覧表示（ヘッダー構成・説明文・3列構成・アクションボタン検証）
         $listResponse = $this->actingAs($this->user)
-            ->get(route('timetables.goza-stores.index', $this->timetable));
+            ->get(route('timetables.vendors.index', $this->timetable));
 
         $listResponse->assertStatus(200);
-        $listResponse->assertSee('ござ市出店者マスター管理');
+        $listResponse->assertSee('出店者マスター管理');
+        $listResponse->assertSee('イベントにおける商業出店者の基本情報と配置コマを一元管理します。');
+        $listResponse->assertSee('新規出店者を登録');
+        $listResponse->assertSee('配置ダッシュボードへ');
+        $listResponse->assertSee('インフラ設備一覧');
+        $listResponse->assertSee('名前');
+        $listResponse->assertSee('配置');
+        $listResponse->assertSee('操作');
+        $listResponse->assertDontSee('>状態<', false);
 
-        // 新規登録
+        // 2. 新規出店者を登録（statusなし）
         $storeResponse = $this->actingAs($this->user)
-            ->post(route('timetables.goza-stores.store', $this->timetable), [
-                'store_name' => '新規宿場カフェ',
+            ->post(route('timetables.vendors.store', $this->timetable), [
+                'name' => '新規宿場カフェ',
                 'representative_name' => '鈴木 花子',
                 'emergency_contact' => '090-9999-8888',
-                'product_items' => 'ドリップコーヒー・焼き菓子',
-                'status' => 'confirmed',
                 'notes' => '初出店',
             ]);
 
         $storeResponse->assertRedirect();
         $storeResponse->assertSessionHas('success');
 
-        $store = GozaStore::where('store_name', '新規宿場カフェ')->firstOrFail();
-        $this->assertEquals('鈴木 花子', $store->representative_name);
+        $vendor = Vendor::where('name', '新規宿場カフェ')->firstOrFail();
+        $this->assertEquals('鈴木 花子', $vendor->representative_name);
+        $this->assertDatabaseHas('vendors', [
+            'id' => $vendor->id,
+            'name' => '新規宿場カフェ',
+        ]);
 
-        // 出店者登録後の一覧表示検証（UIパーツ・ボタンスタイル・CSP検証）
+        // 3. 一覧表示での表示確認（検索、名前クリック詳細モーダル属性、コマ数表示、CSP検証）
         $afterStoreList = $this->actingAs($this->user)
-            ->get(route('timetables.goza-stores.index', $this->timetable));
+            ->get(route('timetables.vendors.index', [$this->timetable, 'search' => '新規宿場カフェ']));
         $afterStoreList->assertStatus(200);
         $afterStoreList->assertSee('新規宿場カフェ');
-        $afterStoreList->assertSee('data-action="open-edit-store-modal"', false);
+        $afterStoreList->assertSee('(0コマ)');
+        $afterStoreList->assertSee('data-action="open-vendor-detail"', false);
+        $afterStoreList->assertSee('data-action="open-edit-vendor-modal"', false);
         $afterStoreList->assertSee('✏️');
         $afterStoreList->assertSee('編集');
         $afterStoreList->assertSee('🗑️');
         $afterStoreList->assertSee('削除');
-        $afterStoreList->assertSee('コマ割り一覧');
-        $afterStoreList->assertSee('インフラ設備一覧');
-        $afterStoreList->assertSee('配置ダッシュボードへ');
         $afterStoreList->assertDontSee('<script type="module">', false);
         $afterStoreList->assertDontSee('<script>', false);
 
-        // 更新
+        // 4. 同一出店者に対する複数ブース割当（それぞれ異なる品目を設定）
+        $booth1 = LayoutBooth::where('layout_map_id', $this->map->id)->where('booth_code', 'A01')->firstOrFail();
+        $booth2 = LayoutBooth::where('layout_map_id', $this->map->id)->where('booth_code', 'A02')->firstOrFail();
+
+        $booth1->update([
+            'vendor_id' => $vendor->id,
+            'category' => BoothCategory::FoodNonCooking,
+            'product_items' => '焼きたてワッフル',
+        ]);
+        $booth2->update([
+            'vendor_id' => $vendor->id,
+            'category' => BoothCategory::FoodCooking,
+            'product_items' => '自家焙煎アイスコーヒー',
+        ]);
+
+        $vendorWithBooths = $vendor->fresh(['booths']);
+        $this->assertCount(2, $vendorWithBooths->booths);
+        $this->assertEquals('焼きたてワッフル', $vendorWithBooths->booths[0]->product_items);
+        $this->assertEquals('自家焙煎アイスコーヒー', $vendorWithBooths->booths[1]->product_items);
+
+        $multiBoothsList = $this->actingAs($this->user)
+            ->get(route('timetables.vendors.index', [$this->timetable, 'search' => '新規宿場カフェ']));
+        $multiBoothsList->assertSee('(2コマ)');
+        $multiBoothsList->assertSee('A01');
+        $multiBoothsList->assertSee('焼きたてワッフル');
+        $multiBoothsList->assertSee('A02');
+        $multiBoothsList->assertSee('自家焙煎アイスコーヒー');
+
+        // 5. 更新
         $updateResponse = $this->actingAs($this->user)
-            ->put(route('timetables.goza-stores.update', [$this->timetable, $store]), [
-                'store_name' => '新規宿場カフェ 保土ヶ谷店',
+            ->put(route('timetables.vendors.update', [$this->timetable, $vendor]), [
+                'name' => '新規宿場カフェ 保土ヶ谷店',
                 'representative_name' => '鈴木 花子',
                 'emergency_contact' => '090-9999-8888',
-                'product_items' => 'ドリップコーヒー・焼き菓子・アイス',
-                'status' => 'checked_in',
-                'notes' => '当日受付済',
+                'notes' => '店名変更完了',
             ]);
 
         $updateResponse->assertRedirect();
-        $this->assertDatabaseHas('goza_stores', [
-            'id' => $store->id,
-            'store_name' => '新規宿場カフェ 保土ヶ谷店',
-            'status' => 'checked_in',
+        $this->assertDatabaseHas('vendors', [
+            'id' => $vendor->id,
+            'name' => '新規宿場カフェ 保土ヶ谷店',
         ]);
 
-        // 削除
+        // 6. 削除
         $deleteResponse = $this->actingAs($this->user)
-            ->delete(route('timetables.goza-stores.destroy', [$this->timetable, $store]));
+            ->delete(route('timetables.vendors.destroy', [$this->timetable, $vendor]));
 
         $deleteResponse->assertRedirect();
-        $this->assertDatabaseMissing('goza_stores', [
-            'id' => $store->id,
+        $this->assertDatabaseMissing('vendors', [
+            'id' => $vendor->id,
         ]);
+        // コマのvendor_idが解除されていること
+        $this->assertNull($booth1->fresh()->vendor_id);
     }
 
     /**

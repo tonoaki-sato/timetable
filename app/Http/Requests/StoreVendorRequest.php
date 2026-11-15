@@ -2,12 +2,12 @@
 
 namespace App\Http\Requests;
 
-use App\Models\GozaStore;
+use App\Enums\BoothCategory;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreGozaStoreRequest extends FormRequest
+class StoreVendorRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,12 +25,13 @@ class StoreGozaStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'store_name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'representative_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact' => ['nullable', 'string', 'max:50'],
-            'product_items' => ['nullable', 'string', 'max:1000'],
-            'status' => ['required', Rule::in(array_keys(GozaStore::STATUSES))],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'initial_booth_id' => ['nullable', 'integer', 'exists:layout_booths,id'],
+            'initial_category' => ['nullable', Rule::enum(BoothCategory::class)],
+            'initial_product_items' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -42,12 +43,13 @@ class StoreGozaStoreRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'store_name' => '出店名・屋号',
+            'name' => '出店名・屋号',
             'representative_name' => '出店代表者氏名',
             'emergency_contact' => '緊急連絡先',
-            'product_items' => '販売品目',
-            'status' => '出店ステータス',
             'notes' => '備考',
+            'initial_booth_id' => '割当コマ',
+            'initial_category' => '出店区分',
+            'initial_product_items' => '販売品目',
         ];
     }
 }

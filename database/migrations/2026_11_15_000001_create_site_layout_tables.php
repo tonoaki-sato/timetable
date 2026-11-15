@@ -40,20 +40,18 @@ return new class extends Migration
             $table->index(['layout_map_id', 'display_order']);
         });
 
-        // 3. ござ市出店者管理テーブル（別テーブル）
-        Schema::create('goza_stores', function (Blueprint $table) {
+        // 3. 商業出店者管理マスターテーブル
+        Schema::create('vendors', function (Blueprint $table) {
             $table->id();
             $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
-            $table->string('store_name')->comment('出店名・屋号（例: 水浅青果, 炭火工房 鶏陣）');
+            $table->string('name')->comment('出店者名・屋号（事業者名・店舗名・団体名）');
             $table->string('representative_name')->nullable()->comment('出店代表者氏名');
             $table->string('emergency_contact', 50)->nullable()->comment('緊急連絡先（携帯電話等）');
-            $table->text('product_items')->nullable()->comment('販売品目（例: 焼きそば, フランクフルト）');
-            $table->string('status', 30)->default('confirmed')->comment('出店ステータス: applied(申込), confirmed(確定), checked_in(当日受付済), cancelled(辞退)');
-            $table->text('notes')->nullable()->comment('備考');
+            $table->text('notes')->nullable()->comment('出店者に関する特記事項・搬入情報等');
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
 
-            $table->index(['timetable_id', 'status']);
+            $table->index('timetable_id');
         });
 
         // 4. 現場配置コマ割り・出店ブース
@@ -61,10 +59,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('layout_map_id')->constrained('layout_maps')->cascadeOnDelete();
             $table->foreignId('layout_area_id')->nullable()->constrained('layout_areas')->nullOnDelete();
-            $table->foreignId('goza_store_id')->nullable()->constrained('goza_stores')->nullOnDelete();
+            $table->foreignId('vendor_id')->nullable()->constrained('vendors')->nullOnDelete();
             $table->string('booth_code', 30)->comment('コマ番号（例: A01〜A51, B01〜B30, KC-01等）');
-            $table->string('name')->nullable()->comment('表示名・屋号（ござ市出店者名、または企業名・特設企画名）');
+            $table->string('name')->nullable()->comment('表示名・屋号（出店者名、または企業名・特設企画名）');
             $table->string('category', 40)->default('food_non_cooking')->comment('出店区分: food_cooking, food_non_cooking, general_merchandise, special_event, corporate_kitchen_car, corporate_tent');
+            $table->text('product_items')->nullable()->comment('このブースでの具体的な取扱品目・活動内容（例: 焼きそば, フランクフルト）');
             $table->string('adjacent_landmark')->nullable()->comment('近接店舗・建物名（例: おもちゃのうえの前, 西村アパート前）');
             $table->text('notes')->nullable()->comment('特記事項・メモ');
             $table->integer('display_order')->default(0);
@@ -101,7 +100,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('layout_facilities');
         Schema::dropIfExists('layout_booths');
-        Schema::dropIfExists('goza_stores');
+        Schema::dropIfExists('vendors');
         Schema::dropIfExists('layout_areas');
         Schema::dropIfExists('layout_maps');
     }

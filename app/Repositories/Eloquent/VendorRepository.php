@@ -2,23 +2,23 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Models\GozaStore;
 use App\Models\Timetable;
-use App\Repositories\Contracts\GozaStoreRepositoryInterface;
+use App\Models\Vendor;
+use App\Repositories\Contracts\VendorRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
-class GozaStoreRepository implements GozaStoreRepositoryInterface
+class VendorRepository implements VendorRepositoryInterface
 {
     /**
      * タイムテーブルに紐づく出店者一覧を取得
      */
     public function getForTimetable(Timetable $timetable): Collection
     {
-        return GozaStore::with('booth')
+        return Vendor::with(['booths.area'])
             ->where('timetable_id', $timetable->id)
-            ->orderBy('store_name', 'asc')
+            ->orderBy('name', 'asc')
             ->get();
     }
 
@@ -27,20 +27,26 @@ class GozaStoreRepository implements GozaStoreRepositoryInterface
      */
     public function paginateForTimetable(Timetable $timetable, array $filters = [], int $perPage = 25): LengthAwarePaginator
     {
-        $query = GozaStore::with('booth')
+        $query = Vendor::with(['booths.area'])
             ->where('timetable_id', $timetable->id);
 
-        if (! empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+        if (! empty($filters['category'])) {
+            $query->whereHas('booths', function (Builder $q) use ($filters) {
+                $q->where('category', $filters['category']);
+            });
         }
 
         if (! empty($filters['search'])) {
             $search = '%'.trim($filters['search']).'%';
             $query->where(function (Builder $q) use ($search) {
-                $q->where('store_name', 'like', $search)
+                $q->where('name', 'like', $search)
                     ->orWhere('representative_name', 'like', $search)
                     ->orWhere('emergency_contact', 'like', $search)
-                    ->orWhere('product_items', 'like', $search);
+                    ->orWhereHas('booths', function (Builder $bq) use ($search) {
+                        $bq->where('booth_code', 'like', $search)
+                            ->orWhere('product_items', 'like', $search)
+                            ->orWhere('adjacent_landmark', 'like', $search);
+                    });
             });
         }
 
@@ -52,28 +58,28 @@ class GozaStoreRepository implements GozaStoreRepositoryInterface
     /**
      * 出店者を登録
      */
-    public function create(Timetable $timetable, array $data): GozaStore
+    public function create(Timetable $timetable, array $data): Vendor
     {
         $data['timetable_id'] = $timetable->id;
 
-        return GozaStore::create($data);
+        return Vendor::create($data);
     }
 
     /**
      * 出店者を更新
      */
-    public function update(GozaStore $store, array $data): GozaStore
+    public function update(Vendor $vendor, array $data): Vendor
     {
-        $store->update($data);
+        $vendor->update($data);
 
-        return $store->fresh('booth');
+        return $vendor->fresh(['booths.area']);
     }
 
     /**
      * 出店者を削除
      */
-    public function delete(GozaStore $store): bool
+    public function delete(Vendor $vendor): bool
     {
-        return (bool) $store->delete();
+        return (bool) $vendor->delete();
     }
 }

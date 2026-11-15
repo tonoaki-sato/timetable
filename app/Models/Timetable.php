@@ -251,11 +251,19 @@ class Timetable extends Model
     }
 
     /**
-     * ござ市出店者一覧とのリレーション
+     * 出店者一覧とのリレーション
+     */
+    public function vendors(): HasMany
+    {
+        return $this->hasMany(Vendor::class)->orderBy('id', 'asc');
+    }
+
+    /**
+     * ござ市出店者一覧とのリレーション (後方互換用エイリアス)
      */
     public function gozaStores(): HasMany
     {
-        return $this->hasMany(GozaStore::class)->orderBy('id', 'asc');
+        return $this->vendors();
     }
 
     /**
