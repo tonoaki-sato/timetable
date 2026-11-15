@@ -110,6 +110,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 ### Database Migrations
 
 - テーブルスキーマを変更する際は、新規の差分マイグレーション（addColumn, dropColumn 等）を作成せず、既存のマイグレーションファイル（テーブル作成マイグレーション等）を直接修正して対応する。
+- **マイグレーション・シーダー実行前の差分検証と同期**: `php artisan migrate:fresh --seed` などのデータベース再構築コマンドを実行する際は、直前に現時点のデータベース登録内容（UI経由で作成・変更・削除されたデータや最新のマスター状態）とシーダー（`database/seeders/*`）の内容を比較・検証すること。差分や更新の必要性がある場合は、あらかじめシーダーファイルを最新の状態に更新した上でマイグレーションを実行し、最新データの消失を防止する。
 
 ### Model Creation
 
@@ -166,7 +167,14 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
      - Blade テンプレート内に直接 `<script>`（または `<script type="module">`）ブロックを記述してはならない。本アプリケーションでは CSP ミドルウェアにより `script-src 'self' 'nonce-{ViteNonce}'` が強制されており、直接記述されたインライン `<script>` はブラウザ側でセキュリティ違反として実行が遮断される。
      - JavaScript は必ず `resources/js/{feature}.js` に外部ファイルとして作成し、`vite.config.js` の `input` に登録した上で、Blade 側からは `@vite(['resources/js/{feature}.js'])` 経由で読み込むこと（Laravel Vite プラグインが自動的に CSP ノンス属性を付与するため安全に実行される）。
      - 動的な初期値やURL、件数などは HTML 側の `data-*` 属性（`dataset`）に保持させ、JavaScript 側では `element.dataset.*` 経由で取得すること（Blade 式を JS 内に展開しない）。
-   - **一覧画面の表示切替フィルターバー**: 一覧系画面で施設や資材等の表示・非表示を切り替えるフィルターバーを設ける際は、搬出入計画一覧（`logistics/index.blade.php`）の統一デザイン（`bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs`、インライン全選択・全解除ボタングループ、`✔`/`✕` チップトグル、件数インジケータ表記）に準拠すること。
+   - **一覧画面のレイアウト・パーツデザイン標準規約**:
+     一覧画面を新規作成または改修する際は、**インフラ設備一覧（`resources/views/site_layouts/facilities.blade.php`）**の構成とパーツデザインを基本標準として統一すること。
+     - **ページヘッダー**: 戻るナビゲーションリンク、タイトル（アイコン付き）、ページ説明文、右側プライマリアクションボタングループ（新規作成モーダル起動ボタン、PDF出力ボタン等）。
+     - **KPI / サマリーカード**: グリッド配置（2〜4列）、白背景（`bg-white`）、微細ボーダー（`border border-slate-200 rounded-xl p-4 shadow-xs`）、アイコンバッジ、カウントバッジ。
+     - **表示切替フィルターバー**: `bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs`、インライン全選択・全解除ボタングループ、`✔`/`✕` チップトグル、件数インジケータ。
+     - **データテーブル**: `bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden`、ヘッダー背景 `bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600`、行hover効果（`hover:bg-slate-50/50`）、識別コードバッジ（Monoフォント）、状態・種別バッジ。
+     - **行アクションボタン**: 編集ボタン（`text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg px-2.5 py-1 text-xs font-medium`）、削除ボタン（`text-red-600 bg-red-50 hover:bg-red-100 rounded-lg px-2.5 py-1 text-xs font-medium`、確認ダイアログ付き）。
+     - **ダイアログ / モーダル**: Backdrop（`bg-slate-900/40 backdrop-blur-xs`）、白カード（`rounded-2xl shadow-xl max-w-lg`）、明確な閉じるボタンとキャンセル/保存ボタンの配色統一。
    - **PDFテンプレート (DomPDF) のCSS・テーブル規約**:
      - 全称セレクタ `*` をリセットスタイル等で使用しないこと（DomPDF内部で `@page` にマッチしてページ余白が `0` にリセットされ、`position: fixed` の固定ヘッダーを用紙外へ押し出すため）。リセットは `table, th, td, h1, h2, h3, div, span, strong, b, p` など具体的なタグ名を列挙して指定する。
      - テーブル列幅に `<colgroup>` / `<col>` を使用しないこと（DomPDF未サポートのため無視され均等幅にフォールバックする）。列幅は `<style>` ブロック内で `th`（または `td`）のクラスセレクタ（例: `.table th.col-name { width: ...; }`）に対して指定する。
