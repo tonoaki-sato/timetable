@@ -44,6 +44,18 @@ enum FacilityType: string
     }
 
     /**
+     * 表示大分類（インフラ設備カテゴリ）を取得
+     */
+    public function category(): FacilityCategory
+    {
+        return match ($this) {
+            self::WaterSupply => FacilityCategory::WaterSupply,
+            self::ToiletPaid, self::ToiletFree, self::NursingRoom => FacilityCategory::ToiletAndNursing,
+            self::FirstAid, self::Headquarters, self::StaffWaitingArea => FacilityCategory::Other,
+        };
+    }
+
+    /**
      * バッジのCSSクラスを取得
      */
     public function badgeClasses(): string

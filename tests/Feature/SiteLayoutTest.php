@@ -101,7 +101,7 @@ class SiteLayoutTest extends TestCase
     }
 
     /**
-     * 現場設備一覧画面が表示され、設備の更新ができること
+     * インフラ設備一覧画面が表示され、設備の更新ができること
      */
     public function test_facilities_list_screen_and_update(): void
     {
@@ -113,8 +113,17 @@ class SiteLayoutTest extends TestCase
             ->get(route('timetables.layouts.facilities', $this->timetable));
 
         $response->assertStatus(200);
-        $response->assertSee('現場設備・インフラ一覧');
+        $response->assertSee('インフラ設備一覧');
+        $response->assertSee('給水設備');
+        $response->assertSee('トイレ・授乳室');
+        $response->assertSee('その他');
         $response->assertSee('W-01');
+
+        // ダッシュボードからのリンク元表記も確認
+        $indexResponse = $this->actingAs($this->user)
+            ->get(route('timetables.layouts.index', $this->timetable));
+        $indexResponse->assertStatus(200);
+        $indexResponse->assertSee('インフラ設備一覧');
 
         $updateResponse = $this->actingAs($this->user)
             ->put(route('timetables.layouts.facilities.update', [$this->timetable, $facility]), [
@@ -190,5 +199,19 @@ class SiteLayoutTest extends TestCase
         $this->assertDatabaseMissing('goza_stores', [
             'id' => $store->id,
         ]);
+    }
+
+    /**
+     * 設備種別のカテゴリ分類マッピングが正しいこと
+     */
+    public function test_facility_type_category_mapping(): void
+    {
+        $this->assertSame(\App\Enums\FacilityCategory::WaterSupply, FacilityType::WaterSupply->category());
+        $this->assertSame(\App\Enums\FacilityCategory::ToiletAndNursing, FacilityType::ToiletFree->category());
+        $this->assertSame(\App\Enums\FacilityCategory::ToiletAndNursing, FacilityType::ToiletPaid->category());
+        $this->assertSame(\App\Enums\FacilityCategory::ToiletAndNursing, FacilityType::NursingRoom->category());
+        $this->assertSame(\App\Enums\FacilityCategory::Other, FacilityType::FirstAid->category());
+        $this->assertSame(\App\Enums\FacilityCategory::Other, FacilityType::Headquarters->category());
+        $this->assertSame(\App\Enums\FacilityCategory::Other, FacilityType::StaffWaitingArea->category());
     }
 }

@@ -72,7 +72,7 @@ class SiteLayoutController extends Controller
     }
 
     /**
-     * 現場設備・インフラ一覧画面
+     * インフラ設備一覧画面
      */
     public function facilities(Request $request, Timetable $timetable): View
     {

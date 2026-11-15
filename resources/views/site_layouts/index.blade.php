@@ -35,7 +35,7 @@
             <a href="{{ route('timetables.layouts.facilities', $timetable) }}"
                 class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>🚰</span>
-                <span>現場設備一覧</span>
+                <span>インフラ設備一覧</span>
             </a>
             <a href="{{ route('timetables.goza-stores.index', $timetable) }}"
                 class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
@@ -124,7 +124,7 @@
             <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
                 <span>給水設備（手洗い）: <strong class="text-slate-800 font-mono">{{ $summary['facilities']['water_supply']['count'] ?? 0 }}</strong> ヵ所</span>
                 <a href="{{ route('timetables.layouts.facilities', $timetable) }}" class="text-indigo-600 hover:underline font-bold">
-                    設備一覧 →
+                    インフラ設備一覧 →
                 </a>
             </div>
         </div>
