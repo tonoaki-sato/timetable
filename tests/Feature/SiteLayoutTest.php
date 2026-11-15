@@ -119,6 +119,9 @@ class SiteLayoutTest extends TestCase
         $response->assertSee('トイレ・授乳室');
         $response->assertSee('その他');
         $response->assertSee('W-01');
+        $response->assertHeader('Content-Security-Policy');
+        $response->assertSee('facilities');
+        $response->assertDontSee('<script type="module">', false);
 
         // ダッシュボードからのリンク元表記も確認
         $indexResponse = $this->actingAs($this->user)
