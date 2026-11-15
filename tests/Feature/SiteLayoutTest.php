@@ -122,6 +122,14 @@ class SiteLayoutTest extends TestCase
         $response->assertHeader('Content-Security-Policy');
         $response->assertSee('facilities');
         $response->assertDontSee('<script type="module">', false);
+        $response->assertSee('（指定なし）');
+        $response->assertSee('S&S前駐車場内');
+        $response->assertSee('税務署前駐車場内');
+        $response->assertDontSee('タカオ前ステージ');
+        $response->assertDontSee('日本パーキング');
+        $response->assertDontSee('タイムス');
+        $response->assertDontSee('(parking)');
+        $response->assertDontSee('(street)');
 
         // ダッシュボードからのリンク元表記も確認
         $indexResponse = $this->actingAs($this->user)

@@ -30,7 +30,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('layout_map_id')->constrained('layout_maps')->cascadeOnDelete();
             $table->foreignId('location_id')->nullable()->constrained('locations')->nullOnDelete();
-            $table->string('zone_code', 50)->comment('識別コード（ZONE_A, ZONE_B, AREA_KITAGAWA, AREA_SS, AREA_TAX, STAGE_TAKAO）');
+            $table->string('zone_code', 50)->comment('識別コード（ZONE_A, ZONE_B, AREA_KITAGAWA, AREA_SS, AREA_TAX）');
             $table->string('name')->comment('エリア名（例: 北川駐車場内, メイン通りA列（東側））');
             $table->string('area_type', 30)->default('street')->comment('種別: street(通り), parking(駐車場特設), stage(ステージ), hq(本部・待機エリア)');
             $table->integer('display_order')->default(0);

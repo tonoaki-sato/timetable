@@ -66,7 +66,7 @@ class SiteLayoutSeeder extends Seeder
             'layout_map_id' => $map->id,
             'location_id' => $locations->get('S&S駐車場')?->id,
             'zone_code' => 'AREA_SS',
-            'name' => 'S&S前駐車場（日本パーキング保土ヶ谷第2）内',
+            'name' => 'S&S前駐車場内',
             'area_type' => 'parking',
             'display_order' => 20,
         ]);
@@ -75,18 +75,9 @@ class SiteLayoutSeeder extends Seeder
             'layout_map_id' => $map->id,
             'location_id' => $locations->get('税務署前駐車場')?->id,
             'zone_code' => 'AREA_TAX',
-            'name' => '税務署前駐車場（タイムス保土ヶ谷駅西口）内',
+            'name' => '税務署前駐車場内',
             'area_type' => 'parking',
             'display_order' => 30,
-        ]);
-
-        $areaTakao = LayoutArea::create([
-            'layout_map_id' => $map->id,
-            'location_id' => null,
-            'zone_code' => 'STAGE_TAKAO',
-            'name' => 'タカオ前ステージ',
-            'area_type' => 'stage',
-            'display_order' => 40,
         ]);
 
         $areaA = LayoutArea::create([
@@ -95,7 +86,7 @@ class SiteLayoutSeeder extends Seeder
             'zone_code' => 'ZONE_A',
             'name' => 'メイン通りA列（東側歩道）',
             'area_type' => 'street',
-            'display_order' => 50,
+            'display_order' => 40,
         ]);
 
         $areaB = LayoutArea::create([
@@ -104,7 +95,7 @@ class SiteLayoutSeeder extends Seeder
             'zone_code' => 'ZONE_B',
             'name' => 'メイン通りB列（西側歩道）',
             'area_type' => 'street',
-            'display_order' => 60,
+            'display_order' => 50,
         ]);
 
         // 3. 現場設備・インフラ（給水5ヵ所、トイレ、授乳室、救護所、本陣、待機所）
@@ -357,7 +348,7 @@ class SiteLayoutSeeder extends Seeder
             11 => '帷子珈琲前',
             12 => 'アパート前',
             14 => '金子クリーニング前',
-            16 => 'タカオ前ステージ横',
+            16 => 'タカオ前',
             17 => 'NUCパーキング前',
             18 => '北川製粉所前',
             20 => 'ライオンズマンション前',

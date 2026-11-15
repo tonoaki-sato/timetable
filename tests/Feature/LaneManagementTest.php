@@ -670,7 +670,7 @@ class LaneManagementTest extends TestCase
         $response->assertDontSee('主な資機材');
 
         // ヘッダーから削除されたリンクおよびバッジの検証
-        $response->assertDontSee('🗺️');
+        $response->assertDontSee('運行マトリクス');
         $response->assertDontSee('表示順 / 優先度');
         $response->assertDontSee('#'.$lane->display_order);
         $response->assertDontSee('👁️ 有効');

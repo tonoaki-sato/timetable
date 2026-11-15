@@ -254,9 +254,9 @@
                 <div>
                     <label for="selectFacArea" class="block font-bold text-slate-700 mb-1">設置エリア</label>
                     <select id="selectFacArea" name="layout_area_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
-                        <option value="">メイン通り（指定なし）</option>
+                        <option value="">（指定なし）</option>
                         @foreach($areas as $area)
-                            <option value="{{ $area->id }}">{{ $area->name }} ({{ $area->area_type }})</option>
+                            <option value="{{ $area->id }}">{{ $area->name }}</option>
                         @endforeach
                     </select>
                 </div>
