@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\BoothCategory;
+use App\Enums\FacilityCategory;
 use App\Enums\FacilityType;
 use App\Models\GozaStore;
 use App\Models\LayoutBooth;
@@ -206,12 +207,12 @@ class SiteLayoutTest extends TestCase
      */
     public function test_facility_type_category_mapping(): void
     {
-        $this->assertSame(\App\Enums\FacilityCategory::WaterSupply, FacilityType::WaterSupply->category());
-        $this->assertSame(\App\Enums\FacilityCategory::ToiletAndNursing, FacilityType::ToiletFree->category());
-        $this->assertSame(\App\Enums\FacilityCategory::ToiletAndNursing, FacilityType::ToiletPaid->category());
-        $this->assertSame(\App\Enums\FacilityCategory::ToiletAndNursing, FacilityType::NursingRoom->category());
-        $this->assertSame(\App\Enums\FacilityCategory::Other, FacilityType::FirstAid->category());
-        $this->assertSame(\App\Enums\FacilityCategory::Other, FacilityType::Headquarters->category());
-        $this->assertSame(\App\Enums\FacilityCategory::Other, FacilityType::StaffWaitingArea->category());
+        $this->assertSame(FacilityCategory::WaterSupply, FacilityType::WaterSupply->category());
+        $this->assertSame(FacilityCategory::ToiletAndNursing, FacilityType::ToiletFree->category());
+        $this->assertSame(FacilityCategory::ToiletAndNursing, FacilityType::ToiletPaid->category());
+        $this->assertSame(FacilityCategory::ToiletAndNursing, FacilityType::NursingRoom->category());
+        $this->assertSame(FacilityCategory::Other, FacilityType::FirstAid->category());
+        $this->assertSame(FacilityCategory::Other, FacilityType::Headquarters->category());
+        $this->assertSame(FacilityCategory::Other, FacilityType::StaffWaitingArea->category());
     }
 }

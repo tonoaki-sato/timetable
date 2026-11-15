@@ -50,47 +50,47 @@
     </div>
     @endif
 
-    <!-- 表示施設フィルター（給水設備 / トイレ・授乳室 / その他） -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-2xs space-y-2">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div class="flex items-center space-x-2">
-                <span class="text-xs font-bold text-slate-700 flex items-center space-x-1">
-                    <span>🔍</span>
-                    <span>表示施設切り替え:</span>
-                </span>
-                <span class="text-[11px] text-slate-500">
-                    表示中 <strong id="visibleCount" class="font-mono text-indigo-600">{{ $facilities->count() }}</strong> / 全 {{ $map->facilities->count() }} 件
-                </span>
+    <!-- 表示施設切り替えフィルターバー (logistics ページデザイン準拠) -->
+    <div class="print:hidden bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+        <!-- 全選択 / 全解除 & 施設チップ -->
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-slate-700 flex items-center mr-1">
+                <span>🔍 表示施設:</span>
+            </span>
+
+            <!-- 全選択 / 全解除 ボタン -->
+            <div class="inline-flex rounded border border-slate-300 bg-white p-0.5 mr-1 shrink-0">
+                <button type="button" data-action="select-all-facilities"
+                    title="全施設を表示"
+                    class="px-1.5 py-0.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-[10px] font-bold transition cursor-pointer">
+                    全選択
+                </button>
+                <button type="button" data-action="deselect-all-facilities"
+                    title="全施設を非表示"
+                    class="px-1.5 py-0.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded text-[10px] font-bold transition cursor-pointer">
+                    全解除
+                </button>
             </div>
-            <div class="flex items-center space-x-2 text-xs">
-                <button type="button" id="selectAllCategoriesBtn" class="text-indigo-600 hover:text-indigo-800 font-bold hover:underline cursor-pointer">
-                    すべて表示
-                </button>
-                <span class="text-slate-300">|</span>
-                <button type="button" id="deselectAllCategoriesBtn" class="text-slate-500 hover:text-slate-700 font-bold hover:underline cursor-pointer">
-                    すべて非表示
-                </button>
+
+            <!-- 各分類のチップ（ON/OFF トグル） -->
+            <div class="flex flex-wrap items-center gap-1.5" id="facility-filter-chips">
+                @foreach(\App\Enums\FacilityCategory::cases() as $cat)
+                    <button type="button"
+                        id="chip-facility-{{ $cat->value }}"
+                        data-facility-category="{{ $cat->value }}"
+                        class="facility-chip inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border transition bg-white text-slate-800 border-slate-300 hover:border-indigo-400 whitespace-nowrap shrink-0 cursor-pointer">
+                        <span class="mr-1 text-[10px] text-emerald-600 font-bold">✔</span>
+                        <span>{{ $cat->icon() }} {{ $cat->label() }}</span>
+                    </button>
+                @endforeach
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 pt-1">
-            @foreach(\App\Enums\FacilityCategory::cases() as $cat)
-                @php
-                    $count = $map->facilities->filter(fn($f) => $f->facility_type->category() === $cat)->count();
-                @endphp
-                <button type="button"
-                    data-action="toggle-category"
-                    data-category="{{ $cat->value }}"
-                    data-active="true"
-                    class="category-toggle-btn px-3 py-1.5 rounded-xl font-bold text-xs transition flex items-center space-x-1.5 border shadow-2xs cursor-pointer select-none bg-indigo-50 border-indigo-300 text-indigo-900 hover:bg-indigo-100">
-                    <span class="check-icon">✓</span>
-                    <span>{{ $cat->icon() }}</span>
-                    <span>{{ $cat->label() }}</span>
-                    <span class="category-count text-[11px] font-mono opacity-80 px-1.5 py-0.5 bg-white/70 rounded-full border border-indigo-200">
-                        {{ $count }}
-                    </span>
-                </button>
-            @endforeach
+        <!-- 表示施設数インジケータ -->
+        <div class="flex items-center space-x-2 shrink-0">
+            <span class="text-xs text-slate-500 font-mono" id="facility-count-indicator" data-total-count="{{ $map->facilities->count() }}">
+                全 {{ $map->facilities->count() }} 施設表示中
+            </span>
         </div>
     </div>
 
@@ -188,7 +188,7 @@
                 </button>
             </div>
 
-            <form id="facilityEditForm" method="POST" action="" class="space-y-3 text-xs">
+            <form id="facilityEditForm" method="POST" action="" data-base-action="/timetables/{{ $timetable->id }}/layouts/facilities" class="space-y-3 text-xs">
                 @csrf
                 @method('PUT')
 
@@ -243,18 +243,17 @@
 <!-- モーダル操作 & 分類切り替え用 Vanilla JS (外部スクリプト / CSP対応) -->
 <script type="module">
     document.addEventListener('DOMContentLoaded', () => {
-        // --- 1. 分類切り替えトグル機能 ---
-        const categoryButtons = document.querySelectorAll('[data-action="toggle-category"]');
+        // --- 1. 分類切り替えトグル機能 (logistics ページデザイン準拠) ---
+        const filterContainer = document.getElementById('facility-filter-chips');
         const facilityRows = document.querySelectorAll('.facility-row');
-        const visibleCountSpan = document.getElementById('visibleCount');
+        const countIndicator = document.getElementById('facility-count-indicator');
         const noMatchingRow = document.getElementById('noMatchingRow');
-        const selectAllBtn = document.getElementById('selectAllCategoriesBtn');
-        const deselectAllBtn = document.getElementById('deselectAllCategoriesBtn');
+        const totalCount = Number(countIndicator?.dataset.totalCount ?? facilityRows.length);
+        const allCategoryKeys = ['water_supply', 'toilet_nursing', 'other'];
 
         // URLパラメータから初期選択状態を復元（例: ?categories=water_supply,toilet_nursing）
         const urlParams = new URLSearchParams(window.location.search);
         const categoriesParam = urlParams.get('categories');
-        const allCategoryKeys = ['water_supply', 'toilet_nursing', 'other'];
 
         let activeCategories = new Set(
             categoriesParam !== null
@@ -262,23 +261,27 @@
                 : allCategoryKeys
         );
 
+        const setFacilityChipState = (chip, visible) => {
+            const check = chip.querySelector('span:first-child');
+            if (visible) {
+                chip.classList.remove('opacity-40', 'bg-slate-100');
+                chip.classList.add('bg-white', 'border-slate-300');
+                if (check) check.textContent = '✔';
+            } else {
+                chip.classList.add('opacity-40', 'bg-slate-100');
+                chip.classList.remove('bg-white', 'border-slate-300');
+                if (check) check.textContent = '✕';
+            }
+        };
+
         const updateStylesAndRows = () => {
             let visibleCount = 0;
 
-            // ボタンのスタイル更新
-            categoryButtons.forEach(btn => {
-                const cat = btn.getAttribute('data-category');
+            // チップのスタイル更新
+            document.querySelectorAll('.facility-chip').forEach(chip => {
+                const cat = chip.getAttribute('data-facility-category');
                 const isActive = activeCategories.has(cat);
-                btn.setAttribute('data-active', isActive ? 'true' : 'false');
-                const checkIcon = btn.querySelector('.check-icon');
-
-                if (isActive) {
-                    btn.className = 'category-toggle-btn px-3 py-1.5 rounded-xl font-bold text-xs transition flex items-center space-x-1.5 border shadow-2xs cursor-pointer select-none bg-indigo-50 border-indigo-300 text-indigo-900 hover:bg-indigo-100';
-                    if (checkIcon) checkIcon.textContent = '✓';
-                } else {
-                    btn.className = 'category-toggle-btn px-3 py-1.5 rounded-xl font-bold text-xs transition flex items-center space-x-1.5 border shadow-none cursor-pointer select-none bg-slate-50 border-slate-200 text-slate-400 opacity-60 hover:opacity-100';
-                    if (checkIcon) checkIcon.textContent = '–';
-                }
+                setFacilityChipState(chip, isActive);
             });
 
             // テーブル行の表示切り替え
@@ -292,9 +295,13 @@
                 }
             });
 
-            // 表示件数表示の更新
-            if (visibleCountSpan) {
-                visibleCountSpan.textContent = visibleCount;
+            // インジケータ表示の更新 (logistics と同形式: "全 N 施設表示中" または "全 N 施設中 M 施設表示中")
+            if (countIndicator) {
+                if (visibleCount === totalCount) {
+                    countIndicator.textContent = `全 ${totalCount} 施設表示中`;
+                } else {
+                    countIndicator.textContent = `全 ${totalCount} 施設中 ${visibleCount} 施設表示中`;
+                }
             }
 
             // 該当なし行の表示制御
@@ -316,26 +323,30 @@
             window.history.replaceState({}, '', newUrl);
         };
 
-        categoryButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const cat = btn.getAttribute('data-category');
-                if (activeCategories.has(cat)) {
-                    activeCategories.delete(cat);
-                } else {
-                    activeCategories.add(cat);
-                }
+        // チップクリックイベント（デリゲーション）
+        filterContainer?.addEventListener('click', (e) => {
+            const chip = e.target.closest('.facility-chip');
+            if (!chip) return;
+            const cat = chip.getAttribute('data-facility-category');
+            if (activeCategories.has(cat)) {
+                activeCategories.delete(cat);
+            } else {
+                activeCategories.add(cat);
+            }
+            updateStylesAndRows();
+        });
+
+        // 全選択 / 全解除
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('[data-action="select-all-facilities"]')) {
+                allCategoryKeys.forEach(k => activeCategories.add(k));
                 updateStylesAndRows();
-            });
-        });
-
-        selectAllBtn?.addEventListener('click', () => {
-            allCategoryKeys.forEach(k => activeCategories.add(k));
-            updateStylesAndRows();
-        });
-
-        deselectAllBtn?.addEventListener('click', () => {
-            activeCategories.clear();
-            updateStylesAndRows();
+                return;
+            }
+            if (e.target.closest('[data-action="deselect-all-facilities"]')) {
+                activeCategories.clear();
+                updateStylesAndRows();
+            }
         });
 
         updateStylesAndRows();
@@ -376,7 +387,8 @@
                 locationInput.value = location;
                 notesTextarea.value = notes;
 
-                form.action = `/timetables/{{ $timetable->id }}/layouts/facilities/${id}`;
+                const baseAction = form.getAttribute('data-base-action') || '';
+                form.action = `${baseAction}/${id}`;
                 modal.classList.remove('hidden');
             });
         });

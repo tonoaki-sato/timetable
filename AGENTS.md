@@ -161,6 +161,8 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
    - BladeテンプレートによるSSR描画。UI表示の加工は `app/Presenters/` や View Component に委譲し、Blade内に複雑なロジックを直接記述しない。
    - フロントエンドは Vanilla JS (ES Modules) + Vite + Print CSS。厳格な CSP（インラインスクリプト/スタイルの禁止）を遵守する。
    - 動的な幅・位置の計算（プログレスバー等）においてインラインスタイル属性（`style="..."` や動的生成文字列）をBlade内に出力しない。`data-*` 属性に値を保持させ、JavaScript (CSSOM: `element.style.width = ...`) 経由で初期化・更新する。
+   - **Blade内の `<script>` タグにおける Blade 式（`{{ ... }}`）埋め込みの禁止**: `<script>` ブロック内に Blade 式（`{{ ... }}`）を直接記述しないこと（エディタ・リンターが JavaScript として静的解析した際に `Property assignment expected.` などの構文エラーを引き起こすため）。動的な初期値やURLは HTML 側の `data-*` 属性に保持させ、JavaScript 側では `element.dataset.*` または `getAttribute('data-*')` 経由で取得すること。
+   - **一覧画面の表示切替フィルターバー**: 一覧系画面で施設や資材等の表示・非表示を切り替えるフィルターバーを設ける際は、搬出入計画一覧（`logistics/index.blade.php`）の統一デザイン（`bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs`、インライン全選択・全解除ボタングループ、`✔`/`✕` チップトグル、件数インジケータ表記）に準拠すること。
    - **PDFテンプレート (DomPDF) のCSS・テーブル規約**:
      - 全称セレクタ `*` をリセットスタイル等で使用しないこと（DomPDF内部で `@page` にマッチしてページ余白が `0` にリセットされ、`position: fixed` の固定ヘッダーを用紙外へ押し出すため）。リセットは `table, th, td, h1, h2, h3, div, span, strong, b, p` など具体的なタグ名を列挙して指定する。
      - テーブル列幅に `<colgroup>` / `<col>` を使用しないこと（DomPDF未サポートのため無視され均等幅にフォールバックする）。列幅は `<style>` ブロック内で `th`（または `td`）のクラスセレクタ（例: `.table th.col-name { width: ...; }`）に対して指定する。
