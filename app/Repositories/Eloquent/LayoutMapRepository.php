@@ -115,4 +115,18 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
 
         return $facility->fresh('area');
     }
+
+    /**
+     * 現場設備を新規登録
+     */
+    public function storeFacility(LayoutMap $map, array $data): LayoutFacility
+    {
+        $data['layout_map_id'] = $map->id;
+        if (! isset($data['display_order'])) {
+            $maxOrder = LayoutFacility::where('layout_map_id', $map->id)->max('display_order') ?? 0;
+            $data['display_order'] = $maxOrder + 1;
+        }
+
+        return LayoutFacility::create($data)->fresh('area');
+    }
 }

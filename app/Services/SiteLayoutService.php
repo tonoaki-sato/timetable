@@ -216,6 +216,16 @@ class SiteLayoutService
     }
 
     /**
+     * 現場設備の新規登録
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function storeFacility(LayoutMap $map, array $data): LayoutFacility
+    {
+        return $this->layoutMapRepository->storeFacility($map, $data);
+    }
+
+    /**
      * ござ市出店者一覧をページネーション取得
      */
     public function paginateGozaStores(Timetable $timetable, array $filters = [], int $perPage = 25): LengthAwarePaginator

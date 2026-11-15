@@ -231,6 +231,7 @@ Route::middleware('auth')->group(function () {
         Route::get('timetables/{timetable}/layouts/booths', [SiteLayoutController::class, 'booths'])->name('timetables.layouts.booths');
         Route::put('timetables/{timetable}/layouts/booths/{booth}', [SiteLayoutController::class, 'updateBooth'])->name('timetables.layouts.booths.update');
         Route::get('timetables/{timetable}/layouts/facilities', [SiteLayoutController::class, 'facilities'])->name('timetables.layouts.facilities');
+        Route::post('timetables/{timetable}/layouts/facilities', [SiteLayoutController::class, 'storeFacility'])->name('timetables.layouts.facilities.store');
         Route::put('timetables/{timetable}/layouts/facilities/{facility}', [SiteLayoutController::class, 'updateFacility'])->name('timetables.layouts.facilities.update');
 
         // ござ市出店者管理 (Goza Stores)

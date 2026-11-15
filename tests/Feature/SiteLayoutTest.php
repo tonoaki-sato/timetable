@@ -131,6 +131,7 @@ class SiteLayoutTest extends TestCase
 
         $updateResponse = $this->actingAs($this->user)
             ->put(route('timetables.layouts.facilities.update', [$this->timetable, $facility]), [
+                'facility_code' => 'W-01-REV',
                 'name' => '給水設備①（北川P特設）',
                 'facility_type' => FacilityType::WaterSupply->value,
                 'status' => '確定',
@@ -143,9 +144,48 @@ class SiteLayoutTest extends TestCase
 
         $this->assertDatabaseHas('layout_facilities', [
             'id' => $facility->id,
+            'facility_code' => 'W-01-REV',
             'name' => '給水設備①（北川P特設）',
             'status' => '確定',
         ]);
+    }
+
+    /**
+     * 新規設備が登録できること、およびコード重複時にバリデーションエラーとなること
+     */
+    public function test_facility_can_be_created_and_code_uniqueness_is_validated(): void
+    {
+        // 1. 新規登録の成功
+        $response = $this->actingAs($this->user)
+            ->post(route('timetables.layouts.facilities.store', $this->timetable), [
+                'facility_code' => 'W-NEW-01',
+                'name' => '新設給水所A',
+                'facility_type' => FacilityType::WaterSupply->value,
+                'status' => '予定',
+                'location_description' => '市役所前特設エリア入口',
+                'notes' => '新規配備テスト',
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('layout_facilities', [
+            'layout_map_id' => $this->map->id,
+            'facility_code' => 'W-NEW-01',
+            'name' => '新設給水所A',
+            'status' => '予定',
+        ]);
+
+        // 2. 同一図面内での重複コード登録の失敗
+        $duplicateResponse = $this->actingAs($this->user)
+            ->post(route('timetables.layouts.facilities.store', $this->timetable), [
+                'facility_code' => 'W-NEW-01',
+                'name' => '新設給水所B（重複）',
+                'facility_type' => FacilityType::WaterSupply->value,
+                'status' => '予定',
+            ]);
+
+        $duplicateResponse->assertSessionHasErrors(['facility_code']);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLayoutFacilityRequest;
 use App\Http\Requests\UpdateLayoutBoothRequest;
 use App\Http\Requests\UpdateLayoutFacilityRequest;
 use App\Models\LayoutBooth;
@@ -91,6 +92,17 @@ class SiteLayoutController extends Controller
             'filters' => $filters,
             'areas' => $map->areas,
         ]);
+    }
+
+    /**
+     * 現場設備の新規登録
+     */
+    public function storeFacility(StoreLayoutFacilityRequest $request, Timetable $timetable): RedirectResponse
+    {
+        $map = $this->siteLayoutService->getLayoutDetails($timetable);
+        $facility = $this->siteLayoutService->storeFacility($map, $request->validated());
+
+        return redirect()->back()->with('success', '設備情報（'.$facility->name.'）を新規登録しました。');
     }
 
     /**

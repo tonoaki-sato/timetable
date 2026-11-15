@@ -26,6 +26,13 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
+            <button type="button"
+                id="btnOpenCreateFacilityModal"
+                data-store-url="{{ route('timetables.layouts.facilities.store', $timetable) }}"
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
+                <span>➕</span>
+                <span>新規設備を登録</span>
+            </button>
             <a href="{{ route('timetables.layouts.index', $timetable) }}"
                 class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>←</span>
@@ -151,6 +158,7 @@
                                     data-name="{{ $facility->name }}"
                                     data-type="{{ $facility->facility_type->value }}"
                                     data-status="{{ $facility->status }}"
+                                    data-area-id="{{ $facility->layout_area_id }}"
                                     data-location="{{ $facility->location_description }}"
                                     data-notes="{{ $facility->notes }}"
                                     class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
@@ -175,26 +183,40 @@
         </div>
     </div>
 
-    <!-- 設備編集モーダル -->
-    <div id="facilityEditModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
+    <!-- 設備登録・編集モーダル -->
+    <div id="facilityModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 border border-slate-200">
             <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h3 class="text-base font-bold text-slate-900 flex items-center space-x-1.5">
-                    <span>✏️</span>
-                    <span>設備の編集: <span id="modalFacilityCode" class="font-mono text-indigo-600"></span></span>
+                    <span id="modalFacIcon">✏️</span>
+                    <span id="modalFacTitle">設備の編集</span>
+                    <span id="modalFacilityCode" class="font-mono text-indigo-600 ml-1"></span>
                 </h3>
                 <button type="button" id="modalFacCloseBtn" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer">
                     ✕
                 </button>
             </div>
 
-            <form id="facilityEditForm" method="POST" action="" data-base-action="/timetables/{{ $timetable->id }}/layouts/facilities" class="space-y-3 text-xs">
+            <form id="facilityForm" method="POST" action=""
+                data-base-action="/timetables/{{ $timetable->id }}/layouts/facilities"
+                data-store-url="{{ route('timetables.layouts.facilities.store', $timetable) }}"
+                class="space-y-3 text-xs">
                 @csrf
-                @method('PUT')
+                <input type="hidden" name="_method" id="facilityFormMethod" value="PUT">
 
-                <div>
-                    <label for="inputFacName" class="block font-bold text-slate-700 mb-1">設備名称 <span class="text-rose-500">*</span></label>
-                    <input type="text" id="inputFacName" name="name" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="inputFacCode" class="block font-bold text-slate-700 mb-1">設備コード <span class="text-rose-500">*</span></label>
+                        <input type="text" id="inputFacCode" name="facility_code" required
+                            class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-mono uppercase text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500"
+                            placeholder="例: W-06, TOILET-03">
+                    </div>
+                    <div>
+                        <label for="inputFacName" class="block font-bold text-slate-700 mb-1">設備名称 <span class="text-rose-500">*</span></label>
+                        <input type="text" id="inputFacName" name="name" required
+                            class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500"
+                            placeholder="例: 給水設備⑥（北川P特設）">
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2">
@@ -217,6 +239,16 @@
                 </div>
 
                 <div>
+                    <label for="selectFacArea" class="block font-bold text-slate-700 mb-1">設置エリア</label>
+                    <select id="selectFacArea" name="layout_area_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                        <option value="">メイン通り（指定なし）</option>
+                        @foreach($areas as $area)
+                            <option value="{{ $area->id }}">{{ $area->name }} ({{ $area->area_type }})</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
                     <label for="inputFacLocation" class="block font-bold text-slate-700 mb-1">設置場所の目安</label>
                     <input type="text" id="inputFacLocation" name="location_description" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: 北川駐車場 奥, 甲陽ビル前">
                 </div>
@@ -230,7 +262,7 @@
                     <button type="button" id="modalFacCancelBtn" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-bold shadow-2xs transition cursor-pointer">
                         キャンセル
                     </button>
-                    <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition cursor-pointer">
+                    <button type="submit" id="modalFacSubmitBtn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition cursor-pointer">
                         💾 変更を保存する
                     </button>
                 </div>

@@ -48,4 +48,11 @@ interface LayoutMapRepositoryInterface
      * @param  array<string, mixed>  $data
      */
     public function updateFacility(LayoutFacility $facility, array $data): LayoutFacility;
+
+    /**
+     * 現場設備を新規登録
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function storeFacility(LayoutMap $map, array $data): LayoutFacility;
 }

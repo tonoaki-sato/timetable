@@ -1,11 +1,11 @@
 /**
  * インフラ設備一覧（/timetables/{timetable}/layouts/facilities）
- * 分類フィルター切り替え ＆ 設備編集モーダル操作スクリプト (CSP完全準拠・Vanilla JS)
+ * 分類フィルター切り替え ＆ 設備登録・編集モーダル操作スクリプト (CSP完全準拠・Vanilla JS)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     initFacilityFilters();
-    initFacilityEditModal();
+    initFacilityModal();
 });
 
 /**
@@ -126,23 +126,30 @@ function initFacilityFilters() {
 }
 
 /**
- * 設備編集モーダル機能
+ * 設備登録・編集モーダル機能
  */
-function initFacilityEditModal() {
-    const modal = document.getElementById('facilityEditModal');
-    const form = document.getElementById('facilityEditForm');
+function initFacilityModal() {
+    const modal = document.getElementById('facilityModal');
+    const form = document.getElementById('facilityForm');
     if (!modal || !form) {
         return;
     }
 
+    const formMethod = document.getElementById('facilityFormMethod');
+    const modalIcon = document.getElementById('modalFacIcon');
+    const modalTitle = document.getElementById('modalFacTitle');
     const codeSpan = document.getElementById('modalFacilityCode');
+    const codeInput = document.getElementById('inputFacCode');
     const nameInput = document.getElementById('inputFacName');
     const typeSelect = document.getElementById('selectFacType');
     const statusSelect = document.getElementById('selectFacStatus');
+    const areaSelect = document.getElementById('selectFacArea');
     const locationInput = document.getElementById('inputFacLocation');
     const notesTextarea = document.getElementById('inputFacNotes');
+    const submitBtn = document.getElementById('modalFacSubmitBtn');
     const closeBtn = document.getElementById('modalFacCloseBtn');
     const cancelBtn = document.getElementById('modalFacCancelBtn');
+    const openCreateBtn = document.getElementById('btnOpenCreateFacilityModal');
 
     const closeModal = () => {
         modal.classList.add('hidden');
@@ -151,26 +158,60 @@ function initFacilityEditModal() {
     closeBtn?.addEventListener('click', closeModal);
     cancelBtn?.addEventListener('click', closeModal);
 
+    // 新規登録モーダルを開く
+    openCreateBtn?.addEventListener('click', () => {
+        if (modalIcon) modalIcon.textContent = '➕';
+        if (modalTitle) modalTitle.textContent = '新規設備の登録';
+        if (codeSpan) codeSpan.textContent = '';
+        if (formMethod) formMethod.value = 'POST';
+
+        const storeUrl = form.getAttribute('data-store-url') || openCreateBtn.getAttribute('data-store-url') || '';
+        form.action = storeUrl;
+
+        if (codeInput) codeInput.value = '';
+        if (nameInput) nameInput.value = '';
+        if (typeSelect) typeSelect.value = 'water_supply';
+        if (statusSelect) statusSelect.value = '予定';
+        if (areaSelect) areaSelect.value = '';
+        if (locationInput) locationInput.value = '';
+        if (notesTextarea) notesTextarea.value = '';
+        if (submitBtn) submitBtn.textContent = '➕ 設備を登録する';
+
+        modal.classList.remove('hidden');
+        codeInput?.focus();
+    });
+
+    // 編集モーダルを開く
     document.querySelectorAll('[data-action="open-facility-modal"]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = btn.getAttribute('data-id');
-            const code = btn.getAttribute('data-code');
-            const name = btn.getAttribute('data-name');
-            const type = btn.getAttribute('data-type');
-            const status = btn.getAttribute('data-status');
+            const code = btn.getAttribute('data-code') || '';
+            const name = btn.getAttribute('data-name') || '';
+            const type = btn.getAttribute('data-type') || 'water_supply';
+            const status = btn.getAttribute('data-status') || '予定';
+            const areaId = btn.getAttribute('data-area-id') || '';
             const location = btn.getAttribute('data-location') || '';
             const notes = btn.getAttribute('data-notes') || '';
 
-            if (codeSpan) codeSpan.textContent = code;
-            if (nameInput) nameInput.value = name;
-            if (typeSelect) typeSelect.value = type;
-            if (statusSelect) statusSelect.value = status;
-            if (locationInput) locationInput.value = location;
-            if (notesTextarea) notesTextarea.value = notes;
+            if (modalIcon) modalIcon.textContent = '✏️';
+            if (modalTitle) modalTitle.textContent = '設備の編集';
+            if (codeSpan) codeSpan.textContent = `(${code})`;
+            if (formMethod) formMethod.value = 'PUT';
 
             const baseAction = form.getAttribute('data-base-action') || '';
             form.action = `${baseAction}/${id}`;
+
+            if (codeInput) codeInput.value = code;
+            if (nameInput) nameInput.value = name;
+            if (typeSelect) typeSelect.value = type;
+            if (statusSelect) statusSelect.value = status;
+            if (areaSelect) areaSelect.value = areaId;
+            if (locationInput) locationInput.value = location;
+            if (notesTextarea) notesTextarea.value = notes;
+            if (submitBtn) submitBtn.textContent = '💾 変更を保存する';
+
             modal.classList.remove('hidden');
+            codeInput?.focus();
         });
     });
 }
