@@ -226,6 +226,14 @@ class SiteLayoutService
     }
 
     /**
+     * 現場設備の削除
+     */
+    public function deleteFacility(LayoutFacility $facility): void
+    {
+        $this->layoutMapRepository->deleteFacility($facility);
+    }
+
+    /**
      * ござ市出店者一覧をページネーション取得
      */
     public function paginateGozaStores(Timetable $timetable, array $filters = [], int $perPage = 25): LengthAwarePaginator

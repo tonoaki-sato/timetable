@@ -233,6 +233,7 @@ Route::middleware('auth')->group(function () {
         Route::get('timetables/{timetable}/layouts/facilities', [SiteLayoutController::class, 'facilities'])->name('timetables.layouts.facilities');
         Route::post('timetables/{timetable}/layouts/facilities', [SiteLayoutController::class, 'storeFacility'])->name('timetables.layouts.facilities.store');
         Route::put('timetables/{timetable}/layouts/facilities/{facility}', [SiteLayoutController::class, 'updateFacility'])->name('timetables.layouts.facilities.update');
+        Route::delete('timetables/{timetable}/layouts/facilities/{facility}', [SiteLayoutController::class, 'destroyFacility'])->name('timetables.layouts.facilities.destroy');
 
         // ござ市出店者管理 (Goza Stores)
         Route::get('timetables/{timetable}/goza-stores', [GozaStoreController::class, 'index'])->name('timetables.goza-stores.index');

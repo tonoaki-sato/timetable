@@ -55,4 +55,9 @@ interface LayoutMapRepositoryInterface
      * @param  array<string, mixed>  $data
      */
     public function storeFacility(LayoutMap $map, array $data): LayoutFacility;
+
+    /**
+     * 現場設備を削除
+     */
+    public function deleteFacility(LayoutFacility $facility): void;
 }

@@ -129,4 +129,12 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
 
         return LayoutFacility::create($data)->fresh('area');
     }
+
+    /**
+     * 現場設備を削除
+     */
+    public function deleteFacility(LayoutFacility $facility): void
+    {
+        $facility->delete();
+    }
 }

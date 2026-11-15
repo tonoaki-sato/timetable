@@ -150,7 +150,7 @@
                             <td class="py-2.5 px-3 text-slate-500 text-[11px]">
                                 {{ $facility->notes ?? '-' }}
                             </td>
-                            <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                            <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-1">
                                 <button type="button"
                                     data-action="open-facility-modal"
                                     data-id="{{ $facility->id }}"
@@ -161,9 +161,22 @@
                                     data-area-id="{{ $facility->layout_area_id }}"
                                     data-location="{{ $facility->location_description }}"
                                     data-notes="{{ $facility->notes }}"
-                                    class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
-                                    編集
+                                    class="inline-flex items-center space-x-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                                    title="設備を編集">
+                                    <span>✏️</span>
+                                    <span>編集</span>
                                 </button>
+                                <form action="{{ route('timetables.layouts.facilities.destroy', [$timetable, $facility]) }}" method="POST" class="inline"
+                                    data-confirm="設備「{{ $facility->name }}（{{ $facility->facility_code }}）」を削除しますか？">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="inline-flex items-center space-x-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                                        title="設備を削除">
+                                        <span>🗑️</span>
+                                        <span>削除</span>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     @empty

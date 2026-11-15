@@ -114,4 +114,15 @@ class SiteLayoutController extends Controller
 
         return redirect()->back()->with('success', '設備情報（'.$facility->name.'）を更新しました。');
     }
+
+    /**
+     * 現場設備の削除
+     */
+    public function destroyFacility(Timetable $timetable, LayoutFacility $facility): RedirectResponse
+    {
+        $name = $facility->name;
+        $this->siteLayoutService->deleteFacility($facility);
+
+        return redirect()->back()->with('success', '設備「'.$name.'」を削除しました。');
+    }
 }

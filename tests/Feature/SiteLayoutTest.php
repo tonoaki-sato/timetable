@@ -189,6 +189,34 @@ class SiteLayoutTest extends TestCase
     }
 
     /**
+     * 設備が削除できること
+     */
+    public function test_facility_can_be_deleted(): void
+    {
+        $facility = LayoutFacility::where('layout_map_id', $this->map->id)
+            ->where('facility_code', 'W-01')
+            ->firstOrFail();
+
+        // 一覧画面に削除ボタンが表示されていること
+        $listResponse = $this->actingAs($this->user)
+            ->get(route('timetables.layouts.facilities', $this->timetable));
+        $listResponse->assertStatus(200);
+        $listResponse->assertSee('削除');
+        $listResponse->assertSee('🗑️');
+
+        // 削除リクエスト
+        $response = $this->actingAs($this->user)
+            ->delete(route('timetables.layouts.facilities.destroy', [$this->timetable, $facility]));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('layout_facilities', [
+            'id' => $facility->id,
+        ]);
+    }
+
+    /**
      * ござ市出店者のCRUDができること
      */
     public function test_goza_store_crud(): void
