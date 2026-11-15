@@ -253,6 +253,22 @@ class SiteLayoutTest extends TestCase
         $store = GozaStore::where('store_name', '新規宿場カフェ')->firstOrFail();
         $this->assertEquals('鈴木 花子', $store->representative_name);
 
+        // 出店者登録後の一覧表示検証（UIパーツ・ボタンスタイル・CSP検証）
+        $afterStoreList = $this->actingAs($this->user)
+            ->get(route('timetables.goza-stores.index', $this->timetable));
+        $afterStoreList->assertStatus(200);
+        $afterStoreList->assertSee('新規宿場カフェ');
+        $afterStoreList->assertSee('data-action="open-edit-store-modal"', false);
+        $afterStoreList->assertSee('✏️');
+        $afterStoreList->assertSee('編集');
+        $afterStoreList->assertSee('🗑️');
+        $afterStoreList->assertSee('削除');
+        $afterStoreList->assertSee('コマ割り一覧');
+        $afterStoreList->assertSee('インフラ設備一覧');
+        $afterStoreList->assertSee('配置ダッシュボードへ');
+        $afterStoreList->assertDontSee('<script type="module">', false);
+        $afterStoreList->assertDontSee('<script>', false);
+
         // 更新
         $updateResponse = $this->actingAs($this->user)
             ->put(route('timetables.goza-stores.update', [$this->timetable, $store]), [

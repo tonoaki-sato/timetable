@@ -28,7 +28,8 @@
         <x-slot:actions>
             <button type="button"
                 id="btnOpenCreateStoreModal"
-                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+                data-store-url="{{ route('timetables.goza-stores.store', $timetable) }}"
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
                 <span>➕</span>
                 <span>新規出店者を登録</span>
             </button>
@@ -36,6 +37,16 @@
                 class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>←</span>
                 <span>配置ダッシュボードへ</span>
+            </a>
+            <a href="{{ route('timetables.layouts.booths', $timetable) }}"
+                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+                <span>📋</span>
+                <span>コマ割り一覧</span>
+            </a>
+            <a href="{{ route('timetables.layouts.facilities', $timetable) }}"
+                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+                <span>🚰</span>
+                <span>インフラ設備一覧</span>
             </a>
         </x-slot:actions>
     </x-page-header>
@@ -65,14 +76,14 @@
     </div>
     @endif
 
-    <!-- 検索・絞り込みバー -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-2xs">
-        <form method="GET" action="{{ route('timetables.goza-stores.index', $timetable) }}" class="space-y-3">
-            <div class="flex flex-wrap items-center gap-2">
+    <!-- 検索・絞り込みフィルターバー (facilities 統一デザイン) -->
+    <div class="print:hidden bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs">
+        <form method="GET" action="{{ route('timetables.goza-stores.index', $timetable) }}" class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
                 <!-- ステータス絞り込み -->
-                <div class="flex items-center space-x-1 text-xs">
-                    <span class="text-slate-500 font-bold whitespace-nowrap">状態:</span>
-                    <select name="status" class="bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <div class="flex items-center space-x-1.5 text-xs shrink-0">
+                    <span class="text-slate-500 font-bold whitespace-nowrap">🔍 状態:</span>
+                    <select name="status" class="bg-white border border-slate-300 rounded-lg text-xs py-1 px-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                         <option value="">全ステータス</option>
                         @foreach(\App\Models\GozaStore::STATUSES as $key => $label)
                             <option value="{{ $key }}" {{ ($filters['status'] ?? '') === $key ? 'selected' : '' }}>
@@ -85,32 +96,30 @@
                 <!-- キーワード検索 -->
                 <div class="flex-1 min-w-[200px]">
                     <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="屋号・代表者・電話番号・品目で検索..."
-                        class="w-full bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-400">
+                        class="w-full bg-white border border-slate-300 rounded-lg text-xs py-1 px-2.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-400">
                 </div>
 
                 <!-- ボタン -->
-                <button type="submit" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shrink-0">
-                    <span>🔍</span>
+                <button type="submit" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shrink-0 cursor-pointer">
                     <span>検索</span>
                 </button>
                 @if(!empty($filters['status']) || !empty($filters['search']))
-                    <a href="{{ route('timetables.goza-stores.index', $timetable) }}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs transition flex items-center space-x-1 shrink-0">
+                    <a href="{{ route('timetables.goza-stores.index', $timetable) }}" class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 rounded-lg text-xs transition flex items-center space-x-1 shrink-0">
                         <span>✖</span>
                         <span>リセット</span>
                     </a>
                 @endif
             </div>
+
+            <!-- 件数インジケータ -->
+            <div class="text-xs text-slate-500 font-mono shrink-0">
+                全 {{ $stores->total() }} 件中 {{ $stores->firstItem() ?? 0 }} 〜 {{ $stores->lastItem() ?? 0 }} 件を表示
+            </div>
         </form>
     </div>
 
     <!-- 出店者一覧テーブル -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">
-        <div class="p-3 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between text-xs">
-            <span class="font-bold text-slate-700">
-                全 {{ $stores->total() }} 件中 {{ $stores->firstItem() ?? 0 }} 〜 {{ $stores->lastItem() ?? 0 }} 件を表示
-            </span>
-        </div>
-
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-800">
                 <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -163,14 +172,20 @@
                                     data-items="{{ $store->product_items }}"
                                     data-status="{{ $store->status }}"
                                     data-notes="{{ $store->notes }}"
-                                    class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition">
-                                    編集
+                                    class="inline-flex items-center space-x-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                                    title="出店者を編集">
+                                    <span>✏️</span>
+                                    <span>編集</span>
                                 </button>
-                                <form method="POST" action="{{ route('timetables.goza-stores.destroy', [$timetable, $store]) }}" class="inline" onsubmit="return confirm('出店者「{{ $store->store_name }}」を削除しますか？');">
+                                <form method="POST" action="{{ route('timetables.goza-stores.destroy', [$timetable, $store]) }}" class="inline"
+                                    data-confirm="出店者「{{ $store->store_name }}」を削除しますか？">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition">
-                                        削除
+                                    <button type="submit"
+                                        class="inline-flex items-center space-x-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                                        title="出店者を削除">
+                                        <span>🗑️</span>
+                                        <span>削除</span>
                                     </button>
                                 </form>
                             </td>
@@ -193,20 +208,24 @@
         @endif
     </div>
 
-    <!-- 出店者 登録・編集モーダル -->
+    <!-- 出店者 登録・編集モーダル (facilities 統一デザイン) -->
     <div id="storeModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 border border-slate-200">
             <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h3 class="text-base font-bold text-slate-900 flex items-center space-x-1.5">
-                    <span>🏮</span>
-                    <span id="storeModalTitle">ござ市出店者の登録</span>
+                    <span id="modalStoreIcon">🏮</span>
+                    <span id="modalStoreTitle">ござ市出店者の登録</span>
+                    <span id="modalStoreId" class="font-mono text-indigo-600 ml-1 text-xs"></span>
                 </h3>
-                <button type="button" id="storeModalCloseBtn" class="text-slate-400 hover:text-slate-600 text-lg font-bold">
+                <button type="button" id="storeModalCloseBtn" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer">
                     ✕
                 </button>
             </div>
 
-            <form id="storeForm" method="POST" action="" class="space-y-3 text-xs">
+            <form id="storeForm" method="POST" action=""
+                data-base-action="/timetables/{{ $timetable->id }}/goza-stores"
+                data-store-url="{{ route('timetables.goza-stores.store', $timetable) }}"
+                class="space-y-3 text-xs">
                 @csrf
                 <input type="hidden" name="_method" id="storeFormMethod" value="POST">
 
@@ -247,10 +266,10 @@
                 </div>
 
                 <div class="pt-3 border-t border-slate-200 flex items-center justify-end space-x-2">
-                    <button type="button" id="storeModalCancelBtn" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-bold shadow-2xs transition">
+                    <button type="button" id="storeModalCancelBtn" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-bold shadow-2xs transition cursor-pointer">
                         キャンセル
                     </button>
-                    <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition">
+                    <button type="submit" id="modalStoreSubmitBtn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition cursor-pointer">
                         💾 登録・保存
                     </button>
                 </div>
@@ -260,65 +279,5 @@
 
 </div>
 
-<!-- モーダル操作用 Vanilla JS (外部スクリプト / CSP対応) -->
-<script type="module">
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('storeModal');
-        const form = document.getElementById('storeForm');
-        const formMethod = document.getElementById('storeFormMethod');
-        const titleSpan = document.getElementById('storeModalTitle');
-        const nameInput = document.getElementById('inputStoreName');
-        const repInput = document.getElementById('inputRepName');
-        const contactInput = document.getElementById('inputContact');
-        const productsTextarea = document.getElementById('inputProducts');
-        const statusSelect = document.getElementById('selectStoreStatus');
-        const notesTextarea = document.getElementById('inputStoreNotes');
-        const openCreateBtn = document.getElementById('btnOpenCreateStoreModal');
-        const closeBtn = document.getElementById('storeModalCloseBtn');
-        const cancelBtn = document.getElementById('storeModalCancelBtn');
-
-        const closeModal = () => {
-            modal.classList.add('hidden');
-        };
-
-        closeBtn?.addEventListener('click', closeModal);
-        cancelBtn?.addEventListener('click', closeModal);
-
-        openCreateBtn?.addEventListener('click', () => {
-            titleSpan.textContent = 'ござ市出店者の新規登録';
-            formMethod.value = 'POST';
-            form.action = '{{ route('timetables.goza-stores.store', $timetable) }}';
-            nameInput.value = '';
-            repInput.value = '';
-            contactInput.value = '';
-            productsTextarea.value = '';
-            statusSelect.value = 'confirmed';
-            notesTextarea.value = '';
-            modal.classList.remove('hidden');
-        });
-
-        document.querySelectorAll('[data-action="open-edit-store-modal"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = btn.getAttribute('data-id');
-                const name = btn.getAttribute('data-name');
-                const rep = btn.getAttribute('data-rep') || '';
-                const contact = btn.getAttribute('data-contact') || '';
-                const items = btn.getAttribute('data-items') || '';
-                const status = btn.getAttribute('data-status');
-                const notes = btn.getAttribute('data-notes') || '';
-
-                titleSpan.textContent = `ござ市出店者の編集: ${name}`;
-                formMethod.value = 'PUT';
-                form.action = `/timetables/{{ $timetable->id }}/goza-stores/${id}`;
-                nameInput.value = name;
-                repInput.value = rep;
-                contactInput.value = contact;
-                productsTextarea.value = items;
-                statusSelect.value = status;
-                notesTextarea.value = notes;
-                modal.classList.remove('hidden');
-            });
-        });
-    });
-</script>
+@vite(['resources/js/goza_stores.js'])
 </x-layouts.app>
