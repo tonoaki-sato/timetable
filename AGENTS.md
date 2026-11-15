@@ -32,7 +32,8 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Frontend Bundling
 
-- If a frontend change doesn't show in the UI or you get a "Unable to locate file in Vite manifest" error, run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
+- `resources/js/` や `resources/css/` を新規作成または変更した際、あるいは `vite.config.js` の `input` を更新した際は、必ず `npm run build` を実行して `public/build/manifest.json` を更新すること。
+- UIにフロントエンドの変更が反映されない場合や "Unable to locate file in Vite manifest" エラーが発生した場合は、`npm run build` を再実行するかユーザーに `npm run dev` または `composer run dev` の実行を依頼する。
 
 ## Documentation Files
 
@@ -159,9 +160,12 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 1. **Presentation Layer (View / Presenter)**:
    - BladeテンプレートによるSSR描画。UI表示の加工は `app/Presenters/` や View Component に委譲し、Blade内に複雑なロジックを直接記述しない。
-   - フロントエンドは Vanilla JS (ES Modules) + Vite + Print CSS。厳格な CSP（インラインスクリプト/スタイルの禁止）を遵守する。
+   - フロントエンドは Vanilla JS (ES Modules) + Vite + Print CSS。厳格な CSP（インラインスクリプト/スタイルの完全禁止）を遵守する。
    - 動的な幅・位置の計算（プログレスバー等）においてインラインスタイル属性（`style="..."` や動的生成文字列）をBlade内に出力しない。`data-*` 属性に値を保持させ、JavaScript (CSSOM: `element.style.width = ...`) 経由で初期化・更新する。
-   - **Blade内の `<script>` タグにおける Blade 式（`{{ ... }}`）埋め込みの禁止**: `<script>` ブロック内に Blade 式（`{{ ... }}`）を直接記述しないこと（エディタ・リンターが JavaScript として静的解析した際に `Property assignment expected.` などの構文エラーを引き起こすため）。動的な初期値やURLは HTML 側の `data-*` 属性に保持させ、JavaScript 側では `element.dataset.*` または `getAttribute('data-*')` 経由で取得すること。
+   - **厳格な CSP（インラインスクリプトの完全禁止）と Vite 外部モジュール化の徹底**:
+     - Blade テンプレート内に直接 `<script>`（または `<script type="module">`）ブロックを記述してはならない。本アプリケーションでは CSP ミドルウェアにより `script-src 'self' 'nonce-{ViteNonce}'` が強制されており、直接記述されたインライン `<script>` はブラウザ側でセキュリティ違反として実行が遮断される。
+     - JavaScript は必ず `resources/js/{feature}.js` に外部ファイルとして作成し、`vite.config.js` の `input` に登録した上で、Blade 側からは `@vite(['resources/js/{feature}.js'])` 経由で読み込むこと（Laravel Vite プラグインが自動的に CSP ノンス属性を付与するため安全に実行される）。
+     - 動的な初期値やURL、件数などは HTML 側の `data-*` 属性（`dataset`）に保持させ、JavaScript 側では `element.dataset.*` 経由で取得すること（Blade 式を JS 内に展開しない）。
    - **一覧画面の表示切替フィルターバー**: 一覧系画面で施設や資材等の表示・非表示を切り替えるフィルターバーを設ける際は、搬出入計画一覧（`logistics/index.blade.php`）の統一デザイン（`bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs`、インライン全選択・全解除ボタングループ、`✔`/`✕` チップトグル、件数インジケータ表記）に準拠すること。
    - **PDFテンプレート (DomPDF) のCSS・テーブル規約**:
      - 全称セレクタ `*` をリセットスタイル等で使用しないこと（DomPDF内部で `@page` にマッチしてページ余白が `0` にリセットされ、`position: fixed` の固定ヘッダーを用紙外へ押し出すため）。リセットは `table, th, td, h1, h2, h3, div, span, strong, b, p` など具体的なタグ名を列挙して指定する。
