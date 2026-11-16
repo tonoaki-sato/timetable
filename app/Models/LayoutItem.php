@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'name',
     'status',
     'category',
-    'sub_type',
+    'booth_type',
     'vendor_id',
     'location_description',
     'notes',
@@ -112,11 +112,11 @@ class LayoutItem extends Model
     }
 
     /**
-     * ブース形態 Enum
+     * ブース形態 Enum (出店・設備共通)
      */
     public function boothType(): ?BoothType
     {
-        return $this->sub_type ? BoothType::tryFrom($this->sub_type) : null;
+        return $this->booth_type ? BoothType::tryFrom($this->booth_type) : null;
     }
 
     /**
@@ -124,15 +124,15 @@ class LayoutItem extends Model
      */
     public function facilityCategory(): ?FacilityCategory
     {
-        return $this->category ? FacilityCategory::tryFrom($this->category) : null;
+        return $this->facilityType()?->category();
     }
 
     /**
-     * 設備詳細種別 Enum
+     * 設備詳細種別 Enum (category カラムから取得)
      */
     public function facilityType(): ?FacilityType
     {
-        return $this->sub_type ? FacilityType::tryFrom($this->sub_type) : null;
+        return $this->category ? FacilityType::tryFrom($this->category) : null;
     }
 
     /**

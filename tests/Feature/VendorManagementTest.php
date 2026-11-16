@@ -164,7 +164,7 @@ class VendorManagementTest extends TestCase
             'code' => 'A01',
             'name' => '水浅青果 本店',
             'category' => BoothCategory::GozaCookedFood->value,
-            'sub_type' => BoothType::Tent->value,
+            'booth_type' => BoothType::Tent->value,
             'status' => LayoutItemStatus::Confirmed,
             'notes' => '新鮮野菜、果物詰め合わせ',
         ]);
@@ -178,7 +178,7 @@ class VendorManagementTest extends TestCase
             'code' => 'A03',
             'name' => '水浅青果 加工品',
             'category' => BoothCategory::GozaCookedFood->value,
-            'sub_type' => BoothType::Tent->value,
+            'booth_type' => BoothType::Tent->value,
             'status' => LayoutItemStatus::Confirmed,
             'notes' => '漬物、乾燥野菜加工品',
         ]);
@@ -192,7 +192,7 @@ class VendorManagementTest extends TestCase
             'code' => 'KC-03',
             'name' => '水浅青果 ジュースカー',
             'category' => BoothCategory::CorporateBooth->value,
-            'sub_type' => BoothType::KitchenCar->value,
+            'booth_type' => BoothType::KitchenCar->value,
             'status' => LayoutItemStatus::Confirmed,
             'notes' => '生搾り果実ジュース、カット果物',
         ]);

@@ -59,8 +59,8 @@ return new class extends Migration
             $table->string('code', 30)->comment('識別コード（コマ番号 A01〜 または 設備コード W-01〜）');
             $table->string('name')->nullable()->comment('名称（ブース個別表示名または設備名。未入力時ブースはvendor名を表示）');
             $table->string('status', 30)->default('confirmed')->comment('状態: tentative(未定), confirmed(確定)');
-            $table->string('category', 50)->nullable()->comment('出店区分(goza_cooked_food等) または 設備大分類(water_supply等)');
-            $table->string('sub_type', 50)->nullable()->comment('形態(tent等) または 設備種別(water_supply, first_aid等)');
+            $table->string('category', 50)->nullable()->comment('出店区分(goza_cooked_food等) または 設備種別(water_supply, first_aid等)');
+            $table->string('booth_type', 50)->nullable()->comment('ブース形態(tent, pipe_tent, open_stall, kitchen_car, partner_building)');
             $table->foreignId('vendor_id')->nullable()->constrained('vendors')->nullOnDelete();
             $table->string('location_description')->nullable()->comment('近接店舗・建物・設置場所の目安');
             $table->text('notes')->nullable()->comment('取扱品目・展示内容・特記事項・メモ（product_items統合）');

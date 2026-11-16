@@ -41,11 +41,14 @@ function initBoothDetailModal() {
     const areaName = document.getElementById('detail-area-name');
     const statusLabel = document.getElementById('detail-status-label');
     const typeLabel = document.getElementById('detail-type-label');
-    const subTypeLabel = document.getElementById('detail-sub-type-label');
+    const boothTypeLabel = document.getElementById('detail-booth-type-label');
     const vendorSection = document.getElementById('detail-vendor-section');
     const vendorName = document.getElementById('detail-vendor-name');
     const vendorContactPerson = document.getElementById('detail-vendor-contact-person');
     const vendorContact = document.getElementById('detail-vendor-contact');
+    const multipleContainer = document.getElementById('detail-vendor-multiple-booths-container');
+    const boothsCount = document.getElementById('detail-vendor-booths-count');
+    const boothsList = document.getElementById('detail-vendor-booths-list');
     const location = document.getElementById('detail-location');
     const notes = document.getElementById('detail-notes');
 
@@ -66,6 +69,7 @@ function initBoothDetailModal() {
     document.querySelectorAll('.btn-view-item').forEach(btn => {
         btn.addEventListener('click', () => {
             const data = btn.dataset;
+            const currentId = Number(data.id);
 
             if (statusIcon) statusIcon.textContent = data.statusIcon || '🟢';
             if (itemName) itemName.textContent = data.name || '配置詳細';
@@ -73,9 +77,9 @@ function initBoothDetailModal() {
             if (areaName) areaName.textContent = data.area || '—';
             if (statusLabel) statusLabel.textContent = `${data.statusIcon || '🟢'} ${data.statusLabel || '確定'}`;
             if (typeLabel) typeLabel.textContent = `${data.typeIcon || ''} ${data.typeLabel || '—'}`;
-            if (subTypeLabel) subTypeLabel.textContent = data.subTypeLabel || '—';
+            if (boothTypeLabel) boothTypeLabel.textContent = data.boothTypeLabel || '—';
 
-            // 出展者マスター情報 (ブースのみ)
+            // 出展・出店者情報 (ブース時のみ)
             if (data.type === 'booth' && data.vendorName) {
                 if (vendorSection) vendorSection.classList.remove('hidden');
                 if (vendorName) vendorName.textContent = data.vendorName;
@@ -85,8 +89,60 @@ function initBoothDetailModal() {
                 if (vendorContact) {
                     vendorContact.textContent = data.vendorContact ? `連絡先: ${data.vendorContact}` : '';
                 }
+
+                // 複数ブース展開情報のレンダリング（色分け表示）
+                let booths = [];
+                try {
+                    booths = JSON.parse(data.vendorBooths || '[]');
+                } catch (e) {
+                    booths = [];
+                }
+
+                if (multipleContainer && boothsCount && boothsList) {
+                    if (booths.length > 1) {
+                        multipleContainer.classList.remove('hidden');
+                        boothsCount.textContent = booths.length;
+                        boothsList.innerHTML = '';
+
+                        booths.forEach(b => {
+                            const isCurrent = Number(b.id) === currentId;
+                            const card = document.createElement('div');
+                            card.className = isCurrent
+                                ? 'p-2 rounded-xl bg-indigo-50/90 border border-indigo-300 ring-1 ring-indigo-200 text-xs shadow-2xs'
+                                : 'p-2 rounded-xl bg-white border border-slate-200 text-xs hover:bg-slate-50 transition shadow-2xs';
+
+                            card.innerHTML = `
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center space-x-1.5 min-w-0">
+                                        <span class="font-mono font-bold ${isCurrent ? 'text-indigo-900' : 'text-slate-800'} text-[11px] px-1.5 py-0.2 bg-white rounded border border-slate-200 shrink-0">
+                                            ${b.code}
+                                        </span>
+                                        <span class="font-bold truncate ${isCurrent ? 'text-indigo-950' : 'text-slate-800'}">
+                                            ${b.name || '(名称未設定)'}
+                                        </span>
+                                    </div>
+                                    ${isCurrent 
+                                        ? '<span class="px-1.5 py-0.2 rounded text-[9px] bg-indigo-600 text-white font-bold shrink-0">📍 閲覧中</span>' 
+                                        : '<span class="px-1.5 py-0.2 rounded text-[9px] bg-slate-100 text-slate-600 shrink-0">他配置</span>'}
+                                </div>
+                                <div class="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500">
+                                    <span>📍 ${b.area || '通り'}</span>
+                                    <span>•</span>
+                                    <span class="px-1 rounded ${b.category_badge || 'bg-slate-100'}">${b.category_label || ''}</span>
+                                    <span>•</span>
+                                    <span>${b.type_label || '—'}</span>
+                                </div>
+                                ${b.notes ? `<div class="text-[10px] text-slate-600 mt-1 pl-1 border-l-2 ${isCurrent ? 'border-indigo-400' : 'border-slate-200'} truncate">${b.notes}</div>` : ''}
+                            `;
+                            boothsList.appendChild(card);
+                        });
+                    } else {
+                        multipleContainer.classList.add('hidden');
+                    }
+                }
             } else {
                 if (vendorSection) vendorSection.classList.add('hidden');
+                if (multipleContainer) multipleContainer.classList.add('hidden');
             }
 
             if (location) location.textContent = data.location || '—';
@@ -105,7 +161,7 @@ function initBoothDetailModal() {
 }
 
 /**
- * 登録・編集兼用フォームモーダルの制御
+ * 登録・編集兼用フォームモーダルの制御 (2列対称レイアウト)
  */
 function initItemFormModal() {
     const modal = document.getElementById('itemEditModal');
@@ -130,7 +186,6 @@ function initItemFormModal() {
     const selectVendor = document.getElementById('selectVendor');
     const selectBoothCategory = document.getElementById('selectBoothCategory');
     const selectFacilityType = document.getElementById('selectFacilityType');
-    const rowBoothType = document.getElementById('rowBoothTypeSelect');
     const selectBoothType = document.getElementById('selectBoothType');
     const inputLocation = document.getElementById('inputLocation');
     const textareaNotes = document.getElementById('textareaNotes');
@@ -151,15 +206,14 @@ function initItemFormModal() {
             if (rowVendor) rowVendor.classList.remove('hidden');
             if (selectBoothCategory) selectBoothCategory.classList.remove('hidden');
             if (selectFacilityType) selectFacilityType.classList.add('hidden');
-            if (rowBoothType) rowBoothType.classList.remove('hidden');
         } else {
             typeBtnBooth.className = 'item-type-toggle-btn flex-1 py-1.5 px-2 rounded-md text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer text-slate-500 hover:text-slate-700 border border-transparent';
             typeBtnFacility.className = 'item-type-toggle-btn flex-1 py-1.5 px-2 rounded-md text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer bg-white text-cyan-800 shadow-2xs border border-cyan-300';
             if (rowVendor) rowVendor.classList.add('hidden');
             if (selectBoothCategory) selectBoothCategory.classList.add('hidden');
             if (selectFacilityType) selectFacilityType.classList.remove('hidden');
-            if (rowBoothType) rowBoothType.classList.add('hidden');
         }
+        // ブース形態(selectBoothType)は出店・設備共通で常時有効
     };
 
     const updateStatusUI = (status) => {
@@ -246,12 +300,13 @@ function initItemFormModal() {
             updateTypeUI(itemType);
             updateStatusUI(data.status || 'confirmed');
 
+            if (selectBoothType) selectBoothType.value = data.boothType || 'tent';
+
             if (itemType === 'booth') {
                 if (selectVendor) selectVendor.value = data.vendorId || '';
                 if (selectBoothCategory) selectBoothCategory.value = data.category || '';
-                if (selectBoothType) selectBoothType.value = data.subType || '';
             } else {
-                if (selectFacilityType) selectFacilityType.value = data.subType || '';
+                if (selectFacilityType) selectFacilityType.value = data.category || '';
             }
 
             modal.classList.remove('hidden');
@@ -259,14 +314,10 @@ function initItemFormModal() {
         });
     });
 
-    // フォーム送信前調整: 設備の場合は sub_type_facility の選択値から category と sub_type を設定
+    // フォーム送信前調整
     form.addEventListener('submit', () => {
         if (inputType.value === 'facility') {
-            const selectedOpt = selectFacilityType.options[selectFacilityType.selectedIndex];
-            const cat = selectedOpt ? selectedOpt.dataset.cat : 'water';
-            const subType = selectFacilityType.value;
-
-            // category フィールドをセット
+            // 設備時: category に selectFacilityType の値をセット
             let hiddenCategory = form.querySelector('input[name="category"][data-facility-auto]');
             if (!hiddenCategory) {
                 hiddenCategory = document.createElement('input');
@@ -275,33 +326,20 @@ function initItemFormModal() {
                 hiddenCategory.dataset.facilityAuto = 'true';
                 form.appendChild(hiddenCategory);
             }
-            hiddenCategory.value = cat;
+            hiddenCategory.value = selectFacilityType.value;
 
-            // sub_type フィールドをセット
-            let hiddenSubType = form.querySelector('input[name="sub_type"][data-facility-auto]');
-            if (!hiddenSubType) {
-                hiddenSubType = document.createElement('input');
-                hiddenSubType.type = 'hidden';
-                hiddenSubType.name = 'sub_type';
-                hiddenSubType.dataset.facilityAuto = 'true';
-                form.appendChild(hiddenSubType);
-            }
-            hiddenSubType.value = subType;
-
-            // ブース用セレクトのnameを一時的に無効化
+            // ブース用セレクトを無効化
             if (selectBoothCategory) selectBoothCategory.name = '';
-            if (selectBoothType) selectBoothType.name = '';
             if (selectVendor) selectVendor.value = '';
         } else {
-            // ブースの場合
+            // ブース時
             if (selectBoothCategory) selectBoothCategory.name = 'category';
-            if (selectBoothType) selectBoothType.name = 'sub_type';
 
             const autoCat = form.querySelector('input[name="category"][data-facility-auto]');
             if (autoCat) autoCat.remove();
-            const autoSub = form.querySelector('input[name="sub_type"][data-facility-auto]');
-            if (autoSub) autoSub.remove();
         }
+        // selectBoothType (booth_type) は常時送信
+        if (selectBoothType) selectBoothType.name = 'booth_type';
     });
 }
 

@@ -53,6 +53,7 @@ class Vendor extends Model
             $statusLabel = $b->status?->label() ?? '';
 
             return [
+                'id' => $b->id,
                 'code' => $b->code,
                 'name' => $b->displayName,
                 'area' => $b->area?->name ?? '通り',

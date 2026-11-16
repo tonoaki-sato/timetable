@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Enums\BoothCategory;
 use App\Enums\BoothType;
-use App\Enums\FacilityCategory;
 use App\Enums\FacilityType;
 use App\Enums\LayoutItemStatus;
 use App\Enums\LayoutItemType;
@@ -100,7 +99,7 @@ class SiteLayoutTest extends TestCase
             'code' => 'A99',
             'name' => '水浅青果 本店',
             'category' => BoothCategory::GozaCookedFood->value,
-            'sub_type' => BoothType::Tent->value,
+            'booth_type' => BoothType::Tent->value,
             'status' => LayoutItemStatus::Confirmed,
             'location_description' => 'セブンイレブン向かい',
             'notes' => '新鮮野菜販売',
@@ -116,7 +115,7 @@ class SiteLayoutTest extends TestCase
             'code' => 'B99',
             'name' => null,
             'category' => BoothCategory::GozaGeneralGoods->value,
-            'sub_type' => BoothType::StreetStall->value,
+            'booth_type' => BoothType::OpenStall->value,
             'status' => LayoutItemStatus::Tentative,
             'display_order' => 2,
         ]);
@@ -128,8 +127,8 @@ class SiteLayoutTest extends TestCase
             'item_type' => LayoutItemType::Facility,
             'code' => 'W-99',
             'name' => '給水設備①',
-            'category' => FacilityCategory::WaterSupply->value,
-            'sub_type' => FacilityType::WaterSupply->value,
+            'category' => FacilityType::WaterSupply->value,
+            'booth_type' => BoothType::OpenStall->value,
             'status' => LayoutItemStatus::Confirmed,
             'location_description' => '北川P入口',
             'notes' => 'ポリタンク常設',
@@ -143,8 +142,8 @@ class SiteLayoutTest extends TestCase
             'item_type' => LayoutItemType::Facility,
             'code' => 'STAFF-99',
             'name' => 'スタッフ控室',
-            'category' => FacilityCategory::Other->value,
-            'sub_type' => FacilityType::StaffRoom->value,
+            'category' => FacilityType::StaffRoom->value,
+            'booth_type' => BoothType::PartnerBuilding->value,
             'status' => LayoutItemStatus::Tentative,
             'location_description' => '本部テント裏',
             'display_order' => 2,
@@ -185,13 +184,18 @@ class SiteLayoutTest extends TestCase
         $response->assertSee('W-99');
         $response->assertSee('STAFF-99');
         $response->assertSee('テント');
-        $response->assertSee('現場インフラ');
+        $response->assertSee('露店・露出');
+        $response->assertSee('提携建屋内');
         $response->assertSee('🟢');
         $response->assertSee('🟡');
+
+        // コード列の直後に種別絵文字アイコンが付いていないこと（コードのみのシンプルなバッジ表示）
+        $response->assertDontSee('>A99</span><span class="text-[10px]', false);
 
         // モーダル要素とスクリプトが正しくレンダリングされていること
         $response->assertSee('itemEditModal');
         $response->assertSee('modal-item-detail');
+        $response->assertSee('detail-vendor-multiple-booths-container');
         $content = $response->getContent();
         $this->assertTrue(
             str_contains($content, 'booths.js') || str_contains($content, 'booths-'),
@@ -200,7 +204,7 @@ class SiteLayoutTest extends TestCase
     }
 
     /**
-     * 新規ブース配置が登録できること (product_items は notes に統合)
+     * 新規ブース配置が登録できること
      */
     public function test_booth_item_can_be_created(): void
     {
@@ -211,7 +215,7 @@ class SiteLayoutTest extends TestCase
                 'layout_area_id' => $this->areaPark->id,
                 'name' => 'テストキッチンカー',
                 'category' => BoothCategory::GozaOutdoorCooking->value,
-                'sub_type' => BoothType::KitchenCar->value,
+                'booth_type' => BoothType::KitchenCar->value,
                 'status' => 'confirmed',
                 'location_description' => '駐車場入口横',
                 'notes' => '牛串、フランクフルト。発電機持参',
@@ -227,14 +231,14 @@ class SiteLayoutTest extends TestCase
             'code' => 'KC-01',
             'name' => 'テストキッチンカー',
             'category' => BoothCategory::GozaOutdoorCooking->value,
-            'sub_type' => BoothType::KitchenCar->value,
+            'booth_type' => BoothType::KitchenCar->value,
             'status' => 'confirmed',
             'notes' => '牛串、フランクフルト。発電機持参',
         ]);
     }
 
     /**
-     * 新規設備が同一エンドポイントから登録できること
+     * 新規設備が同一エンドポイントから登録でき、ブース形態（提携建屋内）も保存されること
      */
     public function test_facility_item_can_be_created(): void
     {
@@ -244,10 +248,10 @@ class SiteLayoutTest extends TestCase
                 'code' => 'STAFF-NEW',
                 'layout_area_id' => $this->areaPark->id,
                 'name' => '第2スタッフ控室',
-                'category' => FacilityCategory::Other->value,
-                'sub_type' => FacilityType::StaffRoom->value,
+                'category' => FacilityType::StaffRoom->value,
+                'booth_type' => BoothType::PartnerBuilding->value,
                 'status' => 'tentative',
-                'location_description' => '市役所前特設エリア入口',
+                'location_description' => '商店街会館2階',
                 'notes' => '新規配備テスト',
             ]);
 
@@ -259,9 +263,10 @@ class SiteLayoutTest extends TestCase
             'item_type' => 'facility',
             'code' => 'STAFF-NEW',
             'name' => '第2スタッフ控室',
-            'category' => FacilityCategory::Other->value,
-            'sub_type' => FacilityType::StaffRoom->value,
+            'category' => FacilityType::StaffRoom->value,
+            'booth_type' => BoothType::PartnerBuilding->value,
             'status' => 'tentative',
+            'location_description' => '商店街会館2階',
         ]);
     }
 
@@ -277,7 +282,7 @@ class SiteLayoutTest extends TestCase
                 'layout_area_id' => $this->areaA->id,
                 'name' => '水浅青果 焼き芋店',
                 'category' => BoothCategory::GozaOutdoorCooking->value,
-                'sub_type' => BoothType::KitchenCar->value,
+                'booth_type' => BoothType::PartnerBuilding->value,
                 'status' => 'confirmed',
                 'location_description' => 'セブンイレブン向かい',
                 'notes' => '石焼き芋、焼きとうもろこし。三方幕テント持参確認',
@@ -291,7 +296,7 @@ class SiteLayoutTest extends TestCase
             'code' => 'A99-REV',
             'name' => '水浅青果 焼き芋店',
             'category' => BoothCategory::GozaOutdoorCooking->value,
-            'sub_type' => BoothType::KitchenCar->value,
+            'booth_type' => BoothType::PartnerBuilding->value,
             'status' => 'confirmed',
             'notes' => '石焼き芋、焼きとうもろこし。三方幕テント持参確認',
         ]);
