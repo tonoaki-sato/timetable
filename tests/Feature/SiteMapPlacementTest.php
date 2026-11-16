@@ -166,4 +166,79 @@ class SiteMapPlacementTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['shape_type', 'pos_x', 'pos_y']);
     }
+
+    /**
+     * 配置の位置・寸法・回転をAPIで更新できる
+     */
+    public function test_can_update_placement_position_via_api(): void
+    {
+        $placement = SiteMapPlacement::create([
+            'site_base_map_id' => $this->siteBaseMap->id,
+            'shape_type' => 'general_tent',
+            'display_text' => 'A01',
+            'color_theme' => 'red',
+            'pos_x' => 100.00,
+            'pos_y' => 150.00,
+            'width' => 21.26,
+            'height' => 21.26,
+            'rotation' => 0,
+        ]);
+
+        $updatePayload = [
+            'pos_x' => 135.50,
+            'pos_y' => 180.25,
+            'rotation' => 45,
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->putJson(route('timetables.site-maps.placements.update', [$this->timetable, $placement]), $updatePayload);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'placement' => [
+                    'id' => $placement->id,
+                    'pos_x' => '135.50',
+                    'pos_y' => '180.25',
+                    'rotation' => 45,
+                ],
+            ]);
+
+        $this->assertDatabaseHas('site_map_placements', [
+            'id' => $placement->id,
+            'pos_x' => 135.50,
+            'pos_y' => 180.25,
+            'rotation' => 45,
+        ]);
+    }
+
+    /**
+     * 配置をAPIで削除できる
+     */
+    public function test_can_delete_placement_via_api(): void
+    {
+        $placement = SiteMapPlacement::create([
+            'site_base_map_id' => $this->siteBaseMap->id,
+            'shape_type' => 'general_tent',
+            'display_text' => 'A02',
+            'color_theme' => 'blue',
+            'pos_x' => 200.00,
+            'pos_y' => 250.00,
+            'width' => 21.26,
+            'height' => 21.26,
+            'rotation' => 0,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->deleteJson(route('timetables.site-maps.placements.destroy', [$this->timetable, $placement]));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertDatabaseMissing('site_map_placements', [
+            'id' => $placement->id,
+        ]);
+    }
 }

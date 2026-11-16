@@ -501,6 +501,14 @@ class Timetable extends Model
     }
 
     /**
+     * 運行情報に紐づく白地図上の全配置アイテムを取得
+     */
+    public function placements(): HasManyThrough
+    {
+        return $this->hasManyThrough(SiteMapPlacement::class, SiteBaseMap::class);
+    }
+
+    /**
      * 現在有効な白地図を取得
      */
     public function activeSiteBaseMap(): ?SiteBaseMap

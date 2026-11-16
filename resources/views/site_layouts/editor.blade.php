@@ -146,8 +146,19 @@
                     </span>
                 </div>
 
-                <!-- 右側: ズーム & ビュー操作ツールバー -->
+                <!-- 右側: ズーム & ビュー操作 & 編集操作ツールバー -->
                 <div class="flex items-center space-x-1.5 text-xs">
+                    <!-- 選択中アイテム削除ボタン -->
+                    <button type="button" id="btn-delete-selected"
+                        disabled
+                        class="px-2.5 py-1 bg-red-50 hover:bg-red-600 hover:text-white text-red-700 border border-red-200 hover:border-red-600 rounded-lg font-bold shadow-2xs transition flex items-center space-x-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-50 disabled:hover:text-red-700 disabled:hover:border-red-200 cursor-pointer"
+                        title="選択した配置アイテムを削除 (Deleteキー)">
+                        <span>🗑️</span>
+                        <span class="hidden sm:inline">削除</span>
+                    </button>
+
+                    <div class="h-4 w-px bg-slate-300 mx-1"></div>
+
                     <!-- ズームアウト -->
                     <button type="button" id="btn-zoom-out"
                         class="p-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg shadow-2xs transition flex items-center justify-center cursor-pointer"
@@ -211,9 +222,11 @@
 
                 <!-- 操作ヘルプチップ（画面右下） -->
                 <div class="absolute bottom-3 right-3 z-10 px-3 py-1.5 bg-slate-900/75 backdrop-blur-xs text-white rounded-lg text-[11px] font-medium shadow-md flex items-center space-x-2 pointer-events-none">
-                    <span>🎯 左パレットからDnD配置</span>
+                    <span>🎯 パレットからDnD配置</span>
                     <span class="text-slate-400">|</span>
-                    <span>🖱️ ドラッグで画面移動</span>
+                    <span>👆 クリックで選択・移動</span>
+                    <span class="text-slate-400">|</span>
+                    <span>🗑️ Deleteで削除</span>
                     <span class="text-slate-400">|</span>
                     <span>ホイールでズーム</span>
                 </div>

@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnZoomOut = document.getElementById('btn-zoom-out');
     const btnZoom100 = document.getElementById('btn-zoom-100');
     const btnZoomFit = document.getElementById('btn-zoom-fit');
+    const btnDeleteSelected = document.getElementById('btn-delete-selected');
 
     const svgUrl = appEl.dataset.svgUrl;
     const viewboxStr = appEl.dataset.viewbox || '0 0 842 1191';
@@ -56,9 +57,17 @@ document.addEventListener('DOMContentLoaded', () => {
         isDragging: false,
         dragStartX: 0,
         dragStartY: 0,
+        panDist: 0,
         svgWidth: 842,
         svgHeight: 1191,
         placements: placements,
+        selectedPlacementId: null,
+        isMovingNode: false,
+        movingNodeId: null,
+        moveStartSvgX: 0,
+        moveStartSvgY: 0,
+        origPlacementX: 0,
+        origPlacementY: 0,
     };
 
     // viewBox からデフォルトサイズをパース (842 x 1191)
@@ -195,9 +204,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const x = parseFloat(placement.pos_x) || 0;
         const y = parseFloat(placement.pos_y) || 0;
         const rot = parseInt(placement.rotation, 10) || 0;
+        const isSelected = state.selectedPlacementId === placement.id;
 
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttribute('class', 'site-map-node cursor-pointer select-none transition-opacity');
+        g.setAttribute('class', `site-map-node cursor-pointer select-none transition-opacity ${isSelected ? 'selected-node' : ''}`);
         g.setAttribute('data-placement-id', placement.id);
         g.setAttribute('data-shape-type', placement.shape_type);
 
@@ -262,7 +272,186 @@ document.addEventListener('DOMContentLoaded', () => {
             g.appendChild(textEl);
         }
 
+        // 4. 選択状態のハイライト枠 & 四隅の白丸ハンドル描画
+        if (isSelected) {
+            // 外枠ハイライト (青色の破線枠)
+            const selRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            selRect.setAttribute('x', x - 0.75);
+            selRect.setAttribute('y', y - 0.75);
+            selRect.setAttribute('width', w + 1.5);
+            selRect.setAttribute('height', h + 1.5);
+            selRect.setAttribute('fill', 'rgba(37, 99, 235, 0.08)');
+            selRect.setAttribute('stroke', '#2563eb');
+            selRect.setAttribute('stroke-width', '0.85');
+            selRect.setAttribute('stroke-dasharray', '2 1');
+            selRect.setAttribute('pointer-events', 'none');
+            g.appendChild(selRect);
+
+            // 四隅の白丸ハンドル
+            const corners = [
+                { cx: x, cy: y },           // 左上
+                { cx: x + w, cy: y },       // 右上
+                { cx: x + w, cy: y + h },   // 右下
+                { cx: x, cy: y + h },       // 左下
+            ];
+
+            corners.forEach(corner => {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', corner.cx);
+                circle.setAttribute('cy', corner.cy);
+                circle.setAttribute('r', '1.3');
+                circle.setAttribute('fill', '#ffffff');
+                circle.setAttribute('stroke', '#2563eb');
+                circle.setAttribute('stroke-width', '0.6');
+                circle.setAttribute('pointer-events', 'none');
+                g.appendChild(circle);
+            });
+        }
+
+        // 5. アイコンのクリック選択 & ドラッグ移動開始イベント
+        g.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            e.stopPropagation();
+
+            selectPlacement(placement.id);
+
+            state.isMovingNode = true;
+            state.movingNodeId = placement.id;
+
+            const svgCoords = getSvgCoordinates(e.clientX, e.clientY);
+            state.moveStartSvgX = svgCoords.x;
+            state.moveStartSvgY = svgCoords.y;
+            state.origPlacementX = parseFloat(placement.pos_x) || 0;
+            state.origPlacementY = parseFloat(placement.pos_y) || 0;
+        });
+
         layer.appendChild(g);
+    }
+
+    /**
+     * 指定IDの配置アイテムを選択状態にする
+     */
+    function selectPlacement(id) {
+        if (state.selectedPlacementId === id) return;
+
+        const prevId = state.selectedPlacementId;
+        state.selectedPlacementId = id;
+
+        if (btnDeleteSelected) {
+            btnDeleteSelected.disabled = false;
+        }
+
+        if (prevId) {
+            const prevTarget = state.placements.find(p => p.id === prevId);
+            if (prevTarget) renderPlacementNode(prevTarget);
+        }
+
+        const target = state.placements.find(p => p.id === id);
+        if (target) renderPlacementNode(target);
+    }
+
+    /**
+     * 選択を解除する
+     */
+    function deselectPlacement() {
+        if (!state.selectedPlacementId) return;
+
+        const prevId = state.selectedPlacementId;
+        state.selectedPlacementId = null;
+
+        if (btnDeleteSelected) {
+            btnDeleteSelected.disabled = true;
+        }
+
+        if (prevId) {
+            const prevTarget = state.placements.find(p => p.id === prevId);
+            if (prevTarget) renderPlacementNode(prevTarget);
+        }
+    }
+
+    /**
+     * アイコンの移動座標をAPIにPUT保存する
+     */
+    async function updatePlacementPosition(placement) {
+        const url = `${storeUrl}/${placement.id}`;
+        const payload = {
+            pos_x: placement.pos_x,
+            pos_y: placement.pos_y,
+        };
+
+        try {
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.message || '位置の更新に失敗しました');
+            }
+        } catch (err) {
+            console.error('Error updating placement position:', err);
+            alert(`位置の保存に失敗しました: ${err.message}`);
+            // ロールバック
+            placement.pos_x = state.origPlacementX;
+            placement.pos_y = state.origPlacementY;
+            renderPlacementNode(placement);
+        }
+    }
+
+    /**
+     * 選択された配置アイテムを削除する
+     */
+    async function deleteSelectedPlacement() {
+        if (!state.selectedPlacementId) return;
+
+        const target = state.placements.find(p => p.id === state.selectedPlacementId);
+        if (!target) return;
+
+        const itemName = target.display_text || 'このアイテム';
+        if (!confirm(`「${itemName}」を配置図から削除（配置解除）しますか？`)) {
+            return;
+        }
+
+        const url = `${storeUrl}/${target.id}`;
+        try {
+            const res = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.message || '配置の削除に失敗しました');
+            }
+
+            // state から削除
+            state.placements = state.placements.filter(p => p.id !== target.id);
+
+            // DOM から削除
+            const layer = getPlacementsLayer();
+            if (layer) {
+                const node = layer.querySelector(`[data-placement-id="${target.id}"]`);
+                if (node) node.remove();
+            }
+
+            deselectPlacement();
+
+            if (countBadge) {
+                countBadge.textContent = `配置数: ${state.placements.length}件`;
+            }
+        } catch (err) {
+            console.error('Error deleting placement:', err);
+            alert(`削除に失敗しました: ${err.message}`);
+        }
     }
 
     /**
@@ -339,23 +528,91 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- イベントリスナー設定 ---
 
-    // ドラッグによるパン移動
+    // ドラッグによるパン移動およびノード移動
     canvasContainer.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         state.isDragging = true;
         state.dragStartX = e.clientX - state.x;
         state.dragStartY = e.clientY - state.y;
+        state.panDist = 0;
     });
 
     window.addEventListener('mousemove', (e) => {
+        // 配置アイコンのドラッグ移動中
+        if (state.isMovingNode) {
+            const svgCoords = getSvgCoordinates(e.clientX, e.clientY);
+            const dx = svgCoords.x - state.moveStartSvgX;
+            const dy = svgCoords.y - state.moveStartSvgY;
+
+            const target = state.placements.find(p => p.id === state.movingNodeId);
+            if (target) {
+                target.pos_x = Math.round((state.origPlacementX + dx) * 100) / 100;
+                target.pos_y = Math.round((state.origPlacementY + dy) * 100) / 100;
+                renderPlacementNode(target);
+            }
+            return;
+        }
+
+        // キャンバス全体のパン移動
         if (!state.isDragging) return;
-        state.x = e.clientX - state.dragStartX;
-        state.y = e.clientY - state.dragStartY;
+        const newX = e.clientX - state.dragStartX;
+        const newY = e.clientY - state.dragStartY;
+        state.panDist += Math.abs(newX - state.x) + Math.abs(newY - state.y);
+        state.x = newX;
+        state.y = newY;
         updateTransform();
     });
 
-    window.addEventListener('mouseup', () => {
-        state.isDragging = false;
+    window.addEventListener('mouseup', (e) => {
+        // 配置アイコン移動の完了
+        if (state.isMovingNode) {
+            const target = state.placements.find(p => p.id === state.movingNodeId);
+            state.isMovingNode = false;
+            state.movingNodeId = null;
+
+            if (target) {
+                const hasMoved = (target.pos_x !== state.origPlacementX) || (target.pos_y !== state.origPlacementY);
+                if (hasMoved) {
+                    updatePlacementPosition(target);
+                }
+            }
+            return;
+        }
+
+        // キャンバスパン移動の終了 & 背景クリック判定（選択解除）
+        if (state.isDragging) {
+            state.isDragging = false;
+            if (state.panDist < 6) {
+                const isClickOnNode = e.target.closest('.site-map-node');
+                if (!isClickOnNode) {
+                    deselectPlacement();
+                }
+            }
+        }
+    });
+
+    // 選択アイテムの削除ボタン
+    if (btnDeleteSelected) {
+        btnDeleteSelected.addEventListener('click', () => {
+            deleteSelectedPlacement();
+        });
+    }
+
+    // キーボードショートカット (Delete/Backspace で削除、Esc で選択解除)
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            const tag = document.activeElement?.tagName?.toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+                return;
+            }
+
+            if (state.selectedPlacementId) {
+                e.preventDefault();
+                deleteSelectedPlacement();
+            }
+        } else if (e.key === 'Escape') {
+            deselectPlacement();
+        }
     });
 
     // マウスホイールによるズーム
@@ -475,6 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resData.success && resData.placement) {
                 state.placements.push(resData.placement);
                 renderPlacementNode(resData.placement);
+                selectPlacement(resData.placement.id);
                 if (countBadge) {
                     countBadge.textContent = `配置数: ${state.placements.length}件`;
                 }
