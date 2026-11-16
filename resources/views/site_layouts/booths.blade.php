@@ -258,43 +258,36 @@
         @endif
     </div>
 
-    <!-- 閲覧専用詳細モーダル -->
-    <div id="modal-item-detail" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 border border-slate-200">
-            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-                <div class="flex items-center space-x-2">
-                    <span class="text-xl" id="detail-status-icon">🟢</span>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800" id="detail-name">配置詳細</h3>
-                        <p class="text-[11px] font-mono text-slate-500" id="detail-code"></p>
+    <!-- 閲覧専用詳細モーダル (上部見切れ防止＆固定ヘッダー・フッター構造) -->
+    <div id="modal-item-detail" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex justify-center items-start sm:items-center p-3 sm:p-6 min-h-screen">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 my-auto">
+            <!-- 固定ヘッダー (見切れ防止) -->
+            <div class="flex items-center justify-between border-b border-slate-200 p-4 shrink-0">
+                <div class="flex items-center space-x-2.5 min-w-0">
+                    <span class="text-2xl shrink-0" id="detail-status-icon">🟢</span>
+                    <div class="min-w-0">
+                        <div class="flex items-center space-x-2">
+                            <h3 class="text-sm sm:text-base font-bold text-slate-900 truncate" id="detail-name">配置詳細</h3>
+                            <span class="font-mono text-[11px] font-bold text-indigo-700 px-1.5 py-0.2 bg-indigo-50 border border-indigo-200 rounded shrink-0" id="detail-code"></span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500 mt-1">
+                            <span class="font-bold text-slate-700" id="detail-area-name">—</span>
+                            <span>•</span>
+                            <span id="detail-type-label">—</span>
+                            <span>•</span>
+                            <span id="detail-booth-type-label">—</span>
+                            <span>•</span>
+                            <span id="detail-status-label" class="font-bold">—</span>
+                        </div>
                     </div>
                 </div>
-                <button type="button" class="btn-close-detail-modal text-slate-400 hover:text-slate-600 transition cursor-pointer p-1">
+                <button type="button" class="btn-close-detail-modal text-slate-400 hover:text-slate-600 transition cursor-pointer p-1 shrink-0 text-lg">
                     ✕
                 </button>
             </div>
 
-            <div class="space-y-3.5 text-xs">
-                <!-- 基本情報グリッド -->
-                <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                    <div>
-                        <span class="text-slate-500 font-medium block text-[10px]">所属エリア</span>
-                        <span class="font-bold text-slate-800" id="detail-area-name">—</span>
-                    </div>
-                    <div>
-                        <span class="text-slate-500 font-medium block text-[10px]">配置状態</span>
-                        <span class="font-bold text-slate-800" id="detail-status-label">—</span>
-                    </div>
-                    <div>
-                        <span class="text-slate-500 font-medium block text-[10px]">区分 / 種別</span>
-                        <span class="font-bold text-slate-800" id="detail-type-label">—</span>
-                    </div>
-                    <div>
-                        <span class="text-slate-500 font-medium block text-[10px]">形態</span>
-                        <span class="font-bold text-slate-800" id="detail-booth-type-label">—</span>
-                    </div>
-                </div>
-
+            <!-- スクロール可能なコンテンツ本体 (基本情報カードを削除しすっきり整理) -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-3.5 text-xs">
                 <!-- 割り当て出展・出店者情報 (ブース時のみ) -->
                 <div id="detail-vendor-section" class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 space-y-2">
                     <span class="text-indigo-900 font-bold block text-[11px] flex items-center space-x-1">
@@ -309,13 +302,13 @@
                         </div>
                     </div>
 
-                    <!-- 出展・出店者の複数配置ブース一覧（現在閲覧中と他のブースを色分け表示） -->
+                    <!-- 出展・出店者の複数配置ブース一覧（スクロール無しで全件直接表示、出店状況バッジ付き） -->
                     <div id="detail-vendor-multiple-booths-container" class="hidden space-y-1.5 pt-2 border-t border-indigo-100/80">
                         <div class="flex items-center justify-between text-[11px] font-bold text-indigo-950">
                             <span>🏪 出展ブース一覧 (全<span id="detail-vendor-booths-count"></span>箇所)</span>
-                            <span class="text-[10px] text-indigo-600 font-normal">※ 色分け表示</span>
+                            <span class="text-[10px] text-indigo-600 font-normal">※ 閲覧中と他のブースを色分け表示</span>
                         </div>
-                        <div id="detail-vendor-booths-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-0.5"></div>
+                        <div id="detail-vendor-booths-list" class="space-y-1.5"></div>
                     </div>
                 </div>
 
@@ -332,7 +325,8 @@
                 </div>
             </div>
 
-            <div class="pt-3 border-t border-slate-200 flex justify-end">
+            <!-- 固定フッター -->
+            <div class="p-3 border-t border-slate-200 flex justify-end shrink-0 bg-slate-50/50 rounded-b-2xl">
                 <button type="button" class="btn-close-detail-modal px-4 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg font-bold transition cursor-pointer text-xs">
                     閉じる
                 </button>
@@ -477,14 +471,6 @@
                 <div class="flex items-center justify-end space-x-2 pt-2.5 border-t border-slate-200">
                     <button type="button" id="modalCancelBtn" class="px-3.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-bold transition cursor-pointer">
                         キャンセル
-                    </button>
-                    <button type="submit" id="modalSubmitBtn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition cursor-pointer">
-                        💾 変更を保存する
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
                     </button>
                     <button type="submit" id="modalSubmitBtn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition cursor-pointer">
                         💾 変更を保存する

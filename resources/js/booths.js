@@ -121,9 +121,14 @@ function initBoothDetailModal() {
                                             ${b.name || '(名称未設定)'}
                                         </span>
                                     </div>
-                                    ${isCurrent 
-                                        ? '<span class="px-1.5 py-0.2 rounded text-[9px] bg-indigo-600 text-white font-bold shrink-0">📍 閲覧中</span>' 
-                                        : '<span class="px-1.5 py-0.2 rounded text-[9px] bg-slate-100 text-slate-600 shrink-0">他配置</span>'}
+                                    <div class="flex items-center space-x-1 shrink-0">
+                                        <span class="px-1.5 py-0.2 rounded text-[9px] border font-bold ${b.status_badge || 'bg-slate-50 text-slate-700 border-slate-300'}">
+                                            ${b.status_icon || '🟢'} ${b.status_label || '確定'}
+                                        </span>
+                                        ${isCurrent 
+                                            ? '<span class="px-1.5 py-0.2 rounded text-[9px] bg-indigo-600 text-white font-bold shrink-0">📍 閲覧中</span>' 
+                                            : '<span class="px-1.5 py-0.2 rounded text-[9px] bg-slate-100 text-slate-600 shrink-0">他配置</span>'}
+                                    </div>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500">
                                     <span>📍 ${b.area || '通り'}</span>

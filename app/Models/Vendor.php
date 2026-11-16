@@ -60,7 +60,9 @@ class Vendor extends Model
                 'category_label' => $categoryLabel,
                 'category_badge' => $categoryBadge,
                 'type_label' => $typeLabel,
-                'status_label' => $statusLabel,
+                'status_label' => $b->status?->label() ?? '確定',
+                'status_icon' => $b->status?->icon() ?? '🟢',
+                'status_badge' => $b->status?->badgeClasses() ?? 'bg-emerald-50 text-emerald-700 border-emerald-300',
                 'notes' => $b->notes ?? '',
             ];
         })->values()->all();

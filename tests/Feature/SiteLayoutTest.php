@@ -192,6 +192,16 @@ class SiteLayoutTest extends TestCase
         // コード列の直後に種別絵文字アイコンが付いていないこと（コードのみのシンプルなバッジ表示）
         $response->assertDontSee('>A99</span><span class="text-[10px]', false);
 
+        // 一覧画面最下部に重複した「変更を保存する」ボタンが露出していないこと（モーダルフォーム内のみに1つ存在）
+        $this->assertSame(
+            1,
+            substr_count($response->getContent(), '💾 変更を保存する'),
+            'There should be exactly one save button on the page (inside itemEditModal).'
+        );
+
+        // 詳細モーダルの基本情報カードが削除され、ヘッダーにインライン統合されていること
+        $response->assertDontSee('grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl', false);
+
         // モーダル要素とスクリプトが正しくレンダリングされていること
         $response->assertSee('itemEditModal');
         $response->assertSee('modal-item-detail');
