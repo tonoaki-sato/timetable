@@ -40,49 +40,55 @@
     </div>
     @endif
 
-    <!-- 1段目: 区分別サマリー指標（出展区分・設備区分 2列構成） -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <!-- 1. 出展区分サマリー -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
-            <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-100">
-                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1">
-                    <span>🎪</span>
-                    <span>出展区分 (全{{ $summary['total_booths'] }}件)</span>
-                </span>
-                <span class="text-base">🏷️</span>
-            </div>
-            <div class="grid grid-cols-2 gap-1.5 text-xs">
-                @foreach($summary['categories'] as $cat)
-                    <div class="flex items-center justify-between px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
-                        <span class="text-[11px] text-slate-600 truncate flex items-center space-x-1">
-                            <span>{{ $cat['icon'] }}</span>
-                            <span class="truncate">{{ $cat['label'] }}</span>
-                        </span>
-                        <span class="font-bold font-mono ml-1 text-slate-900">{{ $cat['count'] }}</span>
-                    </div>
-                @endforeach
-            </div>
+    <!-- 1段目: 区分別内訳（出展区分・設備区分 2列構成） -->
+    <div class="space-y-2">
+        <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-700">
+            <span>📊</span>
+            <span>区分別内訳</span>
         </div>
-
-        <!-- 2. 設備区分サマリー -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
-            <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-100">
-                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1">
-                    <span>🚰</span>
-                    <span>設備区分 (全{{ $summary['total_facilities'] }}箇所)</span>
-                </span>
-                <span class="text-base">🛠️</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <!-- 1. 出展区分サマリー -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
+                <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-100">
+                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1">
+                        <span>🎪</span>
+                        <span>出展区分 (全{{ $summary['total_booths'] }}件)</span>
+                    </span>
+                    <span class="text-base">🏷️</span>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5 text-xs">
+                    @foreach($summary['categories'] as $cat)
+                        <div class="flex items-center justify-between px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
+                            <span class="text-[11px] text-slate-600 truncate flex items-center space-x-1">
+                                <span>{{ $cat['icon'] }}</span>
+                                <span class="truncate">{{ $cat['label'] }}</span>
+                            </span>
+                            <span class="font-bold font-mono ml-1 text-slate-900">{{ $cat['count'] }}</span>
+                        </div>
+                    @endforeach
+                </div>
             </div>
-            <div class="grid grid-cols-2 gap-1.5 text-xs">
-                @foreach($summary['facilities'] as $fac)
-                    <div class="flex items-center justify-between px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
-                        <span class="text-[11px] text-slate-600 flex items-center space-x-1 truncate">
-                            <span>{{ $fac['icon'] }}</span>
-                            <span class="truncate">{{ $fac['label'] }}</span>
-                        </span>
-                        <span class="font-bold font-mono ml-1 text-slate-900">{{ $fac['count'] }}</span>
-                    </div>
-                @endforeach
+
+            <!-- 2. 設備区分サマリー -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
+                <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-100">
+                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1">
+                        <span>🚰</span>
+                        <span>設備区分 (全{{ $summary['total_facilities'] }}箇所)</span>
+                    </span>
+                    <span class="text-base">🛠️</span>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5 text-xs">
+                    @foreach($summary['facilities'] as $fac)
+                        <div class="flex items-center justify-between px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
+                            <span class="text-[11px] text-slate-600 flex items-center space-x-1 truncate">
+                                <span>{{ $fac['icon'] }}</span>
+                                <span class="truncate">{{ $fac['label'] }}</span>
+                            </span>
+                            <span class="font-bold font-mono ml-1 text-slate-900">{{ $fac['count'] }}</span>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>

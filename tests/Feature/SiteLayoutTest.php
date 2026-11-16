@@ -173,6 +173,7 @@ class SiteLayoutTest extends TestCase
         $response->assertDontSee('現場設備一覧 →');
 
         // 1段目: 出展区分・設備区分
+        $response->assertSee('区分別内訳');
         $response->assertSee('出展区分 (全2件)');
         $response->assertSee('設備区分 (全2箇所)');
 
