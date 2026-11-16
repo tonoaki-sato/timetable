@@ -51,6 +51,16 @@ class VendorManagementTest extends TestCase
         $response->assertSee('水浅青果');
         $response->assertSee('水浅 太郎');
         $response->assertSee('090-1111-2222');
+
+        // モーダル要素とスクリプトが正しくレンダリングされていること
+        $response->assertSee('modal-vendor-detail');
+        $response->assertSee('modal-vendor-form');
+        $response->assertSee('btn-open-create-vendor');
+        $content = $response->getContent();
+        $this->assertTrue(
+            str_contains($content, 'vendors.js') || str_contains($content, 'vendors-'),
+            'vendors.js script should be rendered on the page.'
+        );
     }
 
     /**

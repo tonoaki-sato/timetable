@@ -318,7 +318,5 @@
         </div>
     </div>
 
-    @push('scripts')
-        @vite(['resources/js/vendors.js'])
-    @endpush
+    @vite(['resources/js/vendors.js'])
 </x-layouts.app>

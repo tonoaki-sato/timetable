@@ -319,7 +319,5 @@
 
 </div>
 
-    @push('scripts')
-        @vite(['resources/js/booths.js'])
-    @endpush
+    @vite(['resources/js/booths.js'])
 </x-layouts.app>

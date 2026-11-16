@@ -169,6 +169,14 @@ class SiteLayoutTest extends TestCase
         $response->assertSee('テント');
         $response->assertSee('確定');
         $response->assertSee('出展・出店者マスター');
+
+        // モーダル要素とスクリプトが正しくレンダリングされていること
+        $response->assertSee('boothEditModal');
+        $content = $response->getContent();
+        $this->assertTrue(
+            str_contains($content, 'booths.js') || str_contains($content, 'booths-'),
+            'booths.js script should be rendered on the page.'
+        );
     }
 
     /**

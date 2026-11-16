@@ -131,6 +131,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
 - CSP検証や画面レンダリングテストでは、空モデルだけでなく子レコード（タスク、アサイン等）を登録した状態で検証し、ループ（`@foreach` / `@forelse`）や条件分岐（`@if`）内部のHTMLブロックが実際にレンダリングされた状態でインラインスタイル・イベントハンドラの不在を検証する。
 - **PDFレンダリングテスト**: PDFを生成・検証するFeature/Unitテストでは、レスポンスのContent-Typeやバイナリヘッダー（`%PDF-`）だけでなく、必要に応じてDomPDFインスタンスのページ余白（`$dompdf->getCss()->get_page_styles()['base']->margin_top > 0`）が0にリセットされず維持されていることを検証し、余白喪失の再発を防止する。
+- **画面レンダリングテストでのスクリプトおよびモーダルDOM検証の徹底**: 画面レンダリングの Feature テストでは、タイトルやテキスト等の表示確認にとどまらず、画面専用 JavaScript（`@vite` で解決されるスクリプトアセット、例: `vendors.js` / `vendors-`）およびモーダル用DOM要素（モーダルIDや新規登録ボタン等）が HTML 内に正しくレンダリングされていることを検証し、スクリプト読み込み欠落による UI 機能不全の再発を防止すること。
 
 === pint/core rules ===
 
@@ -167,6 +168,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
      - Blade テンプレート内に直接 `<script>`（または `<script type="module">`）ブロックを記述してはならない。本アプリケーションでは CSP ミドルウェアにより `script-src 'self' 'nonce-{ViteNonce}'` が強制されており、直接記述されたインライン `<script>` はブラウザ側でセキュリティ違反として実行が遮断される。
      - JavaScript は必ず `resources/js/{feature}.js` に外部ファイルとして作成し、`vite.config.js` の `input` に登録した上で、Blade 側からは `@vite(['resources/js/{feature}.js'])` 経由で読み込むこと（Laravel Vite プラグインが自動的に CSP ノンス属性を付与するため安全に実行される）。
      - 動的な初期値やURL、件数などは HTML 側の `data-*` 属性（`dataset`）に保持させ、JavaScript 側では `element.dataset.*` 経由で取得すること（Blade 式を JS 内に展開しない）。
+     - **Vite スクリプトの読み込み方式（スロット内末尾への直接配置）**: 本アプリケーションの親レイアウト（`resources/views/components/layouts/app.blade.php` 等）は各画面のビューをメインスロット `{{ $slot }}` として展開する設計となっており、親レイアウト側に `@stack('scripts')` の受け皿は設けていない。個別の Blade テンプレートで `@push('scripts')` を使用するとスクリプトタグが出力されず破棄されるため、画面専用のスクリプトは他の全画面と同様に、`<x-layouts.app>` のスロット内末尾に直接 `@vite(['resources/js/{feature}.js'])` と記述して読み込ませること。
    - **一覧画面のレイアウト・パーツデザイン標準規約**:
      一覧画面を新規作成または改修する際は、**インフラ設備一覧（`resources/views/site_layouts/facilities.blade.php`）**の構成とパーツデザインを基本標準として統一すること。
      - **ページヘッダー**: 画面のタイトル行は「タイトル（アイコン付き見出し）」「説明文」「リンク・アクションボタン」が横並びの一行に収まるレイアウトとする。タイトルと説明文を左側にインライン配置し、説明文は一行に収まる簡潔な短文とし、右側にアクションボタングループ（新規作成ボタン、画面遷移ボタン等）を右寄せ配置して画面上部の縦領域を圧迫しないようにする。
