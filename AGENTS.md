@@ -169,7 +169,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
      - 動的な初期値やURL、件数などは HTML 側の `data-*` 属性（`dataset`）に保持させ、JavaScript 側では `element.dataset.*` 経由で取得すること（Blade 式を JS 内に展開しない）。
    - **一覧画面のレイアウト・パーツデザイン標準規約**:
      一覧画面を新規作成または改修する際は、**インフラ設備一覧（`resources/views/site_layouts/facilities.blade.php`）**の構成とパーツデザインを基本標準として統一すること。
-     - **ページヘッダー**: 戻るナビゲーションリンク、タイトル（アイコン付き）、ページ説明文、右側プライマリアクションボタングループ（新規作成モーダル起動ボタン、PDF出力ボタン等）。
+     - **ページヘッダー**: 画面のタイトル行は「タイトル（アイコン付き見出し）」「説明文」「リンク・アクションボタン」が横並びの一行に収まるレイアウトとする。タイトルと説明文を左側にインライン配置し、説明文は一行に収まる簡潔な短文とし、右側にアクションボタングループ（新規作成ボタン、画面遷移ボタン等）を右寄せ配置して画面上部の縦領域を圧迫しないようにする。
      - **KPI / サマリーカード**: グリッド配置（2〜4列）、白背景（`bg-white`）、微細ボーダー（`border border-slate-200 rounded-xl p-4 shadow-xs`）、アイコンバッジ、カウントバッジ。
      - **表示切替フィルターバー**: `bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs`、インライン全選択・全解除ボタングループ、`✔`/`✕` チップトグル、件数インジケータ。
      - **データテーブル**: `bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden`、ヘッダー背景 `bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600`、行hover効果（`hover:bg-slate-50/50`）、識別コードバッジ（Monoフォント）、状態・種別バッジ。
