@@ -3,16 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'timetable_id',
     'name',
-    'representative_name',
-    'emergency_contact',
+    'contact_person',
+    'contact',
     'notes',
 ])]
 class Vendor extends Model
@@ -33,14 +32,6 @@ class Vendor extends Model
     }
 
     /**
-     * 運行計画（タイムテーブル）とのリレーション
-     */
-    public function timetable(): BelongsTo
-    {
-        return $this->belongsTo(Timetable::class);
-    }
-
-    /**
      * アサインされた配置コマ（ブース）群とのリレーション (1:N)
      */
     public function booths(): HasMany
@@ -49,10 +40,37 @@ class Vendor extends Model
     }
 
     /**
-     * 確保しているコマ数
+     * 詳細モーダル表示用のブース情報配列
+     *
+     * @return array<int, array<string, string>>
      */
-    public function getBoothsCountAttribute(): int
+    public function getBoothsDetailListAttribute(): array
     {
-        return $this->booths->count();
+        return $this->booths->map(fn (LayoutBooth $b) => [
+            'code' => $b->booth_code,
+            'name' => $b->displayName,
+            'area' => $b->area?->name ?? '通り',
+            'category_label' => $b->category?->label() ?? '',
+            'category_badge' => $b->category?->badgeClasses() ?? '',
+            'type_label' => $b->booth_type?->label() ?? '',
+            'status_label' => $b->status?->label() ?? '',
+            'items' => $b->product_items ?? '',
+        ])->values()->all();
+    }
+
+    /**
+     * キーワード検索スコープ（名称・担当者・連絡先）
+     */
+    public function scopeSearch(Builder $query, ?string $keyword): Builder
+    {
+        if (! $keyword) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $q) use ($keyword) {
+            $q->where('name', 'like', "%{$keyword}%")
+                ->orWhere('contact_person', 'like', "%{$keyword}%")
+                ->orWhere('contact', 'like', "%{$keyword}%");
+        });
     }
 }

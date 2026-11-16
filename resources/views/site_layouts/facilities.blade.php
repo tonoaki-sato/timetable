@@ -140,8 +140,8 @@
                                 {{ $facility->area?->name ?? 'メイン通り' }}
                             </td>
                             <td class="py-2.5 px-3 whitespace-nowrap">
-                                <span class="px-2 py-0.5 rounded text-[10px] {{ $facility->statusBadgeClass }}">
-                                    {{ $facility->status }}
+                                <span class="px-2 py-0.5 rounded text-[10px] {{ $facility->statusBadgeClasses }}">
+                                    {{ $facility->status instanceof \App\Enums\FacilityStatus ? $facility->status->label() : $facility->status }}
                                 </span>
                             </td>
                             <td class="py-2.5 px-3 text-slate-600 text-[11px]">
@@ -157,7 +157,7 @@
                                     data-code="{{ $facility->facility_code }}"
                                     data-name="{{ $facility->name }}"
                                     data-type="{{ $facility->facility_type->value }}"
-                                    data-status="{{ $facility->status }}"
+                                    data-status="{{ $facility->status instanceof \App\Enums\FacilityStatus ? $facility->status->value : $facility->status }}"
                                     data-area-id="{{ $facility->layout_area_id }}"
                                     data-location="{{ $facility->location_description }}"
                                     data-notes="{{ $facility->notes }}"
@@ -245,8 +245,9 @@
                     <div>
                         <label for="selectFacStatus" class="block font-bold text-slate-700 mb-1">設置ステータス <span class="text-rose-500">*</span></label>
                         <select id="selectFacStatus" name="status" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
-                            <option value="予定">予定</option>
-                            <option value="確定">確定</option>
+                            @foreach(\App\Enums\FacilityStatus::cases() as $statusCase)
+                                <option value="{{ $statusCase->value }}">{{ $statusCase->label() }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>

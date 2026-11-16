@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\BoothCategory;
+use App\Enums\BoothStatus;
+use App\Enums\BoothType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -27,8 +29,9 @@ class UpdateLayoutBoothRequest extends FormRequest
         return [
             'name' => ['nullable', 'string', 'max:255'],
             'category' => ['required', Rule::enum(BoothCategory::class)],
+            'booth_type' => ['required', Rule::enum(BoothType::class)],
+            'status' => ['required', Rule::enum(BoothStatus::class)],
             'vendor_id' => ['nullable', 'exists:vendors,id'],
-            'goza_store_id' => ['nullable', 'exists:vendors,id'],
             'product_items' => ['nullable', 'string', 'max:1000'],
             'adjacent_landmark' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -45,7 +48,9 @@ class UpdateLayoutBoothRequest extends FormRequest
         return [
             'name' => 'ブース表示名・屋号',
             'category' => '出店区分',
-            'vendor_id' => '出店者',
+            'booth_type' => '形態',
+            'status' => '状態',
+            'vendor_id' => '出展・出店者',
             'product_items' => '取扱品目・活動内容',
             'adjacent_landmark' => '近接店舗・建物',
             'notes' => '特記事項・メモ',

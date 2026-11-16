@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'location_id',
     'zone_code',
     'name',
-    'area_type',
     'display_order',
 ])]
 class LayoutArea extends Model
@@ -51,18 +50,18 @@ class LayoutArea extends Model
     }
 
     /**
-     * このエリアに属するブース一覧
+     * このエリアに属するコマ割り（ブース）一覧
      */
     public function booths(): HasMany
     {
-        return $this->hasMany(LayoutBooth::class)->orderBy('display_order', 'asc');
+        return $this->hasMany(LayoutBooth::class)->orderBy('display_order')->orderBy('booth_code');
     }
 
     /**
-     * このエリアに属する設備一覧
+     * このエリアに属するインフラ設備一覧
      */
     public function facilities(): HasMany
     {
-        return $this->hasMany(LayoutFacility::class)->orderBy('display_order', 'asc');
+        return $this->hasMany(LayoutFacility::class)->orderBy('display_order')->orderBy('facility_code');
     }
 }

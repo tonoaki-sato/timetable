@@ -26,6 +26,7 @@ export default defineConfig({
                 'resources/js/organizations.js',
                 'resources/js/facilities.js',
                 'resources/js/vendors.js',
+                'resources/js/booths.js',
             ],
             refresh: true,
             fonts: [

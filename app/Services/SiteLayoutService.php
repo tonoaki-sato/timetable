@@ -80,7 +80,7 @@ class SiteLayoutService
             $areasSummary[] = [
                 'id' => $area->id,
                 'name' => $area->name,
-                'area_type' => $area->area_type,
+                'zone_code' => $area->zone_code,
                 'booths_count' => $area->booths->count(),
                 'facilities_count' => $area->facilities->count(),
             ];
@@ -169,7 +169,7 @@ class SiteLayoutService
 
         // 駐車場・特設エリア
         $parkingAreas = [];
-        foreach ($map->areas->filter(fn ($a) => $a->area_type !== 'street') as $area) {
+        foreach ($map->areas->filter(fn ($a) => ! in_array($a->zone_code, ['ZONE_A', 'ZONE_B'])) as $area) {
             $parkingAreas[] = [
                 'area' => $area,
                 'booths' => $booths->filter(fn ($b) => $b->layout_area_id === $area->id),
@@ -244,11 +244,11 @@ class SiteLayoutService
     }
 
     /**
-     * タイムテーブルに属する全出店者を取得（セレクトボックス用）
+     * 全出展・出店者を取得（セレクトボックス用）
      */
-    public function getVendorsForSelect(Timetable $timetable): Collection
+    public function getVendorsForSelect(?Timetable $timetable = null): Collection
     {
-        return $this->vendorRepository->getForTimetable($timetable);
+        return $this->vendorRepository->getAll();
     }
 
     /**

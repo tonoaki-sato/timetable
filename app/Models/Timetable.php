@@ -251,19 +251,11 @@ class Timetable extends Model
     }
 
     /**
-     * 出店者一覧とのリレーション
+     * 配置図面経由でアサインされている出店者一覧を取得
      */
-    public function vendors(): HasMany
+    public function assignedVendors()
     {
-        return $this->hasMany(Vendor::class)->orderBy('id', 'asc');
-    }
-
-    /**
-     * ござ市出店者一覧とのリレーション (後方互換用エイリアス)
-     */
-    public function gozaStores(): HasMany
-    {
-        return $this->vendors();
+        return Vendor::whereIn('id', $this->booths()->whereNotNull('vendor_id')->select('vendor_id'));
     }
 
     /**

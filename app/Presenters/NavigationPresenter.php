@@ -66,7 +66,8 @@ class NavigationPresenter
             || request()->routeIs('timetables.equipments.*')
             || request()->routeIs('locations.*')
             || request()->routeIs('location-types.*')
-            || request()->routeIs('equipment-patterns.*');
+            || request()->routeIs('equipment-patterns.*')
+            || request()->routeIs('vendors.*');
     }
 
     /**

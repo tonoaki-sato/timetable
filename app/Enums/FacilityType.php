@@ -10,7 +10,7 @@ enum FacilityType: string
     case NursingRoom = 'nursing_room';
     case FirstAid = 'first_aid';
     case Headquarters = 'headquarters';
-    case StaffWaitingArea = 'staff_waiting_area';
+    case StaffRoom = 'staff_room';
 
     /**
      * 日本語ラベルを取得
@@ -24,7 +24,7 @@ enum FacilityType: string
             self::NursingRoom => '授乳室',
             self::FirstAid => '救護所',
             self::Headquarters => '本陣',
-            self::StaffWaitingArea => 'スタッフ待機場所',
+            self::StaffRoom => 'スタッフ控室',
         };
     }
 
@@ -39,7 +39,7 @@ enum FacilityType: string
             self::NursingRoom => '🍼',
             self::FirstAid => '🏥',
             self::Headquarters => '🏛️',
-            self::StaffWaitingArea => '👥',
+            self::StaffRoom => '👥',
         };
     }
 
@@ -51,7 +51,7 @@ enum FacilityType: string
         return match ($this) {
             self::WaterSupply => FacilityCategory::WaterSupply,
             self::ToiletPaid, self::ToiletFree, self::NursingRoom => FacilityCategory::ToiletAndNursing,
-            self::FirstAid, self::Headquarters, self::StaffWaitingArea => FacilityCategory::Other,
+            self::FirstAid, self::Headquarters, self::StaffRoom => FacilityCategory::Other,
         };
     }
 
@@ -67,7 +67,7 @@ enum FacilityType: string
             self::NursingRoom => 'bg-pink-50 text-pink-800 border-pink-300',
             self::FirstAid => 'bg-rose-50 text-rose-800 border-rose-300 font-bold',
             self::Headquarters => 'bg-indigo-50 text-indigo-800 border-indigo-300 font-bold',
-            self::StaffWaitingArea => 'bg-slate-100 text-slate-800 border-slate-300',
+            self::StaffRoom => 'bg-slate-100 text-slate-800 border-slate-300',
         };
     }
 

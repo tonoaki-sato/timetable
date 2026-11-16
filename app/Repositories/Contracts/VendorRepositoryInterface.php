@@ -2,7 +2,6 @@
 
 namespace App\Repositories\Contracts;
 
-use App\Models\Timetable;
 use App\Models\Vendor;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -10,33 +9,38 @@ use Illuminate\Database\Eloquent\Collection;
 interface VendorRepositoryInterface
 {
     /**
-     * タイムテーブルに紐づく出店者一覧を取得
+     * 全出展・出店者一覧を取得（ID順、ブース数事前ロード）
      */
-    public function getForTimetable(Timetable $timetable): Collection;
+    public function getAll(): Collection;
 
     /**
-     * 出店者一覧をページネーション取得（検索・絞り込み）
+     * 出展・出店者一覧をページネーション取得（検索対応）
      *
-     * @param  array{category?: string|null, search?: string|null}  $filters
+     * @param  array{search?: string|null}  $filters
      */
-    public function paginateForTimetable(Timetable $timetable, array $filters = [], int $perPage = 25): LengthAwarePaginator;
+    public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator;
 
     /**
-     * 出店者を登録
+     * IDで出展・出店者を取得
+     */
+    public function findById(int $id): ?Vendor;
+
+    /**
+     * 出展・出店者を登録
      *
      * @param  array<string, mixed>  $data
      */
-    public function create(Timetable $timetable, array $data): Vendor;
+    public function create(array $data): Vendor;
 
     /**
-     * 出店者を更新
+     * 出展・出店者を更新
      *
      * @param  array<string, mixed>  $data
      */
     public function update(Vendor $vendor, array $data): Vendor;
 
     /**
-     * 出店者を削除
+     * 出展・出店者を削除
      */
     public function delete(Vendor $vendor): bool;
 }

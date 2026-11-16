@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\FacilityStatus;
 use App\Enums\FacilityType;
 use App\Models\LayoutFacility;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -16,6 +17,21 @@ class UpdateLayoutFacilityRequest extends FormRequest
     public function authorize(): bool
     {
         return $this->user() !== null;
+    }
+
+    /**
+     * 入力値の前処理（日本語表記と英語コード値の互換対応）
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('status')) {
+            $status = match ($this->input('status')) {
+                '未定', '予定' => 'tentative',
+                '確定' => 'confirmed',
+                default => $this->input('status'),
+            };
+            $this->merge(['status' => $status]);
+        }
     }
 
     /**
@@ -40,7 +56,7 @@ class UpdateLayoutFacilityRequest extends FormRequest
             ],
             'name' => ['required', 'string', 'max:255'],
             'facility_type' => ['required', Rule::enum(FacilityType::class)],
-            'status' => ['required', Rule::in(['予定', '確定'])],
+            'status' => ['required', Rule::enum(FacilityStatus::class)],
             'layout_area_id' => ['nullable', 'exists:layout_areas,id'],
             'location_description' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -48,7 +64,7 @@ class UpdateLayoutFacilityRequest extends FormRequest
     }
 
     /**
-     * 属性名の日本語化
+     * バリデーションエラーメッセージの属性名
      *
      * @return array<string, string>
      */
@@ -58,8 +74,8 @@ class UpdateLayoutFacilityRequest extends FormRequest
             'facility_code' => '設備コード',
             'name' => '設備名称',
             'facility_type' => '設備種別',
-            'status' => '設置ステータス',
-            'layout_area_id' => '設置エリア',
+            'status' => '設置状況',
+            'layout_area_id' => '特設エリア',
             'location_description' => '設置場所の目安',
             'notes' => '特記事項',
         ];

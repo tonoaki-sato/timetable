@@ -235,17 +235,12 @@ Route::middleware('auth')->group(function () {
         Route::put('timetables/{timetable}/layouts/facilities/{facility}', [SiteLayoutController::class, 'updateFacility'])->name('timetables.layouts.facilities.update');
         Route::delete('timetables/{timetable}/layouts/facilities/{facility}', [SiteLayoutController::class, 'destroyFacility'])->name('timetables.layouts.facilities.destroy');
 
-        // 商業出店者管理 (Vendors)
-        Route::get('timetables/{timetable}/vendors', [VendorController::class, 'index'])->name('timetables.vendors.index');
-        Route::post('timetables/{timetable}/vendors', [VendorController::class, 'store'])->name('timetables.vendors.store');
-        Route::put('timetables/{timetable}/vendors/{vendor}', [VendorController::class, 'update'])->name('timetables.vendors.update');
-        Route::delete('timetables/{timetable}/vendors/{vendor}', [VendorController::class, 'destroy'])->name('timetables.vendors.destroy');
+        // 出展・出店者マスター管理 (Vendors)
+        Route::resource('vendors', VendorController::class)->except(['create', 'show', 'edit']);
 
-        // ござ市出店者管理 (旧ルート互換)
-        Route::get('timetables/{timetable}/goza-stores', [VendorController::class, 'index'])->name('timetables.goza-stores.index');
-        Route::post('timetables/{timetable}/goza-stores', [VendorController::class, 'store'])->name('timetables.goza-stores.store');
-        Route::put('timetables/{timetable}/goza-stores/{vendor}', [VendorController::class, 'update'])->name('timetables.goza-stores.update');
-        Route::delete('timetables/{timetable}/goza-stores/{vendor}', [VendorController::class, 'destroy'])->name('timetables.goza-stores.destroy');
+        // 旧ルート互換
+        Route::get('timetables/{timetable}/vendors', fn () => redirect()->route('vendors.index'))->name('timetables.vendors.index');
+        Route::get('timetables/{timetable}/goza-stores', fn () => redirect()->route('vendors.index'))->name('timetables.goza-stores.index');
     });
 
     // 拠点管理 既存互換フォールバック

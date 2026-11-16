@@ -58,7 +58,6 @@ class SiteLayoutSeeder extends Seeder
             'location_id' => $locations->get('長島駐車場（旧北川駐車場）')?->id,
             'zone_code' => 'AREA_KITAGAWA',
             'name' => '北川駐車場内',
-            'area_type' => 'parking',
             'display_order' => 10,
         ]);
 
@@ -67,7 +66,6 @@ class SiteLayoutSeeder extends Seeder
             'location_id' => $locations->get('S&S駐車場')?->id,
             'zone_code' => 'AREA_SS',
             'name' => 'S&S前駐車場内',
-            'area_type' => 'parking',
             'display_order' => 20,
         ]);
 
@@ -76,7 +74,6 @@ class SiteLayoutSeeder extends Seeder
             'location_id' => $locations->get('税務署前駐車場')?->id,
             'zone_code' => 'AREA_TAX',
             'name' => '税務署前駐車場内',
-            'area_type' => 'parking',
             'display_order' => 30,
         ]);
 
@@ -85,7 +82,6 @@ class SiteLayoutSeeder extends Seeder
             'location_id' => null,
             'zone_code' => 'ZONE_A',
             'name' => 'メイン通りA列（東側歩道）',
-            'area_type' => 'street',
             'display_order' => 40,
         ]);
 
@@ -94,7 +90,6 @@ class SiteLayoutSeeder extends Seeder
             'location_id' => null,
             'zone_code' => 'ZONE_B',
             'name' => 'メイン通りB列（西側歩道）',
-            'area_type' => 'street',
             'display_order' => 50,
         ]);
 
@@ -106,7 +101,7 @@ class SiteLayoutSeeder extends Seeder
                 'type' => FacilityType::WaterSupply,
                 'area_id' => $areaKitagawa->id,
                 'loc_desc' => '北川駐車場内 奥',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 10,
             ],
             [
@@ -115,7 +110,7 @@ class SiteLayoutSeeder extends Seeder
                 'type' => FacilityType::WaterSupply,
                 'area_id' => $areaA->id,
                 'loc_desc' => 'メイン通り南側（ヴィラソレイユ付近）',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 20,
             ],
             [
@@ -124,7 +119,7 @@ class SiteLayoutSeeder extends Seeder
                 'type' => FacilityType::WaterSupply,
                 'area_id' => $areaB->id,
                 'loc_desc' => 'メイン通り中央（フローレンスパレス向かい・服部邸前）',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 30,
             ],
             [
@@ -133,7 +128,7 @@ class SiteLayoutSeeder extends Seeder
                 'type' => FacilityType::WaterSupply,
                 'area_id' => $areaB->id,
                 'loc_desc' => 'メイン通り中央北（甲陽保土ヶ谷ビル/ガスト前）',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 40,
             ],
             [
@@ -142,7 +137,7 @@ class SiteLayoutSeeder extends Seeder
                 'type' => FacilityType::WaterSupply,
                 'area_id' => $areaB->id,
                 'loc_desc' => 'メイン通り北側（丸山浴槽設備・藤巻ビル間）',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 50,
             ],
             [
@@ -151,7 +146,7 @@ class SiteLayoutSeeder extends Seeder
                 'type' => FacilityType::FirstAid,
                 'area_id' => $areaB->id,
                 'loc_desc' => 'リサイクル歌留多・作田邸間（B06-B08裏）',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 60,
             ],
             [
@@ -160,16 +155,16 @@ class SiteLayoutSeeder extends Seeder
                 'type' => FacilityType::Headquarters,
                 'area_id' => $areaB->id,
                 'loc_desc' => 'おもちゃのうえの向かい・本陣スペース',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 70,
             ],
             [
                 'code' => 'STBY-01',
-                'name' => 'スタッフ待機場所・控室',
-                'type' => FacilityType::StaffWaitingArea,
+                'name' => 'スタッフ控室',
+                'type' => FacilityType::StaffRoom,
                 'area_id' => $areaB->id,
                 'loc_desc' => '本陣裏・西村アパート付近',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 80,
             ],
             [
@@ -178,7 +173,7 @@ class SiteLayoutSeeder extends Seeder
                 'type' => FacilityType::ToiletFree,
                 'area_id' => $areaKitagawa->id,
                 'loc_desc' => '北川駐車場内 手前',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 90,
             ],
             [
@@ -187,7 +182,7 @@ class SiteLayoutSeeder extends Seeder
                 'type' => FacilityType::ToiletFree,
                 'area_id' => $areaSS->id,
                 'loc_desc' => 'S&S前駐車場内 奥',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 100,
             ],
             [
@@ -196,7 +191,7 @@ class SiteLayoutSeeder extends Seeder
                 'type' => FacilityType::ToiletPaid,
                 'area_id' => $areaTax->id,
                 'loc_desc' => '税務署前駐車場内 奥',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 110,
             ],
             [
@@ -205,7 +200,7 @@ class SiteLayoutSeeder extends Seeder
                 'type' => FacilityType::NursingRoom,
                 'area_id' => $areaSS->id,
                 'loc_desc' => 'S&S前駐車場内 店舗横',
-                'status' => '確定',
+                'status' => 'confirmed',
                 'order' => 120,
             ],
         ];
@@ -226,10 +221,9 @@ class SiteLayoutSeeder extends Seeder
         // 4. 特設・企業ブース
         // 複数ブース出店者（水浅青果: KC-03, A01, A03 の3ブースを出店）
         $mizuasaVendor = Vendor::create([
-            'timetable_id' => $timetable->id,
             'name' => '水浅青果',
-            'representative_name' => '水浅 太郎',
-            'emergency_contact' => '090-1234-1001',
+            'contact_person' => '水浅 太郎',
+            'contact' => '090-1234-1001',
             'notes' => '北川Pでキッチンカー、メイン通りA列で青果直売および生搾り加工品の計3コマ出店。',
         ]);
 
@@ -246,10 +240,9 @@ class SiteLayoutSeeder extends Seeder
                 $vendorId = $kc['vendor']->id;
             } else {
                 $vendor = Vendor::create([
-                    'timetable_id' => $timetable->id,
                     'name' => $kc['name'],
-                    'representative_name' => '企業出店担当者',
-                    'emergency_contact' => '090-0000-00'.str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT),
+                    'contact_person' => '企業出店担当者',
+                    'contact' => '090-0000-00'.str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT),
                 ]);
                 $vendorId = $vendor->id;
             }
@@ -260,7 +253,9 @@ class SiteLayoutSeeder extends Seeder
                 'vendor_id' => $vendorId,
                 'booth_code' => $kc['code'],
                 'name' => $kc['name'],
-                'category' => BoothCategory::CorporateKitchenCar,
+                'category' => BoothCategory::CorporateBooth,
+                'booth_type' => 'kitchen_car',
+                'status' => 'confirmed',
                 'product_items' => $kc['items'],
                 'adjacent_landmark' => '北川駐車場内',
                 'display_order' => 100 + $idx,
@@ -270,17 +265,16 @@ class SiteLayoutSeeder extends Seeder
         // S&S前駐車場（体験・企業ブース）
         $ssBooths = [
             ['code' => 'SS-01', 'name' => 'ミニバス体験スペース', 'category' => BoothCategory::SpecialEvent, 'store' => null, 'items' => 'フリースロー体験コーナー'],
-            ['code' => 'SS-02', 'name' => '横浜エデンの園', 'category' => BoothCategory::CorporateTent, 'store' => '横浜エデンの園', 'items' => '福祉施設PR・オリジナルグッズ配布'],
-            ['code' => 'SS-03', 'name' => 'S&Sブース', 'category' => BoothCategory::CorporateTent, 'store' => 'S&S', 'items' => '地域協賛企業PR・抽選会'],
+            ['code' => 'SS-02', 'name' => '横浜エデンの園', 'category' => BoothCategory::CorporateBooth, 'store' => '横浜エデンの園', 'items' => '福祉施設PR・オリジナルグッズ配布'],
+            ['code' => 'SS-03', 'name' => 'S&Sブース', 'category' => BoothCategory::CorporateBooth, 'store' => 'S&S', 'items' => '地域協賛企業PR・抽選会'],
         ];
         foreach ($ssBooths as $idx => $sb) {
             $vendorId = null;
             if ($sb['store']) {
                 $vendor = Vendor::create([
-                    'timetable_id' => $timetable->id,
                     'name' => $sb['store'],
-                    'representative_name' => '協賛企業責任者',
-                    'emergency_contact' => '090-0000-01'.str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT),
+                    'contact_person' => '協賛企業責任者',
+                    'contact' => '090-0000-01'.str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT),
                 ]);
                 $vendorId = $vendor->id;
             }
@@ -292,6 +286,8 @@ class SiteLayoutSeeder extends Seeder
                 'booth_code' => $sb['code'],
                 'name' => $sb['name'],
                 'category' => $sb['category'],
+                'booth_type' => 'tent',
+                'status' => 'confirmed',
                 'product_items' => $sb['items'],
                 'adjacent_landmark' => 'S&S前駐車場内',
                 'display_order' => 200 + $idx,
@@ -315,6 +311,8 @@ class SiteLayoutSeeder extends Seeder
                 'booth_code' => $tb['code'],
                 'name' => $tb['name'],
                 'category' => $tb['category'],
+                'booth_type' => 'tent',
+                'status' => 'confirmed',
                 'adjacent_landmark' => '税務署前駐車場内',
                 'display_order' => 300 + $idx,
             ]);
@@ -375,7 +373,7 @@ class SiteLayoutSeeder extends Seeder
         for ($i = 1; $i <= 51; $i++) {
             $code = 'A'.str_pad((string) $i, 2, '0', STR_PAD_LEFT);
             $isCooking = in_array($i, $cookingA, true);
-            $category = $isCooking ? BoothCategory::FoodCooking : BoothCategory::FoodNonCooking;
+            $category = $isCooking ? BoothCategory::GozaOutdoorCooking : BoothCategory::GozaCookedFood;
             $landmark = $landmarkA[$i] ?? null;
 
             // 代表的な出店者名
@@ -430,10 +428,9 @@ class SiteLayoutSeeder extends Seeder
                 $vendorId = $mizuasaVendor->id;
             } elseif ($storeName) {
                 $vendor = Vendor::create([
-                    'timetable_id' => $timetable->id,
                     'name' => $storeName,
-                    'representative_name' => '出店担当 '.$code,
-                    'emergency_contact' => '090-1234-'.str_pad((string) (1000 + $i), 4, '0', STR_PAD_LEFT),
+                    'contact_person' => '出店担当 '.$code,
+                    'contact' => '090-1234-'.str_pad((string) (1000 + $i), 4, '0', STR_PAD_LEFT),
                 ]);
                 $vendorId = $vendor->id;
             }
@@ -445,6 +442,8 @@ class SiteLayoutSeeder extends Seeder
                 'booth_code' => $code,
                 'name' => $storeName,
                 'category' => $category,
+                'booth_type' => 'tent',
+                'status' => 'confirmed',
                 'product_items' => $storeName ? $items : null,
                 'adjacent_landmark' => $landmark,
                 'display_order' => 1000 + $i,
@@ -455,7 +454,7 @@ class SiteLayoutSeeder extends Seeder
         for ($i = 1; $i <= 30; $i++) {
             $code = 'B'.str_pad((string) $i, 2, '0', STR_PAD_LEFT);
             $isCooking = in_array($i, $cookingB, true);
-            $category = $isCooking ? BoothCategory::FoodCooking : BoothCategory::FoodNonCooking;
+            $category = $isCooking ? BoothCategory::GozaOutdoorCooking : BoothCategory::GozaCookedFood;
             $landmark = $landmarkB[$i] ?? null;
 
             $storeName = match ($code) {
@@ -501,10 +500,9 @@ class SiteLayoutSeeder extends Seeder
 
             if ($storeName) {
                 $vendor = Vendor::create([
-                    'timetable_id' => $timetable->id,
                     'name' => $storeName,
-                    'representative_name' => '出店代表 '.$code,
-                    'emergency_contact' => '080-5678-'.str_pad((string) (1000 + $i), 4, '0', STR_PAD_LEFT),
+                    'contact_person' => '出店代表 '.$code,
+                    'contact' => '080-5678-'.str_pad((string) (1000 + $i), 4, '0', STR_PAD_LEFT),
                 ]);
                 $vendorId = $vendor->id;
             }
@@ -516,6 +514,8 @@ class SiteLayoutSeeder extends Seeder
                 'booth_code' => $code,
                 'name' => $storeName,
                 'category' => $category,
+                'booth_type' => 'tent',
+                'status' => 'confirmed',
                 'product_items' => $storeName ? $items : null,
                 'adjacent_landmark' => $landmark,
                 'display_order' => 2000 + $i,

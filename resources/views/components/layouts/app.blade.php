@@ -322,6 +322,23 @@
                                 <div class="border-t border-slate-800/80 my-1"></div>
 
                                 <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
+                                    <span>🎪 出展・出店者マスター</span>
+                                    <span class="text-[9px] text-emerald-300 font-mono font-bold">出店</span>
+                                </div>
+                                <div class="py-1 space-y-0.5">
+                                    <a href="{{ route('vendors.index') }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('vendors.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">🏪</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">出展・出店者一覧</div>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">ござ市・企業ブース・特設企画の全出展者台帳</p>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="border-t border-slate-800/80 my-1"></div>
+
+                                <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
                                     <span>📦 資材・拠点マスター</span>
                                     <span class="text-[9px] text-amber-300 font-mono font-bold">リソース</span>
                                 </div>
@@ -811,6 +828,10 @@
                             <a href="{{ route('staff.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">👷</span>
                                 <span class="font-bold truncate">スタッフ名簿</span>
+                            </a>
+                            <a href="{{ route('vendors.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                                <span class="text-base shrink-0">🎪</span>
+                                <span class="font-bold truncate">出展・出店者一覧</span>
                             </a>
                             <a href="{{ route('equipments.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">📦</span>

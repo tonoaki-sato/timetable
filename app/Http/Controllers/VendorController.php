@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\BoothCategory;
 use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
-use App\Models\Timetable;
 use App\Models\Vendor;
-use App\Services\SiteLayoutService;
+use App\Services\VendorService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,89 +14,77 @@ use Illuminate\View\View;
 class VendorController extends Controller
 {
     public function __construct(
-        protected SiteLayoutService $siteLayoutService
+        protected VendorService $vendorService
     ) {}
 
     /**
-     * 出店者 一覧・管理画面
+     * 出展・出店者一覧画面を表示
      */
-    public function index(Request $request, Timetable $timetable): View
+    public function index(Request $request): View
     {
         $filters = [
-            'category' => $request->query('category'),
-            'search' => $request->query('search'),
+            'search' => $request->input('search'),
         ];
 
-        $vendors = $this->siteLayoutService->paginateVendors($timetable, $filters, 25);
-        $allBooths = $this->siteLayoutService->getBoothsForSelect($timetable);
-        $categories = BoothCategory::cases();
+        $vendors = $this->vendorService->paginateVendors($filters, 15);
 
-        return view('site_layouts.vendors', [
-            'timetable' => $timetable,
-            'vendors' => $vendors,
-            'allBooths' => $allBooths,
-            'categories' => $categories,
-            'filters' => $filters,
-        ]);
+        return view('vendors.index', compact('vendors', 'filters'));
     }
 
     /**
-     * 出店者を新規登録
+     * 出展・出店者を新規登録
      */
-    public function store(StoreVendorRequest $request, Timetable $timetable): RedirectResponse
+    public function store(StoreVendorRequest $request): RedirectResponse|JsonResponse
     {
-        $validated = $request->validated();
-        $vendorData = [
-            'name' => $validated['name'],
-            'representative_name' => $validated['representative_name'] ?? null,
-            'emergency_contact' => $validated['emergency_contact'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-        ];
+        $vendor = $this->vendorService->createVendor($request->validated());
 
-        $vendor = $this->siteLayoutService->createVendor(
-            $timetable,
-            $vendorData,
-            $request->input('initial_booth_id') ? (int) $request->input('initial_booth_id') : null,
-            $request->input('initial_category'),
-            $request->input('initial_product_items')
-        );
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "「{$vendor->name}」を登録しました。",
+                'vendor' => $vendor,
+            ]);
+        }
 
-        return redirect()->back()->with('success', '出店者「'.$vendor->name.'」を登録しました。');
+        return redirect()->route('vendors.index')
+            ->with('success', "出展・出店者「{$vendor->name}」を登録しました。");
     }
 
     /**
-     * 出店者情報を更新
+     * 出展・出店者を更新
      */
-    public function update(UpdateVendorRequest $request, Timetable $timetable, Vendor $vendor): RedirectResponse
+    public function update(UpdateVendorRequest $request, Vendor $vendor): RedirectResponse|JsonResponse
     {
-        $validated = $request->validated();
-        $vendorData = [
-            'name' => $validated['name'],
-            'representative_name' => $validated['representative_name'] ?? null,
-            'emergency_contact' => $validated['emergency_contact'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-        ];
+        $updated = $this->vendorService->updateVendor($vendor, $request->validated());
 
-        $this->siteLayoutService->updateVendor(
-            $vendor,
-            $vendorData,
-            $request->input('booths'),
-            $request->input('add_booth_id') ? (int) $request->input('add_booth_id') : null,
-            $request->input('add_category'),
-            $request->input('add_product_items')
-        );
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "「{$updated->name}」の情報を更新しました。",
+                'vendor' => $updated,
+            ]);
+        }
 
-        return redirect()->back()->with('success', '出店者「'.$vendor->name.'」の情報を更新しました。');
+        return redirect()->route('vendors.index')
+            ->with('success', "出展・出店者「{$updated->name}」を更新しました。");
     }
 
     /**
-     * 出店者を削除
+     * 出展・出店者を削除
      */
-    public function destroy(Timetable $timetable, Vendor $vendor): RedirectResponse
+    public function destroy(Request $request, Vendor $vendor): RedirectResponse|JsonResponse
     {
         $name = $vendor->name;
-        $this->siteLayoutService->deleteVendor($vendor);
+        $this->vendorService->deleteVendor($vendor);
 
-        return redirect()->back()->with('success', '出店者「'.$name.'」を削除しました。');
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "「{$name}」を削除しました。",
+            ]);
+        }
+
+        return redirect()->route('vendors.index')
+            ->with('success', "出展・出店者「{$name}」を削除しました。");
     }
 }

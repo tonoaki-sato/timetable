@@ -2,7 +2,6 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Models\Timetable;
 use App\Models\Vendor;
 use App\Repositories\Contracts\VendorRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -12,40 +11,32 @@ use Illuminate\Database\Eloquent\Collection;
 class VendorRepository implements VendorRepositoryInterface
 {
     /**
-     * タイムテーブルに紐づく出店者一覧を取得
+     * 全出展・出店者一覧を取得
      */
-    public function getForTimetable(Timetable $timetable): Collection
+    public function getAll(): Collection
     {
         return Vendor::with(['booths.area'])
-            ->where('timetable_id', $timetable->id)
-            ->orderBy('name', 'asc')
+            ->orderBy('id', 'asc')
             ->get();
     }
 
     /**
-     * 出店者一覧をページネーション取得
+     * 出展・出店者一覧をページネーション取得
      */
-    public function paginateForTimetable(Timetable $timetable, array $filters = [], int $perPage = 25): LengthAwarePaginator
+    public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Vendor::with(['booths.area'])
-            ->where('timetable_id', $timetable->id);
-
-        if (! empty($filters['category'])) {
-            $query->whereHas('booths', function (Builder $q) use ($filters) {
-                $q->where('category', $filters['category']);
-            });
-        }
+        $query = Vendor::with(['booths.area']);
 
         if (! empty($filters['search'])) {
             $search = '%'.trim($filters['search']).'%';
             $query->where(function (Builder $q) use ($search) {
                 $q->where('name', 'like', $search)
-                    ->orWhere('representative_name', 'like', $search)
-                    ->orWhere('emergency_contact', 'like', $search)
+                    ->orWhere('contact_person', 'like', $search)
+                    ->orWhere('contact', 'like', $search)
                     ->orWhereHas('booths', function (Builder $bq) use ($search) {
-                        $bq->where('booth_code', 'like', $search)
-                            ->orWhere('product_items', 'like', $search)
-                            ->orWhere('adjacent_landmark', 'like', $search);
+                        $bq->where('name', 'like', $search)
+                            ->orWhere('booth_code', 'like', $search)
+                            ->orWhere('product_items', 'like', $search);
                     });
             });
         }
@@ -56,17 +47,23 @@ class VendorRepository implements VendorRepositoryInterface
     }
 
     /**
-     * 出店者を登録
+     * IDで出展・出店者を取得
      */
-    public function create(Timetable $timetable, array $data): Vendor
+    public function findById(int $id): ?Vendor
     {
-        $data['timetable_id'] = $timetable->id;
+        return Vendor::with(['booths.area'])->find($id);
+    }
 
+    /**
+     * 出展・出店者を登録
+     */
+    public function create(array $data): Vendor
+    {
         return Vendor::create($data);
     }
 
     /**
-     * 出店者を更新
+     * 出展・出店者を更新
      */
     public function update(Vendor $vendor, array $data): Vendor
     {
@@ -76,7 +73,7 @@ class VendorRepository implements VendorRepositoryInterface
     }
 
     /**
-     * 出店者を削除
+     * 出展・出店者を削除
      */
     public function delete(Vendor $vendor): bool
     {

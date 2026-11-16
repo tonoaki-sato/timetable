@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\BoothCategory;
+use App\Enums\BoothStatus;
+use App\Enums\BoothType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'booth_code',
     'name',
     'category',
+    'booth_type',
+    'status',
     'product_items',
     'adjacent_landmark',
     'notes',
@@ -33,6 +37,8 @@ class LayoutBooth extends Model
     {
         return [
             'category' => BoothCategory::class,
+            'booth_type' => BoothType::class,
+            'status' => BoothStatus::class,
             'display_order' => 'integer',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',

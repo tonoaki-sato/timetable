@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\FacilityStatus;
 use App\Enums\FacilityType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,11 +24,6 @@ class LayoutFacility extends Model
 {
     use HasFactory;
 
-    public const array STATUSES = [
-        '予定' => '予定',
-        '確定' => '確定',
-    ];
-
     /**
      * Get the attributes that should be cast.
      *
@@ -37,6 +33,7 @@ class LayoutFacility extends Model
     {
         return [
             'facility_type' => FacilityType::class,
+            'status' => FacilityStatus::class,
             'display_order' => 'integer',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
@@ -60,13 +57,17 @@ class LayoutFacility extends Model
     }
 
     /**
-     * ステータスバッジのCSSクラス
+     * 状態（未定/確定）のバッジCSSクラスを取得
      */
-    public function getStatusBadgeClassAttribute(): string
+    public function getStatusBadgeClassesAttribute(): string
     {
+        if ($this->status instanceof FacilityStatus) {
+            return $this->status->badgeClasses();
+        }
+
         return match ($this->status) {
-            '確定' => 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold',
-            default => 'bg-amber-50 text-amber-800 border-amber-300',
+            'confirmed', '確定' => 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold',
+            default => 'bg-amber-50 text-amber-700 border-amber-300 font-medium',
         };
     }
 }

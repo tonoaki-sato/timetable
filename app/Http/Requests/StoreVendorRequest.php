@@ -2,10 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\BoothCategory;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreVendorRequest extends FormRequest
 {
@@ -26,12 +24,9 @@ class StoreVendorRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'representative_name' => ['nullable', 'string', 'max:255'],
-            'emergency_contact' => ['nullable', 'string', 'max:50'],
+            'contact_person' => ['nullable', 'string', 'max:255'],
+            'contact' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:1000'],
-            'initial_booth_id' => ['nullable', 'integer', 'exists:layout_booths,id'],
-            'initial_category' => ['nullable', Rule::enum(BoothCategory::class)],
-            'initial_product_items' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -43,13 +38,10 @@ class StoreVendorRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'name' => '出店名・屋号',
-            'representative_name' => '出店代表者氏名',
-            'emergency_contact' => '緊急連絡先',
-            'notes' => '備考',
-            'initial_booth_id' => '割当コマ',
-            'initial_category' => '出店区分',
-            'initial_product_items' => '販売品目',
+            'name' => '出展・出店者名',
+            'contact_person' => '窓口担当者名',
+            'contact' => '連絡先',
+            'notes' => '特記事項・備考',
         ];
     }
 }

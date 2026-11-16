@@ -31,10 +31,10 @@
                 <span>←</span>
                 <span>配置ダッシュボードへ</span>
             </a>
-            <a href="{{ route('timetables.vendors.index', $timetable) }}"
+            <a href="{{ route('vendors.index') }}"
                 class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
-                <span>🏪</span>
-                <span>出店者マスター管理</span>
+                <span>🎪</span>
+                <span>出展・出店者マスター</span>
             </a>
         </x-slot:actions>
     </x-page-header>
@@ -71,7 +71,7 @@
                 <!-- エリア絞り込み -->
                 <div class="flex items-center space-x-1 text-xs">
                     <span class="text-slate-500 font-bold whitespace-nowrap">エリア:</span>
-                    <select name="area_id" class="bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <select name="area_id" class="bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2 text-slate-800 focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500">
                         <option value="">全エリア ({{ $map->booths->count() }})</option>
                         @foreach($areas as $area)
                             <option value="{{ $area->id }}" {{ ($filters['area_id'] ?? '') == $area->id ? 'selected' : '' }}>
@@ -84,11 +84,11 @@
                 <!-- 出店区分絞り込み -->
                 <div class="flex items-center space-x-1 text-xs">
                     <span class="text-slate-500 font-bold whitespace-nowrap">出店区分:</span>
-                    <select name="category" class="bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <select name="category" class="bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2 text-slate-800 focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500">
                         <option value="">全区分</option>
                         @foreach(\App\Enums\BoothCategory::cases() as $case)
                             <option value="{{ $case->value }}" {{ ($filters['category'] ?? '') === $case->value ? 'selected' : '' }}>
-                                {{ $case->label() }}
+                                {{ $case->icon() }} {{ $case->label() }}
                             </option>
                         @endforeach
                     </select>
@@ -96,63 +96,77 @@
 
                 <!-- キーワード検索 -->
                 <div class="flex-1 min-w-[200px]">
-                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="出店名・コマ番号・近接店舗で検索..."
-                        class="w-full bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-400">
+                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="出店名・コマ番号・品目・近接店舗で検索..."
+                        class="w-full bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2.5 text-slate-800 focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-400">
                 </div>
 
-                <!-- ボタン -->
-                <button type="submit" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shrink-0">
-                    <span>🔍</span>
-                    <span>検索</span>
-                </button>
-                @if(!empty($filters['area_id']) || !empty($filters['category']) || !empty($filters['search']))
-                    <a href="{{ route('timetables.layouts.booths', $timetable) }}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs transition flex items-center space-x-1 shrink-0">
-                        <span>✖</span>
-                        <span>リセット</span>
-                    </a>
-                @endif
+                <div class="flex items-center space-x-1.5 shrink-0">
+                    <button type="submit" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-2xs">
+                        絞り込み
+                    </button>
+                    @if(!empty($filters['area_id']) || !empty($filters['category']) || !empty($filters['search']))
+                        <a href="{{ route('timetables.layouts.booths', $timetable) }}" class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition">
+                            クリア
+                        </a>
+                    @endif
+                </div>
             </div>
         </form>
     </div>
 
     <!-- コマ割り一覧テーブル -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">
-        <div class="p-3 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between text-xs">
-            <span class="font-bold text-slate-700">
-                全 {{ $booths->total() }} 件中 {{ $booths->firstItem() ?? 0 }} 〜 {{ $booths->lastItem() ?? 0 }} 件を表示
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700 flex items-center space-x-1">
+                <span>📋</span>
+                <span>コマ割り一覧 (全 {{ $booths->total() }} コマ)</span>
+            </span>
+            <span class="text-slate-500 font-mono">
+                {{ $booths->firstItem() ?? 0 }} - {{ $booths->lastItem() ?? 0 }} 件を表示
             </span>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-800">
-                <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <tr>
-                        <th class="py-2.5 px-3 whitespace-nowrap">コマ番号</th>
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold">
+                        <th class="py-2.5 px-3 whitespace-nowrap">コマ</th>
                         <th class="py-2.5 px-3 whitespace-nowrap">エリア</th>
-                        <th class="py-2.5 px-3 whitespace-nowrap min-w-[160px]">表示名・屋号</th>
+                        <th class="py-2.5 px-3">コマ表示名</th>
                         <th class="py-2.5 px-3 whitespace-nowrap">出店区分</th>
-                        <th class="py-2.5 px-3 whitespace-nowrap min-w-[140px]">ござ市紐付け</th>
-                        <th class="py-2.5 px-3 whitespace-nowrap min-w-[140px]">近接店舗・建物</th>
+                        <th class="py-2.5 px-3 whitespace-nowrap">形態</th>
+                        <th class="py-2.5 px-3 whitespace-nowrap">状態</th>
+                        <th class="py-2.5 px-3 whitespace-nowrap">配置出展・出店者</th>
+                        <th class="py-2.5 px-3">取扱品目</th>
+                        <th class="py-2.5 px-3">近接店舗</th>
                         <th class="py-2.5 px-3 text-right whitespace-nowrap">操作</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($booths as $booth)
-                        <tr class="hover:bg-slate-50/80 transition">
-                            <td class="py-2.5 px-3 font-mono font-bold whitespace-nowrap">
-                                <span class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-slate-800">
+                        <tr class="hover:bg-slate-50/60 transition">
+                            <td class="py-2.5 px-3 font-mono font-bold text-slate-800 whitespace-nowrap">
+                                <span class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-[11px]">
                                     {{ $booth->booth_code }}
                                 </span>
                             </td>
-                            <td class="py-2.5 px-3 text-slate-600 whitespace-nowrap">
-                                {{ $booth->area?->name ?? '-' }}
+                            <td class="py-2.5 px-3 text-slate-600 whitespace-nowrap text-[11px]">
+                                {{ $booth->area?->name ?? '通り' }}
                             </td>
                             <td class="py-2.5 px-3 font-bold text-slate-900">
                                 {{ $booth->displayName }}
                             </td>
                             <td class="py-2.5 px-3 whitespace-nowrap">
                                 <span class="px-2 py-0.5 rounded text-[10px] {{ $booth->category->badgeClasses() }}">
-                                    {{ $booth->category->label() }}
+                                    {{ $booth->category->icon() }} {{ $booth->category->label() }}
+                                </span>
+                            </td>
+                            <td class="py-2.5 px-3 whitespace-nowrap text-slate-700 font-medium">
+                                {{ $booth->booth_type?->label() ?? 'テント' }}
+                            </td>
+                            <td class="py-2.5 px-3 whitespace-nowrap">
+                                <span class="px-1.5 py-0.5 rounded text-[10px] {{ $booth->status?->badgeClasses() ?? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold' }}">
+                                    {{ $booth->status?->label() ?? '確定' }}
                                 </span>
                             </td>
                             <td class="py-2.5 px-3 whitespace-nowrap text-slate-600">
@@ -162,11 +176,14 @@
                                         <span class="truncate max-w-[120px]">{{ $booth->vendor->name }}</span>
                                     </span>
                                 @else
-                                    <span class="text-slate-400 text-[11px]">-</span>
+                                    <span class="text-slate-400 text-[11px]">—</span>
                                 @endif
                             </td>
+                            <td class="py-2.5 px-3 text-slate-600 text-[11px] max-w-xs truncate" title="{{ $booth->product_items }}">
+                                {{ $booth->product_items ?: '—' }}
+                            </td>
                             <td class="py-2.5 px-3 text-slate-600 text-[11px]">
-                                {{ $booth->adjacent_landmark ?? '-' }}
+                                {{ $booth->adjacent_landmark ?: '—' }}
                             </td>
                             <td class="py-2.5 px-3 text-right whitespace-nowrap">
                                 <button type="button"
@@ -176,19 +193,20 @@
                                     data-area="{{ $booth->area?->name }}"
                                     data-name="{{ $booth->name }}"
                                     data-category="{{ $booth->category->value }}"
+                                    data-type="{{ $booth->booth_type?->value ?? 'tent' }}"
+                                    data-status="{{ $booth->status?->value ?? 'confirmed' }}"
                                     data-vendor-id="{{ $booth->vendor_id }}"
-                                    data-goza-id="{{ $booth->vendor_id }}"
                                     data-items="{{ $booth->product_items }}"
                                     data-landmark="{{ $booth->adjacent_landmark }}"
                                     data-notes="{{ $booth->notes }}"
-                                    class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition">
+                                    class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
                                     編集
                                 </button>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="py-8 text-center text-slate-400 text-xs">
+                            <td colspan="10" class="py-8 text-center text-slate-400 text-xs">
                                 該当するコマ割りデータがありません。
                             </td>
                         </tr>
@@ -212,12 +230,12 @@
                     <span>✏️</span>
                     <span>コマ情報の編集: <span id="modalBoothCode" class="font-mono text-indigo-600"></span></span>
                 </h3>
-                <button type="button" id="modalCloseBtn" class="text-slate-400 hover:text-slate-600 text-lg font-bold">
+                <button type="button" id="modalCloseBtn" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer">
                     ✕
                 </button>
             </div>
 
-            <form id="boothEditForm" method="POST" action="" class="space-y-3 text-xs">
+            <form id="boothEditForm" method="POST" action="" data-timetable-id="{{ $timetable->id }}" class="space-y-3 text-xs">
                 @csrf
                 @method('PUT')
 
@@ -227,51 +245,71 @@
                 </div>
 
                 <div>
-                    <label for="inputBoothName" class="block font-bold text-slate-700 mb-1">ブース表示名・屋号</label>
-                    <input type="text" id="inputBoothName" name="name" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="未入力の場合はござ市出店者名が表示されます">
-                </div>
-
-                <div>
-                    <label for="selectBoothCategory" class="block font-bold text-slate-700 mb-1">出店区分 <span class="text-rose-500">*</span></label>
-                    <select id="selectBoothCategory" name="category" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
-                        @foreach(\App\Enums\BoothCategory::cases() as $case)
-                            <option value="{{ $case->value }}">{{ $case->label() }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label for="selectVendor" class="block font-bold text-slate-700 mb-1">出店者の紐付け (任意)</label>
+                    <label for="selectVendor" class="block font-bold text-slate-700 mb-1">配置する出展・出店者マスター</label>
                     <select id="selectVendor" name="vendor_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
-                        <option value="">(紐付けなし・一般または企業ブース)</option>
+                        <option value="">(未割当・個別名のみまたは空きコマ)</option>
                         @foreach($vendors as $v)
                             <option value="{{ $v->id }}">
-                                {{ $v->name }} {{ $v->representative_name ? '(' . $v->representative_name . ')' : '' }}
+                                {{ $v->name }} {{ $v->contact_person ? ' (' . $v->contact_person . ($v->contact ? ' / ' . $v->contact : '') . ')' : '' }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
                 <div>
-                    <label for="inputBoothProducts" class="block font-bold text-slate-700 mb-1">このコマでの取扱品目・活動内容</label>
-                    <input type="text" id="inputBoothProducts" name="product_items" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: 新鮮野菜、果物直売">
+                    <label for="inputBoothName" class="block font-bold text-slate-700 mb-1">このブースの個別表示名</label>
+                    <input type="text" id="inputBoothName" name="name" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="未入力の場合は出展者マスター名がそのまま表示されます">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="selectBoothCategory" class="block font-bold text-slate-700 mb-1">出店区分 <span class="text-rose-500">*</span></label>
+                        <select id="selectBoothCategory" name="category" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                            @foreach(\App\Enums\BoothCategory::cases() as $case)
+                                <option value="{{ $case->value }}">{{ $case->icon() }} {{ $case->label() }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="selectBoothType" class="block font-bold text-slate-700 mb-1">形態 <span class="text-rose-500">*</span></label>
+                        <select id="selectBoothType" name="booth_type" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                            @foreach(\App\Enums\BoothType::cases() as $case)
+                                <option value="{{ $case->value }}">{{ $case->label() }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="selectBoothStatus" class="block font-bold text-slate-700 mb-1">配置状態 <span class="text-rose-500">*</span></label>
+                    <select id="selectBoothStatus" name="status" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                        @foreach(\App\Enums\BoothStatus::cases() as $case)
+                            <option value="{{ $case->value }}">{{ $case->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="textareaItems" class="block font-bold text-slate-700 mb-1">具体的な取扱品目・展示内容</label>
+                    <textarea id="textareaItems" name="product_items" rows="2" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: 焼きそば、フランクフルト、生搾りジュース"></textarea>
                 </div>
 
                 <div>
                     <label for="inputLandmark" class="block font-bold text-slate-700 mb-1">近接店舗・建物 (ランドマーク)</label>
-                    <input type="text" id="inputLandmark" name="adjacent_landmark" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: おもちゃのうえの前, 川むら前">
+                    <input type="text" id="inputLandmark" name="adjacent_landmark" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: 川むら前、おもちゃのうえの前">
                 </div>
 
                 <div>
-                    <label for="inputNotes" class="block font-bold text-slate-700 mb-1">特記事項・メモ</label>
-                    <textarea id="inputNotes" name="notes" rows="2" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="備考・運用条件など"></textarea>
+                    <label for="textareaNotes" class="block font-bold text-slate-700 mb-1">特記事項・メモ</label>
+                    <textarea id="textareaNotes" name="notes" rows="2" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="消火器持参、搬入時間要請など"></textarea>
                 </div>
 
-                <div class="pt-3 border-t border-slate-200 flex items-center justify-end space-x-2">
-                    <button type="button" id="modalCancelBtn" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-bold shadow-2xs transition">
+                <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-200">
+                    <button type="button" id="modalCancelBtn" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-bold transition cursor-pointer">
                         キャンセル
                     </button>
-                    <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition cursor-pointer">
                         💾 変更を保存する
                     </button>
                 </div>
@@ -281,54 +319,7 @@
 
 </div>
 
-<!-- モーダル操作用 Vanilla JS (外部スクリプト / CSP対応) -->
-<script type="module">
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('boothEditModal');
-        const form = document.getElementById('boothEditForm');
-        const codeSpan = document.getElementById('modalBoothCode');
-        const areaNameDiv = document.getElementById('modalAreaName');
-        const nameInput = document.getElementById('inputBoothName');
-        const categorySelect = document.getElementById('selectBoothCategory');
-        const vendorSelect = document.getElementById('selectVendor');
-        const productsInput = document.getElementById('inputBoothProducts');
-        const landmarkInput = document.getElementById('inputLandmark');
-        const notesTextarea = document.getElementById('inputNotes');
-        const closeBtn = document.getElementById('modalCloseBtn');
-        const cancelBtn = document.getElementById('modalCancelBtn');
-
-        const closeModal = () => {
-            modal.classList.add('hidden');
-        };
-
-        closeBtn?.addEventListener('click', closeModal);
-        cancelBtn?.addEventListener('click', closeModal);
-
-        document.querySelectorAll('[data-action="open-booth-modal"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = btn.getAttribute('data-id');
-                const code = btn.getAttribute('data-code');
-                const area = btn.getAttribute('data-area');
-                const name = btn.getAttribute('data-name') || '';
-                const category = btn.getAttribute('data-category');
-                const vendorId = btn.getAttribute('data-vendor-id') || btn.getAttribute('data-goza-id') || '';
-                const items = btn.getAttribute('data-items') || '';
-                const landmark = btn.getAttribute('data-landmark') || '';
-                const notes = btn.getAttribute('data-notes') || '';
-
-                codeSpan.textContent = code;
-                areaNameDiv.textContent = area || '-';
-                nameInput.value = name;
-                categorySelect.value = category;
-                if (vendorSelect) vendorSelect.value = vendorId;
-                if (productsInput) productsInput.value = items;
-                landmarkInput.value = landmark;
-                notesTextarea.value = notes;
-
-                form.action = `/timetables/{{ $timetable->id }}/layouts/booths/${id}`;
-                modal.classList.remove('hidden');
-            });
-        });
-    });
-</script>
+    @push('scripts')
+        @vite(['resources/js/booths.js'])
+    @endpush
 </x-layouts.app>
