@@ -196,14 +196,16 @@ class VendorManagementTest extends TestCase
         // リレーションの検証 (1:N)
         $this->assertCount(3, $vendor->fresh()->booths);
 
-        // 画面上での展開ブース数表示検証
+        // 出展・出店者一覧画面では配置ブース（展開ブース）列が表示されないこと
         $response = $this->actingAs($this->user)
             ->get(route('vendors.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('3箇所');
-        $response->assertSee('A01');
-        $response->assertSee('A03');
-        $response->assertSee('KC-03');
+        $response->assertDontSee('展開ブース');
+        $response->assertDontSee('3箇所');
+        $response->assertDontSee('A01');
+        $response->assertDontSee('A03');
+        $response->assertDontSee('KC-03');
+        $response->assertDontSee('配置ブース一覧');
     }
 }

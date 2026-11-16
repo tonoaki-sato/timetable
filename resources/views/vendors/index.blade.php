@@ -74,7 +74,6 @@
                             <th class="py-2.5 px-3">出展・出店者名</th>
                             <th class="py-2.5 px-3">窓口担当者</th>
                             <th class="py-2.5 px-3">連絡先</th>
-                            <th class="py-2.5 px-3">展開ブース</th>
                             <th class="py-2.5 px-3">特記事項・備考</th>
                             <th class="py-2.5 px-3 text-right">操作</th>
                         </tr>
@@ -90,8 +89,7 @@
                                         data-vendor-name="{{ $vendor->name }}"
                                         data-contact-person="{{ $vendor->contact_person ?? '' }}"
                                         data-contact="{{ $vendor->contact ?? '' }}"
-                                        data-notes="{{ $vendor->notes ?? '' }}"
-                                        data-booths='@json($vendor->booths_detail_list)'>
+                                        data-notes="{{ $vendor->notes ?? '' }}">
                                         {{ $vendor->name }}
                                     </button>
                                 </td>
@@ -104,24 +102,6 @@
                                 <!-- 連絡先 -->
                                 <td class="py-2.5 px-3 text-slate-700 font-mono">
                                     {{ $vendor->contact ?: '—' }}
-                                </td>
-
-                                <!-- 展開ブース数 & コマ名 -->
-                                <td class="py-2.5 px-3">
-                                    @if($vendor->booths->isNotEmpty())
-                                        <div class="flex flex-wrap items-center gap-1">
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                                {{ $vendor->booths->count() }}箇所
-                                            </span>
-                                            @foreach($vendor->booths as $booth)
-                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-700 border border-slate-200" title="{{ $booth->display_name }} ({{ $booth->category?->label() }})">
-                                                    {{ $booth->booth_code }}
-                                                </span>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span class="text-slate-400">未割当</span>
-                                    @endif
                                 </td>
 
                                 <!-- 備考 -->
@@ -161,7 +141,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-8 text-center text-slate-400">
+                                <td colspan="5" class="py-8 text-center text-slate-400">
                                     出展・出店者が登録されていません。「新規登録」ボタンから登録してください。
                                 </td>
                             </tr>
@@ -213,18 +193,6 @@
                         <div class="flex items-start">
                             <span class="w-24 text-slate-500 shrink-0 font-medium">特記事項:</span>
                             <span class="text-slate-700 whitespace-pre-wrap" id="detail-notes"></span>
-                        </div>
-                    </div>
-
-                    <!-- アサイン済みブース一覧 -->
-                    <div>
-                        <h4 class="font-bold text-slate-700 mb-2 flex items-center space-x-1">
-                            <span>🗺️</span>
-                            <span>配置ブース一覧</span>
-                            <span id="detail-booths-count" class="text-[11px] text-indigo-600 font-bold ml-1"></span>
-                        </h4>
-                        <div id="detail-booths-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                            <!-- JS描画 -->
                         </div>
                     </div>
                 </div>

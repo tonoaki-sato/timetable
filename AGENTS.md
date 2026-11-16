@@ -35,6 +35,10 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - `resources/js/` や `resources/css/` を新規作成または変更した際、あるいは `vite.config.js` の `input` を更新した際は、必ず `npm run build` を実行して `public/build/manifest.json` を更新すること。
 - UIにフロントエンドの変更が反映されない場合や "Unable to locate file in Vite manifest" エラーが発生した場合は、`npm run build` を再実行するかユーザーに `npm run dev` または `composer run dev` の実行を依頼する。
 
+## View Cache Clearing
+
+- 実装終了時（特に Blade テンプレートや View Component の新規作成・変更後、および作業完了前の最終確認時）は、必ず `php artisan view:clear` を実行してコンパイル済みビューのキャッシュをクリアし、最新の描画が画面に確実に反映されるようにすること。
+
 ## Documentation Files
 
 - You must only create documentation files if explicitly requested by the user.
