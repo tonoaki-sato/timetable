@@ -37,7 +37,8 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## View Cache Clearing
 
-- 実装終了時（特に Blade テンプレートや View Component の新規作成・変更後、および作業完了前の最終確認時）は、必ず `php artisan view:clear` を実行してコンパイル済みビューのキャッシュをクリアし、最新の描画が画面に確実に反映されるようにすること。
+- 実装終了時（特に Blade テンプレートや View Component の新規作成・変更後、テスト実行後、および作業完了前の最終確認時）は、必ず `php artisan view:clear` を実行してコンパイル済みビューのキャッシュをクリアし、最新の描画が画面に確実に反映されるようにすること。
+- **Webサーバー（Apache）との所有権不一致による touch() エラー防止**: CLI実行ユーザー（開発者・CI）とWebサーバープロセス（`apache` 等）の実行ユーザーが異なる環境において、CLIで生成されたコンパイル済みファイルに対してWebサーバーが `touch()` できずに `touch(): Utime failed: Operation not permitted` エラーが発生するのを防ぐため、ビューキャッシュクリアと併せて `rm -f storage/framework/views/*.php` や `chmod -R 777 storage bootstrap/cache` を確認・徹底すること。
 
 ## Documentation Files
 
@@ -184,6 +185,9 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
      - **行アクションボタン**: 操作ボタンは他のページ同様に「アイコン＋テキスト」で表示する。編集ボタン（`inline-flex items-center space-x-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition cursor-pointer`、`<span>✏️</span><span>編集</span>`、クリックで編集モーダルを開く）、削除ボタン（`inline-flex items-center space-x-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition cursor-pointer`、`<span>🗑️</span><span>削除</span>`、確認ダイアログ付き）。
      - **詳細モーダル（閲覧専用）**: 各行の名前クリック時に開き、基本情報・関連レコード・特記事項の確認に専念させる。モーダル内には編集・削除リンクやボタンを配置せず、明確な「閉じる」ボタンのみを設けて誤操作を防止する。
      - **入力フォームモーダル（新規追加・編集）**: 画面遷移（別ページ遷移）を行わず、ページ上部アクションからの「新規登録」および行アクションからの「編集」ともにモーダルフォームを表示し、一覧画面内で追加・更新操作を完結させる。Backdrop（`bg-slate-900/40 backdrop-blur-xs`）、白カード（`rounded-2xl shadow-xl max-w-lg`）、キャンセル/保存ボタンの配色統一。
+   - **グローバルナビゲーション・ドロップダウンメニューの表示規約**:
+     - 項目数が多いドロップダウンメニュー（6項目以上等）は、1列の縦長配置を避け、業務・役割の論理的グループに基づいた2カラム（メガメニュー形式、例: `w-[620px] lg:w-[650px]`）に整理して縦幅を約300px以内に抑制し、ノートPC等の画面下端での見切れを防止すること。
+     - 全てのドロップダウンメニュー（`.dropdown-menu`）には、小型ウィンドウや上下狭小画面での見切れ安全対策として、必ず `max-h-[calc(100vh-4.5rem)] overflow-y-auto` を付与し、常に全項目へスクロールしてアクセス可能にすること。
    - **PDFテンプレート (DomPDF) のCSS・テーブル規約**:
      - 全称セレクタ `*` をリセットスタイル等で使用しないこと（DomPDF内部で `@page` にマッチしてページ余白が `0` にリセットされ、`position: fixed` の固定ヘッダーを用紙外へ押し出すため）。リセットは `table, th, td, h1, h2, h3, div, span, strong, b, p` など具体的なタグ名を列挙して指定する。
      - テーブル列幅に `<colgroup>` / `<col>` を使用しないこと（DomPDF未サポートのため無視され均等幅にフォールバックする）。列幅は `<style>` ブロック内で `th`（または `td`）のクラスセレクタ（例: `.table th.col-name { width: ...; }`）に対して指定する。
