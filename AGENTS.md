@@ -172,9 +172,10 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
      - **ページヘッダー**: 画面のタイトル行は「タイトル（アイコン付き見出し）」「説明文」「リンク・アクションボタン」が横並びの一行に収まるレイアウトとする。タイトルと説明文を左側にインライン配置し、説明文は一行に収まる簡潔な短文とし、右側にアクションボタングループ（新規作成ボタン、画面遷移ボタン等）を右寄せ配置して画面上部の縦領域を圧迫しないようにする。
      - **KPI / サマリーカード**: グリッド配置（2〜4列）、白背景（`bg-white`）、微細ボーダー（`border border-slate-200 rounded-xl p-4 shadow-xs`）、アイコンバッジ、カウントバッジ。
      - **表示切替フィルターバー**: `bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs`、インライン全選択・全解除ボタングループ、`✔`/`✕` チップトグル、件数インジケータ。
-     - **データテーブル**: `bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden`、ヘッダー背景 `bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600`、行hover効果（`hover:bg-slate-50/50`）、識別コードバッジ（Monoフォント）、状態・種別バッジ。
-     - **行アクションボタン**: 編集ボタン（`text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg px-2.5 py-1 text-xs font-medium`）、削除ボタン（`text-red-600 bg-red-50 hover:bg-red-100 rounded-lg px-2.5 py-1 text-xs font-medium`、確認ダイアログ付き）。
-     - **ダイアログ / モーダル**: Backdrop（`bg-slate-900/40 backdrop-blur-xs`）、白カード（`rounded-2xl shadow-xl max-w-lg`）、明確な閉じるボタンとキャンセル/保存ボタンの配色統一。
+     - **データテーブル**: `bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden`、ヘッダー背景 `bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600`、行hover効果（`hover:bg-slate-50/50`）、識別コードバッジ（Monoフォント）、状態・種別バッジ。各行の「名前」はクリック可能なリンク/ボタン（`hover:underline`）とし、クリック時に閲覧専用の詳細モーダルを表示する。
+     - **行アクションボタン**: 編集ボタン（`text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg px-2.5 py-1 text-xs font-medium`、クリックで編集モーダルを開く）、削除ボタン（`text-red-600 bg-red-50 hover:bg-red-100 rounded-lg px-2.5 py-1 text-xs font-medium`、確認ダイアログ付き）。
+     - **詳細モーダル（閲覧専用）**: 各行の名前クリック時に開き、基本情報・関連レコード・特記事項の確認に専念させる。モーダル内には編集・削除リンクやボタンを配置せず、明確な「閉じる」ボタンのみを設けて誤操作を防止する。
+     - **入力フォームモーダル（新規追加・編集）**: 画面遷移（別ページ遷移）を行わず、ページ上部アクションからの「新規登録」および行アクションからの「編集」ともにモーダルフォームを表示し、一覧画面内で追加・更新操作を完結させる。Backdrop（`bg-slate-900/40 backdrop-blur-xs`）、白カード（`rounded-2xl shadow-xl max-w-lg`）、キャンセル/保存ボタンの配色統一。
    - **PDFテンプレート (DomPDF) のCSS・テーブル規約**:
      - 全称セレクタ `*` をリセットスタイル等で使用しないこと（DomPDF内部で `@page` にマッチしてページ余白が `0` にリセットされ、`position: fixed` の固定ヘッダーを用紙外へ押し出すため）。リセットは `table, th, td, h1, h2, h3, div, span, strong, b, p` など具体的なタグ名を列挙して指定する。
      - テーブル列幅に `<colgroup>` / `<col>` を使用しないこと（DomPDF未サポートのため無視され均等幅にフォールバックする）。列幅は `<style>` ブロック内で `th`（または `td`）のクラスセレクタ（例: `.table th.col-name { width: ...; }`）に対して指定する。
