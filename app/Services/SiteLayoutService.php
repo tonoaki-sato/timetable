@@ -4,8 +4,7 @@ namespace App\Services;
 
 use App\Enums\BoothCategory;
 use App\Enums\FacilityType;
-use App\Models\LayoutBooth;
-use App\Models\LayoutFacility;
+use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
 use App\Models\Vendor;
@@ -18,21 +17,21 @@ class SiteLayoutService
 {
     public function __construct(
         protected LayoutMapRepositoryInterface $layoutMapRepository,
-        protected VendorRepositoryInterface $vendorRepository
+        protected VendorRepositoryInterface $vendorRepository,
     ) {}
 
     /**
-     * タイムテーブルの配置図面を取得（詳細リレーション込み）
+     * タイムテーブルに紐づく現場配置図面詳細を取得
      */
     public function getLayoutDetails(Timetable $timetable): LayoutMap
     {
         $map = $this->layoutMapRepository->getOrCreateForTimetable($timetable);
 
-        return $this->layoutMapRepository->findWithDetails($map->id);
+        return $this->layoutMapRepository->findWithDetails($map->id) ?? $map;
     }
 
     /**
-     * 配置計画の主要サマリー指標を集計
+     * 配置計画サマリー集計データを生成
      *
      * @return array{
      *   total_booths: int,
@@ -45,17 +44,18 @@ class SiteLayoutService
      */
     public function getSummary(LayoutMap $map): array
     {
-        $booths = $map->booths;
-        $facilities = $map->facilities;
+        $items = $map->items;
+        $booths = $items->filter(fn (LayoutItem $item) => $item->isBooth());
+        $facilities = $items->filter(fn (LayoutItem $item) => $item->isFacility());
 
         $totalBooths = $booths->count();
-        $assignedBooths = $booths->filter(fn (LayoutBooth $b) => ! empty($b->name) || $b->vendor_id !== null)->count();
+        $assignedBooths = $booths->filter(fn (LayoutItem $b) => ! empty($b->name) || $b->vendor_id !== null)->count();
         $unassignedBooths = $totalBooths - $assignedBooths;
 
         // カテゴリ別集計
         $categoryCounts = [];
         foreach (BoothCategory::cases() as $case) {
-            $count = $booths->filter(fn (LayoutBooth $b) => $b->category === $case)->count();
+            $count = $booths->filter(fn (LayoutItem $b) => $b->category === $case->value)->count();
             $categoryCounts[$case->value] = [
                 'label' => $case->label(),
                 'count' => $count,
@@ -66,7 +66,7 @@ class SiteLayoutService
         // 設備種別集計
         $facilityCounts = [];
         foreach (FacilityType::cases() as $case) {
-            $count = $facilities->filter(fn (LayoutFacility $f) => $f->facility_type === $case)->count();
+            $count = $facilities->filter(fn (LayoutItem $f) => $f->sub_type === $case->value)->count();
             $facilityCounts[$case->value] = [
                 'label' => $case->label(),
                 'icon' => $case->icon(),
@@ -81,8 +81,8 @@ class SiteLayoutService
                 'id' => $area->id,
                 'name' => $area->name,
                 'zone_code' => $area->zone_code,
-                'booths_count' => $area->booths->count(),
-                'facilities_count' => $area->facilities->count(),
+                'booths_count' => $area->items->where('item_type', 'booth')->count(),
+                'facilities_count' => $area->items->where('item_type', 'facility')->count(),
             ];
         }
 
@@ -100,59 +100,48 @@ class SiteLayoutService
      * 通りマップビュー用の構造化データを生成
      *
      * @return array{
-     *   street_pairs: array<int, array{a: ?LayoutBooth, b: ?LayoutBooth, facilities_near: array<int, LayoutFacility>}>,
+     *   street_pairs: array<int, array{a: ?LayoutItem, b: ?LayoutItem, facilities_near: array<int, LayoutItem>}>,
      *   parking_areas: array<int, array{area: mixed, booths: Collection, facilities: Collection}>
      * }
      */
     public function getStreetMapViewData(LayoutMap $map): array
     {
-        $booths = $map->booths;
-        $facilities = $map->facilities;
+        $items = $map->items;
+        $booths = $items->filter(fn (LayoutItem $item) => $item->isBooth());
+        $facilities = $items->filter(fn (LayoutItem $item) => $item->isFacility());
 
         // A列・B列のブース（メイン通り）
-        $boothsA = $booths->filter(fn (LayoutBooth $b) => str_starts_with($b->booth_code, 'A'))->keyBy('booth_code');
-        $boothsB = $booths->filter(fn (LayoutBooth $b) => str_starts_with($b->booth_code, 'B'))->keyBy('booth_code');
+        $boothsA = $booths->filter(fn (LayoutItem $b) => str_starts_with($b->code, 'A'))->keyBy('code');
+        $boothsB = $booths->filter(fn (LayoutItem $b) => str_starts_with($b->code, 'B'))->keyBy('code');
 
-        // 北から南へ（番号の大きい順: 北側 A51〜A01, B30〜B01）
-        // 通り沿いのペアを作成（A列51コマ、B列30コマを並行配置）
+        // 北から南へ
         $streetPairs = [];
-        $maxIndex = 51; // A列は51コマ
+        $maxIndex = 51;
 
         for ($i = $maxIndex; $i >= 1; $i--) {
             $codeA = 'A'.str_pad((string) $i, 2, '0', STR_PAD_LEFT);
-            // B列は30コマなので、按分または同等位置にマッピング (30 -> 1)
             $bIndex = (int) ceil(($i / 51) * 30);
             $codeB = 'B'.str_pad((string) $bIndex, 2, '0', STR_PAD_LEFT);
 
-            // この行でB列が初出の場合のみB列に表示（重複回避）
             $prevBIndex = ($i < $maxIndex) ? (int) ceil((($i + 1) / 51) * 30) : -1;
             $boothB = ($bIndex !== $prevBIndex) ? $boothsB->get($codeB) : null;
             $boothA = $boothsA->get($codeA);
 
             // 近接設備（手洗い設備等）
-            $nearFacilities = $facilities->filter(function (LayoutFacility $f) use ($i) {
-                // 給水設備⑤（丸山浴槽前: i=50付近）
-                if ($f->facility_code === 'W-05' && $i === 50) {
+            $nearFacilities = $facilities->filter(function (LayoutItem $f) use ($i) {
+                if ($f->code === 'W-05' && $i === 50) {
                     return true;
                 }
-                // 給水設備④（ガスト前: i=46付近）
-                if ($f->facility_code === 'W-04' && $i === 46) {
+                if ($f->code === 'W-04' && $i === 46) {
                     return true;
                 }
-                // 救護所（作田邸付近: i=35付近）
-                if ($f->facility_code === 'FA-01' && $i === 38) {
+                if ($f->code === 'W-03' && $i === 33) {
                     return true;
                 }
-                // 本陣・待機所（おもちゃのうえの向かい: i=42付近）
-                if (in_array($f->facility_code, ['HQ-01', 'STBY-01'], true) && $i === 42) {
+                if ($f->code === 'W-02' && $i === 17) {
                     return true;
                 }
-                // 給水設備③（フローレンスパレス前: i=35付近）
-                if ($f->facility_code === 'W-03' && $i === 35) {
-                    return true;
-                }
-                // 給水設備②（ヴィラソレイユ付近: i=3付近）
-                if ($f->facility_code === 'W-02' && $i === 3) {
+                if ($f->code === 'W-01' && $i === 1) {
                     return true;
                 }
 
@@ -169,12 +158,15 @@ class SiteLayoutService
 
         // 駐車場・特設エリア
         $parkingAreas = [];
-        foreach ($map->areas->filter(fn ($a) => ! in_array($a->zone_code, ['ZONE_A', 'ZONE_B'])) as $area) {
-            $parkingAreas[] = [
-                'area' => $area,
-                'booths' => $booths->filter(fn ($b) => $b->layout_area_id === $area->id),
-                'facilities' => $facilities->filter(fn ($f) => $f->layout_area_id === $area->id),
-            ];
+        foreach ($map->areas as $area) {
+            if (str_starts_with($area->zone_code, 'AREA_') || $area->zone_code === 'KIDS_VILLAGE') {
+                $areaItems = $area->items;
+                $parkingAreas[] = [
+                    'area' => $area,
+                    'booths' => $areaItems->where('item_type', 'booth'),
+                    'facilities' => $areaItems->where('item_type', 'facility'),
+                ];
+            }
         }
 
         return [
@@ -184,71 +176,41 @@ class SiteLayoutService
     }
 
     /**
-     * コマ割り一覧をページネーション取得
+     * 配置アイテム一覧をページネーション取得
+     *
+     * @param  array{item_type?: string|null, area_id?: int|string|null, category?: string|null, search?: string|null}  $filters
      */
-    public function paginateBooths(LayoutMap $map, array $filters = [], int $perPage = 25): LengthAwarePaginator
+    public function paginateItems(LayoutMap $map, array $filters = [], int $perPage = 50): LengthAwarePaginator
     {
-        return $this->layoutMapRepository->paginateBooths($map, $filters, $perPage);
+        return $this->layoutMapRepository->paginateItems($map, $filters, $perPage);
     }
 
     /**
-     * コマ割り情報の更新
-     */
-    public function updateBooth(LayoutBooth $booth, array $data): LayoutBooth
-    {
-        return $this->layoutMapRepository->updateBooth($booth, $data);
-    }
-
-    /**
-     * コマ割り情報を新規登録
+     * 配置アイテムを新規登録
      *
      * @param  array<string, mixed>  $data
      */
-    public function storeBooth(LayoutMap $map, array $data): LayoutBooth
+    public function storeItem(LayoutMap $map, array $data): LayoutItem
     {
-        return $this->layoutMapRepository->storeBooth($map, $data);
+        return $this->layoutMapRepository->storeItem($map, $data);
     }
 
     /**
-     * コマ割り情報の削除
-     */
-    public function deleteBooth(LayoutBooth $booth): void
-    {
-        $this->layoutMapRepository->deleteBooth($booth);
-    }
-
-    /**
-     * 現場設備一覧を取得
-     */
-    public function getFacilities(LayoutMap $map, array $filters = []): Collection
-    {
-        return $this->layoutMapRepository->getFacilities($map, $filters);
-    }
-
-    /**
-     * 現場設備の更新
-     */
-    public function updateFacility(LayoutFacility $facility, array $data): LayoutFacility
-    {
-        return $this->layoutMapRepository->updateFacility($facility, $data);
-    }
-
-    /**
-     * 現場設備の新規登録
+     * 配置アイテムの更新
      *
      * @param  array<string, mixed>  $data
      */
-    public function storeFacility(LayoutMap $map, array $data): LayoutFacility
+    public function updateItem(LayoutItem $item, array $data): LayoutItem
     {
-        return $this->layoutMapRepository->storeFacility($map, $data);
+        return $this->layoutMapRepository->updateItem($item, $data);
     }
 
     /**
-     * 現場設備の削除
+     * 配置アイテムの削除
      */
-    public function deleteFacility(LayoutFacility $facility): void
+    public function deleteItem(LayoutItem $item): void
     {
-        $this->layoutMapRepository->deleteFacility($facility);
+        $this->layoutMapRepository->deleteItem($item);
     }
 
     /**
@@ -276,10 +238,11 @@ class SiteLayoutService
     {
         $map = $this->layoutMapRepository->getOrCreateForTimetable($timetable);
 
-        return LayoutBooth::with(['area', 'vendor'])
+        return LayoutItem::with(['area', 'vendor'])
             ->where('layout_map_id', $map->id)
+            ->where('item_type', 'booth')
             ->orderBy('display_order', 'asc')
-            ->orderBy('booth_code', 'asc')
+            ->orderBy('code', 'asc')
             ->get();
     }
 
@@ -288,44 +251,43 @@ class SiteLayoutService
      *
      * @param  array<string, mixed>  $data
      */
-    public function createVendor(Timetable $timetable, array $data, ?int $initialBoothId = null, ?string $initialCategory = null, ?string $initialProductItems = null): Vendor
+    public function createVendor(Timetable $timetable, array $data, ?int $initialBoothId = null, ?string $initialCategory = null, ?string $initialNotes = null): Vendor
     {
         $vendor = $this->vendorRepository->create($timetable, $data);
 
         if ($initialBoothId) {
-            $booth = LayoutBooth::find($initialBoothId);
-            if ($booth) {
+            $booth = LayoutItem::find($initialBoothId);
+            if ($booth && $booth->isBooth()) {
                 $boothUpdate = ['vendor_id' => $vendor->id];
                 if ($initialCategory) {
                     $boothUpdate['category'] = $initialCategory;
                 }
-                if ($initialProductItems !== null) {
-                    $boothUpdate['product_items'] = $initialProductItems;
+                if ($initialNotes !== null) {
+                    $boothUpdate['notes'] = $initialNotes;
                 }
                 $booth->update($boothUpdate);
             }
         }
 
-        return $vendor->fresh(['booths.area']);
+        return $vendor->fresh(['items.area']);
     }
 
     /**
      * 出店者の更新（ブース更新・新規コマ割当・解除に対応）
      *
      * @param  array<string, mixed>  $data
-     * @param  array<int, array{id: int, category?: string, product_items?: string, unassign?: bool}>|null  $booths
+     * @param  array<int, array{id: int, category?: string, notes?: string, unassign?: bool}>|null  $booths
      */
-    public function updateVendor(Vendor $vendor, array $data, ?array $booths = null, ?int $addBoothId = null, ?string $addCategory = null, ?string $addProductItems = null): Vendor
+    public function updateVendor(Vendor $vendor, array $data, ?array $booths = null, ?int $addBoothId = null, ?string $addCategory = null, ?string $addNotes = null): Vendor
     {
         $vendor = $this->vendorRepository->update($vendor, $data);
 
-        // 既存ブースの更新 (category, product_items, 解除)
         if (is_array($booths)) {
             foreach ($booths as $bData) {
                 if (empty($bData['id'])) {
                     continue;
                 }
-                $booth = LayoutBooth::where('id', $bData['id'])->where('vendor_id', $vendor->id)->first();
+                $booth = LayoutItem::where('id', $bData['id'])->where('vendor_id', $vendor->id)->first();
                 if (! $booth) {
                     continue;
                 }
@@ -336,8 +298,8 @@ class SiteLayoutService
                     if (isset($bData['category'])) {
                         $update['category'] = $bData['category'];
                     }
-                    if (isset($bData['product_items'])) {
-                        $update['product_items'] = $bData['product_items'];
+                    if (isset($bData['notes'])) {
+                        $update['notes'] = $bData['notes'];
                     }
                     if (! empty($update)) {
                         $booth->update($update);
@@ -346,22 +308,21 @@ class SiteLayoutService
             }
         }
 
-        // 新規ブースの追加割当
         if ($addBoothId) {
-            $newBooth = LayoutBooth::find($addBoothId);
-            if ($newBooth) {
+            $newBooth = LayoutItem::find($addBoothId);
+            if ($newBooth && $newBooth->isBooth()) {
                 $addUpdate = ['vendor_id' => $vendor->id];
                 if ($addCategory) {
                     $addUpdate['category'] = $addCategory;
                 }
-                if ($addProductItems !== null) {
-                    $addUpdate['product_items'] = $addProductItems;
+                if ($addNotes !== null) {
+                    $addUpdate['notes'] = $addNotes;
                 }
                 $newBooth->update($addUpdate);
             }
         }
 
-        return $vendor->fresh(['booths.area']);
+        return $vendor->fresh(['items.area']);
     }
 
     /**
@@ -369,36 +330,8 @@ class SiteLayoutService
      */
     public function deleteVendor(Vendor $vendor): bool
     {
-        LayoutBooth::where('vendor_id', $vendor->id)->update(['vendor_id' => null]);
+        LayoutItem::where('vendor_id', $vendor->id)->update(['vendor_id' => null]);
 
         return $this->vendorRepository->delete($vendor);
-    }
-
-    /**
-     * 後方互換用エイリアス
-     */
-    public function paginateGozaStores(Timetable $timetable, array $filters = [], int $perPage = 25): LengthAwarePaginator
-    {
-        return $this->paginateVendors($timetable, $filters, $perPage);
-    }
-
-    public function getGozaStoresForSelect(Timetable $timetable): Collection
-    {
-        return $this->getVendorsForSelect($timetable);
-    }
-
-    public function createGozaStore(Timetable $timetable, array $data): Vendor
-    {
-        return $this->createVendor($timetable, $data);
-    }
-
-    public function updateGozaStore(Vendor $store, array $data): Vendor
-    {
-        return $this->updateVendor($store, $data);
-    }
-
-    public function deleteGozaStore(Vendor $store): bool
-    {
-        return $this->deleteVendor($store);
     }
 }

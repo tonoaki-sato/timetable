@@ -30,12 +30,7 @@
             <a href="{{ route('timetables.layouts.booths', $timetable) }}"
                 class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>📋</span>
-                <span>コマ割り一覧・編集</span>
-            </a>
-            <a href="{{ route('timetables.layouts.facilities', $timetable) }}"
-                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
-                <span>🚰</span>
-                <span>インフラ設備一覧</span>
+                <span>現場配置一覧・編集</span>
             </a>
             <a href="{{ route('vendors.index') }}"
                 class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
@@ -104,7 +99,7 @@
         <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">現場設備インフラ (全{{ $map->facilities->count() }}箇所)</span>
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">現場設備インフラ (全{{ $map->items->filter(fn($i) => $i->isFacility())->count() }}箇所)</span>
                     <span class="text-base">🚰</span>
                 </div>
                 <div class="grid grid-cols-2 gap-1.5 text-xs">
@@ -123,8 +118,8 @@
             </div>
             <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
                 <span>給水設備（手洗い）: <strong class="text-slate-800 font-mono">{{ $summary['facilities']['water_supply']['count'] ?? 0 }}</strong> ヵ所</span>
-                <a href="{{ route('timetables.layouts.facilities', $timetable) }}" class="text-indigo-600 hover:underline font-bold">
-                    インフラ設備一覧 →
+                <a href="{{ route('timetables.layouts.booths', [$timetable, 'item_type' => 'facility']) }}" class="text-indigo-600 hover:underline font-bold">
+                    現場設備一覧 →
                 </a>
             </div>
         </div>
@@ -167,11 +162,11 @@
                         <div class="my-2 p-2 bg-sky-50/80 border border-sky-200 rounded-xl flex flex-wrap items-center justify-center gap-2 text-xs font-bold text-sky-900 shadow-2xs">
                             @foreach($pair['facilities_near'] as $fac)
                                 <span class="inline-flex items-center space-x-1 px-2 py-0.5 bg-white border border-sky-300 rounded-lg shadow-2xs">
-                                    <span>{{ $fac->facility_type->icon() }}</span>
-                                    <span>【{{ $fac->name }}】</span>
+                                    <span>{{ $fac->typeIcon() }}</span>
+                                    <span>【{{ $fac->displayName }}】</span>
                                     <span class="text-[10px] text-sky-700 font-normal">({{ $fac->location_description }})</span>
                                     <span class="px-1 rounded text-[9px] {{ $fac->statusBadgeClass }}">
-                                        {{ $fac->status }}
+                                        {{ $fac->status->label() }}
                                     </span>
                                 </span>
                             @endforeach
@@ -183,24 +178,24 @@
                         <div class="min-w-0">
                             @if($pair['b'])
                                 @php $b = $pair['b']; @endphp
-                                <div class="p-2 rounded-xl {{ $b->category->borderClasses() }} transition hover:shadow-xs flex items-center justify-between text-xs gap-1.5">
+                                <div class="p-2 rounded-xl {{ $b->boothCategory()?->borderClasses() ?? 'border-slate-200 bg-white' }} transition hover:shadow-xs flex items-center justify-between text-xs gap-1.5">
                                     <div class="min-w-0 flex-1">
                                         <div class="flex items-center space-x-1.5">
                                             <span class="font-mono font-bold text-slate-800 text-[11px] px-1 bg-white/80 rounded border border-slate-200">
-                                                {{ $b->booth_code }}
+                                                {{ $b->code }}
                                             </span>
                                             <span class="font-bold truncate text-slate-900">
                                                 {{ $b->displayName }}
                                             </span>
                                         </div>
-                                        @if($b->adjacent_landmark)
+                                        @if($b->location_description)
                                             <div class="text-[10px] text-slate-500 truncate mt-0.5">
-                                                📍 {{ $b->adjacent_landmark }}
+                                                📍 {{ $b->location_description }}
                                             </div>
                                         @endif
                                     </div>
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] shrink-0 {{ $b->category->badgeClasses() }}">
-                                        {{ $b->category->label() }}
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] shrink-0 {{ $b->boothCategory()?->badgeClasses() ?? 'bg-slate-100 text-slate-700' }}">
+                                        {{ $b->boothCategory()?->label() ?? '出店' }}
                                     </span>
                                 </div>
                             @else
@@ -214,24 +209,24 @@
                         <div class="min-w-0">
                             @if($pair['a'])
                                 @php $a = $pair['a']; @endphp
-                                <div class="p-2 rounded-xl {{ $a->category->borderClasses() }} transition hover:shadow-xs flex items-center justify-between text-xs gap-1.5">
+                                <div class="p-2 rounded-xl {{ $a->boothCategory()?->borderClasses() ?? 'border-slate-200 bg-white' }} transition hover:shadow-xs flex items-center justify-between text-xs gap-1.5">
                                     <div class="min-w-0 flex-1">
                                         <div class="flex items-center space-x-1.5">
                                             <span class="font-mono font-bold text-slate-800 text-[11px] px-1 bg-white/80 rounded border border-slate-200">
-                                                {{ $a->booth_code }}
+                                                {{ $a->code }}
                                             </span>
                                             <span class="font-bold truncate text-slate-900">
                                                 {{ $a->displayName }}
                                             </span>
                                         </div>
-                                        @if($a->adjacent_landmark)
+                                        @if($a->location_description)
                                             <div class="text-[10px] text-slate-500 truncate mt-0.5">
-                                                📍 {{ $a->adjacent_landmark }}
+                                                📍 {{ $a->location_description }}
                                             </div>
                                         @endif
                                     </div>
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] shrink-0 {{ $a->category->badgeClasses() }}">
-                                        {{ $a->category->label() }}
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] shrink-0 {{ $a->boothCategory()?->badgeClasses() ?? 'bg-slate-100 text-slate-700' }}">
+                                        {{ $a->boothCategory()?->label() ?? '出店' }}
                                     </span>
                                 </div>
                             @else
@@ -274,11 +269,11 @@
                                     @foreach($pa['booths'] as $pb)
                                         <div class="p-1.5 bg-white border border-slate-200 rounded-lg text-[11px] flex items-center justify-between">
                                             <span class="truncate font-medium text-slate-800">
-                                                <strong class="font-mono text-slate-600 mr-1">{{ $pb->booth_code }}</strong>
+                                                <strong class="font-mono text-slate-600 mr-1">{{ $pb->code }}</strong>
                                                 {{ $pb->displayName }}
                                             </span>
-                                            <span class="px-1 py-0.2 rounded text-[9px] shrink-0 {{ $pb->category->badgeClasses() }}">
-                                                {{ $pb->category->label() }}
+                                            <span class="px-1 py-0.2 rounded text-[9px] shrink-0 {{ $pb->boothCategory()?->badgeClasses() ?? 'bg-slate-100 text-slate-700' }}">
+                                                {{ $pb->boothCategory()?->label() ?? '出店' }}
                                             </span>
                                         </div>
                                     @endforeach
@@ -294,11 +289,11 @@
                                     @foreach($pa['facilities'] as $pf)
                                         <div class="p-1.5 bg-white border border-slate-200 rounded-lg text-[11px] flex items-center justify-between">
                                             <span class="truncate font-medium text-slate-800 flex items-center space-x-1">
-                                                <span>{{ $pf->facility_type->icon() }}</span>
-                                                <span>{{ $pf->name }}</span>
+                                                <span>{{ $pf->typeIcon() }}</span>
+                                                <span>{{ $pf->displayName }}</span>
                                             </span>
                                             <span class="px-1 rounded text-[9px] {{ $pf->statusBadgeClass }}">
-                                                {{ $pf->status }}
+                                                {{ $pf->status->label() }}
                                             </span>
                                         </div>
                                     @endforeach

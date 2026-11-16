@@ -127,15 +127,15 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($vendors as $vendor)
                         @php
-                            $boothsData = $vendor->booths->map(fn($b) => [
+                            $boothsData = $vendor->items->map(fn($b) => [
                                 'id' => $b->id,
-                                'booth_code' => $b->booth_code,
+                                'booth_code' => $b->code,
                                 'area_name' => $b->area?->name ?? '特設エリア',
-                                'category' => $b->category->value,
-                                'category_label' => $b->category->label(),
-                                'category_badge' => $b->category->badgeClasses(),
-                                'product_items' => $b->product_items,
-                                'adjacent_landmark' => $b->adjacent_landmark,
+                                'category' => $b->boothCategory()?->value ?? '',
+                                'category_label' => $b->boothCategory()?->label() ?? '',
+                                'category_badge' => $b->boothCategory()?->badgeClasses() ?? 'bg-slate-100 text-slate-700',
+                                'product_items' => $b->notes,
+                                'adjacent_landmark' => $b->location_description,
                             ]);
                         @endphp
                         <tr class="hover:bg-slate-50/80 transition">
@@ -152,30 +152,30 @@
                                     class="text-left font-bold text-slate-900 hover:text-indigo-600 hover:underline cursor-pointer flex items-baseline space-x-1"
                                     title="クリックして詳細を表示">
                                     <span>{{ $vendor->name }}</span>
-                                    <span class="font-normal text-slate-500 text-[11px]">({{ $vendor->booths->count() }}コマ)</span>
+                                    <span class="font-normal text-slate-500 text-[11px]">({{ $vendor->items->count() }}コマ)</span>
                                 </button>
                             </td>
 
                             <!-- 2. 配置（割当コマ・エリア・区分・品目） -->
                             <td class="py-2.5 px-3 align-top space-y-1.5">
-                                @if($vendor->booths->isNotEmpty())
-                                    @foreach($vendor->booths as $booth)
+                                @if($vendor->items->isNotEmpty())
+                                    @foreach($vendor->items as $booth)
                                         <div class="p-1.5 bg-slate-50/80 border border-slate-200/80 rounded-lg space-y-1">
                                             <div class="flex flex-wrap items-center gap-1.5">
                                                 <span class="px-1.5 py-0.2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded font-mono font-bold text-[11px]">
-                                                    {{ $booth->booth_code }}
+                                                    {{ $booth->code }}
                                                 </span>
                                                 <span class="font-bold text-slate-700 text-[11px]">{{ $booth->area?->name }}</span>
-                                                <span class="px-1.5 py-0.2 rounded text-[10px] font-bold border {{ $booth->category->badgeClasses() }}">
-                                                    {{ $booth->category->label() }}
+                                                <span class="px-1.5 py-0.2 rounded text-[10px] font-bold border {{ $booth->boothCategory()?->badgeClasses() ?? 'bg-slate-100 text-slate-700' }}">
+                                                    {{ $booth->boothCategory()?->label() ?? '出店' }}
                                                 </span>
-                                                @if($booth->adjacent_landmark)
-                                                    <span class="text-[10px] text-slate-400">（{{ $booth->adjacent_landmark }}）</span>
+                                                @if($booth->location_description)
+                                                    <span class="text-[10px] text-slate-400">（{{ $booth->location_description }}）</span>
                                                 @endif
                                             </div>
-                                            @if($booth->product_items)
+                                            @if($booth->notes)
                                                 <div class="text-[11px] text-slate-600 pl-1">
-                                                    {{ $booth->product_items }}
+                                                    {{ $booth->notes }}
                                                 </div>
                                             @endif
                                         </div>

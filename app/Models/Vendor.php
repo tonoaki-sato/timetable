@@ -32,11 +32,11 @@ class Vendor extends Model
     }
 
     /**
-     * アサインされた配置コマ（ブース）群とのリレーション (1:N)
+     * アサインされた配置アイテム（ブース）群とのリレーション (1:N)
      */
-    public function booths(): HasMany
+    public function items(): HasMany
     {
-        return $this->hasMany(LayoutBooth::class)->orderBy('booth_code', 'asc');
+        return $this->hasMany(LayoutItem::class)->where('item_type', 'booth')->orderBy('code', 'asc');
     }
 
     /**
@@ -46,36 +46,21 @@ class Vendor extends Model
      */
     public function getBoothsDetailListAttribute(): array
     {
-        return $this->booths->map(function (LayoutBooth $b) {
-            try {
-                $categoryLabel = $b->category?->label() ?? '';
-                $categoryBadge = $b->category?->badgeClasses() ?? '';
-            } catch (\Throwable) {
-                $categoryLabel = is_string($b->getRawOriginal('category')) ? $b->getRawOriginal('category') : '';
-                $categoryBadge = 'bg-slate-100 text-slate-700 border-slate-300';
-            }
-
-            try {
-                $typeLabel = $b->booth_type?->label() ?? '';
-            } catch (\Throwable) {
-                $typeLabel = is_string($b->getRawOriginal('booth_type')) ? $b->getRawOriginal('booth_type') : '';
-            }
-
-            try {
-                $statusLabel = $b->status?->label() ?? '';
-            } catch (\Throwable) {
-                $statusLabel = is_string($b->getRawOriginal('status')) ? $b->getRawOriginal('status') : '';
-            }
+        return $this->items->map(function (LayoutItem $b) {
+            $categoryLabel = $b->boothCategory()?->label() ?? '';
+            $categoryBadge = $b->boothCategory()?->badgeClasses() ?? 'bg-slate-100 text-slate-700 border-slate-300';
+            $typeLabel = $b->boothType()?->label() ?? '';
+            $statusLabel = $b->status?->label() ?? '';
 
             return [
-                'code' => $b->booth_code,
+                'code' => $b->code,
                 'name' => $b->displayName,
                 'area' => $b->area?->name ?? '通り',
                 'category_label' => $categoryLabel,
                 'category_badge' => $categoryBadge,
                 'type_label' => $typeLabel,
                 'status_label' => $statusLabel,
-                'items' => $b->product_items ?? '',
+                'notes' => $b->notes ?? '',
             ];
         })->values()->all();
     }

@@ -50,18 +50,10 @@ class LayoutArea extends Model
     }
 
     /**
-     * このエリアに属するコマ割り（ブース）一覧
+     * このエリアに属する配置アイテム一覧（出店ブース・現場設備）
      */
-    public function booths(): HasMany
+    public function items(): HasMany
     {
-        return $this->hasMany(LayoutBooth::class)->orderBy('display_order')->orderBy('booth_code');
-    }
-
-    /**
-     * このエリアに属するインフラ設備一覧
-     */
-    public function facilities(): HasMany
-    {
-        return $this->hasMany(LayoutFacility::class)->orderBy('display_order')->orderBy('facility_code');
+        return $this->hasMany(LayoutItem::class)->orderBy('display_order')->orderBy('code');
     }
 }

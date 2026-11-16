@@ -15,7 +15,7 @@ class VendorRepository implements VendorRepositoryInterface
      */
     public function getAll(): Collection
     {
-        return Vendor::with(['booths.area'])
+        return Vendor::with(['items.area'])
             ->orderBy('id', 'asc')
             ->get();
     }
@@ -25,7 +25,7 @@ class VendorRepository implements VendorRepositoryInterface
      */
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Vendor::with(['booths.area']);
+        $query = Vendor::with(['items.area']);
 
         if (! empty($filters['search'])) {
             $search = '%'.trim($filters['search']).'%';
@@ -33,10 +33,10 @@ class VendorRepository implements VendorRepositoryInterface
                 $q->where('name', 'like', $search)
                     ->orWhere('contact_person', 'like', $search)
                     ->orWhere('contact', 'like', $search)
-                    ->orWhereHas('booths', function (Builder $bq) use ($search) {
+                    ->orWhereHas('items', function (Builder $bq) use ($search) {
                         $bq->where('name', 'like', $search)
-                            ->orWhere('booth_code', 'like', $search)
-                            ->orWhere('product_items', 'like', $search);
+                            ->orWhere('code', 'like', $search)
+                            ->orWhere('notes', 'like', $search);
                     });
             });
         }
@@ -51,7 +51,7 @@ class VendorRepository implements VendorRepositoryInterface
      */
     public function findById(int $id): ?Vendor
     {
-        return Vendor::with(['booths.area'])->find($id);
+        return Vendor::with(['items.area'])->find($id);
     }
 
     /**
@@ -69,7 +69,7 @@ class VendorRepository implements VendorRepositoryInterface
     {
         $vendor->update($data);
 
-        return $vendor->fresh(['booths.area']);
+        return $vendor->fresh(['items.area']);
     }
 
     /**

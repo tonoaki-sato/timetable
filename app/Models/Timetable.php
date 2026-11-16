@@ -235,19 +235,19 @@ class Timetable extends Model
     }
 
     /**
-     * 現場配置図面を経由した全コマ割り（ブース）一覧
+     * 現場配置図面を経由した全配置アイテム（ブース・現場設備）一覧
      */
-    public function booths(): HasManyThrough
+    public function layoutItems(): HasManyThrough
     {
-        return $this->hasManyThrough(LayoutBooth::class, LayoutMap::class);
+        return $this->hasManyThrough(LayoutItem::class, LayoutMap::class);
     }
 
     /**
-     * 現場配置図面を経由した全現場設備一覧
+     * 現場配置アイテム一覧（ルートバインディング用エイリアス）
      */
-    public function facilities(): HasManyThrough
+    public function items(): HasManyThrough
     {
-        return $this->hasManyThrough(LayoutFacility::class, LayoutMap::class);
+        return $this->layoutItems();
     }
 
     /**
@@ -255,7 +255,7 @@ class Timetable extends Model
      */
     public function assignedVendors()
     {
-        return Vendor::whereIn('id', $this->booths()->whereNotNull('vendor_id')->select('vendor_id'));
+        return Vendor::whereIn('id', $this->layoutItems()->where('item_type', 'booth')->whereNotNull('vendor_id')->select('vendor_id'));
     }
 
     /**

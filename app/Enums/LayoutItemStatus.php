@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum FacilityStatus: string
+enum LayoutItemStatus: string
 {
     case Tentative = 'tentative';
     case Confirmed = 'confirmed';
@@ -15,6 +15,17 @@ enum FacilityStatus: string
         return match ($this) {
             self::Tentative => '未定',
             self::Confirmed => '確定',
+        };
+    }
+
+    /**
+     * UI表示用丸アイコン
+     */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::Tentative => '🟡',
+            self::Confirmed => '🟢',
         };
     }
 

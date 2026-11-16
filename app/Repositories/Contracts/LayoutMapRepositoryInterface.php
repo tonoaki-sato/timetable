@@ -2,12 +2,10 @@
 
 namespace App\Repositories\Contracts;
 
-use App\Models\LayoutBooth;
-use App\Models\LayoutFacility;
+use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
 
 interface LayoutMapRepositoryInterface
 {
@@ -17,59 +15,33 @@ interface LayoutMapRepositoryInterface
     public function getOrCreateForTimetable(Timetable $timetable): LayoutMap;
 
     /**
-     * 図面詳細（エリア、ブース、設備等）を取得
+     * 図面詳細（エリア、アイテム一覧等）を取得
      */
     public function findWithDetails(int $id): ?LayoutMap;
 
     /**
-     * コマ割り一覧をページネーション取得（絞り込み・検索対応）
+     * 配置アイテム一覧をページネーション取得（絞り込み・検索対応）
      *
-     * @param  array{area_id?: int|string|null, category?: string|null, search?: string|null}  $filters
+     * @param  array{item_type?: string|null, area_id?: int|string|null, category?: string|null, search?: string|null}  $filters
      */
-    public function paginateBooths(LayoutMap $map, array $filters = [], int $perPage = 25): LengthAwarePaginator;
+    public function paginateItems(LayoutMap $map, array $filters = [], int $perPage = 50): LengthAwarePaginator;
 
     /**
-     * コマ割り情報を更新
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public function updateBooth(LayoutBooth $booth, array $data): LayoutBooth;
-
-    /**
-     * コマ割り情報を新規登録
+     * 配置アイテムを新規登録
      *
      * @param  array<string, mixed>  $data
      */
-    public function storeBooth(LayoutMap $map, array $data): LayoutBooth;
+    public function storeItem(LayoutMap $map, array $data): LayoutItem;
 
     /**
-     * コマ割り情報を削除
-     */
-    public function deleteBooth(LayoutBooth $booth): void;
-
-    /**
-     * 現場設備一覧を取得
-     *
-     * @param  array{type?: string|null}  $filters
-     */
-    public function getFacilities(LayoutMap $map, array $filters = []): Collection;
-
-    /**
-     * 現場設備情報を更新
+     * 配置アイテムを更新
      *
      * @param  array<string, mixed>  $data
      */
-    public function updateFacility(LayoutFacility $facility, array $data): LayoutFacility;
+    public function updateItem(LayoutItem $item, array $data): LayoutItem;
 
     /**
-     * 現場設備を新規登録
-     *
-     * @param  array<string, mixed>  $data
+     * 配置アイテムを削除
      */
-    public function storeFacility(LayoutMap $map, array $data): LayoutFacility;
-
-    /**
-     * 現場設備を削除
-     */
-    public function deleteFacility(LayoutFacility $facility): void;
+    public function deleteItem(LayoutItem $item): void;
 }

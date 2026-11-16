@@ -2,14 +2,12 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Models\LayoutBooth;
-use App\Models\LayoutFacility;
+use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
 use App\Repositories\Contracts\LayoutMapRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 
 class LayoutMapRepository implements LayoutMapRepositoryInterface
 {
@@ -40,19 +38,22 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
         return LayoutMap::with([
             'timetable',
             'areas.location',
-            'booths.vendor',
-            'booths.area',
-            'facilities.area',
+            'items.vendor',
+            'items.area',
         ])->find($id);
     }
 
     /**
-     * コマ割り一覧をページネーション取得
+     * 配置アイテム一覧をページネーション取得
      */
-    public function paginateBooths(LayoutMap $map, array $filters = [], int $perPage = 25): LengthAwarePaginator
+    public function paginateItems(LayoutMap $map, array $filters = [], int $perPage = 50): LengthAwarePaginator
     {
-        $query = LayoutBooth::with(['area', 'vendor'])
+        $query = LayoutItem::with(['area', 'vendor'])
             ->where('layout_map_id', $map->id);
+
+        if (! empty($filters['item_type'])) {
+            $query->where('item_type', $filters['item_type']);
+        }
 
         if (! empty($filters['area_id'])) {
             $query->where('layout_area_id', $filters['area_id']);
@@ -65,99 +66,53 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
         if (! empty($filters['search'])) {
             $search = '%'.trim($filters['search']).'%';
             $query->where(function (Builder $q) use ($search) {
-                $q->where('booth_code', 'like', $search)
+                $q->where('code', 'like', $search)
                     ->orWhere('name', 'like', $search)
-                    ->orWhere('adjacent_landmark', 'like', $search)
-                    ->orWhere('product_items', 'like', $search)
+                    ->orWhere('location_description', 'like', $search)
+                    ->orWhere('notes', 'like', $search)
                     ->orWhereHas('vendor', function (Builder $sq) use ($search) {
                         $sq->where('name', 'like', $search)
-                            ->orWhere('representative_name', 'like', $search);
+                            ->orWhere('contact_person', 'like', $search);
                     });
             });
         }
 
-        return $query->orderBy('display_order', 'asc')
-            ->orderBy('booth_code', 'asc')
+        return $query->orderBy('layout_area_id', 'asc')
+            ->orderBy('display_order', 'asc')
+            ->orderBy('code', 'asc')
             ->paginate($perPage)
             ->withQueryString();
     }
 
     /**
-     * コマ割り情報を更新
+     * 配置アイテムを新規登録
      */
-    public function updateBooth(LayoutBooth $booth, array $data): LayoutBooth
-    {
-        $booth->update($data);
-
-        return $booth->fresh(['area', 'vendor']);
-    }
-
-    /**
-     * コマ割り情報を新規登録
-     */
-    public function storeBooth(LayoutMap $map, array $data): LayoutBooth
+    public function storeItem(LayoutMap $map, array $data): LayoutItem
     {
         $data['layout_map_id'] = $map->id;
         if (! isset($data['display_order'])) {
-            $maxOrder = LayoutBooth::where('layout_map_id', $map->id)->max('display_order') ?? 0;
+            $maxOrder = LayoutItem::where('layout_map_id', $map->id)->max('display_order') ?? 0;
             $data['display_order'] = $maxOrder + 1;
         }
 
-        return LayoutBooth::create($data)->fresh(['area', 'vendor']);
+        return LayoutItem::create($data)->fresh(['area', 'vendor']);
     }
 
     /**
-     * コマ割り情報を削除
+     * 配置アイテムを更新
      */
-    public function deleteBooth(LayoutBooth $booth): void
+    public function updateItem(LayoutItem $item, array $data): LayoutItem
     {
-        $booth->delete();
+        $item->update($data);
+
+        return $item->fresh(['area', 'vendor']);
     }
 
     /**
-     * 現場設備一覧を取得
+     * 配置アイテムを削除
      */
-    public function getFacilities(LayoutMap $map, array $filters = []): Collection
+    public function deleteItem(LayoutItem $item): void
     {
-        $query = LayoutFacility::with('area')
-            ->where('layout_map_id', $map->id);
-
-        if (! empty($filters['type'])) {
-            $query->where('facility_type', $filters['type']);
-        }
-
-        return $query->orderBy('display_order', 'asc')->get();
-    }
-
-    /**
-     * 現場設備情報を更新
-     */
-    public function updateFacility(LayoutFacility $facility, array $data): LayoutFacility
-    {
-        $facility->update($data);
-
-        return $facility->fresh('area');
-    }
-
-    /**
-     * 現場設備を新規登録
-     */
-    public function storeFacility(LayoutMap $map, array $data): LayoutFacility
-    {
-        $data['layout_map_id'] = $map->id;
-        if (! isset($data['display_order'])) {
-            $maxOrder = LayoutFacility::where('layout_map_id', $map->id)->max('display_order') ?? 0;
-            $data['display_order'] = $maxOrder + 1;
-        }
-
-        return LayoutFacility::create($data)->fresh('area');
-    }
-
-    /**
-     * 現場設備を削除
-     */
-    public function deleteFacility(LayoutFacility $facility): void
-    {
-        $facility->delete();
+        $item->delete();
     }
 }

@@ -57,18 +57,10 @@ class LayoutMap extends Model
     }
 
     /**
-     * コマ割り（ブース）一覧
+     * 現場配置アイテム一覧（出店ブース・現場設備）
      */
-    public function booths(): HasMany
+    public function items(): HasMany
     {
-        return $this->hasMany(LayoutBooth::class)->orderBy('display_order', 'asc');
-    }
-
-    /**
-     * 現場設備・インフラ一覧
-     */
-    public function facilities(): HasMany
-    {
-        return $this->hasMany(LayoutFacility::class)->orderBy('display_order', 'asc');
+        return $this->hasMany(LayoutItem::class)->orderBy('display_order', 'asc');
     }
 }

@@ -3,13 +3,13 @@
 namespace Tests\Feature;
 
 use App\Enums\BoothCategory;
-use App\Enums\BoothStatus;
 use App\Enums\BoothType;
-use App\Enums\FacilityStatus;
+use App\Enums\FacilityCategory;
 use App\Enums\FacilityType;
+use App\Enums\LayoutItemStatus;
+use App\Enums\LayoutItemType;
 use App\Models\LayoutArea;
-use App\Models\LayoutBooth;
-use App\Models\LayoutFacility;
+use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
 use App\Models\User;
@@ -30,6 +30,14 @@ class SiteLayoutTest extends TestCase
     protected LayoutArea $areaA;
 
     protected LayoutArea $areaPark;
+
+    protected LayoutItem $itemBoothA;
+
+    protected LayoutItem $itemBoothB;
+
+    protected LayoutItem $itemFacilityWater;
+
+    protected LayoutItem $itemFacilityStaff;
 
     protected function setUp(): void
     {
@@ -83,54 +91,61 @@ class SiteLayoutTest extends TestCase
             'contact' => '090-1111-2222',
         ]);
 
-        // コマ1 (A01)
-        LayoutBooth::create([
+        // コマ1 (A99 - ブース)
+        $this->itemBoothA = LayoutItem::create([
             'layout_map_id' => $this->map->id,
             'layout_area_id' => $this->areaA->id,
+            'item_type' => LayoutItemType::Booth,
             'vendor_id' => $vendor->id,
-            'booth_code' => 'A01',
+            'code' => 'A99',
             'name' => '水浅青果 本店',
-            'category' => BoothCategory::GozaCookedFood,
-            'booth_type' => BoothType::Tent,
-            'status' => BoothStatus::Confirmed,
-            'product_items' => '新鮮野菜',
-            'adjacent_landmark' => 'セブンイレブン向かい',
+            'category' => BoothCategory::GozaCookedFood->value,
+            'sub_type' => BoothType::Tent->value,
+            'status' => LayoutItemStatus::Confirmed,
+            'location_description' => 'セブンイレブン向かい',
+            'notes' => '新鮮野菜販売',
             'display_order' => 1,
         ]);
 
-        // コマ2 (B01)
-        LayoutBooth::create([
+        // コマ2 (B99 - ブース未定)
+        $this->itemBoothB = LayoutItem::create([
             'layout_map_id' => $this->map->id,
             'layout_area_id' => $this->areaA->id,
+            'item_type' => LayoutItemType::Booth,
             'vendor_id' => null,
-            'booth_code' => 'B01',
+            'code' => 'B99',
             'name' => null,
-            'category' => BoothCategory::GozaGeneralGoods,
-            'booth_type' => BoothType::StreetStall,
-            'status' => BoothStatus::Tentative,
+            'category' => BoothCategory::GozaGeneralGoods->value,
+            'sub_type' => BoothType::StreetStall->value,
+            'status' => LayoutItemStatus::Tentative,
             'display_order' => 2,
         ]);
 
-        // 設備1: 給水設備
-        LayoutFacility::create([
+        // 設備1: 給水設備 (W-99)
+        $this->itemFacilityWater = LayoutItem::create([
             'layout_map_id' => $this->map->id,
             'layout_area_id' => $this->areaPark->id,
-            'facility_code' => 'W-01',
+            'item_type' => LayoutItemType::Facility,
+            'code' => 'W-99',
             'name' => '給水設備①',
-            'facility_type' => FacilityType::WaterSupply,
-            'status' => FacilityStatus::Confirmed,
+            'category' => FacilityCategory::WaterSupply->value,
+            'sub_type' => FacilityType::WaterSupply->value,
+            'status' => LayoutItemStatus::Confirmed,
             'location_description' => '北川P入口',
+            'notes' => 'ポリタンク常設',
             'display_order' => 1,
         ]);
 
-        // 設備2: スタッフ控室
-        LayoutFacility::create([
+        // 設備2: スタッフ控室 (STAFF-99)
+        $this->itemFacilityStaff = LayoutItem::create([
             'layout_map_id' => $this->map->id,
             'layout_area_id' => $this->areaPark->id,
-            'facility_code' => 'STAFF-01',
+            'item_type' => LayoutItemType::Facility,
+            'code' => 'STAFF-99',
             'name' => 'スタッフ控室',
-            'facility_type' => FacilityType::StaffRoom,
-            'status' => FacilityStatus::Tentative,
+            'category' => FacilityCategory::Other->value,
+            'sub_type' => FacilityType::StaffRoom->value,
+            'status' => LayoutItemStatus::Tentative,
             'location_description' => '本部テント裏',
             'display_order' => 2,
         ]);
@@ -147,16 +162,14 @@ class SiteLayoutTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('現場配置計画');
         $response->assertSee('メイン通り商店街配置図');
-        $response->assertSee('A01');
-        $response->assertSee('B01');
         $response->assertSee('給水設備①');
         $response->assertSee('出展・出店者マスター');
     }
 
     /**
-     * 配置一覧画面が表示され、7列構成・詳細モーダル・丸アイコンが確認できること
+     * 統合配置一覧画面が表示され、7列構成・詳細モーダル・丸アイコンが確認できること
      */
-    public function test_booths_list_screen_can_be_rendered(): void
+    public function test_items_list_screen_can_be_rendered(): void
     {
         $response = $this->actingAs($this->user)
             ->get(route('timetables.layouts.booths', $this->timetable));
@@ -166,17 +179,19 @@ class SiteLayoutTest extends TestCase
         $response->assertSee('ござ市、インフラ設備などの配置を管理します。');
         $response->assertSee('新規配置追加');
         $response->assertSee('ダッシュボードに戻る');
-        $response->assertSee('配置一覧（全2コマ）');
-        $response->assertSee('A01');
-        $response->assertSee('B01');
-        $response->assertSee('ござ市（調理済品販売）');
+        $response->assertSee('配置一覧（全4件）');
+        $response->assertSee('A99');
+        $response->assertSee('B99');
+        $response->assertSee('W-99');
+        $response->assertSee('STAFF-99');
         $response->assertSee('テント');
+        $response->assertSee('現場インフラ');
         $response->assertSee('🟢');
         $response->assertSee('🟡');
 
         // モーダル要素とスクリプトが正しくレンダリングされていること
-        $response->assertSee('boothEditModal');
-        $response->assertSee('modal-booth-detail');
+        $response->assertSee('itemEditModal');
+        $response->assertSee('modal-item-detail');
         $content = $response->getContent();
         $this->assertTrue(
             str_contains($content, 'booths.js') || str_contains($content, 'booths-'),
@@ -185,143 +200,52 @@ class SiteLayoutTest extends TestCase
     }
 
     /**
-     * 新規配置が登録できること
+     * 新規ブース配置が登録できること (product_items は notes に統合)
      */
-    public function test_booth_can_be_created(): void
+    public function test_booth_item_can_be_created(): void
     {
         $response = $this->actingAs($this->user)
             ->post(route('timetables.layouts.booths.store', $this->timetable), [
-                'booth_code' => 'KC-01',
+                'item_type' => 'booth',
+                'code' => 'KC-01',
                 'layout_area_id' => $this->areaPark->id,
                 'name' => 'テストキッチンカー',
                 'category' => BoothCategory::GozaOutdoorCooking->value,
-                'booth_type' => BoothType::KitchenCar->value,
-                'status' => BoothStatus::Confirmed->value,
-                'product_items' => '牛串、フランクフルト',
-                'adjacent_landmark' => '駐車場入口横',
-                'notes' => '発電機持参',
+                'sub_type' => BoothType::KitchenCar->value,
+                'status' => 'confirmed',
+                'location_description' => '駐車場入口横',
+                'notes' => '牛串、フランクフルト。発電機持参',
             ]);
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
-        $this->assertDatabaseHas('layout_booths', [
+        $this->assertDatabaseHas('layout_items', [
             'layout_map_id' => $this->map->id,
             'layout_area_id' => $this->areaPark->id,
-            'booth_code' => 'KC-01',
+            'item_type' => 'booth',
+            'code' => 'KC-01',
             'name' => 'テストキッチンカー',
             'category' => BoothCategory::GozaOutdoorCooking->value,
-            'booth_type' => BoothType::KitchenCar->value,
-            'status' => BoothStatus::Confirmed->value,
-        ]);
-    }
-
-    /**
-     * コマ割り情報（区分・形態・状態）の更新ができること
-     */
-    public function test_booth_information_can_be_updated(): void
-    {
-        $booth = LayoutBooth::where('layout_map_id', $this->map->id)
-            ->where('booth_code', 'A01')
-            ->firstOrFail();
-
-        $response = $this->actingAs($this->user)
-            ->put(route('timetables.layouts.booths.update', [$this->timetable, $booth]), [
-                'booth_code' => 'A01-REV',
-                'layout_area_id' => $this->areaA->id,
-                'name' => '水浅青果 焼き芋店',
-                'category' => BoothCategory::GozaOutdoorCooking->value,
-                'booth_type' => BoothType::KitchenCar->value,
-                'status' => BoothStatus::Confirmed->value,
-                'adjacent_landmark' => 'セブンイレブン向かい',
-                'product_items' => '石焼き芋、焼きとうもろこし',
-                'notes' => '三方幕テント持参確認',
-            ]);
-
-        $response->assertRedirect();
-        $response->assertSessionHas('success');
-
-        $this->assertDatabaseHas('layout_booths', [
-            'id' => $booth->id,
-            'booth_code' => 'A01-REV',
-            'name' => '水浅青果 焼き芋店',
-            'category' => BoothCategory::GozaOutdoorCooking->value,
-            'booth_type' => BoothType::KitchenCar->value,
-            'status' => BoothStatus::Confirmed->value,
-            'product_items' => '石焼き芋、焼きとうもろこし',
-        ]);
-    }
-
-    /**
-     * 配置が削除できること
-     */
-    public function test_booth_can_be_deleted(): void
-    {
-        $booth = LayoutBooth::where('layout_map_id', $this->map->id)
-            ->where('booth_code', 'A01')
-            ->firstOrFail();
-
-        $response = $this->actingAs($this->user)
-            ->delete(route('timetables.layouts.booths.destroy', [$this->timetable, $booth]));
-
-        $response->assertRedirect();
-        $response->assertSessionHas('success');
-
-        $this->assertDatabaseMissing('layout_booths', [
-            'id' => $booth->id,
-        ]);
-    }
-
-    /**
-     * インフラ設備一覧画面が表示され、スタッフ控室や未定/確定状態が反映されること
-     */
-    public function test_facilities_list_screen_and_update(): void
-    {
-        $facility = LayoutFacility::where('layout_map_id', $this->map->id)
-            ->where('facility_code', 'W-01')
-            ->firstOrFail();
-
-        $response = $this->actingAs($this->user)
-            ->get(route('timetables.layouts.facilities', $this->timetable));
-
-        $response->assertStatus(200);
-        $response->assertSee('インフラ設備一覧');
-        $response->assertSee('給水設備');
-        $response->assertSee('スタッフ控室');
-        $response->assertSee('W-01');
-
-        // 更新テスト
-        $updateResponse = $this->actingAs($this->user)
-            ->put(route('timetables.layouts.facilities.update', [$this->timetable, $facility]), [
-                'facility_code' => 'W-01-REV',
-                'name' => '給水設備①（北川P特設）',
-                'facility_type' => FacilityType::WaterSupply->value,
-                'status' => 'confirmed',
-                'location_description' => '北川駐車場 最奥部水栓付近',
-                'notes' => 'ポリタンク2個配備済',
-            ]);
-
-        $updateResponse->assertRedirect();
-        $updateResponse->assertSessionHas('success');
-
-        $this->assertDatabaseHas('layout_facilities', [
-            'id' => $facility->id,
-            'facility_code' => 'W-01-REV',
-            'name' => '給水設備①（北川P特設）',
+            'sub_type' => BoothType::KitchenCar->value,
             'status' => 'confirmed',
+            'notes' => '牛串、フランクフルト。発電機持参',
         ]);
     }
 
     /**
-     * 新規設備が登録できること
+     * 新規設備が同一エンドポイントから登録できること
      */
-    public function test_facility_can_be_created(): void
+    public function test_facility_item_can_be_created(): void
     {
         $response = $this->actingAs($this->user)
-            ->post(route('timetables.layouts.facilities.store', $this->timetable), [
-                'facility_code' => 'STAFF-NEW',
+            ->post(route('timetables.layouts.booths.store', $this->timetable), [
+                'item_type' => 'facility',
+                'code' => 'STAFF-NEW',
+                'layout_area_id' => $this->areaPark->id,
                 'name' => '第2スタッフ控室',
-                'facility_type' => FacilityType::StaffRoom->value,
+                'category' => FacilityCategory::Other->value,
+                'sub_type' => FacilityType::StaffRoom->value,
                 'status' => 'tentative',
                 'location_description' => '市役所前特設エリア入口',
                 'notes' => '新規配備テスト',
@@ -330,32 +254,88 @@ class SiteLayoutTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
-        $this->assertDatabaseHas('layout_facilities', [
+        $this->assertDatabaseHas('layout_items', [
             'layout_map_id' => $this->map->id,
-            'facility_code' => 'STAFF-NEW',
+            'item_type' => 'facility',
+            'code' => 'STAFF-NEW',
             'name' => '第2スタッフ控室',
-            'facility_type' => FacilityType::StaffRoom->value,
+            'category' => FacilityCategory::Other->value,
+            'sub_type' => FacilityType::StaffRoom->value,
             'status' => 'tentative',
         ]);
     }
 
     /**
-     * 設備が削除できること
+     * 配置情報（区分・形態・状態・notes）の更新ができること
      */
-    public function test_facility_can_be_deleted(): void
+    public function test_layout_item_can_be_updated(): void
     {
-        $facility = LayoutFacility::where('layout_map_id', $this->map->id)
-            ->where('facility_code', 'W-01')
-            ->firstOrFail();
-
         $response = $this->actingAs($this->user)
-            ->delete(route('timetables.layouts.facilities.destroy', [$this->timetable, $facility]));
+            ->put(route('timetables.layouts.booths.update', [$this->timetable, $this->itemBoothA]), [
+                'item_type' => 'booth',
+                'code' => 'A99-REV',
+                'layout_area_id' => $this->areaA->id,
+                'name' => '水浅青果 焼き芋店',
+                'category' => BoothCategory::GozaOutdoorCooking->value,
+                'sub_type' => BoothType::KitchenCar->value,
+                'status' => 'confirmed',
+                'location_description' => 'セブンイレブン向かい',
+                'notes' => '石焼き芋、焼きとうもろこし。三方幕テント持参確認',
+            ]);
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
-        $this->assertDatabaseMissing('layout_facilities', [
-            'id' => $facility->id,
+        $this->assertDatabaseHas('layout_items', [
+            'id' => $this->itemBoothA->id,
+            'code' => 'A99-REV',
+            'name' => '水浅青果 焼き芋店',
+            'category' => BoothCategory::GozaOutdoorCooking->value,
+            'sub_type' => BoothType::KitchenCar->value,
+            'status' => 'confirmed',
+            'notes' => '石焼き芋、焼きとうもろこし。三方幕テント持参確認',
         ]);
+    }
+
+    /**
+     * 配置が削除できること
+     */
+    public function test_layout_item_can_be_deleted(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->delete(route('timetables.layouts.booths.destroy', [$this->timetable, $this->itemBoothA]));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('layout_items', [
+            'id' => $this->itemBoothA->id,
+        ]);
+    }
+
+    /**
+     * 表示種別によるフィルタリングができること
+     */
+    public function test_filter_items_by_type(): void
+    {
+        // 現場設備のみ表示
+        $response = $this->actingAs($this->user)
+            ->get(route('timetables.layouts.booths', [$this->timetable, 'item_type' => 'facility']));
+
+        $response->assertStatus(200);
+        $response->assertSee('W-99');
+        $response->assertSee('STAFF-99');
+        $response->assertDontSee('A99');
+        $response->assertDontSee('B99');
+
+        // 出店ブースのみ表示
+        $responseBooth = $this->actingAs($this->user)
+            ->get(route('timetables.layouts.booths', [$this->timetable, 'item_type' => 'booth']));
+
+        $responseBooth->assertStatus(200);
+        $responseBooth->assertSee('A99');
+        $responseBooth->assertSee('B99');
+        $responseBooth->assertDontSee('W-99');
+        $responseBooth->assertDontSee('STAFF-99');
     }
 }

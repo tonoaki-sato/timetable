@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreLayoutBoothRequest;
-use App\Http\Requests\StoreLayoutFacilityRequest;
-use App\Http\Requests\UpdateLayoutBoothRequest;
-use App\Http\Requests\UpdateLayoutFacilityRequest;
-use App\Models\LayoutBooth;
-use App\Models\LayoutFacility;
+use App\Http\Requests\StoreLayoutItemRequest;
+use App\Http\Requests\UpdateLayoutItemRequest;
+use App\Models\LayoutItem;
 use App\Models\Timetable;
 use App\Services\SiteLayoutService;
 use Illuminate\Http\RedirectResponse;
@@ -38,116 +35,62 @@ class SiteLayoutController extends Controller
     }
 
     /**
-     * コマ割り（ブース）一覧・クイック編集画面
+     * 配置一覧画面（出店ブース・インフラ設備統合一覧）
      */
     public function booths(Request $request, Timetable $timetable): View
     {
         $map = $this->siteLayoutService->getLayoutDetails($timetable);
 
         $filters = [
+            'item_type' => $request->query('item_type'),
             'area_id' => $request->query('area_id'),
             'category' => $request->query('category'),
             'search' => $request->query('search'),
         ];
 
-        $booths = $this->siteLayoutService->paginateBooths($map, $filters, 25);
+        $items = $this->siteLayoutService->paginateItems($map, $filters, 50);
         $vendors = $this->siteLayoutService->getVendorsForSelect($timetable);
 
         return view('site_layouts.booths', [
             'timetable' => $timetable,
             'map' => $map,
-            'booths' => $booths,
+            'items' => $items,
             'vendors' => $vendors,
-            'gozaStores' => $vendors,
             'filters' => $filters,
             'areas' => $map->areas,
         ]);
     }
 
     /**
-     * コマ割り情報の新規登録
+     * 配置アイテムの新規登録
      */
-    public function storeBooth(StoreLayoutBoothRequest $request, Timetable $timetable): RedirectResponse
+    public function storeBooth(StoreLayoutItemRequest $request, Timetable $timetable): RedirectResponse
     {
         $map = $this->siteLayoutService->getLayoutDetails($timetable);
-        $booth = $this->siteLayoutService->storeBooth($map, $request->validated());
+        $item = $this->siteLayoutService->storeItem($map, $request->validated());
 
-        return redirect()->back()->with('success', 'コマ配置情報（'.$booth->booth_code.'）を新規登録しました。');
+        return redirect()->back()->with('success', '配置情報（'.$item->code.'）を新規登録しました。');
     }
 
     /**
-     * コマ割り情報の更新
+     * 配置アイテムの更新
      */
-    public function updateBooth(UpdateLayoutBoothRequest $request, Timetable $timetable, LayoutBooth $booth): RedirectResponse
+    public function updateBooth(UpdateLayoutItemRequest $request, Timetable $timetable, LayoutItem $item): RedirectResponse
     {
-        $this->siteLayoutService->updateBooth($booth, $request->validated());
+        $this->siteLayoutService->updateItem($item, $request->validated());
 
-        return redirect()->back()->with('success', 'コマ割り情報（'.$booth->booth_code.'）を更新しました。');
+        return redirect()->back()->with('success', '配置情報（'.$item->code.'）を更新しました。');
     }
 
     /**
-     * コマ割り配置の削除
+     * 配置アイテムの削除
      */
-    public function destroyBooth(Timetable $timetable, LayoutBooth $booth): RedirectResponse
+    public function destroyBooth(Timetable $timetable, LayoutItem $item): RedirectResponse
     {
-        $code = $booth->booth_code;
-        $name = $booth->displayName;
-        $this->siteLayoutService->deleteBooth($booth);
+        $code = $item->code;
+        $name = $item->displayName;
+        $this->siteLayoutService->deleteItem($item);
 
-        return redirect()->back()->with('success', 'コマ配置「'.$name.'（'.$code.'）」を削除しました。');
-    }
-
-    /**
-     * インフラ設備一覧画面
-     */
-    public function facilities(Request $request, Timetable $timetable): View
-    {
-        $map = $this->siteLayoutService->getLayoutDetails($timetable);
-
-        $filters = [
-            'type' => $request->query('type'),
-        ];
-
-        $facilities = $this->siteLayoutService->getFacilities($map, $filters);
-
-        return view('site_layouts.facilities', [
-            'timetable' => $timetable,
-            'map' => $map,
-            'facilities' => $facilities,
-            'filters' => $filters,
-            'areas' => $map->areas,
-        ]);
-    }
-
-    /**
-     * 現場設備の新規登録
-     */
-    public function storeFacility(StoreLayoutFacilityRequest $request, Timetable $timetable): RedirectResponse
-    {
-        $map = $this->siteLayoutService->getLayoutDetails($timetable);
-        $facility = $this->siteLayoutService->storeFacility($map, $request->validated());
-
-        return redirect()->back()->with('success', '設備情報（'.$facility->name.'）を新規登録しました。');
-    }
-
-    /**
-     * 現場設備の更新
-     */
-    public function updateFacility(UpdateLayoutFacilityRequest $request, Timetable $timetable, LayoutFacility $facility): RedirectResponse
-    {
-        $this->siteLayoutService->updateFacility($facility, $request->validated());
-
-        return redirect()->back()->with('success', '設備情報（'.$facility->name.'）を更新しました。');
-    }
-
-    /**
-     * 現場設備の削除
-     */
-    public function destroyFacility(Timetable $timetable, LayoutFacility $facility): RedirectResponse
-    {
-        $name = $facility->name;
-        $this->siteLayoutService->deleteFacility($facility);
-
-        return redirect()->back()->with('success', '設備「'.$name.'」を削除しました。');
+        return redirect()->back()->with('success', '配置「'.$name.'（'.$code.'）」を削除しました。');
     }
 }

@@ -3,10 +3,11 @@
 namespace Tests\Feature;
 
 use App\Enums\BoothCategory;
-use App\Enums\BoothStatus;
 use App\Enums\BoothType;
+use App\Enums\LayoutItemStatus;
+use App\Enums\LayoutItemType;
 use App\Models\LayoutArea;
-use App\Models\LayoutBooth;
+use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
 use App\Models\User;
@@ -155,46 +156,49 @@ class VendorManagementTest extends TestCase
         ]);
 
         // コマ1: A01（テント・調理済品・新鮮野菜）
-        $booth1 = LayoutBooth::create([
+        $booth1 = LayoutItem::create([
             'layout_map_id' => $map->id,
             'layout_area_id' => $areaA->id,
+            'item_type' => LayoutItemType::Booth,
             'vendor_id' => $vendor->id,
-            'booth_code' => 'A01',
+            'code' => 'A01',
             'name' => '水浅青果 本店',
-            'category' => BoothCategory::GozaCookedFood,
-            'booth_type' => BoothType::Tent,
-            'status' => BoothStatus::Confirmed,
-            'product_items' => '新鮮野菜、果物詰め合わせ',
+            'category' => BoothCategory::GozaCookedFood->value,
+            'sub_type' => BoothType::Tent->value,
+            'status' => LayoutItemStatus::Confirmed,
+            'notes' => '新鮮野菜、果物詰め合わせ',
         ]);
 
         // コマ2: A03（テント・調理済品・漬物加工品）
-        $booth2 = LayoutBooth::create([
+        $booth2 = LayoutItem::create([
             'layout_map_id' => $map->id,
             'layout_area_id' => $areaA->id,
+            'item_type' => LayoutItemType::Booth,
             'vendor_id' => $vendor->id,
-            'booth_code' => 'A03',
+            'code' => 'A03',
             'name' => '水浅青果 加工品',
-            'category' => BoothCategory::GozaCookedFood,
-            'booth_type' => BoothType::Tent,
-            'status' => BoothStatus::Confirmed,
-            'product_items' => '漬物、乾燥野菜加工品',
+            'category' => BoothCategory::GozaCookedFood->value,
+            'sub_type' => BoothType::Tent->value,
+            'status' => LayoutItemStatus::Confirmed,
+            'notes' => '漬物、乾燥野菜加工品',
         ]);
 
         // コマ3: KC-03（キッチンカー・企業ブース・生搾りジュース）
-        $booth3 = LayoutBooth::create([
+        $booth3 = LayoutItem::create([
             'layout_map_id' => $map->id,
             'layout_area_id' => $areaPark->id,
+            'item_type' => LayoutItemType::Booth,
             'vendor_id' => $vendor->id,
-            'booth_code' => 'KC-03',
+            'code' => 'KC-03',
             'name' => '水浅青果 ジュースカー',
-            'category' => BoothCategory::CorporateBooth,
-            'booth_type' => BoothType::KitchenCar,
-            'status' => BoothStatus::Confirmed,
-            'product_items' => '生搾り果実ジュース、カット果物',
+            'category' => BoothCategory::CorporateBooth->value,
+            'sub_type' => BoothType::KitchenCar->value,
+            'status' => LayoutItemStatus::Confirmed,
+            'notes' => '生搾り果実ジュース、カット果物',
         ]);
 
         // リレーションの検証 (1:N)
-        $this->assertCount(3, $vendor->fresh()->booths);
+        $this->assertCount(3, $vendor->fresh()->items);
 
         // 出展・出店者マスター画面では配置ブース（展開ブース）列が表示されないこと
         $response = $this->actingAs($this->user)

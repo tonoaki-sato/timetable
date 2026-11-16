@@ -4,9 +4,9 @@ namespace Database\Seeders;
 
 use App\Enums\BoothCategory;
 use App\Enums\FacilityType;
+use App\Enums\LayoutItemType;
 use App\Models\LayoutArea;
-use App\Models\LayoutBooth;
-use App\Models\LayoutFacility;
+use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Location;
 use App\Models\Timetable;
@@ -214,12 +214,14 @@ class SiteLayoutSeeder extends Seeder
         ];
 
         foreach ($facilitiesData as $f) {
-            LayoutFacility::create([
+            LayoutItem::create([
                 'layout_map_id' => $map->id,
                 'layout_area_id' => $f['area_id'],
-                'facility_code' => $f['code'],
+                'item_type' => LayoutItemType::Facility,
+                'code' => $f['code'],
                 'name' => $f['name'],
-                'facility_type' => $f['type'],
+                'category' => $f['type']->category()->value,
+                'sub_type' => $f['type']->value,
                 'location_description' => $f['loc_desc'],
                 'status' => $f['status'],
                 'display_order' => $f['order'],
@@ -255,17 +257,18 @@ class SiteLayoutSeeder extends Seeder
                 $vendorId = $vendor->id;
             }
 
-            LayoutBooth::create([
+            LayoutItem::create([
                 'layout_map_id' => $map->id,
                 'layout_area_id' => $areaKitagawa->id,
+                'item_type' => LayoutItemType::Booth,
                 'vendor_id' => $vendorId,
-                'booth_code' => $kc['code'],
+                'code' => $kc['code'],
                 'name' => $kc['name'],
-                'category' => BoothCategory::CorporateBooth,
-                'booth_type' => 'kitchen_car',
+                'category' => BoothCategory::CorporateBooth->value,
+                'sub_type' => 'kitchen_car',
                 'status' => 'confirmed',
-                'product_items' => $kc['items'],
-                'adjacent_landmark' => '北川駐車場内',
+                'notes' => $kc['items'],
+                'location_description' => '北川駐車場内',
                 'display_order' => 100 + $idx,
             ]);
         }
@@ -287,17 +290,18 @@ class SiteLayoutSeeder extends Seeder
                 $vendorId = $vendor->id;
             }
 
-            LayoutBooth::create([
+            LayoutItem::create([
                 'layout_map_id' => $map->id,
                 'layout_area_id' => $areaSS->id,
+                'item_type' => LayoutItemType::Booth,
                 'vendor_id' => $vendorId,
-                'booth_code' => $sb['code'],
+                'code' => $sb['code'],
                 'name' => $sb['name'],
-                'category' => $sb['category'],
-                'booth_type' => 'tent',
+                'category' => $sb['category']->value,
+                'sub_type' => 'tent',
                 'status' => 'confirmed',
-                'product_items' => $sb['items'],
-                'adjacent_landmark' => 'S&S前駐車場内',
+                'notes' => $sb['items'],
+                'location_description' => 'S&S前駐車場内',
                 'display_order' => 200 + $idx,
             ]);
         }
@@ -312,16 +316,17 @@ class SiteLayoutSeeder extends Seeder
             ['code' => 'TAX-06', 'name' => '保土ヶ谷宿 歴史展示②', 'category' => BoothCategory::SpecialEvent],
         ];
         foreach ($taxBooths as $idx => $tb) {
-            LayoutBooth::create([
+            LayoutItem::create([
                 'layout_map_id' => $map->id,
                 'layout_area_id' => $areaTax->id,
+                'item_type' => LayoutItemType::Booth,
                 'vendor_id' => null,
-                'booth_code' => $tb['code'],
+                'code' => $tb['code'],
                 'name' => $tb['name'],
-                'category' => $tb['category'],
-                'booth_type' => 'tent',
+                'category' => $tb['category']->value,
+                'sub_type' => 'tent',
                 'status' => 'confirmed',
-                'adjacent_landmark' => '税務署前駐車場内',
+                'location_description' => '税務署前駐車場内',
                 'display_order' => 300 + $idx,
             ]);
         }
@@ -443,17 +448,18 @@ class SiteLayoutSeeder extends Seeder
                 $vendorId = $vendor->id;
             }
 
-            LayoutBooth::create([
+            LayoutItem::create([
                 'layout_map_id' => $map->id,
                 'layout_area_id' => $areaA->id,
+                'item_type' => LayoutItemType::Booth,
                 'vendor_id' => $vendorId,
-                'booth_code' => $code,
+                'code' => $code,
                 'name' => $storeName,
-                'category' => $category,
-                'booth_type' => 'tent',
+                'category' => $category->value,
+                'sub_type' => 'tent',
                 'status' => 'confirmed',
-                'product_items' => $storeName ? $items : null,
-                'adjacent_landmark' => $landmark,
+                'notes' => $storeName ? $items : null,
+                'location_description' => $landmark,
                 'display_order' => 1000 + $i,
             ]);
         }
@@ -515,17 +521,18 @@ class SiteLayoutSeeder extends Seeder
                 $vendorId = $vendor->id;
             }
 
-            LayoutBooth::create([
+            LayoutItem::create([
                 'layout_map_id' => $map->id,
                 'layout_area_id' => $areaB->id,
+                'item_type' => LayoutItemType::Booth,
                 'vendor_id' => $vendorId,
-                'booth_code' => $code,
+                'code' => $code,
                 'name' => $storeName,
-                'category' => $category,
-                'booth_type' => 'tent',
+                'category' => $category->value,
+                'sub_type' => 'tent',
                 'status' => 'confirmed',
-                'product_items' => $storeName ? $items : null,
-                'adjacent_landmark' => $landmark,
+                'notes' => $storeName ? $items : null,
+                'location_description' => $landmark,
                 'display_order' => 2000 + $i,
             ]);
         }
