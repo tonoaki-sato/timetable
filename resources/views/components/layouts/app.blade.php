@@ -330,7 +330,7 @@
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('vendors.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🏪</span>
                                         <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">出展・出店者一覧</div>
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">出展・出店者マスター</div>
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">ござ市・企業ブース・特設企画の全出展者台帳</p>
                                         </div>
                                     </a>
@@ -831,7 +831,7 @@
                             </a>
                             <a href="{{ route('vendors.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🎪</span>
-                                <span class="font-bold truncate">出展・出店者一覧</span>
+                                <span class="font-bold truncate">出展・出店者マスター</span>
                             </a>
                             <a href="{{ route('equipments.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">📦</span>

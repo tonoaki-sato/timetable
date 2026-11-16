@@ -18,7 +18,7 @@ class VendorController extends Controller
     ) {}
 
     /**
-     * 出展・出店者一覧画面を表示
+     * 出展・出店者マスター画面を表示
      */
     public function index(Request $request): View
     {

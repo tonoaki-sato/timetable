@@ -1,9 +1,9 @@
-<x-layouts.app title="出展・出店者一覧">
+<x-layouts.app title="出展・出店者マスター">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
         <!-- ページヘッダー -->
         <x-page-header
-            title="出展・出店者一覧"
+            title="出展・出店者マスター"
             icon="🎪"
             description="ござ市出店者、特設企画、企業協賛ブース等の出展・出店者マスター台帳を管理します。">
             <x-slot:breadcrumbs>
@@ -14,7 +14,7 @@
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>
-                <span class="text-slate-700 font-bold truncate">🎪 出展・出店者一覧</span>
+                <span class="text-slate-700 font-bold truncate">🎪 出展・出店者マスター</span>
             </x-slot:breadcrumbs>
 
             <x-slot:actions>

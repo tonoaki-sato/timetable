@@ -31,7 +31,7 @@ class VendorManagementTest extends TestCase
     }
 
     /**
-     * 出展・出店者一覧画面が表示され、タイトルと新規登録ボタンが存在すること
+     * 出展・出店者マスター画面が表示され、タイトルと新規登録ボタンが存在すること
      */
     public function test_vendors_list_screen_can_be_rendered(): void
     {
@@ -46,7 +46,7 @@ class VendorManagementTest extends TestCase
             ->get(route('vendors.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('出展・出店者一覧');
+        $response->assertSee('出展・出店者マスター');
         $response->assertSee('新規登録');
         $response->assertSee('水浅青果');
         $response->assertSee('水浅 太郎');
@@ -196,7 +196,7 @@ class VendorManagementTest extends TestCase
         // リレーションの検証 (1:N)
         $this->assertCount(3, $vendor->fresh()->booths);
 
-        // 出展・出店者一覧画面では配置ブース（展開ブース）列が表示されないこと
+        // 出展・出店者マスター画面では配置ブース（展開ブース）列が表示されないこと
         $response = $this->actingAs($this->user)
             ->get(route('vendors.index'));
 
