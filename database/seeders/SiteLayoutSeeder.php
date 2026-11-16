@@ -81,7 +81,7 @@ class SiteLayoutSeeder extends Seeder
             'layout_map_id' => $map->id,
             'location_id' => null,
             'zone_code' => 'KIDS_VILLAGE',
-            'name' => 'キッズヴィレッジ',
+            'name' => 'キッズ村',
             'display_order' => 35,
         ]);
 

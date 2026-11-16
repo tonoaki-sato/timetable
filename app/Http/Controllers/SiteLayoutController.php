@@ -18,19 +18,17 @@ class SiteLayoutController extends Controller
     ) {}
 
     /**
-     * 現場配置計画 ダッシュボード（メイン画面）
+     * 配置計画（メイン画面）
      */
     public function index(Timetable $timetable): View
     {
         $map = $this->siteLayoutService->getLayoutDetails($timetable);
         $summary = $this->siteLayoutService->getSummary($map);
-        $streetMapViewData = $this->siteLayoutService->getStreetMapViewData($map);
 
         return view('site_layouts.index', [
             'timetable' => $timetable,
             'map' => $map,
             'summary' => $summary,
-            'streetMapViewData' => $streetMapViewData,
         ]);
     }
 

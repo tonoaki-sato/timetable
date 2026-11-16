@@ -19,7 +19,7 @@
             <span class="text-slate-300">/</span>
             <a href="{{ route('timetables.layouts.index', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>🗺️</span>
-                <span>現場配置計画</span>
+                <span>配置計画</span>
             </a>
             <span class="text-slate-300">/</span>
             <span class="text-slate-700 font-bold truncate">📋 配置一覧</span>
@@ -36,7 +36,7 @@
             <a href="{{ route('timetables.layouts.index', $timetable) }}"
                 class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>←</span>
-                <span>ダッシュボードに戻る</span>
+                <span>配置計画に戻る</span>
             </a>
         </x-slot:actions>
     </x-page-header>

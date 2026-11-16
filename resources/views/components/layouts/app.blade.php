@@ -234,12 +234,12 @@
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">6大フェーズ運行・資材物流計画</p>
                                         </div>
                                     </a>
-                                    <!-- 現場配置計画 -->
+                                    <!-- 配置計画 -->
                                     <a href="{{ route('timetables.layouts.index', $nav->targetPrintTimetable() ?? 1) }}"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.layouts.*') || request()->routeIs('timetables.goza-stores.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🗺️</span>
                                         <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">現場配置計画</div>
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">配置計画</div>
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">ござ市コマ割り・現場設備配置</p>
                                         </div>
                                     </a>
@@ -254,7 +254,7 @@
                                     <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
                                         <span class="text-base shrink-0 grayscale opacity-60">🗺️</span>
                                         <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">現場配置計画</div>
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">配置計画</div>
                                             <p class="text-[10px] text-slate-500 truncate mt-0.5">ござ市コマ割り・現場設備配置</p>
                                         </div>
                                     </div>
@@ -794,7 +794,7 @@
                             </a>
                             <a href="{{ route('timetables.layouts.index', $nav->targetPrintTimetable() ?? 1) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🗺️</span>
-                                <span class="font-bold truncate">現場配置計画</span>
+                                <span class="font-bold truncate">配置計画</span>
                             </a>
                             @else
                             <div class="p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
@@ -803,7 +803,7 @@
                             </div>
                             <div class="p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
                                 <span class="text-base shrink-0 grayscale opacity-60">🗺️</span>
-                                <span class="font-bold truncate">現場配置計画</span>
+                                <span class="font-bold truncate">配置計画</span>
                             </div>
                             @endif
                             <a href="{{ route('calendar.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">

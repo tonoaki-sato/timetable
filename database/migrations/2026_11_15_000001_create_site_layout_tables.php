@@ -31,7 +31,7 @@ return new class extends Migration
             $table->foreignId('layout_map_id')->constrained('layout_maps')->cascadeOnDelete();
             $table->foreignId('location_id')->nullable()->constrained('locations')->nullOnDelete();
             $table->string('zone_code', 50)->comment('識別コード（ZONE_A, ZONE_B, AREA_KITAGAWA, AREA_SS, AREA_TAX, KIDS_VILLAGE）');
-            $table->string('name')->comment('エリア名（例: 北川駐車場内, メイン通りA列（東側）, キッズヴィレッジ）');
+            $table->string('name')->comment('エリア名（例: 北川駐車場内, メイン通りA列（東側）, キッズ村）');
             $table->integer('display_order')->default(0);
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();

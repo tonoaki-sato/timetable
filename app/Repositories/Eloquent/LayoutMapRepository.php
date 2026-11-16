@@ -38,6 +38,7 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
         return LayoutMap::with([
             'timetable',
             'areas.location',
+            'areas.items.vendor',
             'items.vendor',
             'items.area',
         ])->find($id);

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\BoothCategory;
+use App\Enums\BoothType;
 use App\Enums\FacilityType;
 use App\Models\LayoutItem;
 use App\Models\LayoutMap;
@@ -35,11 +36,11 @@ class SiteLayoutService
      *
      * @return array{
      *   total_booths: int,
-     *   assigned_booths: int,
-     *   unassigned_booths: int,
-     *   categories: array<string, array{label: string, count: int, badge: string}>,
-     *   facilities: array<string, array{label: string, icon: string, count: int}>,
-     *   areas_summary: array<int, array{name: string, booths_count: int, facilities_count: int}>
+     *   total_facilities: int,
+     *   total_items: int,
+     *   categories: array<string, array{label: string, icon: string, count: int, badge: string}>,
+     *   facilities: array<string, array{label: string, icon: string, count: int, badge: string}>,
+     *   area_booth_types: array<int, array{area_id: int, area_name: string, total_count: int, types: array<int, array{value: string, label: string, count: int}>}>
      * }
      */
     public function getSummary(LayoutMap $map): array
@@ -49,50 +50,63 @@ class SiteLayoutService
         $facilities = $items->filter(fn (LayoutItem $item) => $item->isFacility());
 
         $totalBooths = $booths->count();
-        $assignedBooths = $booths->filter(fn (LayoutItem $b) => ! empty($b->name) || $b->vendor_id !== null)->count();
-        $unassignedBooths = $totalBooths - $assignedBooths;
+        $totalFacilities = $facilities->count();
+        $totalItems = $items->count();
 
-        // カテゴリ別集計
+        // 1. 出展区分別集計 (BoothCategory)
         $categoryCounts = [];
         foreach (BoothCategory::cases() as $case) {
             $count = $booths->filter(fn (LayoutItem $b) => $b->category === $case->value)->count();
             $categoryCounts[$case->value] = [
                 'label' => $case->label(),
+                'icon' => $case->icon(),
                 'count' => $count,
                 'badge' => $case->badgeClasses(),
             ];
         }
 
-        // 設備種別集計
+        // 2. 設備区分別集計 (FacilityType)
         $facilityCounts = [];
         foreach (FacilityType::cases() as $case) {
-            $count = $facilities->filter(fn (LayoutItem $f) => $f->sub_type === $case->value)->count();
+            $count = $facilities->filter(fn (LayoutItem $f) => $f->category === $case->value)->count();
             $facilityCounts[$case->value] = [
                 'label' => $case->label(),
                 'icon' => $case->icon(),
                 'count' => $count,
+                'badge' => $case->badgeClasses(),
             ];
         }
 
-        // エリア別集計
-        $areasSummary = [];
+        // 3. 所属エリア別のブース形態別集計
+        $areaBoothTypes = [];
         foreach ($map->areas as $area) {
-            $areasSummary[] = [
-                'id' => $area->id,
-                'name' => $area->name,
-                'zone_code' => $area->zone_code,
-                'booths_count' => $area->items->where('item_type', 'booth')->count(),
-                'facilities_count' => $area->items->where('item_type', 'facility')->count(),
+            $areaItems = $items->filter(fn (LayoutItem $i) => $i->layout_area_id === $area->id);
+            $types = [];
+            foreach (BoothType::cases() as $type) {
+                $cnt = $areaItems->filter(fn (LayoutItem $i) => $i->booth_type === $type->value)->count();
+                if ($cnt > 0) {
+                    $types[] = [
+                        'value' => $type->value,
+                        'label' => $type->label(),
+                        'count' => $cnt,
+                    ];
+                }
+            }
+            $areaBoothTypes[] = [
+                'area_id' => $area->id,
+                'area_name' => $area->name,
+                'total_count' => $areaItems->count(),
+                'types' => $types,
             ];
         }
 
         return [
             'total_booths' => $totalBooths,
-            'assigned_booths' => $assignedBooths,
-            'unassigned_booths' => $unassignedBooths,
+            'total_facilities' => $totalFacilities,
+            'total_items' => $totalItems,
             'categories' => $categoryCounts,
             'facilities' => $facilityCounts,
-            'areas_summary' => $areasSummary,
+            'area_booth_types' => $areaBoothTypes,
         ];
     }
 

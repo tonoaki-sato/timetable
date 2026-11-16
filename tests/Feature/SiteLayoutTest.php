@@ -151,7 +151,7 @@ class SiteLayoutTest extends TestCase
     }
 
     /**
-     * 現場配置計画ダッシュボード画面が表示されること
+     * 配置計画画面が表示されること
      */
     public function test_layout_dashboard_screen_can_be_rendered(): void
     {
@@ -159,10 +159,30 @@ class SiteLayoutTest extends TestCase
             ->get(route('timetables.layouts.index', $this->timetable));
 
         $response->assertStatus(200);
-        $response->assertSee('現場配置計画');
-        $response->assertSee('メイン通り商店街配置図');
+        $response->assertSee($this->timetable->name.' 配置計画');
+        $response->assertSee('ござ市、インフラ設備などの配置情報を閲覧できます');
+        $response->assertSee('配置一覧');
+        $response->assertDontSee('<span>出展・出店者マスター</span>', false);
+        $response->assertDontSee('v1.0');
+        $response->assertDontSee('ござ市・出店コマ割');
+        $response->assertDontSee('メイン通り配置マップビュー');
+        $response->assertDontSee('ZONE_A');
+        $response->assertDontSee('全エリアの出展ブースおよび現場設備の配置状況一覧です。');
+        $response->assertDontSee('出展一覧 →');
+        $response->assertDontSee('現場設備一覧 →');
+
+        // 1段目: 出展区分・設備区分
+        $response->assertSee('出展区分 (全2件)');
+        $response->assertSee('設備区分 (全2箇所)');
+
+        // 2段目: エリア別 ブース形態内訳
+        $response->assertSee('エリア別 ブース形態内訳');
+
+        // エリア別配置一覧
+        $response->assertSee('エリア別配置一覧 (全2エリア)');
+        $response->assertSee('メイン通りA列（東側歩道）');
+        $response->assertSee('北川駐車場内');
         $response->assertSee('給水設備①');
-        $response->assertSee('出展・出店者マスター');
     }
 
     /**
@@ -177,7 +197,7 @@ class SiteLayoutTest extends TestCase
         $response->assertSee('配置一覧');
         $response->assertSee('ござ市、インフラ設備などの配置を管理します。');
         $response->assertSee('新規配置追加');
-        $response->assertSee('ダッシュボードに戻る');
+        $response->assertSee('配置計画に戻る');
         $response->assertSee('配置一覧（全4件）');
         $response->assertSee('A99');
         $response->assertSee('B99');
