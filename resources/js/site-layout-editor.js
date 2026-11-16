@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnZoomOut = document.getElementById('btn-zoom-out');
     const btnZoom100 = document.getElementById('btn-zoom-100');
     const btnZoomFit = document.getElementById('btn-zoom-fit');
+    const btnRotateSelected = document.getElementById('btn-rotate-selected');
     const btnDeleteSelected = document.getElementById('btn-delete-selected');
 
     const svgUrl = appEl.dataset.svgUrl;
@@ -80,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnModalDelete = document.getElementById('btn-modal-delete');
     const btnModalSave = document.getElementById('btn-modal-save');
 
-    // ビューポート状態
+    // ビューポート & 編集状態
     const state = {
         scale: 1.0,
         x: 0,
@@ -99,7 +100,26 @@ document.addEventListener('DOMContentLoaded', () => {
         moveStartSvgY: 0,
         origPlacementX: 0,
         origPlacementY: 0,
+        // フリーエリアリサイズ用状態 (Phase 5)
+        isResizing: false,
+        resizeHandle: null, // 'tl', 'tr', 'br', 'bl'
+        resizePlacementId: null,
+        resizeStartSvgX: 0,
+        resizeStartSvgY: 0,
+        origWidth: 0,
+        origHeight: 0,
+        origX: 0,
+        origY: 0,
     };
+
+    /**
+     * 座標がメイン通り（南北の車道・歩道領域）沿いにあるかを幾何判定 (Phase 5)
+     */
+    function isAlongStreet(x, y, w, h) {
+        const centerX = x + w / 2;
+        // 商店街のメイン道路（車道・両側歩道を含む縦断ゾーン）: X 230〜330
+        return centerX >= 230 && centerX <= 330;
+    }
 
     // viewBox からデフォルトサイズをパース (842 x 1191)
     const vbParts = viewboxStr.split(/\s+/).map(Number);
@@ -318,23 +338,49 @@ document.addEventListener('DOMContentLoaded', () => {
             selRect.setAttribute('pointer-events', 'none');
             g.appendChild(selRect);
 
+            // 縦横リサイズ可能判定 (フリーエリアのみ可変、テント類は固定規格値で型崩れ防止)
+            const isResizable = (iconDef && iconDef.is_resizable) || placement.shape_type === 'free_area';
+
             // 四隅の白丸ハンドル
             const corners = [
-                { cx: x, cy: y },           // 左上
-                { cx: x + w, cy: y },       // 右上
-                { cx: x + w, cy: y + h },   // 右下
-                { cx: x, cy: y + h },       // 左下
+                { type: 'tl', cx: x, cy: y, cursor: 'nwse-resize' },          // 左上
+                { type: 'tr', cx: x + w, cy: y, cursor: 'nesw-resize' },      // 右上
+                { type: 'br', cx: x + w, cy: y + h, cursor: 'nwse-resize' },  // 右下
+                { type: 'bl', cx: x, cy: y + h, cursor: 'nesw-resize' },      // 左下
             ];
 
             corners.forEach(corner => {
                 const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 circle.setAttribute('cx', corner.cx);
                 circle.setAttribute('cy', corner.cy);
-                circle.setAttribute('r', '1.3');
+                circle.setAttribute('r', isResizable ? '1.8' : '1.3');
                 circle.setAttribute('fill', '#ffffff');
                 circle.setAttribute('stroke', '#2563eb');
-                circle.setAttribute('stroke-width', '0.6');
-                circle.setAttribute('pointer-events', 'none');
+                circle.setAttribute('stroke-width', isResizable ? '0.8' : '0.6');
+
+                if (isResizable) {
+                    circle.setAttribute('class', 'resize-handle');
+                    circle.style.cursor = corner.cursor;
+                    circle.addEventListener('mousedown', (e) => {
+                        if (e.button !== 0) return;
+                        e.stopPropagation();
+
+                        state.isResizing = true;
+                        state.resizeHandle = corner.type;
+                        state.resizePlacementId = placement.id;
+
+                        const svgCoords = getSvgCoordinates(e.clientX, e.clientY);
+                        state.resizeStartSvgX = svgCoords.x;
+                        state.resizeStartSvgY = svgCoords.y;
+                        state.origWidth = parseFloat(placement.width) || 78.0;
+                        state.origHeight = parseFloat(placement.height) || 78.0;
+                        state.origX = parseFloat(placement.pos_x) || 0;
+                        state.origY = parseFloat(placement.pos_y) || 0;
+                    });
+                } else {
+                    circle.setAttribute('pointer-events', 'none');
+                }
+
                 g.appendChild(circle);
             });
         }
@@ -374,8 +420,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const prevId = state.selectedPlacementId;
         state.selectedPlacementId = id;
 
+        const target = state.placements.find(p => p.id === id);
+
         if (btnDeleteSelected) {
             btnDeleteSelected.disabled = false;
+        }
+
+        if (btnRotateSelected) {
+            const iconDef = target ? iconDefinitions[target.shape_type] : null;
+            const canRotate = target && (iconDef ? iconDef.allow_rotation : true) && !target.is_rotation_locked;
+            btnRotateSelected.disabled = !canRotate;
+            if (target && target.is_rotation_locked) {
+                btnRotateSelected.title = '通り沿い配置のため回転不可（平行固定）';
+            } else if (iconDef && !iconDef.allow_rotation) {
+                btnRotateSelected.title = '現場設備のため回転不可（直立固定）';
+            } else {
+                btnRotateSelected.title = '時計回りに45°回転 (Rキー)';
+            }
         }
 
         if (prevId) {
@@ -383,7 +444,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (prevTarget) renderPlacementNode(prevTarget);
         }
 
-        const target = state.placements.find(p => p.id === id);
         if (target) renderPlacementNode(target);
     }
 
@@ -400,6 +460,11 @@ document.addEventListener('DOMContentLoaded', () => {
             btnDeleteSelected.disabled = true;
         }
 
+        if (btnRotateSelected) {
+            btnRotateSelected.disabled = true;
+            btnRotateSelected.title = '時計回りに45°回転 (Rキー)';
+        }
+
         if (prevId) {
             const prevTarget = state.placements.find(p => p.id === prevId);
             if (prevTarget) renderPlacementNode(prevTarget);
@@ -407,13 +472,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * アイコンの移動座標をAPIにPUT保存する
+     * 選択された配置アイテムを時計回りに45°回転する (Phase 5)
      */
-    async function updatePlacementPosition(placement) {
+    async function rotateSelectedPlacement(step = 45) {
+        if (!state.selectedPlacementId) return;
+
+        const target = state.placements.find(p => p.id === state.selectedPlacementId);
+        if (!target) return;
+
+        if (target.is_rotation_locked) {
+            alert('通り沿いに配置されているため、道路平行に固定されています（回転不可）。');
+            return;
+        }
+
+        const iconDef = iconDefinitions[target.shape_type];
+        if (iconDef && !iconDef.allow_rotation) {
+            alert('この設備アイコンは直立固定のため回転できません。');
+            return;
+        }
+
+        const currentRot = parseInt(target.rotation, 10) || 0;
+        target.rotation = (currentRot + step) % 360;
+
+        renderPlacementNode(target);
+
+        // API保存
+        await updatePlacementGeometry(target);
+    }
+
+    /**
+     * アイコンの幾何情報（座標・寸法・角度・ロック）をAPIにPUT保存する (Phase 5)
+     */
+    async function updatePlacementGeometry(placement) {
         const url = `${storeUrl}/${placement.id}`;
         const payload = {
             pos_x: placement.pos_x,
             pos_y: placement.pos_y,
+            width: placement.width,
+            height: placement.height,
+            rotation: placement.rotation,
+            is_rotation_locked: placement.is_rotation_locked,
         };
 
         try {
@@ -429,16 +527,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.message || '位置の更新に失敗しました');
+                throw new Error(errData.message || '配置ジオメトリの更新に失敗しました');
             }
         } catch (err) {
-            console.error('Error updating placement position:', err);
-            alert(`位置の保存に失敗しました: ${err.message}`);
-            // ロールバック
-            placement.pos_x = state.origPlacementX;
-            placement.pos_y = state.origPlacementY;
-            renderPlacementNode(placement);
+            console.error('Error updating placement geometry:', err);
+            alert(`ジオメトリの保存に失敗しました: ${err.message}`);
         }
+    }
+
+    /**
+     * 位置移動の保存用エイリアス
+     */
+    async function updatePlacementPosition(placement) {
+        await updatePlacementGeometry(placement);
     }
 
     /**
@@ -788,6 +889,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('mousemove', (e) => {
+        // フリーエリアのリサイズドラッグ中 (Phase 5)
+        if (state.isResizing) {
+            const svgCoords = getSvgCoordinates(e.clientX, e.clientY);
+            const dx = svgCoords.x - state.resizeStartSvgX;
+            const dy = svgCoords.y - state.resizeStartSvgY;
+
+            const target = state.placements.find(p => p.id === state.resizePlacementId);
+            if (target) {
+                const minSize = 7.0866; // 最小 1.0m (約7.09px)
+                let newX = state.origX;
+                let newY = state.origY;
+                let newW = state.origWidth;
+                let newH = state.origHeight;
+
+                switch (state.resizeHandle) {
+                    case 'br':
+                        newW = Math.max(minSize, state.origWidth + dx);
+                        newH = Math.max(minSize, state.origHeight + dy);
+                        break;
+                    case 'tr':
+                        newW = Math.max(minSize, state.origWidth + dx);
+                        if (state.origHeight - dy >= minSize) {
+                            newH = state.origHeight - dy;
+                            newY = state.origY + dy;
+                        } else {
+                            newH = minSize;
+                            newY = state.origY + (state.origHeight - minSize);
+                        }
+                        break;
+                    case 'bl':
+                        if (state.origWidth - dx >= minSize) {
+                            newW = state.origWidth - dx;
+                            newX = state.origX + dx;
+                        } else {
+                            newW = minSize;
+                            newX = state.origX + (state.origWidth - minSize);
+                        }
+                        newH = Math.max(minSize, state.origHeight + dy);
+                        break;
+                    case 'tl':
+                        if (state.origWidth - dx >= minSize) {
+                            newW = state.origWidth - dx;
+                            newX = state.origX + dx;
+                        } else {
+                            newW = minSize;
+                            newX = state.origX + (state.origWidth - minSize);
+                        }
+                        if (state.origHeight - dy >= minSize) {
+                            newH = state.origHeight - dy;
+                            newY = state.origY + dy;
+                        } else {
+                            newH = minSize;
+                            newY = state.origY + (state.origHeight - minSize);
+                        }
+                        break;
+                }
+
+                target.pos_x = Math.round(newX * 100) / 100;
+                target.pos_y = Math.round(newY * 100) / 100;
+                target.width = Math.round(newW * 100) / 100;
+                target.height = Math.round(newH * 100) / 100;
+                renderPlacementNode(target);
+            }
+            return;
+        }
+
         // 配置アイコンのドラッグ移動中
         if (state.isMovingNode) {
             const svgCoords = getSvgCoordinates(e.clientX, e.clientY);
@@ -814,17 +981,54 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('mouseup', (e) => {
-        // 配置アイコン移動の完了
+        // フリーエリアリサイズの完了 (Phase 5)
+        if (state.isResizing) {
+            const target = state.placements.find(p => p.id === state.resizePlacementId);
+            state.isResizing = false;
+            state.resizeHandle = null;
+            state.resizePlacementId = null;
+
+            if (target) {
+                const hasChanged = (target.width !== state.origWidth) || (target.height !== state.origHeight)
+                    || (target.pos_x !== state.origX) || (target.pos_y !== state.origY);
+                if (hasChanged) {
+                    updatePlacementGeometry(target);
+                }
+            }
+            return;
+        }
+
+        // 配置アイコン移動の完了 (Phase 5: 通り沿い自動平行整列 & ロック判定)
         if (state.isMovingNode) {
             const target = state.placements.find(p => p.id === state.movingNodeId);
             state.isMovingNode = false;
             state.movingNodeId = null;
 
             if (target) {
-                const hasMoved = (target.pos_x !== state.origPlacementX) || (target.pos_y !== state.origPlacementY);
-                if (hasMoved) {
-                    updatePlacementPosition(target);
+                const inStreet = isAlongStreet(target.pos_x, target.pos_y, target.width, target.height);
+                if (inStreet) {
+                    target.is_rotation_locked = true;
+                    target.rotation = 0; // 通りに沿って平行直立に固定
+                } else {
+                    target.is_rotation_locked = false;
                 }
+
+                renderPlacementNode(target);
+
+                if (btnRotateSelected && state.selectedPlacementId === target.id) {
+                    const iconDef = iconDefinitions[target.shape_type];
+                    const canRotate = (iconDef ? iconDef.allow_rotation : true) && !target.is_rotation_locked;
+                    btnRotateSelected.disabled = !canRotate;
+                    if (target.is_rotation_locked) {
+                        btnRotateSelected.title = '通り沿い配置のため回転不可（平行固定）';
+                    } else if (iconDef && !iconDef.allow_rotation) {
+                        btnRotateSelected.title = '現場設備のため回転不可（直立固定）';
+                    } else {
+                        btnRotateSelected.title = '時計回りに45°回転 (Rキー)';
+                    }
+                }
+
+                updatePlacementGeometry(target);
             }
             return;
         }
@@ -841,6 +1045,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // 45°スナップ回転ボタン (Phase 5)
+    if (btnRotateSelected) {
+        btnRotateSelected.addEventListener('click', () => {
+            rotateSelectedPlacement(45);
+        });
+    }
+
     // 選択アイテムの削除ボタン
     if (btnDeleteSelected) {
         btnDeleteSelected.addEventListener('click', () => {
@@ -848,17 +1059,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // キーボードショートカット (Delete/Backspace で削除、Esc でモーダル閉じる/選択解除)
+    // キーボードショートカット (Delete/Backspace で削除、Rで45°回転、Esc でモーダル閉じる/選択解除)
     window.addEventListener('keydown', (e) => {
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-            const tag = document.activeElement?.tagName?.toLowerCase();
-            if (tag === 'input' || tag === 'textarea' || tag === 'select') {
-                return;
-            }
+        const tag = document.activeElement?.tagName?.toLowerCase();
+        const isInput = tag === 'input' || tag === 'textarea' || tag === 'select';
 
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (isInput) return;
             if (state.selectedPlacementId) {
                 e.preventDefault();
                 deleteSelectedPlacement();
+            }
+        } else if (e.key === 'r' || e.key === 'R') {
+            if (isInput) return;
+            if (state.selectedPlacementId) {
+                e.preventDefault();
+                rotateSelectedPlacement(45);
             }
         } else if (e.key === 'Escape') {
             if (modalEl && !modalEl.classList.contains('hidden')) {
@@ -1011,7 +1227,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const svgX = svgCoords.x - targetW / 2;
         const svgY = svgCoords.y - targetH / 2;
 
-        // 非同期保存リクエスト
+        // 非同期保存リクエスト (Phase 5: 通り沿いドロップ判定)
+        const inStreet = isAlongStreet(svgX, svgY, targetW, targetH);
         const payload = {
             shape_type: dragData.shape_type,
             pos_x: Math.round(svgX * 100) / 100,
@@ -1021,6 +1238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             display_text: dragData.name,
             color_theme: 'red',
             rotation: 0,
+            is_rotation_locked: inStreet,
         };
 
         try {

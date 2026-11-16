@@ -148,6 +148,15 @@
 
                 <!-- 右側: ズーム & ビュー操作 & 編集操作ツールバー -->
                 <div class="flex items-center space-x-1.5 text-xs">
+                    <!-- 45°スナップ回転ボタン (Phase 5) -->
+                    <button type="button" id="btn-rotate-selected"
+                        disabled
+                        class="px-2.5 py-1 bg-white hover:bg-indigo-600 hover:text-white text-slate-700 border border-slate-300 hover:border-indigo-600 rounded-lg font-bold shadow-2xs transition flex items-center space-x-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-slate-700 disabled:hover:border-slate-300 cursor-pointer"
+                        title="時計回りに45°回転 (Rキー)">
+                        <span>↻</span>
+                        <span class="hidden sm:inline">45°回転</span>
+                    </button>
+
                     <!-- 選択中アイテム削除ボタン -->
                     <button type="button" id="btn-delete-selected"
                         disabled
@@ -226,11 +235,11 @@
                     <span class="text-slate-400">|</span>
                     <span>👆 クリックで選択・移動</span>
                     <span class="text-slate-400">|</span>
-                    <span>⚙️ ダブルクリックで設定</span>
+                    <span>↻ Rキーで45°回転</span>
                     <span class="text-slate-400">|</span>
-                    <span>🗑️ Deleteで削除</span>
+                    <span>⚙️ ダブルクリック設定</span>
                     <span class="text-slate-400">|</span>
-                    <span>ホイールでズーム</span>
+                    <span>🗑️ Delete削除</span>
                 </div>
             </div>
         </main>

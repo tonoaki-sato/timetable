@@ -274,6 +274,98 @@ class SiteMapPlacementTest extends TestCase
         $response->assertSee('modal-display-text');
         $response->assertSee('modal-color-palette');
         $response->assertSee('modal-rotation');
+        $response->assertSee('btn-rotate-selected');
+    }
+
+    /**
+     * フリーエリアの寸法伸縮（リサイズ）をAPIで更新できる (Phase 5)
+     */
+    public function test_can_update_free_area_dimensions_via_api(): void
+    {
+        $placement = SiteMapPlacement::create([
+            'site_base_map_id' => $this->siteBaseMap->id,
+            'shape_type' => 'free_area',
+            'display_text' => 'ミニバス体験',
+            'color_theme' => 'blue',
+            'pos_x' => 450.00,
+            'pos_y' => 300.00,
+            'width' => 78.00,
+            'height' => 78.00,
+            'rotation' => 0,
+        ]);
+
+        $updatePayload = [
+            'pos_x' => 440.00,
+            'pos_y' => 290.00,
+            'width' => 120.50,
+            'height' => 95.00,
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->putJson(route('timetables.site-maps.placements.update', [$this->timetable, $placement]), $updatePayload);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'placement' => [
+                    'id' => $placement->id,
+                    'pos_x' => '440.00',
+                    'pos_y' => '290.00',
+                    'width' => '120.50',
+                    'height' => '95.00',
+                ],
+            ]);
+
+        $this->assertDatabaseHas('site_map_placements', [
+            'id' => $placement->id,
+            'pos_x' => 440.00,
+            'pos_y' => 290.00,
+            'width' => 120.50,
+            'height' => 95.00,
+        ]);
+    }
+
+    /**
+     * 通り沿い配置時に回転ロック（is_rotation_locked=true）と角度リセットを更新できる (Phase 5)
+     */
+    public function test_can_lock_rotation_when_along_street_via_api(): void
+    {
+        $placement = SiteMapPlacement::create([
+            'site_base_map_id' => $this->siteBaseMap->id,
+            'shape_type' => 'general_tent',
+            'display_text' => '本部前テント',
+            'color_theme' => 'red',
+            'pos_x' => 265.00,
+            'pos_y' => 400.00,
+            'width' => 21.26,
+            'height' => 21.26,
+            'rotation' => 45,
+            'is_rotation_locked' => false,
+        ]);
+
+        $updatePayload = [
+            'rotation' => 0,
+            'is_rotation_locked' => true,
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->putJson(route('timetables.site-maps.placements.update', [$this->timetable, $placement]), $updatePayload);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'placement' => [
+                    'id' => $placement->id,
+                    'rotation' => 0,
+                    'is_rotation_locked' => true,
+                ],
+            ]);
+
+        $this->assertDatabaseHas('site_map_placements', [
+            'id' => $placement->id,
+            'rotation' => 0,
+            'is_rotation_locked' => true,
+        ]);
     }
 
     /**

@@ -31,6 +31,7 @@ class StoreSiteMapPlacementRequest extends FormRequest
             'width' => ['nullable', 'numeric', 'min:1'],
             'height' => ['nullable', 'numeric', 'min:1'],
             'rotation' => ['nullable', 'integer'],
+            'is_rotation_locked' => ['nullable', 'boolean'],
             'layout_item_id' => ['nullable', 'integer', 'exists:layout_items,id'],
             'notes' => ['nullable', 'string'],
         ];
