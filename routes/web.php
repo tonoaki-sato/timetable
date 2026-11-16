@@ -22,6 +22,7 @@ use App\Http\Controllers\PreparationNavigatorController;
 use App\Http\Controllers\PresentationController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\SiteLayoutController;
+use App\Http\Controllers\SiteMapController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffCsvController;
 use App\Http\Controllers\StaffJoinController;
@@ -232,6 +233,9 @@ Route::middleware('auth')->group(function () {
         Route::post('timetables/{timetable}/layouts/booths', [SiteLayoutController::class, 'storeBooth'])->name('timetables.layouts.booths.store');
         Route::put('timetables/{timetable}/layouts/booths/{item}', [SiteLayoutController::class, 'updateBooth'])->name('timetables.layouts.booths.update');
         Route::delete('timetables/{timetable}/layouts/booths/{item}', [SiteLayoutController::class, 'destroyBooth'])->name('timetables.layouts.booths.destroy');
+
+        // 白地図マッピングエディタ (Site Map Editor)
+        Route::get('timetables/{timetable}/site-maps/editor', [SiteMapController::class, 'editor'])->name('timetables.site-maps.editor');
 
         // 出展・出店者マスター管理 (Vendors)
         Route::resource('vendors', VendorController::class)->except(['create', 'show', 'edit']);

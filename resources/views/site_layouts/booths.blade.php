@@ -26,6 +26,11 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
+            <a href="{{ route('timetables.site-maps.editor', $timetable) }}"
+                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+                <span>🎨</span>
+                <span>白地図エディタ</span>
+            </a>
             <button type="button"
                 id="btnOpenCreateItemModal"
                 data-store-url="{{ route('timetables.layouts.booths.store', $timetable) }}"

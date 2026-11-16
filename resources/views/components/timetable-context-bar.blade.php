@@ -75,6 +75,11 @@
             <span>🗺️</span>
             <span>配置計画</span>
         </a>
+        <a href="{{ route('timetables.site-maps.editor', $timetable) }}"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'site-maps' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+            <span>🎨</span>
+            <span>白地図</span>
+        </a>
         <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'matrix' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>⏱️</span>

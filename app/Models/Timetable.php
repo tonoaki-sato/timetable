@@ -491,4 +491,20 @@ class Timetable extends Model
 
         return is_array($periods) ? $periods : [];
     }
+
+    /**
+     * 運行情報に紐づく白地図一覧を取得
+     */
+    public function siteBaseMaps(): HasMany
+    {
+        return $this->hasMany(SiteBaseMap::class);
+    }
+
+    /**
+     * 現在有効な白地図を取得
+     */
+    public function activeSiteBaseMap(): ?SiteBaseMap
+    {
+        return $this->siteBaseMaps()->where('is_active', true)->first();
+    }
 }

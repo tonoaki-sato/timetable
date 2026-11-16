@@ -261,6 +261,15 @@
                                                         <p class="text-[10px] text-slate-400 truncate mt-0.5">ござ市コマ割り・現場設備配置</p>
                                                     </div>
                                                 </a>
+                                                <!-- 白地図エディタ -->
+                                                <a href="{{ route('timetables.site-maps.editor', $nav->targetPrintTimetable() ?? 1) }}"
+                                                    class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.site-maps.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                    <span class="text-base shrink-0">🎨</span>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="text-xs font-bold whitespace-nowrap truncate">白地図エディタ</div>
+                                                        <p class="text-[10px] text-slate-400 truncate mt-0.5">A3 1/400 白地図ブース配置</p>
+                                                    </div>
+                                                </a>
                                                 @else
                                                 <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
                                                     <span class="text-base shrink-0 grayscale opacity-60">🚚</span>
@@ -818,6 +827,10 @@
                             <a href="{{ route('timetables.layouts.index', $nav->targetPrintTimetable() ?? 1) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🗺️</span>
                                 <span class="font-bold truncate">配置計画</span>
+                            </a>
+                            <a href="{{ route('timetables.site-maps.editor', $nav->targetPrintTimetable() ?? 1) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                                <span class="text-base shrink-0">🎨</span>
+                                <span class="font-bold truncate">白地図エディタ</span>
                             </a>
                             @else
                             <div class="p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
