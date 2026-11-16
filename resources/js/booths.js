@@ -109,10 +109,34 @@ function initBoothFormModal() {
     const inputBoothName = document.getElementById('inputBoothName');
     const selectBoothCategory = document.getElementById('selectBoothCategory');
     const selectBoothType = document.getElementById('selectBoothType');
-    const selectBoothStatus = document.getElementById('selectBoothStatus');
+    const inputBoothStatus = document.getElementById('inputBoothStatus');
+    const statusBtnConfirmed = document.getElementById('statusBtnConfirmed');
+    const statusBtnTentative = document.getElementById('statusBtnTentative');
     const textareaItems = document.getElementById('textareaItems');
     const inputLandmark = document.getElementById('inputLandmark');
     const textareaNotes = document.getElementById('textareaNotes');
+
+    const setBoothStatus = (statusVal) => {
+        const val = statusVal === 'tentative' ? 'tentative' : 'confirmed';
+        if (inputBoothStatus) inputBoothStatus.value = val;
+
+        if (val === 'confirmed') {
+            statusBtnConfirmed?.classList.remove('text-slate-500', 'hover:text-slate-700', 'border-transparent', 'bg-transparent');
+            statusBtnConfirmed?.classList.add('bg-white', 'text-emerald-700', 'shadow-2xs', 'border-emerald-200');
+
+            statusBtnTentative?.classList.remove('bg-white', 'text-amber-700', 'shadow-2xs', 'border-amber-200');
+            statusBtnTentative?.classList.add('text-slate-500', 'hover:text-slate-700', 'border-transparent', 'bg-transparent');
+        } else {
+            statusBtnTentative?.classList.remove('text-slate-500', 'hover:text-slate-700', 'border-transparent', 'bg-transparent');
+            statusBtnTentative?.classList.add('bg-white', 'text-amber-700', 'shadow-2xs', 'border-amber-200');
+
+            statusBtnConfirmed?.classList.remove('bg-white', 'text-emerald-700', 'shadow-2xs', 'border-emerald-200');
+            statusBtnConfirmed?.classList.add('text-slate-500', 'hover:text-slate-700', 'border-transparent', 'bg-transparent');
+        }
+    };
+
+    statusBtnConfirmed?.addEventListener('click', () => setBoothStatus('confirmed'));
+    statusBtnTentative?.addEventListener('click', () => setBoothStatus('tentative'));
 
     const closeBtn = document.getElementById('modalCloseBtn');
     const cancelBtn = document.getElementById('modalCancelBtn');
@@ -147,7 +171,7 @@ function initBoothFormModal() {
         if (inputBoothName) inputBoothName.value = '';
         if (selectBoothCategory) selectBoothCategory.value = 'goza_cooked_food';
         if (selectBoothType) selectBoothType.value = 'tent';
-        if (selectBoothStatus) selectBoothStatus.value = 'confirmed';
+        setBoothStatus('confirmed');
         if (textareaItems) textareaItems.value = '';
         if (inputLandmark) inputLandmark.value = '';
         if (textareaNotes) textareaNotes.value = '';
@@ -182,7 +206,7 @@ function initBoothFormModal() {
             if (inputBoothName) inputBoothName.value = data.name || '';
             if (selectBoothCategory) selectBoothCategory.value = data.category || 'goza_cooked_food';
             if (selectBoothType) selectBoothType.value = data.type || 'tent';
-            if (selectBoothStatus) selectBoothStatus.value = data.status || 'confirmed';
+            setBoothStatus(data.status || 'confirmed');
             if (textareaItems) textareaItems.value = data.items || '';
             if (inputLandmark) inputLandmark.value = data.landmark || '';
             if (textareaNotes) textareaNotes.value = data.notes || '';

@@ -319,8 +319,8 @@
 
     <!-- 配置 登録・編集兼用モーダル -->
     <div id="boothEditModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 border border-slate-200">
-            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl space-y-3.5 border border-slate-200">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-2.5">
                 <h3 class="text-base font-bold text-slate-900 flex items-center space-x-1.5">
                     <span id="modalFormIcon">✏️</span>
                     <span id="modalFormTitle">コマ情報の編集</span>
@@ -335,58 +335,75 @@
                 data-timetable-id="{{ $timetable->id }}"
                 data-store-url="{{ route('timetables.layouts.booths.store', $timetable) }}"
                 data-base-update-url="/timetables/{{ $timetable->id }}/layouts/booths"
-                class="space-y-3 text-xs">
+                class="space-y-2.5 text-xs">
                 @csrf
                 <input type="hidden" name="_method" id="boothFormMethod" value="PUT">
 
-                <div class="grid grid-cols-2 gap-2">
+                <!-- 第1段: コマ番号 / 所属エリア / 配置状態 (3列グリッド) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <div>
                         <label for="inputBoothCode" class="block font-bold text-slate-700 mb-1">コマ番号 <span class="text-rose-500">*</span></label>
                         <input type="text" id="inputBoothCode" name="booth_code" required
-                            class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-mono uppercase text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500"
+                            class="w-full bg-slate-50 border border-slate-300 rounded-lg py-1.5 px-2.5 font-mono uppercase text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500"
                             placeholder="例: A01, B12, KC-01">
                     </div>
                     <div>
                         <label for="selectBoothArea" class="block font-bold text-slate-700 mb-1">所属エリア</label>
-                        <select id="selectBoothArea" name="layout_area_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                        <select id="selectBoothArea" name="layout_area_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg py-1.5 px-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
                             <option value="">(未設定・通り)</option>
                             @foreach($areas as $area)
                                 <option value="{{ $area->id }}">{{ $area->name }}</option>
                             @endforeach
                         </select>
                     </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">配置状態 <span class="text-rose-500">*</span></label>
+                        <input type="hidden" name="status" id="inputBoothStatus" value="confirmed">
+                        <div class="inline-flex rounded-lg border border-slate-300 bg-slate-100 p-0.5 w-full">
+                            <button type="button" id="statusBtnConfirmed" data-status-val="confirmed"
+                                class="status-toggle-btn flex-1 py-1.5 px-2 rounded-md text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer bg-white text-emerald-700 shadow-2xs border border-emerald-200">
+                                <span>🟢</span>
+                                <span>確定</span>
+                            </button>
+                            <button type="button" id="statusBtnTentative" data-status-val="tentative"
+                                class="status-toggle-btn flex-1 py-1.5 px-2 rounded-md text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer text-slate-500 hover:text-slate-700 border border-transparent">
+                                <span>🟡</span>
+                                <span>未定</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div>
-                    <label for="selectVendor" class="block font-bold text-slate-700 mb-1">配置する出展・出店者マスター</label>
-                    <select id="selectVendor" name="vendor_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
-                        <option value="">(未割当・個別名のみまたは空きコマ)</option>
-                        @foreach($vendors as $v)
-                            <option value="{{ $v->id }}">
-                                {{ $v->name }} {{ $v->contact_person ? ' (' . $v->contact_person . ($v->contact ? ' / ' . $v->contact : '') . ')' : '' }}
-                            </option>
-                        @endforeach
-                    </select>
+                <!-- 第2段: 出展・出店者マスター / 個別表示名 (2列グリッド) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <label for="selectVendor" class="block font-bold text-slate-700 mb-1">配置する出展・出店者マスター</label>
+                        <select id="selectVendor" name="vendor_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg py-1.5 px-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                            <option value="">(未割当・個別名のみまたは空きコマ)</option>
+                            @foreach($vendors as $v)
+                                <option value="{{ $v->id }}">{{ $v->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label for="inputBoothName" class="block font-bold text-slate-700 mb-1">このブースの個別表示名</label>
+                        <input type="text" id="inputBoothName" name="name" class="w-full bg-slate-50 border border-slate-300 rounded-lg py-1.5 px-2.5 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="未入力時は出展者マスター名が反映">
+                    </div>
                 </div>
 
-                <div>
-                    <label for="inputBoothName" class="block font-bold text-slate-700 mb-1">このブースの個別表示名</label>
-                    <input type="text" id="inputBoothName" name="name" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="未入力の場合は出展者マスター名がそのまま表示されます">
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
+                <!-- 第3段: 出店区分 / 形態 (2列グリッド) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
                         <label for="selectBoothCategory" class="block font-bold text-slate-700 mb-1">出店区分 <span class="text-rose-500">*</span></label>
-                        <select id="selectBoothCategory" name="category" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                        <select id="selectBoothCategory" name="category" required class="w-full bg-slate-50 border border-slate-300 rounded-lg py-1.5 px-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
                             @foreach(\App\Enums\BoothCategory::cases() as $case)
                                 <option value="{{ $case->value }}">{{ $case->icon() }} {{ $case->label() }}</option>
                             @endforeach
                         </select>
                     </div>
-
                     <div>
                         <label for="selectBoothType" class="block font-bold text-slate-700 mb-1">形態 <span class="text-rose-500">*</span></label>
-                        <select id="selectBoothType" name="booth_type" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                        <select id="selectBoothType" name="booth_type" required class="w-full bg-slate-50 border border-slate-300 rounded-lg py-1.5 px-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
                             @foreach(\App\Enums\BoothType::cases() as $case)
                                 <option value="{{ $case->value }}">{{ $case->label() }}</option>
                             @endforeach
@@ -394,35 +411,30 @@
                     </div>
                 </div>
 
-                <div>
-                    <label for="selectBoothStatus" class="block font-bold text-slate-700 mb-1">配置状態 <span class="text-rose-500">*</span></label>
-                    <select id="selectBoothStatus" name="status" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
-                        @foreach(\App\Enums\BoothStatus::cases() as $case)
-                            <option value="{{ $case->value }}">{{ $case->icon() }} {{ $case->label() }}</option>
-                        @endforeach
-                    </select>
+                <!-- 第4段: 取扱品目 / 近接店舗・ランドマーク (2列グリッド) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <label for="textareaItems" class="block font-bold text-slate-700 mb-1">取扱品目・展示内容</label>
+                        <input type="text" id="textareaItems" name="product_items" class="w-full bg-slate-50 border border-slate-300 rounded-lg py-1.5 px-2.5 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: 焼きそば、フランクフルト、生搾りジュース">
+                    </div>
+                    <div>
+                        <label for="inputLandmark" class="block font-bold text-slate-700 mb-1">近接店舗・建物 (ランドマーク)</label>
+                        <input type="text" id="inputLandmark" name="adjacent_landmark" class="w-full bg-slate-50 border border-slate-300 rounded-lg py-1.5 px-2.5 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: 川むら前、おもちゃのうえの前">
+                    </div>
                 </div>
 
-                <div>
-                    <label for="textareaItems" class="block font-bold text-slate-700 mb-1">具体的な取扱品目・展示内容</label>
-                    <textarea id="textareaItems" name="product_items" rows="2" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: 焼きそば、フランクフルト、生搾りジュース"></textarea>
-                </div>
-
-                <div>
-                    <label for="inputLandmark" class="block font-bold text-slate-700 mb-1">近接店舗・建物 (ランドマーク)</label>
-                    <input type="text" id="inputLandmark" name="adjacent_landmark" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: 川むら前、おもちゃのうえの前"></input>
-                </div>
-
+                <!-- 第5段: 特記事項・メモ (全幅) -->
                 <div>
                     <label for="textareaNotes" class="block font-bold text-slate-700 mb-1">特記事項・メモ</label>
-                    <textarea id="textareaNotes" name="notes" rows="2" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="消火器持参、搬入時間要請など"></textarea>
+                    <textarea id="textareaNotes" name="notes" rows="1" class="w-full bg-slate-50 border border-slate-300 rounded-lg py-1.5 px-2.5 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="消火器持参、搬入時間要請など"></textarea>
                 </div>
 
-                <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-200">
-                    <button type="button" id="modalCancelBtn" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-bold transition cursor-pointer">
+                <!-- フッター操作ボタン -->
+                <div class="flex items-center justify-end space-x-2 pt-2.5 border-t border-slate-200">
+                    <button type="button" id="modalCancelBtn" class="px-3.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-bold transition cursor-pointer">
                         キャンセル
                     </button>
-                    <button type="submit" id="modalSubmitBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition cursor-pointer">
+                    <button type="submit" id="modalSubmitBtn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition cursor-pointer">
                         💾 変更を保存する
                     </button>
                 </div>
