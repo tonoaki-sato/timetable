@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('name')->comment('白地図名称（例: 商店街平面図 260813版 A3 1/400）');
             $table->string('cad_version', 50)->default('260813')->comment('CAD版数（例: 260813）');
             $table->string('paper_size', 20)->default('A3')->comment('用紙サイズ（A3）');
-            $table->decimal('scale_ratio', 8, 4)->default(26.0000)->comment('縮尺比率（1mあたりのpx数: A3 1/400換算 26.0px/m）');
+            $table->decimal('scale_ratio', 8, 4)->default(7.0866)->comment('縮尺比率（1mあたりのpx数: A3 1/400換算 7.0866px/m）');
             $table->decimal('width_meters', 8, 2)->default(32.40)->comment('実空間横幅目安（m）');
             $table->decimal('height_meters', 8, 2)->default(45.80)->comment('実空間縦幅目安（m）');
             $table->string('svg_path')->default('maps/shopping_street_base_map_260813.svg')->comment('SVG白地図ファイルパス');

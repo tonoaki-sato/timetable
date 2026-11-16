@@ -32,7 +32,7 @@ class SiteMapController extends Controller
                 'name' => '商店街平面図 260813版 A3 1/400',
                 'cad_version' => '260813',
                 'paper_size' => 'A3',
-                'scale_ratio' => 26.000,
+                'scale_ratio' => 7.0866,
                 'width_meters' => 32.4,
                 'height_meters' => 45.8,
                 'svg_path' => 'maps/shopping_street_base_map_260813.svg',

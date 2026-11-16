@@ -84,7 +84,7 @@
                             data-default-width="{{ $def->default_width }}"
                             data-default-height="{{ $def->default_height }}"
                             data-name="{{ $def->name }}"
-                            title="{{ $def->name }} ({{ round($def->default_width / 26.0, 1) }}m × {{ round($def->default_height / 26.0, 1) }}m)">
+                            title="{{ $def->name }} ({{ round($def->default_width / $siteBaseMap->scale_ratio, 1) }}m × {{ round($def->default_height / $siteBaseMap->scale_ratio, 1) }}m)">
                             <div class="w-10 h-10 flex items-center justify-center pointer-events-none mb-1">
                                 <img src="{{ asset($def->icon_asset_path) }}" alt="{{ $def->name }}" class="max-w-full max-h-full object-contain drop-shadow-xs">
                             </div>
@@ -92,7 +92,7 @@
                                 {{ $def->name }}
                             </span>
                             <span class="text-[9px] text-slate-400 font-mono pointer-events-none">
-                                {{ round($def->default_width / 26.0, 1) }}m×{{ round($def->default_height / 26.0, 1) }}m
+                                {{ round($def->default_width / $siteBaseMap->scale_ratio, 1) }}m×{{ round($def->default_height / $siteBaseMap->scale_ratio, 1) }}m
                             </span>
                         </div>
                     @endforeach
@@ -112,7 +112,7 @@
                             data-default-width="{{ $def->default_width }}"
                             data-default-height="{{ $def->default_height }}"
                             data-name="{{ $def->name }}"
-                            title="{{ $def->name }}">
+                            title="{{ $def->name }} ({{ round($def->default_width / $siteBaseMap->scale_ratio, 1) }}m × {{ round($def->default_height / $siteBaseMap->scale_ratio, 1) }}m)">
                             <div class="w-10 h-10 flex items-center justify-center pointer-events-none mb-1">
                                 <img src="{{ asset($def->icon_asset_path) }}" alt="{{ $def->name }}" class="max-w-full max-h-full object-contain drop-shadow-xs">
                             </div>
@@ -120,7 +120,7 @@
                                 {{ $def->name }}
                             </span>
                             <span class="text-[9px] text-slate-400 font-mono pointer-events-none">
-                                {{ round($def->default_width / 26.0, 1) }}m×{{ round($def->default_height / 26.0, 1) }}m
+                                {{ round($def->default_width / $siteBaseMap->scale_ratio, 1) }}m×{{ round($def->default_height / $siteBaseMap->scale_ratio, 1) }}m
                             </span>
                         </div>
                     @endforeach

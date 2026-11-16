@@ -207,7 +207,31 @@ document.addEventListener('DOMContentLoaded', () => {
             g.setAttribute('transform', `rotate(${rot} ${cx} ${cy})`);
         }
 
-        // アイコン画像 (透過PNG)
+        // カラーテーマに応じた枠色・文字色 (添付PDFの赤枠・緑枠・黒枠に準拠)
+        const colorMap = {
+            red: { stroke: '#dc2626', fill: 'rgba(254, 242, 242, 0.6)', text: '#dc2626' },
+            green: { stroke: '#16a34a', fill: 'rgba(240, 253, 244, 0.6)', text: '#16a34a' },
+            blue: { stroke: '#2563eb', fill: 'rgba(239, 246, 255, 0.6)', text: '#1d4ed8' },
+            black: { stroke: '#0f172a', fill: 'rgba(248, 250, 252, 0.6)', text: '#0f172a' },
+            orange: { stroke: '#ea580c', fill: 'rgba(255, 247, 237, 0.6)', text: '#c2410c' },
+            pink: { stroke: '#db2777', fill: 'rgba(253, 242, 248, 0.6)', text: '#be185d' },
+            purple: { stroke: '#7e22ce', fill: 'rgba(250, 245, 255, 0.6)', text: '#6b21a8' },
+        };
+        const theme = colorMap[placement.color_theme] || colorMap.red;
+
+        // 1. ブース外枠 (添付PDFの赤枠/緑枠スタイル)
+        const rectEl = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rectEl.setAttribute('x', x);
+        rectEl.setAttribute('y', y);
+        rectEl.setAttribute('width', w);
+        rectEl.setAttribute('height', h);
+        rectEl.setAttribute('fill', theme.fill);
+        rectEl.setAttribute('stroke', theme.stroke);
+        rectEl.setAttribute('stroke-width', '0.75');
+        rectEl.setAttribute('rx', '0.5');
+        g.appendChild(rectEl);
+
+        // 2. アイコン画像 (透過PNG)
         const img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
         img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', iconPath);
         img.setAttribute('href', iconPath);
@@ -216,9 +240,10 @@ document.addEventListener('DOMContentLoaded', () => {
         img.setAttribute('width', w);
         img.setAttribute('height', h);
         img.setAttribute('preserveAspectRatio', 'none');
+        img.setAttribute('opacity', '0.85');
         g.appendChild(img);
 
-        // 中央テキスト表示 (テキスト外枠なし、透過背景)
+        // 3. 中央テキスト表示 (PDF原本のA01/B08と同等のサイズ比率)
         const textStr = placement.display_text || '';
         if (textStr) {
             const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -227,20 +252,12 @@ document.addEventListener('DOMContentLoaded', () => {
             textEl.setAttribute('text-anchor', 'middle');
             textEl.setAttribute('dominant-baseline', 'central');
             textEl.setAttribute('font-family', 'sans-serif');
-            textEl.setAttribute('font-size', '9px');
-            textEl.setAttribute('font-weight', 'bold');
 
-            // カラーテーマに応じた文字色（視認性最適化）
-            const colorMap = {
-                red: '#b91c1c',
-                green: '#15803d',
-                blue: '#1d4ed8',
-                black: '#0f172a',
-                orange: '#c2410c',
-                pink: '#be185d',
-                purple: '#6b21a8',
-            };
-            textEl.setAttribute('fill', colorMap[placement.color_theme] || '#0f172a');
+            // ブースの大きさに合わせたフォントサイズ (最小4px、標準4.5〜5.5px)
+            const calcFontSize = Math.max(3.8, Math.min(5.2, h * 0.45));
+            textEl.setAttribute('font-size', `${calcFontSize.toFixed(1)}px`);
+            textEl.setAttribute('font-weight', 'bold');
+            textEl.setAttribute('fill', theme.text);
             textEl.textContent = textStr;
             g.appendChild(textEl);
         }
