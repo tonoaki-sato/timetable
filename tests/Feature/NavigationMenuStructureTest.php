@@ -117,6 +117,14 @@ class NavigationMenuStructureTest extends TestCase
         // カレンダー & スケジュール
         $response->assertSee(route('calendar.index'));
         $response->assertSee(route('schedules.index'));
+
+        // 2カラム化・論理グループ見出しおよびスクロール対応の検証
+        $response->assertSee('grid grid-cols-2');
+        $response->assertSee('📋 運行・人員編成');
+        $response->assertSee('🗺️ 会場・物流計画');
+        $response->assertSee('📅 全体日程・会議');
+        $response->assertSee('max-h-[calc(100vh-4.5rem)]');
+        $response->assertSee('overflow-y-auto');
     }
 
     /**
