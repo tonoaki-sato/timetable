@@ -56,7 +56,7 @@ class SiteMapService
     }
 
     /**
-     * 配置の位置・寸法・回転を更新する
+     * 配置の位置・寸法・回転・属性を更新する
      *
      * @param  array<string, mixed>  $data
      */
@@ -79,6 +79,18 @@ class SiteMapService
         }
         if (isset($data['is_rotation_locked'])) {
             $placement->is_rotation_locked = (bool) $data['is_rotation_locked'];
+        }
+        if (array_key_exists('display_text', $data)) {
+            $placement->display_text = $data['display_text'] ?? '';
+        }
+        if (isset($data['color_theme'])) {
+            $placement->color_theme = $data['color_theme'];
+        }
+        if (array_key_exists('layout_item_id', $data)) {
+            $placement->layout_item_id = ! empty($data['layout_item_id']) ? (int) $data['layout_item_id'] : null;
+        }
+        if (array_key_exists('notes', $data)) {
+            $placement->notes = $data['notes'];
         }
 
         $placement->save();

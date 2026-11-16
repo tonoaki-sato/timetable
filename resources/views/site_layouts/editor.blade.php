@@ -226,6 +226,8 @@
                     <span class="text-slate-400">|</span>
                     <span>👆 クリックで選択・移動</span>
                     <span class="text-slate-400">|</span>
+                    <span>⚙️ ダブルクリックで設定</span>
+                    <span class="text-slate-400">|</span>
                     <span>🗑️ Deleteで削除</span>
                     <span class="text-slate-400">|</span>
                     <span>ホイールでズーム</span>
@@ -235,9 +237,13 @@
     </div>
 </div>
 
+{{-- オブジェクト設定モーダル (Phase 4) --}}
+@include('site_layouts.partials.placement_modal', ['layoutItems' => $layoutItems])
+
 {{-- 初期配置データの安全な埋め込み (JSON) --}}
 <div id="initial-placements-data" class="hidden" data-json="{{ json_encode($placements) }}"></div>
 <div id="icon-definitions-data" class="hidden" data-json="{{ json_encode($iconDefinitions) }}"></div>
+<div id="layout-items-data" class="hidden" data-json="{{ json_encode($layoutItems) }}"></div>
 
 {{-- 厳格な CSP 対応: 専用スクリプトをスロット末尾で @vite 経由読み込み --}}
 @vite(['resources/js/site-layout-editor.js'])

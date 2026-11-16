@@ -213,6 +213,70 @@ class SiteMapPlacementTest extends TestCase
     }
 
     /**
+     * モーダル経由でテキスト・カラー・ブース台帳紐づけ・特記事項を更新できる (Phase 4)
+     */
+    public function test_can_update_placement_modal_settings_via_api(): void
+    {
+        $placement = SiteMapPlacement::create([
+            'site_base_map_id' => $this->siteBaseMap->id,
+            'shape_type' => 'stall_open',
+            'display_text' => '初期値',
+            'color_theme' => 'red',
+            'pos_x' => 100.00,
+            'pos_y' => 150.00,
+            'width' => 6.24,
+            'height' => 12.48,
+            'rotation' => 0,
+        ]);
+
+        $updatePayload = [
+            'display_text' => 'B22',
+            'color_theme' => 'green',
+            'rotation' => 90,
+            'notes' => '電源ドラム・消火器配置済み',
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->putJson(route('timetables.site-maps.placements.update', [$this->timetable, $placement]), $updatePayload);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'placement' => [
+                    'id' => $placement->id,
+                    'display_text' => 'B22',
+                    'color_theme' => 'green',
+                    'rotation' => 90,
+                    'notes' => '電源ドラム・消火器配置済み',
+                ],
+            ]);
+
+        $this->assertDatabaseHas('site_map_placements', [
+            'id' => $placement->id,
+            'display_text' => 'B22',
+            'color_theme' => 'green',
+            'rotation' => 90,
+            'notes' => '電源ドラム・消火器配置済み',
+        ]);
+    }
+
+    /**
+     * 白地図エディタ画面にオブジェクト設定モーダルとブース台帳データが埋め込まれている (Phase 4)
+     */
+    public function test_editor_renders_modal_and_layout_items(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('timetables.site-maps.editor', $this->timetable));
+
+        $response->assertStatus(200);
+        $response->assertSee('site-map-placement-modal');
+        $response->assertSee('layout-items-data');
+        $response->assertSee('modal-display-text');
+        $response->assertSee('modal-color-palette');
+        $response->assertSee('modal-rotation');
+    }
+
+    /**
      * 配置をAPIで削除できる
      */
     public function test_can_delete_placement_via_api(): void

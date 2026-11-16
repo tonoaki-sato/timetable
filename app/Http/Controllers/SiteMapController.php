@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSiteMapPlacementRequest;
+use App\Http\Requests\UpdateSiteMapPlacementRequest;
 use App\Models\SiteMapIconDefinition;
 use App\Models\SiteMapPlacement;
 use App\Models\Timetable;
@@ -48,11 +49,18 @@ class SiteMapController extends Controller
         // 既存の配置データ
         $placements = $this->siteMapService->getPlacements($siteBaseMap);
 
+        // 運行情報に紐づく既存のブース台帳データ一覧
+        $layoutItems = $timetable->layoutItems()
+            ->with(['vendor', 'area'])
+            ->orderBy('code', 'asc')
+            ->get();
+
         return view('site_layouts.editor', [
             'timetable' => $timetable,
             'siteBaseMap' => $siteBaseMap,
             'iconDefinitions' => $iconDefinitions,
             'placements' => $placements,
+            'layoutItems' => $layoutItems,
         ]);
     }
 
@@ -89,20 +97,11 @@ class SiteMapController extends Controller
     }
 
     /**
-     * 配置の位置・寸法・回転を更新する API
+     * 配置の位置・寸法・回転・属性を更新する API
      */
-    public function updatePlacement(Request $request, Timetable $timetable, SiteMapPlacement $placement): JsonResponse
+    public function updatePlacement(UpdateSiteMapPlacementRequest $request, Timetable $timetable, SiteMapPlacement $placement): JsonResponse
     {
-        $validated = $request->validate([
-            'pos_x' => ['nullable', 'numeric'],
-            'pos_y' => ['nullable', 'numeric'],
-            'width' => ['nullable', 'numeric', 'min:1'],
-            'height' => ['nullable', 'numeric', 'min:1'],
-            'rotation' => ['nullable', 'integer'],
-            'display_text' => ['nullable', 'string', 'max:255'],
-            'color_theme' => ['nullable', 'string', 'max:30'],
-            'layout_item_id' => ['nullable', 'integer'],
-        ]);
+        $validated = $request->validated();
 
         $updated = $this->siteMapService->updatePlacementGeometry($placement, $validated);
 

@@ -49,6 +49,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    let layoutItems = [];
+    const layoutItemsEl = document.getElementById('layout-items-data');
+    if (layoutItemsEl && layoutItemsEl.dataset.json) {
+        try {
+            layoutItems = JSON.parse(layoutItemsEl.dataset.json);
+        } catch (e) {
+            console.error('Failed to parse layout items:', e);
+        }
+    }
+
+    // モーダル要素の取得 (Phase 4)
+    const modalEl = document.getElementById('site-map-placement-modal');
+    const modalForm = document.getElementById('placement-modal-form');
+    const modalTitle = document.getElementById('modal-title');
+    const modalSubtitle = document.getElementById('modal-subtitle');
+    const modalIconImg = document.getElementById('modal-icon-img');
+    const modalPlacementId = document.getElementById('modal-placement-id');
+    const modalDisplayText = document.getElementById('modal-display-text');
+    const modalColorOptions = document.querySelectorAll('input[name="modal_color"]');
+    const modalColorBadge = document.getElementById('modal-color-status-badge');
+    const modalRotation = document.getElementById('modal-rotation');
+    const modalRotationBadge = document.getElementById('modal-rotation-status-badge');
+    const modalLayoutItemId = document.getElementById('modal-layout-item-id');
+    const modalItemBadge = document.getElementById('modal-item-status-badge');
+    const modalVendorPreview = document.getElementById('modal-vendor-preview');
+    const modalNotes = document.getElementById('modal-notes');
+    const btnModalClose = document.getElementById('btn-modal-close');
+    const btnModalCancel = document.getElementById('btn-modal-cancel');
+    const btnModalDelete = document.getElementById('btn-modal-delete');
+    const btnModalSave = document.getElementById('btn-modal-save');
+
     // ビューポート状態
     const state = {
         scale: 1.0,
@@ -325,6 +356,12 @@ document.addEventListener('DOMContentLoaded', () => {
             state.origPlacementY = parseFloat(placement.pos_y) || 0;
         });
 
+        // 6. ダブルクリックで設定モーダル表示 (Phase 4)
+        g.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            openPlacementModal(placement.id);
+        });
+
         layer.appendChild(g);
     }
 
@@ -451,6 +488,219 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error('Error deleting placement:', err);
             alert(`削除に失敗しました: ${err.message}`);
+        }
+    }
+
+    /**
+     * オブジェクト設定モーダルを開く (Phase 4)
+     */
+    function openPlacementModal(id) {
+        if (!modalEl) return;
+
+        const placement = state.placements.find(p => p.id === id);
+        if (!placement) return;
+
+        selectPlacement(id);
+
+        const iconDef = iconDefinitions[placement.shape_type];
+        const iconName = iconDef ? iconDef.name : 'オブジェクト';
+        const iconPath = iconDef ? `/${iconDef.icon_asset_path}` : '/maps/icons/icon_general_tent.png';
+
+        if (modalTitle) modalTitle.textContent = `${iconName} 設定`;
+        if (modalIconImg) {
+            modalIconImg.src = iconPath;
+            modalIconImg.alt = iconName;
+        }
+
+        const scaleRatio = parseFloat(appEl.dataset.scaleRatio) || 7.0866;
+        const wMeters = (parseFloat(placement.width) / scaleRatio).toFixed(1);
+        const hMeters = (parseFloat(placement.height) / scaleRatio).toFixed(1);
+        if (modalSubtitle) {
+            modalSubtitle.textContent = `寸法: 間口 ${wMeters}m × 奥行 ${hMeters}m (1/400縮尺)`;
+        }
+
+        modalPlacementId.value = placement.id;
+        modalDisplayText.value = placement.display_text || '';
+        modalNotes.value = placement.notes || '';
+
+        // カラーテーマ制御
+        const hasColorVariants = iconDef ? iconDef.has_color_variants : true;
+        const currentColor = placement.color_theme || 'red';
+
+        modalColorOptions.forEach(opt => {
+            const parent = opt.closest('.color-option');
+            if (!hasColorVariants) {
+                opt.disabled = true;
+                if (parent) parent.classList.add('opacity-40', 'cursor-not-allowed');
+            } else if (placement.shape_type === 'toilet') {
+                if (opt.value === 'blue' || opt.value === 'black') {
+                    opt.disabled = false;
+                    if (parent) parent.classList.remove('opacity-40', 'cursor-not-allowed');
+                } else {
+                    opt.disabled = true;
+                    if (parent) parent.classList.add('opacity-40', 'cursor-not-allowed');
+                }
+            } else {
+                opt.disabled = false;
+                if (parent) parent.classList.remove('opacity-40', 'cursor-not-allowed');
+            }
+
+            opt.checked = (opt.value === currentColor);
+            if (parent) {
+                if (opt.checked) {
+                    parent.classList.add('ring-2', 'ring-indigo-600', 'bg-indigo-50/50');
+                } else {
+                    parent.classList.remove('ring-2', 'ring-indigo-600', 'bg-indigo-50/50');
+                }
+            }
+        });
+
+        if (modalColorBadge) {
+            if (!hasColorVariants) {
+                modalColorBadge.textContent = 'バリエーション無し（固定色）';
+            } else if (placement.shape_type === 'toilet') {
+                modalColorBadge.textContent = '2色（青／黒）選択可能';
+            } else {
+                modalColorBadge.textContent = '5色パレットから選択可能';
+            }
+        }
+
+        // 回転制御
+        const allowRotation = iconDef ? iconDef.allow_rotation : true;
+        if (modalRotation) {
+            if (!allowRotation || placement.is_rotation_locked) {
+                modalRotation.disabled = true;
+                if (modalRotationBadge) {
+                    modalRotationBadge.textContent = placement.is_rotation_locked
+                        ? '通り沿い配置のため回転不可（平行固定）'
+                        : '回転不可（直立固定）';
+                }
+                modalRotation.value = "0";
+            } else {
+                modalRotation.disabled = false;
+                if (modalRotationBadge) {
+                    modalRotationBadge.textContent = '45°刻みで選択可能';
+                }
+                const rot = parseInt(placement.rotation, 10) || 0;
+                const snappedRot = (Math.round(rot / 45) * 45) % 360;
+                modalRotation.value = String(snappedRot);
+            }
+        }
+
+        // 出店ブース連動制御
+        const isFacility = iconDef && iconDef.category === 'facility';
+        if (modalLayoutItemId) {
+            if (isFacility) {
+                modalLayoutItemId.disabled = true;
+                modalLayoutItemId.value = '';
+                if (modalItemBadge) modalItemBadge.textContent = '現場インフラ設備（ブース台帳紐づけ対象外）';
+                if (modalVendorPreview) modalVendorPreview.classList.add('hidden');
+            } else {
+                modalLayoutItemId.disabled = false;
+                if (modalItemBadge) modalItemBadge.textContent = 'ブース台帳と連動可能';
+                modalLayoutItemId.value = placement.layout_item_id || '';
+                updateVendorPreview();
+            }
+        }
+
+        modalEl.classList.remove('hidden');
+        if (modalDisplayText) {
+            setTimeout(() => modalDisplayText.focus(), 50);
+        }
+    }
+
+    /**
+     * オブジェクト設定モーダルを閉じる
+     */
+    function closePlacementModal() {
+        if (!modalEl) return;
+        modalEl.classList.add('hidden');
+    }
+
+    /**
+     * 出店者詳細プレビューの更新
+     */
+    function updateVendorPreview() {
+        if (!modalLayoutItemId || !modalVendorPreview) return;
+        const selectedOpt = modalLayoutItemId.options[modalLayoutItemId.selectedIndex];
+        if (!selectedOpt || !selectedOpt.value) {
+            modalVendorPreview.classList.add('hidden');
+            return;
+        }
+
+        const code = selectedOpt.dataset.code || '';
+        const name = selectedOpt.dataset.name || '';
+        const vendor = selectedOpt.dataset.vendor || '';
+        const fire = selectedOpt.dataset.fire || '';
+
+        modalVendorPreview.innerHTML = `
+            <div class="flex items-center justify-between font-bold text-xs">
+                <span>コマ: ${code} - ${name}</span>
+                <span class="${fire ? 'text-red-600 font-bold' : 'text-slate-500'}">${fire || '火気不使用'}</span>
+            </div>
+            <div class="text-xs text-slate-600 mt-0.5">出店者: ${vendor}</div>
+        `;
+        modalVendorPreview.classList.remove('hidden');
+    }
+
+    /**
+     * モーダル保存処理
+     */
+    async function handleModalSave(e) {
+        e.preventDefault();
+        const placementId = parseInt(modalPlacementId.value, 10);
+        const placement = state.placements.find(p => p.id === placementId);
+        if (!placement) return;
+
+        let selectedColor = 'red';
+        modalColorOptions.forEach(opt => {
+            if (opt.checked) selectedColor = opt.value;
+        });
+
+        const newDisplayText = modalDisplayText.value.trim();
+        const newRotation = parseInt(modalRotation.value, 10) || 0;
+        const newLayoutItemId = modalLayoutItemId.value ? parseInt(modalLayoutItemId.value, 10) : null;
+        const newNotes = modalNotes.value.trim();
+
+        const payload = {
+            display_text: newDisplayText,
+            color_theme: selectedColor,
+            rotation: newRotation,
+            layout_item_id: newLayoutItemId,
+            notes: newNotes,
+        };
+
+        const url = `${storeUrl}/${placement.id}`;
+        try {
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.message || '設定の保存に失敗しました');
+            }
+
+            const resData = await res.json();
+            if (resData.success && resData.placement) {
+                placement.display_text = resData.placement.display_text;
+                placement.color_theme = resData.placement.color_theme;
+                placement.rotation = resData.placement.rotation;
+                placement.layout_item_id = resData.placement.layout_item_id;
+                placement.notes = resData.placement.notes;
+
+                renderPlacementNode(placement);
+                closePlacementModal();
+            }
+        } catch (err) {
+            console.error('Error saving placement settings:', err);
+            alert(`保存に失敗しました: ${err.message}`);
         }
     }
 
@@ -598,7 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // キーボードショートカット (Delete/Backspace で削除、Esc で選択解除)
+    // キーボードショートカット (Delete/Backspace で削除、Esc でモーダル閉じる/選択解除)
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Delete' || e.key === 'Backspace') {
             const tag = document.activeElement?.tagName?.toLowerCase();
@@ -611,9 +861,70 @@ document.addEventListener('DOMContentLoaded', () => {
                 deleteSelectedPlacement();
             }
         } else if (e.key === 'Escape') {
-            deselectPlacement();
+            if (modalEl && !modalEl.classList.contains('hidden')) {
+                closePlacementModal();
+            } else {
+                deselectPlacement();
+            }
         }
     });
+
+    // モーダル関連イベントバインド (Phase 4)
+    if (modalColorOptions) {
+        modalColorOptions.forEach(opt => {
+            opt.addEventListener('change', () => {
+                modalColorOptions.forEach(o => {
+                    const p = o.closest('.color-option');
+                    if (p) {
+                        if (o.checked) {
+                            p.classList.add('ring-2', 'ring-indigo-600', 'bg-indigo-50/50');
+                        } else {
+                            p.classList.remove('ring-2', 'ring-indigo-600', 'bg-indigo-50/50');
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    if (modalLayoutItemId) {
+        modalLayoutItemId.addEventListener('change', () => {
+            updateVendorPreview();
+            const opt = modalLayoutItemId.options[modalLayoutItemId.selectedIndex];
+            if (opt && opt.value && opt.dataset.code) {
+                if (!modalDisplayText.value || modalDisplayText.value === 'ブース' || modalDisplayText.value === 'テキスト') {
+                    modalDisplayText.value = opt.dataset.code;
+                }
+            }
+        });
+    }
+
+    if (modalForm) {
+        modalForm.addEventListener('submit', handleModalSave);
+    }
+
+    if (btnModalClose) {
+        btnModalClose.addEventListener('click', closePlacementModal);
+    }
+
+    if (btnModalCancel) {
+        btnModalCancel.addEventListener('click', closePlacementModal);
+    }
+
+    if (btnModalDelete) {
+        btnModalDelete.addEventListener('click', async () => {
+            await deleteSelectedPlacement();
+            closePlacementModal();
+        });
+    }
+
+    if (modalEl) {
+        modalEl.addEventListener('click', (e) => {
+            if (e.target === modalEl) {
+                closePlacementModal();
+            }
+        });
+    }
 
     // マウスホイールによるズーム
     canvasContainer.addEventListener('wheel', (e) => {
