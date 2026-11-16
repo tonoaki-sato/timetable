@@ -54,17 +54,22 @@
                         <span>🎪</span>
                         <span>出展区分 (全{{ $summary['total_booths'] }}件)</span>
                     </span>
-                    <span class="text-base">🏷️</span>
+                    <a href="{{ route('timetables.layouts.booths', [$timetable, 'item_type' => 'booth']) }}"
+                        class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center space-x-0.5 transition shrink-0">
+                        <span>配置一覧</span>
+                        <span>→</span>
+                    </a>
                 </div>
                 <div class="grid grid-cols-2 gap-1.5 text-xs">
-                    @foreach($summary['categories'] as $cat)
-                        <div class="flex items-center justify-between px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
-                            <span class="text-[11px] text-slate-600 truncate flex items-center space-x-1">
+                    @foreach($summary['categories'] as $key => $cat)
+                        <a href="{{ route('timetables.layouts.booths', [$timetable, 'item_type' => 'booth', 'category' => $cat['key'] ?? $key]) }}"
+                            class="flex items-center justify-between px-2 py-1 bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 rounded-lg transition group">
+                            <span class="text-[11px] text-slate-600 group-hover:text-indigo-700 truncate flex items-center space-x-1 font-medium">
                                 <span>{{ $cat['icon'] }}</span>
                                 <span class="truncate">{{ $cat['label'] }}</span>
                             </span>
-                            <span class="font-bold font-mono ml-1 text-slate-900">{{ $cat['count'] }}</span>
-                        </div>
+                            <span class="font-bold font-mono ml-1 text-slate-900 group-hover:text-indigo-700">{{ $cat['count'] }}</span>
+                        </a>
                     @endforeach
                 </div>
             </div>
@@ -76,17 +81,22 @@
                         <span>🚰</span>
                         <span>設備区分 (全{{ $summary['total_facilities'] }}箇所)</span>
                     </span>
-                    <span class="text-base">🛠️</span>
+                    <a href="{{ route('timetables.layouts.booths', [$timetable, 'item_type' => 'facility']) }}"
+                        class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center space-x-0.5 transition shrink-0">
+                        <span>配置一覧</span>
+                        <span>→</span>
+                    </a>
                 </div>
                 <div class="grid grid-cols-2 gap-1.5 text-xs">
-                    @foreach($summary['facilities'] as $fac)
-                        <div class="flex items-center justify-between px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
-                            <span class="text-[11px] text-slate-600 flex items-center space-x-1 truncate">
+                    @foreach($summary['facilities'] as $key => $fac)
+                        <a href="{{ route('timetables.layouts.booths', [$timetable, 'item_type' => 'facility', 'category' => $fac['key'] ?? $key]) }}"
+                            class="flex items-center justify-between px-2 py-1 bg-slate-50 hover:bg-cyan-50 border border-slate-100 hover:border-cyan-200 rounded-lg transition group">
+                            <span class="text-[11px] text-slate-600 group-hover:text-cyan-800 flex items-center space-x-1 truncate font-medium">
                                 <span>{{ $fac['icon'] }}</span>
                                 <span class="truncate">{{ $fac['label'] }}</span>
                             </span>
-                            <span class="font-bold font-mono ml-1 text-slate-900">{{ $fac['count'] }}</span>
-                        </div>
+                            <span class="font-bold font-mono ml-1 text-slate-900 group-hover:text-cyan-800">{{ $fac['count'] }}</span>
+                        </a>
                     @endforeach
                 </div>
             </div>
@@ -104,9 +114,16 @@
                 <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
                     <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                         <span class="text-xs font-bold text-slate-900 truncate">{{ $abt['area_name'] }}</span>
-                        <span class="font-mono text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
-                            全{{ $abt['total_count'] }}件
-                        </span>
+                        <div class="flex items-center space-x-2 shrink-0">
+                            <span class="font-mono text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                                全{{ $abt['total_count'] }}件
+                            </span>
+                            <a href="{{ route('timetables.layouts.booths', [$timetable, 'area_id' => $abt['area_id']]) }}"
+                                class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center space-x-0.5 transition">
+                                <span>配置一覧</span>
+                                <span>→</span>
+                            </a>
+                        </div>
                     </div>
                     <div class="mt-2 space-y-1">
                         @forelse($abt['types'] as $type)

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\BoothCategory;
+use App\Enums\FacilityType;
 use App\Http\Requests\StoreLayoutItemRequest;
 use App\Http\Requests\UpdateLayoutItemRequest;
 use App\Models\LayoutItem;
@@ -56,6 +58,8 @@ class SiteLayoutController extends Controller
             'vendors' => $vendors,
             'filters' => $filters,
             'areas' => $map->areas,
+            'boothCategories' => BoothCategory::cases(),
+            'facilityTypes' => FacilityType::cases(),
         ]);
     }
 

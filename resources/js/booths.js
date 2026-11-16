@@ -10,19 +10,28 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * 表示種別クイックチップ (すべて / 出店ブース / 現場設備)
+ * 表示種別クイックチップ (すべて / 出店ブース / 現場設備) および エリア・区分絞り込み自動サブミット
  */
 function initTypeFilter() {
     const filterGroup = document.getElementById('item-type-filter-group');
     const hiddenItemType = document.getElementById('hiddenItemType');
     const filterForm = document.getElementById('filterForm');
 
-    if (!filterGroup || !hiddenItemType || !filterForm) return;
+    if (!filterForm) return;
 
-    filterGroup.querySelectorAll('.type-filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const typeFilter = btn.dataset.typeFilter || '';
-            hiddenItemType.value = typeFilter === 'all' ? '' : typeFilter;
+    if (filterGroup && hiddenItemType) {
+        filterGroup.querySelectorAll('.type-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const typeFilter = btn.dataset.typeFilter || '';
+                hiddenItemType.value = typeFilter === 'all' ? '' : typeFilter;
+                filterForm.submit();
+            });
+        });
+    }
+
+    // エリア・区分のセレクトボックス変更時に即時絞り込み
+    filterForm.querySelectorAll('select[name="area_id"], select[name="category"]').forEach(select => {
+        select.addEventListener('change', () => {
             filterForm.submit();
         });
     });

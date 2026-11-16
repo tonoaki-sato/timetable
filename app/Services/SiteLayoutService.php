@@ -58,6 +58,7 @@ class SiteLayoutService
         foreach (BoothCategory::cases() as $case) {
             $count = $booths->filter(fn (LayoutItem $b) => $b->category === $case->value)->count();
             $categoryCounts[$case->value] = [
+                'key' => $case->value,
                 'label' => $case->label(),
                 'icon' => $case->icon(),
                 'count' => $count,
@@ -70,6 +71,7 @@ class SiteLayoutService
         foreach (FacilityType::cases() as $case) {
             $count = $facilities->filter(fn (LayoutItem $f) => $f->category === $case->value)->count();
             $facilityCounts[$case->value] = [
+                'key' => $case->value,
                 'label' => $case->label(),
                 'icon' => $case->icon(),
                 'count' => $count,

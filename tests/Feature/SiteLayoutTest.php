@@ -176,9 +176,15 @@ class SiteLayoutTest extends TestCase
         $response->assertSee('区分別内訳');
         $response->assertSee('出展区分 (全2件)');
         $response->assertSee('設備区分 (全2箇所)');
+        $response->assertSee(route('timetables.layouts.booths', [$this->timetable, 'item_type' => 'booth']));
+        $response->assertSee(route('timetables.layouts.booths', [$this->timetable, 'item_type' => 'facility']));
+        $response->assertSee(route('timetables.layouts.booths', [$this->timetable, 'item_type' => 'booth', 'category' => BoothCategory::GozaOutdoorCooking->value]));
+        $response->assertSee(route('timetables.layouts.booths', [$this->timetable, 'item_type' => 'facility', 'category' => FacilityType::WaterSupply->value]));
 
         // 2段目: エリア別 ブース形態内訳
         $response->assertSee('エリア別 ブース形態内訳');
+        $response->assertSee(route('timetables.layouts.booths', [$this->timetable, 'area_id' => $this->areaA->id]));
+        $response->assertSee(route('timetables.layouts.booths', [$this->timetable, 'area_id' => $this->areaPark->id]));
 
         // エリア別配置一覧
         $response->assertSee('エリア別配置一覧 (全2エリア)');
@@ -234,6 +240,60 @@ class SiteLayoutTest extends TestCase
             str_contains($content, 'booths.js') || str_contains($content, 'booths-'),
             'booths.js script should be rendered on the page.'
         );
+    }
+
+    /**
+     * 配置一覧画面でエリアによる絞り込みが機能すること
+     */
+    public function test_items_list_screen_can_filter_by_area(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('timetables.layouts.booths', [
+                $this->timetable,
+                'area_id' => $this->areaA->id,
+            ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('A99');
+        $response->assertSee('B99');
+        $response->assertDontSee('W-99');
+        $response->assertDontSee('STAFF-99');
+        $response->assertSee('クリア');
+    }
+
+    /**
+     * 配置一覧画面で区分による絞り込みが機能すること
+     */
+    public function test_items_list_screen_can_filter_by_category(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('timetables.layouts.booths', [
+                $this->timetable,
+                'item_type' => 'booth',
+                'category' => BoothCategory::GozaCookedFood->value,
+            ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('A99');
+        $response->assertDontSee('B99'); // B99 は GozaGeneralGoods
+        $response->assertDontSee('W-99');
+        $response->assertDontSee('STAFF-99');
+        $response->assertSee('クリア');
+
+        // 設備区分での絞り込み
+        $facilityResponse = $this->actingAs($this->user)
+            ->get(route('timetables.layouts.booths', [
+                $this->timetable,
+                'item_type' => 'facility',
+                'category' => FacilityType::WaterSupply->value,
+            ]));
+
+        $facilityResponse->assertStatus(200);
+        $facilityResponse->assertSee('W-99');
+        $facilityResponse->assertDontSee('STAFF-99');
+        $facilityResponse->assertDontSee('A99');
+        $facilityResponse->assertDontSee('B99');
+        $facilityResponse->assertSee('クリア');
     }
 
     /**

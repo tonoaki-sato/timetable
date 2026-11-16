@@ -95,13 +95,35 @@
                 <!-- エリア絞り込み -->
                 <div class="flex items-center space-x-1 text-xs">
                     <span class="text-slate-500 font-bold whitespace-nowrap">エリア:</span>
-                    <select name="area_id" class="bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2 text-slate-800 focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500">
+                    <select name="area_id" id="filterAreaId" class="bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2 text-slate-800 focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500">
                         <option value="">全エリア ({{ $map->items->count() }})</option>
                         @foreach($areas as $area)
                             <option value="{{ $area->id }}" {{ ($filters['area_id'] ?? '') == $area->id ? 'selected' : '' }}>
                                 {{ $area->name }} ({{ $area->items->count() }})
                             </option>
                         @endforeach
+                    </select>
+                </div>
+
+                <!-- 区分絞り込み -->
+                <div class="flex items-center space-x-1 text-xs">
+                    <span class="text-slate-500 font-bold whitespace-nowrap">区分:</span>
+                    <select name="category" id="filterCategory" class="bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2 text-slate-800 focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500">
+                        <option value="">全区分</option>
+                        <optgroup label="出展区分">
+                            @foreach($boothCategories as $cat)
+                                <option value="{{ $cat->value }}" {{ ($filters['category'] ?? '') === $cat->value ? 'selected' : '' }}>
+                                    {{ $cat->icon() }} {{ $cat->label() }}
+                                </option>
+                            @endforeach
+                        </optgroup>
+                        <optgroup label="設備区分">
+                            @foreach($facilityTypes as $fac)
+                                <option value="{{ $fac->value }}" {{ ($filters['category'] ?? '') === $fac->value ? 'selected' : '' }}>
+                                    {{ $fac->icon() }} {{ $fac->label() }}
+                                </option>
+                            @endforeach
+                        </optgroup>
                     </select>
                 </div>
 
@@ -115,7 +137,7 @@
                     <button type="submit" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer">
                         絞り込み
                     </button>
-                    @if(!empty($filters['area_id']) || !empty($filters['item_type']) || !empty($filters['search']))
+                    @if(!empty($filters['area_id']) || !empty($filters['item_type']) || !empty($filters['category']) || !empty($filters['search']))
                         <a href="{{ route('timetables.layouts.booths', $timetable) }}" class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition">
                             クリア
                         </a>
