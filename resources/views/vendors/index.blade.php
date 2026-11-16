@@ -21,7 +21,7 @@
                 <button type="button"
                     id="btn-open-create-vendor"
                     data-store-url="{{ route('vendors.store') }}"
-                    class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
+                    class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
                     <span>➕</span>
                     <span>新規登録</span>
                 </button>

@@ -162,6 +162,7 @@ class SiteLayoutTest extends TestCase
         $response->assertSee($this->timetable->name.' 配置計画');
         $response->assertSee('ござ市、インフラ設備などの配置情報を閲覧できます');
         $response->assertSee('配置一覧');
+        $response->assertSee('bg-white border border-slate-300 hover:bg-slate-50 text-slate-700', false);
         $response->assertDontSee('<span>出展・出店者マスター</span>', false);
         $response->assertDontSee('v1.0');
         $response->assertDontSee('ござ市・出店コマ割');
@@ -197,6 +198,7 @@ class SiteLayoutTest extends TestCase
         $response->assertSee('配置一覧');
         $response->assertSee('ござ市、インフラ設備などの配置を管理します。');
         $response->assertSee('新規配置追加');
+        $response->assertSee('bg-white border border-slate-300 hover:bg-slate-50 text-slate-700', false);
         $response->assertSee('配置計画に戻る');
         $response->assertSee('配置一覧（全4件）');
         $response->assertSee('A99');
