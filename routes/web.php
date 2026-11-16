@@ -229,7 +229,9 @@ Route::middleware('auth')->group(function () {
         // 現場配置計画 (Site Layout)
         Route::get('timetables/{timetable}/layouts', [SiteLayoutController::class, 'index'])->name('timetables.layouts.index');
         Route::get('timetables/{timetable}/layouts/booths', [SiteLayoutController::class, 'booths'])->name('timetables.layouts.booths');
+        Route::post('timetables/{timetable}/layouts/booths', [SiteLayoutController::class, 'storeBooth'])->name('timetables.layouts.booths.store');
         Route::put('timetables/{timetable}/layouts/booths/{booth}', [SiteLayoutController::class, 'updateBooth'])->name('timetables.layouts.booths.update');
+        Route::delete('timetables/{timetable}/layouts/booths/{booth}', [SiteLayoutController::class, 'destroyBooth'])->name('timetables.layouts.booths.destroy');
         Route::get('timetables/{timetable}/layouts/facilities', [SiteLayoutController::class, 'facilities'])->name('timetables.layouts.facilities');
         Route::post('timetables/{timetable}/layouts/facilities', [SiteLayoutController::class, 'storeFacility'])->name('timetables.layouts.facilities.store');
         Route::put('timetables/{timetable}/layouts/facilities/{facility}', [SiteLayoutController::class, 'updateFacility'])->name('timetables.layouts.facilities.update');

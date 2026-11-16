@@ -93,6 +93,28 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
     }
 
     /**
+     * コマ割り情報を新規登録
+     */
+    public function storeBooth(LayoutMap $map, array $data): LayoutBooth
+    {
+        $data['layout_map_id'] = $map->id;
+        if (! isset($data['display_order'])) {
+            $maxOrder = LayoutBooth::where('layout_map_id', $map->id)->max('display_order') ?? 0;
+            $data['display_order'] = $maxOrder + 1;
+        }
+
+        return LayoutBooth::create($data)->fresh(['area', 'vendor']);
+    }
+
+    /**
+     * コマ割り情報を削除
+     */
+    public function deleteBooth(LayoutBooth $booth): void
+    {
+        $booth->delete();
+    }
+
+    /**
      * 現場設備一覧を取得
      */
     public function getFacilities(LayoutMap $map, array $filters = []): Collection

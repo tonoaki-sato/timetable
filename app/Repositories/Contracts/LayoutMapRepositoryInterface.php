@@ -36,6 +36,18 @@ interface LayoutMapRepositoryInterface
     public function updateBooth(LayoutBooth $booth, array $data): LayoutBooth;
 
     /**
+     * コマ割り情報を新規登録
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function storeBooth(LayoutMap $map, array $data): LayoutBooth;
+
+    /**
+     * コマ割り情報を削除
+     */
+    public function deleteBooth(LayoutBooth $booth): void;
+
+    /**
      * 現場設備一覧を取得
      *
      * @param  array{type?: string|null}  $filters

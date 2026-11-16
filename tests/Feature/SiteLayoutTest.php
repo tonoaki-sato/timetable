@@ -154,7 +154,7 @@ class SiteLayoutTest extends TestCase
     }
 
     /**
-     * コマ割り一覧画面が表示され、6区分・4形態・2状態が確認できること
+     * 配置一覧画面が表示され、7列構成・詳細モーダル・丸アイコンが確認できること
      */
     public function test_booths_list_screen_can_be_rendered(): void
     {
@@ -162,21 +162,58 @@ class SiteLayoutTest extends TestCase
             ->get(route('timetables.layouts.booths', $this->timetable));
 
         $response->assertStatus(200);
-        $response->assertSee('コマ割り・出店ブース一覧');
+        $response->assertSee('配置一覧');
+        $response->assertSee('ござ市、インフラ設備などの配置を管理します。');
+        $response->assertSee('新規配置追加');
+        $response->assertSee('ダッシュボードに戻る');
+        $response->assertSee('配置一覧（全2コマ）');
         $response->assertSee('A01');
         $response->assertSee('B01');
         $response->assertSee('ござ市（調理済品販売）');
         $response->assertSee('テント');
-        $response->assertSee('確定');
-        $response->assertSee('出展・出店者マスター');
+        $response->assertSee('🟢');
+        $response->assertSee('🟡');
 
         // モーダル要素とスクリプトが正しくレンダリングされていること
         $response->assertSee('boothEditModal');
+        $response->assertSee('modal-booth-detail');
         $content = $response->getContent();
         $this->assertTrue(
             str_contains($content, 'booths.js') || str_contains($content, 'booths-'),
             'booths.js script should be rendered on the page.'
         );
+    }
+
+    /**
+     * 新規配置が登録できること
+     */
+    public function test_booth_can_be_created(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->post(route('timetables.layouts.booths.store', $this->timetable), [
+                'booth_code' => 'KC-01',
+                'layout_area_id' => $this->areaPark->id,
+                'name' => 'テストキッチンカー',
+                'category' => BoothCategory::GozaOutdoorCooking->value,
+                'booth_type' => BoothType::KitchenCar->value,
+                'status' => BoothStatus::Confirmed->value,
+                'product_items' => '牛串、フランクフルト',
+                'adjacent_landmark' => '駐車場入口横',
+                'notes' => '発電機持参',
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('layout_booths', [
+            'layout_map_id' => $this->map->id,
+            'layout_area_id' => $this->areaPark->id,
+            'booth_code' => 'KC-01',
+            'name' => 'テストキッチンカー',
+            'category' => BoothCategory::GozaOutdoorCooking->value,
+            'booth_type' => BoothType::KitchenCar->value,
+            'status' => BoothStatus::Confirmed->value,
+        ]);
     }
 
     /**
@@ -190,6 +227,8 @@ class SiteLayoutTest extends TestCase
 
         $response = $this->actingAs($this->user)
             ->put(route('timetables.layouts.booths.update', [$this->timetable, $booth]), [
+                'booth_code' => 'A01-REV',
+                'layout_area_id' => $this->areaA->id,
                 'name' => '水浅青果 焼き芋店',
                 'category' => BoothCategory::GozaOutdoorCooking->value,
                 'booth_type' => BoothType::KitchenCar->value,
@@ -204,11 +243,32 @@ class SiteLayoutTest extends TestCase
 
         $this->assertDatabaseHas('layout_booths', [
             'id' => $booth->id,
+            'booth_code' => 'A01-REV',
             'name' => '水浅青果 焼き芋店',
             'category' => BoothCategory::GozaOutdoorCooking->value,
             'booth_type' => BoothType::KitchenCar->value,
             'status' => BoothStatus::Confirmed->value,
             'product_items' => '石焼き芋、焼きとうもろこし',
+        ]);
+    }
+
+    /**
+     * 配置が削除できること
+     */
+    public function test_booth_can_be_deleted(): void
+    {
+        $booth = LayoutBooth::where('layout_map_id', $this->map->id)
+            ->where('booth_code', 'A01')
+            ->firstOrFail();
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('timetables.layouts.booths.destroy', [$this->timetable, $booth]));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('layout_booths', [
+            'id' => $booth->id,
         ]);
     }
 

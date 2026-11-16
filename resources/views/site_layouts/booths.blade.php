@@ -1,11 +1,11 @@
-<x-layouts.app :title="$timetable->name . ' コマ割り一覧'">
+<x-layouts.app :title="$timetable->name . ' 配置一覧'">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ページヘッダー -->
     <x-page-header
-        title="コマ割り・出店ブース一覧"
+        title="{{ $timetable->name }} 配置一覧"
         icon="📋"
-        :description="'「' . $timetable->name . '」におけるござ市コマ割り（A列・B列）および各特設エリアの出店情報を管理します。'">
+        description="ござ市、インフラ設備などの配置を管理します。">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
@@ -22,19 +22,21 @@
                 <span>現場配置計画</span>
             </a>
             <span class="text-slate-300">/</span>
-            <span class="text-slate-700 font-bold truncate">📋 コマ割り一覧</span>
+            <span class="text-slate-700 font-bold truncate">📋 配置一覧</span>
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
+            <button type="button"
+                id="btnOpenCreateBoothModal"
+                data-store-url="{{ route('timetables.layouts.booths.store', $timetable) }}"
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
+                <span>➕</span>
+                <span>新規配置追加</span>
+            </button>
             <a href="{{ route('timetables.layouts.index', $timetable) }}"
                 class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
                 <span>←</span>
-                <span>配置ダッシュボードへ</span>
-            </a>
-            <a href="{{ route('vendors.index') }}"
-                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
-                <span>🎪</span>
-                <span>出展・出店者マスター</span>
+                <span>ダッシュボードに戻る</span>
             </a>
         </x-slot:actions>
     </x-page-header>
@@ -101,7 +103,7 @@
                 </div>
 
                 <div class="flex items-center space-x-1.5 shrink-0">
-                    <button type="submit" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-2xs">
+                    <button type="submit" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer">
                         絞り込み
                     </button>
                     @if(!empty($filters['area_id']) || !empty($filters['category']) || !empty($filters['search']))
@@ -114,12 +116,12 @@
         </form>
     </div>
 
-    <!-- コマ割り一覧テーブル -->
+    <!-- 配置一覧テーブル -->
     <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
         <div class="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
             <span class="font-bold text-slate-700 flex items-center space-x-1">
                 <span>📋</span>
-                <span>コマ割り一覧 (全 {{ $booths->total() }} コマ)</span>
+                <span>配置一覧（全{{ $booths->total() }}コマ）</span>
             </span>
             <span class="text-slate-500 font-mono">
                 {{ $booths->firstItem() ?? 0 }} - {{ $booths->lastItem() ?? 0 }} 件を表示
@@ -135,10 +137,7 @@
                         <th class="py-2.5 px-3">コマ表示名</th>
                         <th class="py-2.5 px-3 whitespace-nowrap">出店区分</th>
                         <th class="py-2.5 px-3 whitespace-nowrap">形態</th>
-                        <th class="py-2.5 px-3 whitespace-nowrap">状態</th>
-                        <th class="py-2.5 px-3 whitespace-nowrap">配置出展・出店者</th>
                         <th class="py-2.5 px-3">取扱品目</th>
-                        <th class="py-2.5 px-3">近接店舗</th>
                         <th class="py-2.5 px-3 text-right whitespace-nowrap">操作</th>
                     </tr>
                 </thead>
@@ -153,8 +152,27 @@
                             <td class="py-2.5 px-3 text-slate-600 whitespace-nowrap text-[11px]">
                                 {{ $booth->area?->name ?? '通り' }}
                             </td>
-                            <td class="py-2.5 px-3 font-bold text-slate-900">
-                                {{ $booth->displayName }}
+                            <td class="py-2.5 px-3">
+                                <button type="button"
+                                    class="btn-view-booth font-bold text-slate-800 hover:text-indigo-600 hover:underline transition cursor-pointer text-left inline-flex items-center space-x-1.5"
+                                    data-id="{{ $booth->id }}"
+                                    data-code="{{ $booth->booth_code }}"
+                                    data-area="{{ $booth->area?->name ?? '通り' }}"
+                                    data-name="{{ $booth->displayName }}"
+                                    data-category-label="{{ $booth->category->label() }}"
+                                    data-category-icon="{{ $booth->category->icon() }}"
+                                    data-type-label="{{ $booth->booth_type?->label() ?? 'テント' }}"
+                                    data-status-label="{{ $booth->status?->label() ?? '確定' }}"
+                                    data-status-icon="{{ $booth->status?->icon() ?? '🟢' }}"
+                                    data-vendor-name="{{ $booth->vendor?->name ?? '' }}"
+                                    data-vendor-contact-person="{{ $booth->vendor?->contact_person ?? '' }}"
+                                    data-vendor-contact="{{ $booth->vendor?->contact ?? '' }}"
+                                    data-items="{{ $booth->product_items ?? '' }}"
+                                    data-landmark="{{ $booth->adjacent_landmark ?? '' }}"
+                                    data-notes="{{ $booth->notes ?? '' }}">
+                                    <span>{{ $booth->status?->icon() ?? '🟢' }}</span>
+                                    <span>{{ $booth->displayName }}</span>
+                                </button>
                             </td>
                             <td class="py-2.5 px-3 whitespace-nowrap">
                                 <span class="px-2 py-0.5 rounded text-[10px] {{ $booth->category->badgeClasses() }}">
@@ -164,33 +182,15 @@
                             <td class="py-2.5 px-3 whitespace-nowrap text-slate-700 font-medium">
                                 {{ $booth->booth_type?->label() ?? 'テント' }}
                             </td>
-                            <td class="py-2.5 px-3 whitespace-nowrap">
-                                <span class="px-1.5 py-0.5 rounded text-[10px] {{ $booth->status?->badgeClasses() ?? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold' }}">
-                                    {{ $booth->status?->label() ?? '確定' }}
-                                </span>
-                            </td>
-                            <td class="py-2.5 px-3 whitespace-nowrap text-slate-600">
-                                @if($booth->vendor)
-                                    <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 bg-indigo-50 text-indigo-800 border border-indigo-200 rounded text-[10px] font-bold">
-                                        <span>🏪</span>
-                                        <span class="truncate max-w-[120px]">{{ $booth->vendor->name }}</span>
-                                    </span>
-                                @else
-                                    <span class="text-slate-400 text-[11px]">—</span>
-                                @endif
-                            </td>
                             <td class="py-2.5 px-3 text-slate-600 text-[11px] max-w-xs truncate" title="{{ $booth->product_items }}">
                                 {{ $booth->product_items ?: '—' }}
                             </td>
-                            <td class="py-2.5 px-3 text-slate-600 text-[11px]">
-                                {{ $booth->adjacent_landmark ?: '—' }}
-                            </td>
-                            <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                            <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-1">
                                 <button type="button"
                                     data-action="open-booth-modal"
                                     data-id="{{ $booth->id }}"
                                     data-code="{{ $booth->booth_code }}"
-                                    data-area="{{ $booth->area?->name }}"
+                                    data-area-id="{{ $booth->layout_area_id }}"
                                     data-name="{{ $booth->name }}"
                                     data-category="{{ $booth->category->value }}"
                                     data-type="{{ $booth->booth_type?->value ?? 'tent' }}"
@@ -199,14 +199,27 @@
                                     data-items="{{ $booth->product_items }}"
                                     data-landmark="{{ $booth->adjacent_landmark }}"
                                     data-notes="{{ $booth->notes }}"
-                                    class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
-                                    編集
+                                    class="inline-flex items-center space-x-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                                    title="配置を編集">
+                                    <span>✏️</span>
+                                    <span>編集</span>
                                 </button>
+                                <form action="{{ route('timetables.layouts.booths.destroy', [$timetable, $booth]) }}" method="POST" class="inline"
+                                    data-confirm="コマ「{{ $booth->displayName }}（{{ $booth->booth_code }}）」の配置を削除しますか？">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="inline-flex items-center space-x-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                                        title="配置を削除">
+                                        <span>🗑️</span>
+                                        <span>削除</span>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="py-8 text-center text-slate-400 text-xs">
+                            <td colspan="7" class="py-8 text-center text-slate-400 text-xs">
                                 該当するコマ割りデータがありません。
                             </td>
                         </tr>
@@ -222,26 +235,126 @@
         @endif
     </div>
 
-    <!-- コマ割りクイック編集モーダル -->
+    <!-- 閲覧専用詳細モーダル -->
+    <div id="modal-booth-detail" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 border border-slate-200">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl" id="detail-status-icon">🟢</span>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800" id="detail-booth-name">コマ詳細</h3>
+                        <p class="text-[11px] font-mono text-slate-500" id="detail-booth-code"></p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close-detail-modal text-slate-400 hover:text-slate-600 transition cursor-pointer p-1">
+                    ✕
+                </button>
+            </div>
+
+            <div class="space-y-3.5 text-xs">
+                <!-- 基本情報グリッド -->
+                <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div>
+                        <span class="text-slate-500 font-medium block text-[10px]">所属エリア</span>
+                        <span class="font-bold text-slate-800" id="detail-area-name">—</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 font-medium block text-[10px]">配置状態</span>
+                        <span class="font-bold text-slate-800" id="detail-status-label">—</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 font-medium block text-[10px]">出店区分</span>
+                        <span class="font-bold text-slate-800" id="detail-category-label">—</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 font-medium block text-[10px]">ブース形態</span>
+                        <span class="font-bold text-slate-800" id="detail-type-label">—</span>
+                    </div>
+                </div>
+
+                <!-- 割り当て出展・出店者情報 -->
+                <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 space-y-1.5">
+                    <span class="text-indigo-900 font-bold block text-[11px] flex items-center space-x-1">
+                        <span>🎪</span>
+                        <span>割り当て出展・出店者マスター</span>
+                    </span>
+                    <div id="detail-vendor-section">
+                        <div class="font-bold text-indigo-950 text-xs" id="detail-vendor-name">—</div>
+                        <div class="text-slate-600 text-[11px] flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                            <span id="detail-vendor-contact-person"></span>
+                            <span id="detail-vendor-contact"></span>
+                        </div>
+                    </div>
+                    <div id="detail-vendor-empty" class="text-slate-400 text-[11px] hidden">
+                        （出展・出店者マスターは未割当です）
+                    </div>
+                </div>
+
+                <!-- 取扱品目 -->
+                <div>
+                    <span class="text-slate-500 font-bold block mb-0.5">取扱品目・展示内容</span>
+                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-slate-800 whitespace-pre-wrap min-h-[38px]" id="detail-items">—</div>
+                </div>
+
+                <!-- 近接ランドマーク -->
+                <div>
+                    <span class="text-slate-500 font-bold block mb-0.5">近接店舗・建物 (ランドマーク)</span>
+                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-slate-800" id="detail-landmark">—</div>
+                </div>
+
+                <!-- 特記事項・メモ -->
+                <div>
+                    <span class="text-slate-500 font-bold block mb-0.5">特記事項・メモ</span>
+                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-slate-800 whitespace-pre-wrap min-h-[38px]" id="detail-notes">—</div>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-200 flex justify-end">
+                <button type="button" class="btn-close-detail-modal px-4 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg font-bold transition cursor-pointer text-xs">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配置 登録・編集兼用モーダル -->
     <div id="boothEditModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 border border-slate-200">
             <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h3 class="text-base font-bold text-slate-900 flex items-center space-x-1.5">
-                    <span>✏️</span>
-                    <span>コマ情報の編集: <span id="modalBoothCode" class="font-mono text-indigo-600"></span></span>
+                    <span id="modalFormIcon">✏️</span>
+                    <span id="modalFormTitle">コマ情報の編集</span>
+                    <span id="modalBoothCodeBadge" class="font-mono text-indigo-600 text-sm ml-1"></span>
                 </h3>
                 <button type="button" id="modalCloseBtn" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer">
                     ✕
                 </button>
             </div>
 
-            <form id="boothEditForm" method="POST" action="" data-timetable-id="{{ $timetable->id }}" class="space-y-3 text-xs">
+            <form id="boothEditForm" method="POST" action=""
+                data-timetable-id="{{ $timetable->id }}"
+                data-store-url="{{ route('timetables.layouts.booths.store', $timetable) }}"
+                data-base-update-url="/timetables/{{ $timetable->id }}/layouts/booths"
+                class="space-y-3 text-xs">
                 @csrf
-                @method('PUT')
+                <input type="hidden" name="_method" id="boothFormMethod" value="PUT">
 
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">所属エリア</label>
-                    <div id="modalAreaName" class="text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200 font-medium"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="inputBoothCode" class="block font-bold text-slate-700 mb-1">コマ番号 <span class="text-rose-500">*</span></label>
+                        <input type="text" id="inputBoothCode" name="booth_code" required
+                            class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-mono uppercase text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500"
+                            placeholder="例: A01, B12, KC-01">
+                    </div>
+                    <div>
+                        <label for="selectBoothArea" class="block font-bold text-slate-700 mb-1">所属エリア</label>
+                        <select id="selectBoothArea" name="layout_area_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
+                            <option value="">(未設定・通り)</option>
+                            @foreach($areas as $area)
+                                <option value="{{ $area->id }}">{{ $area->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <div>
@@ -285,7 +398,7 @@
                     <label for="selectBoothStatus" class="block font-bold text-slate-700 mb-1">配置状態 <span class="text-rose-500">*</span></label>
                     <select id="selectBoothStatus" name="status" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500">
                         @foreach(\App\Enums\BoothStatus::cases() as $case)
-                            <option value="{{ $case->value }}">{{ $case->label() }}</option>
+                            <option value="{{ $case->value }}">{{ $case->icon() }} {{ $case->label() }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -297,7 +410,7 @@
 
                 <div>
                     <label for="inputLandmark" class="block font-bold text-slate-700 mb-1">近接店舗・建物 (ランドマーク)</label>
-                    <input type="text" id="inputLandmark" name="adjacent_landmark" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: 川むら前、おもちゃのうえの前">
+                    <input type="text" id="inputLandmark" name="adjacent_landmark" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="例: 川むら前、おもちゃのうえの前"></input>
                 </div>
 
                 <div>
@@ -309,7 +422,7 @@
                     <button type="button" id="modalCancelBtn" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-bold transition cursor-pointer">
                         キャンセル
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition cursor-pointer">
+                    <button type="submit" id="modalSubmitBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-2xs transition cursor-pointer">
                         💾 変更を保存する
                     </button>
                 </div>

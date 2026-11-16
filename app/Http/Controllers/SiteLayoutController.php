@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLayoutBoothRequest;
 use App\Http\Requests\StoreLayoutFacilityRequest;
 use App\Http\Requests\UpdateLayoutBoothRequest;
 use App\Http\Requests\UpdateLayoutFacilityRequest;
@@ -64,6 +65,17 @@ class SiteLayoutController extends Controller
     }
 
     /**
+     * コマ割り情報の新規登録
+     */
+    public function storeBooth(StoreLayoutBoothRequest $request, Timetable $timetable): RedirectResponse
+    {
+        $map = $this->siteLayoutService->getLayoutDetails($timetable);
+        $booth = $this->siteLayoutService->storeBooth($map, $request->validated());
+
+        return redirect()->back()->with('success', 'コマ配置情報（'.$booth->booth_code.'）を新規登録しました。');
+    }
+
+    /**
      * コマ割り情報の更新
      */
     public function updateBooth(UpdateLayoutBoothRequest $request, Timetable $timetable, LayoutBooth $booth): RedirectResponse
@@ -71,6 +83,18 @@ class SiteLayoutController extends Controller
         $this->siteLayoutService->updateBooth($booth, $request->validated());
 
         return redirect()->back()->with('success', 'コマ割り情報（'.$booth->booth_code.'）を更新しました。');
+    }
+
+    /**
+     * コマ割り配置の削除
+     */
+    public function destroyBooth(Timetable $timetable, LayoutBooth $booth): RedirectResponse
+    {
+        $code = $booth->booth_code;
+        $name = $booth->displayName;
+        $this->siteLayoutService->deleteBooth($booth);
+
+        return redirect()->back()->with('success', 'コマ配置「'.$name.'（'.$code.'）」を削除しました。');
     }
 
     /**

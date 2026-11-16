@@ -19,6 +19,17 @@ enum BoothStatus: string
     }
 
     /**
+     * UI表示用丸アイコン
+     */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::Tentative => '🟡',
+            self::Confirmed => '🟢',
+        };
+    }
+
+    /**
      * バッジのCSSクラスを取得
      */
     public function badgeClasses(): string

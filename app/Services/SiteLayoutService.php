@@ -200,6 +200,24 @@ class SiteLayoutService
     }
 
     /**
+     * コマ割り情報を新規登録
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function storeBooth(LayoutMap $map, array $data): LayoutBooth
+    {
+        return $this->layoutMapRepository->storeBooth($map, $data);
+    }
+
+    /**
+     * コマ割り情報の削除
+     */
+    public function deleteBooth(LayoutBooth $booth): void
+    {
+        $this->layoutMapRepository->deleteBooth($booth);
+    }
+
+    /**
      * 現場設備一覧を取得
      */
     public function getFacilities(LayoutMap $map, array $filters = []): Collection
