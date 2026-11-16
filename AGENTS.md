@@ -176,6 +176,8 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
    - **一覧画面のレイアウト・パーツデザイン標準規約**:
      一覧画面を新規作成または改修する際は、**インフラ設備一覧（`resources/views/site_layouts/facilities.blade.php`）**の構成とパーツデザインを基本標準として統一すること。
      - **ページヘッダー**: 画面のタイトル行は「タイトル（アイコン付き見出し）」「説明文」「リンク・アクションボタン」が横並びの一行に収まるレイアウトとする。タイトルと説明文を左側にインライン配置し、説明文は一行に収まる簡潔な短文とし、右側にアクションボタングループ（新規作成ボタン、画面遷移ボタン等）を右寄せ配置して画面上部の縦領域を圧迫しないようにする。
+     - **ヘッダーアクションボタンの配色規約**: 画面タイトル行（`<x-slot:actions>`）に配置する操作ボタン（新規追加、画面遷移、一覧表示等）は、通常時（非ホバー時）は未選択・セカンダリカラー（白背景・微細グレー枠線・ダークテキスト: `bg-white border border-slate-300 text-slate-700`）とし、カーソルホバー（マウス搭乗）時にプライマリカラー（インディゴ背景・インディゴ枠線・白文字: `hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition`）へと滑らかに切り替えること。
+     - **内部識別コード（ゾーンコード等）の露出防止**: 配置計画や一覧・サマリーカードなどの表示において、データベース管理上の内部識別コード（例: `ZONE_A`, `AREA_KITAGAWA`, `KIDS_VILLAGE` などのゾーンコード）は画面上に露出させず、ユーザーにとって直感的で分かりやすい正式な名称（例: `メイン通りA列（東側歩道）`, `北川駐車場内`, `キッズ村`）と件数情報のみをシンプルに表示すること。
      - **KPI / サマリーカード**: グリッド配置（2〜4列）、白背景（`bg-white`）、微細ボーダー（`border border-slate-200 rounded-xl p-4 shadow-xs`）、アイコンバッジ、カウントバッジ。
      - **表示切替フィルターバー**: `bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs`、インライン全選択・全解除ボタングループ、`✔`/`✕` チップトグル、件数インジケータ。
      - **データテーブル**: `bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden`、ヘッダー背景 `bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600`、行hover効果（`hover:bg-slate-50/50`）、識別コードバッジ（Monoフォント）、状態・種別バッジ。各行の「名前」は通常時は黒色（`font-bold text-slate-800`）、ホバー時に下線・インディゴ色（`hover:text-indigo-600 hover:underline transition cursor-pointer`）となるクリック可能なリンク/ボタンとし、クリック時に閲覧専用の詳細モーダルを表示する。
