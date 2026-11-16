@@ -77,6 +77,14 @@ class SiteLayoutSeeder extends Seeder
             'display_order' => 30,
         ]);
 
+        $areaKidsVillage = LayoutArea::create([
+            'layout_map_id' => $map->id,
+            'location_id' => null,
+            'zone_code' => 'KIDS_VILLAGE',
+            'name' => 'キッズヴィレッジ',
+            'display_order' => 35,
+        ]);
+
         $areaA = LayoutArea::create([
             'layout_map_id' => $map->id,
             'location_id' => null,

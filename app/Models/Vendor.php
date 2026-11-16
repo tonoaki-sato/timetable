@@ -46,16 +46,38 @@ class Vendor extends Model
      */
     public function getBoothsDetailListAttribute(): array
     {
-        return $this->booths->map(fn (LayoutBooth $b) => [
-            'code' => $b->booth_code,
-            'name' => $b->displayName,
-            'area' => $b->area?->name ?? '通り',
-            'category_label' => $b->category?->label() ?? '',
-            'category_badge' => $b->category?->badgeClasses() ?? '',
-            'type_label' => $b->booth_type?->label() ?? '',
-            'status_label' => $b->status?->label() ?? '',
-            'items' => $b->product_items ?? '',
-        ])->values()->all();
+        return $this->booths->map(function (LayoutBooth $b) {
+            try {
+                $categoryLabel = $b->category?->label() ?? '';
+                $categoryBadge = $b->category?->badgeClasses() ?? '';
+            } catch (\Throwable) {
+                $categoryLabel = is_string($b->getRawOriginal('category')) ? $b->getRawOriginal('category') : '';
+                $categoryBadge = 'bg-slate-100 text-slate-700 border-slate-300';
+            }
+
+            try {
+                $typeLabel = $b->booth_type?->label() ?? '';
+            } catch (\Throwable) {
+                $typeLabel = is_string($b->getRawOriginal('booth_type')) ? $b->getRawOriginal('booth_type') : '';
+            }
+
+            try {
+                $statusLabel = $b->status?->label() ?? '';
+            } catch (\Throwable) {
+                $statusLabel = is_string($b->getRawOriginal('status')) ? $b->getRawOriginal('status') : '';
+            }
+
+            return [
+                'code' => $b->booth_code,
+                'name' => $b->displayName,
+                'area' => $b->area?->name ?? '通り',
+                'category_label' => $categoryLabel,
+                'category_badge' => $categoryBadge,
+                'type_label' => $typeLabel,
+                'status_label' => $statusLabel,
+                'items' => $b->product_items ?? '',
+            ];
+        })->values()->all();
     }
 
     /**

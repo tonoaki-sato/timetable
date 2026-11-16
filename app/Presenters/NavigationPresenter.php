@@ -134,8 +134,8 @@ class NavigationPresenter
             }
 
             return min(
-                abs($now->diffInSeconds($startDateTime, false)),
-                abs($now->diffInSeconds($endDateTime, false))
+                (int) abs($now->diffInSeconds($startDateTime, false)),
+                (int) abs($now->diffInSeconds($endDateTime, false))
             );
         })->first();
     }
