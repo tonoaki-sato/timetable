@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -78,5 +79,15 @@ class SiteBaseMap extends Model
     public function timetable(): BelongsTo
     {
         return $this->belongsTo(Timetable::class);
+    }
+
+    /**
+     * 白地図上に配置されたオブジェクト群
+     *
+     * @return HasMany<SiteMapPlacement, $this>
+     */
+    public function placements(): HasMany
+    {
+        return $this->hasMany(SiteMapPlacement::class, 'site_base_map_id');
     }
 }

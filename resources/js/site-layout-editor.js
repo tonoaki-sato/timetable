@@ -1,6 +1,6 @@
 /**
- * 白地図配置エディタ (Site Layout Editor) - Phase 1
- * 商店街平面図 (A3 1/400) ベクターCADビューアー & パン・ズームエンジン
+ * 白地図配置エディタ (Site Layout Editor) - Phase 2 (精密CTM座標同期版)
+ * 商店街平面図 (A3 1/400) ベクターCADビューアー & ドラッグ＆ドロップ配置エンジン
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const svgContainer = document.getElementById('site-map-svg-container');
     const loadingEl = document.getElementById('canvas-loading');
     const zoomText = document.getElementById('zoom-level-text');
+    const countBadge = document.getElementById('placement-count-badge');
 
     const btnZoomIn = document.getElementById('btn-zoom-in');
     const btnZoomOut = document.getElementById('btn-zoom-out');
@@ -19,7 +20,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnZoomFit = document.getElementById('btn-zoom-fit');
 
     const svgUrl = appEl.dataset.svgUrl;
-    const viewboxStr = appEl.dataset.viewbox || '0 0 1191 842';
+    const viewboxStr = appEl.dataset.viewbox || '0 0 842 1191';
+    const storeUrl = appEl.dataset.storeUrl;
+    const csrfToken = appEl.dataset.csrfToken;
+
+    // 初期データのパース
+    let placements = [];
+    const initialPlacementsEl = document.getElementById('initial-placements-data');
+    if (initialPlacementsEl && initialPlacementsEl.dataset.json) {
+        try {
+            placements = JSON.parse(initialPlacementsEl.dataset.json);
+        } catch (e) {
+            console.error('Failed to parse initial placements:', e);
+        }
+    }
+
+    let iconDefinitions = {};
+    const iconDefsEl = document.getElementById('icon-definitions-data');
+    if (iconDefsEl && iconDefsEl.dataset.json) {
+        try {
+            const list = JSON.parse(iconDefsEl.dataset.json);
+            list.forEach(def => {
+                iconDefinitions[def.icon_key] = def;
+            });
+        } catch (e) {
+            console.error('Failed to parse icon definitions:', e);
+        }
+    }
 
     // ビューポート状態
     const state = {
@@ -29,11 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
         isDragging: false,
         dragStartX: 0,
         dragStartY: 0,
-        svgWidth: 1191,
-        svgHeight: 842,
+        svgWidth: 842,
+        svgHeight: 1191,
+        placements: placements,
     };
 
-    // viewBox からデフォルトサイズをパース
+    // viewBox からデフォルトサイズをパース (842 x 1191)
     const vbParts = viewboxStr.split(/\s+/).map(Number);
     if (vbParts.length === 4 && vbParts[2] > 0 && vbParts[3] > 0) {
         state.svgWidth = vbParts[2];
@@ -57,13 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const containerRect = canvasContainer.getBoundingClientRect();
         if (containerRect.width === 0 || containerRect.height === 0) return;
 
-        const padding = 32;
+        const padding = 24;
         const availWidth = containerRect.width - padding * 2;
         const availHeight = containerRect.height - padding * 2;
 
         const scaleX = availWidth / state.svgWidth;
         const scaleY = availHeight / state.svgHeight;
-        const newScale = Math.min(scaleX, scaleY, 2.0);
+        const newScale = Math.min(scaleX, scaleY, 1.8);
 
         state.scale = Math.max(0.2, Math.min(newScale, 5.0));
 
@@ -99,6 +127,144 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * スクリーン座標 (clientX, clientY) を SVG 内部の正確な図面座標 (X, Y) に変換
+     * ブラウザ標準の getScreenCTM().inverse() を使用して、ズーム倍率やパン位置、
+     * レターボックスの有無に関係なく完全ピンポイントで逆変換する。
+     */
+    function getSvgCoordinates(clientX, clientY) {
+        const svg = svgContainer.querySelector('svg');
+        if (!svg) {
+            const rect = canvasContainer.getBoundingClientRect();
+            return {
+                x: (clientX - rect.left - state.x) / state.scale,
+                y: (clientY - rect.top - state.y) / state.scale,
+            };
+        }
+
+        const pt = svg.createSVGPoint();
+        pt.x = clientX;
+        pt.y = clientY;
+
+        const ctm = svg.getScreenCTM();
+        if (!ctm) {
+            const rect = canvasContainer.getBoundingClientRect();
+            return {
+                x: (clientX - rect.left - state.x) / state.scale,
+                y: (clientY - rect.top - state.y) / state.scale,
+            };
+        }
+
+        const svgPt = pt.matrixTransform(ctm.inverse());
+        return { x: svgPt.x, y: svgPt.y };
+    }
+
+    /**
+     * 配置レイヤーの取得または生成
+     */
+    function getPlacementsLayer() {
+        const svg = svgContainer.querySelector('svg');
+        if (!svg) return null;
+
+        let layer = svg.querySelector('#site-map-placements-layer');
+        if (!layer) {
+            layer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            layer.setAttribute('id', 'site-map-placements-layer');
+            svg.appendChild(layer);
+        }
+        return layer;
+    }
+
+    /**
+     * 単一の配置ノードをSVGに描画
+     */
+    function renderPlacementNode(placement) {
+        const layer = getPlacementsLayer();
+        if (!layer) return;
+
+        // 既存ノードがあれば削除
+        const existing = layer.querySelector(`[data-placement-id="${placement.id}"]`);
+        if (existing) {
+            existing.remove();
+        }
+
+        const iconDef = iconDefinitions[placement.shape_type];
+        const iconPath = iconDef ? `/${iconDef.icon_asset_path}` : '/maps/icons/icon_general_tent.png';
+
+        const w = parseFloat(placement.width) || 78.0;
+        const h = parseFloat(placement.height) || 78.0;
+        const x = parseFloat(placement.pos_x) || 0;
+        const y = parseFloat(placement.pos_y) || 0;
+        const rot = parseInt(placement.rotation, 10) || 0;
+
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'site-map-node cursor-pointer select-none transition-opacity');
+        g.setAttribute('data-placement-id', placement.id);
+        g.setAttribute('data-shape-type', placement.shape_type);
+
+        if (rot !== 0) {
+            const cx = x + w / 2;
+            const cy = y + h / 2;
+            g.setAttribute('transform', `rotate(${rot} ${cx} ${cy})`);
+        }
+
+        // アイコン画像 (透過PNG)
+        const img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', iconPath);
+        img.setAttribute('href', iconPath);
+        img.setAttribute('x', x);
+        img.setAttribute('y', y);
+        img.setAttribute('width', w);
+        img.setAttribute('height', h);
+        img.setAttribute('preserveAspectRatio', 'none');
+        g.appendChild(img);
+
+        // 中央テキスト表示 (テキスト外枠なし、透過背景)
+        const textStr = placement.display_text || '';
+        if (textStr) {
+            const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            textEl.setAttribute('x', x + w / 2);
+            textEl.setAttribute('y', y + h / 2);
+            textEl.setAttribute('text-anchor', 'middle');
+            textEl.setAttribute('dominant-baseline', 'central');
+            textEl.setAttribute('font-family', 'sans-serif');
+            textEl.setAttribute('font-size', '9px');
+            textEl.setAttribute('font-weight', 'bold');
+
+            // カラーテーマに応じた文字色（視認性最適化）
+            const colorMap = {
+                red: '#b91c1c',
+                green: '#15803d',
+                blue: '#1d4ed8',
+                black: '#0f172a',
+                orange: '#c2410c',
+                pink: '#be185d',
+                purple: '#6b21a8',
+            };
+            textEl.setAttribute('fill', colorMap[placement.color_theme] || '#0f172a');
+            textEl.textContent = textStr;
+            g.appendChild(textEl);
+        }
+
+        layer.appendChild(g);
+    }
+
+    /**
+     * 全配置ノードの再描画
+     */
+    function renderAllPlacements() {
+        const layer = getPlacementsLayer();
+        if (!layer) return;
+        layer.innerHTML = '';
+        state.placements.forEach(p => {
+            renderPlacementNode(p);
+        });
+
+        if (countBadge) {
+            countBadge.textContent = `配置数: ${state.placements.length}件`;
+        }
+    }
+
+    /**
      * SVG 白地図データを非同期ロードしてインジェクション
      */
     async function loadSvgMap() {
@@ -111,6 +277,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const svgElement = svgContainer.querySelector('svg');
             if (svgElement) {
+                // SVGタグのネイティブviewBox属性から正規サイズを読み取る
+                const nativeViewBox = svgElement.getAttribute('viewBox');
+                if (nativeViewBox) {
+                    const parts = nativeViewBox.split(/\s+/).map(Number);
+                    if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+                        state.svgWidth = parts[2];
+                        state.svgHeight = parts[3];
+                    }
+                }
+
                 svgElement.setAttribute('width', `${state.svgWidth}px`);
                 svgElement.setAttribute('height', `${state.svgHeight}px`);
                 svgElement.style.display = 'block';
@@ -124,6 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadingEl.style.display = 'none';
                 }, 300);
             }
+
+            // 初期配置の描画
+            renderAllPlacements();
 
             // 初期配置: 画面全体にフィット
             fitToScreen();
@@ -145,7 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ドラッグによるパン移動
     canvasContainer.addEventListener('mousedown', (e) => {
-        // 右クリックや子要素の個別操作でなければパン開始
         if (e.button !== 0) return;
         state.isDragging = true;
         state.dragStartX = e.clientX - state.x;
@@ -201,9 +379,93 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ウィンドウリサイズ時の再計算（Fit維持などはせず位置保持）
-    window.addEventListener('resize', () => {
-        // 必要に応じて調整
+    // --- パレットからのドラッグ＆ドロップ (DnD) 実装 ---
+
+    // 1. パレットアイテムのドラッグ開始
+    const paletteItems = document.querySelectorAll('.palette-item');
+    paletteItems.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+            const dragData = {
+                shape_type: item.dataset.shapeType,
+                default_width: parseFloat(item.dataset.defaultWidth) || 78.0,
+                default_height: parseFloat(item.dataset.defaultHeight) || 78.0,
+                name: item.dataset.name || 'ブース',
+            };
+            e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+            e.dataTransfer.effectAllowed = 'copy';
+        });
+    });
+
+    // 2. キャンバス上でのドラッグオーバー許可
+    canvasContainer.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+    });
+
+    // 3. ドロップ時の精密 CTM 逆変換座標計算 & API保存
+    canvasContainer.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        const rawData = e.dataTransfer.getData('application/json');
+        if (!rawData) return;
+
+        let dragData;
+        try {
+            dragData = JSON.parse(rawData);
+        } catch (err) {
+            console.error('Failed to parse dropped data:', err);
+            return;
+        }
+
+        const targetW = dragData.default_width;
+        const targetH = dragData.default_height;
+
+        // ブラウザ標準の getScreenCTM().inverse() を用いたピンポイント絶対座標取得
+        const svgCoords = getSvgCoordinates(e.clientX, e.clientY);
+
+        // ドロップ位置がオブジェクトの中心に来るようにオフセット
+        const svgX = svgCoords.x - targetW / 2;
+        const svgY = svgCoords.y - targetH / 2;
+
+        // 非同期保存リクエスト
+        const payload = {
+            shape_type: dragData.shape_type,
+            pos_x: Math.round(svgX * 100) / 100,
+            pos_y: Math.round(svgY * 100) / 100,
+            width: targetW,
+            height: targetH,
+            display_text: dragData.name,
+            color_theme: 'red',
+            rotation: 0,
+        };
+
+        try {
+            const res = await fetch(storeUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || '配置の保存に失敗しました');
+            }
+
+            const resData = await res.json();
+            if (resData.success && resData.placement) {
+                state.placements.push(resData.placement);
+                renderPlacementNode(resData.placement);
+                if (countBadge) {
+                    countBadge.textContent = `配置数: ${state.placements.length}件`;
+                }
+            }
+        } catch (err) {
+            console.error('Error storing placement:', err);
+            alert(`配置の保存に失敗しました: ${err.message}`);
+        }
     });
 
     // 白地図のロード開始

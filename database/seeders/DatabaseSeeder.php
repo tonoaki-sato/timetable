@@ -41,5 +41,9 @@ class DatabaseSeeder extends Seeder
 
         // 10. 現場配置・コマ割り・出店者初期データ
         $this->call(SiteLayoutSeeder::class);
+
+        // 11. 白地図マスターおよびアイコン定義初期データ
+        $this->call(SiteBaseMapSeeder::class);
+        $this->call(SiteMapIconDefinitionSeeder::class);
     }
 }

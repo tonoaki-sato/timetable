@@ -236,6 +236,10 @@ Route::middleware('auth')->group(function () {
 
         // 白地図マッピングエディタ (Site Map Editor)
         Route::get('timetables/{timetable}/site-maps/editor', [SiteMapController::class, 'editor'])->name('timetables.site-maps.editor');
+        Route::get('timetables/{timetable}/site-maps/placements', [SiteMapController::class, 'getPlacements'])->name('timetables.site-maps.placements.index');
+        Route::post('timetables/{timetable}/site-maps/placements', [SiteMapController::class, 'storePlacement'])->name('timetables.site-maps.placements.store');
+        Route::put('timetables/{timetable}/site-maps/placements/{placement}', [SiteMapController::class, 'updatePlacement'])->name('timetables.site-maps.placements.update');
+        Route::delete('timetables/{timetable}/site-maps/placements/{placement}', [SiteMapController::class, 'destroyPlacement'])->name('timetables.site-maps.placements.destroy');
 
         // 出展・出店者マスター管理 (Vendors)
         Route::resource('vendors', VendorController::class)->except(['create', 'show', 'edit']);

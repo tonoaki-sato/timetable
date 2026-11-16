@@ -18,11 +18,11 @@ return new class extends Migration
             $table->string('cad_version', 50)->default('260813')->comment('CAD版数（例: 260813）');
             $table->string('paper_size', 20)->default('A3')->comment('用紙サイズ（A3）');
             $table->decimal('scale_ratio', 8, 4)->default(26.0000)->comment('縮尺比率（1mあたりのpx数: A3 1/400換算 26.0px/m）');
-            $table->decimal('width_meters', 8, 2)->default(45.80)->comment('実空間横幅目安（m）');
-            $table->decimal('height_meters', 8, 2)->default(32.40)->comment('実空間縦幅目安（m）');
+            $table->decimal('width_meters', 8, 2)->default(32.40)->comment('実空間横幅目安（m）');
+            $table->decimal('height_meters', 8, 2)->default(45.80)->comment('実空間縦幅目安（m）');
             $table->string('svg_path')->default('maps/shopping_street_base_map_260813.svg')->comment('SVG白地図ファイルパス');
             $table->string('pdf_path')->default('maps/shopping_street_base_map_260813.pdf')->comment('PDF原本ファイルパス');
-            $table->string('viewbox', 50)->default('0 0 1191 842')->comment('SVG viewBox');
+            $table->string('viewbox', 50)->default('0 0 842 1191')->comment('SVG viewBox');
             $table->boolean('is_active')->default(true)->comment('有効フラグ');
             $table->text('notes')->nullable()->comment('特記事項・CADメモ');
             $table->dateTime('created_at')->nullable();

@@ -54,11 +54,11 @@ class SiteBaseMapViewerTest extends TestCase
             'cad_version' => '260813',
             'paper_size' => 'A3',
             'scale_ratio' => 26.000,
-            'width_meters' => 45.8,
-            'height_meters' => 32.4,
+            'width_meters' => 32.4,
+            'height_meters' => 45.8,
             'svg_path' => 'maps/shopping_street_base_map_260813.svg',
             'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
-            'viewbox' => '0 0 1191 842',
+            'viewbox' => '0 0 842 1191',
             'is_active' => true,
         ]);
 
