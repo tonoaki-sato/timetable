@@ -56,6 +56,12 @@ class VendorManagementTest extends TestCase
         $response->assertSee('modal-vendor-detail');
         $response->assertSee('modal-vendor-form');
         $response->assertSee('btn-open-create-vendor');
+
+        // 出展者名リンクが黒色ベース（text-slate-800）および操作ボタン（✏️ 編集 / 🗑️ 削除）が表示されていること
+        $response->assertSee('text-slate-800');
+        $response->assertSee('✏️');
+        $response->assertSee('🗑️');
+
         $content = $response->getContent();
         $this->assertTrue(
             str_contains($content, 'vendors.js') || str_contains($content, 'vendors-'),

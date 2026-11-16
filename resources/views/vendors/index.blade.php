@@ -85,7 +85,7 @@
                                 <!-- 名前（詳細モーダル起動） -->
                                 <td class="py-2.5 px-3 font-bold">
                                     <button type="button"
-                                        class="btn-view-vendor text-indigo-600 hover:underline cursor-pointer text-left font-bold"
+                                        class="btn-view-vendor font-bold text-slate-800 hover:text-indigo-600 hover:underline transition cursor-pointer text-left"
                                         data-vendor-id="{{ $vendor->id }}"
                                         data-vendor-name="{{ $vendor->name }}"
                                         data-contact-person="{{ $vendor->contact_person ?? '' }}"
@@ -133,23 +133,27 @@
                                 <td class="py-2.5 px-3 text-right whitespace-nowrap">
                                     <div class="inline-flex items-center space-x-1.5">
                                         <button type="button"
-                                            class="btn-edit-vendor text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg px-2.5 py-1 text-xs font-medium transition cursor-pointer"
+                                            class="btn-edit-vendor inline-flex items-center space-x-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                                            title="出展者を編集"
                                             data-vendor-id="{{ $vendor->id }}"
                                             data-update-url="{{ route('vendors.update', $vendor) }}"
                                             data-name="{{ $vendor->name }}"
                                             data-contact-person="{{ $vendor->contact_person ?? '' }}"
                                             data-contact="{{ $vendor->contact ?? '' }}"
                                             data-notes="{{ $vendor->notes ?? '' }}">
-                                            編集
+                                            <span>✏️</span>
+                                            <span>編集</span>
                                         </button>
 
                                         <form method="POST" action="{{ route('vendors.destroy', $vendor) }}" class="inline-block form-delete-vendor">
                                             @csrf
                                             @method('DELETE')
                                             <button type="button"
-                                                class="btn-delete-vendor text-red-600 bg-red-50 hover:bg-red-100 rounded-lg px-2.5 py-1 text-xs font-medium transition cursor-pointer"
+                                                class="btn-delete-vendor inline-flex items-center space-x-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                                                title="出展者を削除"
                                                 data-vendor-name="{{ $vendor->name }}">
-                                                削除
+                                                <span>🗑️</span>
+                                                <span>削除</span>
                                             </button>
                                         </form>
                                     </div>
