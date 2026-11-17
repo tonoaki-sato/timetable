@@ -364,6 +364,50 @@ class SiteMapPlacementTest extends TestCase
     }
 
     /**
+     * PDFエクスポート時に日本語および英数字・記号（WANDA、ECLAT、A01、1/400等）が正しく描画されることを検証
+     */
+    public function test_export_pdf_renders_japanese_and_ascii_text_correctly(): void
+    {
+        SiteMapPlacement::create([
+            'site_base_map_id' => $this->siteBaseMap->id,
+            'shape_type' => 'booth_standard',
+            'display_text' => 'A01',
+            'color_theme' => 'red',
+            'pos_x' => 725.58,
+            'pos_y' => 1017.60,
+            'width' => 13.86,
+            'height' => 13.86,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('timetables.site-maps.pdf', $this->timetable));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+
+        preg_match_all('/stream[\r\n]+(.*?)[\r\n]+endstream/s', $content, $streamMatches);
+        $decompressed = '';
+        foreach ($streamMatches[1] as $s) {
+            $decomp = @gzuncompress($s);
+            if ($decomp !== false) {
+                $decompressed .= $decomp;
+            }
+        }
+
+        // 半角英数字・記号が Helvetica で正しく出力され、未定義グリフ（豆腐化）していないことを検証
+        $this->assertStringContainsString('(WANDA)', $decompressed);
+        $this->assertStringContainsString('(ECLAT)', $decompressed);
+        $this->assertStringContainsString('(POLA)', $decompressed);
+        $this->assertStringContainsString('(1/400)', $decompressed);
+        $this->assertStringContainsString('(A3)', $decompressed);
+        $this->assertStringContainsString('(A01)', $decompressed);
+
+        // 日本語（西村アパート等のUTF-16BEエンコード）も正常に含まれていることを検証
+        $nishimuraHex = "\x89\x7F\x67\x51"; // 「西村」の UTF-16BE
+        $this->assertStringContainsString($nishimuraHex, $decompressed);
+    }
+
+    /**
      * バリデーションエラー時は422を返す
      */
     public function test_store_placement_validation_error(): void

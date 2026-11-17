@@ -129,14 +129,14 @@ class SiteMapPdfExporterService
             $y = (float) ($lbl['y'] ?? 0);
             $size = (float) ($lbl['size'] ?? 8.0);
             if ($text !== '' && $size > 0) {
-                $canvas->text($x, $y - $size * 0.82, $text, $font, $size, $labelColor);
+                $this->drawMixedText($canvas, $x, $y - $size * 0.82, $text, $font, $size, $labelColor);
             }
         }
 
         // 凡例「手洗い設備設置 Nヵ所」の動的数値描画
         $waterCount = $placements->where('shape_type', 'water_supply')->count();
         $canvas->filled_rectangle(82.0, 169.0, 100.0, 10.5, [1.0, 1.0, 1.0]);
-        $canvas->text(84.30, 170.5, "手洗い設備設置　{$waterCount}ヵ所", $font, 7.8, $labelColor);
+        $this->drawMixedText($canvas, 84.30, 170.5, "手洗い設備設置　{$waterCount}ヵ所", $font, 7.8, $labelColor);
     }
 
     /**
@@ -315,7 +315,7 @@ class SiteMapPdfExporterService
         $lineH = $fontSize * 1.25;
         $canvas->filled_rectangle($x, $y, $w, max($h, count($lines) * $lineH), [1.0, 1.0, 1.0]);
         foreach ($lines as $idx => $line) {
-            $canvas->text($x + 1.0, $y + $idx * $lineH, $line, $font, $fontSize, $rgb);
+            $this->drawMixedText($canvas, $x + 1.0, $y + $idx * $lineH, $line, $font, $fontSize, $rgb);
         }
     }
 
@@ -381,7 +381,7 @@ class SiteMapPdfExporterService
         // 最大幅を計測
         $maxTextW = 0.0;
         foreach ($lines as $line) {
-            $tw = $canvas->get_text_width($line, $font, $fontSize);
+            $tw = $this->getMixedTextWidth($canvas, $line, $font, $fontSize);
             if ($tw > $maxTextW) {
                 $maxTextW = $tw;
             }
@@ -398,11 +398,68 @@ class SiteMapPdfExporterService
         // 各行を中央揃えで描画
         $startY = $y + ($h - $totalTextH) / 2;
         foreach ($lines as $idx => $line) {
-            $tw = $canvas->get_text_width($line, $font, $fontSize);
+            $tw = $this->getMixedTextWidth($canvas, $line, $font, $fontSize);
             $tx = $x + ($w - $tw) / 2;
             $ty = $startY + $idx * $lineHeight;
-            $canvas->text($tx, $ty, $line, $font, $fontSize, $rgb);
+            $this->drawMixedText($canvas, $tx, $ty, $line, $font, $fontSize, $rgb);
         }
+    }
+
+    /**
+     * 文字列を ASCII印刷可能文字（半角英数字・記号）と非ASCII（日本語等）のチャンク配列に分割
+     *
+     * @return array<int, array{text: string, is_ascii: bool}>
+     */
+    protected function splitMixedText(string $text): array
+    {
+        if ($text === '') {
+            return [];
+        }
+
+        preg_match_all('/([\x20-\x7E]+|[^\x20-\x7E]+)/u', $text, $matches);
+        $chunks = [];
+        foreach ($matches[1] as $chunk) {
+            $chunks[] = [
+                'text' => $chunk,
+                'is_ascii' => preg_match('/^[\x20-\x7E]+$/', $chunk) === 1,
+            ];
+        }
+
+        return $chunks;
+    }
+
+    /**
+     * 日本語と英数字・ASCII記号が混在する文字列の合計描画幅(pt)を計測
+     */
+    protected function getMixedTextWidth(CPDF $canvas, string $text, string $japaneseFont, float $size): float
+    {
+        $chunks = $this->splitMixedText($text);
+        $totalWidth = 0.0;
+        foreach ($chunks as $chunk) {
+            $font = $chunk['is_ascii'] ? 'Helvetica' : $japaneseFont;
+            $totalWidth += $canvas->get_text_width($chunk['text'], $font, $size);
+        }
+
+        return $totalWidth;
+    }
+
+    /**
+     * 日本語と英数字・ASCII記号が混在する文字列をフォント切り替え（Helvetica / japanesefont）しながら連続描画
+     *
+     * @param  array{float, float, float}  $color
+     */
+    protected function drawMixedText(CPDF $canvas, float $x, float $y, string $text, string $japaneseFont, float $size, array $color): float
+    {
+        $chunks = $this->splitMixedText($text);
+        $currentX = $x;
+        foreach ($chunks as $chunk) {
+            $font = $chunk['is_ascii'] ? 'Helvetica' : $japaneseFont;
+            $width = $canvas->get_text_width($chunk['text'], $font, $size);
+            $canvas->text($currentX, $y, $chunk['text'], $font, $size, $color);
+            $currentX += $width;
+        }
+
+        return $currentX - $x;
     }
 
     /**
