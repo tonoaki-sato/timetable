@@ -451,11 +451,13 @@ class SiteMapPdfExporterService
     protected function drawMixedText(CPDF $canvas, float $x, float $y, string $text, string $japaneseFont, float $size, array $color): float
     {
         $chunks = $this->splitMixedText($text);
+        $baseBaseline = $canvas->get_font_baseline($japaneseFont, $size);
         $currentX = $x;
         foreach ($chunks as $chunk) {
             $font = $chunk['is_ascii'] ? 'Helvetica' : $japaneseFont;
             $width = $canvas->get_text_width($chunk['text'], $font, $size);
-            $canvas->text($currentX, $y, $chunk['text'], $font, $size, $color);
+            $yOffset = $baseBaseline - $canvas->get_font_baseline($font, $size);
+            $canvas->text($currentX, $y + $yOffset, $chunk['text'], $font, $size, $color);
             $currentX += $width;
         }
 

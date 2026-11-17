@@ -408,6 +408,56 @@ class SiteMapPlacementTest extends TestCase
     }
 
     /**
+     * 日本語フォントと英数字フォント（Helvetica）のベースラインが同期され、上下の文字重なりやガタつきが生じないことを検証
+     */
+    public function test_export_pdf_aligns_font_baselines_without_overlap(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('timetables.site-maps.pdf', $this->timetable));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+
+        preg_match_all('/stream[\r\n]+(.*?)[\r\n]+endstream/s', $content, $streamMatches);
+        $decompressed = '';
+        foreach ($streamMatches[1] as $s) {
+            $decomp = @gzuncompress($s);
+            if ($decomp !== false) {
+                $decompressed .= $decomp;
+            }
+        }
+
+        // まるお酒場 (UTF-16BE: 307e308b304a91525834), WANDA, ECLAT の y 座標を抽出
+        // 例: BT 378.060 778.171 Td /F1 8.3 Tf  [(0~0...)] TJ ET
+        // バイナリ列を含むため /u フラグは付けず /s のみでマッチさせる
+        $maruoBinary = "\x30\x7E\x30\x8B\x30\x4A\x91\x52\x58\x34";
+        preg_match('/BT 378\.060 ([\d\.]+) Td \/F1 8\.3 Tf\s+\[\('.preg_quote($maruoBinary, '/').'\)\]/s', $decompressed, $mMaruo);
+        preg_match('/BT 378\.060 ([\d\.]+) Td \/F2 8\.3 Tf\s+\[\(\x57\x41\x4E\x44\x41\)\]/s', $decompressed, $mWanda);
+        preg_match('/BT 378\.060 ([\d\.]+) Td \/F2 8\.3 Tf\s+\[\(\x45\x43\x4C\x41\x54\)\]/s', $decompressed, $mEclat);
+
+        $this->assertNotEmpty($mMaruo, 'まるお酒場の描画コマンドが見つかりません');
+        $this->assertNotEmpty($mWanda, 'WANDAの描画コマンドが見つかりません');
+        $this->assertNotEmpty($mEclat, 'ECLATの描画コマンドが見つかりません');
+
+        $yMaruo = (float) $mMaruo[1];
+        $yWanda = (float) $mWanda[1];
+        $yEclat = (float) $mEclat[1];
+
+        // まるお酒場とWANDAの間隔、WANDAとECLATの間隔がどちらも 8.28pt（等間隔）で重なっていないことを検証
+        $this->assertEqualsWithDelta(8.28, $yMaruo - $yWanda, 0.05, 'まるお酒場とWANDAの行間隔が8.28pt等間隔になっていません');
+        $this->assertEqualsWithDelta(8.28, $yWanda - $yEclat, 0.05, 'WANDAとECLATの行間隔が8.28pt等間隔になっていません');
+
+        // タイトル行「保土ヶ谷宿場まつり ... 1/400 A3」のベースラインy座標が日本語と英数字で完全に一致していることを検証
+        preg_match('/BT ([\d\.]+) ([\d\.]+) Td \/F2 10\.5 Tf\s+\[\(1\/400\)\]/', $decompressed, $mScale);
+        preg_match('/BT ([\d\.]+) ([\d\.]+) Td \/F2 10\.5 Tf\s+\[\(A3\)\]/', $decompressed, $mPaper);
+
+        $this->assertNotEmpty($mScale, '1/400の描画コマンドが見つかりません');
+        $this->assertNotEmpty($mPaper, 'A3の描画コマンドが見つかりません');
+        $this->assertEqualsWithDelta(39.746, (float) $mScale[2], 0.05, '1/400のベースラインが日本語と揃っていません');
+        $this->assertEqualsWithDelta(39.746, (float) $mPaper[2], 0.05, 'A3のベースラインが日本語と揃っていません');
+    }
+
+    /**
      * バリデーションエラー時は422を返す
      */
     public function test_store_placement_validation_error(): void
