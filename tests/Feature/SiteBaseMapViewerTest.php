@@ -110,4 +110,74 @@ class SiteBaseMapViewerTest extends TestCase
             'is_active' => true,
         ]);
     }
+
+    /**
+     * 白地図（SVGおよびJSON）内に旧ブース矩形枠線（1m×1.8m）が残存せず、クリーンであることを検証
+     */
+    public function test_base_map_svg_and_json_have_no_residual_booth_rectangles(): void
+    {
+        $svgPath = public_path('maps/shopping_street_base_map_260813.svg');
+        $this->assertFileExists($svgPath);
+
+        $svgContent = file_get_contents($svgPath);
+
+        // 必須の建物名テキストが含まれていることを確認
+        $this->assertStringContainsString('更地（旧ふとん池田屋）', $svgContent);
+        $this->assertStringContainsString('国際会館', $svgContent);
+        $this->assertStringContainsString('長島駐車場（旧北川駐車場）内', $svgContent);
+
+        // 凡例外に 1m x 1.8m ブース矩形（幅 5.8〜6.6pt かつ 高さ 12.0〜13.0pt）の閉じたサブパスが存在しないことを検証
+        preg_match_all('/(M\s+[^Z]+?\s*Z)/', $svgContent, $matches);
+        $residualBoothCount = 0;
+
+        foreach ($matches[1] as $subpath) {
+            preg_match_all('/([-\d\.]+)\s+([-\d\.]+)/', $subpath, $ptMatches, PREG_SET_ORDER);
+            if (count($ptMatches) >= 3) {
+                $xs = array_map(fn ($p) => (float) $p[1], $ptMatches);
+                $ys = array_map(fn ($p) => (float) $p[2], $ptMatches);
+                $minX = min($xs);
+                $minY = min($ys);
+                $width = max($xs) - $minX;
+                $height = max($ys) - $minY;
+
+                if ($width >= 5.8 && $width <= 6.6 && $height >= 12.0 && $height <= 13.0) {
+                    if ($minX > 105 || $minY > 180) {
+                        $residualBoothCount++;
+                    }
+                }
+            }
+        }
+
+        $this->assertSame(0, $residualBoothCount, '白地図SVG内に旧ブース矩形枠線（1m×1.8m）が残存してはならない');
+
+        // JSONデータ側の検証
+        $jsonPath = storage_path('app/site_map_base_20260927.json');
+        if (file_exists($jsonPath)) {
+            $jsonData = json_decode(file_get_contents($jsonPath), true);
+            $this->assertIsArray($jsonData);
+            $this->assertArrayHasKey('paths', $jsonData);
+
+            $jsonResidualCount = 0;
+            foreach ($jsonData['paths'] as $pathItem) {
+                $d = $pathItem['d'] ?? '';
+                preg_match_all('/([-\d\.]+)\s+([-\d\.]+)/', $d, $ptMatches, PREG_SET_ORDER);
+                if (count($ptMatches) >= 3) {
+                    $xs = array_map(fn ($p) => (float) $p[1], $ptMatches);
+                    $ys = array_map(fn ($p) => (float) $p[2], $ptMatches);
+                    $minX = min($xs);
+                    $minY = min($ys);
+                    $width = max($xs) - $minX;
+                    $height = max($ys) - $minY;
+
+                    if ($width >= 5.8 && $width <= 6.6 && $height >= 12.0 && $height <= 13.0) {
+                        if ($minX > 105 || $minY > 180) {
+                            $jsonResidualCount++;
+                        }
+                    }
+                }
+            }
+
+            $this->assertSame(0, $jsonResidualCount, '白地図JSON内に旧ブース矩形枠線（1m×1.8m）が残存してはならない');
+        }
+    }
 }
