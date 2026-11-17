@@ -26,25 +26,62 @@ class SiteMapPdfExporterService
     ];
 
     /**
+     * 日本語フォントの実体ファイルパスを探索して取得
+     */
+    public function getJapaneseFontPath(): string
+    {
+        $candidates = [
+            resource_path('fonts/DroidSansFallbackFull.ttf'),
+            storage_path('fonts/DroidSansFallbackFull.ttf'),
+            '/usr/share/fonts/google-droid-sans-fonts/DroidSansFallbackFull.ttf',
+            '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
+            '/usr/share/fonts/truetype/fonts-japanese-gothic.ttf',
+        ];
+
+        foreach ($candidates as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        return resource_path('fonts/DroidSansFallbackFull.ttf');
+    }
+
+    /**
      * 白地図と全配置オブジェクトから A3 1/400 ベクターPDFバイナリを生成する
      *
      * @param  Collection<int, SiteMapPlacement>  $placements
      */
     public function exportA3VectorPdf(SiteBaseMap $siteBaseMap, Collection $placements): string
     {
+        $fontPath = $this->getJapaneseFontPath();
+        $fontDir = storage_path('fonts');
+        if (! is_dir($fontDir)) {
+            mkdir($fontDir, 0777, true);
+        }
+
         $dompdf = new Dompdf;
         $options = $dompdf->getOptions();
-        $options->setFontDir(storage_path('fonts'));
-        $options->setFontCache(storage_path('fonts'));
-        $options->setIsRemoteEnabled(false);
+        $options->setFontDir($fontDir);
+        $options->setFontCache($fontDir);
+        $options->setChroot(base_path());
+        $options->setIsRemoteEnabled(true);
 
-        $dompdf->loadHtml('<!DOCTYPE html><html><head><meta charset="utf-8"><style>@page { margin: 0; }</style></head><body style="margin:0;padding:0;"></body></html>');
+        $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>'
+            .'@font-face { font-family: "japanesefont"; src: url("file://'.$fontPath.'") format("truetype"); }'
+            .'@page { margin: 0; } body { font-family: "japanesefont"; margin: 0; padding: 0; }'
+            .'</style></head><body>&nbsp;</body></html>';
+
+        $dompdf->loadHtml($html);
         $dompdf->setPaper([0, 0, 842.0, 1191.0], 'portrait');
         $dompdf->render();
 
         /** @var CPDF $canvas */
         $canvas = $dompdf->getCanvas();
-        $font = $dompdf->getFontMetrics()->getFont('japanesefont', 'normal') ?: 'Helvetica';
+        $font = $dompdf->getFontMetrics()->getFont('japanesefont', 'normal');
+        if (! $font) {
+            $font = $fontPath;
+        }
 
         $iconDefs = SiteMapIconDefinition::all()->keyBy('icon_key');
 

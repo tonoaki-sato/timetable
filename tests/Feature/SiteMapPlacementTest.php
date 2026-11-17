@@ -458,6 +458,38 @@ class SiteMapPlacementTest extends TestCase
     }
 
     /**
+     * フォントキャッシュが存在しない本番初回環境であっても、日本語フォントが自己登録され「?」に化けないことを検証
+     */
+    public function test_export_pdf_auto_registers_japanese_font_without_question_mark_fallback(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('timetables.site-maps.pdf', $this->timetable));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+
+        preg_match_all('/stream[\r\n]+(.*?)[\r\n]+endstream/s', $content, $streamMatches);
+        $decompressed = '';
+        foreach ($streamMatches[1] as $s) {
+            $decomp = @gzuncompress($s);
+            if ($decomp !== false) {
+                $decompressed .= $decomp;
+            }
+        }
+
+        // 1. Helveticaにフォールバックした際に発生する「????」の連続置換が存在しないことを検証
+        $this->assertDoesNotMatchRegularExpression('/\[\(\?{3,}\)\]/', $decompressed);
+
+        // 2. 西村アパート等の日本語文字が正常にUTF-16BEバイナリで出力されていることを検証
+        $nishimuraHex = "\x89\x7F\x67\x51"; // 「西村」の UTF-16BE
+        $this->assertStringContainsString($nishimuraHex, $decompressed);
+
+        // 3. 凡例の日本語テキストも正常に出力されていることを検証
+        $tegakiHex = "\x62\x4B\x6D\x17"; // 「手洗」の UTF-16BE
+        $this->assertStringContainsString($tegakiHex, $decompressed);
+    }
+
+    /**
      * バリデーションエラー時は422を返す
      */
     public function test_store_placement_validation_error(): void
