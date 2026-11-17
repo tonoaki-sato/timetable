@@ -59,6 +59,7 @@
         data-bulk-url="{{ route('timetables.site-maps.placements.bulk-update', $timetable) }}"
         data-placements-url="{{ route('timetables.site-maps.placements.index', $timetable) }}"
         data-reset-url="{{ route('timetables.site-maps.reset-preset', $timetable) }}"
+        data-clear-url="{{ route('timetables.site-maps.clear-placements', $timetable) }}"
         data-icon-store-url="{{ route('timetables.site-maps.icons.store', $timetable) }}"
         data-icon-base-url="{{ url('timetables/' . $timetable->id . '/site-maps/icons') }}"
         data-csrf-token="{{ csrf_token() }}">
@@ -302,11 +303,17 @@
                     </div>
                 </div>
 
-                <!-- 見本配置へ復元ボタン -->
-                <div class="pt-2 border-t border-slate-100 shrink-0">
+                <!-- 見本配置へ復元 & 全クリアボタン -->
+                <div class="pt-2 border-t border-slate-100 shrink-0 space-y-1">
                     <button type="button" id="btn-reset-preset"
-                        class="w-full py-1.5 px-2 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300 text-slate-600 border border-slate-200 rounded-lg text-[11px] font-bold transition cursor-pointer">
+                        class="w-full py-1.5 px-2 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300 text-slate-600 border border-slate-200 rounded-lg text-[11px] font-bold transition cursor-pointer"
+                        title="添付PDFと同じ標準見本配置（全111件）を読み込みます">
                         🔄 標準見本配置 (260927) に復元
+                    </button>
+                    <button type="button" id="btn-clear-placements"
+                        class="w-full py-1.5 px-2 bg-slate-100 hover:bg-red-50 hover:text-red-700 hover:border-red-300 text-slate-600 border border-slate-200 rounded-lg text-[11px] font-bold transition cursor-pointer"
+                        title="現在の全配置オブジェクトを削除し、白地図のみの初期状態に戻します">
+                        🗑️ 全配置をクリア
                     </button>
                 </div>
             </aside>

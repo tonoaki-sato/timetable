@@ -200,6 +200,14 @@ class SiteMapService
     }
 
     /**
+     * 白地図上の全配置オブジェクトを一括削除（クリア）する
+     */
+    public function clearPlacements(SiteBaseMap $siteBaseMap): bool
+    {
+        return $this->repository->clearPlacementsByBaseMap($siteBaseMap);
+    }
+
+    /**
      * 白地図上の配置を添付PDFの見本配置状態へ復元する
      *
      * @return Collection<int, SiteMapPlacement>

@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarSearch = document.getElementById('sidebar-item-search');
     const sidebarUnplacedOnly = document.getElementById('sidebar-item-unplaced-only');
     const btnResetPreset = document.getElementById('btn-reset-preset');
+    const btnClearPlacements = document.getElementById('btn-clear-placements');
 
     // 右インスペクタ
     const inspBadge = document.getElementById('inspector-selection-badge');
@@ -86,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const storeUrl = appEl.dataset.storeUrl;
     const bulkUrl = appEl.dataset.bulkUrl;
     const resetUrl = appEl.dataset.resetUrl;
+    const clearUrl = appEl.dataset.clearUrl;
     const iconStoreUrl = appEl.dataset.iconStoreUrl;
     const iconBaseUrl = appEl.dataset.iconBaseUrl;
     const csrfToken = appEl.dataset.csrfToken;
@@ -1548,7 +1550,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     state.undoStack = [];
                     state.redoStack = [];
                     renderAllPlacements();
+                    syncInspector();
+                    syncSidebarLayoutItems();
+                    updateHygieneWarnings();
                     showToast('標準見本配置へ復元しました');
+                }
+                setSaveStatus('saved');
+            } catch (err) {
+                console.error(err);
+                setSaveStatus('error');
+            }
+        });
+    }
+
+    if (btnClearPlacements) {
+        btnClearPlacements.addEventListener('click', async () => {
+            if (state.placements.length === 0) {
+                showToast('配置オブジェクトはありません');
+                return;
+            }
+            if (!confirm(`現在の全配置オブジェクト（${state.placements.length}件）をすべて削除し、白地図のみの初期状態に戻しますか？`)) return;
+            setSaveStatus('saving');
+            try {
+                const res = await fetch(clearUrl, { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken } });
+                if (!res.ok) throw new Error('クリアに失敗しました');
+                const data = await res.json();
+                if (data.success) {
+                    state.placements = [];
+                    state.selectedIds.clear();
+                    state.undoStack = [];
+                    state.redoStack = [];
+                    renderAllPlacements();
+                    syncInspector();
+                    syncSidebarLayoutItems();
+                    updateHygieneWarnings();
+                    showToast('すべての配置オブジェクトをクリアしました');
                 }
                 setSaveStatus('saved');
             } catch (err) {

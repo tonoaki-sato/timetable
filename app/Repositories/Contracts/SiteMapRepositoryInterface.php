@@ -51,6 +51,11 @@ interface SiteMapRepositoryInterface
     public function deletePlacement(SiteMapPlacement $placement): bool;
 
     /**
+     * 白地図上の全配置オブジェクトを一括削除
+     */
+    public function clearPlacementsByBaseMap(SiteBaseMap $siteBaseMap): bool;
+
+    /**
      * 運行情報に紐づく既存ブース・設備台帳一覧を取得
      *
      * @return Collection<int, LayoutItem>

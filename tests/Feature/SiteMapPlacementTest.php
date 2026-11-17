@@ -369,4 +369,65 @@ class SiteMapPlacementTest extends TestCase
         $this->assertSame('x00', $resTent->json('placement.display_text'));
         $this->assertSame('red', $resTent->json('placement.color_theme'));
     }
+
+    /**
+     * デフォルト表示では配置オブジェクトが存在せず、0件の白地図のみが表示される
+     */
+    public function test_editor_displays_empty_placements_by_default(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('timetables.site-maps.editor', $this->timetable));
+
+        $response->assertStatus(200);
+
+        // 配置オブジェクトのカウントが 0件であることを検証
+        $this->assertSame(0, $this->siteBaseMap->placements()->count());
+
+        // 「標準見本配置に復元」および「全配置をクリア」ボタンが存在することを検証
+        $response->assertSee('id="btn-reset-preset"', false);
+        $response->assertSee('id="btn-clear-placements"', false);
+        $response->assertSee('全配置をクリア');
+    }
+
+    /**
+     * 全配置オブジェクトを一括削除（クリア）できる
+     */
+    public function test_can_clear_all_placements_via_api(): void
+    {
+        // 事前に2件の配置を作成
+        SiteMapPlacement::create([
+            'site_base_map_id' => $this->siteBaseMap->id,
+            'shape_type' => 'booth_standard',
+            'display_text' => 'B01',
+            'color_theme' => 'black',
+            'pos_x' => 100.0,
+            'pos_y' => 150.0,
+            'width' => 6.24,
+            'height' => 12.48,
+        ]);
+        SiteMapPlacement::create([
+            'site_base_map_id' => $this->siteBaseMap->id,
+            'shape_type' => 'booth_with_tent',
+            'display_text' => 'A01',
+            'color_theme' => 'red',
+            'pos_x' => 200.0,
+            'pos_y' => 250.0,
+            'width' => 13.86,
+            'height' => 13.86,
+        ]);
+
+        $this->assertSame(2, $this->siteBaseMap->placements()->count());
+
+        // クリアAPIを実行
+        $response = $this->actingAs($this->user)
+            ->postJson(route('timetables.site-maps.clear-placements', $this->timetable));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'placements' => [],
+            ]);
+
+        $this->assertSame(0, $this->siteBaseMap->placements()->count());
+    }
 }

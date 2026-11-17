@@ -126,6 +126,20 @@ class SiteMapController extends Controller
     }
 
     /**
+     * 全配置オブジェクトを一括削除（クリア）する API
+     */
+    public function clearPlacements(Timetable $timetable): JsonResponse
+    {
+        $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
+        $this->siteMapService->clearPlacements($siteBaseMap);
+
+        return response()->json([
+            'success' => true,
+            'placements' => [],
+        ]);
+    }
+
+    /**
      * 編集済みの白地図配置を A3 1/400 ベクターPDFとしてダウンロード出力する
      */
     public function exportPdf(Timetable $timetable): Response

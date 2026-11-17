@@ -79,6 +79,13 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
         return (bool) $placement->delete();
     }
 
+    public function clearPlacementsByBaseMap(SiteBaseMap $siteBaseMap): bool
+    {
+        $siteBaseMap->placements()->delete();
+
+        return true;
+    }
+
     /**
      * @return Collection<int, LayoutItem>
      */
