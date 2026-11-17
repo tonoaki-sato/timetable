@@ -79,6 +79,9 @@ class SiteMapPlacementTest extends TestCase
         $response->assertSee('modal-create-icon', false);
         $response->assertSee('modal-edit-icon', false);
         $response->assertSee('modal-delete-icon', false);
+        $response->assertSee('右クリック: 選択/手のひら切替');
+        $response->assertSee('選択・移動モード (Vキー / 右クリック)');
+        $response->assertSee('手のひら移動モード (Hキー / Space押下 / 右クリック)');
     }
 
     /**

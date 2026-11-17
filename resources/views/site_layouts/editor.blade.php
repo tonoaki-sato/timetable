@@ -72,12 +72,12 @@
                 <div class="inline-flex rounded-lg border border-slate-300 bg-slate-50 p-0.5">
                     <button type="button" id="btn-mode-select"
                         class="px-2 py-1 rounded-md font-bold bg-indigo-600 text-white transition cursor-pointer"
-                        title="選択・移動モード (Vキー)">
+                        title="選択・移動モード (Vキー / 右クリック)">
                         ↖ 選択
                     </button>
                     <button type="button" id="btn-mode-pan"
                         class="px-2 py-1 rounded-md font-bold text-slate-700 hover:bg-slate-200 transition cursor-pointer"
-                        title="手のひら移動モード (Hキー / Space押下)">
+                        title="手のひら移動モード (Hキー / Space押下 / 右クリック)">
                         ✋ 手のひら
                     </button>
                 </div>
@@ -351,6 +351,8 @@
 
                 <!-- ヘルプチップ -->
                 <div class="absolute bottom-2.5 right-3 z-10 px-2.5 py-1 bg-slate-900/75 text-white rounded-lg text-[10px] font-medium pointer-events-none flex items-center space-x-2">
+                    <span>右クリック: 選択/手のひら切替</span>
+                    <span class="text-slate-400">|</span>
                     <span>ダブルクリック: 文字入力</span>
                     <span class="text-slate-400">|</span>
                     <span>Shift+選択/範囲: 複数選択</span>

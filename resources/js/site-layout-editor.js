@@ -1216,6 +1216,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- ツールモードトグル切替 (右クリック等) ---
+    function toggleToolMode() {
+        if (state.isMarquee) {
+            state.isMarquee = false;
+            if (marqueeBox) marqueeBox.classList.add('hidden');
+        }
+        if (state.isMoving) {
+            state.isMoving = false;
+            clearGuideLines();
+        }
+        if (state.isResizing) {
+            state.isResizing = false;
+            state.resizeOrig = null;
+        }
+        if (state.isPanning) {
+            state.isPanning = false;
+        }
+        const nextMode = state.toolMode === 'select' ? 'pan' : 'select';
+        setToolMode(nextMode);
+    }
+
+    // キャンバス上の右クリックで「選択」↔「手のひら」をトグル切替
+    canvasContainer.addEventListener('contextmenu', (e) => {
+        const tag = e.target?.tagName?.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+        e.preventDefault();
+        toggleToolMode();
+    });
+
     // --- マウスイベント ---
     canvasContainer.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
