@@ -118,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 通り沿い歩道4レールX座標 (A3 1/400 pt)
     const STREET_RAILS_X = [309.72, 353.94, 681.36, 725.58];
     const HYGIENE_RADIUS_PT = 138.0; // 20m
+    const CAD_FONT_FAMILY = "'BIZ UDPGothic', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', 'Noto Sans JP', sans-serif";
 
     // エディタ状態
     const state = {
@@ -197,8 +198,29 @@ document.addEventListener('DOMContentLoaded', () => {
         state.toastTimer = setTimeout(() => toastEl.classList.add('hidden'), 3500);
     }
 
+    function snapToDevicePixel(val) {
+        const dpr = window.devicePixelRatio || 1;
+        return Math.round(val * dpr) / dpr;
+    }
+
     function updateTransform() {
-        viewport.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        const pxX = snapToDevicePixel(state.x);
+        const pxY = snapToDevicePixel(state.y);
+        const scaledW = snapToDevicePixel(state.svgWidth * state.scale);
+        const scaledH = snapToDevicePixel(state.svgHeight * state.scale);
+
+        viewport.style.transform = 'none';
+        viewport.style.left = `${pxX}px`;
+        viewport.style.top = `${pxY}px`;
+
+        const svg = svgContainer.querySelector('svg');
+        if (svg) {
+            svg.setAttribute('width', `${scaledW}`);
+            svg.setAttribute('height', `${scaledH}`);
+            svg.style.width = `${scaledW}px`;
+            svg.style.height = `${scaledH}px`;
+        }
+
         if (zoomText) zoomText.textContent = `${Math.round(state.scale * 100)}%`;
     }
 
@@ -207,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!rect.width || !rect.height) return;
         const pad = 20;
         const s = Math.min((rect.width - pad * 2) / state.svgWidth, (rect.height - pad * 2) / state.svgHeight, 2.0);
-        state.scale = Math.max(0.25, Math.min(s, 6.0));
+        state.scale = Math.max(0.25, Math.min(s, 16.0));
         state.x = (rect.width - state.svgWidth * state.scale) / 2;
         state.y = (rect.height - state.svgHeight * state.scale) / 2;
         updateTransform();
@@ -218,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cx = clientX - rect.left;
         const cy = clientY - rect.top;
         const oldS = state.scale;
-        const newS = Math.max(0.25, Math.min(oldS * factor, 8.0));
+        const newS = Math.max(0.25, Math.min(oldS * factor, 16.0));
         const svgX = (cx - state.x) / oldS;
         const svgY = (cy - state.y) / oldS;
         state.scale = newS;
@@ -414,7 +436,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const lh = fs * 1.25;
             g.appendChild(createSvgEl('rect', { x, y, width: w, height: Math.max(h, lines.length * lh), fill: 'rgba(255,255,255,0.85)', stroke: isSelected ? '#2563eb' : 'none', 'stroke-width': '0.4' }));
             lines.forEach((line, idx) => {
-                const tEl = createSvgEl('text', { x: x + 1, y: y + fs + idx * lh, 'font-family': 'sans-serif', 'font-size': `${fs}px`, 'font-weight': 'bold', fill: theme.text });
+                const tEl = createSvgEl('text', {
+                    x: x + 1, y: y + fs + idx * lh,
+                    'font-family': CAD_FONT_FAMILY,
+                    'font-size': `${fs}px`,
+                    'font-weight': 'bold',
+                    'text-rendering': 'geometricPrecision',
+                    'paint-order': 'stroke fill',
+                    stroke: '#ffffff',
+                    'stroke-width': '0.9',
+                    'stroke-linejoin': 'round',
+                    fill: theme.text,
+                });
                 tEl.textContent = line;
                 g.appendChild(tEl);
             });
@@ -517,9 +550,17 @@ document.addEventListener('DOMContentLoaded', () => {
         lines.forEach((line, idx) => {
             const tEl = createSvgEl('text', {
                 x: x + w / 2, y: startY + idx * lh,
-                'text-anchor': 'middle', 'font-family': 'sans-serif',
-                'font-size': `${fs.toFixed(1)}px`, 'font-weight': 'bold',
-                fill: colorHex, 'pointer-events': 'none',
+                'text-anchor': 'middle',
+                'font-family': CAD_FONT_FAMILY,
+                'font-size': `${fs.toFixed(1)}px`,
+                'font-weight': 'bold',
+                'text-rendering': 'geometricPrecision',
+                'paint-order': 'stroke fill',
+                stroke: '#ffffff',
+                'stroke-width': '0.65',
+                'stroke-linejoin': 'round',
+                fill: colorHex,
+                'pointer-events': 'none',
             });
             tEl.textContent = line;
             g.appendChild(tEl);
@@ -1110,17 +1151,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 白地図ロード ---
     async function loadSvgMap() {
         try {
-            const res = await fetch(svgUrl);
+            const res = await fetch(svgUrl, { cache: 'no-cache' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const svgText = await res.text();
             svgContainer.innerHTML = svgText;
 
             const svg = svgContainer.querySelector('svg');
             if (svg) {
-                svg.setAttribute('width', `${state.svgWidth}px`);
-                svg.setAttribute('height', `${state.svgHeight}px`);
+                svg.setAttribute('width', `${state.svgWidth}`);
+                svg.setAttribute('height', `${state.svgHeight}`);
+                svg.setAttribute('shape-rendering', 'geometricPrecision');
+                svg.setAttribute('text-rendering', 'geometricPrecision');
                 svg.style.display = 'block';
                 svg.style.maxWidth = 'none';
+                svg.style.fontFamily = CAD_FONT_FAMILY;
             }
 
             if (loadingEl) {

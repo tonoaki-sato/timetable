@@ -292,9 +292,9 @@
                         <p class="mt-3 text-xs font-bold text-slate-600">A3 1/400 ベクター白地図を読み込み中...</p>
                     </div>
 
-                    <!-- トランスフォームビューポート -->
-                    <div id="site-map-viewport" class="absolute top-0 left-0 origin-top-left will-change-transform">
-                        <div id="site-map-svg-container" class="relative inline-block shadow-xl bg-white"></div>
+                    <!-- ベクター直接スケーリング・ビューポート (will-change-transform によるGPUビットマップボケを防止) -->
+                    <div id="site-map-viewport" class="absolute top-0 left-0 origin-top-left">
+                        <div id="site-map-svg-container" class="relative inline-block shadow-xl bg-white antialiased"></div>
                     </div>
 
                     <!-- 範囲選択ラバーバンド矩形 -->
