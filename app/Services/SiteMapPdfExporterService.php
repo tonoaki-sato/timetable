@@ -67,14 +67,29 @@ class SiteMapPdfExporterService
         $options->setChroot(base_path());
         $options->setIsRemoteEnabled(true);
 
-        $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>'
-            .'@font-face { font-family: "japanesefont"; src: url("file://'.$fontPath.'") format("truetype"); }'
-            .'@page { margin: 0; } body { font-family: "japanesefont"; margin: 0; padding: 0; }'
-            .'</style></head><body>&nbsp;</body></html>';
+        // 既に japanesefont が登録されている場合は不要な再登録（w+ でのUFM再生成）をスキップ
+        $existingFont = $dompdf->getFontMetrics()->getFont('japanesefont', 'normal');
+        if (! $existingFont) {
+            $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>'
+                .'@font-face { font-family: "japanesefont"; src: url("file://'.$fontPath.'") format("truetype"); }'
+                .'@page { margin: 0; } body { font-family: "japanesefont"; margin: 0; padding: 0; }'
+                .'</style></head><body>&nbsp;</body></html>';
+        } else {
+            $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>@page { margin: 0; }</style></head><body style="margin:0;padding:0;"></body></html>';
+        }
 
         $dompdf->loadHtml($html);
         $dompdf->setPaper([0, 0, 842.0, 1191.0], 'portrait');
         $dompdf->render();
+
+        // 初回生成時のWebサーバー・CLI間の所有権不一致（Permission denied）を防止
+        if (! $existingFont) {
+            foreach (glob($fontDir.'/*') ?: [] as $file) {
+                if (is_file($file)) {
+                    @chmod($file, 0666);
+                }
+            }
+        }
 
         /** @var CPDF $canvas */
         $canvas = $dompdf->getCanvas();
