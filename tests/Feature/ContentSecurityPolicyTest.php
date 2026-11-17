@@ -95,6 +95,7 @@ class ContentSecurityPolicyTest extends TestCase
             route('timetables.locations.show', [$timetable, $location]),
             route('timetables.locations.edit', [$timetable, $location]),
             route('timetables.logistics.index', $timetable),
+            route('timetables.site-maps.editor', $timetable),
             route('timetables.staff-timeline', $timetable),
             route('staff.index'),
             route('staff.create'),

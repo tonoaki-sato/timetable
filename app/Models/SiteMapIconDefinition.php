@@ -7,19 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
- * アイコン種別定義マスターモデル
+ * CADシンボル種別定義マスターモデル
  *
  * @property int $id
  * @property string $icon_key
  * @property string $name
  * @property string $category
+ * @property string $render_style
  * @property float $default_width
  * @property float $default_height
  * @property bool $is_resizable
  * @property bool $is_rotatable
  * @property int $rotation_step
  * @property array<string>|null $supported_colors
+ * @property string $default_color
  * @property bool $has_hygiene_circle
+ * @property float $hygiene_radius
  * @property bool $is_hygiene_target
  * @property string|null $icon_asset_path
  * @property Carbon|null $created_at
@@ -41,13 +44,16 @@ class SiteMapIconDefinition extends Model
         'icon_key',
         'name',
         'category',
+        'render_style',
         'default_width',
         'default_height',
         'is_resizable',
         'is_rotatable',
         'rotation_step',
         'supported_colors',
+        'default_color',
         'has_hygiene_circle',
+        'hygiene_radius',
         'is_hygiene_target',
         'icon_asset_path',
     ];
@@ -65,6 +71,7 @@ class SiteMapIconDefinition extends Model
             'rotation_step' => 'integer',
             'supported_colors' => 'array',
             'has_hygiene_circle' => 'boolean',
+            'hygiene_radius' => 'decimal:2',
             'is_hygiene_target' => 'boolean',
         ];
     }

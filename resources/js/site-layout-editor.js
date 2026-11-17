@@ -1,1277 +1,1650 @@
 /**
- * 白地図配置エディタ (Site Layout Editor) - Phase 2 (精密CTM座標同期版)
- * 商店街平面図 (A3 1/400) ベクターCADビューアー & ドラッグ＆ドロップ配置エンジン
+ * 白地図配置エディタ (Site Layout Editor) - 3ペイン CADベクタードローツール
+ * A3 1/400 (842pt × 1191pt) 精密ベクター編集・スマートスナップ・20m衛生チェック・PDF出力連動
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     const appEl = document.getElementById('site-layout-editor-app');
     if (!appEl) return;
 
+    // --- DOM参照 ---
     const canvasContainer = document.getElementById('site-map-canvas-container');
     const viewport = document.getElementById('site-map-viewport');
     const svgContainer = document.getElementById('site-map-svg-container');
     const loadingEl = document.getElementById('canvas-loading');
-    const zoomText = document.getElementById('zoom-level-text');
-    const countBadge = document.getElementById('placement-count-badge');
+    const marqueeBox = document.getElementById('marquee-selection-box');
+    const inlineEditor = document.getElementById('inline-text-editor');
+    const hoverTooltip = document.getElementById('node-hover-tooltip');
+    const toastEl = document.getElementById('editor-toast');
+    const toastMsgEl = document.getElementById('editor-toast-message');
+    const toastUndoBtn = document.getElementById('editor-toast-undo');
 
-    const btnZoomIn = document.getElementById('btn-zoom-in');
-    const btnZoomOut = document.getElementById('btn-zoom-out');
-    const btnZoom100 = document.getElementById('btn-zoom-100');
-    const btnZoomFit = document.getElementById('btn-zoom-fit');
+    // 上部ツールバー
+    const btnModeSelect = document.getElementById('btn-mode-select');
+    const btnModePan = document.getElementById('btn-mode-pan');
+    const btnUndo = document.getElementById('btn-undo');
+    const btnRedo = document.getElementById('btn-redo');
+    const btnDuplicate = document.getElementById('btn-duplicate');
     const btnRotateSelected = document.getElementById('btn-rotate-selected');
     const btnDeleteSelected = document.getElementById('btn-delete-selected');
+    const btnAlignLeft = document.getElementById('btn-align-left');
+    const btnAlignTop = document.getElementById('btn-align-top');
+    const btnPackVert = document.getElementById('btn-pack-vert');
+    const btnPackHoriz = document.getElementById('btn-pack-horiz');
+    const btnToggleHygiene = document.getElementById('btn-toggle-hygiene');
+    const btnToggleSnap = document.getElementById('btn-toggle-snap');
+    const btnZoomOut = document.getElementById('btn-zoom-out');
+    const btnZoomIn = document.getElementById('btn-zoom-in');
+    const btnZoom100 = document.getElementById('btn-zoom-100');
+    const btnZoomFit = document.getElementById('btn-zoom-fit');
+    const zoomText = document.getElementById('zoom-level-text');
+    const saveStatusBadge = document.getElementById('save-status-badge');
 
+    // 左ペイン
+    const tabBtnShapes = document.getElementById('tab-btn-shapes');
+    const tabBtnItems = document.getElementById('tab-btn-items');
+    const tabPanelShapes = document.getElementById('tab-panel-shapes');
+    const tabPanelItems = document.getElementById('tab-panel-items');
+    const sidebarSearch = document.getElementById('sidebar-item-search');
+    const sidebarUnplacedOnly = document.getElementById('sidebar-item-unplaced-only');
+    const btnResetPreset = document.getElementById('btn-reset-preset');
+
+    // 右インスペクタ
+    const inspBadge = document.getElementById('inspector-selection-badge');
+    const inspEmpty = document.getElementById('inspector-empty-state');
+    const inspSingle = document.getElementById('inspector-single-form');
+    const inspMulti = document.getElementById('inspector-multi-panel');
+    const inspShapeName = document.getElementById('insp-shape-name');
+    const inspDisplayText = document.getElementById('insp-display-text');
+    const inspColorNote = document.getElementById('insp-color-note');
+    const inspColorBtns = document.querySelectorAll('.insp-color-btn');
+    const inspRotation = document.getElementById('insp-rotation');
+    const inspFontSize = document.getElementById('insp-font-size');
+    const inspRotationLocked = document.getElementById('insp-rotation-locked');
+    const inspWidthM = document.getElementById('insp-width-m');
+    const inspHeightM = document.getElementById('insp-height-m');
+    const inspWaterOptions = document.getElementById('insp-water-options');
+    const inspShowHygieneCircle = document.getElementById('insp-show-hygiene-circle');
+    const inspArcMode = document.getElementById('insp-arc-mode');
+    const inspLayoutItemId = document.getElementById('insp-layout-item-id');
+    const inspNotes = document.getElementById('insp-notes');
+    const inspMultiCount = document.getElementById('insp-multi-count');
+    const bulkColorBtns = document.querySelectorAll('.bulk-color-btn');
+
+    // サマリー＆衛生チェック
+    const sumTotal = document.getElementById('summary-total-count');
+    const sumRed = document.getElementById('summary-red-count');
+    const sumGreen = document.getElementById('summary-green-count');
+    const sumWater = document.getElementById('summary-water-count');
+    const hygieneStatus = document.getElementById('hygiene-check-status');
+    const hygieneWarningList = document.getElementById('hygiene-warning-list');
+
+    // Dataset URLs
     const svgUrl = appEl.dataset.svgUrl;
     const viewboxStr = appEl.dataset.viewbox || '0 0 842 1191';
+    const scaleRatio = parseFloat(appEl.dataset.scaleRatio) || 7.0866;
     const storeUrl = appEl.dataset.storeUrl;
+    const bulkUrl = appEl.dataset.bulkUrl;
+    const resetUrl = appEl.dataset.resetUrl;
     const csrfToken = appEl.dataset.csrfToken;
 
-    // 初期データのパース
-    let placements = [];
-    const initialPlacementsEl = document.getElementById('initial-placements-data');
-    if (initialPlacementsEl && initialPlacementsEl.dataset.json) {
+    // 初期JSONパース
+    const parseJsonAttr = (id, fallback) => {
+        const el = document.getElementById(id);
+        if (!el || !el.dataset.json) return fallback;
         try {
-            placements = JSON.parse(initialPlacementsEl.dataset.json);
+            return JSON.parse(el.dataset.json);
         } catch (e) {
-            console.error('Failed to parse initial placements:', e);
+            console.error(`JSON parse failed for ${id}:`, e);
+            return fallback;
         }
-    }
+    };
 
-    let iconDefinitions = {};
-    const iconDefsEl = document.getElementById('icon-definitions-data');
-    if (iconDefsEl && iconDefsEl.dataset.json) {
-        try {
-            const list = JSON.parse(iconDefsEl.dataset.json);
-            list.forEach(def => {
-                iconDefinitions[def.icon_key] = def;
-            });
-        } catch (e) {
-            console.error('Failed to parse icon definitions:', e);
-        }
-    }
+    const initialPlacements = parseJsonAttr('initial-placements-data', []);
+    const iconDefsList = parseJsonAttr('icon-definitions-data', []);
+    const iconDefinitions = {};
+    iconDefsList.forEach(d => { iconDefinitions[d.icon_key] = d; });
 
-    let layoutItems = [];
-    const layoutItemsEl = document.getElementById('layout-items-data');
-    if (layoutItemsEl && layoutItemsEl.dataset.json) {
-        try {
-            layoutItems = JSON.parse(layoutItemsEl.dataset.json);
-        } catch (e) {
-            console.error('Failed to parse layout items:', e);
-        }
-    }
+    // カラーマップ（添付PDF準拠）
+    const COLOR_MAP = {
+        red: { stroke: '#dc2626', text: '#dc2626' },
+        green: { stroke: '#16a34a', text: '#16a34a' },
+        black: { stroke: '#0f172a', text: '#0f172a' },
+        cyan: { stroke: '#06b6d4', text: '#0891b2' },
+        orange: { stroke: '#f97316', text: '#ea580c' },
+        blue: { stroke: '#2563eb', text: '#2563eb' },
+    };
 
-    // モーダル要素の取得 (Phase 4)
-    const modalEl = document.getElementById('site-map-placement-modal');
-    const modalForm = document.getElementById('placement-modal-form');
-    const modalTitle = document.getElementById('modal-title');
-    const modalSubtitle = document.getElementById('modal-subtitle');
-    const modalIconImg = document.getElementById('modal-icon-img');
-    const modalPlacementId = document.getElementById('modal-placement-id');
-    const modalDisplayText = document.getElementById('modal-display-text');
-    const modalColorOptions = document.querySelectorAll('input[name="modal_color"]');
-    const modalColorBadge = document.getElementById('modal-color-status-badge');
-    const modalRotation = document.getElementById('modal-rotation');
-    const modalRotationBadge = document.getElementById('modal-rotation-status-badge');
-    const modalLayoutItemId = document.getElementById('modal-layout-item-id');
-    const modalItemBadge = document.getElementById('modal-item-status-badge');
-    const modalVendorPreview = document.getElementById('modal-vendor-preview');
-    const modalNotes = document.getElementById('modal-notes');
-    const btnModalClose = document.getElementById('btn-modal-close');
-    const btnModalCancel = document.getElementById('btn-modal-cancel');
-    const btnModalDelete = document.getElementById('btn-modal-delete');
-    const btnModalSave = document.getElementById('btn-modal-save');
+    // 通り沿い歩道4レールX座標 (A3 1/400 pt)
+    const STREET_RAILS_X = [309.72, 353.94, 681.36, 725.58];
+    const HYGIENE_RADIUS_PT = 138.0; // 20m
 
-    // ビューポート & 編集状態
+    // エディタ状態
     const state = {
         scale: 1.0,
         x: 0,
         y: 0,
-        isDragging: false,
-        dragStartX: 0,
-        dragStartY: 0,
-        panDist: 0,
         svgWidth: 842,
         svgHeight: 1191,
-        placements: placements,
-        selectedPlacementId: null,
-        isMovingNode: false,
-        movingNodeId: null,
+        toolMode: 'select', // 'select' | 'pan'
+        spacePressed: false,
+        showHygiene: true,
+        snapEnabled: true,
+        placements: initialPlacements,
+        selectedIds: new Set(),
+        // インタラクション状態
+        isPanning: false,
+        panStartX: 0,
+        panStartY: 0,
+        isMarquee: false,
+        marqueeStartClientX: 0,
+        marqueeStartClientY: 0,
+        isMoving: false,
         moveStartSvgX: 0,
         moveStartSvgY: 0,
-        origPlacementX: 0,
-        origPlacementY: 0,
-        // フリーエリアリサイズ用状態 (Phase 5)
+        moveOrigPositions: new Map(), // id -> {x, y}
         isResizing: false,
-        resizeHandle: null, // 'tl', 'tr', 'br', 'bl'
-        resizePlacementId: null,
+        resizeHandle: null,
+        resizeId: null,
         resizeStartSvgX: 0,
         resizeStartSvgY: 0,
-        origWidth: 0,
-        origHeight: 0,
-        origX: 0,
-        origY: 0,
+        resizeOrig: null,
+        // 履歴
+        undoStack: [],
+        redoStack: [],
+        nudgeTimer: null,
+        inspTimer: null,
+        toastTimer: null,
     };
 
-    /**
-     * 座標がメイン通り（南北の車道・歩道領域）沿いにあるかを幾何判定 (Phase 5)
-     */
-    function isAlongStreet(x, y, w, h) {
-        const centerX = x + w / 2;
-        // 商店街のメイン道路（車道・両側歩道を含む縦断ゾーン）: X 230〜330
-        return centerX >= 230 && centerX <= 330;
-    }
-
-    // viewBox からデフォルトサイズをパース (842 x 1191)
     const vbParts = viewboxStr.split(/\s+/).map(Number);
     if (vbParts.length === 4 && vbParts[2] > 0 && vbParts[3] > 0) {
         state.svgWidth = vbParts[2];
         state.svgHeight = vbParts[3];
     }
 
-    /**
-     * トランスフォームの適用 & UI更新
-     */
-    function updateTransform() {
-        viewport.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
-        if (zoomText) {
-            zoomText.textContent = `${Math.round(state.scale * 100)}%`;
+    // --- ユーティリティ ---
+    function setSaveStatus(status) {
+        if (!saveStatusBadge) return;
+        if (status === 'saving') {
+            saveStatusBadge.textContent = '⏳ 保存中...';
+            saveStatusBadge.className = 'px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg font-bold text-[11px]';
+        } else if (status === 'error') {
+            saveStatusBadge.textContent = '⚠️ 保存エラー';
+            saveStatusBadge.className = 'px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded-lg font-bold text-[11px]';
+        } else {
+            saveStatusBadge.textContent = '✓ 保存済';
+            saveStatusBadge.className = 'px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg font-bold text-[11px]';
         }
     }
 
-    /**
-     * 全体表示 (Fit to Screen)
-     */
+    function showToast(msg, undoCallback = null) {
+        if (!toastEl || !toastMsgEl) return;
+        toastMsgEl.textContent = msg;
+        if (toastUndoBtn) {
+            if (undoCallback) {
+                toastUndoBtn.classList.remove('hidden');
+                toastUndoBtn.onclick = () => {
+                    toastEl.classList.add('hidden');
+                    undoCallback();
+                };
+            } else {
+                toastUndoBtn.classList.add('hidden');
+            }
+        }
+        toastEl.classList.remove('hidden');
+        clearTimeout(state.toastTimer);
+        state.toastTimer = setTimeout(() => toastEl.classList.add('hidden'), 3500);
+    }
+
+    function updateTransform() {
+        viewport.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        if (zoomText) zoomText.textContent = `${Math.round(state.scale * 100)}%`;
+    }
+
     function fitToScreen() {
-        const containerRect = canvasContainer.getBoundingClientRect();
-        if (containerRect.width === 0 || containerRect.height === 0) return;
-
-        const padding = 24;
-        const availWidth = containerRect.width - padding * 2;
-        const availHeight = containerRect.height - padding * 2;
-
-        const scaleX = availWidth / state.svgWidth;
-        const scaleY = availHeight / state.svgHeight;
-        const newScale = Math.min(scaleX, scaleY, 1.8);
-
-        state.scale = Math.max(0.2, Math.min(newScale, 5.0));
-
-        // 中央配置
-        const renderedW = state.svgWidth * state.scale;
-        const renderedH = state.svgHeight * state.scale;
-        state.x = (containerRect.width - renderedW) / 2;
-        state.y = (containerRect.height - renderedH) / 2;
-
-        updateTransform();
-    }
-
-    /**
-     * 指定中心点に向かってズーム
-     */
-    function zoomAround(deltaScale, clientX, clientY) {
         const rect = canvasContainer.getBoundingClientRect();
-        const cursorX = clientX - rect.left;
-        const cursorY = clientY - rect.top;
-
-        const oldScale = state.scale;
-        const newScale = Math.max(0.2, Math.min(oldScale * deltaScale, 6.0));
-
-        // カーソル下の図面上の絶対位置を維持
-        const svgPointX = (cursorX - state.x) / oldScale;
-        const svgPointY = (cursorY - state.y) / oldScale;
-
-        state.scale = newScale;
-        state.x = cursorX - svgPointX * newScale;
-        state.y = cursorY - svgPointY * newScale;
-
+        if (!rect.width || !rect.height) return;
+        const pad = 20;
+        const s = Math.min((rect.width - pad * 2) / state.svgWidth, (rect.height - pad * 2) / state.svgHeight, 2.0);
+        state.scale = Math.max(0.25, Math.min(s, 6.0));
+        state.x = (rect.width - state.svgWidth * state.scale) / 2;
+        state.y = (rect.height - state.svgHeight * state.scale) / 2;
         updateTransform();
     }
 
-    /**
-     * スクリーン座標 (clientX, clientY) を SVG 内部の正確な図面座標 (X, Y) に変換
-     * ブラウザ標準の getScreenCTM().inverse() を使用して、ズーム倍率やパン位置、
-     * レターボックスの有無に関係なく完全ピンポイントで逆変換する。
-     */
-    function getSvgCoordinates(clientX, clientY) {
+    function zoomAround(factor, clientX, clientY) {
+        const rect = canvasContainer.getBoundingClientRect();
+        const cx = clientX - rect.left;
+        const cy = clientY - rect.top;
+        const oldS = state.scale;
+        const newS = Math.max(0.25, Math.min(oldS * factor, 8.0));
+        const svgX = (cx - state.x) / oldS;
+        const svgY = (cy - state.y) / oldS;
+        state.scale = newS;
+        state.x = cx - svgX * newS;
+        state.y = cy - svgY * newS;
+        updateTransform();
+    }
+
+    function getSvgCoords(clientX, clientY) {
         const svg = svgContainer.querySelector('svg');
         if (!svg) {
             const rect = canvasContainer.getBoundingClientRect();
-            return {
-                x: (clientX - rect.left - state.x) / state.scale,
-                y: (clientY - rect.top - state.y) / state.scale,
-            };
+            return { x: (clientX - rect.left - state.x) / state.scale, y: (clientY - rect.top - state.y) / state.scale };
         }
-
         const pt = svg.createSVGPoint();
         pt.x = clientX;
         pt.y = clientY;
-
         const ctm = svg.getScreenCTM();
         if (!ctm) {
             const rect = canvasContainer.getBoundingClientRect();
-            return {
-                x: (clientX - rect.left - state.x) / state.scale,
-                y: (clientY - rect.top - state.y) / state.scale,
-            };
+            return { x: (clientX - rect.left - state.x) / state.scale, y: (clientY - rect.top - state.y) / state.scale };
         }
-
-        const svgPt = pt.matrixTransform(ctm.inverse());
-        return { x: svgPt.x, y: svgPt.y };
+        const res = pt.matrixTransform(ctm.inverse());
+        return { x: res.x, y: res.y };
     }
 
-    /**
-     * 配置レイヤーの取得または生成
-     */
-    function getPlacementsLayer() {
+    function isAlongStreet(x, y, w) {
+        const cx = x + w / 2;
+        return (cx >= 305 && cx <= 372) || (cx >= 676 && cx <= 744);
+    }
+
+    // --- SVG サブレイヤー管理 (Z-Order 自動階層化) ---
+    function ensureLayers() {
         const svg = svgContainer.querySelector('svg');
         if (!svg) return null;
+        let root = svg.querySelector('#site-map-placements-layer');
+        if (!root) {
+            root = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            root.setAttribute('id', 'site-map-placements-layer');
+            svg.appendChild(root);
 
-        let layer = svg.querySelector('#site-map-placements-layer');
-        if (!layer) {
-            layer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            layer.setAttribute('id', 'site-map-placements-layer');
-            svg.appendChild(layer);
+            ['layer-hygiene-circles', 'layer-free-areas', 'layer-booths', 'layer-facilities', 'layer-overlays'].forEach(id => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('id', id);
+                root.appendChild(g);
+            });
         }
-        return layer;
+        return {
+            hygiene: root.querySelector('#layer-hygiene-circles'),
+            areas: root.querySelector('#layer-free-areas'),
+            booths: root.querySelector('#layer-booths'),
+            facilities: root.querySelector('#layer-facilities'),
+            overlays: root.querySelector('#layer-overlays'),
+        };
     }
 
-    /**
-     * 単一の配置ノードをSVGに描画
-     */
-    function renderPlacementNode(placement) {
-        const layer = getPlacementsLayer();
-        if (!layer) return;
+    function getTargetLayerFor(placement, layers) {
+        if (placement.shape_type === 'free_area' || placement.shape_type === 'area_note') return layers.areas;
+        if (placement.shape_type === 'water_supply') return layers.facilities;
+        return layers.booths;
+    }
 
-        // 既存ノードがあれば削除
-        const existing = layer.querySelector(`[data-placement-id="${placement.id}"]`);
-        if (existing) {
-            existing.remove();
+    // --- 20m 衛生サークル描画 & 圏外チェック ---
+    function renderHygieneCirclesAndCheck() {
+        const layers = ensureLayers();
+        if (!layers) return;
+        layers.hygiene.innerHTML = '';
+
+        const waters = state.placements.filter(p => p.shape_type === 'water_supply');
+        const redBooths = state.placements.filter(p => p.color_theme === 'red' && p.shape_type !== 'area_note');
+
+        if (state.showHygiene) {
+            waters.forEach(w => {
+                if (w.show_hygiene_circle === false) return;
+                const cx = parseFloat(w.pos_x) + parseFloat(w.width) / 2;
+                const cy = parseFloat(w.pos_y) + parseFloat(w.height) / 2;
+                const startDeg = parseInt(w.arc_start_angle ?? 0, 10);
+                let endDeg = parseInt(w.arc_end_angle ?? 360, 10);
+                if (endDeg <= startDeg) endDeg = startDeg + 360;
+
+                if (endDeg - startDeg >= 360) {
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', cx);
+                    circle.setAttribute('cy', cy);
+                    circle.setAttribute('r', HYGIENE_RADIUS_PT);
+                    circle.setAttribute('fill', 'rgba(37, 99, 235, 0.04)');
+                    circle.setAttribute('stroke', '#2563eb');
+                    circle.setAttribute('stroke-width', '0.5');
+                    circle.setAttribute('stroke-dasharray', '3 2');
+                    circle.setAttribute('pointer-events', 'none');
+                    layers.hygiene.appendChild(circle);
+                } else {
+                    const rad1 = (startDeg - 90) * Math.PI / 180;
+                    const rad2 = (endDeg - 90) * Math.PI / 180;
+                    const x1 = cx + HYGIENE_RADIUS_PT * Math.cos(rad1);
+                    const y1 = cy + HYGIENE_RADIUS_PT * Math.sin(rad1);
+                    const x2 = cx + HYGIENE_RADIUS_PT * Math.cos(rad2);
+                    const y2 = cy + HYGIENE_RADIUS_PT * Math.sin(rad2);
+                    const largeArc = (endDeg - startDeg) > 180 ? 1 : 0;
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${HYGIENE_RADIUS_PT} ${HYGIENE_RADIUS_PT} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`);
+                    path.setAttribute('fill', 'none');
+                    path.setAttribute('stroke', '#2563eb');
+                    path.setAttribute('stroke-width', '0.5');
+                    path.setAttribute('stroke-dasharray', '3 2');
+                    path.setAttribute('pointer-events', 'none');
+                    layers.hygiene.appendChild(path);
+                }
+            });
         }
 
-        const iconDef = iconDefinitions[placement.shape_type];
-        const iconPath = iconDef ? `/${iconDef.icon_asset_path}` : '/maps/icons/icon_general_tent.png';
+        // 圏外赤枠ブース判定
+        const outOfRange = [];
+        redBooths.forEach(b => {
+            const bx = parseFloat(b.pos_x) + parseFloat(b.width) / 2;
+            const by = parseFloat(b.pos_y) + parseFloat(b.height) / 2;
+            const covered = waters.some(w => {
+                const wx = parseFloat(w.pos_x) + parseFloat(w.width) / 2;
+                const wy = parseFloat(w.pos_y) + parseFloat(w.height) / 2;
+                return Math.hypot(bx - wx, by - wy) <= HYGIENE_RADIUS_PT;
+            });
+            if (!covered) outOfRange.push(b);
+        });
 
-        const w = parseFloat(placement.width) || 78.0;
-        const h = parseFloat(placement.height) || 78.0;
+        if (hygieneStatus && hygieneWarningList) {
+            hygieneWarningList.innerHTML = '';
+            if (waters.length === 0) {
+                hygieneStatus.textContent = '手洗い設備が配置されていません。';
+            } else if (outOfRange.length === 0) {
+                hygieneStatus.textContent = `✓ 全 ${redBooths.length} 件の赤枠ブースが20m圏内に収まっています。`;
+            } else {
+                hygieneStatus.textContent = `⚠️ 20m圏外の赤枠ブースが ${outOfRange.length} 件あります：`;
+                outOfRange.forEach(b => {
+                    const li = document.createElement('li');
+                    li.textContent = `• ${b.display_text || '無題'} (X:${Math.round(b.pos_x)}, Y:${Math.round(b.pos_y)})`;
+                    hygieneWarningList.appendChild(li);
+                });
+            }
+        }
+    }
+
+    // --- 純粋SVG CADベクター描画 (DOMインプレース更新でdblclick 100%保証) ---
+    function createSvgEl(tag, attrs = {}) {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, String(v)));
+        return el;
+    }
+
+    function buildHatchPathD(x, y, w, h, step) {
+        const parts = [];
+        for (let d = -h; d <= w; d += step) {
+            let x1 = x + d, y1 = y + h;
+            let x2 = x + d + h, y2 = y;
+            if (x1 < x) { y1 -= (x - x1); x1 = x; }
+            if (x2 > x + w) { y2 += (x2 - (x + w)); x2 = x + w; }
+            if (x1 <= x + w && x2 >= x && y1 >= y && y2 <= y + h) {
+                parts.push(`M ${x1.toFixed(2)} ${y1.toFixed(2)} L ${x2.toFixed(2)} ${y2.toFixed(2)}`);
+            }
+        }
+        return parts.join(' ');
+    }
+
+    function populatePlacementSvgGroup(g, placement) {
+        // 中身のみ再構築し、<g> 要素自体はDOM上に維持する（dblclickイベントを絶対に壊さない）
+        while (g.firstChild) g.removeChild(g.firstChild);
+
         const x = parseFloat(placement.pos_x) || 0;
         const y = parseFloat(placement.pos_y) || 0;
+        const w = parseFloat(placement.width) || 13.86;
+        const h = parseFloat(placement.height) || 13.86;
         const rot = parseInt(placement.rotation, 10) || 0;
-        const isSelected = state.selectedPlacementId === placement.id;
-
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttribute('class', `site-map-node cursor-pointer select-none transition-opacity ${isSelected ? 'selected-node' : ''}`);
-        g.setAttribute('data-placement-id', placement.id);
-        g.setAttribute('data-shape-type', placement.shape_type);
+        const shape = placement.shape_type;
+        const theme = COLOR_MAP[placement.color_theme] || COLOR_MAP.red;
+        const isSelected = state.selectedIds.has(placement.id);
 
         if (rot !== 0) {
-            const cx = x + w / 2;
-            const cy = y + h / 2;
-            g.setAttribute('transform', `rotate(${rot} ${cx} ${cy})`);
+            g.setAttribute('transform', `rotate(${rot} ${x + w / 2} ${y + h / 2})`);
+        } else {
+            g.removeAttribute('transform');
         }
 
-        // カラーテーマに応じた枠色・文字色 (添付PDFの赤枠・緑枠・黒枠に準拠)
-        const colorMap = {
-            red: { stroke: '#dc2626', fill: 'rgba(254, 242, 242, 0.6)', text: '#dc2626' },
-            green: { stroke: '#16a34a', fill: 'rgba(240, 253, 244, 0.6)', text: '#16a34a' },
-            blue: { stroke: '#2563eb', fill: 'rgba(239, 246, 255, 0.6)', text: '#1d4ed8' },
-            black: { stroke: '#0f172a', fill: 'rgba(248, 250, 252, 0.6)', text: '#0f172a' },
-            orange: { stroke: '#ea580c', fill: 'rgba(255, 247, 237, 0.6)', text: '#c2410c' },
-            pink: { stroke: '#db2777', fill: 'rgba(253, 242, 248, 0.6)', text: '#be185d' },
-            purple: { stroke: '#7e22ce', fill: 'rgba(250, 245, 255, 0.6)', text: '#6b21a8' },
-        };
-        const theme = colorMap[placement.color_theme] || colorMap.red;
+        // ヒット領域（クリック・ドラッグ掴みやすさ用透明背景）
+        g.appendChild(createSvgEl('rect', { x, y, width: w, height: h, fill: 'rgba(255,255,255,0.01)' }));
 
-        // 1. ブース外枠 (添付PDFの赤枠/緑枠スタイル)
-        const rectEl = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        rectEl.setAttribute('x', x);
-        rectEl.setAttribute('y', y);
-        rectEl.setAttribute('width', w);
-        rectEl.setAttribute('height', h);
-        rectEl.setAttribute('fill', theme.fill);
-        rectEl.setAttribute('stroke', theme.stroke);
-        rectEl.setAttribute('stroke-width', '0.75');
-        rectEl.setAttribute('rx', '0.5');
-        g.appendChild(rectEl);
+        if (shape === 'water_supply') {
+            g.appendChild(createSvgEl('rect', { x, y, width: w, height: h, fill: '#ffffff', stroke: '#2563eb', 'stroke-width': '0.55' }));
+            g.appendChild(createSvgEl('rect', { x: x + 1.1, y: y + 1.1, width: Math.max(1, w - 2.2), height: Math.max(1, h - 2.2), fill: 'none', stroke: '#2563eb', 'stroke-width': '0.4' }));
+            g.appendChild(createSvgEl('line', { x1: x + w / 2, y1: y + 1.1, x2: x + w / 2, y2: y + h - 1.1, stroke: '#2563eb', 'stroke-width': '0.4' }));
+            g.appendChild(createSvgEl('line', { x1: x + 1.1, y1: y + h / 2, x2: x + w - 1.1, y2: y + h / 2, stroke: '#2563eb', 'stroke-width': '0.4' }));
+        } else if (shape === 'area_note') {
+            const lines = (placement.display_text || '').split('\n');
+            const fs = placement.font_size ? parseFloat(placement.font_size) : 6.0;
+            const lh = fs * 1.25;
+            g.appendChild(createSvgEl('rect', { x, y, width: w, height: Math.max(h, lines.length * lh), fill: 'rgba(255,255,255,0.85)', stroke: isSelected ? '#2563eb' : 'none', 'stroke-width': '0.4' }));
+            lines.forEach((line, idx) => {
+                const tEl = createSvgEl('text', { x: x + 1, y: y + fs + idx * lh, 'font-family': 'sans-serif', 'font-size': `${fs}px`, 'font-weight': 'bold', fill: theme.text });
+                tEl.textContent = line;
+                g.appendChild(tEl);
+            });
+        } else if (shape === 'free_area') {
+            const hatchD = buildHatchPathD(x, y, w, h, 4.0);
+            if (hatchD) g.appendChild(createSvgEl('path', { d: hatchD, fill: 'none', stroke: theme.stroke, 'stroke-width': '0.16', opacity: '0.75' }));
+            g.appendChild(createSvgEl('rect', { x, y, width: w, height: h, fill: 'none', stroke: theme.stroke, 'stroke-width': '0.5' }));
+            renderTextWithMask(g, placement, x, y, w, h, theme.text);
+        } else if (shape === 'kitchen_car') {
+            g.appendChild(createSvgEl('rect', { x, y, width: w, height: h, fill: '#ffffff', stroke: theme.stroke, 'stroke-width': '0.9' }));
+            g.appendChild(createSvgEl('line', { x1: x + w * 0.18, y1: y, x2: x + w * 0.18, y2: y + h, stroke: theme.stroke, 'stroke-width': '0.45' }));
+            renderTextWithMask(g, placement, x, y, w, h, theme.text);
+        } else {
+            // CADテント・ブース（ハッチング + 外枠 + 寄棟屋根稜線 + 四隅支柱 + 白抜き文字）
+            const hatchD = buildHatchPathD(x, y, w, h, 3.2);
+            if (hatchD) g.appendChild(createSvgEl('path', { d: hatchD, fill: 'none', stroke: theme.stroke, 'stroke-width': '0.14', opacity: '0.65' }));
+            g.appendChild(createSvgEl('rect', { x, y, width: w, height: h, fill: 'none', stroke: theme.stroke, 'stroke-width': '0.84' }));
 
-        // 2. アイコン画像 (透過PNG)
-        const img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-        img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', iconPath);
-        img.setAttribute('href', iconPath);
-        img.setAttribute('x', x);
-        img.setAttribute('y', y);
-        img.setAttribute('width', w);
-        img.setAttribute('height', h);
-        img.setAttribute('preserveAspectRatio', 'none');
-        img.setAttribute('opacity', '0.85');
-        g.appendChild(img);
+            const inset = Math.min(w, h) * 0.25;
+            const x1 = x + inset, y1 = y + inset, x2 = x + w - inset, y2 = y + h - inset;
+            let roofD = `M ${x} ${y} L ${x1} ${y1} M ${x + w} ${y} L ${x2} ${y1} M ${x} ${y + h} L ${x1} ${y2} M ${x + w} ${y + h} L ${x2} ${y2}`;
+            if (w > h * 1.15) roofD += ` M ${x1} ${y + h / 2} L ${x2} ${y + h / 2}`;
+            else if (h > w * 1.15) roofD += ` M ${x + w / 2} ${y1} L ${x + w / 2} ${y2}`;
+            else roofD += ` M ${x} ${y} L ${x + w} ${y + h} M ${x + w} ${y} L ${x} ${y + h}`;
+            g.appendChild(createSvgEl('path', { d: roofD, fill: 'none', stroke: theme.stroke, 'stroke-width': '0.35', opacity: '0.85' }));
 
-        // 3. 中央テキスト表示 (PDF原本のA01/B08と同等のサイズ比率)
-        const textStr = placement.display_text || '';
-        if (textStr) {
-            const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            textEl.setAttribute('x', x + w / 2);
-            textEl.setAttribute('y', y + h / 2);
-            textEl.setAttribute('text-anchor', 'middle');
-            textEl.setAttribute('dominant-baseline', 'central');
-            textEl.setAttribute('font-family', 'sans-serif');
+            const p = 0.7;
+            [[x, y], [x + w - p, y], [x, y + h - p], [x + w - p, y + h - p]].forEach(([px, py]) => {
+                g.appendChild(createSvgEl('rect', { x: px, y: py, width: p, height: p, fill: theme.stroke }));
+            });
 
-            // ブースの大きさに合わせたフォントサイズ (最小4px、標準4.5〜5.5px)
-            const calcFontSize = Math.max(3.8, Math.min(5.2, h * 0.45));
-            textEl.setAttribute('font-size', `${calcFontSize.toFixed(1)}px`);
-            textEl.setAttribute('font-weight', 'bold');
-            textEl.setAttribute('fill', theme.text);
-            textEl.textContent = textStr;
-            g.appendChild(textEl);
+            renderTextWithMask(g, placement, x, y, w, h, theme.text);
         }
 
-        // 4. 選択状態のハイライト枠 & 四隅の白丸ハンドル描画
+        // 選択時ハイライト枠 & リサイズハンドル
         if (isSelected) {
-            // 外枠ハイライト (青色の破線枠)
-            const selRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            selRect.setAttribute('x', x - 0.75);
-            selRect.setAttribute('y', y - 0.75);
-            selRect.setAttribute('width', w + 1.5);
-            selRect.setAttribute('height', h + 1.5);
-            selRect.setAttribute('fill', 'rgba(37, 99, 235, 0.08)');
-            selRect.setAttribute('stroke', '#2563eb');
-            selRect.setAttribute('stroke-width', '0.85');
-            selRect.setAttribute('stroke-dasharray', '2 1');
-            selRect.setAttribute('pointer-events', 'none');
-            g.appendChild(selRect);
+            g.appendChild(createSvgEl('rect', {
+                x: x - 0.75, y: y - 0.75, width: w + 1.5, height: h + 1.5,
+                fill: 'rgba(37, 99, 235, 0.08)', stroke: '#2563eb', 'stroke-width': '0.85', 'stroke-dasharray': '2 1', 'pointer-events': 'none',
+            }));
 
-            // 縦横リサイズ可能判定 (フリーエリアのみ可変、テント類は固定規格値で型崩れ防止)
-            const isResizable = (iconDef && iconDef.is_resizable) || placement.shape_type === 'free_area';
-
-            // 四隅の白丸ハンドル
+            const def = iconDefinitions[shape];
+            const isResizable = state.selectedIds.size === 1 && ((def && def.is_resizable) || shape === 'free_area' || shape === 'kitchen_car');
             const corners = [
-                { type: 'tl', cx: x, cy: y, cursor: 'nwse-resize' },          // 左上
-                { type: 'tr', cx: x + w, cy: y, cursor: 'nesw-resize' },      // 右上
-                { type: 'br', cx: x + w, cy: y + h, cursor: 'nwse-resize' },  // 右下
-                { type: 'bl', cx: x, cy: y + h, cursor: 'nesw-resize' },      // 左下
+                { type: 'tl', cx: x, cy: y, cursor: 'nwse-resize' },
+                { type: 'tr', cx: x + w, cy: y, cursor: 'nesw-resize' },
+                { type: 'br', cx: x + w, cy: y + h, cursor: 'nwse-resize' },
+                { type: 'bl', cx: x, cy: y + h, cursor: 'nesw-resize' },
             ];
-
-            corners.forEach(corner => {
-                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circle.setAttribute('cx', corner.cx);
-                circle.setAttribute('cy', corner.cy);
-                circle.setAttribute('r', isResizable ? '1.8' : '1.3');
-                circle.setAttribute('fill', '#ffffff');
-                circle.setAttribute('stroke', '#2563eb');
-                circle.setAttribute('stroke-width', isResizable ? '0.8' : '0.6');
-
+            corners.forEach(c => {
+                const circle = createSvgEl('circle', {
+                    cx: c.cx, cy: c.cy, r: isResizable ? '1.7' : '1.2',
+                    fill: '#ffffff', stroke: '#2563eb', 'stroke-width': isResizable ? '0.7' : '0.5',
+                });
                 if (isResizable) {
-                    circle.setAttribute('class', 'resize-handle');
-                    circle.style.cursor = corner.cursor;
+                    circle.style.cursor = c.cursor;
                     circle.addEventListener('mousedown', (e) => {
                         if (e.button !== 0) return;
                         e.stopPropagation();
-
                         state.isResizing = true;
-                        state.resizeHandle = corner.type;
-                        state.resizePlacementId = placement.id;
-
-                        const svgCoords = getSvgCoordinates(e.clientX, e.clientY);
-                        state.resizeStartSvgX = svgCoords.x;
-                        state.resizeStartSvgY = svgCoords.y;
-                        state.origWidth = parseFloat(placement.width) || 78.0;
-                        state.origHeight = parseFloat(placement.height) || 78.0;
-                        state.origX = parseFloat(placement.pos_x) || 0;
-                        state.origY = parseFloat(placement.pos_y) || 0;
+                        state.resizeHandle = c.type;
+                        state.resizeId = placement.id;
+                        const sc = getSvgCoords(e.clientX, e.clientY);
+                        state.resizeStartSvgX = sc.x;
+                        state.resizeStartSvgY = sc.y;
+                        state.resizeOrig = { x, y, w, h, rot };
                     });
                 } else {
                     circle.setAttribute('pointer-events', 'none');
                 }
-
                 g.appendChild(circle);
             });
         }
+    }
 
-        // 5. アイコンのクリック選択 & ドラッグ移動開始イベント
+    function renderTextWithMask(g, placement, x, y, w, h, colorHex) {
+        const text = (placement.display_text || '').trim();
+        if (!text) return;
+
+        const lines = text.split('\n');
+        const isBoothCode = /^[AB]\d+$/.test(text);
+        let fs = placement.font_size ? parseFloat(placement.font_size) : (isBoothCode ? 6.2 : Math.min(5.5, Math.max(3.4, (w - 2) / Math.max(1, ...lines.map(l => l.length * 0.7)))));
+        if (!placement.font_size && lines.length > 1) {
+            fs = Math.min(fs, (h - 2) / (lines.length * 1.25));
+        }
+
+        const lh = fs * 1.18;
+        const totalH = lh * lines.length;
+        const estMaxW = Math.max(...lines.map(l => l.length * fs * (/[A-Za-z0-9]/.test(l) ? 0.62 : 0.92)));
+        const maskW = Math.min(w - 1.4, estMaxW + 1.6);
+        const maskH = Math.min(h - 1.4, totalH + 1.0);
+
+        g.appendChild(createSvgEl('rect', {
+            x: x + (w - maskW) / 2, y: y + (h - maskH) / 2,
+            width: Math.max(1, maskW), height: Math.max(1, maskH),
+            fill: '#ffffff', 'pointer-events': 'none',
+        }));
+
+        const startY = y + (h - totalH) / 2 + fs * 0.85;
+        lines.forEach((line, idx) => {
+            const tEl = createSvgEl('text', {
+                x: x + w / 2, y: startY + idx * lh,
+                'text-anchor': 'middle', 'font-family': 'sans-serif',
+                'font-size': `${fs.toFixed(1)}px`, 'font-weight': 'bold',
+                fill: colorHex, 'pointer-events': 'none',
+            });
+            tEl.textContent = line;
+            g.appendChild(tEl);
+        });
+    }
+
+    function renderPlacementNode(placement) {
+        const layers = ensureLayers();
+        if (!layers) return;
+        const targetLayer = getTargetLayerFor(placement, layers);
+
+        const existing = svgContainer.querySelector(`g.site-map-node[data-placement-id="${placement.id}"]`);
+        if (existing) {
+            if (existing.parentNode !== targetLayer) targetLayer.appendChild(existing);
+            populatePlacementSvgGroup(existing, placement);
+            return;
+        }
+
+        const g = createSvgEl('g', {
+            class: 'site-map-node cursor-pointer select-none',
+            'data-placement-id': placement.id,
+        });
+        populatePlacementSvgGroup(g, placement);
+
+        // イベントバインド（1回のみ付与）
         g.addEventListener('mousedown', (e) => {
-            if (e.button !== 0) return;
+            if (e.button !== 0 || state.toolMode === 'pan' || state.spacePressed) return;
             e.stopPropagation();
 
-            selectPlacement(placement.id);
+            const pid = placement.id;
+            if (e.shiftKey) {
+                toggleSelection(pid);
+            } else if (!state.selectedIds.has(pid)) {
+                setSingleSelection(pid);
+            }
 
-            state.isMovingNode = true;
-            state.movingNodeId = placement.id;
-
-            const svgCoords = getSvgCoordinates(e.clientX, e.clientY);
-            state.moveStartSvgX = svgCoords.x;
-            state.moveStartSvgY = svgCoords.y;
-            state.origPlacementX = parseFloat(placement.pos_x) || 0;
-            state.origPlacementY = parseFloat(placement.pos_y) || 0;
+            state.isMoving = true;
+            const sc = getSvgCoords(e.clientX, e.clientY);
+            state.moveStartSvgX = sc.x;
+            state.moveStartSvgY = sc.y;
+            state.moveOrigPositions.clear();
+            state.selectedIds.forEach(sid => {
+                const sp = state.placements.find(p => p.id === sid);
+                if (sp) state.moveOrigPositions.set(sid, { x: parseFloat(sp.pos_x), y: parseFloat(sp.pos_y), rot: sp.rotation, locked: sp.is_rotation_locked });
+            });
         });
 
-        // 6. ダブルクリックで設定モーダル表示 (Phase 4)
         g.addEventListener('dblclick', (e) => {
             e.stopPropagation();
-            openPlacementModal(placement.id);
+            if (state.toolMode === 'pan' || state.spacePressed) return;
+            openInlineTextEditor(placement);
         });
 
-        layer.appendChild(g);
+        g.addEventListener('mouseenter', (e) => showHoverTooltip(e, placement));
+        g.addEventListener('mousemove', (e) => moveHoverTooltip(e));
+        g.addEventListener('mouseleave', () => hideHoverTooltip());
+
+        targetLayer.appendChild(g);
     }
 
-    /**
-     * 指定IDの配置アイテムを選択状態にする
-     */
-    function selectPlacement(id) {
-        if (state.selectedPlacementId === id) return;
-
-        const prevId = state.selectedPlacementId;
-        state.selectedPlacementId = id;
-
-        const target = state.placements.find(p => p.id === id);
-
-        if (btnDeleteSelected) {
-            btnDeleteSelected.disabled = false;
-        }
-
-        if (btnRotateSelected) {
-            const iconDef = target ? iconDefinitions[target.shape_type] : null;
-            const canRotate = target && (iconDef ? iconDef.allow_rotation : true) && !target.is_rotation_locked;
-            btnRotateSelected.disabled = !canRotate;
-            if (target && target.is_rotation_locked) {
-                btnRotateSelected.title = '通り沿い配置のため回転不可（平行固定）';
-            } else if (iconDef && !iconDef.allow_rotation) {
-                btnRotateSelected.title = '現場設備のため回転不可（直立固定）';
-            } else {
-                btnRotateSelected.title = '時計回りに45°回転 (Rキー)';
-            }
-        }
-
-        if (prevId) {
-            const prevTarget = state.placements.find(p => p.id === prevId);
-            if (prevTarget) renderPlacementNode(prevTarget);
-        }
-
-        if (target) renderPlacementNode(target);
-    }
-
-    /**
-     * 選択を解除する
-     */
-    function deselectPlacement() {
-        if (!state.selectedPlacementId) return;
-
-        const prevId = state.selectedPlacementId;
-        state.selectedPlacementId = null;
-
-        if (btnDeleteSelected) {
-            btnDeleteSelected.disabled = true;
-        }
-
-        if (btnRotateSelected) {
-            btnRotateSelected.disabled = true;
-            btnRotateSelected.title = '時計回りに45°回転 (Rキー)';
-        }
-
-        if (prevId) {
-            const prevTarget = state.placements.find(p => p.id === prevId);
-            if (prevTarget) renderPlacementNode(prevTarget);
-        }
-    }
-
-    /**
-     * 選択された配置アイテムを時計回りに45°回転する (Phase 5)
-     */
-    async function rotateSelectedPlacement(step = 45) {
-        if (!state.selectedPlacementId) return;
-
-        const target = state.placements.find(p => p.id === state.selectedPlacementId);
-        if (!target) return;
-
-        if (target.is_rotation_locked) {
-            alert('通り沿いに配置されているため、道路平行に固定されています（回転不可）。');
-            return;
-        }
-
-        const iconDef = iconDefinitions[target.shape_type];
-        if (iconDef && !iconDef.allow_rotation) {
-            alert('この設備アイコンは直立固定のため回転できません。');
-            return;
-        }
-
-        const currentRot = parseInt(target.rotation, 10) || 0;
-        target.rotation = (currentRot + step) % 360;
-
-        renderPlacementNode(target);
-
-        // API保存
-        await updatePlacementGeometry(target);
-    }
-
-    /**
-     * アイコンの幾何情報（座標・寸法・角度・ロック）をAPIにPUT保存する (Phase 5)
-     */
-    async function updatePlacementGeometry(placement) {
-        const url = `${storeUrl}/${placement.id}`;
-        const payload = {
-            pos_x: placement.pos_x,
-            pos_y: placement.pos_y,
-            width: placement.width,
-            height: placement.height,
-            rotation: placement.rotation,
-            is_rotation_locked: placement.is_rotation_locked,
-        };
-
-        try {
-            const res = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.message || '配置ジオメトリの更新に失敗しました');
-            }
-        } catch (err) {
-            console.error('Error updating placement geometry:', err);
-            alert(`ジオメトリの保存に失敗しました: ${err.message}`);
-        }
-    }
-
-    /**
-     * 位置移動の保存用エイリアス
-     */
-    async function updatePlacementPosition(placement) {
-        await updatePlacementGeometry(placement);
-    }
-
-    /**
-     * 選択された配置アイテムを削除する
-     */
-    async function deleteSelectedPlacement() {
-        if (!state.selectedPlacementId) return;
-
-        const target = state.placements.find(p => p.id === state.selectedPlacementId);
-        if (!target) return;
-
-        const itemName = target.display_text || 'このアイテム';
-        if (!confirm(`「${itemName}」を配置図から削除（配置解除）しますか？`)) {
-            return;
-        }
-
-        const url = `${storeUrl}/${target.id}`;
-        try {
-            const res = await fetch(url, {
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-            });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.message || '配置の削除に失敗しました');
-            }
-
-            // state から削除
-            state.placements = state.placements.filter(p => p.id !== target.id);
-
-            // DOM から削除
-            const layer = getPlacementsLayer();
-            if (layer) {
-                const node = layer.querySelector(`[data-placement-id="${target.id}"]`);
-                if (node) node.remove();
-            }
-
-            deselectPlacement();
-
-            if (countBadge) {
-                countBadge.textContent = `配置数: ${state.placements.length}件`;
-            }
-        } catch (err) {
-            console.error('Error deleting placement:', err);
-            alert(`削除に失敗しました: ${err.message}`);
-        }
-    }
-
-    /**
-     * オブジェクト設定モーダルを開く (Phase 4)
-     */
-    function openPlacementModal(id) {
-        if (!modalEl) return;
-
-        const placement = state.placements.find(p => p.id === id);
-        if (!placement) return;
-
-        selectPlacement(id);
-
-        const iconDef = iconDefinitions[placement.shape_type];
-        const iconName = iconDef ? iconDef.name : 'オブジェクト';
-        const iconPath = iconDef ? `/${iconDef.icon_asset_path}` : '/maps/icons/icon_general_tent.png';
-
-        if (modalTitle) modalTitle.textContent = `${iconName} 設定`;
-        if (modalIconImg) {
-            modalIconImg.src = iconPath;
-            modalIconImg.alt = iconName;
-        }
-
-        const scaleRatio = parseFloat(appEl.dataset.scaleRatio) || 7.0866;
-        const wMeters = (parseFloat(placement.width) / scaleRatio).toFixed(1);
-        const hMeters = (parseFloat(placement.height) / scaleRatio).toFixed(1);
-        if (modalSubtitle) {
-            modalSubtitle.textContent = `寸法: 間口 ${wMeters}m × 奥行 ${hMeters}m (1/400縮尺)`;
-        }
-
-        modalPlacementId.value = placement.id;
-        modalDisplayText.value = placement.display_text || '';
-        modalNotes.value = placement.notes || '';
-
-        // カラーテーマ制御
-        const hasColorVariants = iconDef ? iconDef.has_color_variants : true;
-        const currentColor = placement.color_theme || 'red';
-
-        modalColorOptions.forEach(opt => {
-            const parent = opt.closest('.color-option');
-            if (!hasColorVariants) {
-                opt.disabled = true;
-                if (parent) parent.classList.add('opacity-40', 'cursor-not-allowed');
-            } else if (placement.shape_type === 'toilet') {
-                if (opt.value === 'blue' || opt.value === 'black') {
-                    opt.disabled = false;
-                    if (parent) parent.classList.remove('opacity-40', 'cursor-not-allowed');
-                } else {
-                    opt.disabled = true;
-                    if (parent) parent.classList.add('opacity-40', 'cursor-not-allowed');
-                }
-            } else {
-                opt.disabled = false;
-                if (parent) parent.classList.remove('opacity-40', 'cursor-not-allowed');
-            }
-
-            opt.checked = (opt.value === currentColor);
-            if (parent) {
-                if (opt.checked) {
-                    parent.classList.add('ring-2', 'ring-indigo-600', 'bg-indigo-50/50');
-                } else {
-                    parent.classList.remove('ring-2', 'ring-indigo-600', 'bg-indigo-50/50');
-                }
-            }
-        });
-
-        if (modalColorBadge) {
-            if (!hasColorVariants) {
-                modalColorBadge.textContent = 'バリエーション無し（固定色）';
-            } else if (placement.shape_type === 'toilet') {
-                modalColorBadge.textContent = '2色（青／黒）選択可能';
-            } else {
-                modalColorBadge.textContent = '5色パレットから選択可能';
-            }
-        }
-
-        // 回転制御
-        const allowRotation = iconDef ? iconDef.allow_rotation : true;
-        if (modalRotation) {
-            if (!allowRotation || placement.is_rotation_locked) {
-                modalRotation.disabled = true;
-                if (modalRotationBadge) {
-                    modalRotationBadge.textContent = placement.is_rotation_locked
-                        ? '通り沿い配置のため回転不可（平行固定）'
-                        : '回転不可（直立固定）';
-                }
-                modalRotation.value = "0";
-            } else {
-                modalRotation.disabled = false;
-                if (modalRotationBadge) {
-                    modalRotationBadge.textContent = '45°刻みで選択可能';
-                }
-                const rot = parseInt(placement.rotation, 10) || 0;
-                const snappedRot = (Math.round(rot / 45) * 45) % 360;
-                modalRotation.value = String(snappedRot);
-            }
-        }
-
-        // 出店ブース連動制御
-        const isFacility = iconDef && iconDef.category === 'facility';
-        if (modalLayoutItemId) {
-            if (isFacility) {
-                modalLayoutItemId.disabled = true;
-                modalLayoutItemId.value = '';
-                if (modalItemBadge) modalItemBadge.textContent = '現場インフラ設備（ブース台帳紐づけ対象外）';
-                if (modalVendorPreview) modalVendorPreview.classList.add('hidden');
-            } else {
-                modalLayoutItemId.disabled = false;
-                if (modalItemBadge) modalItemBadge.textContent = 'ブース台帳と連動可能';
-                modalLayoutItemId.value = placement.layout_item_id || '';
-                updateVendorPreview();
-            }
-        }
-
-        modalEl.classList.remove('hidden');
-        if (modalDisplayText) {
-            setTimeout(() => modalDisplayText.focus(), 50);
-        }
-    }
-
-    /**
-     * オブジェクト設定モーダルを閉じる
-     */
-    function closePlacementModal() {
-        if (!modalEl) return;
-        modalEl.classList.add('hidden');
-    }
-
-    /**
-     * 出店者詳細プレビューの更新
-     */
-    function updateVendorPreview() {
-        if (!modalLayoutItemId || !modalVendorPreview) return;
-        const selectedOpt = modalLayoutItemId.options[modalLayoutItemId.selectedIndex];
-        if (!selectedOpt || !selectedOpt.value) {
-            modalVendorPreview.classList.add('hidden');
-            return;
-        }
-
-        const code = selectedOpt.dataset.code || '';
-        const name = selectedOpt.dataset.name || '';
-        const vendor = selectedOpt.dataset.vendor || '';
-        const fire = selectedOpt.dataset.fire || '';
-
-        modalVendorPreview.innerHTML = `
-            <div class="flex items-center justify-between font-bold text-xs">
-                <span>コマ: ${code} - ${name}</span>
-                <span class="${fire ? 'text-red-600 font-bold' : 'text-slate-500'}">${fire || '火気不使用'}</span>
-            </div>
-            <div class="text-xs text-slate-600 mt-0.5">出店者: ${vendor}</div>
-        `;
-        modalVendorPreview.classList.remove('hidden');
-    }
-
-    /**
-     * モーダル保存処理
-     */
-    async function handleModalSave(e) {
-        e.preventDefault();
-        const placementId = parseInt(modalPlacementId.value, 10);
-        const placement = state.placements.find(p => p.id === placementId);
-        if (!placement) return;
-
-        let selectedColor = 'red';
-        modalColorOptions.forEach(opt => {
-            if (opt.checked) selectedColor = opt.value;
-        });
-
-        const newDisplayText = modalDisplayText.value.trim();
-        const newRotation = parseInt(modalRotation.value, 10) || 0;
-        const newLayoutItemId = modalLayoutItemId.value ? parseInt(modalLayoutItemId.value, 10) : null;
-        const newNotes = modalNotes.value.trim();
-
-        const payload = {
-            display_text: newDisplayText,
-            color_theme: selectedColor,
-            rotation: newRotation,
-            layout_item_id: newLayoutItemId,
-            notes: newNotes,
-        };
-
-        const url = `${storeUrl}/${placement.id}`;
-        try {
-            const res = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.message || '設定の保存に失敗しました');
-            }
-
-            const resData = await res.json();
-            if (resData.success && resData.placement) {
-                placement.display_text = resData.placement.display_text;
-                placement.color_theme = resData.placement.color_theme;
-                placement.rotation = resData.placement.rotation;
-                placement.layout_item_id = resData.placement.layout_item_id;
-                placement.notes = resData.placement.notes;
-
-                renderPlacementNode(placement);
-                closePlacementModal();
-            }
-        } catch (err) {
-            console.error('Error saving placement settings:', err);
-            alert(`保存に失敗しました: ${err.message}`);
-        }
-    }
-
-    /**
-     * 全配置ノードの再描画
-     */
     function renderAllPlacements() {
-        const layer = getPlacementsLayer();
-        if (!layer) return;
-        layer.innerHTML = '';
-        state.placements.forEach(p => {
-            renderPlacementNode(p);
+        const layers = ensureLayers();
+        if (!layers) return;
+        layers.areas.innerHTML = '';
+        layers.booths.innerHTML = '';
+        layers.facilities.innerHTML = '';
+        state.placements.forEach(p => renderPlacementNode(p));
+        renderHygieneCirclesAndCheck();
+        updateSummaryAndInspector();
+        syncSidebarLayoutItems();
+    }
+
+    // --- ホバーツールチップ ---
+    function showHoverTooltip(e, p) {
+        if (!hoverTooltip || state.isMoving || state.isResizing) return;
+        const def = iconDefinitions[p.shape_type];
+        const wM = (parseFloat(p.width) / scaleRatio).toFixed(1);
+        const hM = (parseFloat(p.height) / scaleRatio).toFixed(1);
+        const vendor = p.layout_item?.vendor?.name ? ` | ${p.layout_item.vendor.name}` : '';
+        hoverTooltip.textContent = `${p.display_text || '(無題)'}${vendor} [${def ? def.name : p.shape_type} ${wM}m×${hM}m]`;
+        hoverTooltip.classList.remove('hidden');
+        moveHoverTooltip(e);
+    }
+    function moveHoverTooltip(e) {
+        if (!hoverTooltip || hoverTooltip.classList.contains('hidden')) return;
+        const rect = canvasContainer.getBoundingClientRect();
+        hoverTooltip.style.left = `${e.clientX - rect.left + 12}px`;
+        hoverTooltip.style.top = `${e.clientY - rect.top + 12}px`;
+    }
+    function hideHoverTooltip() {
+        if (hoverTooltip) hoverTooltip.classList.add('hidden');
+    }
+
+    // --- ダブルクリック・インラインテキスト編集 ---
+    function openInlineTextEditor(placement) {
+        if (!inlineEditor) return;
+        const svg = svgContainer.querySelector('svg');
+        if (!svg) return;
+
+        const pt = svg.createSVGPoint();
+        pt.x = parseFloat(placement.pos_x) + parseFloat(placement.width) / 2;
+        pt.y = parseFloat(placement.pos_y) + parseFloat(placement.height) / 2;
+        const screenPt = pt.matrixTransform(svg.getScreenCTM());
+        const rect = canvasContainer.getBoundingClientRect();
+
+        inlineEditor.value = placement.display_text || '';
+        inlineEditor.style.width = '110px';
+        inlineEditor.style.left = `${screenPt.x - rect.left - 55}px`;
+        inlineEditor.style.top = `${screenPt.y - rect.top - 22}px`;
+        inlineEditor.classList.remove('hidden');
+        inlineEditor.focus();
+        inlineEditor.select();
+
+        const commit = async () => {
+            inlineEditor.classList.add('hidden');
+            inlineEditor.onblur = null;
+            inlineEditor.onkeydown = null;
+            const nextVal = inlineEditor.value.trim();
+            if (nextVal !== (placement.display_text || '')) {
+                await applySingleUpdate(placement, { display_text: nextVal }, true);
+            }
+        };
+
+        inlineEditor.onblur = commit;
+        inlineEditor.onkeydown = (ev) => {
+            if (ev.key === 'Enter' && !ev.shiftKey) {
+                ev.preventDefault();
+                commit();
+            } else if (ev.key === 'Escape') {
+                inlineEditor.classList.add('hidden');
+                inlineEditor.onblur = null;
+            }
+        };
+    }
+
+    // --- 選択管理 ---
+    function setSingleSelection(id) {
+        const prev = new Set(state.selectedIds);
+        state.selectedIds.clear();
+        if (id !== null) state.selectedIds.add(id);
+        refreshChangedNodes(prev, state.selectedIds);
+        updateSummaryAndInspector();
+    }
+
+    function toggleSelection(id) {
+        const prev = new Set(state.selectedIds);
+        if (state.selectedIds.has(id)) state.selectedIds.delete(id);
+        else state.selectedIds.add(id);
+        refreshChangedNodes(prev, state.selectedIds);
+        updateSummaryAndInspector();
+    }
+
+    function clearSelection() {
+        if (state.selectedIds.size === 0) return;
+        const prev = new Set(state.selectedIds);
+        state.selectedIds.clear();
+        refreshChangedNodes(prev, state.selectedIds);
+        updateSummaryAndInspector();
+    }
+
+    function refreshChangedNodes(prevSet, nextSet) {
+        const allChanged = new Set([...prevSet, ...nextSet]);
+        allChanged.forEach(id => {
+            const p = state.placements.find(item => item.id === id);
+            if (p) renderPlacementNode(p);
+        });
+    }
+
+    // --- サマリー & 右インスペクタ同期 ---
+    function updateSummaryAndInspector() {
+        const total = state.placements.length;
+        const red = state.placements.filter(p => p.color_theme === 'red').length;
+        const green = state.placements.filter(p => p.color_theme === 'green').length;
+        const water = state.placements.filter(p => p.shape_type === 'water_supply').length;
+        if (sumTotal) sumTotal.textContent = total;
+        if (sumRed) sumRed.textContent = red;
+        if (sumGreen) sumGreen.textContent = green;
+        if (sumWater) sumWater.textContent = water;
+
+        const selCount = state.selectedIds.size;
+        if (btnDuplicate) btnDuplicate.disabled = selCount !== 1;
+        if (btnDeleteSelected) btnDeleteSelected.disabled = selCount === 0;
+        if (btnAlignLeft) btnAlignLeft.disabled = selCount < 2;
+        if (btnAlignTop) btnAlignTop.disabled = selCount < 2;
+        if (btnPackVert) btnPackVert.disabled = selCount < 2;
+        if (btnPackHoriz) btnPackHoriz.disabled = selCount < 2;
+
+        if (btnUndo) btnUndo.disabled = state.undoStack.length === 0;
+        if (btnRedo) btnRedo.disabled = state.redoStack.length === 0;
+
+        if (selCount === 0) {
+            if (inspBadge) inspBadge.textContent = '未選択';
+            if (inspEmpty) inspEmpty.classList.remove('hidden');
+            if (inspSingle) inspSingle.classList.add('hidden');
+            if (inspMulti) inspMulti.classList.add('hidden');
+            if (btnRotateSelected) btnRotateSelected.disabled = true;
+            return;
+        }
+
+        if (selCount > 1) {
+            if (inspBadge) inspBadge.textContent = `${selCount}件選択`;
+            if (inspEmpty) inspEmpty.classList.add('hidden');
+            if (inspSingle) inspSingle.classList.add('hidden');
+            if (inspMulti) inspMulti.classList.remove('hidden');
+            if (inspMultiCount) inspMultiCount.textContent = `${selCount} 件のオブジェクトを選択中`;
+            if (btnRotateSelected) btnRotateSelected.disabled = true;
+            return;
+        }
+
+        // 単一選択時
+        const sid = [...state.selectedIds][0];
+        const p = state.placements.find(item => item.id === sid);
+        if (!p) return;
+
+        const def = iconDefinitions[p.shape_type];
+        if (inspBadge) inspBadge.textContent = p.display_text || '1件選択';
+        if (inspEmpty) inspEmpty.classList.add('hidden');
+        if (inspSingle) inspSingle.classList.remove('hidden');
+        if (inspMulti) inspMulti.classList.add('hidden');
+
+        if (inspShapeName) inspShapeName.textContent = def ? def.name : p.shape_type;
+        if (inspDisplayText) inspDisplayText.value = p.display_text || '';
+        if (inspFontSize) inspFontSize.value = p.font_size || '';
+        if (inspNotes) inspNotes.value = p.notes || '';
+        if (inspWidthM) {
+            inspWidthM.value = (parseFloat(p.width) / scaleRatio).toFixed(2);
+            inspWidthM.disabled = !(def && def.is_resizable);
+        }
+        if (inspHeightM) {
+            inspHeightM.value = (parseFloat(p.height) / scaleRatio).toFixed(2);
+            inspHeightM.disabled = !(def && def.is_resizable);
+        }
+
+        // カラーボタン制御
+        const supported = def && Array.isArray(def.supported_colors) ? def.supported_colors : ['red', 'green', 'black', 'cyan', 'orange', 'blue'];
+        if (inspColorNote) inspColorNote.textContent = supported.length <= 1 ? '固定色' : '';
+        inspColorBtns.forEach(btn => {
+            const c = btn.dataset.color;
+            const allowed = supported.includes(c);
+            btn.disabled = !allowed;
+            btn.classList.toggle('opacity-20', !allowed);
+            btn.classList.toggle('cursor-not-allowed', !allowed);
+            const active = c === p.color_theme;
+            btn.classList.toggle('ring-2', active);
+            btn.classList.toggle('ring-indigo-600', active);
+            btn.classList.toggle('ring-offset-1', active);
         });
 
-        if (countBadge) {
-            countBadge.textContent = `配置数: ${state.placements.length}件`;
+        // 回転制御 (正しいプロパティ名 is_rotatable を使用!)
+        const rotatable = (def ? def.is_rotatable : true) && !p.is_rotation_locked;
+        if (btnRotateSelected) btnRotateSelected.disabled = !rotatable;
+        if (inspRotation) {
+            inspRotation.disabled = !rotatable;
+            inspRotation.value = String((Math.round((parseInt(p.rotation, 10) || 0) / 45) * 45) % 360);
+        }
+        if (inspRotationLocked) inspRotationLocked.checked = Boolean(p.is_rotation_locked);
+
+        // 給水オプション
+        if (inspWaterOptions) {
+            if (p.shape_type === 'water_supply') {
+                inspWaterOptions.classList.remove('hidden');
+                if (inspShowHygieneCircle) inspShowHygieneCircle.checked = p.show_hygiene_circle !== false;
+                if (inspArcMode) inspArcMode.value = `${p.arc_start_angle ?? 0},${p.arc_end_angle ?? 360}`;
+            } else {
+                inspWaterOptions.classList.add('hidden');
+            }
+        }
+
+        // 台帳連動セレクト
+        if (inspLayoutItemId) {
+            inspLayoutItemId.value = p.layout_item_id || '';
+            const usedIds = new Set(state.placements.filter(other => other.id !== p.id && other.layout_item_id).map(other => String(other.layout_item_id)));
+            Array.from(inspLayoutItemId.options).forEach(opt => {
+                if (!opt.value) return;
+                const baseLabel = opt.dataset.baseLabel || opt.textContent.replace(' 【配置済】', '');
+                opt.dataset.baseLabel = baseLabel;
+                opt.textContent = usedIds.has(opt.value) ? `${baseLabel} 【配置済】` : baseLabel;
+            });
         }
     }
 
-    /**
-     * SVG 白地図データを非同期ロードしてインジェクション
-     */
+    function syncSidebarLayoutItems() {
+        const usedIds = new Set(state.placements.filter(p => p.layout_item_id).map(p => String(p.layout_item_id)));
+        const kw = (sidebarSearch?.value || '').trim().toLowerCase();
+        const unplacedOnly = Boolean(sidebarUnplacedOnly?.checked);
+
+        document.querySelectorAll('.sidebar-layout-item').forEach(el => {
+            const id = el.dataset.layoutItemId;
+            const placed = usedIds.has(id);
+            const badge = el.querySelector('.item-status-badge');
+            if (badge) {
+                badge.textContent = placed ? '配置済' : '未配置';
+                badge.className = placed
+                    ? 'item-status-badge text-[9px] px-1.5 py-0.2 rounded font-bold bg-emerald-100 text-emerald-700'
+                    : 'item-status-badge text-[9px] px-1.5 py-0.2 rounded font-bold bg-slate-200 text-slate-600';
+            }
+            const textMatch = !kw || (el.dataset.code || '').toLowerCase().includes(kw) || (el.dataset.name || '').toLowerCase().includes(kw);
+            const filterMatch = !unplacedOnly || !placed;
+            el.classList.toggle('hidden', !(textMatch && filterMatch));
+        });
+    }
+
+    // --- スマートスナップ & ガイド線 ---
+    function clearGuideLines() {
+        const layers = ensureLayers();
+        if (layers) layers.overlays.innerHTML = '';
+    }
+
+    function drawGuideLine(x1, y1, x2, y2) {
+        const layers = ensureLayers();
+        if (!layers) return;
+        layers.overlays.appendChild(createSvgEl('line', {
+            x1, y1, x2, y2, stroke: '#06b6d4', 'stroke-width': '0.6', 'stroke-dasharray': '2 1', 'pointer-events': 'none',
+        }));
+    }
+
+    function computeSnap(movingId, rawX, rawY, w, h) {
+        clearGuideLines();
+        if (!state.snapEnabled) return { x: rawX, y: rawY };
+
+        let sx = rawX, sy = rawY;
+        const thresh = 2.0;
+
+        // 1. 通り沿い4レール X 座標スナップ
+        for (const railX of STREET_RAILS_X) {
+            if (Math.abs(rawX - railX) <= thresh) {
+                sx = railX;
+                drawGuideLine(railX, 80, railX, 1100);
+                break;
+            }
+        }
+
+        // 2. 他ノードの辺・密着スナップ
+        for (const other of state.placements) {
+            if (other.id === movingId || state.selectedIds.has(other.id)) continue;
+            const ox = parseFloat(other.pos_x), oy = parseFloat(other.pos_y);
+            const ow = parseFloat(other.width), oh = parseFloat(other.height);
+            if (Math.abs(oy - rawY) > 80 && Math.abs(ox - rawX) > 80) continue;
+
+            if (Math.abs(sx - ox) <= thresh) { sx = ox; drawGuideLine(ox, Math.min(sy, oy) - 10, ox, Math.max(sy + h, oy + oh) + 10); }
+            else if (Math.abs(sx - (ox + ow)) <= thresh) { sx = ox + ow; drawGuideLine(ox + ow, Math.min(sy, oy) - 10, ox + ow, Math.max(sy + h, oy + oh) + 10); }
+            else if (Math.abs((sx + w) - ox) <= thresh) { sx = ox - w; drawGuideLine(ox, Math.min(sy, oy) - 10, ox, Math.max(sy + h, oy + oh) + 10); }
+
+            if (Math.abs(sy - oy) <= thresh) { sy = oy; drawGuideLine(Math.min(sx, ox) - 10, oy, Math.max(sx + w, ox + ow) + 10, oy); }
+            else if (Math.abs(sy - (oy + oh)) <= thresh) { sy = oy + oh; drawGuideLine(Math.min(sx, ox) - 10, oy + oh, Math.max(sx + w, ox + ow) + 10, oy + oh); }
+            else if (Math.abs((sy + h) - oy) <= thresh) { sy = oy - h; drawGuideLine(Math.min(sx, ox) - 10, oy, Math.max(sx + w, ox + ow) + 10, oy); }
+        }
+
+        return { x: Math.round(sx * 100) / 100, y: Math.round(sy * 100) / 100 };
+    }
+
+    // --- Undo / Redo ヒストリー ---
+    function pushHistory(action) {
+        state.undoStack.push(action);
+        if (state.undoStack.length > 30) state.undoStack.shift();
+        state.redoStack = [];
+        updateSummaryAndInspector();
+    }
+
+    async function performUndo() {
+        const action = state.undoStack.pop();
+        if (!action) return;
+        state.redoStack.push(action);
+        await applyHistoryAction(action, true);
+        updateSummaryAndInspector();
+    }
+
+    async function performRedo() {
+        const action = state.redoStack.pop();
+        if (!action) return;
+        state.undoStack.push(action);
+        await applyHistoryAction(action, false);
+        updateSummaryAndInspector();
+    }
+
+    async function applyHistoryAction(action, isUndo) {
+        if (action.type === 'update') {
+            const items = isUndo ? action.before : action.after;
+            await apiBulkUpdate(items);
+        } else if (action.type === 'delete') {
+            if (isUndo) {
+                const created = await apiCreatePlacement(action.snapshot);
+                if (created) action.restoredId = created.id;
+            } else {
+                const targetId = action.restoredId || action.snapshot.id;
+                await apiDeletePlacement(targetId, false);
+            }
+        } else if (action.type === 'create') {
+            if (isUndo) {
+                await apiDeletePlacement(action.created.id, false);
+            } else {
+                const reCreated = await apiCreatePlacement(action.created);
+                if (reCreated) action.created = reCreated;
+            }
+        }
+    }
+
+    // --- API 通信層 ---
+    async function apiCreatePlacement(payload, recordHistory = false) {
+        setSaveStatus('saving');
+        try {
+            const res = await fetch(storeUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error('作成に失敗しました');
+            const data = await res.json();
+            if (data.success && data.placement) {
+                state.placements.push(data.placement);
+                renderPlacementNode(data.placement);
+                setSingleSelection(data.placement.id);
+                renderHygieneCirclesAndCheck();
+                syncSidebarLayoutItems();
+                if (recordHistory) pushHistory({ type: 'create', created: { ...data.placement } });
+                setSaveStatus('saved');
+                return data.placement;
+            }
+        } catch (err) {
+            console.error(err);
+            setSaveStatus('error');
+        }
+        return null;
+    }
+
+    async function applySingleUpdate(placement, patch, recordHistory = true) {
+        const before = [{ id: placement.id, pos_x: placement.pos_x, pos_y: placement.pos_y, width: placement.width, height: placement.height, rotation: placement.rotation, is_rotation_locked: placement.is_rotation_locked, display_text: placement.display_text, color_theme: placement.color_theme }];
+        Object.assign(placement, patch);
+        renderPlacementNode(placement);
+        renderHygieneCirclesAndCheck();
+        updateSummaryAndInspector();
+
+        setSaveStatus('saving');
+        try {
+            const res = await fetch(`${storeUrl}/${placement.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify(patch),
+            });
+            if (!res.ok) throw new Error('更新失敗');
+            const data = await res.json();
+            if (data.placement) Object.assign(placement, data.placement);
+            if (recordHistory) {
+                const after = [{ id: placement.id, pos_x: placement.pos_x, pos_y: placement.pos_y, width: placement.width, height: placement.height, rotation: placement.rotation, is_rotation_locked: placement.is_rotation_locked, display_text: placement.display_text, color_theme: placement.color_theme }];
+                pushHistory({ type: 'update', before, after });
+            }
+            renderPlacementNode(placement);
+            syncSidebarLayoutItems();
+            setSaveStatus('saved');
+        } catch (err) {
+            console.error(err);
+            setSaveStatus('error');
+        }
+    }
+
+    async function apiBulkUpdate(items, recordHistory = false, beforeSnapshot = null) {
+        if (!items || items.length === 0) return;
+        setSaveStatus('saving');
+        try {
+            const res = await fetch(bulkUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify({ items }),
+            });
+            if (!res.ok) throw new Error('一括更新失敗');
+            const data = await res.json();
+            if (data.success && Array.isArray(data.placements)) {
+                state.placements = data.placements;
+                renderAllPlacements();
+                if (recordHistory && beforeSnapshot) {
+                    pushHistory({ type: 'update', before: beforeSnapshot, after: items });
+                }
+            }
+            setSaveStatus('saved');
+        } catch (err) {
+            console.error(err);
+            setSaveStatus('error');
+        }
+    }
+
+    async function apiDeletePlacement(id, recordHistory = true) {
+        const target = state.placements.find(p => p.id === id);
+        if (!target) return;
+        const snapshot = { ...target };
+
+        setSaveStatus('saving');
+        try {
+            const res = await fetch(`${storeUrl}/${id}`, {
+                method: 'DELETE',
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
+            });
+            if (!res.ok) throw new Error('削除失敗');
+            state.placements = state.placements.filter(p => p.id !== id);
+            state.selectedIds.delete(id);
+            const node = svgContainer.querySelector(`g.site-map-node[data-placement-id="${id}"]`);
+            if (node) node.remove();
+            renderHygieneCirclesAndCheck();
+            updateSummaryAndInspector();
+            syncSidebarLayoutItems();
+            if (recordHistory) {
+                pushHistory({ type: 'delete', snapshot });
+                showToast(`「${snapshot.display_text || 'オブジェクト'}」を削除しました`, performUndo);
+            }
+            setSaveStatus('saved');
+        } catch (err) {
+            console.error(err);
+            setSaveStatus('error');
+        }
+    }
+
+    async function deleteSelectedPlacements() {
+        const ids = [...state.selectedIds];
+        for (const id of ids) {
+            await apiDeletePlacement(id, true);
+        }
+    }
+
+    // --- 連番複製 (Ctrl+D) ---
+    function incrementLabel(text) {
+        const m = String(text || '').match(/^(.*?)(\d+)$/);
+        if (!m) return text;
+        const prefix = m[1];
+        const numStr = m[2];
+        const nextNum = String(parseInt(numStr, 10) + 1).padStart(numStr.length, '0');
+        return `${prefix}${nextNum}`;
+    }
+
+    async function duplicateSelected() {
+        if (state.selectedIds.size !== 1) return;
+        const src = state.placements.find(p => p.id === [...state.selectedIds][0]);
+        if (!src) return;
+
+        const w = parseFloat(src.width), h = parseFloat(src.height);
+        const isVerticalColumn = isAlongStreet(parseFloat(src.pos_x), parseFloat(src.pos_y), w);
+        const newX = isVerticalColumn ? parseFloat(src.pos_x) : parseFloat(src.pos_x) + w;
+        const newY = isVerticalColumn ? parseFloat(src.pos_y) + h : parseFloat(src.pos_y);
+
+        await apiCreatePlacement({
+            shape_type: src.shape_type,
+            display_text: incrementLabel(src.display_text),
+            color_theme: src.color_theme,
+            pos_x: Math.round(newX * 100) / 100,
+            pos_y: Math.round(newY * 100) / 100,
+            width: w,
+            height: h,
+            rotation: src.rotation,
+            is_rotation_locked: src.is_rotation_locked,
+            font_size: src.font_size,
+        }, true);
+    }
+
+    // --- 一括整列・密着配置 ---
+    async function alignSelected(mode) {
+        const nodes = state.placements.filter(p => state.selectedIds.has(p.id));
+        if (nodes.length < 2) return;
+
+        const before = nodes.map(p => ({ id: p.id, pos_x: p.pos_x, pos_y: p.pos_y }));
+        const items = [];
+
+        if (mode === 'left') {
+            const minX = Math.min(...nodes.map(n => parseFloat(n.pos_x)));
+            nodes.forEach(n => items.push({ id: n.id, pos_x: minX, pos_y: n.pos_y }));
+        } else if (mode === 'top') {
+            const minY = Math.min(...nodes.map(n => parseFloat(n.pos_y)));
+            nodes.forEach(n => items.push({ id: n.id, pos_x: n.pos_x, pos_y: minY }));
+        } else if (mode === 'pack_vert') {
+            const sorted = [...nodes].sort((a, b) => parseFloat(a.pos_y) - parseFloat(b.pos_y));
+            const baseX = parseFloat(sorted[0].pos_x);
+            let curY = parseFloat(sorted[0].pos_y);
+            sorted.forEach(n => {
+                items.push({ id: n.id, pos_x: baseX, pos_y: Math.round(curY * 100) / 100 });
+                curY += parseFloat(n.height);
+            });
+        } else if (mode === 'pack_horiz') {
+            const sorted = [...nodes].sort((a, b) => parseFloat(a.pos_x) - parseFloat(b.pos_x));
+            let curX = parseFloat(sorted[0].pos_x);
+            const baseY = parseFloat(sorted[0].pos_y);
+            sorted.forEach(n => {
+                items.push({ id: n.id, pos_x: Math.round(curX * 100) / 100, pos_y: baseY });
+                curX += parseFloat(n.width);
+            });
+        }
+
+        await apiBulkUpdate(items, true, before);
+        showToast('整列を適用しました');
+    }
+
+    // --- 白地図ロード ---
     async function loadSvgMap() {
         try {
             const res = await fetch(svgUrl);
-            if (!res.ok) throw new Error(`SVG load failed: ${res.statusText}`);
-            const svgContent = await res.text();
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const svgText = await res.text();
+            svgContainer.innerHTML = svgText;
 
-            svgContainer.innerHTML = svgContent;
-
-            const svgElement = svgContainer.querySelector('svg');
-            if (svgElement) {
-                // SVGタグのネイティブviewBox属性から正規サイズを読み取る
-                const nativeViewBox = svgElement.getAttribute('viewBox');
-                if (nativeViewBox) {
-                    const parts = nativeViewBox.split(/\s+/).map(Number);
-                    if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
-                        state.svgWidth = parts[2];
-                        state.svgHeight = parts[3];
-                    }
-                }
-
-                svgElement.setAttribute('width', `${state.svgWidth}px`);
-                svgElement.setAttribute('height', `${state.svgHeight}px`);
-                svgElement.style.display = 'block';
-                svgElement.style.maxWidth = 'none';
-                svgElement.id = 'site-map-base-svg';
+            const svg = svgContainer.querySelector('svg');
+            if (svg) {
+                svg.setAttribute('width', `${state.svgWidth}px`);
+                svg.setAttribute('height', `${state.svgHeight}px`);
+                svg.style.display = 'block';
+                svg.style.maxWidth = 'none';
             }
 
             if (loadingEl) {
                 loadingEl.style.opacity = '0';
-                setTimeout(() => {
-                    loadingEl.style.display = 'none';
-                }, 300);
+                setTimeout(() => { loadingEl.style.display = 'none'; }, 250);
             }
-
-            // 初期配置の描画
             renderAllPlacements();
-
-            // 初期配置: 画面全体にフィット
             fitToScreen();
         } catch (err) {
-            console.error('Error loading SVG base map:', err);
-            if (loadingEl) {
-                loadingEl.innerHTML = `
-                    <div class="text-center text-red-600 p-4">
-                        <span class="text-2xl">⚠️</span>
-                        <p class="font-bold mt-2">白地図データの読み込みに失敗しました</p>
-                        <p class="text-xs text-slate-500 mt-1">${err.message}</p>
-                    </div>
-                `;
-            }
+            console.error(err);
+            if (loadingEl) loadingEl.textContent = `白地図の読み込みに失敗しました: ${err.message}`;
         }
     }
 
-    // --- イベントリスナー設定 ---
+    // --- ツールモード切替 ---
+    function setToolMode(mode) {
+        state.toolMode = mode;
+        const isPan = mode === 'pan' || state.spacePressed;
+        canvasContainer.style.cursor = isPan ? 'grab' : 'default';
+        if (btnModeSelect && btnModePan) {
+            btnModeSelect.className = mode === 'select' ? 'px-2 py-1 rounded-md font-bold bg-indigo-600 text-white transition cursor-pointer' : 'px-2 py-1 rounded-md font-bold text-slate-700 hover:bg-slate-200 transition cursor-pointer';
+            btnModePan.className = mode === 'pan' ? 'px-2 py-1 rounded-md font-bold bg-indigo-600 text-white transition cursor-pointer' : 'px-2 py-1 rounded-md font-bold text-slate-700 hover:bg-slate-200 transition cursor-pointer';
+        }
+    }
 
-    // ドラッグによるパン移動およびノード移動
+    // --- マウスイベント ---
     canvasContainer.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
-        state.isDragging = true;
-        state.dragStartX = e.clientX - state.x;
-        state.dragStartY = e.clientY - state.y;
-        state.panDist = 0;
+        if (state.toolMode === 'pan' || state.spacePressed) {
+            state.isPanning = true;
+            state.panStartX = e.clientX - state.x;
+            state.panStartY = e.clientY - state.y;
+            canvasContainer.style.cursor = 'grabbing';
+            return;
+        }
+        // 背景クリック ➔ 範囲選択(ラバーバンド)開始
+        state.isMarquee = true;
+        state.marqueeStartClientX = e.clientX;
+        state.marqueeStartClientY = e.clientY;
+        if (!e.shiftKey) clearSelection();
     });
 
     window.addEventListener('mousemove', (e) => {
-        // フリーエリアのリサイズドラッグ中 (Phase 5)
-        if (state.isResizing) {
-            const svgCoords = getSvgCoordinates(e.clientX, e.clientY);
-            const dx = svgCoords.x - state.resizeStartSvgX;
-            const dy = svgCoords.y - state.resizeStartSvgY;
+        if (state.isPanning) {
+            state.x = e.clientX - state.panStartX;
+            state.y = e.clientY - state.panStartY;
+            updateTransform();
+            return;
+        }
 
-            const target = state.placements.find(p => p.id === state.resizePlacementId);
-            if (target) {
-                const minSize = 7.0866; // 最小 1.0m (約7.09px)
-                let newX = state.origX;
-                let newY = state.origY;
-                let newW = state.origWidth;
-                let newH = state.origHeight;
-
-                switch (state.resizeHandle) {
-                    case 'br':
-                        newW = Math.max(minSize, state.origWidth + dx);
-                        newH = Math.max(minSize, state.origHeight + dy);
-                        break;
-                    case 'tr':
-                        newW = Math.max(minSize, state.origWidth + dx);
-                        if (state.origHeight - dy >= minSize) {
-                            newH = state.origHeight - dy;
-                            newY = state.origY + dy;
-                        } else {
-                            newH = minSize;
-                            newY = state.origY + (state.origHeight - minSize);
-                        }
-                        break;
-                    case 'bl':
-                        if (state.origWidth - dx >= minSize) {
-                            newW = state.origWidth - dx;
-                            newX = state.origX + dx;
-                        } else {
-                            newW = minSize;
-                            newX = state.origX + (state.origWidth - minSize);
-                        }
-                        newH = Math.max(minSize, state.origHeight + dy);
-                        break;
-                    case 'tl':
-                        if (state.origWidth - dx >= minSize) {
-                            newW = state.origWidth - dx;
-                            newX = state.origX + dx;
-                        } else {
-                            newW = minSize;
-                            newX = state.origX + (state.origWidth - minSize);
-                        }
-                        if (state.origHeight - dy >= minSize) {
-                            newH = state.origHeight - dy;
-                            newY = state.origY + dy;
-                        } else {
-                            newH = minSize;
-                            newY = state.origY + (state.origHeight - minSize);
-                        }
-                        break;
-                }
-
-                target.pos_x = Math.round(newX * 100) / 100;
-                target.pos_y = Math.round(newY * 100) / 100;
-                target.width = Math.round(newW * 100) / 100;
-                target.height = Math.round(newH * 100) / 100;
-                renderPlacementNode(target);
+        if (state.isMarquee && marqueeBox) {
+            const rect = canvasContainer.getBoundingClientRect();
+            const x1 = Math.min(state.marqueeStartClientX, e.clientX) - rect.left;
+            const y1 = Math.min(state.marqueeStartClientY, e.clientY) - rect.top;
+            const w = Math.abs(e.clientX - state.marqueeStartClientX);
+            const h = Math.abs(e.clientY - state.marqueeStartClientY);
+            if (w > 4 || h > 4) {
+                marqueeBox.style.left = `${x1}px`;
+                marqueeBox.style.top = `${y1}px`;
+                marqueeBox.style.width = `${w}px`;
+                marqueeBox.style.height = `${h}px`;
+                marqueeBox.classList.remove('hidden');
             }
             return;
         }
 
-        // 配置アイコンのドラッグ移動中
-        if (state.isMovingNode) {
-            const svgCoords = getSvgCoordinates(e.clientX, e.clientY);
-            const dx = svgCoords.x - state.moveStartSvgX;
-            const dy = svgCoords.y - state.moveStartSvgY;
+        // リサイズ中 (回転考慮の逆行列変換)
+        if (state.isResizing && state.resizeOrig) {
+            const sc = getSvgCoords(e.clientX, e.clientY);
+            const dx = sc.x - state.resizeStartSvgX;
+            const dy = sc.y - state.resizeStartSvgY;
+            const target = state.placements.find(p => p.id === state.resizeId);
+            if (!target) return;
 
-            const target = state.placements.find(p => p.id === state.movingNodeId);
-            if (target) {
-                target.pos_x = Math.round((state.origPlacementX + dx) * 100) / 100;
-                target.pos_y = Math.round((state.origPlacementY + dy) * 100) / 100;
-                renderPlacementNode(target);
+            const rad = -(state.resizeOrig.rot * Math.PI) / 180;
+            const ldx = dx * Math.cos(rad) - dy * Math.sin(rad);
+            const ldy = dx * Math.sin(rad) + dy * Math.cos(rad);
+            const minS = 7.0866;
+
+            let { x, y, w, h } = state.resizeOrig;
+            if (state.resizeHandle.includes('r')) w = Math.max(minS, w + ldx);
+            if (state.resizeHandle.includes('b')) h = Math.max(minS, h + ldy);
+            if (state.resizeHandle.includes('l')) {
+                const nw = Math.max(minS, w - ldx);
+                x += (w - nw);
+                w = nw;
             }
+            if (state.resizeHandle.includes('t')) {
+                const nh = Math.max(minS, h - ldy);
+                y += (h - nh);
+                h = nh;
+            }
+
+            target.pos_x = Math.round(x * 100) / 100;
+            target.pos_y = Math.round(y * 100) / 100;
+            target.width = Math.round(w * 100) / 100;
+            target.height = Math.round(h * 100) / 100;
+            renderPlacementNode(target);
+            updateSummaryAndInspector();
             return;
         }
 
-        // キャンバス全体のパン移動
-        if (!state.isDragging) return;
-        const newX = e.clientX - state.dragStartX;
-        const newY = e.clientY - state.dragStartY;
-        state.panDist += Math.abs(newX - state.x) + Math.abs(newY - state.y);
-        state.x = newX;
-        state.y = newY;
-        updateTransform();
-    });
+        // ノード移動中
+        if (state.isMoving) {
+            const sc = getSvgCoords(e.clientX, e.clientY);
+            let dx = sc.x - state.moveStartSvgX;
+            let dy = sc.y - state.moveStartSvgY;
 
-    window.addEventListener('mouseup', (e) => {
-        // フリーエリアリサイズの完了 (Phase 5)
-        if (state.isResizing) {
-            const target = state.placements.find(p => p.id === state.resizePlacementId);
-            state.isResizing = false;
-            state.resizeHandle = null;
-            state.resizePlacementId = null;
-
-            if (target) {
-                const hasChanged = (target.width !== state.origWidth) || (target.height !== state.origHeight)
-                    || (target.pos_x !== state.origX) || (target.pos_y !== state.origY);
-                if (hasChanged) {
-                    updatePlacementGeometry(target);
+            if (state.selectedIds.size === 1) {
+                const sid = [...state.selectedIds][0];
+                const target = state.placements.find(p => p.id === sid);
+                const orig = state.moveOrigPositions.get(sid);
+                if (target && orig) {
+                    const snapped = e.altKey
+                        ? { x: orig.x + dx, y: orig.y + dy }
+                        : computeSnap(sid, orig.x + dx, orig.y + dy, parseFloat(target.width), parseFloat(target.height));
+                    target.pos_x = Math.round(snapped.x * 100) / 100;
+                    target.pos_y = Math.round(snapped.y * 100) / 100;
+                    renderPlacementNode(target);
+                    if (target.shape_type === 'water_supply') renderHygieneCirclesAndCheck();
                 }
-            }
-            return;
-        }
-
-        // 配置アイコン移動の完了 (Phase 5: 通り沿い自動平行整列 & ロック判定)
-        if (state.isMovingNode) {
-            const target = state.placements.find(p => p.id === state.movingNodeId);
-            state.isMovingNode = false;
-            state.movingNodeId = null;
-
-            if (target) {
-                const inStreet = isAlongStreet(target.pos_x, target.pos_y, target.width, target.height);
-                if (inStreet) {
-                    target.is_rotation_locked = true;
-                    target.rotation = 0; // 通りに沿って平行直立に固定
-                } else {
-                    target.is_rotation_locked = false;
-                }
-
-                renderPlacementNode(target);
-
-                if (btnRotateSelected && state.selectedPlacementId === target.id) {
-                    const iconDef = iconDefinitions[target.shape_type];
-                    const canRotate = (iconDef ? iconDef.allow_rotation : true) && !target.is_rotation_locked;
-                    btnRotateSelected.disabled = !canRotate;
-                    if (target.is_rotation_locked) {
-                        btnRotateSelected.title = '通り沿い配置のため回転不可（平行固定）';
-                    } else if (iconDef && !iconDef.allow_rotation) {
-                        btnRotateSelected.title = '現場設備のため回転不可（直立固定）';
-                    } else {
-                        btnRotateSelected.title = '時計回りに45°回転 (Rキー)';
+            } else {
+                state.selectedIds.forEach(sid => {
+                    const target = state.placements.find(p => p.id === sid);
+                    const orig = state.moveOrigPositions.get(sid);
+                    if (target && orig) {
+                        target.pos_x = Math.round((orig.x + dx) * 100) / 100;
+                        target.pos_y = Math.round((orig.y + dy) * 100) / 100;
+                        renderPlacementNode(target);
                     }
-                }
-
-                updatePlacementGeometry(target);
-            }
-            return;
-        }
-
-        // キャンバスパン移動の終了 & 背景クリック判定（選択解除）
-        if (state.isDragging) {
-            state.isDragging = false;
-            if (state.panDist < 6) {
-                const isClickOnNode = e.target.closest('.site-map-node');
-                if (!isClickOnNode) {
-                    deselectPlacement();
-                }
+                });
             }
         }
     });
 
-    // 45°スナップ回転ボタン (Phase 5)
-    if (btnRotateSelected) {
-        btnRotateSelected.addEventListener('click', () => {
-            rotateSelectedPlacement(45);
-        });
-    }
+    window.addEventListener('mouseup', async (e) => {
+        if (state.isPanning) {
+            state.isPanning = false;
+            canvasContainer.style.cursor = (state.toolMode === 'pan' || state.spacePressed) ? 'grab' : 'default';
+            return;
+        }
 
-    // 選択アイテムの削除ボタン
-    if (btnDeleteSelected) {
-        btnDeleteSelected.addEventListener('click', () => {
-            deleteSelectedPlacement();
-        });
-    }
+        if (state.isMarquee) {
+            state.isMarquee = false;
+            if (marqueeBox) marqueeBox.classList.add('hidden');
+            const w = Math.abs(e.clientX - state.marqueeStartClientX);
+            const h = Math.abs(e.clientY - state.marqueeStartClientY);
+            if (w > 5 || h > 5) {
+                const p1 = getSvgCoords(state.marqueeStartClientX, state.marqueeStartClientY);
+                const p2 = getSvgCoords(e.clientX, e.clientY);
+                const rx1 = Math.min(p1.x, p2.x), rx2 = Math.max(p1.x, p2.x);
+                const ry1 = Math.min(p1.y, p2.y), ry2 = Math.max(p1.y, p2.y);
+                const prev = new Set(state.selectedIds);
+                state.placements.forEach(p => {
+                    const px = parseFloat(p.pos_x), py = parseFloat(p.pos_y), pw = parseFloat(p.width), ph = parseFloat(p.height);
+                    if (px + pw >= rx1 && px <= rx2 && py + ph >= ry1 && py <= ry2) {
+                        state.selectedIds.add(p.id);
+                    }
+                });
+                refreshChangedNodes(prev, state.selectedIds);
+                updateSummaryAndInspector();
+            }
+            return;
+        }
 
-    // キーボードショートカット (Delete/Backspace で削除、Rで45°回転、Esc でモーダル閉じる/選択解除)
+        if (state.isResizing) {
+            const target = state.placements.find(p => p.id === state.resizeId);
+            const orig = state.resizeOrig;
+            state.isResizing = false;
+            state.resizeOrig = null;
+            if (target && orig && (target.width !== orig.w || target.height !== orig.h || target.pos_x !== orig.x || target.pos_y !== orig.y)) {
+                await applySingleUpdate(target, { pos_x: target.pos_x, pos_y: target.pos_y, width: target.width, height: target.height }, true);
+            }
+            return;
+        }
+
+        if (state.isMoving) {
+            state.isMoving = false;
+            clearGuideLines();
+            const updates = [];
+            const before = [];
+            state.selectedIds.forEach(sid => {
+                const target = state.placements.find(p => p.id === sid);
+                const orig = state.moveOrigPositions.get(sid);
+                if (target && orig && (target.pos_x !== orig.x || target.pos_y !== orig.y)) {
+                    before.push({ id: sid, pos_x: orig.x, pos_y: orig.y, rotation: orig.rot, is_rotation_locked: orig.locked });
+                    const inStreet = isAlongStreet(target.pos_x, target.pos_y, parseFloat(target.width));
+                    const nextLocked = inStreet;
+                    const nextRot = inStreet ? 0 : target.rotation;
+                    target.is_rotation_locked = nextLocked;
+                    target.rotation = nextRot;
+                    updates.push({ id: sid, pos_x: target.pos_x, pos_y: target.pos_y, rotation: nextRot, is_rotation_locked: nextLocked });
+                }
+            });
+            if (updates.length === 1) {
+                const target = state.placements.find(p => p.id === updates[0].id);
+                if (target) await applySingleUpdate(target, updates[0], true);
+            } else if (updates.length > 1) {
+                await apiBulkUpdate(updates, true, before);
+            }
+        }
+    });
+
+    canvasContainer.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        zoomAround(e.deltaY < 0 ? 1.15 : 0.85, e.clientX, e.clientY);
+    }, { passive: false });
+
+    // --- キーボードショートカット ---
     window.addEventListener('keydown', (e) => {
         const tag = document.activeElement?.tagName?.toLowerCase();
         const isInput = tag === 'input' || tag === 'textarea' || tag === 'select';
+        if (isInput) return;
 
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-            if (isInput) return;
-            if (state.selectedPlacementId) {
+        if (e.code === 'Space' && !state.spacePressed) {
+            e.preventDefault();
+            state.spacePressed = true;
+            canvasContainer.style.cursor = 'grab';
+        } else if (e.key === 'v' || e.key === 'V') {
+            setToolMode('select');
+        } else if (e.key === 'h' || e.key === 'H') {
+            setToolMode('pan');
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+            e.preventDefault();
+            performUndo();
+        } else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+            e.preventDefault();
+            performRedo();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+            e.preventDefault();
+            duplicateSelected();
+        } else if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (state.selectedIds.size > 0) {
                 e.preventDefault();
-                deleteSelectedPlacement();
+                deleteSelectedPlacements();
             }
         } else if (e.key === 'r' || e.key === 'R') {
-            if (isInput) return;
-            if (state.selectedPlacementId) {
-                e.preventDefault();
-                rotateSelectedPlacement(45);
+            if (state.selectedIds.size === 1) {
+                const p = state.placements.find(item => item.id === [...state.selectedIds][0]);
+                const def = p ? iconDefinitions[p.shape_type] : null;
+                if (p && !p.is_rotation_locked && (!def || def.is_rotatable)) {
+                    e.preventDefault();
+                    applySingleUpdate(p, { rotation: (parseInt(p.rotation, 10) + 45) % 360 });
+                }
             }
+        } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && state.selectedIds.size > 0) {
+            e.preventDefault();
+            const step = e.shiftKey ? 3.54 : 0.5;
+            const dx = e.key === 'ArrowLeft' ? -step : (e.key === 'ArrowRight' ? step : 0);
+            const dy = e.key === 'ArrowUp' ? -step : (e.key === 'ArrowDown' ? step : 0);
+            state.selectedIds.forEach(sid => {
+                const p = state.placements.find(item => item.id === sid);
+                if (p) {
+                    p.pos_x = Math.round((parseFloat(p.pos_x) + dx) * 100) / 100;
+                    p.pos_y = Math.round((parseFloat(p.pos_y) + dy) * 100) / 100;
+                    renderPlacementNode(p);
+                }
+            });
+            renderHygieneCirclesAndCheck();
+            clearTimeout(state.nudgeTimer);
+            state.nudgeTimer = setTimeout(() => {
+                const items = [...state.selectedIds].map(sid => {
+                    const p = state.placements.find(item => item.id === sid);
+                    return p ? { id: p.id, pos_x: p.pos_x, pos_y: p.pos_y } : null;
+                }).filter(Boolean);
+                apiBulkUpdate(items, false);
+            }, 350);
         } else if (e.key === 'Escape') {
-            if (modalEl && !modalEl.classList.contains('hidden')) {
-                closePlacementModal();
-            } else {
-                deselectPlacement();
-            }
+            clearSelection();
         }
     });
 
-    // モーダル関連イベントバインド (Phase 4)
-    if (modalColorOptions) {
-        modalColorOptions.forEach(opt => {
-            opt.addEventListener('change', () => {
-                modalColorOptions.forEach(o => {
-                    const p = o.closest('.color-option');
-                    if (p) {
-                        if (o.checked) {
-                            p.classList.add('ring-2', 'ring-indigo-600', 'bg-indigo-50/50');
-                        } else {
-                            p.classList.remove('ring-2', 'ring-indigo-600', 'bg-indigo-50/50');
-                        }
-                    }
-                });
-            });
+    window.addEventListener('keyup', (e) => {
+        if (e.code === 'Space') {
+            state.spacePressed = false;
+            canvasContainer.style.cursor = state.toolMode === 'pan' ? 'grab' : 'default';
+        }
+    });
+
+    // --- ツールバー & 左ペインバインド ---
+    if (btnModeSelect) btnModeSelect.addEventListener('click', () => setToolMode('select'));
+    if (btnModePan) btnModePan.addEventListener('click', () => setToolMode('pan'));
+    if (btnUndo) btnUndo.addEventListener('click', performUndo);
+    if (btnRedo) btnRedo.addEventListener('click', performRedo);
+    if (btnDuplicate) btnDuplicate.addEventListener('click', duplicateSelected);
+    if (btnDeleteSelected) btnDeleteSelected.addEventListener('click', deleteSelectedPlacements);
+    if (btnRotateSelected) {
+        btnRotateSelected.addEventListener('click', () => {
+            if (state.selectedIds.size !== 1) return;
+            const p = state.placements.find(item => item.id === [...state.selectedIds][0]);
+            if (p && !p.is_rotation_locked) applySingleUpdate(p, { rotation: (parseInt(p.rotation, 10) + 45) % 360 });
+        });
+    }
+    if (btnAlignLeft) btnAlignLeft.addEventListener('click', () => alignSelected('left'));
+    if (btnAlignTop) btnAlignTop.addEventListener('click', () => alignSelected('top'));
+    if (btnPackVert) btnPackVert.addEventListener('click', () => alignSelected('pack_vert'));
+    if (btnPackHoriz) btnPackHoriz.addEventListener('click', () => alignSelected('pack_horiz'));
+
+    if (btnToggleHygiene) {
+        btnToggleHygiene.addEventListener('click', () => {
+            state.showHygiene = !state.showHygiene;
+            btnToggleHygiene.textContent = state.showHygiene ? '💧 20m衛生圏 ON' : '💧 20m衛生圏 OFF';
+            btnToggleHygiene.className = state.showHygiene
+                ? 'px-2.5 py-1 bg-sky-600 text-white border border-sky-600 rounded-lg font-bold shadow-2xs transition cursor-pointer'
+                : 'px-2.5 py-1 bg-white text-slate-600 border border-slate-300 rounded-lg font-bold shadow-2xs transition cursor-pointer';
+            renderHygieneCirclesAndCheck();
         });
     }
 
-    if (modalLayoutItemId) {
-        modalLayoutItemId.addEventListener('change', () => {
-            updateVendorPreview();
-            const opt = modalLayoutItemId.options[modalLayoutItemId.selectedIndex];
-            if (opt && opt.value && opt.dataset.code) {
-                if (!modalDisplayText.value || modalDisplayText.value === 'ブース' || modalDisplayText.value === 'テキスト') {
-                    modalDisplayText.value = opt.dataset.code;
+    if (btnToggleSnap) {
+        btnToggleSnap.addEventListener('click', () => {
+            state.snapEnabled = !state.snapEnabled;
+            btnToggleSnap.textContent = state.snapEnabled ? '🧲 吸着 ON' : '🧲 吸着 OFF';
+            btnToggleSnap.className = state.snapEnabled
+                ? 'px-2.5 py-1 bg-emerald-600 text-white border border-emerald-600 rounded-lg font-bold shadow-2xs transition cursor-pointer'
+                : 'px-2.5 py-1 bg-white text-slate-600 border border-slate-300 rounded-lg font-bold shadow-2xs transition cursor-pointer';
+        });
+    }
+
+    if (btnZoomIn) btnZoomIn.addEventListener('click', () => { const r = canvasContainer.getBoundingClientRect(); zoomAround(1.25, r.left + r.width / 2, r.top + r.height / 2); });
+    if (btnZoomOut) btnZoomOut.addEventListener('click', () => { const r = canvasContainer.getBoundingClientRect(); zoomAround(0.8, r.left + r.width / 2, r.top + r.height / 2); });
+    if (btnZoom100) btnZoom100.addEventListener('click', () => { const r = canvasContainer.getBoundingClientRect(); state.scale = 1.0; state.x = (r.width - state.svgWidth) / 2; state.y = (r.height - state.svgHeight) / 2; updateTransform(); });
+    if (btnZoomFit) btnZoomFit.addEventListener('click', fitToScreen);
+
+    // 左ペインタブ切替
+    if (tabBtnShapes && tabBtnItems) {
+        tabBtnShapes.addEventListener('click', () => {
+            tabPanelShapes.classList.remove('hidden');
+            tabPanelItems.classList.add('hidden');
+            tabPanelItems.classList.remove('flex');
+            tabBtnShapes.className = 'py-1 rounded-lg text-xs font-bold bg-white text-indigo-700 shadow-2xs transition cursor-pointer';
+            tabBtnItems.className = 'py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition cursor-pointer';
+        });
+        tabBtnItems.addEventListener('click', () => {
+            tabPanelShapes.classList.add('hidden');
+            tabPanelItems.classList.remove('hidden');
+            tabPanelItems.classList.add('flex');
+            tabBtnItems.className = 'py-1 rounded-lg text-xs font-bold bg-white text-indigo-700 shadow-2xs transition cursor-pointer';
+            tabBtnShapes.className = 'py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition cursor-pointer';
+        });
+    }
+
+    if (sidebarSearch) sidebarSearch.addEventListener('input', syncSidebarLayoutItems);
+    if (sidebarUnplacedOnly) sidebarUnplacedOnly.addEventListener('change', syncSidebarLayoutItems);
+
+    if (btnResetPreset) {
+        btnResetPreset.addEventListener('click', async () => {
+            if (!confirm('現在の配置をリセットし、標準見本配置（260927版・全111件）に復元しますか？')) return;
+            setSaveStatus('saving');
+            try {
+                const res = await fetch(resetUrl, { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken } });
+                if (!res.ok) throw new Error('復元に失敗しました');
+                const data = await res.json();
+                if (data.success && Array.isArray(data.placements)) {
+                    state.placements = data.placements;
+                    state.selectedIds.clear();
+                    state.undoStack = [];
+                    state.redoStack = [];
+                    renderAllPlacements();
+                    showToast('標準見本配置へ復元しました');
                 }
+                setSaveStatus('saved');
+            } catch (err) {
+                console.error(err);
+                setSaveStatus('error');
             }
         });
     }
 
-    if (modalForm) {
-        modalForm.addEventListener('submit', handleModalSave);
-    }
+    // --- 右インスペクタ双方向イベント ---
+    const getSingleSelected = () => state.selectedIds.size === 1 ? state.placements.find(p => p.id === [...state.selectedIds][0]) : null;
 
-    if (btnModalClose) {
-        btnModalClose.addEventListener('click', closePlacementModal);
-    }
-
-    if (btnModalCancel) {
-        btnModalCancel.addEventListener('click', closePlacementModal);
-    }
-
-    if (btnModalDelete) {
-        btnModalDelete.addEventListener('click', async () => {
-            await deleteSelectedPlacement();
-            closePlacementModal();
+    if (inspDisplayText) {
+        inspDisplayText.addEventListener('input', () => {
+            const p = getSingleSelected();
+            if (!p) return;
+            p.display_text = inspDisplayText.value;
+            renderPlacementNode(p);
+            clearTimeout(state.inspTimer);
+            state.inspTimer = setTimeout(() => applySingleUpdate(p, { display_text: inspDisplayText.value }, true), 350);
         });
     }
 
-    if (modalEl) {
-        modalEl.addEventListener('click', (e) => {
-            if (e.target === modalEl) {
-                closePlacementModal();
+    inspColorBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const p = getSingleSelected();
+            if (p && !btn.disabled) applySingleUpdate(p, { color_theme: btn.dataset.color }, true);
+        });
+    });
+
+    bulkColorBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const color = btn.dataset.bulkColor;
+            const before = [...state.selectedIds].map(id => {
+                const p = state.placements.find(item => item.id === id);
+                return p ? { id: p.id, color_theme: p.color_theme } : null;
+            }).filter(Boolean);
+            const items = before.map(b => ({ id: b.id, color_theme: color }));
+            apiBulkUpdate(items, true, before);
+        });
+    });
+
+    if (inspRotation) inspRotation.addEventListener('change', () => { const p = getSingleSelected(); if (p) applySingleUpdate(p, { rotation: parseInt(inspRotation.value, 10) }, true); });
+    if (inspRotationLocked) inspRotationLocked.addEventListener('change', () => { const p = getSingleSelected(); if (p) applySingleUpdate(p, { is_rotation_locked: inspRotationLocked.checked }, true); });
+    if (inspFontSize) inspFontSize.addEventListener('change', () => { const p = getSingleSelected(); if (p) applySingleUpdate(p, { font_size: inspFontSize.value ? parseFloat(inspFontSize.value) : null }, true); });
+    if (inspWidthM) inspWidthM.addEventListener('change', () => { const p = getSingleSelected(); if (p) applySingleUpdate(p, { width: Math.max(7.09, Math.round(parseFloat(inspWidthM.value) * scaleRatio * 100) / 100) }, true); });
+    if (inspHeightM) inspHeightM.addEventListener('change', () => { const p = getSingleSelected(); if (p) applySingleUpdate(p, { height: Math.max(7.09, Math.round(parseFloat(inspHeightM.value) * scaleRatio * 100) / 100) }, true); });
+    if (inspShowHygieneCircle) inspShowHygieneCircle.addEventListener('change', () => { const p = getSingleSelected(); if (p) applySingleUpdate(p, { show_hygiene_circle: inspShowHygieneCircle.checked }, true); });
+    if (inspArcMode) {
+        inspArcMode.addEventListener('change', () => {
+            const p = getSingleSelected();
+            if (!p) return;
+            const [s, e] = inspArcMode.value.split(',').map(Number);
+            applySingleUpdate(p, { arc_start_angle: s, arc_end_angle: e }, true);
+        });
+    }
+    if (inspLayoutItemId) {
+        inspLayoutItemId.addEventListener('change', () => {
+            const p = getSingleSelected();
+            if (!p) return;
+            const val = inspLayoutItemId.value ? parseInt(inspLayoutItemId.value, 10) : null;
+            const opt = inspLayoutItemId.options[inspLayoutItemId.selectedIndex];
+            const patch = { layout_item_id: val };
+            if (val && opt?.dataset.code && (!p.display_text || p.display_text === 'A00' || p.display_text === 'テント')) {
+                patch.display_text = opt.dataset.code;
             }
+            applySingleUpdate(p, patch, true);
         });
     }
+    if (inspNotes) inspNotes.addEventListener('change', () => { const p = getSingleSelected(); if (p) applySingleUpdate(p, { notes: inspNotes.value }, true); });
 
-    // マウスホイールによるズーム
-    canvasContainer.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const delta = e.deltaY < 0 ? 1.15 : 0.85;
-        zoomAround(delta, e.clientX, e.clientY);
-    }, { passive: false });
-
-    // ツールバーボタン
-    if (btnZoomIn) {
-        btnZoomIn.addEventListener('click', () => {
-            const rect = canvasContainer.getBoundingClientRect();
-            zoomAround(1.25, rect.left + rect.width / 2, rect.top + rect.height / 2);
-        });
-    }
-
-    if (btnZoomOut) {
-        btnZoomOut.addEventListener('click', () => {
-            const rect = canvasContainer.getBoundingClientRect();
-            zoomAround(0.8, rect.left + rect.width / 2, rect.top + rect.height / 2);
-        });
-    }
-
-    if (btnZoom100) {
-        btnZoom100.addEventListener('click', () => {
-            const rect = canvasContainer.getBoundingClientRect();
-            state.scale = 1.0;
-            state.x = (rect.width - state.svgWidth) / 2;
-            state.y = (rect.height - state.svgHeight) / 2;
-            updateTransform();
-        });
-    }
-
-    if (btnZoomFit) {
-        btnZoomFit.addEventListener('click', () => {
-            fitToScreen();
-        });
-    }
-
-    // --- パレットからのドラッグ＆ドロップ (DnD) 実装 ---
-
-    // 1. パレットアイテムのドラッグ開始
-    const paletteItems = document.querySelectorAll('.palette-item');
-    paletteItems.forEach(item => {
+    // --- パレット & 台帳からのドラッグ＆ドロップ配置 ---
+    document.querySelectorAll('.palette-item').forEach(item => {
         item.addEventListener('dragstart', (e) => {
-            const dragData = {
+            e.dataTransfer.setData('application/json', JSON.stringify({
+                kind: 'palette',
                 shape_type: item.dataset.shapeType,
-                default_width: parseFloat(item.dataset.defaultWidth) || 78.0,
-                default_height: parseFloat(item.dataset.defaultHeight) || 78.0,
-                name: item.dataset.name || 'ブース',
-            };
-            e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+                default_width: parseFloat(item.dataset.defaultWidth) || 13.86,
+                default_height: parseFloat(item.dataset.defaultHeight) || 13.86,
+                color_theme: item.dataset.defaultColor || 'red',
+            }));
             e.dataTransfer.effectAllowed = 'copy';
         });
     });
 
-    // 2. キャンバス上でのドラッグオーバー許可
+    document.querySelectorAll('.sidebar-layout-item').forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('application/json', JSON.stringify({
+                kind: 'layout_item',
+                layout_item_id: parseInt(item.dataset.layoutItemId, 10),
+                code: item.dataset.code,
+                item_type: item.dataset.itemType,
+            }));
+            e.dataTransfer.effectAllowed = 'copy';
+        });
+        // 配置済アイテムをクリックするとその位置にズーム＆フォーカス
+        item.addEventListener('click', () => {
+            const lid = parseInt(item.dataset.layoutItemId, 10);
+            const found = state.placements.find(p => p.layout_item_id === lid);
+            if (!found) return;
+            setSingleSelection(found.id);
+            const rect = canvasContainer.getBoundingClientRect();
+            state.scale = 3.0;
+            state.x = rect.width / 2 - (parseFloat(found.pos_x) + parseFloat(found.width) / 2) * state.scale;
+            state.y = rect.height / 2 - (parseFloat(found.pos_y) + parseFloat(found.height) / 2) * state.scale;
+            updateTransform();
+        });
+    });
+
     canvasContainer.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'copy';
     });
 
-    // 3. ドロップ時の精密 CTM 逆変換座標計算 & API保存
     canvasContainer.addEventListener('drop', async (e) => {
         e.preventDefault();
-        const rawData = e.dataTransfer.getData('application/json');
-        if (!rawData) return;
+        const raw = e.dataTransfer.getData('application/json');
+        if (!raw) return;
 
-        let dragData;
-        try {
-            dragData = JSON.parse(rawData);
-        } catch (err) {
-            console.error('Failed to parse dropped data:', err);
-            return;
+        let data;
+        try { data = JSON.parse(raw); } catch { return; }
+
+        const sc = getSvgCoords(e.clientX, e.clientY);
+        let shapeType = data.shape_type || 'booth_standard';
+        let w = data.default_width || 13.86;
+        let h = data.default_height || 13.86;
+        let color = data.color_theme || 'red';
+        let displayText = '';
+        let layoutItemId = null;
+
+        if (data.kind === 'layout_item') {
+            layoutItemId = data.layout_item_id;
+            displayText = data.code || '';
+            if (data.item_type === 'facility') {
+                shapeType = 'water_supply';
+                w = 6.24;
+                h = 6.24;
+                color = 'blue';
+            }
         }
 
-        const targetW = dragData.default_width;
-        const targetH = dragData.default_height;
+        let posX = sc.x - w / 2;
+        let posY = sc.y - h / 2;
+        if (state.snapEnabled) {
+            const snapped = computeSnap(null, posX, posY, w, h);
+            posX = snapped.x;
+            posY = snapped.y;
+            clearGuideLines();
+        }
 
-        // ブラウザ標準の getScreenCTM().inverse() を用いたピンポイント絶対座標取得
-        const svgCoords = getSvgCoordinates(e.clientX, e.clientY);
-
-        // ドロップ位置がオブジェクトの中心に来るようにオフセット
-        const svgX = svgCoords.x - targetW / 2;
-        const svgY = svgCoords.y - targetH / 2;
-
-        // 非同期保存リクエスト (Phase 5: 通り沿いドロップ判定)
-        const inStreet = isAlongStreet(svgX, svgY, targetW, targetH);
-        const payload = {
-            shape_type: dragData.shape_type,
-            pos_x: Math.round(svgX * 100) / 100,
-            pos_y: Math.round(svgY * 100) / 100,
-            width: targetW,
-            height: targetH,
-            display_text: dragData.name,
-            color_theme: 'red',
+        const inStreet = isAlongStreet(posX, posY, w);
+        await apiCreatePlacement({
+            shape_type: shapeType,
+            layout_item_id: layoutItemId,
+            display_text: displayText,
+            color_theme: color,
+            pos_x: Math.round(posX * 100) / 100,
+            pos_y: Math.round(posY * 100) / 100,
+            width: w,
+            height: h,
             rotation: 0,
             is_rotation_locked: inStreet,
-        };
-
-        try {
-            const res = await fetch(storeUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || '配置の保存に失敗しました');
-            }
-
-            const resData = await res.json();
-            if (resData.success && resData.placement) {
-                state.placements.push(resData.placement);
-                renderPlacementNode(resData.placement);
-                selectPlacement(resData.placement.id);
-                if (countBadge) {
-                    countBadge.textContent = `配置数: ${state.placements.length}件`;
-                }
-            }
-        } catch (err) {
-            console.error('Error storing placement:', err);
-            alert(`配置の保存に失敗しました: ${err.message}`);
-        }
+        }, true);
     });
 
-    // 白地図のロード開始
     loadSvgMap();
 });

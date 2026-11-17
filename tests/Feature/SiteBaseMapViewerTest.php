@@ -69,8 +69,8 @@ class SiteBaseMapViewerTest extends TestCase
 
         // タイトルや白地図メタ情報
         $response->assertSee('白地図配置エディタ');
-        $response->assertSee('商店街平面図 260813版 A3 1/400');
-        $response->assertSee('縮尺 1/400');
+        $response->assertSee('A3 1/400 CADベクター図面');
+        $response->assertSee('図面配置サマリー');
 
         // 主要なDOMコンテナ・ツールバーボタン
         $response->assertSee('id="site-layout-editor-app"', false);
@@ -106,7 +106,7 @@ class SiteBaseMapViewerTest extends TestCase
 
         $this->assertDatabaseHas('site_base_maps', [
             'timetable_id' => $this->timetable->id,
-            'name' => '商店街平面図 260813版 A3 1/400',
+            'name' => '保土ヶ谷宿場まつり 平面図 1/400 A3',
             'is_active' => true,
         ]);
     }

@@ -2,20 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BulkUpdateSiteMapPlacementsRequest;
 use App\Http\Requests\StoreSiteMapPlacementRequest;
 use App\Http\Requests\UpdateSiteMapPlacementRequest;
-use App\Models\SiteMapIconDefinition;
 use App\Models\SiteMapPlacement;
 use App\Models\Timetable;
+use App\Services\SiteMapPdfExporterService;
 use App\Services\SiteMapService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class SiteMapController extends Controller
 {
     public function __construct(
-        protected SiteMapService $siteMapService
+        protected SiteMapService $siteMapService,
+        protected SiteMapPdfExporterService $pdfExporterService
     ) {}
 
     /**
@@ -23,53 +26,19 @@ class SiteMapController extends Controller
      */
     public function editor(Request $request, Timetable $timetable): View
     {
-        // 運行情報に紐づくアクティブな白地図を取得、存在しない場合はデフォルト白地図を準備
-        $siteBaseMap = $timetable->siteBaseMaps()
-            ->where('is_active', true)
-            ->first();
+        $editorData = $this->siteMapService->getEditorData($timetable);
 
-        if (! $siteBaseMap) {
-            $siteBaseMap = $timetable->siteBaseMaps()->create([
-                'name' => '商店街平面図 260813版 A3 1/400',
-                'cad_version' => '260813',
-                'paper_size' => 'A3',
-                'scale_ratio' => 7.0866,
-                'width_meters' => 32.4,
-                'height_meters' => 45.8,
-                'svg_path' => 'maps/shopping_street_base_map_260813.svg',
-                'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
-                'viewbox' => '0 0 842 1191',
-                'is_active' => true,
-            ]);
-        }
-
-        // アイコン定義マスター一覧
-        $iconDefinitions = SiteMapIconDefinition::all();
-
-        // 既存の配置データ
-        $placements = $this->siteMapService->getPlacements($siteBaseMap);
-
-        // 運行情報に紐づく既存のブース台帳データ一覧
-        $layoutItems = $timetable->layoutItems()
-            ->with(['vendor', 'area'])
-            ->orderBy('code', 'asc')
-            ->get();
-
-        return view('site_layouts.editor', [
+        return view('site_layouts.editor', array_merge($editorData, [
             'timetable' => $timetable,
-            'siteBaseMap' => $siteBaseMap,
-            'iconDefinitions' => $iconDefinitions,
-            'placements' => $placements,
-            'layoutItems' => $layoutItems,
-        ]);
+        ]));
     }
 
     /**
-     * 新規配置を保存する (ドラッグ＆ドロップ配置 API)
+     * 新規配置を保存する (ドラッグ＆ドロップ配置・複製 API)
      */
     public function storePlacement(StoreSiteMapPlacementRequest $request, Timetable $timetable): JsonResponse
     {
-        $siteBaseMap = $timetable->siteBaseMaps()->where('is_active', true)->firstOrFail();
+        $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
 
         $placement = $this->siteMapService->createPlacement(
             $siteBaseMap,
@@ -87,7 +56,7 @@ class SiteMapController extends Controller
      */
     public function getPlacements(Timetable $timetable): JsonResponse
     {
-        $siteBaseMap = $timetable->siteBaseMaps()->where('is_active', true)->firstOrFail();
+        $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
         $placements = $this->siteMapService->getPlacements($siteBaseMap);
 
         return response()->json([
@@ -101,13 +70,28 @@ class SiteMapController extends Controller
      */
     public function updatePlacement(UpdateSiteMapPlacementRequest $request, Timetable $timetable, SiteMapPlacement $placement): JsonResponse
     {
-        $validated = $request->validated();
-
-        $updated = $this->siteMapService->updatePlacementGeometry($placement, $validated);
+        $updated = $this->siteMapService->updatePlacementGeometry($placement, $request->validated());
 
         return response()->json([
             'success' => true,
             'placement' => $updated,
+        ]);
+    }
+
+    /**
+     * 複数の配置を一括更新する API (一括整列・複数移動・一括カラー変更)
+     */
+    public function bulkUpdatePlacements(BulkUpdateSiteMapPlacementsRequest $request, Timetable $timetable): JsonResponse
+    {
+        $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
+        $placements = $this->siteMapService->bulkUpdatePlacements(
+            $siteBaseMap,
+            $request->validated('items')
+        );
+
+        return response()->json([
+            'success' => true,
+            'placements' => $placements,
         ]);
     }
 
@@ -120,6 +104,39 @@ class SiteMapController extends Controller
 
         return response()->json([
             'success' => true,
+        ]);
+    }
+
+    /**
+     * 標準配置プリセット（添付PDF状態）へリセットする API
+     */
+    public function resetPreset(Timetable $timetable): JsonResponse
+    {
+        $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
+        $placements = $this->siteMapService->resetToStandardPreset($siteBaseMap);
+
+        return response()->json([
+            'success' => true,
+            'placements' => $placements,
+        ]);
+    }
+
+    /**
+     * 編集済みの白地図配置を A3 1/400 ベクターPDFとしてダウンロード出力する
+     */
+    public function exportPdf(Timetable $timetable): Response
+    {
+        $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
+        $placements = $this->siteMapService->getPlacements($siteBaseMap);
+
+        $pdfBinary = $this->pdfExporterService->exportA3VectorPdf($siteBaseMap, $placements);
+
+        $dateStr = $timetable->target_date ? $timetable->target_date->format('Ymd') : date('Ymd');
+        $filename = "ござ市配置図_{$dateStr}_A3_1-400.pdf";
+
+        return response($pdfBinary, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 }

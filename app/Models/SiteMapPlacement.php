@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $layout_item_id
  * @property string $shape_type
  * @property string $display_text
+ * @property float|null $font_size
  * @property string $color_theme
  * @property float $pos_x
  * @property float $pos_y
@@ -22,6 +23,10 @@ use Illuminate\Support\Carbon;
  * @property float $height
  * @property int $rotation
  * @property bool $is_rotation_locked
+ * @property bool $show_hygiene_circle
+ * @property int $arc_start_angle
+ * @property int $arc_end_angle
+ * @property int $z_index
  * @property string|null $notes
  * @property array<string, mixed>|null $meta_data
  * @property Carbon|null $created_at
@@ -46,6 +51,7 @@ class SiteMapPlacement extends Model
         'layout_item_id',
         'shape_type',
         'display_text',
+        'font_size',
         'color_theme',
         'pos_x',
         'pos_y',
@@ -53,6 +59,10 @@ class SiteMapPlacement extends Model
         'height',
         'rotation',
         'is_rotation_locked',
+        'show_hygiene_circle',
+        'arc_start_angle',
+        'arc_end_angle',
+        'z_index',
         'notes',
         'meta_data',
     ];
@@ -65,12 +75,17 @@ class SiteMapPlacement extends Model
         return [
             'site_base_map_id' => 'integer',
             'layout_item_id' => 'integer',
+            'font_size' => 'decimal:2',
             'pos_x' => 'decimal:2',
             'pos_y' => 'decimal:2',
             'width' => 'decimal:2',
             'height' => 'decimal:2',
             'rotation' => 'integer',
             'is_rotation_locked' => 'boolean',
+            'show_hygiene_circle' => 'boolean',
+            'arc_start_angle' => 'integer',
+            'arc_end_angle' => 'integer',
+            'z_index' => 'integer',
             'meta_data' => 'array',
         ];
     }

@@ -236,8 +236,11 @@ Route::middleware('auth')->group(function () {
 
         // 白地図マッピングエディタ (Site Map Editor)
         Route::get('timetables/{timetable}/site-maps/editor', [SiteMapController::class, 'editor'])->name('timetables.site-maps.editor');
+        Route::get('timetables/{timetable}/site-maps/pdf', [SiteMapController::class, 'exportPdf'])->name('timetables.site-maps.pdf');
+        Route::post('timetables/{timetable}/site-maps/reset-preset', [SiteMapController::class, 'resetPreset'])->name('timetables.site-maps.reset-preset');
         Route::get('timetables/{timetable}/site-maps/placements', [SiteMapController::class, 'getPlacements'])->name('timetables.site-maps.placements.index');
         Route::post('timetables/{timetable}/site-maps/placements', [SiteMapController::class, 'storePlacement'])->name('timetables.site-maps.placements.store');
+        Route::put('timetables/{timetable}/site-maps/placements-bulk', [SiteMapController::class, 'bulkUpdatePlacements'])->name('timetables.site-maps.placements.bulk-update');
         Route::put('timetables/{timetable}/site-maps/placements/{placement}', [SiteMapController::class, 'updatePlacement'])->name('timetables.site-maps.placements.update');
         Route::delete('timetables/{timetable}/site-maps/placements/{placement}', [SiteMapController::class, 'destroyPlacement'])->name('timetables.site-maps.placements.destroy');
 

@@ -16,6 +16,7 @@ use App\Repositories\Contracts\LocationScheduleRepositoryInterface;
 use App\Repositories\Contracts\LocationTypeRepositoryInterface;
 use App\Repositories\Contracts\OrganizationUnitRepositoryInterface;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Repositories\Contracts\SiteMapRepositoryInterface;
 use App\Repositories\Contracts\StaffCheckInRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
@@ -23,6 +24,7 @@ use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Contracts\VendorRepositoryInterface;
+use App\Repositories\Eloquent\EloquentSiteMapRepository;
 use App\Repositories\Eloquent\EquipmentLogisticsPatternRepository;
 use App\Repositories\Eloquent\EquipmentLogisticsPlanRepository;
 use App\Repositories\Eloquent\EquipmentRepository;
@@ -56,6 +58,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ScheduleRepositoryInterface::class,
             ScheduleRepository::class
+        );
+        $this->app->bind(
+            SiteMapRepositoryInterface::class,
+            EloquentSiteMapRepository::class
         );
 
         $this->app->bind(
