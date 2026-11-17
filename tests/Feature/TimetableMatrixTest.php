@@ -320,15 +320,15 @@ class TimetableMatrixTest extends TestCase
         // 運行完了（completed）はプルダウンメニューに表示されないこと
         $response->assertDontSee(route('timetable.index', ['timetable_id' => $completedTimetable->id]));
 
-        // セクション2: 編成・業務計画
-        $response->assertSee('編成・業務計画');
+        // セクション2: 運行・人員編成
+        $response->assertSee('運行・人員編成');
         $response->assertSee('運行日程管理');
         $response->assertSee('搬出入計画');
         $response->assertSee(route('timetables.index'));
         $response->assertSee(route('logistics.index'));
 
-        // セクション3: 日程・スケジュール
-        $response->assertSee('日程・スケジュール');
+        // セクション3: 全体日程・会議
+        $response->assertSee('全体日程・会議');
         $response->assertSee('総合カレンダー');
         $response->assertSee(route('calendar.index'));
         $response->assertSee('スケジュール管理');
