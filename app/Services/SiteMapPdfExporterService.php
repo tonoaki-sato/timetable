@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\SiteBaseMap;
+use App\Models\SiteMapIconDefinition;
 use App\Models\SiteMapPlacement;
 use Dompdf\Adapter\CPDF;
 use Dompdf\Dompdf;
@@ -45,12 +46,16 @@ class SiteMapPdfExporterService
         $canvas = $dompdf->getCanvas();
         $font = $dompdf->getFontMetrics()->getFont('japanesefont', 'normal') ?: 'Helvetica';
 
+        $iconDefs = SiteMapIconDefinition::all()->keyBy('icon_key');
+
         // 1. 白地図ベースレイヤーの描画
         $this->drawBaseMapLayer($canvas, $font, $placements);
 
         // 2. 給水20m衛生サークルレイヤーの描画 (最背面配置レイヤー)
         foreach ($placements as $placement) {
-            if ($placement->shape_type === 'water_supply' && $placement->show_hygiene_circle) {
+            $iconDef = $iconDefs->get($placement->shape_type);
+            $hasHygiene = $placement->shape_type === 'water_supply' || ($iconDef && $iconDef->has_hygiene_circle);
+            if ($hasHygiene && $placement->show_hygiene_circle) {
                 $this->drawWaterHygieneCircle($canvas, $placement);
             }
         }
@@ -58,7 +63,7 @@ class SiteMapPdfExporterService
         // 3. 配置オブジェクトレイヤーの描画 (z_index 順)
         $sorted = $placements->sortBy(fn (SiteMapPlacement $p) => [$p->z_index, $p->id]);
         foreach ($sorted as $placement) {
-            $this->drawPlacementNode($canvas, $font, $placement);
+            $this->drawPlacementNode($canvas, $font, $placement, $iconDefs);
         }
 
         return (string) $dompdf->output();
@@ -169,9 +174,11 @@ class SiteMapPdfExporterService
     }
 
     /**
-     * 配置オブジェクトをCADベクター図形として描画
+     * 配置オブジェクトをCADベクター図形または画像シンボルとして描画
+     *
+     * @param  \Illuminate\Support\Collection<string, SiteMapIconDefinition>|null  $iconDefs
      */
-    protected function drawPlacementNode(CPDF $canvas, string $font, SiteMapPlacement $placement): void
+    protected function drawPlacementNode(CPDF $canvas, string $font, SiteMapPlacement $placement, ?\Illuminate\Support\Collection $iconDefs = null): void
     {
         $x = (float) $placement->pos_x;
         $y = (float) $placement->pos_y;
@@ -188,7 +195,19 @@ class SiteMapPdfExporterService
         }
 
         $shape = $placement->shape_type;
-        if ($shape === 'water_supply') {
+        $iconDef = $iconDefs?->get($shape);
+
+        if ($iconDef && $iconDef->render_style === 'image' && $iconDef->icon_asset_path) {
+            $fullPath = public_path($iconDef->icon_asset_path);
+            if (file_exists($fullPath)) {
+                $canvas->image($fullPath, $x, $y, $w, $h);
+            } else {
+                $canvas->rectangle($x, $y, $w, $h, $rgb, 0.5);
+            }
+            if (! empty(trim($placement->display_text))) {
+                $this->drawCenteredTextWithMask($canvas, $font, $placement, $x, $y, $w, $h, $rgb);
+            }
+        } elseif ($shape === 'water_supply') {
             $this->drawWaterSupplySymbol($canvas, $x, $y, $w, $h);
         } elseif ($shape === 'area_note') {
             $this->drawAreaNoteSymbol($canvas, $font, $placement, $x, $y, $w, $h, $rgb);

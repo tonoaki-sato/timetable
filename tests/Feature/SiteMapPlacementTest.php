@@ -73,6 +73,10 @@ class SiteMapPlacementTest extends TestCase
         $response->assertSee('btn-export-pdf', false);
         $response->assertSee('btn-pack-vert', false);
         $response->assertSee('insp-display-text', false);
+        $response->assertSee('btn-open-create-icon-modal', false);
+        $response->assertSee('modal-create-icon', false);
+        $response->assertSee('modal-edit-icon', false);
+        $response->assertSee('modal-delete-icon', false);
     }
 
     /**

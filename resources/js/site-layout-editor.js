@@ -86,6 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const storeUrl = appEl.dataset.storeUrl;
     const bulkUrl = appEl.dataset.bulkUrl;
     const resetUrl = appEl.dataset.resetUrl;
+    const iconStoreUrl = appEl.dataset.iconStoreUrl;
+    const iconBaseUrl = appEl.dataset.iconBaseUrl;
     const csrfToken = appEl.dataset.csrfToken;
 
     // 初期JSONパース
@@ -309,8 +311,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!layers) return;
         layers.hygiene.innerHTML = '';
 
-        const waters = state.placements.filter(p => p.shape_type === 'water_supply');
-        const redBooths = state.placements.filter(p => p.color_theme === 'red' && p.shape_type !== 'area_note');
+        const waters = state.placements.filter(p => {
+            const def = iconDefinitions[p.shape_type];
+            return p.shape_type === 'water_supply' || (def && def.has_hygiene_circle);
+        });
+        const redBooths = state.placements.filter(p => {
+            const def = iconDefinitions[p.shape_type];
+            return p.color_theme === 'red' && p.shape_type !== 'area_note' && (!def || def.is_hygiene_target !== false);
+        });
 
         if (state.showHygiene) {
             waters.forEach(w => {
@@ -425,7 +433,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // ヒット領域（クリック・ドラッグ掴みやすさ用透明背景）
         g.appendChild(createSvgEl('rect', { x, y, width: w, height: h, fill: 'rgba(255,255,255,0.01)' }));
 
-        if (shape === 'water_supply') {
+        const def = iconDefinitions[shape];
+
+        if (def && def.render_style === 'image' && def.icon_asset_path) {
+            const assetUrl = def.icon_asset_path.startsWith('/') ? def.icon_asset_path : `/${def.icon_asset_path}`;
+            const imgEl = createSvgEl('image', {
+                href: assetUrl,
+                x,
+                y,
+                width: w,
+                height: h,
+                preserveAspectRatio: 'none',
+            });
+            g.appendChild(imgEl);
+            if (placement.display_text && placement.display_text.trim()) {
+                renderTextWithMask(g, placement, x, y, w, h, theme.text);
+            }
+        } else if (shape === 'water_supply') {
             g.appendChild(createSvgEl('rect', { x, y, width: w, height: h, fill: '#ffffff', stroke: '#2563eb', 'stroke-width': '0.55' }));
             g.appendChild(createSvgEl('rect', { x: x + 1.1, y: y + 1.1, width: Math.max(1, w - 2.2), height: Math.max(1, h - 2.2), fill: 'none', stroke: '#2563eb', 'stroke-width': '0.4' }));
             g.appendChild(createSvgEl('line', { x1: x + w / 2, y1: y + 1.1, x2: x + w / 2, y2: y + h - 1.1, stroke: '#2563eb', 'stroke-width': '0.4' }));
@@ -1597,7 +1621,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inspNotes) inspNotes.addEventListener('change', () => { const p = getSingleSelected(); if (p) applySingleUpdate(p, { notes: inspNotes.value }, true); });
 
     // --- パレット & 台帳からのドラッグ＆ドロップ配置 ---
-    document.querySelectorAll('.palette-item').forEach(item => {
+    function bindPaletteItem(item) {
         item.addEventListener('dragstart', (e) => {
             e.dataTransfer.setData('application/json', JSON.stringify({
                 kind: 'palette',
@@ -1608,7 +1632,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }));
             e.dataTransfer.effectAllowed = 'copy';
         });
-    });
+
+        const btnEdit = item.querySelector('.btn-edit-custom-icon');
+        if (btnEdit) {
+            btnEdit.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditIconModal(item.dataset.shapeType);
+            });
+        }
+
+        const btnDelete = item.querySelector('.btn-delete-custom-icon');
+        if (btnDelete) {
+            btnDelete.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openDeleteIconModal(item.dataset.shapeType);
+            });
+        }
+    }
+
+    document.querySelectorAll('.palette-item').forEach(item => bindPaletteItem(item));
 
     document.querySelectorAll('.sidebar-layout-item').forEach(item => {
         item.addEventListener('dragstart', (e) => {
@@ -1689,6 +1731,473 @@ document.addEventListener('DOMContentLoaded', () => {
             is_rotation_locked: inStreet,
         }, true);
     });
+
+    // --- カスタムPNGアイコン管理 (生成・編集・削除・パレット連携) ---
+    const btnOpenCreateIconModal = document.getElementById('btn-open-create-icon-modal');
+    const modalCreateIcon = document.getElementById('modal-create-icon');
+    const formCreateIcon = document.getElementById('form-create-icon');
+    const createIconDropzone = document.getElementById('create-icon-dropzone');
+    const createIconFile = document.getElementById('create-icon-file');
+    const createIconPrompt = document.getElementById('create-icon-prompt');
+    const createIconPreviewWrap = document.getElementById('create-icon-preview-wrap');
+    const createIconPreviewImg = document.getElementById('create-icon-preview-img');
+    const createIconFilename = document.getElementById('create-icon-filename');
+    const createIconWidth = document.getElementById('create-icon-width');
+    const createIconHeight = document.getElementById('create-icon-height');
+    const createIconScaleHint = document.getElementById('create-icon-scale-hint');
+    const createIconErrorMsg = document.getElementById('create-icon-error-msg');
+    const btnSubmitCreateIcon = document.getElementById('btn-submit-create-icon');
+
+    const modalEditIcon = document.getElementById('modal-edit-icon');
+    const formEditIcon = document.getElementById('form-edit-icon');
+    const editIconId = document.getElementById('edit-icon-id');
+    const editIconName = document.getElementById('edit-icon-name');
+    const editIconCategory = document.getElementById('edit-icon-category');
+    const editIconWidth = document.getElementById('edit-icon-width');
+    const editIconHeight = document.getElementById('edit-icon-height');
+    const editIconScaleHint = document.getElementById('edit-icon-scale-hint');
+    const editIconRotatable = document.getElementById('edit-icon-rotatable');
+    const editIconResizable = document.getElementById('edit-icon-resizable');
+    const editIconHygiene = document.getElementById('edit-icon-hygiene');
+    const editIconCurrentImg = document.getElementById('edit-icon-current-img');
+    const editIconFile = document.getElementById('edit-icon-file');
+    const editIconErrorMsg = document.getElementById('edit-icon-error-msg');
+    const btnSubmitEditIcon = document.getElementById('btn-submit-edit-icon');
+
+    const modalDeleteIcon = document.getElementById('modal-delete-icon');
+    const deleteIconId = document.getElementById('delete-icon-id');
+    const deleteIconImg = document.getElementById('delete-icon-img');
+    const deleteIconNameText = document.getElementById('delete-icon-name-text');
+    const deleteIconSizeText = document.getElementById('delete-icon-size-text');
+    const deleteIconUsageWarning = document.getElementById('delete-icon-usage-warning');
+    const deleteIconUsageCount = document.getElementById('delete-icon-usage-count');
+    const deleteIconErrorMsg = document.getElementById('delete-icon-error-msg');
+    const btnSubmitDeleteIcon = document.getElementById('btn-submit-delete-icon');
+
+    const paletteShapesGrid = document.getElementById('palette-shapes-grid');
+
+    // 汎用モーダルクローズ
+    document.querySelectorAll('.btn-close-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modalId = btn.dataset.modal;
+            if (modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) modal.classList.add('hidden');
+            } else {
+                [modalCreateIcon, modalEditIcon, modalDeleteIcon].forEach(m => m?.classList.add('hidden'));
+            }
+        });
+    });
+
+    // 縮尺ヒント更新ヘルパー
+    function updateScaleHintText(wInput, hInput, hintEl) {
+        if (!wInput || !hInput || !hintEl) return;
+        const wM = parseFloat(wInput.value) || 0;
+        const hM = parseFloat(hInput.value) || 0;
+        const wPt = (wM * scaleRatio).toFixed(2);
+        const hPt = (hM * scaleRatio).toFixed(2);
+        hintEl.textContent = `A3 1/400換算: ${wPt}pt × ${hPt}pt`;
+    }
+
+    if (createIconWidth && createIconHeight && createIconScaleHint) {
+        createIconWidth.addEventListener('input', () => updateScaleHintText(createIconWidth, createIconHeight, createIconScaleHint));
+        createIconHeight.addEventListener('input', () => updateScaleHintText(createIconWidth, createIconHeight, createIconScaleHint));
+    }
+    if (editIconWidth && editIconHeight && editIconScaleHint) {
+        editIconWidth.addEventListener('input', () => updateScaleHintText(editIconWidth, editIconHeight, editIconScaleHint));
+        editIconHeight.addEventListener('input', () => updateScaleHintText(editIconWidth, editIconHeight, editIconScaleHint));
+    }
+
+    // --- 新規生成モーダル開閉 & ファイルドロップ ---
+    if (btnOpenCreateIconModal) {
+        btnOpenCreateIconModal.addEventListener('click', () => {
+            if (formCreateIcon) formCreateIcon.reset();
+            if (createIconPrompt) createIconPrompt.classList.remove('hidden');
+            if (createIconPreviewWrap) createIconPreviewWrap.classList.add('hidden');
+            if (createIconErrorMsg) createIconErrorMsg.classList.add('hidden');
+            if (createIconWidth) createIconWidth.value = '2.0';
+            if (createIconHeight) createIconHeight.value = '2.0';
+            updateScaleHintText(createIconWidth, createIconHeight, createIconScaleHint);
+            if (modalCreateIcon) modalCreateIcon.classList.remove('hidden');
+        });
+    }
+
+    function processSelectedPngFile(file) {
+        if (!file) return;
+        if (file.type !== 'image/png' && !file.name.toLowerCase().endsWith('.png')) {
+            if (createIconErrorMsg) {
+                createIconErrorMsg.textContent = 'PNG形式の画像ファイルのみアップロード可能です。';
+                createIconErrorMsg.classList.remove('hidden');
+            }
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            if (createIconErrorMsg) {
+                createIconErrorMsg.textContent = 'ファイルサイズが上限 (5MB) を超えています。';
+                createIconErrorMsg.classList.remove('hidden');
+            }
+            return;
+        }
+        if (createIconErrorMsg) createIconErrorMsg.classList.add('hidden');
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            const img = new Image();
+            img.onload = () => {
+                const nw = img.naturalWidth;
+                const nh = img.naturalHeight;
+                if (nw > 0 && nh > 0) {
+                    const aspect = nw / nh;
+                    const suggestedW = 2.0;
+                    let suggestedH = Math.round((suggestedW / aspect) * 10) / 10;
+                    if (suggestedH < 0.5) suggestedH = 0.5;
+                    if (suggestedH > 20.0) suggestedH = 20.0;
+                    if (createIconWidth) createIconWidth.value = suggestedW.toFixed(1);
+                    if (createIconHeight) createIconHeight.value = suggestedH.toFixed(1);
+                    updateScaleHintText(createIconWidth, createIconHeight, createIconScaleHint);
+                }
+            };
+            img.src = dataUrl;
+
+            if (createIconPreviewImg) createIconPreviewImg.src = dataUrl;
+            if (createIconFilename) createIconFilename.textContent = file.name;
+            if (createIconPrompt) createIconPrompt.classList.add('hidden');
+            if (createIconPreviewWrap) createIconPreviewWrap.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    if (createIconDropzone && createIconFile) {
+        createIconDropzone.addEventListener('click', () => createIconFile.click());
+        createIconFile.addEventListener('change', () => {
+            if (createIconFile.files && createIconFile.files[0]) {
+                processSelectedPngFile(createIconFile.files[0]);
+            }
+        });
+        createIconDropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            createIconDropzone.classList.add('border-indigo-500', 'bg-indigo-50/60');
+        });
+        createIconDropzone.addEventListener('dragleave', () => {
+            createIconDropzone.classList.remove('border-indigo-500', 'bg-indigo-50/60');
+        });
+        createIconDropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            createIconDropzone.classList.remove('border-indigo-500', 'bg-indigo-50/60');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                createIconFile.files = e.dataTransfer.files;
+                processSelectedPngFile(e.dataTransfer.files[0]);
+            }
+        });
+    }
+
+    // 新規アイコン作成送信
+    if (formCreateIcon) {
+        formCreateIcon.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!createIconFile || !createIconFile.files || !createIconFile.files[0]) {
+                if (createIconErrorMsg) {
+                    createIconErrorMsg.textContent = 'PNG画像ファイルを選択してください。';
+                    createIconErrorMsg.classList.remove('hidden');
+                }
+                return;
+            }
+
+            if (btnSubmitCreateIcon) btnSubmitCreateIcon.disabled = true;
+            if (createIconErrorMsg) createIconErrorMsg.classList.add('hidden');
+
+            try {
+                const formData = new FormData(formCreateIcon);
+                const res = await fetch(iconStoreUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    const msg = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'アイコンの生成に失敗しました。');
+                    if (createIconErrorMsg) {
+                        createIconErrorMsg.textContent = msg;
+                        createIconErrorMsg.classList.remove('hidden');
+                    }
+                    return;
+                }
+
+                addIconToPalette(data.icon);
+                modalCreateIcon?.classList.add('hidden');
+                formCreateIcon.reset();
+                showToast(`アイコン「${data.icon.name}」を生成・追加しました`);
+            } catch (err) {
+                console.error('Failed to create icon:', err);
+                if (createIconErrorMsg) {
+                    createIconErrorMsg.textContent = '通信エラーが発生しました。時間をおいて再試行してください。';
+                    createIconErrorMsg.classList.remove('hidden');
+                }
+            } finally {
+                if (btnSubmitCreateIcon) btnSubmitCreateIcon.disabled = false;
+            }
+        });
+    }
+
+    // --- パレット動的反映ヘルパー ---
+    function addIconToPalette(iconDef) {
+        if (!paletteShapesGrid || !iconDef) return;
+        iconDefinitions[iconDef.icon_key] = iconDef;
+
+        const assetUrl = iconDef.icon_asset_path ? (iconDef.icon_asset_path.startsWith('/') ? iconDef.icon_asset_path : `/${iconDef.icon_asset_path}`) : '';
+        const wM = (parseFloat(iconDef.default_width) / scaleRatio).toFixed(1);
+        const hM = (parseFloat(iconDef.default_height) / scaleRatio).toFixed(1);
+
+        const card = document.createElement('div');
+        card.className = 'palette-item group relative p-2 bg-slate-50 hover:bg-indigo-50/70 border border-slate-200 hover:border-indigo-300 rounded-xl cursor-grab active:cursor-grabbing transition flex flex-col items-center text-center select-none';
+        card.draggable = true;
+        card.dataset.shapeType = iconDef.icon_key;
+        card.dataset.defaultWidth = iconDef.default_width;
+        card.dataset.defaultHeight = iconDef.default_height;
+        card.dataset.defaultColor = iconDef.default_color || 'red';
+        card.dataset.name = iconDef.name;
+        card.dataset.category = iconDef.category;
+        card.dataset.isPreset = '0';
+        card.dataset.iconId = iconDef.id;
+        card.dataset.renderStyle = iconDef.render_style;
+        card.dataset.assetPath = assetUrl;
+        card.dataset.isRotatable = iconDef.is_rotatable ? '1' : '0';
+        card.dataset.isResizable = iconDef.is_resizable ? '1' : '0';
+        card.dataset.rotationStep = iconDef.rotation_step || '45';
+        card.dataset.hasHygieneCircle = iconDef.has_hygiene_circle ? '1' : '0';
+
+        card.innerHTML = `
+            <div class="absolute top-1 right-1 hidden group-hover:flex items-center space-x-0.5 z-10">
+                <button type="button" class="btn-edit-custom-icon px-1 py-0.5 bg-white/90 hover:bg-amber-100 border border-amber-300 text-amber-700 rounded text-[9px] font-bold shadow-2xs transition cursor-pointer" title="編集" data-icon-id="${iconDef.id}">✏️</button>
+                <button type="button" class="btn-delete-custom-icon px-1 py-0.5 bg-white/90 hover:bg-red-100 border border-red-300 text-red-700 rounded text-[9px] font-bold shadow-2xs transition cursor-pointer" title="削除" data-icon-id="${iconDef.id}">🗑️</button>
+            </div>
+            <div class="w-9 h-7 flex items-center justify-center pointer-events-none mb-1">
+                <img src="${assetUrl}" alt="${iconDef.name}" class="max-w-full max-h-full object-contain">
+            </div>
+            <span class="text-[10px] font-bold text-slate-700 group-hover:text-indigo-700 leading-tight pointer-events-none truncate w-full">
+                ${iconDef.name}
+            </span>
+            <span class="text-[9px] text-slate-400 font-mono mt-0.5 pointer-events-none">
+                ${wM}m×${hM}m
+            </span>
+        `;
+
+        paletteShapesGrid.appendChild(card);
+        bindPaletteItem(card);
+    }
+
+    function updateIconInPalette(iconDef) {
+        if (!iconDef) return;
+        iconDefinitions[iconDef.icon_key] = iconDef;
+
+        const card = document.querySelector(`.palette-item[data-shape-type="${iconDef.icon_key}"]`);
+        if (card) {
+            const assetUrl = iconDef.icon_asset_path ? (iconDef.icon_asset_path.startsWith('/') ? iconDef.icon_asset_path : `/${iconDef.icon_asset_path}`) : '';
+            const wM = (parseFloat(iconDef.default_width) / scaleRatio).toFixed(1);
+            const hM = (parseFloat(iconDef.default_height) / scaleRatio).toFixed(1);
+
+            card.dataset.defaultWidth = iconDef.default_width;
+            card.dataset.defaultHeight = iconDef.default_height;
+            card.dataset.name = iconDef.name;
+            card.dataset.category = iconDef.category;
+            card.dataset.assetPath = assetUrl;
+            card.dataset.isRotatable = iconDef.is_rotatable ? '1' : '0';
+            card.dataset.isResizable = iconDef.is_resizable ? '1' : '0';
+            card.dataset.hasHygieneCircle = iconDef.has_hygiene_circle ? '1' : '0';
+
+            const nameSpan = card.querySelector('span.text-slate-700');
+            if (nameSpan) nameSpan.textContent = iconDef.name;
+
+            const sizeSpan = card.querySelector('span.text-slate-400');
+            if (sizeSpan) sizeSpan.textContent = `${wM}m×${hM}m`;
+
+            const imgEl = card.querySelector('img');
+            if (imgEl && assetUrl) imgEl.src = assetUrl;
+        }
+
+        // 白地図上の既存配置ノードを最新情報でインプレース再描画
+        state.placements.forEach(p => {
+            if (p.shape_type === iconDef.icon_key) {
+                const g = document.getElementById(`placement-node-${p.id}`);
+                if (g) populatePlacementSvgGroup(g, p);
+            }
+        });
+        renderHygieneCirclesAndCheck();
+    }
+
+    function removeIconFromPalette(shapeType) {
+        const card = document.querySelector(`.palette-item[data-shape-type="${shapeType}"]`);
+        if (card) card.remove();
+
+        delete iconDefinitions[shapeType];
+
+        // 白地図上の配置ノードを削除
+        const toRemove = state.placements.filter(p => p.shape_type === shapeType);
+        toRemove.forEach(p => {
+            const g = document.getElementById(`placement-node-${p.id}`);
+            if (g) g.remove();
+            state.selectedIds.delete(p.id);
+        });
+        state.placements = state.placements.filter(p => p.shape_type !== shapeType);
+
+        renderHygieneCirclesAndCheck();
+        updateSummary();
+        updateSelectionUI();
+    }
+
+    // --- 編集モーダル操作 ---
+    function openEditIconModal(shapeType) {
+        const def = iconDefinitions[shapeType];
+        if (!def || def.is_preset) return;
+
+        if (editIconId) editIconId.value = def.id;
+        if (editIconName) editIconName.value = def.name;
+        if (editIconCategory) editIconCategory.value = def.category;
+        if (editIconWidth) editIconWidth.value = (parseFloat(def.default_width) / scaleRatio).toFixed(1);
+        if (editIconHeight) editIconHeight.value = (parseFloat(def.default_height) / scaleRatio).toFixed(1);
+        if (editIconRotatable) editIconRotatable.checked = Boolean(def.is_rotatable);
+        if (editIconResizable) editIconResizable.checked = Boolean(def.is_resizable);
+        if (editIconHygiene) editIconHygiene.checked = Boolean(def.has_hygiene_circle);
+
+        const assetUrl = def.icon_asset_path ? (def.icon_asset_path.startsWith('/') ? def.icon_asset_path : `/${def.icon_asset_path}`) : '';
+        if (editIconCurrentImg) editIconCurrentImg.src = assetUrl;
+        if (editIconFile) editIconFile.value = '';
+        if (editIconErrorMsg) editIconErrorMsg.classList.add('hidden');
+
+        updateScaleHintText(editIconWidth, editIconHeight, editIconScaleHint);
+        modalEditIcon?.classList.remove('hidden');
+    }
+
+    if (formEditIcon) {
+        formEditIcon.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const iconId = editIconId?.value;
+            if (!iconId) return;
+
+            if (btnSubmitEditIcon) btnSubmitEditIcon.disabled = true;
+            if (editIconErrorMsg) editIconErrorMsg.classList.add('hidden');
+
+            try {
+                const formData = new FormData(formEditIcon);
+                const res = await fetch(`${iconBaseUrl}/${iconId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    const msg = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'アイコンの更新に失敗しました。');
+                    if (editIconErrorMsg) {
+                        editIconErrorMsg.textContent = msg;
+                        editIconErrorMsg.classList.remove('hidden');
+                    }
+                    return;
+                }
+
+                updateIconInPalette(data.icon);
+                modalEditIcon?.classList.add('hidden');
+                showToast(`アイコン「${data.icon.name}」を更新しました`);
+            } catch (err) {
+                console.error('Failed to update icon:', err);
+                if (editIconErrorMsg) {
+                    editIconErrorMsg.textContent = '通信エラーが発生しました。時間をおいて再試行してください。';
+                    editIconErrorMsg.classList.remove('hidden');
+                }
+            } finally {
+                if (btnSubmitEditIcon) btnSubmitEditIcon.disabled = false;
+            }
+        });
+    }
+
+    // --- 削除モーダル操作 ---
+    async function openDeleteIconModal(shapeType) {
+        const def = iconDefinitions[shapeType];
+        if (!def || def.is_preset) return;
+
+        if (deleteIconId) deleteIconId.value = def.id;
+        if (deleteIconNameText) deleteIconNameText.textContent = def.name;
+        const wM = (parseFloat(def.default_width) / scaleRatio).toFixed(1);
+        const hM = (parseFloat(def.default_height) / scaleRatio).toFixed(1);
+        if (deleteIconSizeText) deleteIconSizeText.textContent = `${wM}m × ${hM}m (${def.category})`;
+
+        const assetUrl = def.icon_asset_path ? (def.icon_asset_path.startsWith('/') ? def.icon_asset_path : `/${def.icon_asset_path}`) : '';
+        if (deleteIconImg) deleteIconImg.src = assetUrl;
+
+        if (deleteIconUsageWarning) deleteIconUsageWarning.classList.add('hidden');
+        if (deleteIconErrorMsg) deleteIconErrorMsg.classList.add('hidden');
+        modalDeleteIcon?.classList.remove('hidden');
+
+        try {
+            const res = await fetch(`${iconBaseUrl}/${def.id}/usage`, {
+                headers: { 'Accept': 'application/json' },
+            });
+            const data = await res.json();
+            if (res.ok && data.success && data.usage_count > 0) {
+                if (deleteIconUsageCount) deleteIconUsageCount.textContent = data.usage_count;
+                if (deleteIconUsageWarning) deleteIconUsageWarning.classList.remove('hidden');
+            }
+        } catch (err) {
+            console.warn('Failed to fetch icon usage count:', err);
+        }
+    }
+
+    if (btnSubmitDeleteIcon) {
+        btnSubmitDeleteIcon.addEventListener('click', async () => {
+            const iconId = deleteIconId?.value;
+            if (!iconId) return;
+
+            btnSubmitDeleteIcon.disabled = true;
+            if (deleteIconErrorMsg) deleteIconErrorMsg.classList.add('hidden');
+
+            try {
+                const res = await fetch(`${iconBaseUrl}/${iconId}?force=1`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    const msg = data.message || 'アイコンの削除に失敗しました。';
+                    if (deleteIconErrorMsg) {
+                        deleteIconErrorMsg.textContent = msg;
+                        deleteIconErrorMsg.classList.remove('hidden');
+                    }
+                    return;
+                }
+
+                let targetKey = null;
+                for (const [key, d] of Object.entries(iconDefinitions)) {
+                    if (d.id == iconId) {
+                        targetKey = key;
+                        break;
+                    }
+                }
+                if (targetKey) {
+                    removeIconFromPalette(targetKey);
+                }
+
+                modalDeleteIcon?.classList.add('hidden');
+                showToast('カスタムアイコンを削除しました');
+            } catch (err) {
+                console.error('Failed to delete icon:', err);
+                if (deleteIconErrorMsg) {
+                    deleteIconErrorMsg.textContent = '通信エラーが発生しました。時間をおいて再試行してください。';
+                    deleteIconErrorMsg.classList.remove('hidden');
+                }
+            } finally {
+                btnSubmitDeleteIcon.disabled = false;
+            }
+        });
+    }
 
     loadSvgMap();
 });

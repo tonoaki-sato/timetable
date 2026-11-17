@@ -84,4 +84,31 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
             ->orderBy('code', 'asc')
             ->get();
     }
+
+    public function createIconDefinition(array $data): SiteMapIconDefinition
+    {
+        return SiteMapIconDefinition::create($data);
+    }
+
+    public function updateIconDefinition(SiteMapIconDefinition $iconDefinition, array $data): SiteMapIconDefinition
+    {
+        $iconDefinition->update($data);
+
+        return $iconDefinition->fresh();
+    }
+
+    public function deleteIconDefinition(SiteMapIconDefinition $iconDefinition): bool
+    {
+        return (bool) $iconDefinition->delete();
+    }
+
+    public function countPlacementsUsingIcon(string $iconKey): int
+    {
+        return SiteMapPlacement::where('shape_type', $iconKey)->count();
+    }
+
+    public function deletePlacementsByShapeType(string $shapeType): int
+    {
+        return SiteMapPlacement::where('shape_type', $shapeType)->delete();
+    }
 }

@@ -31,6 +31,7 @@ class SiteMapIconDefinitionSeeder extends Seeder
                 'has_hygiene_circle' => false,
                 'hygiene_radius' => 138.00,
                 'is_hygiene_target' => true,
+                'is_preset' => true,
                 'icon_asset_path' => null,
             ],
             [
@@ -48,6 +49,7 @@ class SiteMapIconDefinitionSeeder extends Seeder
                 'has_hygiene_circle' => false,
                 'hygiene_radius' => 138.00,
                 'is_hygiene_target' => true,
+                'is_preset' => true,
                 'icon_asset_path' => null,
             ],
             [
@@ -65,6 +67,7 @@ class SiteMapIconDefinitionSeeder extends Seeder
                 'has_hygiene_circle' => false,
                 'hygiene_radius' => 138.00,
                 'is_hygiene_target' => true,
+                'is_preset' => true,
                 'icon_asset_path' => null,
             ],
             [
@@ -82,6 +85,7 @@ class SiteMapIconDefinitionSeeder extends Seeder
                 'has_hygiene_circle' => false,
                 'hygiene_radius' => 138.00,
                 'is_hygiene_target' => true,
+                'is_preset' => true,
                 'icon_asset_path' => null,
             ],
             [
@@ -99,6 +103,7 @@ class SiteMapIconDefinitionSeeder extends Seeder
                 'has_hygiene_circle' => false,
                 'hygiene_radius' => 138.00,
                 'is_hygiene_target' => false,
+                'is_preset' => true,
                 'icon_asset_path' => null,
             ],
             [
@@ -116,6 +121,7 @@ class SiteMapIconDefinitionSeeder extends Seeder
                 'has_hygiene_circle' => false,
                 'hygiene_radius' => 138.00,
                 'is_hygiene_target' => true,
+                'is_preset' => true,
                 'icon_asset_path' => null,
             ],
             [
@@ -133,6 +139,7 @@ class SiteMapIconDefinitionSeeder extends Seeder
                 'has_hygiene_circle' => false,
                 'hygiene_radius' => 138.00,
                 'is_hygiene_target' => false,
+                'is_preset' => true,
                 'icon_asset_path' => null,
             ],
             [
@@ -150,6 +157,7 @@ class SiteMapIconDefinitionSeeder extends Seeder
                 'has_hygiene_circle' => true,
                 'hygiene_radius' => 138.00,
                 'is_hygiene_target' => false,
+                'is_preset' => true,
                 'icon_asset_path' => null,
             ],
             [
@@ -167,12 +175,13 @@ class SiteMapIconDefinitionSeeder extends Seeder
                 'has_hygiene_circle' => false,
                 'hygiene_radius' => 138.00,
                 'is_hygiene_target' => false,
+                'is_preset' => true,
                 'icon_asset_path' => null,
             ],
         ];
 
         $validKeys = array_column($icons, 'icon_key');
-        SiteMapIconDefinition::whereNotIn('icon_key', $validKeys)->delete();
+        SiteMapIconDefinition::where('is_preset', true)->whereNotIn('icon_key', $validKeys)->delete();
 
         foreach ($icons as $icon) {
             SiteMapIconDefinition::updateOrCreate(

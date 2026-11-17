@@ -56,4 +56,33 @@ interface SiteMapRepositoryInterface
      * @return Collection<int, LayoutItem>
      */
     public function getLayoutItemsForTimetable(Timetable $timetable): Collection;
+
+    /**
+     * 新しいシンボル定義（カスタムアイコン等）を作成
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function createIconDefinition(array $data): SiteMapIconDefinition;
+
+    /**
+     * シンボル定義を更新
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function updateIconDefinition(SiteMapIconDefinition $iconDefinition, array $data): SiteMapIconDefinition;
+
+    /**
+     * シンボル定義を削除
+     */
+    public function deleteIconDefinition(SiteMapIconDefinition $iconDefinition): bool;
+
+    /**
+     * 指定のシンボル種別を使用している配置件数をカウント
+     */
+    public function countPlacementsUsingIcon(string $iconKey): int;
+
+    /**
+     * 指定のシンボル種別を使用している配置を一括削除
+     */
+    public function deletePlacementsByShapeType(string $shapeType): int;
 }

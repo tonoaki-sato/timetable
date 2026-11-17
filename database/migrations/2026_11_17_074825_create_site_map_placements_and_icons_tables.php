@@ -28,6 +28,7 @@ return new class extends Migration
             $table->boolean('has_hygiene_circle')->default(false)->comment('給水20m衛生円自動展開フラグ');
             $table->decimal('hygiene_radius', 10, 2)->default(138.00)->comment('衛生円半径 (PDF pt: 20m相当)');
             $table->boolean('is_hygiene_target')->default(false)->comment('衛生チェック対象フラグ');
+            $table->boolean('is_preset')->default(false)->comment('プリセット初期定義フラグ（削除保護）');
             $table->string('icon_asset_path')->nullable()->comment('互換用アセットパス');
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();

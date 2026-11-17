@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\BulkUpdateSiteMapPlacementsRequest;
+use App\Http\Requests\StoreSiteMapIconRequest;
 use App\Http\Requests\StoreSiteMapPlacementRequest;
+use App\Http\Requests\UpdateSiteMapIconRequest;
 use App\Http\Requests\UpdateSiteMapPlacementRequest;
+use App\Models\SiteMapIconDefinition;
 use App\Models\SiteMapPlacement;
 use App\Models\Timetable;
 use App\Services\SiteMapPdfExporterService;
@@ -13,6 +16,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
 
 class SiteMapController extends Controller
 {
@@ -137,6 +141,85 @@ class SiteMapController extends Controller
         return response($pdfBinary, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
+    }
+
+    /**
+     * PNG画像からカスタムアイコン定義を新規作成する API
+     */
+    public function storeIcon(StoreSiteMapIconRequest $request, Timetable $timetable): JsonResponse
+    {
+        /** @var UploadedFile $file */
+        $file = $request->file('png_file');
+        $icon = $this->siteMapService->storeIconFromPng(
+            $timetable,
+            $request->validated(),
+            $file
+        );
+
+        return response()->json([
+            'success' => true,
+            'icon' => $icon,
+        ], 201);
+    }
+
+    /**
+     * カスタムアイコン定義を更新する API (画像差し替え対応)
+     */
+    public function updateIcon(UpdateSiteMapIconRequest $request, Timetable $timetable, SiteMapIconDefinition $iconDefinition): JsonResponse
+    {
+        try {
+            $file = $request->file('png_file');
+            $updated = $this->siteMapService->updateIcon(
+                $timetable,
+                $iconDefinition,
+                $request->validated(),
+                $file
+            );
+
+            return response()->json([
+                'success' => true,
+                'icon' => $updated,
+            ]);
+        } catch (\DomainException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * カスタムアイコン定義を削除する API
+     */
+    public function destroyIcon(Request $request, Timetable $timetable, SiteMapIconDefinition $iconDefinition): JsonResponse
+    {
+        try {
+            $force = $request->boolean('force', false);
+            $result = $this->siteMapService->deleteIcon($iconDefinition, $force);
+
+            return response()->json([
+                'success' => true,
+                'placements_deleted' => $result['placements_deleted'],
+            ]);
+        } catch (\DomainException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * アイコンの白地図上での配置使用状況を取得する API
+     */
+    public function getIconUsage(Timetable $timetable, SiteMapIconDefinition $iconDefinition): JsonResponse
+    {
+        $count = $this->siteMapService->getIconUsageCount($iconDefinition->icon_key);
+
+        return response()->json([
+            'success' => true,
+            'usage_count' => $count,
         ]);
     }
 }

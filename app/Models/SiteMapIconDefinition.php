@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property bool $has_hygiene_circle
  * @property float $hygiene_radius
  * @property bool $is_hygiene_target
+ * @property bool $is_preset
  * @property string|null $icon_asset_path
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -55,6 +56,7 @@ class SiteMapIconDefinition extends Model
         'has_hygiene_circle',
         'hygiene_radius',
         'is_hygiene_target',
+        'is_preset',
         'icon_asset_path',
     ];
 
@@ -73,6 +75,15 @@ class SiteMapIconDefinition extends Model
             'has_hygiene_circle' => 'boolean',
             'hygiene_radius' => 'decimal:2',
             'is_hygiene_target' => 'boolean',
+            'is_preset' => 'boolean',
         ];
+    }
+
+    /**
+     * ユーザーが追加したカスタムアイコンかどうかを判定
+     */
+    public function isCustom(): bool
+    {
+        return ! $this->is_preset;
     }
 }
