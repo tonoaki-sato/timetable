@@ -80,10 +80,41 @@ class SiteMapIconDefinition extends Model
     }
 
     /**
+     * パレット表示の優先順位定義（数値が小さい順に表示）
+     *
+     * @var array<string, int>
+     */
+    public const PALETTE_ORDER = [
+        'booth_standard' => 1,      // 通り標準ブース (最優先)
+        'booth_with_tent' => 2,     // 通りテントブース (2番目)
+        'tent_2x15_horiz' => 10,    // パイプテント横
+        'tent_2x15_vert' => 11,     // パイプテント縦
+        'tent_3m' => 12,            // 持参テント
+        'tent_1x15_vert' => 13,     // スリムテント縦
+        'kitchen_car' => 20,        // キッチンカー
+        'free_area' => 30,          // フリーエリア
+        'water_supply' => 40,       // 洗浄・手洗い設備
+        'area_note' => 50,          // テキスト注記
+    ];
+
+    /**
      * ユーザーが追加したカスタムアイコンかどうかを判定
      */
     public function isCustom(): bool
     {
         return ! $this->is_preset;
+    }
+
+    /**
+     * パレット表示順の重みを取得（SQL非依存ソート用）
+     */
+    public function getPaletteOrderWeight(): int
+    {
+        if (isset(self::PALETTE_ORDER[$this->icon_key])) {
+            return self::PALETTE_ORDER[$this->icon_key];
+        }
+
+        // 未定義プリセットは 90、カスタムアイコンは 100
+        return $this->is_preset ? 90 : 100;
     }
 }

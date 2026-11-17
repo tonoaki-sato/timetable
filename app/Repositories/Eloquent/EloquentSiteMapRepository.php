@@ -45,7 +45,12 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
 
     public function getAllIconDefinitions(): Collection
     {
-        return SiteMapIconDefinition::orderBy('id', 'asc')->get();
+        return SiteMapIconDefinition::all()
+            ->sortBy([
+                fn (SiteMapIconDefinition $a, SiteMapIconDefinition $b) => $a->getPaletteOrderWeight() <=> $b->getPaletteOrderWeight(),
+                fn (SiteMapIconDefinition $a, SiteMapIconDefinition $b) => $a->id <=> $b->id,
+            ])
+            ->values();
     }
 
     public function findIconDefinitionByKey(string $iconKey): ?SiteMapIconDefinition

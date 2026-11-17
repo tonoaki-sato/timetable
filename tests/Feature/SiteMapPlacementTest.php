@@ -63,11 +63,13 @@ class SiteMapPlacementTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('図形パレット');
         $response->assertSee('通り標準ブース');
+        $response->assertSee('通りテントブース');
         $response->assertSee('洗浄・手洗い設備');
         $response->assertSee('フリーエリア');
         $response->assertSee('プロパティ・インスペクタ');
         $response->assertSee('PDFダウンロード (A3 1/400)');
         $response->assertSee('data-shape-type="booth_standard"', false);
+        $response->assertSee('data-shape-type="booth_with_tent"', false);
         $response->assertSee('data-shape-type="water_supply"', false);
         $response->assertSee('data-shape-type="free_area"', false);
         $response->assertSee('btn-export-pdf', false);
@@ -338,5 +340,33 @@ class SiteMapPlacementTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['shape_type', 'pos_x', 'pos_y']);
+    }
+
+    /**
+     * booth_standard と booth_with_tent は初期テキスト省略時に x00 が設定される
+     */
+    public function test_default_display_text_is_x00_for_booths(): void
+    {
+        // 1. booth_standard (通り標準ブース): 省略時に x00, default_color は black
+        $resStd = $this->actingAs($this->user)
+            ->postJson(route('timetables.site-maps.placements.store', $this->timetable), [
+                'shape_type' => 'booth_standard',
+                'pos_x' => 100.0,
+                'pos_y' => 200.0,
+            ]);
+        $resStd->assertStatus(201);
+        $this->assertSame('x00', $resStd->json('placement.display_text'));
+        $this->assertSame('black', $resStd->json('placement.color_theme'));
+
+        // 2. booth_with_tent (通りテントブース): 省略時に x00, default_color は red
+        $resTent = $this->actingAs($this->user)
+            ->postJson(route('timetables.site-maps.placements.store', $this->timetable), [
+                'shape_type' => 'booth_with_tent',
+                'pos_x' => 120.0,
+                'pos_y' => 220.0,
+            ]);
+        $resTent->assertStatus(201);
+        $this->assertSame('x00', $resTent->json('placement.display_text'));
+        $this->assertSame('red', $resTent->json('placement.color_theme'));
     }
 }

@@ -7,6 +7,7 @@ use App\Models\SiteMapIconDefinition;
 use App\Models\SiteMapPlacement;
 use App\Models\Timetable;
 use App\Models\User;
+use App\Repositories\Contracts\SiteMapRepositoryInterface;
 use Database\Seeders\SiteMapIconDefinitionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -357,5 +358,40 @@ class SiteMapIconManagementTest extends TestCase
         $content = $pdfRes->getContent();
         $this->assertStringStartsWith('%PDF-', $content);
         $this->assertGreaterThan(20000, strlen($content));
+    }
+
+    /**
+     * 通り標準ブースおよび通りテントブースの仕様とパレット表示順序を検証
+     */
+    public function test_booth_standard_and_booth_with_tent_specifications_and_palette_order(): void
+    {
+        // 1. booth_standard（通り標準ブース）の仕様検証
+        $standard = SiteMapIconDefinition::where('icon_key', 'booth_standard')->firstOrFail();
+        $this->assertSame('通り標準ブース', $standard->name);
+        $this->assertSame('6.24', (string) $standard->default_width);
+        $this->assertSame('12.48', (string) $standard->default_height);
+        $this->assertSame('black', $standard->default_color);
+        $this->assertFalse($standard->is_hygiene_target);
+        $this->assertTrue($standard->is_preset);
+
+        // 2. booth_with_tent（通りテントブース）の仕様検証
+        $tent = SiteMapIconDefinition::where('icon_key', 'booth_with_tent')->firstOrFail();
+        $this->assertSame('通りテントブース', $tent->name);
+        $this->assertSame('13.86', (string) $tent->default_width);
+        $this->assertSame('13.86', (string) $tent->default_height);
+        $this->assertSame('red', $tent->default_color);
+        $this->assertTrue($tent->is_hygiene_target);
+        $this->assertTrue($tent->is_preset);
+
+        // 3. リポジトリの getAllIconDefinitions によるパレット表示順（SQL非依存ソート）の検証
+        /** @var SiteMapRepositoryInterface $repo */
+        $repo = app(SiteMapRepositoryInterface::class);
+        $allIcons = $repo->getAllIconDefinitions();
+
+        $this->assertGreaterThanOrEqual(2, $allIcons->count());
+        $this->assertSame('booth_standard', $allIcons[0]->icon_key);
+        $this->assertSame('通り標準ブース', $allIcons[0]->name);
+        $this->assertSame('booth_with_tent', $allIcons[1]->icon_key);
+        $this->assertSame('通りテントブース', $allIcons[1]->name);
     }
 }

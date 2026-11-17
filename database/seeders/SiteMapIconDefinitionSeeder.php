@@ -15,10 +15,39 @@ class SiteMapIconDefinitionSeeder extends Seeder
      */
     public function run(): void
     {
+        // 既存の booth_standard が存在し、booth_with_tent が未作成の場合は先にキーを更新（UNIQUE制約競合回避）
+        $existingOld = SiteMapIconDefinition::where('icon_key', 'booth_standard')->first();
+        if ($existingOld && ! SiteMapIconDefinition::where('icon_key', 'booth_with_tent')->exists()) {
+            $existingOld->update([
+                'icon_key' => 'booth_with_tent',
+                'name' => '通りテントブース',
+                'default_color' => 'red',
+                'is_hygiene_target' => true,
+            ]);
+        }
+
         $icons = [
             [
                 'icon_key' => 'booth_standard',
-                'name' => '通り標準ブース (2m×2m)',
+                'name' => '通り標準ブース',
+                'category' => 'booth',
+                'render_style' => 'cad_tent',
+                'default_width' => 6.24,
+                'default_height' => 12.48,
+                'is_resizable' => false,
+                'is_rotatable' => true,
+                'rotation_step' => 45,
+                'supported_colors' => ['black', 'green', 'red', 'cyan', 'orange'],
+                'default_color' => 'black',
+                'has_hygiene_circle' => false,
+                'hygiene_radius' => 138.00,
+                'is_hygiene_target' => false,
+                'is_preset' => true,
+                'icon_asset_path' => null,
+            ],
+            [
+                'icon_key' => 'booth_with_tent',
+                'name' => '通りテントブース',
                 'category' => 'booth',
                 'render_style' => 'cad_tent',
                 'default_width' => 13.86,

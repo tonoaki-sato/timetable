@@ -374,7 +374,7 @@ class SiteMapService
         }
 
         return match ($shapeType) {
-            'booth_standard' => 'A00',
+            'booth_with_tent', 'booth_standard' => 'x00',
             'tent_2x15_horiz', 'tent_2x15_vert' => 'テント',
             'tent_3m' => '3M',
             'tent_1x15_vert' => '本陣',
