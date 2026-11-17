@@ -160,18 +160,21 @@ class SiteBaseMapViewerTest extends TestCase
             $jsonResidualCount = 0;
             foreach ($jsonData['paths'] as $pathItem) {
                 $d = $pathItem['d'] ?? '';
-                preg_match_all('/([-\d\.]+)\s+([-\d\.]+)/', $d, $ptMatches, PREG_SET_ORDER);
-                if (count($ptMatches) >= 3) {
-                    $xs = array_map(fn ($p) => (float) $p[1], $ptMatches);
-                    $ys = array_map(fn ($p) => (float) $p[2], $ptMatches);
-                    $minX = min($xs);
-                    $minY = min($ys);
-                    $width = max($xs) - $minX;
-                    $height = max($ys) - $minY;
+                preg_match_all('/(M\s+[^M]+)/i', $d, $subMatches);
+                foreach ($subMatches[1] as $subpath) {
+                    preg_match_all('/([-\d\.]+)\s+([-\d\.]+)/', $subpath, $ptMatches, PREG_SET_ORDER);
+                    if (count($ptMatches) >= 3) {
+                        $xs = array_map(fn ($p) => (float) $p[1], $ptMatches);
+                        $ys = array_map(fn ($p) => (float) $p[2], $ptMatches);
+                        $minX = min($xs);
+                        $minY = min($ys);
+                        $width = max($xs) - $minX;
+                        $height = max($ys) - $minY;
 
-                    if ($width >= 5.8 && $width <= 6.6 && $height >= 12.0 && $height <= 13.0) {
-                        if ($minX > 105 || $minY > 180) {
-                            $jsonResidualCount++;
+                        if ($width >= 5.8 && $width <= 6.6 && $height >= 12.0 && $height <= 13.0) {
+                            if ($minX > 105 || $minY > 180) {
+                                $jsonResidualCount++;
+                            }
                         }
                     }
                 }

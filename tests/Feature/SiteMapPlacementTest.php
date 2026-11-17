@@ -334,6 +334,36 @@ class SiteMapPlacementTest extends TestCase
     }
 
     /**
+     * 配置オブジェクトがない状態の PDF エクスポートでも旧ブース矩形枠線が描画されないことを検証
+     */
+    public function test_export_pdf_has_no_residual_booth_rectangles(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('timetables.site-maps.pdf', $this->timetable));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+        $this->assertStringStartsWith('%PDF-', $content);
+
+        // PDFの描画ストリームを解凍して検証
+        preg_match_all('/stream[\r\n]+(.*?)[\r\n]+endstream/s', $content, $streamMatches);
+        $decompressed = '';
+        foreach ($streamMatches[1] as $s) {
+            $decomp = @gzuncompress($s);
+            if ($decomp !== false) {
+                $decompressed .= $decomp;
+            }
+        }
+
+        // 旧ブース矩形（更地前・国際会館前等の線分）がストリームに含まれていないことを検証
+        $this->assertStringNotContainsString('313.440 961.380', $decompressed);
+        $this->assertStringNotContainsString('313.440 975.240', $decompressed);
+        $this->assertStringNotContainsString('358.800 1040.340', $decompressed);
+        $this->assertStringNotContainsString('358.800 1054.140', $decompressed);
+        $this->assertStringNotContainsString('730.440 939.780', $decompressed);
+    }
+
+    /**
      * バリデーションエラー時は422を返す
      */
     public function test_store_placement_validation_error(): void
