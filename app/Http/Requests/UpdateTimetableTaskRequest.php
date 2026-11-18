@@ -3,10 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Models\TimetableTask;
-use App\Services\TimetableTaskService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
 
 class UpdateTimetableTaskRequest extends FormRequest
 {
@@ -74,40 +72,5 @@ class UpdateTimetableTaskRequest extends FormRequest
             'status' => '進行ステータス',
             'content' => '作業内容・手順指示',
         ];
-    }
-
-    /**
-     * 時間帯重複の検証
-     */
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function ($validator) {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            /** @var TimetableTask $task */
-            $task = $this->route('task');
-            if (! $task instanceof TimetableTask) {
-                return;
-            }
-
-            $taskService = app(TimetableTaskService::class);
-            $taskData = [
-                [
-                    'id' => $task->id,
-                    'title' => (string) $this->input('title'),
-                    'start_time' => (string) $this->input('start_time'),
-                    'end_time' => (string) $this->input('end_time'),
-                    'status' => (string) $this->input('status', 'not_started'),
-                ],
-            ];
-
-            // 自身以外の同一レーン既存タスクとの時間帯重複チェック
-            $dbErrors = $taskService->checkDatabaseOverlaps($task->lane_id, $taskData, [$task->id]);
-            foreach ($dbErrors as $err) {
-                $validator->errors()->add('start_time', $err);
-            }
-        });
     }
 }

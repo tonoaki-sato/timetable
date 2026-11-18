@@ -4,10 +4,8 @@ namespace App\Http\Requests;
 
 use App\Models\TimetableTask;
 use App\Repositories\Contracts\LaneRepositoryInterface;
-use App\Services\TimetableTaskService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
 
 class StoreTimetableTaskRequest extends FormRequest
 {
@@ -127,39 +125,5 @@ class StoreTimetableTaskRequest extends FormRequest
             'tasks.*.is_critical' => '最優先フラグ',
             'tasks.*.status' => '進行ステータス',
         ];
-    }
-
-    /**
-     * バリデータの追加設定（時間帯重複の検証）
-     */
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function ($validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $tasks = $this->input('tasks');
-            if (! is_array($tasks) || empty($tasks)) {
-                return;
-            }
-
-            $taskService = app(TimetableTaskService::class);
-
-            // 1. 送信タスク内での重複チェック
-            $internalErrors = $taskService->checkInternalOverlaps($tasks);
-            foreach ($internalErrors as $err) {
-                $validator->errors()->add('tasks', $err);
-            }
-
-            // 2. 既存DBタスクとの重複チェック
-            $laneId = (int) $this->input('lane_id');
-            if ($laneId > 0) {
-                $dbErrors = $taskService->checkDatabaseOverlaps($laneId, $tasks);
-                foreach ($dbErrors as $err) {
-                    $validator->errors()->add('tasks', $err);
-                }
-            }
-        });
     }
 }

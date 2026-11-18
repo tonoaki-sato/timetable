@@ -246,7 +246,7 @@ function initTimetableTaskModals() {
     }
 
     /**
-     * 追加モーダルのリアルタイム時間重複チェック
+     * 追加モーダルのリアルタイム時間重複チェック（注意喚起表示のみ・登録ブロックなし）
      */
     function validateCreateOverlap() {
         if (!createOverlapWarning || !createLaneIdInput || !createStartTimeInput || !createEndTimeInput) {
@@ -256,21 +256,27 @@ function initTimetableTaskModals() {
         const laneId = createLaneIdInput.value;
         const start = createStartTimeInput.value;
         const end = createEndTimeInput.value;
+        const status = createStatusSelect?.value || 'not_started';
 
-        const conflictingTask = checkOverlapWithLaneTasks(laneId, start, end);
-        if (conflictingTask) {
+        const matches = status === 'cancelled'
+            ? []
+            : findOverlapsWithLaneTasks(laneId, start, end);
+
+        if (matches.length > 0) {
             const warningSpan = createOverlapWarning.querySelector('.warning-text');
             if (warningSpan) {
-                warningSpan.textContent = `既存タスク「${conflictingTask.title}」（${conflictingTask.start_time}〜${conflictingTask.end_time}）と時間帯が重複しています。`;
+                if (matches.length === 1) {
+                    const conflictingTask = matches[0];
+                    warningSpan.textContent = `既存タスク「${conflictingTask.title}」（${conflictingTask.start_time}〜${conflictingTask.end_time}）と時間帯が重なっています（並行タスクとして登録できます）。`;
+                } else {
+                    const summary = matches.map(t => `「${t.title}」(${t.start_time}〜${t.end_time})`).join('・');
+                    warningSpan.textContent = `既存タスク ${summary} と時間帯が重なっています（並行タスクとして登録できます）。`;
+                }
             }
             createOverlapWarning.classList.remove('hidden');
-            createStartTimeInput.classList.add('border-rose-400', 'bg-rose-50/20');
-            createEndTimeInput.classList.add('border-rose-400', 'bg-rose-50/20');
             return true;
         } else {
             createOverlapWarning.classList.add('hidden');
-            createStartTimeInput.classList.remove('border-rose-400', 'bg-rose-50/20');
-            createEndTimeInput.classList.remove('border-rose-400', 'bg-rose-50/20');
             return false;
         }
     }
@@ -311,7 +317,7 @@ function initTimetableTaskModals() {
     }
 
     /**
-     * 編集モーダルのリアルタイム時間重複チェック
+     * 編集モーダルのリアルタイム時間重複チェック（注意喚起表示のみ・保存ブロックなし）
      */
     function validateEditOverlap() {
         if (!editOverlapWarning || !editLaneIdInput || !editStartTimeInput || !editEndTimeInput) {
@@ -321,21 +327,27 @@ function initTimetableTaskModals() {
         const laneId = editLaneIdInput.value;
         const start = editStartTimeInput.value;
         const end = editEndTimeInput.value;
+        const status = editStatusSelect?.value || 'not_started';
 
-        const conflictingTask = checkOverlapWithLaneTasks(laneId, start, end, currentEditingTaskId);
-        if (conflictingTask) {
+        const matches = status === 'cancelled'
+            ? []
+            : findOverlapsWithLaneTasks(laneId, start, end, currentEditingTaskId);
+
+        if (matches.length > 0) {
             const warningSpan = editOverlapWarning.querySelector('.warning-text');
             if (warningSpan) {
-                warningSpan.textContent = `同一班のタスク「${conflictingTask.title}」（${conflictingTask.start_time}〜${conflictingTask.end_time}）と時間帯が重複しています。`;
+                if (matches.length === 1) {
+                    const conflictingTask = matches[0];
+                    warningSpan.textContent = `同一班のタスク「${conflictingTask.title}」（${conflictingTask.start_time}〜${conflictingTask.end_time}）と時間帯が重なっています（並行タスクとして保存できます）。`;
+                } else {
+                    const summary = matches.map(t => `「${t.title}」(${t.start_time}〜${t.end_time})`).join('・');
+                    warningSpan.textContent = `同一班のタスク ${summary} と時間帯が重なっています（並行タスクとして保存できます）。`;
+                }
             }
             editOverlapWarning.classList.remove('hidden');
-            editStartTimeInput.classList.add('border-rose-400', 'bg-rose-50/20');
-            editEndTimeInput.classList.add('border-rose-400', 'bg-rose-50/20');
             return true;
         } else {
             editOverlapWarning.classList.add('hidden');
-            editStartTimeInput.classList.remove('border-rose-400', 'bg-rose-50/20');
-            editEndTimeInput.classList.remove('border-rose-400', 'bg-rose-50/20');
             return false;
         }
     }
@@ -404,13 +416,9 @@ function initTimetableTaskModals() {
         }
 
         commonOverlapWarning?.classList.toggle('hidden', !hasOverlap);
-        commonStartTimeInput?.classList.toggle('border-rose-400', hasOverlap);
-        commonStartTimeInput?.classList.toggle('bg-rose-50/20', hasOverlap);
-        commonEndTimeInput?.classList.toggle('border-rose-400', hasOverlap);
-        commonEndTimeInput?.classList.toggle('bg-rose-50/20', hasOverlap);
 
         if (commonSubmitBtn) {
-            commonSubmitBtn.disabled = hasOverlap || hasNoLanes;
+            commonSubmitBtn.disabled = hasNoLanes;
         }
 
         return { hasOverlap, hasNoLanes };
@@ -523,16 +531,26 @@ function initTimetableTaskModals() {
         }
     });
 
-    // 追加モーダルの入力監視
+    // 追加モーダルの入力・ステータス変更監視
     createModal?.addEventListener('input', (e) => {
         if (e.target.matches('#create-modal-start-time, #create-modal-end-time')) {
             validateCreateOverlap();
         }
     });
+    createModal?.addEventListener('change', (e) => {
+        if (e.target.matches('#create-modal-status')) {
+            validateCreateOverlap();
+        }
+    });
 
-    // 編集モーダルの入力監視
+    // 編集モーダルの入力・ステータス変更監視
     editModal?.addEventListener('input', (e) => {
         if (e.target.matches('#edit-modal-start-time, #edit-modal-end-time')) {
+            validateEditOverlap();
+        }
+    });
+    editModal?.addEventListener('change', (e) => {
+        if (e.target.matches('#edit-modal-status')) {
             validateEditOverlap();
         }
     });
@@ -550,33 +568,12 @@ function initTimetableTaskModals() {
         }
     });
 
-    // 追加モーダル送信時チェック
-    createForm?.addEventListener('submit', (e) => {
-        if (validateCreateOverlap()) {
-            e.preventDefault();
-            alert('既存タスクと時間帯が重複しています。開始時刻・終了時刻を確認してください。');
-        }
-    });
-
-    // 編集モーダル送信時チェック
-    editForm?.addEventListener('submit', (e) => {
-        if (validateEditOverlap()) {
-            e.preventDefault();
-            alert('同一班の他タスクと時間帯が重複しています。開始時刻・終了時刻を確認してください。');
-        }
-    });
-
-    // 共通タスクモーダル送信時チェック
+    // 共通タスクモーダル送信時チェック（対象班未選択のみ防止）
     commonCreateForm?.addEventListener('submit', (e) => {
-        const { hasOverlap, hasNoLanes } = validateCommonCreateOverlap();
+        const { hasNoLanes } = validateCommonCreateOverlap();
         if (hasNoLanes) {
             e.preventDefault();
             alert('登録対象の担当班を1つ以上選択してください。');
-            return;
-        }
-        if (hasOverlap) {
-            e.preventDefault();
-            alert('選択した担当班の中に既存タスクと時間帯が重複している班があります。対象班または時間帯を確認してください。');
         }
     });
 

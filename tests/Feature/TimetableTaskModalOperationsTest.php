@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Lane;
+use App\Models\Staff;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
@@ -157,10 +158,17 @@ class TimetableTaskModalOperationsTest extends TestCase
     }
 
     /**
-     * 追加モーダルからの登録時、同一レーン内で時間帯が重複する場合はバリデーションエラーとなること
+     * 追加モーダルからの登録時、同一レーン内で時間帯が重複（一部重複含む）しても登録でき、
+     * 並行タスク作成時は班長のみ自動アサインされ固定スタッフは自動アサインされないこと
      */
-    public function test_create_task_fails_when_time_overlaps_in_same_lane(): void
+    public function test_can_create_parallel_tasks_with_time_overlap_in_same_lane_and_only_assigns_lead_staff(): void
     {
+        $leadStaff = Staff::factory()->create(['name' => 'テスト班長']);
+        $fixedStaff = Staff::factory()->create(['name' => '固定メンバー']);
+        $this->lane->update(['lead_staff_id' => $leadStaff->id]);
+        $this->lane->fixedStaff()->attach($fixedStaff->id);
+
+        // 既存タスク: 09:00 〜 11:00
         TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
             'lane_id' => $this->lane->id,
@@ -169,27 +177,90 @@ class TimetableTaskModalOperationsTest extends TestCase
             'end_time' => '11:00:00',
         ]);
 
-        // 10:00 〜 12:00（重複）
+        // 10:00 〜 12:00（一部重複）と 10:30 〜 11:30（完全包含重複）を登録
         $payload = [
             'timetable_id' => $this->timetable->id,
             'lane_id' => $this->lane->id,
             'tasks' => [
                 [
-                    'title' => '新規重複タスク',
+                    'title' => '新規並行タスクA',
                     'start_time' => '10:00',
                     'end_time' => '12:00',
                     'required_people_count' => 2,
                     'status' => 'not_started',
                 ],
+                [
+                    'title' => '新規並行タスクB',
+                    'start_time' => '10:30',
+                    'end_time' => '11:30',
+                    'required_people_count' => 1,
+                    'status' => 'not_started',
+                ],
             ],
+            'auto_assign_lead' => '1',
         ];
 
         $response = $this->actingAs($this->operator)
             ->post(route('timetable-tasks.store'), $payload);
 
-        $response->assertSessionHasErrors(['tasks']);
-        $this->assertDatabaseMissing('timetable_tasks', [
-            'title' => '新規重複タスク',
+        $response->assertRedirect(route('timetables.tasks.index', $this->timetable->id));
+        $response->assertSessionHasNoErrors();
+
+        $taskA = TimetableTask::where('title', '新規並行タスクA')->firstOrFail();
+        $taskB = TimetableTask::where('title', '新規並行タスクB')->firstOrFail();
+
+        // 班長は全タスクに自動アサインされること
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $taskA->id,
+            'staff_id' => $leadStaff->id,
+            'role_description' => '班長',
+        ]);
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $taskB->id,
+            'staff_id' => $leadStaff->id,
+            'role_description' => '班長',
+        ]);
+
+        // 並行タスクには固定スタッフは自動アサインされないこと
+        $this->assertDatabaseMissing('task_staff_assignments', [
+            'timetable_task_id' => $taskA->id,
+            'staff_id' => $fixedStaff->id,
+        ]);
+        $this->assertDatabaseMissing('task_staff_assignments', [
+            'timetable_task_id' => $taskB->id,
+            'staff_id' => $fixedStaff->id,
+        ]);
+
+        // 時間帯が重複しない単独タスク（13:00 〜 14:00）作成時は班長＋固定スタッフの両方が自動アサインされること
+        $standalonePayload = [
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $this->lane->id,
+            'tasks' => [
+                [
+                    'title' => '午後単独タスク',
+                    'start_time' => '13:00',
+                    'end_time' => '14:00',
+                    'required_people_count' => 2,
+                    'status' => 'not_started',
+                ],
+            ],
+            'auto_assign_lead' => '1',
+        ];
+
+        $this->actingAs($this->operator)
+            ->post(route('timetable-tasks.store'), $standalonePayload)
+            ->assertSessionHasNoErrors();
+
+        $standaloneTask = TimetableTask::where('title', '午後単独タスク')->firstOrFail();
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $standaloneTask->id,
+            'staff_id' => $leadStaff->id,
+            'role_description' => '班長',
+        ]);
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $standaloneTask->id,
+            'staff_id' => $fixedStaff->id,
+            'role_description' => '固定スタッフ',
         ]);
     }
 
@@ -240,11 +311,11 @@ class TimetableTaskModalOperationsTest extends TestCase
     }
 
     /**
-     * 編集モーダルでの更新時、自身以外の同一レーン内タスクと重複する場合はエラーとなること
+     * 編集モーダルでの更新時、自身以外の同一レーン内タスクと時間帯の一部が重複する時刻へ変更しても正常に更新できること
      */
-    public function test_update_task_fails_when_overlapping_with_another_task_in_same_lane(): void
+    public function test_update_task_succeeds_when_overlapping_with_another_task_in_same_lane(): void
     {
-        $existingTask = TimetableTask::factory()->create([
+        TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
             'lane_id' => $this->lane->id,
             'title' => '既存他タスク',
@@ -260,10 +331,10 @@ class TimetableTaskModalOperationsTest extends TestCase
             'end_time' => '15:00:00',
         ]);
 
-        // 11:30 〜 13:30（既存他タスクと重複）
+        // 11:30 〜 13:30（既存他タスクと一部重複）
         $payload = [
             'lane_id' => $this->lane->id,
-            'title' => '更新対象タスク（重複時刻）',
+            'title' => '更新対象タスク（並行時刻）',
             'start_time' => '11:30',
             'end_time' => '13:30',
             'required_people_count' => 2,
@@ -273,10 +344,13 @@ class TimetableTaskModalOperationsTest extends TestCase
         $response = $this->actingAs($this->operator)
             ->put(route('timetable-tasks.update', $taskToUpdate), $payload);
 
-        $response->assertSessionHasErrors(['start_time']);
+        $response->assertRedirect(route('timetables.tasks.index', $this->timetable->id));
+        $response->assertSessionHasNoErrors();
 
         $taskToUpdate->refresh();
-        $this->assertSame('13:00:00', $taskToUpdate->start_time);
+        $this->assertSame('更新対象タスク（並行時刻）', $taskToUpdate->title);
+        $this->assertSame('11:30', substr($taskToUpdate->start_time, 0, 5));
+        $this->assertSame('13:30', substr($taskToUpdate->end_time, 0, 5));
     }
 
     /**

@@ -274,12 +274,23 @@
                     @foreach($lanes as $lane)
                     @foreach([$grid[$sIdx][$lane->id] ?? ['type' => 'empty', 'rowspan' => 1]] as $cell)
                     @if($cell['type'] === 'task')
-                    @foreach([$cell['task']] as $task)
+                    @php
+                        $cellTasks = $cell['tasks'] ?? collect([$cell['task']]);
+                        $isParallel = $cellTasks->count() > 1;
+                    @endphp
                     <td rowspan="{{ $cell['rowspan'] }}"
                         data-lane-id="{{ $lane->id }}"
                         class="lane-col-{{ $lane->id }} border-r border-slate-700 p-2 align-top bg-white hover:bg-indigo-50/50 transition border-b border-b-slate-700 print:border-black print:p-1.5">
-                        <div class="space-y-1.5 h-full flex flex-col justify-between">
+                        <div class="{{ $isParallel ? 'flex flex-row gap-2 divide-x divide-dashed divide-slate-300 h-full' : 'h-full' }}">
+                        @foreach($cellTasks as $task)
+                        <div class="{{ $isParallel ? 'flex-1 min-w-[145px] first:pl-0 pl-2' : '' }} space-y-1.5 h-full flex flex-col justify-between">
                             <div>
+                                @if($isParallel)
+                                <div class="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded inline-block mb-0.5">
+                                    {{ substr($task->start_time, 0, 5) }}〜{{ substr($task->end_time, 0, 5) }}
+                                </div>
+                                @endif
+
                                 <!-- 作業タイトル ＋ 人員規模 -->
                                 <div class="font-bold text-xs text-slate-900 leading-snug">
                                     <a href="{{ route('timetables.tasks.index', $selectedTimetable) }}"
@@ -355,8 +366,9 @@
                             </div>
                             @endif
                         </div>
+                        @endforeach
+                        </div>
                     </td>
-                    @endforeach
 
                     @elseif($cell['type'] === 'empty')
                     <!-- 空きスロット（PDF準拠: ハイフン表示 & ホバーでタスク作成リンク） -->

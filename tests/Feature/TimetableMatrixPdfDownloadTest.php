@@ -536,4 +536,65 @@ class TimetableMatrixPdfDownloadTest extends TestCase
             }
         }
     }
+
+    /**
+     * 同一班で時間帯の全部または一部が重なる並行タスクがある場合、進行表PDFで内部横並びテーブルとして両方描画され、
+     * PDF生成自体もエラーなく完了すること
+     */
+    public function test_matrix_pdf_renders_overlapping_parallel_tasks_side_by_side(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '並行タスクPDFテスト',
+            'target_date' => '2026-10-17',
+            'start_time' => '08:00:00',
+            'end_time' => '11:00:00',
+        ]);
+
+        $lane = Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => 'カラーコーン',
+            'display_order' => 10,
+        ]);
+
+        // 一部重複する並行タスク（09:00〜10:00 と 09:30〜10:30）
+        TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '並行作業Alpha',
+            'start_time' => '09:00:00',
+            'end_time' => '10:00:00',
+            'required_people_count' => 2,
+        ]);
+        TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '並行作業Beta',
+            'start_time' => '09:30:00',
+            'end_time' => '10:30:00',
+            'required_people_count' => 3,
+        ]);
+
+        // プレビューHTML上で横並びテーブルおよび各タスク情報が出力されていること
+        $previewResponse = $this->get(route('timetables.print-matrix', [
+            'timetable' => $timetable,
+            'preview' => 1,
+        ]));
+        $previewResponse->assertStatus(200);
+        $previewResponse->assertSee('parallel-tasks-table', false);
+        $previewResponse->assertSee('parallel-task-col-first', false);
+        $previewResponse->assertSee('parallel-task-col', false);
+        $previewResponse->assertSee('並行作業Alpha');
+        $previewResponse->assertSee('並行作業Beta');
+        $previewResponse->assertSee('09:00〜10:00');
+        $previewResponse->assertSee('09:30〜10:30');
+        $previewResponse->assertSee('cell-task-continue', false);
+
+        // 実際のPDFダウンロードも正常に出力されること
+        $pdfResponse = $this->get(route('timetables.print-matrix', $timetable));
+        $pdfResponse->assertStatus(200);
+        $pdfResponse->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $pdfResponse->getContent());
+    }
 }

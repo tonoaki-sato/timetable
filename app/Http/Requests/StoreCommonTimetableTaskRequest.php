@@ -4,11 +4,9 @@ namespace App\Http\Requests;
 
 use App\DTOs\TimetableTask\CreateCommonTimetableTaskDTO;
 use App\Models\TimetableTask;
-use App\Services\TimetableTaskService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Validator;
 
 class StoreCommonTimetableTaskRequest extends FormRequest
 {
@@ -104,43 +102,6 @@ class StoreCommonTimetableTaskRequest extends FormRequest
             'lane_ids.min' => '登録対象の担当班を1つ以上選択してください。',
             'lane_ids.*.exists' => '選択された担当班の中に、この運行日に属さない班が含まれています。',
         ];
-    }
-
-    /**
-     * バリデータの追加設定（対象全班での時間帯重複検証）
-     */
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function ($validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $rawLaneIds = $this->input('lane_ids', []);
-            if (! is_array($rawLaneIds) || empty($rawLaneIds)) {
-                return;
-            }
-
-            $laneIds = array_values(array_map('intval', $rawLaneIds));
-            $timetableId = $this->integer('timetable_id');
-            $startTime = (string) $this->input('start_time');
-            $endTime = (string) $this->input('end_time');
-            $status = (string) $this->input('status', 'not_started');
-
-            /** @var TimetableTaskService $taskService */
-            $taskService = app(TimetableTaskService::class);
-            $overlapErrors = $taskService->checkDatabaseOverlapsForLanes(
-                $timetableId,
-                $laneIds,
-                $startTime,
-                $endTime,
-                $status
-            );
-
-            foreach ($overlapErrors as $err) {
-                $validator->errors()->add('lane_ids', $err);
-            }
-        });
     }
 
     /**

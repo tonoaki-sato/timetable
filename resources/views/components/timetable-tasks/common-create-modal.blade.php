@@ -62,12 +62,12 @@
                 </div>
                 @endif
 
-                <div id="common-modal-overlap-warning" class="hidden p-2.5 bg-rose-50 border border-rose-200/90 text-rose-800 text-xs rounded-xl shadow-2xs">
+                <div id="common-modal-overlap-warning" class="hidden p-2.5 bg-amber-50 border border-amber-200/90 text-amber-800 text-xs rounded-xl shadow-2xs">
                     <div class="flex items-center space-x-2 font-bold">
-                        <span class="text-sm">⚠️</span>
-                        <span>以下の担当班で既存タスクと時間帯が重複しているため登録できません。</span>
+                        <span class="text-sm">ℹ️</span>
+                        <span>以下の担当班で既存タスクと時間帯が重なっています（並行タスクとして一括登録可能です）。</span>
                     </div>
-                    <ul id="common-modal-overlap-list" class="mt-1.5 pl-6 list-disc space-y-0.5 text-[11px] font-medium text-rose-700"></ul>
+                    <ul id="common-modal-overlap-list" class="mt-1.5 pl-6 list-disc space-y-0.5 text-[11px] font-medium text-amber-700"></ul>
                 </div>
 
                 <div id="common-modal-no-lane-warning" class="hidden p-2.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-center space-x-2 font-bold shadow-2xs">

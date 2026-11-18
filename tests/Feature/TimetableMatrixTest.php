@@ -498,4 +498,78 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('通行止め');
         $response->assertSee('開催中');
     }
+
+    /**
+     * 同一班で時間帯の全部または一部が重なる並行タスクがある場合、Web進行表画面で横並びレイアウトとしてすべて表示されること
+     */
+    public function test_matrix_displays_overlapping_parallel_tasks_side_by_side_in_same_lane(): void
+    {
+        $this->actingAs($this->operator);
+
+        $timetable = Timetable::factory()->create([
+            'name' => '並行タスク検証運行日',
+            'target_date' => '2026-10-17',
+            'start_time' => '08:00:00',
+            'end_time' => '12:00:00',
+            'status' => 'active',
+        ]);
+
+        $lane = Lane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'name' => 'カラーコーン',
+            'display_order' => 10,
+        ]);
+
+        // 09:00〜10:00 と 09:30〜10:30（時間帯の一部が重なる）および 11:00〜12:00 の2タスク（完全重複）
+        TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '東口コーン設置',
+            'start_time' => '09:00:00',
+            'end_time' => '10:00:00',
+            'required_people_count' => 2,
+        ]);
+        TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '西口コーン設置',
+            'start_time' => '09:30:00',
+            'end_time' => '10:30:00',
+            'required_people_count' => 3,
+        ]);
+
+        TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '南側バリケード確認',
+            'start_time' => '11:00:00',
+            'end_time' => '12:00:00',
+            'required_people_count' => 1,
+        ]);
+        TimetableTask::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $lane->id,
+            'title' => '北側バリケード確認',
+            'start_time' => '11:00:00',
+            'end_time' => '12:00:00',
+            'required_people_count' => 1,
+        ]);
+
+        $response = $this->get(route('timetable.index', ['timetable_id' => $timetable->id]));
+        $response->assertStatus(200);
+
+        // すべての並行タスクが欠落せず描画されること
+        $response->assertSee('東口コーン設置');
+        $response->assertSee('西口コーン設置');
+        $response->assertSee('南側バリケード確認');
+        $response->assertSee('北側バリケード確認');
+
+        // 個別の時間帯ラベル・横並びflexコンテナが出力されていること
+        $response->assertSee('09:00〜10:00');
+        $response->assertSee('09:30〜10:30');
+        $response->assertSee('11:00〜12:00');
+        $response->assertSee('flex flex-row gap-2 divide-x divide-dashed divide-slate-300 h-full', false);
+        // 09:00〜10:30 クラスタは3スロット分（rowspan="3"）結合されていること
+        $response->assertSee('rowspan="3"', false);
+    }
 }

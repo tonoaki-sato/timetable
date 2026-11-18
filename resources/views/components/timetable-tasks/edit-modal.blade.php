@@ -32,11 +32,11 @@
                 </button>
             </div>
 
-            <!-- 時間帯重複警告メッセージ (固定ヘッダー直下) -->
+            <!-- 時間帯重複注意喚起メッセージ (固定ヘッダー直下) -->
             <div class="shrink-0 px-5 pt-3 empty:hidden">
-                <div id="edit-modal-overlap-warning" class="hidden p-2.5 bg-rose-50 border border-rose-200/90 text-rose-800 text-xs rounded-xl flex items-center space-x-2 font-bold shadow-2xs">
-                    <span class="text-sm">⚠️</span>
-                    <span class="warning-text">同一レーン内の他タスクと時間帯が重複しています。</span>
+                <div id="edit-modal-overlap-warning" class="hidden p-2.5 bg-amber-50 border border-amber-200/90 text-amber-800 text-xs rounded-xl flex items-center space-x-2 font-bold shadow-2xs">
+                    <span class="text-sm">ℹ️</span>
+                    <span class="warning-text">同一レーン内の他タスクと時間帯が重なっています（並行タスクとして保存可能です）。</span>
                 </div>
             </div>
 

@@ -165,7 +165,7 @@ class CommonTimetableTaskTest extends TestCase
         $this->assertDatabaseCount('task_staff_assignments', 0);
     }
 
-    public function test_blocks_registration_when_any_selected_lane_has_time_overlap_and_reports_lane_and_task_names(): void
+    public function test_allows_registration_when_selected_lanes_have_time_overlap_and_controls_fixed_staff_auto_assign(): void
     {
         $admin = User::factory()->create([
             'role' => 'admin',
@@ -173,17 +173,28 @@ class CommonTimetableTaskTest extends TestCase
         ]);
 
         $timetable = Timetable::factory()->create(['created_by' => $admin->id]);
+        $lead1 = Staff::factory()->create();
+        $fixed1 = Staff::factory()->create();
+        $lead2 = Staff::factory()->create();
+        $fixed2 = Staff::factory()->create();
+
         $lane1 = Lane::factory()->create([
             'timetable_id' => $timetable->id,
             'name' => 'カラーコーン班',
+            'lead_staff_id' => $lead1->id,
             'display_order' => 10,
         ]);
+        $lane1->fixedStaff()->attach($fixed1->id);
+
         $lane2 = Lane::factory()->create([
             'timetable_id' => $timetable->id,
             'name' => '給水・トイレ班',
+            'lead_staff_id' => $lead2->id,
             'display_order' => 20,
         ]);
+        $lane2->fixedStaff()->attach($fixed2->id);
 
+        // 給水・トイレ班のみ 08:15〜09:00 に既存タスクあり（08:00〜08:30と一部重複）
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
             'lane_id' => $lane2->id,
@@ -208,19 +219,34 @@ class CommonTimetableTaskTest extends TestCase
             ]);
 
         $response->assertRedirect(route('timetables.tasks.index', $timetable));
-        $response->assertSessionHasErrors('lane_ids');
+        $response->assertSessionHasNoErrors();
 
-        // 重複がないカラーコーン班を含め、1件も新規作成されていないこと
-        $this->assertDatabaseCount('timetable_tasks', 1);
-        $this->assertDatabaseMissing('timetable_tasks', [
-            'lane_id' => $lane1->id,
-            'title' => '全体ミーティング',
+        // 両班ともに新規作成されていること
+        $commonTask1 = TimetableTask::where('lane_id', $lane1->id)->where('title', '全体ミーティング')->firstOrFail();
+        $commonTask2 = TimetableTask::where('lane_id', $lane2->id)->where('title', '全体ミーティング')->firstOrFail();
+
+        // 重複なしのカラーコーン班は班長＋固定スタッフの両方が自動アサイン
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $commonTask1->id,
+            'staff_id' => $lead1->id,
+            'role_description' => '班長',
+        ]);
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $commonTask1->id,
+            'staff_id' => $fixed1->id,
+            'role_description' => '固定スタッフ',
         ]);
 
-        $errors = session('errors')->get('lane_ids');
-        $joined = implode("\n", $errors);
-        $this->assertStringContainsString('給水・トイレ班', $joined);
-        $this->assertStringContainsString('資材事前準備', $joined);
+        // 一部重複ありの給水・トイレ班は班長のみ自動アサインされ、固定スタッフは自動アサインされない
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $commonTask2->id,
+            'staff_id' => $lead2->id,
+            'role_description' => '班長',
+        ]);
+        $this->assertDatabaseMissing('task_staff_assignments', [
+            'timetable_task_id' => $commonTask2->id,
+            'staff_id' => $fixed2->id,
+        ]);
     }
 
     public function test_allows_registration_when_existing_overlapping_task_is_cancelled(): void
@@ -408,8 +434,8 @@ class CommonTimetableTaskTest extends TestCase
                 'timetable_id' => $timetable->id,
                 'lane_ids' => [$lane->id],
                 'title' => '入力保持テストミーティング',
-                'start_time' => '08:30',
-                'end_time' => '09:30',
+                'start_time' => '09:30',
+                'end_time' => '08:30',
                 'required_people_count' => 0,
             ]);
 
@@ -418,6 +444,5 @@ class CommonTimetableTaskTest extends TestCase
         $response->assertSee('id="common-modal-server-errors"', false);
         $response->assertSee('入力保持テストミーティング');
         $response->assertSee('誘導班');
-        $response->assertSee('事前点検');
     }
 }

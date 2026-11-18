@@ -222,6 +222,14 @@ class TimetableTaskService
             );
         }
 
+        if ($lane->fixedStaff->isEmpty()) {
+            return;
+        }
+
+        if ($this->hasOverlappingActiveTaskInLane($task, $lane->id)) {
+            return;
+        }
+
         foreach ($lane->fixedStaff as $fixedMember) {
             if ($lane->lead_staff_id && (int) $fixedMember->id === (int) $lane->lead_staff_id) {
                 continue;
@@ -238,6 +246,34 @@ class TimetableTaskService
                 ]
             );
         }
+    }
+
+    /**
+     * 同一班内に当該タスクと時間帯の全部または一部が重なる有効タスクが存在するか判定する
+     */
+    protected function hasOverlappingActiveTaskInLane(TimetableTask $task, int $laneId): bool
+    {
+        if ($task->status === 'cancelled') {
+            return false;
+        }
+
+        $start = ! empty($task->start_time) ? substr((string) $task->start_time, 0, 5) : '';
+        $end = ! empty($task->end_time) ? substr((string) $task->end_time, 0, 5) : '';
+        if ($start === '' || $end === '' || $start >= $end) {
+            return false;
+        }
+
+        $existingTasks = $this->taskRepository->getActiveForLaneExcludingIds($laneId, [$task->id]);
+        foreach ($existingTasks as $existing) {
+            $exStart = substr((string) $existing->start_time, 0, 5);
+            $exEnd = substr((string) $existing->end_time, 0, 5);
+
+            if ($this->hasTimeRangeOverlap($start, $end, $exStart, $exEnd)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
