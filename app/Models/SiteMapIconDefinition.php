@@ -98,14 +98,6 @@ class SiteMapIconDefinition extends Model
     ];
 
     /**
-     * ユーザーが追加したカスタムアイコンかどうかを判定
-     */
-    public function isCustom(): bool
-    {
-        return ! $this->is_preset;
-    }
-
-    /**
      * パレット表示順の重みを取得（SQL非依存ソート用）
      */
     public function getPaletteOrderWeight(): int

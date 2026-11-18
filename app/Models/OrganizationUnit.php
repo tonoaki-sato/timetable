@@ -80,14 +80,6 @@ class OrganizationUnit extends Model
     }
 
     /**
-     * 最上位（ルート）組織のみを取得するスコープ
-     */
-    public function scopeRootOnly(Builder $query): Builder
-    {
-        return $query->whereNull('parent_id');
-    }
-
-    /**
      * 表示順でソートするスコープ
      */
     public function scopeOrdered(Builder $query): Builder

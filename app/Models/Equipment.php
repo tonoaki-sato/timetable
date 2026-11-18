@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Collection;
 
 #[Fillable([
     'name',
@@ -212,19 +211,6 @@ class Equipment extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('display_order', 'asc')->orderBy('id', 'asc');
-    }
-
-    /**
-     * 指定フェーズの計画ステップ一覧を抽出
-     *
-     * @param  array<int, string>|string  $phases
-     * @return Collection<int, EquipmentLogisticsPlan>
-     */
-    public function plansForPhases(array|string $phases): Collection
-    {
-        return is_array($phases)
-            ? $this->plans->whereIn('day_phase', $phases)
-            : $this->plans->where('day_phase', $phases);
     }
 
     /**

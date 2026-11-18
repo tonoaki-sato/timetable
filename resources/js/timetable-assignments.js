@@ -40,8 +40,6 @@ function initAssignmentWorkspace() {
     const filterTasks = () => {
         const cards = document.querySelectorAll('[data-task-card]');
         let visibleCount = 0;
-        let shortageVisibleCount = 0;
-        let satisfiedVisibleCount = 0;
 
         cards.forEach(card => {
             const isSatisfied = card.getAttribute('data-is-satisfied') === '1';
@@ -606,7 +604,6 @@ function initAssignmentWorkspace() {
 
             if (res.status === 409 && data.has_conflict) {
                 // 重複検知
-                const conflictNames = (data.conflicts || []).map(c => c.staff_name).join(', ');
                 const alertArea = document.getElementById('assign-alert-area');
                 if (alertArea) {
                     alertArea.innerHTML = `

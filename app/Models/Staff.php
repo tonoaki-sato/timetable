@@ -139,20 +139,6 @@ class Staff extends Model
     }
 
     /**
-     * 班長を務めるユニークな班（レーン）名リスト
-     *
-     * @return array<int, string>
-     */
-    public function getLedLaneNamesAttribute(): array
-    {
-        if (! $this->relationLoaded('ledLanes')) {
-            $this->load('ledLanes');
-        }
-
-        return $this->ledLanes->pluck('name')->unique()->values()->all();
-    }
-
-    /**
      * 固定スタッフとして所属するレーン一覧との多対多リレーション
      */
     public function fixedLanes(): BelongsToMany
@@ -176,17 +162,6 @@ class Staff extends Model
     {
         return $this->belongsToMany(TimetableTask::class, 'task_staff_assignments')
             ->withPivot(['id', 'role_description', 'attendance_status', 'notes'])
-            ->withTimestamps();
-    }
-
-    /**
-     * 所属・担当する組織ユニット一覧との多対多リレーション
-     */
-    public function organizationUnits(): BelongsToMany
-    {
-        return $this->belongsToMany(OrganizationUnit::class, 'organization_unit_staff')
-            ->withPivot(['id', 'role', 'display_order'])
-            ->orderByPivot('display_order')
             ->withTimestamps();
     }
 

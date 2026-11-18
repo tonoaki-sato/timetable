@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\BoothCategory;
 use App\Enums\BoothType;
-use App\Enums\FacilityCategory;
 use App\Enums\FacilityType;
 use App\Enums\LayoutItemStatus;
 use App\Enums\LayoutItemType;
@@ -117,14 +116,6 @@ class LayoutItem extends Model
     public function boothType(): ?BoothType
     {
         return $this->booth_type ? BoothType::tryFrom($this->booth_type) : null;
-    }
-
-    /**
-     * 設備大分類 Enum
-     */
-    public function facilityCategory(): ?FacilityCategory
-    {
-        return $this->facilityType()?->category();
     }
 
     /**

@@ -190,14 +190,6 @@ class Schedule extends Model
     }
 
     /**
-     * PDF用の日時・期間フォーマット表示
-     */
-    public function getPdfDatePeriodAttribute(): string
-    {
-        return (new SchedulePresenter($this))->pdfDatePeriod();
-    }
-
-    /**
      * PDF用の日付・期間フォーマット表示
      */
     public function getPdfDateAttribute(): string
@@ -219,20 +211,6 @@ class Schedule extends Model
     public function getShareTextAttribute(): string
     {
         return (new SchedulePresenter($this))->shareText();
-    }
-
-    /**
-     * 開催予定かどうか
-     */
-    public function getIsUpcomingAttribute(): bool
-    {
-        if (! $this->start_date) {
-            return false;
-        }
-
-        $effectiveDate = $this->end_date ?? $this->start_date;
-
-        return $effectiveDate->isToday() || $effectiveDate->isFuture();
     }
 
     /**

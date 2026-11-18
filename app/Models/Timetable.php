@@ -125,30 +125,6 @@ class Timetable extends Model
     }
 
     /**
-     * 道路通行止めの代表的な時間帯を取得
-     *
-     * @return array{start: string, end: string, label: string}|null
-     */
-    public function getPrimaryRoadClosureRange(): ?array
-    {
-        if (empty($this->road_periods)) {
-            return null;
-        }
-
-        foreach ($this->road_periods as $period) {
-            if (($period['status'] ?? 'closed') === 'closed') {
-                return [
-                    'start' => substr($period['start_time'] ?? '', 0, 5),
-                    'end' => substr($period['end_time'] ?? '', 0, 5),
-                    'label' => $period['label'] ?? '通行止め',
-                ];
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * 道路規制・通行止めの予定が設定されているか判定
      */
     public function hasRoadPeriods(): bool
@@ -219,22 +195,6 @@ class Timetable extends Model
     }
 
     /**
-     * 現場配置図面一覧とのリレーション
-     */
-    public function layoutMaps(): HasMany
-    {
-        return $this->hasMany(LayoutMap::class)->orderBy('id', 'asc');
-    }
-
-    /**
-     * 最新の現場配置図面
-     */
-    public function latestLayoutMap(): HasOne
-    {
-        return $this->hasOne(LayoutMap::class)->latestOfMany();
-    }
-
-    /**
      * 現場配置図面を経由した全配置アイテム（ブース・現場設備）一覧
      */
     public function layoutItems(): HasManyThrough
@@ -251,27 +211,11 @@ class Timetable extends Model
     }
 
     /**
-     * 配置図面経由でアサインされている出店者一覧を取得
-     */
-    public function assignedVendors()
-    {
-        return Vendor::whereIn('id', $this->layoutItems()->where('item_type', 'booth')->whereNotNull('vendor_id')->select('vendor_id'));
-    }
-
-    /**
      * 紐づく資機材搬出入計画一覧とのリレーション
      */
     public function logisticsPlans(): HasMany
     {
         return $this->hasMany(EquipmentLogisticsPlan::class)->ordered();
-    }
-
-    /**
-     * 紐づくスタッフ到着チェックイン一覧とのリレーション
-     */
-    public function staffCheckIns(): HasMany
-    {
-        return $this->hasMany(StaffCheckIn::class);
     }
 
     /**
@@ -431,22 +375,6 @@ class Timetable extends Model
     }
 
     /**
-     * 曜日テキストのカラークラス
-     */
-    public function getWeekdayColorClassAttribute(): string
-    {
-        if (! $this->target_date) {
-            return 'text-slate-400';
-        }
-
-        return match ($this->target_date->dayOfWeek) {
-            0 => 'text-rose-500',
-            6 => 'text-sky-500',
-            default => 'text-slate-400',
-        };
-    }
-
-    /**
      * ステータスバッジのCSSクラス
      */
     public function getStatusBadgeClassAttribute(): string
@@ -456,16 +384,6 @@ class Timetable extends Model
             'completed' => 'bg-slate-100 text-slate-600 border-slate-200',
             default => 'bg-blue-50 text-blue-700 border-blue-200',
         };
-    }
-
-    /**
-     * 搬出入計画画面のURLを取得
-     *
-     * @param  array<string, mixed>  $queryParams
-     */
-    public function logisticsUrl(array $queryParams = []): string
-    {
-        return route('timetables.logistics.index', array_merge(['timetable' => $this], $queryParams));
     }
 
     /**
@@ -506,13 +424,5 @@ class Timetable extends Model
     public function placements(): HasManyThrough
     {
         return $this->hasManyThrough(SiteMapPlacement::class, SiteBaseMap::class);
-    }
-
-    /**
-     * 現在有効な白地図を取得
-     */
-    public function activeSiteBaseMap(): ?SiteBaseMap
-    {
-        return $this->siteBaseMaps()->where('is_active', true)->first();
     }
 }

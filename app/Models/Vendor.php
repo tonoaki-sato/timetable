@@ -50,7 +50,6 @@ class Vendor extends Model
             $categoryLabel = $b->boothCategory()?->label() ?? '';
             $categoryBadge = $b->boothCategory()?->badgeClasses() ?? 'bg-slate-100 text-slate-700 border-slate-300';
             $typeLabel = $b->boothType()?->label() ?? '';
-            $statusLabel = $b->status?->label() ?? '';
 
             return [
                 'id' => $b->id,
