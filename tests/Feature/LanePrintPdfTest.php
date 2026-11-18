@@ -82,9 +82,9 @@ class LanePrintPdfTest extends TestCase
     }
 
     /**
-     * 担当班一覧PDFデータ構築およびテンプレート描画に余白・4列構成（専属固定スタッフ・登録タスク数除外）・行高さ統一が反映されること
+     * 担当班一覧PDFデータ構築およびテンプレート描画に横向き（A4横）・5列構成（主要スタッフ列追加）・行高さ統一が反映されること
      */
-    public function test_print_data_and_pdf_template_render_margins_without_fixed_staff_and_with_uniform_row_height(): void
+    public function test_print_data_and_pdf_template_render_margins_with_assigned_staff_and_uniform_row_height(): void
     {
         $timetable = Timetable::factory()->create([
             'name' => '宵宮 運行計画',
@@ -96,8 +96,12 @@ class LanePrintPdfTest extends TestCase
             'affiliation' => '町内会A',
         ]);
         $fixedStaff = Staff::factory()->create([
-            'name' => '田中 固定除外対象',
+            'name' => '田中 固定スタッフ',
             'affiliation' => 'ボランティアB',
+        ]);
+        $taskStaff = Staff::factory()->create([
+            'name' => '鈴木 アサインスタッフ',
+            'affiliation' => '青年会',
         ]);
 
         $lane1 = Lane::factory()->create([
@@ -110,7 +114,7 @@ class LanePrintPdfTest extends TestCase
         ]);
         $lane1->fixedStaff()->attach([$leadStaff->id, $fixedStaff->id]);
 
-        Lane::factory()->create([
+        $lane2 = Lane::factory()->create([
             'timetable_id' => $timetable->id,
             'name' => '衛生',
             'color' => 'emerald',
@@ -119,10 +123,13 @@ class LanePrintPdfTest extends TestCase
             'display_order' => 20,
         ]);
 
-        TimetableTask::factory()->create([
+        $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
             'lane_id' => $lane1->id,
             'title' => '朝礼準備',
+        ]);
+        $task->assignments()->create([
+            'staff_id' => $taskStaff->id,
         ]);
 
         /** @var DownloadLanesPdfAction $action */
@@ -140,11 +147,16 @@ class LanePrintPdfTest extends TestCase
         $this->assertTrue($firstRow->hasLead);
         $this->assertSame('高橋 リーダー', $firstRow->leadName);
         $this->assertSame('町内会A', $firstRow->leadAffiliation);
+        // 班長以外の固定スタッフおよびタスクアサインスタッフが含まれていること
+        $this->assertContains('田中 固定スタッフ', $firstRow->assignedStaffNames);
+        $this->assertContains('鈴木 アサインスタッフ', $firstRow->assignedStaffNames);
+        $this->assertNotContains('高橋 リーダー', $firstRow->assignedStaffNames);
 
         $secondRow = $printData->rows[1];
         $this->assertSame(2, $secondRow->orderNumber);
         $this->assertFalse($secondRow->hasLead);
         $this->assertSame('未設定', $secondRow->leadName);
+        $this->assertSame([], $secondRow->assignedStaffNames);
 
         /** @var PdfService $pdfService */
         $pdfService = app(PdfService::class);
@@ -154,22 +166,22 @@ class LanePrintPdfTest extends TestCase
             'japaneseFontPath' => $pdfService->getJapaneseFontPath(),
         ])->render();
 
-        $this->assertStringContainsString('size: A4 portrait;', $renderedHtml);
-        $this->assertStringContainsString('margin: 12mm;', $renderedHtml);
+        $this->assertStringContainsString('size: A4 landscape;', $renderedHtml);
+        $this->assertStringContainsString('margin: 10mm 12mm;', $renderedHtml);
         $this->assertStringNotContainsString('*, body,', $renderedHtml);
         $this->assertStringContainsString('まつり運行 担当班一覧表', $renderedHtml);
         $this->assertStringContainsString('宵宮 運行計画', $renderedHtml);
         $this->assertStringContainsString('本陣', $renderedHtml);
         $this->assertStringContainsString('高橋 リーダー', $renderedHtml);
+        $this->assertStringContainsString('主要スタッフ', $renderedHtml);
+        $this->assertStringContainsString('田中 固定スタッフ', $renderedHtml);
+        $this->assertStringContainsString('鈴木 アサインスタッフ', $renderedHtml);
         $this->assertStringContainsString('本部運営および総合案内', $renderedHtml);
         $this->assertStringContainsString('衛生', $renderedHtml);
         $this->assertStringContainsString('未設定', $renderedHtml);
         $this->assertStringContainsString('総班数:', $renderedHtml);
         $this->assertStringContainsString('2班', $renderedHtml);
         $this->assertStringNotContainsString('班長任命', $renderedHtml);
-        $this->assertStringNotContainsString('専属固定スタッフ', $renderedHtml);
-        $this->assertStringNotContainsString('専属固定:', $renderedHtml);
-        $this->assertStringNotContainsString('田中 固定除外対象', $renderedHtml);
         $this->assertStringNotContainsString('登録タスク数', $renderedHtml);
         $this->assertStringNotContainsString('タスク数', $renderedHtml);
         $this->assertDoesNotMatchRegularExpression('/\sstyle\s*=/i', $renderedHtml);
@@ -186,7 +198,7 @@ class LanePrintPdfTest extends TestCase
                 'printData' => $printData,
                 'title' => $printData->title,
             ],
-            'portrait',
+            'landscape',
             [
                 [
                     'event' => 'begin_page_render',
@@ -230,11 +242,11 @@ class LanePrintPdfTest extends TestCase
             ]
         );
 
-        // 12mm ≒ 34.02pt の余白が実際に効いていること
+        // 12mm ≒ 34.02pt, 10mm ≒ 28.35pt の余白が実際に効いていること
         $this->assertNotNull($firstTableX);
         $this->assertNotNull($firstTableY);
         $this->assertGreaterThan(33.0, $firstTableX);
-        $this->assertGreaterThan(33.0, $firstTableY);
+        $this->assertGreaterThan(27.0, $firstTableY);
 
         // 総班数バッジがメタ情報行より下の段に配置されていること
         $this->assertNotNull($headerMetaY);

@@ -81,7 +81,11 @@ class LaneRepository implements LaneRepositoryInterface
     public function getForTimetablePrint(Timetable $timetable): Collection
     {
         return $timetable->lanes()
-            ->with(['leadStaff'])
+            ->with([
+                'leadStaff',
+                'fixedStaff',
+                'tasks.assignments.staff',
+            ])
             ->ordered()
             ->get();
     }

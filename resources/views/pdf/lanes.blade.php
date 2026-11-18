@@ -35,8 +35,8 @@
             font-style: normal;
         }
         @page {
-            size: A4 portrait;
-            margin: 12mm;
+            size: A4 landscape;
+            margin: 10mm 12mm;
         }
         body, table, th, td, h1, h2, h3, div, span, strong, b, p {
             font-family: 'JapaneseFont', sans-serif !important;
@@ -115,19 +115,23 @@
         }
         @endif
         .col-no {
-            width: 6%;
+            width: 4%;
             text-align: center !important;
             color: #475569;
             font-weight: bold;
         }
         .col-name {
-            width: 24%;
+            width: 17%;
         }
         .col-lead {
-            width: 22%;
+            width: 18%;
         }
         .col-description {
-            width: 48%;
+            width: 36%;
+            color: #334155;
+        }
+        .col-staff {
+            width: 25%;
             color: #334155;
         }
         .lane-name {
@@ -168,6 +172,14 @@
             margin-top: 1pt;
             line-height: 1.2;
         }
+        .staff-name-list {
+            font-size: 8pt;
+            color: #1e293b;
+            line-height: 1.35;
+        }
+        .staff-unset {
+            color: #94a3b8;
+        }
         .empty-row {
             text-align: center;
             padding: 20pt !important;
@@ -204,6 +216,7 @@
                 <th class="col-name">班名</th>
                 <th class="col-lead">班長（リーダー）</th>
                 <th class="col-description">役割概要・担当エリア</th>
+                <th class="col-staff">主要スタッフ</th>
             </tr>
         </thead>
         <tbody>
@@ -231,10 +244,17 @@
                         —
                     @endif
                 </td>
+                <td class="col-staff">
+                    @if(!empty($row->assignedStaffNames))
+                        <div class="staff-name-list">{{ implode('、', $row->assignedStaffNames) }}</div>
+                    @else
+                        <span class="staff-unset">—</span>
+                    @endif
+                </td>
             </tr>
             @empty
             <tr>
-                <td colspan="4" class="empty-row">担当班がまだ登録されていません。</td>
+                <td colspan="5" class="empty-row">担当班がまだ登録されていません。</td>
             </tr>
             @endforelse
         </tbody>

@@ -7,6 +7,9 @@ namespace App\DTOs\Lane;
  */
 readonly class LanePrintRowDTO
 {
+    /**
+     * @param  array<int, string>  $assignedStaffNames
+     */
     public function __construct(
         public int $orderNumber,
         public string $name,
@@ -15,5 +18,6 @@ readonly class LanePrintRowDTO
         public string $leadAffiliation,
         public bool $hasLead,
         public string $description,
+        public array $assignedStaffNames = [],
     ) {}
 }

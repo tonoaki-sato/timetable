@@ -14,7 +14,7 @@ use Dompdf\FrameDecorator\TableCell;
 use Illuminate\Http\Response;
 
 /**
- * 担当班一覧 A4縦PDFダウンロードを実行するアクション
+ * 担当班一覧 A4横PDFダウンロードを実行するアクション
  */
 class DownloadLanesPdfAction
 {
@@ -40,7 +40,7 @@ class DownloadLanesPdfAction
                 'title' => $printData->title,
             ],
             $filename,
-            'portrait'
+            'landscape'
         );
     }
 
@@ -60,6 +60,17 @@ class DownloadLanesPdfAction
                 ? (string) $lane->color
                 : 'slate';
 
+            $assignedStaff = $lane->fixedStaff
+                ->concat($lane->tasks->flatMap(fn ($task) => $task->assignments->pluck('staff')))
+                ->filter()
+                ->unique('id');
+
+            if ($lane->lead_staff_id !== null) {
+                $assignedStaff = $assignedStaff->reject(fn ($staff) => $staff->id === $lane->lead_staff_id);
+            }
+
+            $assignedStaffNames = $assignedStaff->pluck('name')->values()->all();
+
             $rows[] = new LanePrintRowDTO(
                 orderNumber: $index + 1,
                 name: $lane->name,
@@ -68,6 +79,7 @@ class DownloadLanesPdfAction
                 leadAffiliation: (string) ($lane->leadStaff?->affiliation ?? ''),
                 hasLead: $hasLead,
                 description: (string) ($lane->description ?? ''),
+                assignedStaffNames: $assignedStaffNames,
             );
         }
 
@@ -116,7 +128,7 @@ class DownloadLanesPdfAction
                 'printData' => $printData,
                 'title' => $printData->title,
             ],
-            'portrait',
+            'landscape',
             [
                 [
                     'event' => 'begin_page_render',
