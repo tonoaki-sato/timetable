@@ -138,15 +138,7 @@ class Equipment extends Model
     {
         $prefix = $this->is_approximate_quantity ? '約 ' : '';
 
-        return $prefix.number_format((int) $this->quantity).' '.$this->unit;
-    }
-
-    /**
-     * 委員会管理機材か判定
-     */
-    public function isCommittee(): bool
-    {
-        return $this->type === EquipmentType::Committee || $this->type === 'committee';
+        return $prefix . number_format((int) $this->quantity) . ' ' . $this->unit;
     }
 
     /**

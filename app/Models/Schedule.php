@@ -96,14 +96,6 @@ class Schedule extends Model
     }
 
     /**
-     * 主催スタッフとのリレーション（assigneeのエイリアス）
-     */
-    public function host(): BelongsTo
-    {
-        return $this->assignee();
-    }
-
-    /**
      * 作成者ユーザーとのリレーション
      */
     public function creator(): BelongsTo

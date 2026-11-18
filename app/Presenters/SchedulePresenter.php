@@ -86,11 +86,11 @@ class SchedulePresenter
 
         $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
         $weekday = $weekdayNames[$this->schedule->start_date->dayOfWeek] ?? '';
-        $dateStr = $this->schedule->start_date->format('Y年n月j日')."({$weekday})";
+        $dateStr = $this->schedule->start_date->format('Y年n月j日') . "({$weekday})";
 
         if ($this->schedule->end_date && $this->schedule->end_date->ne($this->schedule->start_date)) {
             $endWeekday = $weekdayNames[$this->schedule->end_date->dayOfWeek] ?? '';
-            $endDateStr = $this->schedule->end_date->format('Y年n月j日')."({$endWeekday})";
+            $endDateStr = $this->schedule->end_date->format('Y年n月j日') . "({$endWeekday})";
 
             return "{$dateStr} 〜 {$endDateStr}";
         }
@@ -136,34 +136,6 @@ class SchedulePresenter
     }
 
     /**
-     * PDF表示用の日時・期間フォーマット
-     */
-    public function pdfDatePeriod(): string
-    {
-        if (! $this->schedule->start_date) {
-            return '-';
-        }
-
-        $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
-        $startWeekday = $weekdayNames[$this->schedule->start_date->dayOfWeek] ?? '';
-        $startDateStr = $this->schedule->start_date->format('Y/m/d')."({$startWeekday})";
-
-        if ($this->schedule->end_date && $this->schedule->end_date->ne($this->schedule->start_date)) {
-            $endWeekday = $weekdayNames[$this->schedule->end_date->dayOfWeek] ?? '';
-            $endDateStr = $this->schedule->end_date->format('Y/m/d')."({$endWeekday})";
-
-            return "{$startDateStr} 〜 {$endDateStr}";
-        }
-
-        $timeRange = $this->formattedTimeRange();
-        if ($timeRange) {
-            return "{$startDateStr} {$timeRange}";
-        }
-
-        return $startDateStr;
-    }
-
-    /**
      * PDF表示用の日付・期間フォーマット（時間除く）
      */
     public function pdfDate(): string
@@ -174,11 +146,11 @@ class SchedulePresenter
 
         $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
         $startWeekday = $weekdayNames[$this->schedule->start_date->dayOfWeek] ?? '';
-        $startDateStr = $this->schedule->start_date->format('Y/m/d')."({$startWeekday})";
+        $startDateStr = $this->schedule->start_date->format('Y/m/d') . "({$startWeekday})";
 
         if ($this->schedule->end_date && $this->schedule->end_date->ne($this->schedule->start_date)) {
             $endWeekday = $weekdayNames[$this->schedule->end_date->dayOfWeek] ?? '';
-            $endDateStr = $this->schedule->end_date->format('Y/m/d')."({$endWeekday})";
+            $endDateStr = $this->schedule->end_date->format('Y/m/d') . "({$endWeekday})";
 
             return "{$startDateStr} 〜 {$endDateStr}";
         }
