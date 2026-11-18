@@ -364,16 +364,6 @@ class EquipmentLogisticsService
     }
 
     /**
-     * カスタム搬出入パターン一覧の取得
-     *
-     * @return Collection<int, EquipmentLogisticsPattern>
-     */
-    public function getPatternsData(): Collection
-    {
-        return $this->patternRepository->getAllWithSteps();
-    }
-
-    /**
      * 搬出入タイムライン画面用の全表示データを構築
      *
      * @return array<string, mixed>

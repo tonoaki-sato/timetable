@@ -259,12 +259,4 @@ class LocationService
     {
         return $this->locationTypeRepository->delete($locationType);
     }
-
-    /**
-     * フォールバック用タイムテーブルの解決
-     */
-    public function resolveFallbackTimetable(?int $timetableId = null): Timetable
-    {
-        return $this->timetableService->resolveFallbackTimetable($timetableId);
-    }
 }

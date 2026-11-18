@@ -111,13 +111,6 @@ class EquipmentLogisticsPlanController extends Controller
     // 既存互換フォールバックアクション群
     // ==========================================
 
-    public function storeLegacy(StoreEquipmentLogisticsPlanRequest $request): RedirectResponse|JsonResponse
-    {
-        $timetable = $this->resolveFallbackTimetable($request);
-
-        return $this->store($request, $timetable);
-    }
-
     public function updateLegacy(UpdateEquipmentLogisticsPlanRequest $request, EquipmentLogisticsPlan $plan): RedirectResponse|JsonResponse
     {
         $timetable = $plan->timetable ?? $this->resolveFallbackTimetable();
@@ -130,13 +123,6 @@ class EquipmentLogisticsPlanController extends Controller
         $timetable = $plan->timetable ?? $this->resolveFallbackTimetable();
 
         return $this->destroy($request, $timetable, $plan);
-    }
-
-    public function applyTemplateLegacy(ApplyEquipmentTemplateRequest $request, Equipment $equipment): RedirectResponse|JsonResponse
-    {
-        $timetable = $this->resolveFallbackTimetable($request);
-
-        return $this->applyTemplate($request, $timetable, $equipment);
     }
 
     protected function resolveFallbackTimetable(?Request $request = null): Timetable

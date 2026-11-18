@@ -203,9 +203,6 @@ Route::middleware('auth')->group(function () {
     // 搬出入計画既存互換フォールバック
     Route::prefix('logistics')->name('logistics.')->group(function () {
         Route::get('print', [EquipmentLogisticsController::class, 'printLegacy'])->name('print');
-        Route::post('{equipment}/apply-template', [EquipmentLogisticsPlanController::class, 'applyTemplateLegacy'])->name('apply-template');
-
-        Route::post('plans', [EquipmentLogisticsPlanController::class, 'storeLegacy'])->name('plans.store');
         Route::put('plans/{plan}', [EquipmentLogisticsPlanController::class, 'updateLegacy'])->name('plans.update');
         Route::delete('plans/{plan}', [EquipmentLogisticsPlanController::class, 'destroyLegacy'])->name('plans.destroy');
     });
@@ -254,20 +251,7 @@ Route::middleware('auth')->group(function () {
 
         // 旧ルート互換
         Route::get('timetables/{timetable}/vendors', fn () => redirect()->route('vendors.index'))->name('timetables.vendors.index');
-        Route::get('timetables/{timetable}/goza-stores', fn () => redirect()->route('vendors.index'))->name('timetables.goza-stores.index');
     });
-
-    // 拠点管理 既存互換フォールバック
-    Route::get('locations/create', [LocationController::class, 'createRedirect'])->name('locations.create');
-    Route::post('locations', [LocationController::class, 'storeLegacy'])->name('locations.store');
-    Route::get('locations/{location}', [LocationController::class, 'showLegacy'])->name('locations.show');
-    Route::get('locations/{location}/edit', [LocationController::class, 'editLegacy'])->name('locations.edit');
-    Route::match(['put', 'patch'], 'locations/{location}', [LocationController::class, 'updateLegacy'])->name('locations.update');
-    Route::delete('locations/{location}', [LocationController::class, 'destroyLegacy'])->name('locations.destroy');
-    Route::post('locations/{location}/schedules', [LocationScheduleController::class, 'storeLegacy'])->name('locations.schedules.store');
-    Route::put('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'updateLegacy'])->name('locations.schedules.update');
-    Route::patch('locations/{location}/schedules/{schedule}/status', [LocationScheduleController::class, 'updateStatusLegacy'])->name('locations.schedules.update-status');
-    Route::delete('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'destroyLegacy'])->name('locations.schedules.destroy');
 
     Route::resource('location-types', LocationTypeController::class)->except(['create', 'show', 'edit']);
 });

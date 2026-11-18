@@ -2,7 +2,6 @@
 
 namespace App\DTOs;
 
-use App\Enums\ParkingConstraintStatus;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -65,26 +64,6 @@ readonly class ParkingMonitoringContext
         }
 
         return 'bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold';
-    }
-
-    /**
-     * 全体最悪ステータス
-     */
-    public function overallStatus(): ParkingConstraintStatus
-    {
-        if ($this->hasViolations()) {
-            return ParkingConstraintStatus::Violation;
-        }
-
-        if ($this->hasWarnings()) {
-            return ParkingConstraintStatus::Warning;
-        }
-
-        if ($this->inUseCount > 0) {
-            return ParkingConstraintStatus::InUse;
-        }
-
-        return ParkingConstraintStatus::Standby;
     }
 
     /**

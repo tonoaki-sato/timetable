@@ -5,21 +5,12 @@ namespace App\Services;
 use App\Models\Vendor;
 use App\Repositories\Contracts\VendorRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
 
 class VendorService
 {
     public function __construct(
         protected VendorRepositoryInterface $vendorRepository
     ) {}
-
-    /**
-     * 全出展・出店者一覧を取得
-     */
-    public function getAllVendors(): Collection
-    {
-        return $this->vendorRepository->getAll();
-    }
 
     /**
      * ページネーション一覧を取得
