@@ -94,6 +94,15 @@ class TimetableSeederTest extends TestCase
             'title' => '管理・イベント運営',
         ]);
 
+        $kigyoLane = Lane::where('timetable_id', $timetableDay4->id)->where('name', '企業ブース')->firstOrFail();
+        $this->assertSame(24, $kigyoLane->lead_staff_id);
+        $this->assertSame(180, $kigyoLane->display_order);
+        $this->assertDatabaseHas('timetable_tasks', [
+            'timetable_id' => $timetableDay4->id,
+            'lane_id' => $kigyoLane->id,
+            'title' => '搬入対応',
+        ]);
+
         // レーンおよびステータスが定義に合致していること
         $validLanes = array_values(array_unique(array_merge(
             collect(Lane::DEFAULT_LANES)->pluck('name')->toArray(),
