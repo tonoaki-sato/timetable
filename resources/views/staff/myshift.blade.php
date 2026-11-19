@@ -28,8 +28,15 @@
                 </div>
             </div>
 
-            <!-- 到着チェックイン／閲覧専用ステータスエリア -->
-            <div class="shrink-0">
+            <!-- 到着チェックイン／閲覧専用ステータス & カレンダー保存 -->
+            <div class="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                <a href="{{ route('staff.myshift.ics', ['token' => $staff->access_token, 'timetable_id' => $showAllTimetables ? 'all' : $activeTimetable?->id], false) }}"
+                    class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 transition"
+                    title="担当シフトをカレンダー (.ics) に保存">
+                    <span>📅</span>
+                    <span class="hidden sm:inline">カレンダー保存 (.ics)</span>
+                    <span class="sm:hidden">.ics</span>
+                </a>
                 @if($canCheckInActiveTimetable && $activeTimetable)
                     @if($activeTimetableCheckIn)
                         <div class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">

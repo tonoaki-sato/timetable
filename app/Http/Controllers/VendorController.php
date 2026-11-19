@@ -6,6 +6,7 @@ use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
 use App\Models\Vendor;
 use App\Services\VendorService;
+use App\Support\TableQueryOptions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,11 +23,14 @@ class VendorController extends Controller
      */
     public function index(Request $request): View
     {
+        $perPage = TableQueryOptions::resolvePerPage($request->query('per_page'), 15, [15, 30, 50, 100]);
         $filters = [
             'search' => $request->input('search'),
+            'sort' => $request->filled('sort') ? (string) $request->query('sort') : null,
+            'direction' => $request->filled('direction') ? (string) $request->query('direction') : null,
         ];
 
-        $vendors = $this->vendorService->paginateVendors($filters, 15);
+        $vendors = $this->vendorService->paginateVendors($filters, $perPage);
 
         return view('vendors.index', compact('vendors', 'filters'));
     }

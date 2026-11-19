@@ -4,6 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\Staff;
 use App\Repositories\Contracts\StaffRepositoryInterface;
+use App\Support\TableQueryOptions;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Override;
@@ -33,8 +34,13 @@ class StaffRepository implements StaffRepositoryInterface
     }
 
     #[Override]
-    public function paginateFiltered(?string $search = null, ?bool $status = null, int $perPage = 15): LengthAwarePaginator
-    {
+    public function paginateFiltered(
+        ?string $search = null,
+        ?bool $status = null,
+        int $perPage = 15,
+        ?string $sort = null,
+        ?string $direction = null,
+    ): LengthAwarePaginator {
         $query = Staff::query();
 
         if ($search) {
@@ -45,7 +51,16 @@ class StaffRepository implements StaffRepositoryInterface
             $query->where('is_active', $status);
         }
 
-        return $query->orderBy('name', 'asc')
+        $resolved = TableQueryOptions::resolveSort(
+            $sort,
+            $direction,
+            ['id', 'name', 'kana', 'affiliation', 'is_active'],
+            'name',
+            'asc',
+        );
+
+        return $query->orderBy($resolved['sort'], $resolved['direction'])
+            ->orderBy('id', 'asc')
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -124,6 +139,18 @@ class StaffRepository implements StaffRepositoryInterface
     public function delete(Staff $staff): bool
     {
         return (bool) $staff->delete();
+    }
+
+    #[Override]
+    public function searchQuick(string $keyword, int $limit = 5): Collection
+    {
+        return Staff::query()
+            ->search($keyword)
+            ->orderByDesc('is_active')
+            ->orderBy('kana', 'asc')
+            ->orderBy('name', 'asc')
+            ->limit($limit)
+            ->get();
     }
 
     #[Override]

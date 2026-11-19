@@ -1,3 +1,5 @@
+import { confirmDialog, showToast } from './utils/ui.js';
+
 /**
  * タイムテーブル（マトリクス進行表）対話スクリプト
  */
@@ -201,7 +203,7 @@ function initMatrixPdfDownload() {
         // 現在表示中（.opacity-40 を持たない）のチップを収集
         const visibleChips = Array.from(document.querySelectorAll('.lane-chip:not(.opacity-40)'));
         if (visibleChips.length === 0) {
-            alert('印刷対象の担当班を1つ以上選択してください。');
+            showToast('印刷対象の担当班を1つ以上選択してください。', 'warning');
             return;
         }
 
@@ -847,7 +849,7 @@ function initQuickAssignModal() {
         if (removeBtn) {
             const staffId = removeBtn.getAttribute('data-staff-id');
             if (!staffId || !currentTaskId) return;
-            if (!confirm('このスタッフの割り当てを解除しますか？')) return;
+            if (!(await confirmDialog('このスタッフの割り当てを解除しますか？', { variant: 'danger', title: '配置解除の確認', confirmText: '解除する' }))) return;
 
             try {
                 const res = await fetch(`/timetable-tasks/${currentTaskId}/staff/${staffId}`, {

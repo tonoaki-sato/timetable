@@ -1,3 +1,5 @@
+import { confirmDialog } from './utils/ui.js';
+
 /**
  * 出展・出店者マスター管理 JavaScript (CSP準拠・外部モジュール)
  */
@@ -110,9 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 6. 削除確認ダイアログ
     document.querySelectorAll('.btn-delete-vendor').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
             const vendorName = btn.dataset.vendorName || 'この出展者';
-            if (confirm(`出展・出店者「${vendorName}」を削除してもよろしいですか？\n※ 割当済みのコマがある場合、割当が解除されます。`)) {
+            const confirmed = await confirmDialog(
+                `出展・出店者「${vendorName}」を削除してもよろしいですか？\n※ 割当済みのコマがある場合、割当が解除されます。`,
+                { variant: 'danger', title: '削除の確認', confirmText: '削除する' }
+            );
+            if (confirmed) {
                 btn.closest('form')?.submit();
             }
         });

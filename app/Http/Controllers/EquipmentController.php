@@ -32,7 +32,7 @@ class EquipmentController extends Controller
         $isTimetableScoped = $request->route('timetable') instanceof Timetable;
 
         return view('equipments.index', array_merge(
-            $this->equipmentService->getIndexViewData($filter, $timetable, 20),
+            $this->equipmentService->getIndexViewData($filter, $timetable, $filter->perPage),
             [
                 'timetable' => $timetable,
                 'isTimetableScoped' => $isTimetableScoped,

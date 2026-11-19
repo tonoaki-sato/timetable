@@ -14,11 +14,18 @@ interface VendorRepositoryInterface
     public function getAll(): Collection;
 
     /**
-     * 出展・出店者一覧をページネーション取得（検索対応）
+     * 出展・出店者一覧をページネーション取得（検索・ソート対応）
      *
-     * @param  array{search?: string|null}  $filters
+     * @param  array{search?: string|null, sort?: string|null, direction?: string|null}  $filters
      */
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator;
+
+    /**
+     * グローバル検索用のクイック検索
+     *
+     * @return Collection<int, Vendor>
+     */
+    public function searchQuick(string $keyword, int $limit = 5): Collection;
 
     /**
      * IDで出展・出店者を取得

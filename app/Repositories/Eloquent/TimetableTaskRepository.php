@@ -215,6 +215,20 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
     }
 
     #[Override]
+    public function searchQuick(string $keyword, int $limit = 5): Collection
+    {
+        return TimetableTask::with(['timetable', 'laneRelation'])
+            ->where(function ($q) use ($keyword): void {
+                $q->where('title', 'like', "%{$keyword}%")
+                    ->orWhere('content', 'like', "%{$keyword}%")
+                    ->orWhere('location', 'like', "%{$keyword}%");
+            })
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+    }
+
+    #[Override]
     public function updateAttendanceStatus(int $assignmentId, string $status): bool
     {
         $assignment = TaskStaffAssignment::find($assignmentId);

@@ -1,3 +1,5 @@
+import { confirmDialog } from './utils/ui.js';
+
 /**
  * 組織管理 (Organization Management) JavaScript モジュール
  * - タブ切り替え（組織一覧 ↔ 組織図ビュー）
@@ -377,7 +379,7 @@ function initDeleteAction() {
     const deleteForm = document.getElementById('delete-organization-form');
     if (!deleteForm) return;
 
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', async (e) => {
         const trigger = e.target.closest('[data-delete-unit]');
         if (!trigger) return;
 
@@ -385,7 +387,10 @@ function initDeleteAction() {
         const unitName = trigger.dataset.unitName || '該当組織';
         if (!unitId) return;
 
-        const confirmed = window.confirm(`組織「${unitName}」を削除してもよろしいですか？\n※配下に属する子組織もすべて連動して削除されます。`);
+        const confirmed = await confirmDialog(
+            `組織「${unitName}」を削除してもよろしいですか？\n※配下に属する子組織もすべて連動して削除されます。`,
+            { variant: 'danger', title: '削除の確認', confirmText: '削除する' }
+        );
         if (!confirmed) return;
 
         deleteForm.action = `/organizations/${unitId}`;

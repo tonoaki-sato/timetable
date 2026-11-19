@@ -634,10 +634,118 @@
                     </nav>
                 </div>
 
-                <!-- 右側: ログイン中ユーザー情報 & ログアウト -->
+                <!-- 右側: グローバル検索・通知ベル・ユーザー情報 & ログアウト -->
                 <div class="flex items-center space-x-2 lg:space-x-3 shrink-0">
                     @auth
-                    <div class="flex items-center space-x-2 shrink-0">
+                    <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+                        <!-- グローバルクイック検索トリガー (Ctrl+K) -->
+                        <button type="button"
+                            id="btn-open-quick-search"
+                            data-action="open-quick-search"
+                            aria-label="クイック検索 (Ctrl+K)"
+                            title="システム横断検索 (Ctrl+K / Cmd+K)"
+                            class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition cursor-pointer shrink-0">
+                            <span>🔍</span>
+                            <span class="hidden xl:inline">検索</span>
+                            <kbd class="hidden xl:inline-block px-1 py-0.2 bg-slate-900 border border-slate-700 rounded text-[10px] font-mono text-slate-400">Ctrl K</kbd>
+                        </button>
+
+                        <!-- ヘッダー通知ベル (未対応現場要請) -->
+                        <div class="nav-dropdown relative shrink-0">
+                            <button type="button"
+                                id="header-notification-bell"
+                                aria-label="現場要請通知"
+                                title="未対応の班長現場要請"
+                                class="dropdown-trigger relative inline-flex items-center justify-center p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition cursor-pointer">
+                                <span class="text-sm leading-none">🔔</span>
+                                @if(($headerPendingRequestsCount ?? 0) > 0)
+                                    <span id="header-notification-badge"
+                                        class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white font-mono text-[10px] font-bold flex items-center justify-center shadow-xs">
+                                        {{ $headerPendingRequestsCount > 99 ? '99+' : $headerPendingRequestsCount }}
+                                    </span>
+                                @endif
+                            </button>
+
+                            <div class="dropdown-menu hidden absolute right-0 mt-1.5 w-80 sm:w-96 max-h-[calc(100vh-4.5rem)] overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-2xl shadow-xl p-2 z-50">
+                                <div class="px-2.5 py-1.5 border-b border-slate-800 flex items-center justify-between">
+                                    <span class="text-xs font-bold text-white flex items-center space-x-1.5">
+                                        <span>🔔</span>
+                                        <span>未対応の現場要請 ({{ $headerPendingRequestsCount ?? 0 }}件)</span>
+                                    </span>
+                                    <span class="text-[10px] text-slate-400 font-mono">全運行日</span>
+                                </div>
+
+                                @if(($headerPendingRequests ?? collect())->isNotEmpty())
+                                    <div class="divide-y divide-slate-800/80 mt-1">
+                                        @foreach($headerPendingRequests as $req)
+                                            <div class="p-2.5 rounded-xl hover:bg-slate-800/70 transition space-y-1.5 text-xs">
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <div class="min-w-0">
+                                                        <div class="font-bold text-slate-100 truncate">
+                                                            [{{ $req->lane?->name ?? '班' }}] {{ $req->type_label }}
+                                                        </div>
+                                                        <div class="text-[11px] text-slate-300 mt-0.5">
+                                                            @if($req->request_type === 'equipment')
+                                                                機材: <strong class="text-white">{{ $req->equipment_name }}</strong> × {{ $req->requested_count }}
+                                                            @else
+                                                                応援要請: <strong class="text-white">+{{ $req->requested_count }}名</strong>
+                                                                @if($req->task)
+                                                                    （{{ $req->task->title }}）
+                                                                @endif
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    <span class="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold {{ $req->status === 'pending' ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30' : 'bg-sky-500/20 text-sky-300 border border-sky-400/30' }}">
+                                                        {{ $req->status_label }}
+                                                    </span>
+                                                </div>
+
+                                                @if($req->reason)
+                                                    <p class="text-[11px] text-slate-400 line-clamp-2">{{ $req->reason }}</p>
+                                                @endif
+
+                                                <div class="flex items-center justify-between gap-2 pt-1">
+                                                    <div class="text-[10px] text-slate-400 truncate">
+                                                        申請: {{ $req->requestedByStaff?->name ?? '班長' }}
+                                                        @if($req->timetable_id)
+                                                            · <a href="{{ route('timetables.show', $req->timetable_id) }}" class="text-indigo-300 hover:underline">運行計画を開く</a>
+                                                        @endif
+                                                    </div>
+
+                                                    @can('update', $req->lane ?? App\Models\Lane::class)
+                                                    <div class="flex items-center space-x-1 shrink-0">
+                                                        @if($req->status === 'pending')
+                                                        <form action="{{ route('lane-requests.update-status', $req) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="status" value="approved">
+                                                            <button type="submit" class="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[10px] font-bold transition cursor-pointer">
+                                                                手配
+                                                            </button>
+                                                        </form>
+                                                        @endif
+                                                        <form action="{{ route('lane-requests.update-status', $req) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="status" value="resolved">
+                                                            <button type="submit" class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold transition cursor-pointer">
+                                                                完了
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                    @endcan
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="py-6 px-3 text-center text-xs text-slate-400">
+                                        現在、未対応の現場要請はありません。
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
                         <div class="text-right hidden sm:block shrink-0">
                             <div class="text-xs font-bold text-white flex items-center justify-end space-x-1.5 whitespace-nowrap">
                                 <span class="text-[11px] text-slate-300 truncate max-w-[100px]">{{ Auth::user()->name }}</span>
@@ -1161,6 +1269,80 @@
             <p>© {{ now()->year }} まつり実行委員会 運行本部</p>
         </div>
     </footer>
+
+    @auth
+    <!-- グローバル横断検索モーダル (Ctrl+K / Cmd+K) -->
+    <div id="quickSearchModal"
+        class="hidden fixed inset-0 z-50 overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-search-title"
+        data-search-url="{{ route('search.quick') }}">
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-close-quick-search></div>
+        <div class="flex min-h-full items-start justify-center p-4 sm:pt-16">
+            <div class="relative bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full overflow-hidden">
+                <div class="p-3.5 border-b border-slate-200 flex items-center space-x-2.5">
+                    <span class="text-base text-slate-400 shrink-0">🔍</span>
+                    <h2 id="quick-search-title" class="sr-only">システム横断クイック検索</h2>
+                    <input type="text"
+                        id="quick-search-input"
+                        autocomplete="off"
+                        placeholder="スタッフ名、出展者、機材、スケジュール、タスクを検索..."
+                        class="flex-1 bg-transparent border-0 text-sm text-slate-900 placeholder-slate-400 focus:outline-none">
+                    <button type="button" data-close-quick-search
+                        class="px-2 py-1 text-[11px] font-mono text-slate-500 hover:text-slate-800 bg-slate-100 rounded-md cursor-pointer shrink-0">
+                        ESC
+                    </button>
+                </div>
+
+                <div id="quick-search-results" class="max-h-[60vh] overflow-y-auto divide-y divide-slate-100 p-2">
+                    <div class="py-8 text-center text-xs text-slate-400">
+                        検索キーワードを入力してください（スタッフ・出展者・機材・予定・タスク）
+                    </div>
+                </div>
+
+                <div class="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+                    <span id="quick-search-status">↑↓ キーで移動 · Enter で開く</span>
+                    <span class="font-mono">Ctrl + K / Esc</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endauth
+
+    <!-- アプリ共通カスタム確認モーダル (window.confirm置換) -->
+    <div id="appConfirmModal"
+        class="hidden fixed inset-0 z-[60] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="app-confirm-title">
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-confirm-cancel></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden">
+                <div class="px-5 py-3.5 border-b border-slate-100 flex items-center space-x-2">
+                    <span id="app-confirm-icon" class="text-lg">⚠️</span>
+                    <h3 id="app-confirm-title" class="text-sm font-bold text-slate-900">操作の確認</h3>
+                </div>
+                <div class="p-5">
+                    <p id="app-confirm-message" class="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line"></p>
+                </div>
+                <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-end space-x-2">
+                    <button type="button"
+                        id="app-confirm-cancel-btn"
+                        data-confirm-cancel
+                        class="px-3.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold transition cursor-pointer">
+                        キャンセル
+                    </button>
+                    <button type="button"
+                        id="app-confirm-ok-btn"
+                        data-confirm-ok
+                        class="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition cursor-pointer shadow-xs">
+                        実行する
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </body>
 

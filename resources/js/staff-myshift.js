@@ -142,13 +142,13 @@ function initMyShiftPage() {
                     await fetchRealtimeTimeline({ skipLeaderPanelIfFocused: true });
                 } else {
                     const errData = await response.json().catch(() => null);
-                    window.alert(errData?.message || 'チェックインの記録に失敗しました。電波の良い場所で再度お試しください。');
+                    showToast(errData?.message || 'チェックインの記録に失敗しました。電波の良い場所で再度お試しください。', true);
                     checkInBtn.disabled = false;
                     checkInBtn.innerHTML = originalHtml;
                 }
             } catch (err) {
                 console.error('Checkin error:', err);
-                window.alert('通信エラーが発生しました。電波の良い場所で再度お試しください。');
+                showToast('通信エラーが発生しました。電波の良い場所で再度お試しください。', true);
                 checkInBtn.disabled = false;
                 checkInBtn.innerHTML = originalHtml;
             }
@@ -404,13 +404,13 @@ function initMyShiftPage() {
                     showToast(`作業進捗を「${data.status_label || '更新済'}」にしました`);
                 } else {
                     const err = await response.json().catch(() => ({}));
-                    window.alert(err.message || 'ステータスの更新に失敗しました。');
+                    showToast(err.message || 'ステータスの更新に失敗しました。', true);
                     statusBtn.disabled = false;
                     statusBtn.innerHTML = originalHtml;
                 }
             } catch (err) {
                 console.error('Status update error:', err);
-                window.alert('通信エラーが発生しました。電波の良い場所でお試しください。');
+                showToast('通信エラーが発生しました。電波の良い場所でお試しください。', true);
                 statusBtn.disabled = false;
                 statusBtn.innerHTML = originalHtml;
             }

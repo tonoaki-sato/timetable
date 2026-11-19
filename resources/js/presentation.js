@@ -1,3 +1,5 @@
+import { showToast } from './utils/ui.js';
+
 // まつり実行委員会 幹事会向けプレゼンテーション制御スクリプト
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -140,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!presentationContainer) return;
         if (!document.fullscreenElement) {
             presentationContainer.requestFullscreen().catch(err => {
-                alert(`全画面表示エラー: ${err.message}`);
+                showToast(`全画面表示エラー: ${err.message}`, 'error');
             });
         } else {
             document.exitFullscreen();

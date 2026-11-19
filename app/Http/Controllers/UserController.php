@@ -6,6 +6,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Services\UserService;
+use App\Support\TableQueryOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -23,11 +24,14 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
+        $perPage = TableQueryOptions::resolvePerPage($request->query('per_page'), 15, [15, 30, 50, 100]);
         $users = $this->userService->paginateFiltered(
             $request->input('search'),
             $request->input('role'),
             $request->filled('status') ? $request->boolean('status') : null,
-            15
+            $perPage,
+            $request->filled('sort') ? (string) $request->query('sort') : null,
+            $request->filled('direction') ? (string) $request->query('direction') : null,
         );
 
         return view('users.index', compact('users'));

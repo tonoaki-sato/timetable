@@ -18,7 +18,9 @@ interface ScheduleRepositoryInterface
         ?string $search = null,
         ?int $staffId = null,
         ?string $tab = null,
-        int $perPage = 15
+        int $perPage = 15,
+        ?string $sort = null,
+        ?string $direction = null,
     ): LengthAwarePaginator;
 
     /**
@@ -81,6 +83,13 @@ interface ScheduleRepositoryInterface
      * @return array{total: int, planned: int, in_progress: int, completed: int}
      */
     public function getStatusSummary(): array;
+
+    /**
+     * グローバル検索用のクイック検索
+     *
+     * @return Collection<int, Schedule>
+     */
+    public function searchQuick(string $keyword, int $limit = 5): Collection;
 
     /**
      * 新規スケジュールの永続化

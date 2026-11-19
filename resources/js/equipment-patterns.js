@@ -1,3 +1,5 @@
+import { showToast as showAppToast } from './utils/ui.js';
+
 /**
  * 搬出入パターン管理モーダル操作スクリプト (CSP完全準拠・Vanilla JS)
  * パターン作成、パターン詳細表示、ステップ追加、ステップ編集モーダルの開閉制御
@@ -157,7 +159,7 @@ function initEquipmentPatternModals() {
         createForm.addEventListener('submit', (e) => {
             if (createStepsContainer && createStepsContainer.querySelectorAll('.pattern-step-row').length === 0) {
                 e.preventDefault();
-                alert('構成ステップを少なくとも1つ登録してください。');
+                showAppToast('構成ステップを少なくとも1つ登録してください。', 'warning');
             }
         });
     }

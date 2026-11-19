@@ -83,8 +83,13 @@ class StaffService
      *     status: ?string
      * }
      */
-    public function getIndexViewData(?string $search, ?string $status): array
-    {
+    public function getIndexViewData(
+        ?string $search,
+        ?string $status,
+        int $perPage = 15,
+        ?string $sort = null,
+        ?string $direction = null,
+    ): array {
         $statusBool = null;
         if ($status === '1') {
             $statusBool = true;
@@ -92,7 +97,13 @@ class StaffService
             $statusBool = false;
         }
 
-        $staffMembers = $this->staffRepository->paginateFiltered($search, $statusBool);
+        $staffMembers = $this->staffRepository->paginateFiltered(
+            search: $search,
+            status: $statusBool,
+            perPage: $perPage,
+            sort: $sort,
+            direction: $direction,
+        );
 
         return [
             'staffMembers' => $staffMembers,

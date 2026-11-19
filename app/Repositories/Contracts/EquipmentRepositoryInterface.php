@@ -45,6 +45,13 @@ interface EquipmentRepositoryInterface
     public function getAllOrdered(): Collection;
 
     /**
+     * グローバル検索用のクイック検索
+     *
+     * @return Collection<int, Equipment>
+     */
+    public function searchQuick(string $keyword, int $limit = 5): Collection;
+
+    /**
      * 新規資機材を作成
      *
      * @param  array<string, mixed>  $attributes

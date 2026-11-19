@@ -1,3 +1,5 @@
+import { showToast } from './utils/ui.js';
+
 /**
  * 作業タスク操作モーダル管理スクリプト (CSP完全準拠・Vanilla JS)
  * 詳細・追加・編集モーダルの開閉、データバインディング、同一班内時間帯重複検知
@@ -573,7 +575,7 @@ function initTimetableTaskModals() {
         const { hasNoLanes } = validateCommonCreateOverlap();
         if (hasNoLanes) {
             e.preventDefault();
-            alert('登録対象の担当班を1つ以上選択してください。');
+            showToast('登録対象の担当班を1つ以上選択してください。', 'warning');
         }
     });
 

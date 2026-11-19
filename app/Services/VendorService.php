@@ -15,7 +15,7 @@ class VendorService
     /**
      * ページネーション一覧を取得
      *
-     * @param  array{search?: string|null}  $filters
+     * @param  array{search?: string|null, sort?: string|null, direction?: string|null}  $filters
      */
     public function paginateVendors(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {

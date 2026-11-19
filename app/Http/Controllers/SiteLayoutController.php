@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateLayoutItemRequest;
 use App\Models\LayoutItem;
 use App\Models\Timetable;
 use App\Services\SiteLayoutService;
+use App\Support\TableQueryOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -41,14 +42,17 @@ class SiteLayoutController extends Controller
     {
         $map = $this->siteLayoutService->getLayoutDetails($timetable);
 
+        $perPage = TableQueryOptions::resolvePerPage($request->query('per_page'), 50, [25, 50, 100]);
         $filters = [
             'item_type' => $request->query('item_type'),
             'area_id' => $request->query('area_id'),
             'category' => $request->query('category'),
             'search' => $request->query('search'),
+            'sort' => $request->filled('sort') ? (string) $request->query('sort') : null,
+            'direction' => $request->filled('direction') ? (string) $request->query('direction') : null,
         ];
 
-        $items = $this->siteLayoutService->paginateItems($map, $filters, 50);
+        $items = $this->siteLayoutService->paginateItems($map, $filters, $perPage);
         $vendors = $this->siteLayoutService->getVendorsForSelect($timetable);
 
         return view('site_layouts.booths', [

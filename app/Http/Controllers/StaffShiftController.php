@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Staff\ExportStaffShiftIcsAction;
 use App\Http\Requests\CheckInStaffShiftRequest;
 use App\Http\Requests\ShowStaffShiftRequest;
 use App\Http\Requests\StoreLaneRequestFromShiftRequest;
@@ -16,6 +17,7 @@ use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\View\View;
 
@@ -49,6 +51,28 @@ class StaffShiftController extends Controller
         $viewData = $this->staffService->getMyShiftViewData($staff, is_string($timetableFilter) ? $timetableFilter : null);
 
         return view('staff.myshift', $viewData->toArray());
+    }
+
+    /**
+     * 現場マイシフトの .ics (iCalendar) エクスポート
+     */
+    public function exportIcs(
+        ShowStaffShiftRequest $request,
+        string $token,
+        ExportStaffShiftIcsAction $exportStaffShiftIcsAction
+    ): Response {
+        $staff = $this->staffService->getStaffByToken($token);
+
+        if (! $staff || ! $staff->is_active) {
+            abort(404, '指定されたスタッフが見つかりません。');
+        }
+
+        $timetableFilter = $request->validated('timetable_id');
+
+        return $exportStaffShiftIcsAction->execute(
+            $staff,
+            is_string($timetableFilter) ? $timetableFilter : null
+        );
     }
 
     /**

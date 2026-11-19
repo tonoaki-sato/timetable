@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initTypeFilter();
     initBoothDetailModal();
     initItemFormModal();
-    initDeleteConfirmations();
 });
 
 /**
@@ -354,19 +353,5 @@ function initItemFormModal() {
         }
         // selectBoothType (booth_type) は常時送信
         if (selectBoothType) selectBoothType.name = 'booth_type';
-    });
-}
-
-/**
- * 削除確認ダイアログ
- */
-function initDeleteConfirmations() {
-    document.querySelectorAll('form[data-confirm]').forEach(form => {
-        form.addEventListener('submit', (e) => {
-            const msg = form.dataset.confirm || '本当に削除しますか？';
-            if (!confirm(msg)) {
-                e.preventDefault();
-            }
-        });
     });
 }

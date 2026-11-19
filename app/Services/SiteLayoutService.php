@@ -114,7 +114,7 @@ class SiteLayoutService
     /**
      * 配置アイテム一覧をページネーション取得
      *
-     * @param  array{item_type?: string|null, area_id?: int|string|null, category?: string|null, search?: string|null}  $filters
+     * @param  array{item_type?: string|null, area_id?: int|string|null, category?: string|null, search?: string|null, sort?: string|null, direction?: string|null}  $filters
      */
     public function paginateItems(LayoutMap $map, array $filters = [], int $perPage = 50): LengthAwarePaginator
     {

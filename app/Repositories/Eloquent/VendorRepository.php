@@ -4,6 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\Vendor;
 use App\Repositories\Contracts\VendorRepositoryInterface;
+use App\Support\TableQueryOptions;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -41,9 +42,30 @@ class VendorRepository implements VendorRepositoryInterface
             });
         }
 
-        return $query->orderBy('id', 'asc')
+        $resolved = TableQueryOptions::resolveSort(
+            isset($filters['sort']) ? (string) $filters['sort'] : null,
+            isset($filters['direction']) ? (string) $filters['direction'] : null,
+            ['id', 'name', 'contact_person', 'contact'],
+            'id',
+            'asc',
+        );
+
+        return $query->orderBy($resolved['sort'], $resolved['direction'])
+            ->orderBy('id', 'asc')
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    /**
+     * グローバル検索用のクイック検索
+     */
+    public function searchQuick(string $keyword, int $limit = 5): Collection
+    {
+        return Vendor::query()
+            ->search($keyword)
+            ->orderBy('name', 'asc')
+            ->limit($limit)
+            ->get();
     }
 
     /**

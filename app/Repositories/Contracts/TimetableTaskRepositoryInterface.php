@@ -134,6 +134,13 @@ interface TimetableTaskRepositoryInterface
     public function removeStaff(TimetableTask $task, int $staffId): bool;
 
     /**
+     * グローバル検索用のクイック検索
+     *
+     * @return Collection<int, TimetableTask>
+     */
+    public function searchQuick(string $keyword, int $limit = 5): Collection;
+
+    /**
      * アサイン出欠ステータス更新
      */
     public function updateAttendanceStatus(int $assignmentId, string $status): bool;

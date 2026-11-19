@@ -4,6 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Support\TableQueryOptions;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Override;
 
@@ -14,7 +15,9 @@ class UserRepository implements UserRepositoryInterface
         ?string $search = null,
         ?string $role = null,
         ?bool $status = null,
-        int $perPage = 15
+        int $perPage = 15,
+        ?string $sort = null,
+        ?string $direction = null,
     ): LengthAwarePaginator {
         $query = User::query();
 
@@ -33,7 +36,18 @@ class UserRepository implements UserRepositoryInterface
             $query->where('is_active', $status);
         }
 
-        return $query->orderBy('id', 'desc')->paginate($perPage)->withQueryString();
+        $resolved = TableQueryOptions::resolveSort(
+            $sort,
+            $direction,
+            ['id', 'name', 'email', 'role', 'is_active', 'last_login_at'],
+            'id',
+            'desc',
+        );
+
+        return $query->orderBy($resolved['sort'], $resolved['direction'])
+            ->orderBy('id', 'desc')
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     #[Override]

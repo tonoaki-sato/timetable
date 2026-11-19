@@ -53,18 +53,31 @@ class ScheduleService
         ?string $search = null,
         ?int $staffId = null,
         ?string $tab = null,
-        int $perPage = 15
+        int $perPage = 15,
+        ?string $sort = null,
+        ?string $direction = null,
     ): array {
         $selectedCategories = $this->parseCategories($category);
 
-        $schedules = $this->scheduleRepository->paginateFiltered(
-            category: null,
-            status: $status,
-            search: $search,
-            staffId: $staffId,
-            tab: $tab,
-            perPage: $perPage
-        );
+        $schedules = ($sort === null && $direction === null)
+            ? $this->scheduleRepository->paginateFiltered(
+                category: null,
+                status: $status,
+                search: $search,
+                staffId: $staffId,
+                tab: $tab,
+                perPage: $perPage,
+            )
+            : $this->scheduleRepository->paginateFiltered(
+                category: null,
+                status: $status,
+                search: $search,
+                staffId: $staffId,
+                tab: $tab,
+                perPage: $perPage,
+                sort: $sort,
+                direction: $direction,
+            );
 
         $statusSummary = $this->scheduleRepository->getStatusSummary();
         $staffs = $this->staffRepository->getActiveStaffList();
@@ -208,5 +221,28 @@ class ScheduleService
             'schedules' => $schedules,
             'generatedAt' => now()->format('Y年n月j日 H:i'),
         ];
+    }
+
+    /**
+     * .ics（iCalendar）出力用の条件付きスケジュール一覧を取得
+     *
+     * @return Collection<int, Schedule>
+     */
+    public function getFilteredForIcs(
+        mixed $category = null,
+        ?string $status = null,
+        ?string $search = null,
+        ?int $staffId = null,
+        ?string $tab = 'upcoming',
+    ): Collection {
+        $selectedCategories = $this->parseCategories($category);
+
+        return $this->scheduleRepository->getFilteredForPdf(
+            categories: $selectedCategories,
+            status: $status,
+            search: $search,
+            staffId: $staffId,
+            tab: $tab
+        );
     }
 }

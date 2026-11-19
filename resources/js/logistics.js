@@ -1,3 +1,5 @@
+import { showToast } from './utils/ui.js';
+
 /**
  * 搬出入計画一覧（/timetables/{timetable}/logistics）モーダル操作スクリプト (CSP完全準拠・Vanilla JS)
  */
@@ -42,7 +44,7 @@ function initEquipmentFilters() {
             const visibleChips = document.querySelectorAll('.equipment-chip:not(.opacity-40)');
             if (chips.length > 0 && visibleChips.length === 0) {
                 e.preventDefault();
-                alert('印刷対象の資材を1つ以上選択してください。');
+                showToast('印刷対象の資材を1つ以上選択してください。', 'warning');
             }
         });
     }

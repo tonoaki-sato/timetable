@@ -6,6 +6,7 @@ use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
 use App\Repositories\Contracts\LayoutMapRepositoryInterface;
+use App\Support\TableQueryOptions;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -78,11 +79,24 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
             });
         }
 
-        return $query->orderBy('layout_area_id', 'asc')
-            ->orderBy('display_order', 'asc')
-            ->orderBy('code', 'asc')
-            ->paginate($perPage)
-            ->withQueryString();
+        $resolved = TableQueryOptions::resolveSort(
+            isset($filters['sort']) ? (string) $filters['sort'] : null,
+            isset($filters['direction']) ? (string) $filters['direction'] : null,
+            ['display_order', 'code', 'layout_area_id', 'name', 'category', 'booth_type'],
+            'display_order',
+            'asc',
+        );
+
+        if ($resolved['sort'] === 'display_order' && $resolved['direction'] === 'asc') {
+            $query->orderBy('layout_area_id', 'asc')
+                ->orderBy('display_order', 'asc')
+                ->orderBy('code', 'asc');
+        } else {
+            $query->orderBy($resolved['sort'], $resolved['direction'])
+                ->orderBy('code', 'asc');
+        }
+
+        return $query->paginate($perPage)->withQueryString();
     }
 
     /**

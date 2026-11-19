@@ -1,3 +1,5 @@
+import { confirmDialog } from './utils/ui.js';
+
 /**
  * 人員アサイン（タスク別配置）ワークスペース対話スクリプト
  * CSP完全準拠 (Vanilla JS ES Modules)
@@ -660,7 +662,11 @@ function initAssignmentWorkspace() {
 
     // スタッフ解除処理
     const handleRemoveStaff = async (staffId, staffName) => {
-        if (!confirm(`スタッフ「${staffName}」の配置を解除しますか？`)) return;
+        const confirmed = await confirmDialog(
+            `スタッフ「${staffName}」の配置を解除しますか？`,
+            { variant: 'danger', title: '配置解除の確認', confirmText: '解除する' }
+        );
+        if (!confirmed) return;
 
         try {
             const res = await fetch(`/timetable-tasks/${currentTaskId}/staff/${staffId}`, {

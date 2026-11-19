@@ -1,3 +1,5 @@
+import { showToast as showAppToast } from './utils/ui.js';
+
 /**
  * 総合カレンダー 対話スクリプト
  */
@@ -241,7 +243,7 @@ function initCalendar() {
         const select = document.getElementById('quickAssignStaffSelect');
         const staffId = select?.value;
         if (!staffId) {
-            alert('設定するスタッフを選択してください。');
+            showAppToast('設定するスタッフを選択してください。', 'warning');
             return;
         }
 

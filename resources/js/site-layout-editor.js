@@ -1,3 +1,5 @@
+import { confirmDialog } from './utils/ui.js';
+
 /**
  * 白地図配置エディタ (Site Layout Editor) - 3ペイン CADベクタードローツール
  * A3 1/400 (842pt × 1191pt) 精密ベクター編集・スマートスナップ・20m衛生チェック・PDF出力連動
@@ -1567,7 +1569,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnResetPreset) {
         btnResetPreset.addEventListener('click', async () => {
-            if (!confirm('現在の配置をリセットし、標準見本配置（260927版・全111件）に復元しますか？')) return;
+            if (!(await confirmDialog('現在の配置をリセットし、標準見本配置（260927版・全111件）に復元しますか？', { variant: 'danger', title: '配置リセットの確認', confirmText: '復元する' }))) return;
             setSaveStatus('saving');
             try {
                 const res = await fetch(resetUrl, { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken } });
@@ -1598,7 +1600,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('配置オブジェクトはありません');
                 return;
             }
-            if (!confirm(`現在の全配置オブジェクト（${state.placements.length}件）をすべて削除し、白地図のみの初期状態に戻しますか？`)) return;
+            if (!(await confirmDialog(`現在の全配置オブジェクト（${state.placements.length}件）をすべて削除し、白地図のみの初期状態に戻しますか？`, { variant: 'danger', title: '全クリアの確認', confirmText: 'すべて削除する' }))) return;
             setSaveStatus('saving');
             try {
                 const res = await fetch(clearUrl, { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken } });

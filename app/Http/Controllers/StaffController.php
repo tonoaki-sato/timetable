@@ -7,6 +7,7 @@ use App\Http\Requests\StoreStaffRequest;
 use App\Http\Requests\UpdateStaffRequest;
 use App\Models\Staff;
 use App\Services\StaffService;
+use App\Support\TableQueryOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -26,9 +27,13 @@ class StaffController extends Controller
     {
         $this->authorize('viewAny', Staff::class);
 
+        $perPage = TableQueryOptions::resolvePerPage($request->query('per_page'), 15, [15, 30, 50, 100]);
         $viewData = $this->staffService->getIndexViewData(
             search: $request->input('search'),
-            status: $request->input('status')
+            status: $request->input('status'),
+            perPage: $perPage,
+            sort: $request->filled('sort') ? (string) $request->query('sort') : null,
+            direction: $request->filled('direction') ? (string) $request->query('direction') : null,
         );
 
         return view('staff.index', $viewData);

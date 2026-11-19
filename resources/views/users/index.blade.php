@@ -26,7 +26,13 @@
 
     <!-- 検索・絞り込みフォーム -->
     <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs">
-        <form method="GET" action="{{ route('users.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <form method="GET" action="{{ route('users.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+            @if(request('sort'))
+                <input type="hidden" name="sort" value="{{ request('sort') }}">
+            @endif
+            @if(request('direction'))
+                <input type="hidden" name="direction" value="{{ request('direction') }}">
+            @endif
             <!-- キーワード検索 -->
             <div>
                 <label for="search" class="block text-[11px] font-bold text-slate-600 mb-1">氏名 / メールアドレス</label>
@@ -55,14 +61,15 @@
                 </select>
             </div>
 
-            <!-- 検索・クリアボタン -->
-            <div class="flex items-end space-x-2">
+            <!-- 検索・クリア・表示件数ボタン -->
+            <div class="flex items-center space-x-2">
                 <button type="submit" class="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer">
                     🔍 絞り込み
                 </button>
                 <a href="{{ route('users.index') }}" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition text-center whitespace-nowrap">
                     リセット
                 </a>
+                <x-ui.per-page-select :default="15" />
             </div>
         </form>
     </div>
@@ -73,12 +80,12 @@
             <table class="w-full border-collapse text-left text-xs">
                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold select-none">
                     <tr>
-                        <th class="px-3.5 py-2.5 whitespace-nowrap">ID</th>
-                        <th class="px-3.5 py-2.5">氏名</th>
-                        <th class="px-3.5 py-2.5">メールアドレス</th>
-                        <th class="px-3.5 py-2.5 whitespace-nowrap">ロール</th>
-                        <th class="px-3.5 py-2.5 whitespace-nowrap">状態</th>
-                        <th class="px-3.5 py-2.5 whitespace-nowrap">最終ログイン</th>
+                        <x-ui.sortable-th column="id" label="ID" defaultSort="id" defaultDirection="desc" class="px-3.5 py-2.5" />
+                        <x-ui.sortable-th column="name" label="氏名" defaultSort="id" defaultDirection="desc" class="px-3.5 py-2.5" />
+                        <x-ui.sortable-th column="email" label="メールアドレス" defaultSort="id" defaultDirection="desc" class="px-3.5 py-2.5" />
+                        <x-ui.sortable-th column="role" label="ロール" defaultSort="id" defaultDirection="desc" class="px-3.5 py-2.5" />
+                        <x-ui.sortable-th column="is_active" label="状態" defaultSort="id" defaultDirection="desc" class="px-3.5 py-2.5" />
+                        <x-ui.sortable-th column="last_login_at" label="最終ログイン" defaultSort="id" defaultDirection="desc" class="px-3.5 py-2.5" />
                         <th class="px-3.5 py-2.5 text-right whitespace-nowrap">操作</th>
                     </tr>
                 </thead>

@@ -19,6 +19,10 @@
                 <span>📄</span>
                 <span>年間スケジュール一覧PDF</span>
             </x-ui.button>
+            <x-ui.button variant="header-action" :href="route('schedules.ics.all', request()->query())" title="表示中のスケジュールをiCalendar (.ics) 形式でダウンロード">
+                <span>📅</span>
+                <span>iCal (.ics)</span>
+            </x-ui.button>
             @can('create', App\Models\Schedule::class)
             <x-ui.button variant="header-action" :href="route('schedules.create')">
                 <span>➕</span>
@@ -88,6 +92,12 @@
             @if($currentTab && $currentTab !== 'upcoming')
             <input type="hidden" name="tab" value="{{ $currentTab }}">
             @endif
+            @if(request('sort'))
+            <input type="hidden" name="sort" value="{{ request('sort') }}">
+            @endif
+            @if(request('direction'))
+            <input type="hidden" name="direction" value="{{ request('direction') }}">
+            @endif
             <input type="hidden" name="category" id="search-form-category" value="{{ is_array($selectedCategories) ? implode(',', $selectedCategories) : '' }}">
 
             <!-- キーワード -->
@@ -124,7 +134,7 @@
                 </select>
             </div>
 
-            <!-- 検索 & リセットボタン -->
+            <!-- 検索 & リセット & 表示件数ボタン -->
             <div class="flex items-end space-x-2">
                 <button type="submit" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition cursor-pointer">
                     🔍 絞り込み
@@ -133,6 +143,7 @@
                     class="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition text-center">
                     リセット
                 </a>
+                <x-ui.per-page-select :options="[25, 50, 100]" :default="100" />
             </div>
         </form>
     </div>
@@ -143,11 +154,11 @@
             <table class="w-full border-collapse text-left text-xs">
                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold select-none">
                     <tr>
-                        <th class="px-4 py-2.5 whitespace-nowrap">開催日・期間</th>
-                        <th class="px-4 py-2.5">タイトル・議題</th>
-                        <th class="px-4 py-2.5 whitespace-nowrap">場所</th>
+                        <x-ui.sortable-th column="start_date" label="開催日・期間" defaultSort="start_date" :defaultDirection="$currentTab === 'past' ? 'desc' : 'asc'" class="px-4 py-2.5" />
+                        <x-ui.sortable-th column="title" label="タイトル・議題" defaultSort="start_date" class="px-4 py-2.5" />
+                        <x-ui.sortable-th column="location" label="場所" defaultSort="start_date" class="px-4 py-2.5" />
                         <th class="px-4 py-2.5 whitespace-nowrap">担当・主催</th>
-                        <th class="px-4 py-2.5 whitespace-nowrap text-center">状態</th>
+                        <x-ui.sortable-th column="status" label="状態" defaultSort="start_date" align="center" class="px-4 py-2.5 text-center" />
                         <th class="px-4 py-2.5 text-right whitespace-nowrap">操作</th>
                     </tr>
                 </thead>

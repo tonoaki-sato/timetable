@@ -20,9 +20,11 @@ class UserService
         ?string $search = null,
         ?string $role = null,
         ?bool $status = null,
-        int $perPage = 15
+        int $perPage = 15,
+        ?string $sort = null,
+        ?string $direction = null,
     ): LengthAwarePaginator {
-        return $this->userRepository->paginateFiltered($search, $role, $status, $perPage);
+        return $this->userRepository->paginateFiltered($search, $role, $status, $perPage, $sort, $direction);
     }
 
     /**

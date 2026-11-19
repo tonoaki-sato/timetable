@@ -13,6 +13,14 @@
             </x-slot:breadcrumbs>
 
             <x-slot:actions>
+                <x-ui.button variant="header-action" :href="route('vendors.export-csv')" title="出展・出店者一覧をCSVダウンロード">
+                    <span>📥</span>
+                    <span>CSV出力</span>
+                </x-ui.button>
+                <x-ui.button variant="header-action" id="btn-open-vendor-csv-import" data-toggle-target="#vendorCsvImportModal" title="CSVファイルから一括取り込み">
+                    <span>📤</span>
+                    <span>CSV取込</span>
+                </x-ui.button>
                 <x-ui.button variant="header-action" id="btn-open-create-vendor" data-store-url="{{ route('vendors.store') }}">
                     <span>➕</span>
                     <span>新規登録</span>
@@ -20,9 +28,17 @@
             </x-slot:actions>
         </x-page-header>
 
+        <x-ui.validation-errors title="CSV取り込みまたは入力内容にエラーがあります。" />
+
         <!-- 検索・フィルターバー -->
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs">
             <form method="GET" action="{{ route('vendors.index') }}" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                @if(request('sort'))
+                    <input type="hidden" name="sort" value="{{ request('sort') }}">
+                @endif
+                @if(request('direction'))
+                    <input type="hidden" name="direction" value="{{ request('direction') }}">
+                @endif
                 <div class="flex items-center space-x-2 flex-1 max-w-lg">
                     <div class="relative w-full">
                         <input type="text"
@@ -42,9 +58,12 @@
                     @endif
                 </div>
 
-                <div class="text-xs text-slate-500 font-mono text-right shrink-0">
-                    全 <span class="font-bold text-slate-700">{{ $vendors->total() }}</span> 件中
-                    {{ $vendors->firstItem() ?? 0 }}〜{{ $vendors->lastItem() ?? 0 }} 件を表示
+                <div class="flex items-center justify-end gap-3 shrink-0">
+                    <x-ui.per-page-select :default="15" />
+                    <div class="text-xs text-slate-500 font-mono text-right shrink-0">
+                        全 <span class="font-bold text-slate-700">{{ $vendors->total() }}</span> 件中
+                        {{ $vendors->firstItem() ?? 0 }}〜{{ $vendors->lastItem() ?? 0 }} 件を表示
+                    </div>
                 </div>
             </form>
         </div>
@@ -55,9 +74,9 @@
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                            <th class="py-2.5 px-3">出展・出店者名</th>
-                            <th class="py-2.5 px-3">窓口担当者</th>
-                            <th class="py-2.5 px-3">連絡先</th>
+                            <x-ui.sortable-th column="name" label="出展・出店者名" defaultSort="id" class="py-2.5 px-3" />
+                            <x-ui.sortable-th column="contact_person" label="窓口担当者" defaultSort="id" class="py-2.5 px-3" />
+                            <x-ui.sortable-th column="contact" label="連絡先" defaultSort="id" class="py-2.5 px-3" />
                             <th class="py-2.5 px-3">特記事項・備考</th>
                             <th class="py-2.5 px-3 text-right">操作</th>
                         </tr>
@@ -267,6 +286,56 @@
                         </button>
                         <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition cursor-pointer shadow-2xs">
                             💾 保存する
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSVインポートモーダル -->
+    <div id="vendorCsvImportModal"
+        class="hidden fixed inset-0 z-50 overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="vendor-csv-modal-title">
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-close-target="#vendorCsvImportModal"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-white rounded-2xl max-w-lg w-full shadow-xl border border-slate-200 overflow-hidden">
+                <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <h3 id="vendor-csv-modal-title" class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+                        <span>📤</span>
+                        <span>出展・出店者 CSV一括取込</span>
+                    </h3>
+                    <button type="button" data-close-target="#vendorCsvImportModal" class="text-slate-400 hover:text-slate-600 font-bold text-sm cursor-pointer">✕</button>
+                </div>
+
+                <form method="POST" action="{{ route('vendors.import-csv') }}" enctype="multipart/form-data" class="p-4 space-y-3 text-xs">
+                    @csrf
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600 space-y-1">
+                        <p class="font-bold text-slate-700">対応列フォーマット (UTF-8 / Shift-JIS):</p>
+                        <p class="font-mono text-[10px]">ID, 出展・出店者名(必須), 窓口担当者, 連絡先, 特記事項・備考</p>
+                        <p>※既存のIDまたは同名の出展者がある場合は上書き更新、それ以外は新規登録されます。</p>
+                    </div>
+
+                    <div>
+                        <label for="vendor_csv_file" class="block font-bold text-slate-700 mb-1">
+                            CSVファイル選択 <span class="text-red-500">*</span>
+                        </label>
+                        <input type="file"
+                            id="vendor_csv_file"
+                            name="csv_file"
+                            accept=".csv,text/csv"
+                            required
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 file:mr-3 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-end space-x-2">
+                        <button type="button" data-close-target="#vendorCsvImportModal" class="px-3.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold transition cursor-pointer">
+                            キャンセル
+                        </button>
+                        <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition cursor-pointer shadow-xs">
+                            📤 取り込み実行
                         </button>
                     </div>
                 </form>

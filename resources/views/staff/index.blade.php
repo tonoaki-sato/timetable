@@ -50,7 +50,13 @@
 
     <!-- 検索・絞り込みフォーム -->
     <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs">
-        <form method="GET" action="{{ route('staff.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <form method="GET" action="{{ route('staff.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+            @if(request('sort'))
+                <input type="hidden" name="sort" value="{{ request('sort') }}">
+            @endif
+            @if(request('direction'))
+                <input type="hidden" name="direction" value="{{ request('direction') }}">
+            @endif
             <!-- フリーワード -->
             <div>
                 <label for="search" class="block text-[11px] font-bold text-slate-600 mb-1">フリーワード</label>
@@ -69,8 +75,8 @@
                 </select>
             </div>
 
-            <!-- ボタン -->
-            <div class="flex items-end space-x-2">
+            <!-- ボタン & 表示件数 -->
+            <div class="flex items-center space-x-2">
                 <button type="submit" class="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer">
                     🔍 絞り込み
                 </button>
@@ -78,6 +84,7 @@
                     class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition text-center whitespace-nowrap">
                     リセット
                 </a>
+                <x-ui.per-page-select :default="15" />
             </div>
         </form>
     </div>
@@ -88,11 +95,11 @@
             <table class="w-full border-collapse text-left text-xs">
                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold select-none">
                     <tr>
-                        <th class="px-3.5 py-2.5 whitespace-nowrap">ID</th>
-                        <th class="px-3.5 py-2.5">氏名</th>
-                        <th class="px-3.5 py-2.5 whitespace-nowrap">フリガナ</th>
-                        <th class="px-3.5 py-2.5">所属団体・地域会等</th>
-                        <th class="px-3.5 py-2.5 whitespace-nowrap">稼働状態</th>
+                        <x-ui.sortable-th column="id" label="ID" defaultSort="name" class="px-3.5 py-2.5" />
+                        <x-ui.sortable-th column="name" label="氏名" defaultSort="name" class="px-3.5 py-2.5" />
+                        <x-ui.sortable-th column="kana" label="フリガナ" defaultSort="name" class="px-3.5 py-2.5" />
+                        <x-ui.sortable-th column="affiliation" label="所属団体・地域会等" defaultSort="name" class="px-3.5 py-2.5" />
+                        <x-ui.sortable-th column="is_active" label="稼働状態" defaultSort="name" class="px-3.5 py-2.5" />
                         <th class="px-3.5 py-2.5 text-right whitespace-nowrap">操作</th>
                     </tr>
                 </thead>

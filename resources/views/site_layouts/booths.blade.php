@@ -70,6 +70,12 @@
 
         <form method="GET" action="{{ route('timetables.layouts.booths', $timetable) }}" id="filterForm">
             <input type="hidden" name="item_type" id="hiddenItemType" value="{{ $filters['item_type'] ?? '' }}">
+            @if(request('sort'))
+                <input type="hidden" name="sort" value="{{ request('sort') }}">
+            @endif
+            @if(request('direction'))
+                <input type="hidden" name="direction" value="{{ request('direction') }}">
+            @endif
 
             <div class="flex flex-wrap items-center gap-2">
                 <!-- エリア絞り込み -->
@@ -122,6 +128,7 @@
                             クリア
                         </a>
                     @endif
+                    <x-ui.per-page-select :options="[25, 50, 100]" :default="50" />
                 </div>
             </div>
         </form>
@@ -143,11 +150,11 @@
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold">
-                        <th class="py-2.5 px-3 whitespace-nowrap">コード</th>
-                        <th class="py-2.5 px-3 whitespace-nowrap">エリア</th>
-                        <th class="py-2.5 px-3">配置名称</th>
-                        <th class="py-2.5 px-3 whitespace-nowrap">区分 / 種別</th>
-                        <th class="py-2.5 px-3 whitespace-nowrap">形態</th>
+                        <x-ui.sortable-th column="code" label="コード" defaultSort="display_order" class="py-2.5 px-3" />
+                        <x-ui.sortable-th column="layout_area_id" label="エリア" defaultSort="display_order" class="py-2.5 px-3" />
+                        <x-ui.sortable-th column="name" label="配置名称" defaultSort="display_order" class="py-2.5 px-3" />
+                        <x-ui.sortable-th column="category" label="区分 / 種別" defaultSort="display_order" class="py-2.5 px-3" />
+                        <x-ui.sortable-th column="booth_type" label="形態" defaultSort="display_order" class="py-2.5 px-3" />
                         <th class="py-2.5 px-3">内容 / 場所目安</th>
                         <th class="py-2.5 px-3 text-right whitespace-nowrap">操作</th>
                     </tr>

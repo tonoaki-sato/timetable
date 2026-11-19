@@ -45,6 +45,7 @@ use App\Repositories\Eloquent\TimetableTaskRepository;
 use App\Repositories\Eloquent\UserRepository;
 use App\Repositories\Eloquent\VendorRepository;
 use App\Services\FeatureSettingService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -167,13 +168,26 @@ class AppServiceProvider extends ServiceProvider
 
             /** @var FeatureSettingService $featureService */
             $featureService = app(FeatureSettingService::class);
-            $selfRegistrationSetting = $featureService->getFeature(FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION);
             $selfRegistrationStatus = $featureService->getFeatureStatus(FeatureSetting::FEATURE_STAFF_SELF_REGISTRATION);
+            $selfRegistrationSetting = $selfRegistrationStatus['feature'];
+
+            $headerPendingRequestsCount = 0;
+            $headerPendingRequests = collect();
+            if (Auth::check()) {
+                /** @var LaneRequestRepositoryInterface $laneRequestRepository */
+                $laneRequestRepository = app(LaneRequestRepositoryInterface::class);
+                $headerPendingRequestsCount = $laneRequestRepository->countPendingGlobal();
+                if ($headerPendingRequestsCount > 0) {
+                    $headerPendingRequests = $laneRequestRepository->getRecentPendingGlobal(8);
+                }
+            }
 
             $view->with([
                 'navTimetables' => $navTimetables,
                 'selfRegistrationSetting' => $selfRegistrationSetting,
                 'selfRegistrationStatus' => $selfRegistrationStatus,
+                'headerPendingRequestsCount' => $headerPendingRequestsCount,
+                'headerPendingRequests' => $headerPendingRequests,
                 'nav' => new NavigationPresenter($navTimetables),
             ]);
         });

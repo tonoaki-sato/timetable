@@ -37,6 +37,11 @@
         </x-slot:badges>
 
         <x-slot:actions>
+            <x-ui.button variant="header-action" :href="route('schedules.ics', $schedule)" title="カレンダーアプリへ追加 (.ics)">
+                <span>📅</span>
+                <span>カレンダー追加 (.ics)</span>
+            </x-ui.button>
+
             @can('update', $schedule)
             <x-ui.button variant="header-action" :href="route('schedules.edit', $schedule)">
                 <span>✏️</span>

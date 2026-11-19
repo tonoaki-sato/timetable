@@ -1,3 +1,5 @@
+import { showToast } from './utils/ui.js';
+
 /**
  * スケジュール管理（文面コピー & 区分トグルフィルター）スクリプト (CSP完全準拠・Vanilla JS)
  */
@@ -171,7 +173,7 @@ function initScheduleCopyButtons() {
                 button.classList.remove('bg-emerald-200');
             }, 2000);
         }).catch(() => {
-            alert('クリップボードへのコピーに失敗しました。手動でコピーしてください。');
+            showToast('クリップボードへのコピーに失敗しました。手動でコピーしてください。', 'error');
         });
     });
 
@@ -197,7 +199,7 @@ function initScheduleCopyButtons() {
                 button.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
             }, 2000);
         }).catch(() => {
-            alert('クリップボードへのコピーに失敗しました。');
+            showToast('クリップボードへのコピーに失敗しました。', 'error');
         });
     });
 }

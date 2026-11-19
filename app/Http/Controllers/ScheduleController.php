@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Schedule\DownloadSchedulesPdfAction;
+use App\Actions\Schedule\ExportScheduleIcsAction;
 use App\Http\Requests\StoreScheduleRequest;
 use App\Http\Requests\UpdateScheduleRequest;
 use App\Models\Schedule;
 use App\Services\ScheduleService;
+use App\Support\TableQueryOptions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,6 +34,9 @@ class ScheduleController extends Controller
         $search = $request->input('search');
         $staffId = $request->filled('staff_id') ? (int) $request->input('staff_id') : null;
         $tab = $request->input('tab', 'upcoming');
+        $perPage = TableQueryOptions::resolvePerPage($request->query('per_page'), 100, [25, 50, 100]);
+        $sort = $request->filled('sort') ? (string) $request->query('sort') : null;
+        $direction = $request->filled('direction') ? (string) $request->query('direction') : null;
 
         $viewData = $this->scheduleService->getIndexViewData(
             category: $category,
@@ -39,7 +44,9 @@ class ScheduleController extends Controller
             search: $search,
             staffId: $staffId,
             tab: $tab,
-            perPage: 100,
+            perPage: $perPage,
+            sort: $sort,
+            direction: $direction,
         );
 
         return view('schedules.index', $viewData);
@@ -65,6 +72,34 @@ class ScheduleController extends Controller
             staffId: $staffId,
             tab: $tab
         );
+    }
+
+    /**
+     * 単一スケジュールの .ics (iCalendar) エクスポート
+     */
+    public function exportIcs(Schedule $schedule, ExportScheduleIcsAction $exportIcsAction): Response
+    {
+        $this->authorize('view', $schedule);
+
+        return $exportIcsAction->executeSingle($schedule);
+    }
+
+    /**
+     * 絞り込み条件に基づくスケジュール一覧の .ics (iCalendar) エクスポート
+     */
+    public function exportAllIcs(Request $request, ExportScheduleIcsAction $exportIcsAction): Response
+    {
+        $this->authorize('viewAny', Schedule::class);
+
+        $schedules = $this->scheduleService->getFilteredForIcs(
+            category: $request->input('category'),
+            status: $request->input('status'),
+            search: $request->input('search'),
+            staffId: $request->filled('staff_id') ? (int) $request->input('staff_id') : null,
+            tab: $request->input('tab', 'upcoming')
+        );
+
+        return $exportIcsAction->executeCollection($schedules);
     }
 
     /**

@@ -34,4 +34,16 @@ interface LaneRequestRepositoryInterface
      * 指定タイムテーブルに紐づく要請を一括削除
      */
     public function deleteByTimetableId(int $timetableId): int;
+
+    /**
+     * 全運行日における未完了の現場要請総数を取得
+     */
+    public function countPendingGlobal(): int;
+
+    /**
+     * 全運行日における直近の未完了現場要請一覧を取得
+     *
+     * @return Collection<int, LaneRequest>
+     */
+    public function getRecentPendingGlobal(int $limit = 8): Collection;
 }

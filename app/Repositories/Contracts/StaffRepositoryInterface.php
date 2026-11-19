@@ -28,9 +28,15 @@ interface StaffRepositoryInterface
     public function findByIds(array $ids): Collection;
 
     /**
-     * スタッフ一覧の取得（検索・絞り込み・ページネーション）
+     * スタッフ一覧の取得（検索・絞り込み・ソート・ページネーション）
      */
-    public function paginateFiltered(?string $search = null, ?bool $status = null, int $perPage = 15): LengthAwarePaginator;
+    public function paginateFiltered(
+        ?string $search = null,
+        ?bool $status = null,
+        int $perPage = 15,
+        ?string $sort = null,
+        ?string $direction = null,
+    ): LengthAwarePaginator;
 
     /**
      * スタッフ一覧の取得（検索・絞り込み・全件取得・フリガナ順）
@@ -89,6 +95,13 @@ interface StaffRepositoryInterface
      * スタッフ削除
      */
     public function delete(Staff $staff): bool;
+
+    /**
+     * グローバル検索用のクイック検索
+     *
+     * @return Collection<int, Staff>
+     */
+    public function searchQuick(string $keyword, int $limit = 5): Collection;
 
     /**
      * アクセストークンによるスタッフ取得

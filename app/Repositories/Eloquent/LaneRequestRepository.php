@@ -48,4 +48,20 @@ class LaneRequestRepository implements LaneRequestRepositoryInterface
     {
         return LaneRequest::where('timetable_id', $timetableId)->delete();
     }
+
+    #[Override]
+    public function countPendingGlobal(): int
+    {
+        return LaneRequest::whereIn('status', ['pending', 'approved'])->count();
+    }
+
+    #[Override]
+    public function getRecentPendingGlobal(int $limit = 8): Collection
+    {
+        return LaneRequest::with(['timetable', 'lane', 'task', 'requestedByStaff'])
+            ->whereIn('status', ['pending', 'approved'])
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+    }
 }

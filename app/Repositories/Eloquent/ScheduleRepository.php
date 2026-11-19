@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Models\Schedule;
 use App\Models\Timetable;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Support\TableQueryOptions;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -19,7 +20,9 @@ class ScheduleRepository implements ScheduleRepositoryInterface
         ?string $search = null,
         ?int $staffId = null,
         ?string $tab = null,
-        int $perPage = 15
+        int $perPage = 15,
+        ?string $sort = null,
+        ?string $direction = null,
     ): LengthAwarePaginator {
         $query = Schedule::with(['assignee', 'creator', 'timetable']);
 
@@ -47,6 +50,21 @@ class ScheduleRepository implements ScheduleRepositoryInterface
 
         if ($search) {
             $query->search($search);
+        }
+
+        if ($sort !== null && $sort !== '') {
+            $resolved = TableQueryOptions::resolveSort(
+                $sort,
+                $direction,
+                ['start_date', 'title', 'location', 'status'],
+                'start_date',
+                $tab === 'past' ? 'desc' : 'asc',
+            );
+            $query->reorder($resolved['sort'], $resolved['direction']);
+            if ($resolved['sort'] === 'start_date') {
+                $query->orderBy('start_time', $resolved['direction']);
+            }
+            $query->orderBy('id', 'asc');
         }
 
         return $query->paginate($perPage)->withQueryString();
@@ -205,6 +223,16 @@ class ScheduleRepository implements ScheduleRepositoryInterface
             'in_progress' => Schedule::where('status', 'in_progress')->count(),
             'completed' => Schedule::where('status', 'completed')->count(),
         ];
+    }
+
+    #[Override]
+    public function searchQuick(string $keyword, int $limit = 5): Collection
+    {
+        return Schedule::with(['assignee', 'timetable'])
+            ->search($keyword)
+            ->orderBy('start_date', 'desc')
+            ->limit($limit)
+            ->get();
     }
 
     #[Override]

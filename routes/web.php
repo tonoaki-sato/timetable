@@ -4,12 +4,14 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\EquipmentCsvController;
 use App\Http\Controllers\EquipmentLogisticsController;
 use App\Http\Controllers\EquipmentLogisticsPatternController;
 use App\Http\Controllers\EquipmentLogisticsPatternStepController;
 use App\Http\Controllers\EquipmentLogisticsPlanController;
 use App\Http\Controllers\EquipmentLogisticsTimelineController;
 use App\Http\Controllers\FeatureSettingController;
+use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LanePrintController;
@@ -38,6 +40,7 @@ use App\Http\Controllers\TimetableTaskAssignmentController;
 use App\Http\Controllers\TimetableTaskController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendorController;
+use App\Http\Controllers\VendorCsvController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -52,6 +55,7 @@ Route::get('/join/completed', [StaffJoinController::class, 'completed'])->name('
 // 3. 現場マイタイムテーブル閲覧 & チェックイン & 動態操作・班長要請ルート (トークン認証)
 Route::middleware('throttle:60,1')->group(function () {
     Route::get('/my/shift/{token}', [StaffShiftController::class, 'show'])->name('staff.myshift');
+    Route::get('/my/shift/{token}/ics', [StaffShiftController::class, 'exportIcs'])->name('staff.myshift.ics');
     Route::post('/my/shift/{token}/checkin', [StaffShiftController::class, 'checkIn'])->name('staff.myshift.checkin');
     Route::post('/my/shift/{token}/assignments/{assignment}/status', [StaffShiftController::class, 'updateAssignmentStatus'])->name('staff.myshift.assignment-status');
     Route::post('/my/shift/{token}/tasks/{task}/status', [StaffShiftController::class, 'updateLaneTaskStatus'])->name('staff.myshift.lane-task-status');
@@ -73,6 +77,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/realtime', [DashboardController::class, 'realtime'])->name('dashboard.realtime');
 
+    // グローバル横断クイック検索API
+    Route::get('/search/quick', GlobalSearchController::class)->middleware('throttle:60,1')->name('search.quick');
+
     // 総合イベントカレンダー
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
 
@@ -81,6 +88,8 @@ Route::middleware('auth')->group(function () {
 
     // スケジュール管理リソースルート
     Route::get('schedules/pdf', [ScheduleController::class, 'pdf'])->name('schedules.pdf');
+    Route::get('schedules/ics', [ScheduleController::class, 'exportAllIcs'])->name('schedules.ics.all');
+    Route::get('schedules/{schedule}/ics', [ScheduleController::class, 'exportIcs'])->name('schedules.ics');
     Route::resource('schedules', ScheduleController::class);
 
     // 現場スタッフ（ボランティア）管理・印刷・CSVルート
@@ -159,6 +168,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/timetable', [TimetableMatrixController::class, 'index'])->name('timetable.index');
 
     // 1. 資機材・備品管理 (Equipment Management)
+    Route::get('equipments/export-csv', [EquipmentCsvController::class, 'export'])->name('equipments.export-csv');
+    Route::post('equipments/import-csv', [EquipmentCsvController::class, 'import'])->name('equipments.import-csv');
     Route::post('equipments/reorder', [EquipmentController::class, 'reorder'])->name('equipments.reorder');
     Route::resource('equipments', EquipmentController::class);
     Route::group([], function () {
@@ -246,6 +257,8 @@ Route::middleware('auth')->group(function () {
         Route::get('timetables/{timetable}/site-maps/icons/{iconDefinition}/usage', [SiteMapController::class, 'getIconUsage'])->name('timetables.site-maps.icons.usage')->withoutScopedBindings();
 
         // 出展・出店者マスター管理 (Vendors)
+        Route::get('vendors/export-csv', [VendorCsvController::class, 'export'])->name('vendors.export-csv');
+        Route::post('vendors/import-csv', [VendorCsvController::class, 'import'])->name('vendors.import-csv');
         Route::resource('vendors', VendorController::class)->except(['create', 'show', 'edit']);
 
         // 旧ルート互換
