@@ -78,6 +78,66 @@ class ManualTest extends TestCase
     }
 
     /**
+     * 刷新されたマニュアルに全機能一覧・シナリオ別操作手順・最新機能・帳票一覧が含まれること
+     */
+    public function test_refreshed_manual_displays_feature_catalog_scenarios_and_latest_features(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'operator',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('manual.index'));
+
+        $response->assertStatus(200);
+
+        // 1. 全機能一覧・画面カタログ
+        $response->assertSee('id="sec-feature-catalog"', false);
+        $response->assertSee('全機能一覧・画面カタログ');
+        $response->assertSee('組織管理');
+        $response->assertSee('出展・出店者マスター');
+        $response->assertSee('配置計画・配置一覧');
+        $response->assertSee('白地図配置エディタ');
+        $response->assertSee('搬出入パターン');
+        $response->assertSee('搬出入タイムライン');
+        $response->assertSee('横断クイック検索');
+        $response->assertSee('Ctrl+K');
+        $response->assertSee('現場要請通知ベル');
+        $response->assertSee('運行日コンテキストバー');
+
+        // 2. シナリオ別操作手順ガイド (全8シナリオ + フィルタUI)
+        $response->assertSee('id="sec-scenarios"', false);
+        $response->assertSee('シナリオ別操作手順ガイド');
+        $response->assertSee('Scenario 01');
+        $response->assertSee('Scenario 08');
+        $response->assertSee('data-scenario-filter="all"', false);
+        $response->assertSee('data-scenario-category="planning"', false);
+        $response->assertSee('data-scenario-category="venue"', false);
+        $response->assertSee('data-scenario-category="operation"', false);
+        $response->assertSee('data-scenario-category="trouble"', false);
+
+        // 3. 最新機能・帳票出力一覧 (区分A / 区分B)
+        $response->assertSee('実行委員会の組織管理（部門・係・組織図・PDF出力）');
+        $response->assertSee('共通タスク一括登録（全班・複数班共通業務）');
+        $response->assertSee('白地図配置エディタの便利ツール＆ショートカット');
+        $response->assertSee('20m衛生圏チェック');
+        $response->assertSee('帳票・PDF・CSV・iCal 出力総覧（区分A / 区分B）');
+        $response->assertSee('組織図 (PDF)');
+        $response->assertSee('白地図配置図面 (A3 1/400)');
+
+        // 4. 検索・FAQ操作UIの制御属性
+        $response->assertSee('id="manualSearchClear"', false);
+        $response->assertSee('id="manualSearchCount"', false);
+        $response->assertSee('id="manualSearchEmpty"', false);
+        $response->assertSee('data-action="toggle-accordions"', false);
+
+        // 5. 内部識別コードが露出していないこと
+        $response->assertDontSee('ZONE_A');
+        $response->assertDontSee('AREA_KITAGAWA');
+        $response->assertDontSee('KIDS_VILLAGE');
+    }
+
+    /**
      * マニュアル画面はCSP完全準拠でありインラインイベントハンドラを持たないこと
      */
     public function test_manual_page_strictly_complies_with_csp_without_inline_event_handlers(): void
@@ -96,9 +156,12 @@ class ManualTest extends TestCase
         $this->assertNotNull($csp);
         $this->assertStringContainsString("script-src 'self'", $csp);
 
-        // HTML本文にインラインイベントハンドラ (onclick, onload等) が含まれていないこと
+        // HTML本文にインラインイベントハンドラ・インラインスタイル・未保護スクリプトが含まれていないこと
         $content = $response->getContent();
+        $this->assertDoesNotMatchRegularExpression('/<script(?![^>]*(?:\bsrc=|\bnonce=))[^>]*>/i', $content);
         $this->assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/\sstyle=/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/href=["\']javascript:/i', $content);
 
         // 外部ヘルパースクリプトおよびデータ属性が使われていること
         $this->assertStringContainsString('js/manual-helper.js', $content);
