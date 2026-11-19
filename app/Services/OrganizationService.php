@@ -2,10 +2,6 @@
 
 namespace App\Services;
 
-use App\Actions\Organization\CreateOrganizationUnitAction;
-use App\Actions\Organization\DeleteOrganizationUnitAction;
-use App\Actions\Organization\UpdateOrganizationUnitAction;
-use App\DTOs\Organization\OrganizationUnitData;
 use App\Models\OrganizationUnit;
 use App\Models\Staff;
 use App\Repositories\Contracts\OrganizationUnitRepositoryInterface;
@@ -17,9 +13,6 @@ class OrganizationService
     public function __construct(
         protected OrganizationUnitRepositoryInterface $repository,
         protected StaffRepositoryInterface $staffRepository,
-        protected CreateOrganizationUnitAction $createAction,
-        protected UpdateOrganizationUnitAction $updateAction,
-        protected DeleteOrganizationUnitAction $deleteAction,
     ) {}
 
     /**
@@ -53,7 +46,7 @@ class OrganizationService
             'units' => $flattenedUnits,
             'treeUnits' => $treeUnits,
             'parentOptions' => $parentOptions,
-            'availableStaff' => Staff::active()->orderBy('kana')->orderBy('name')->get(['id', 'name', 'kana']),
+            'availableStaff' => $this->staffRepository->getActiveStaffMinimal(),
         ];
     }
 
@@ -207,27 +200,11 @@ class OrganizationService
     }
 
     /**
-     * 組織ユニットの作成
-     */
-    public function createUnit(OrganizationUnitData $data): OrganizationUnit
-    {
-        return $this->createAction->execute($data);
-    }
-
-    /**
-     * 組織ユニットの更新
-     */
-    public function updateUnit(OrganizationUnit $unit, OrganizationUnitData $data): OrganizationUnit
-    {
-        return $this->updateAction->execute($unit, $data);
-    }
-
-    /**
      * 組織ユニットの削除
      */
     public function deleteUnit(OrganizationUnit $unit): bool
     {
-        return $this->deleteAction->execute($unit);
+        return $this->repository->delete($unit);
     }
 
     /**

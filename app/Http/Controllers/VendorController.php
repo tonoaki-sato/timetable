@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\DTOs\VendorFilterDTO;
 use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
 use App\Models\Vendor;
 use App\Services\VendorService;
-use App\Support\TableQueryOptions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,16 +25,13 @@ class VendorController extends Controller
     {
         $this->authorize('viewAny', Vendor::class);
 
-        $perPage = TableQueryOptions::resolvePerPage($request->query('per_page'), 15, [15, 30, 50, 100]);
-        $filters = [
-            'search' => $request->input('search'),
-            'sort' => $request->filled('sort') ? (string) $request->query('sort') : null,
-            'direction' => $request->filled('direction') ? (string) $request->query('direction') : null,
-        ];
+        $filter = VendorFilterDTO::fromArray($request->query());
+        $vendors = $this->vendorService->paginateVendors($filter);
 
-        $vendors = $this->vendorService->paginateVendors($filters, $perPage);
-
-        return view('vendors.index', compact('vendors', 'filters'));
+        return view('vendors.index', [
+            'vendors' => $vendors,
+            'filters' => $filter->toFilterArray(),
+        ]);
     }
 
     /**

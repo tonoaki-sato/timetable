@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Actions\Schedule\DownloadSchedulesPdfAction;
 use App\Actions\Schedule\ExportScheduleIcsAction;
+use App\DTOs\ScheduleFilterDTO;
 use App\Http\Requests\StoreScheduleRequest;
 use App\Http\Requests\UpdateScheduleRequest;
 use App\Models\Schedule;
 use App\Services\ScheduleService;
-use App\Support\TableQueryOptions;
+use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,27 +30,9 @@ class ScheduleController extends Controller
     {
         $this->authorize('viewAny', Schedule::class);
 
-        $category = $request->input('category');
-        $status = $request->input('status');
-        $search = $request->input('search');
-        $staffId = $request->filled('staff_id') ? (int) $request->input('staff_id') : null;
-        $tab = $request->input('tab', 'upcoming');
-        $perPage = TableQueryOptions::resolvePerPage($request->query('per_page'), 100, [25, 50, 100]);
-        $sort = $request->filled('sort') ? (string) $request->query('sort') : null;
-        $direction = $request->filled('direction') ? (string) $request->query('direction') : null;
+        $filter = ScheduleFilterDTO::fromArray($request->query());
 
-        $viewData = $this->scheduleService->getIndexViewData(
-            category: $category,
-            status: $status,
-            search: $search,
-            staffId: $staffId,
-            tab: $tab,
-            perPage: $perPage,
-            sort: $sort,
-            direction: $direction,
-        );
-
-        return view('schedules.index', $viewData);
+        return view('schedules.index', $this->scheduleService->getIndexViewDataByFilter($filter));
     }
 
     /**
@@ -59,18 +42,14 @@ class ScheduleController extends Controller
     {
         $this->authorize('viewAny', Schedule::class);
 
-        $category = $request->input('category');
-        $status = $request->input('status');
-        $search = $request->input('search');
-        $staffId = $request->filled('staff_id') ? (int) $request->input('staff_id') : null;
-        $tab = $request->input('tab', 'upcoming');
+        $filter = ScheduleFilterDTO::fromArray($request->query());
 
         return $this->downloadSchedulesPdfAction->execute(
-            category: $category,
-            status: $status,
-            search: $search,
-            staffId: $staffId,
-            tab: $tab
+            category: $filter->category,
+            status: $filter->status,
+            search: $filter->search,
+            staffId: $filter->staffId,
+            tab: $filter->tab
         );
     }
 
@@ -91,13 +70,8 @@ class ScheduleController extends Controller
     {
         $this->authorize('viewAny', Schedule::class);
 
-        $schedules = $this->scheduleService->getFilteredForIcs(
-            category: $request->input('category'),
-            status: $request->input('status'),
-            search: $request->input('search'),
-            staffId: $request->filled('staff_id') ? (int) $request->input('staff_id') : null,
-            tab: $request->input('tab', 'upcoming')
-        );
+        $filter = ScheduleFilterDTO::fromArray($request->query());
+        $schedules = $this->scheduleService->getFilteredForIcsByFilter($filter);
 
         return $exportIcsAction->executeCollection($schedules);
     }
@@ -134,7 +108,7 @@ class ScheduleController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "予定「{$schedule->title}」を登録しました。",
-                'schedule' => $schedule->load('assignee'),
+                'schedule' => $this->scheduleService->loadAssignee($schedule),
             ], 201);
         }
 
@@ -149,10 +123,8 @@ class ScheduleController extends Controller
     {
         $this->authorize('view', $schedule);
 
-        $schedule->load(['creator', 'assignee', 'timetable']);
-
         return view('schedules.show', [
-            'schedule' => $schedule,
+            'schedule' => $this->scheduleService->getScheduleDetails($schedule),
         ]);
     }
 
@@ -193,12 +165,12 @@ class ScheduleController extends Controller
 
         $title = $schedule->title;
 
-        if ($schedule->is_linked_to_timetable) {
+        try {
+            $this->scheduleService->deleteSchedule($schedule);
+        } catch (DomainException $e) {
             return redirect()->route('schedules.index')
-                ->with('error', "予定「{$title}」は運行スケジュール（タイムテーブル）と自動連動しているため、スケジュール管理画面からは削除できません。運行情報管理画面から削除してください。");
+                ->with('error', $e->getMessage());
         }
-
-        $this->scheduleService->deleteSchedule($schedule);
 
         return redirect()->route('schedules.index')
             ->with('success', "予定「{$title}」を削除しました。");

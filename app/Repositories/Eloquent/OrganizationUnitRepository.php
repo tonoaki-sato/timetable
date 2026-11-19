@@ -139,4 +139,33 @@ class OrganizationUnitRepository implements OrganizationUnitRepositoryInterface
 
         return $query->get(['id', 'name', 'parent_id']);
     }
+
+    /**
+     * 組織ユニットの担当スタッフをDnD並び順を保持して同期
+     *
+     * @param  array<int, int|array{staff_id: int, role?: ?string, display_order?: int}>  $staffAssignments
+     */
+    public function syncStaff(OrganizationUnit $organizationUnit, array $staffAssignments): void
+    {
+        $syncData = [];
+
+        foreach (array_values($staffAssignments) as $index => $item) {
+            $staffId = is_array($item) ? (int) ($item['staff_id'] ?? 0) : (int) $item;
+            if ($staffId <= 0) {
+                continue;
+            }
+
+            $role = is_array($item) && isset($item['role']) && $item['role'] !== '' ? (string) $item['role'] : null;
+            $displayOrder = is_array($item) && isset($item['display_order'])
+                ? (int) $item['display_order']
+                : ($index + 1) * 10;
+
+            $syncData[$staffId] = [
+                'role' => $role,
+                'display_order' => $displayOrder,
+            ];
+        }
+
+        $organizationUnit->staff()->sync($syncData);
+    }
 }

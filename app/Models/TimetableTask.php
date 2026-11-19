@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\TimetableTaskStatus;
+use App\Presenters\TimetableTaskPresenter;
 use Database\Factories\TimetableTaskFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,6 +30,24 @@ class TimetableTask extends Model
 {
     /** @use HasFactory<TimetableTaskFactory> */
     use HasFactory;
+
+    protected ?TimetableTaskPresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): TimetableTaskPresenter
+    {
+        return $this->presenterInstance ??= new TimetableTaskPresenter($this);
+    }
+
+    /**
+     * ステータス Enum
+     */
+    public function getStatusEnumAttribute(): TimetableTaskStatus
+    {
+        return TimetableTaskStatus::tryFrom((string) $this->status) ?? TimetableTaskStatus::NotStarted;
+    }
 
     /**
      * ステータス定義一覧
@@ -148,7 +168,7 @@ class TimetableTask extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return self::STATUSES[$this->status] ?? $this->status;
+        return TimetableTaskStatus::tryFrom((string) $this->status)?->label() ?? (string) $this->status;
     }
 
     /**
@@ -184,7 +204,7 @@ class TimetableTask extends Model
      */
     public function getLaneBadgeClassAttribute(): string
     {
-        return $this->laneRelation?->color_classes['badge'] ?? 'bg-slate-100 text-slate-800 border-slate-200';
+        return $this->presenter()->laneBadgeClass();
     }
 
     /**
@@ -202,9 +222,7 @@ class TimetableTask extends Model
      */
     public function getProgressColorClassAttribute(): string
     {
-        return $this->is_satisfied
-            ? 'bg-emerald-500'
-            : ($this->assigned_count > 0 ? 'bg-amber-500' : 'bg-slate-300');
+        return $this->presenter()->progressColorClass();
     }
 
     /**
@@ -234,12 +252,7 @@ class TimetableTask extends Model
      */
     public function getStatusBadgeClassAttribute(): string
     {
-        return match ($this->status) {
-            'completed' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
-            'in_progress' => 'bg-indigo-100 text-indigo-800 border-indigo-300',
-            'cancelled' => 'bg-slate-200 text-slate-500 border-slate-300',
-            default => 'bg-slate-100 text-slate-700 border-slate-300',
-        };
+        return $this->presenter()->statusBadgeClass();
     }
 
     /**
@@ -249,26 +262,6 @@ class TimetableTask extends Model
      */
     public function toModalPayload(?Lane $lane = null): array
     {
-        $targetLane = $lane ?? $this->laneRelation;
-
-        return [
-            'id' => $this->id,
-            'timetable_id' => $this->timetable_id,
-            'lane_id' => $this->lane_id,
-            'lane_name' => $targetLane?->name ?? '',
-            'lane_icon' => $targetLane?->icon ?: '📋',
-            'lead_staff_name' => $targetLane?->leadStaff?->name,
-            'title' => $this->title,
-            'start_time' => substr((string) $this->start_time, 0, 5),
-            'end_time' => substr((string) $this->end_time, 0, 5),
-            'required_people_count' => $this->required_people_count,
-            'is_at_least' => (bool) $this->is_at_least,
-            'is_critical' => (bool) $this->is_critical,
-            'location' => $this->location ?? '',
-            'status' => $this->status,
-            'status_label' => $this->status_label,
-            'content' => $this->content ?? '',
-            'update_url' => route('timetable-tasks.update', $this),
-        ];
+        return $this->presenter()->toModalPayload($lane);
     }
 }

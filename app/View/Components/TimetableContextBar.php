@@ -3,7 +3,7 @@
 namespace App\View\Components;
 
 use App\Models\Timetable;
-use App\Repositories\Contracts\TimetableRepositoryInterface;
+use App\Services\TimetableService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\View\Component;
@@ -16,11 +16,11 @@ class TimetableContextBar extends Component
     public Collection $timetablesList;
 
     public function __construct(
-        TimetableRepositoryInterface $timetableRepository,
+        TimetableService $timetableService,
         public ?Timetable $timetable = null,
         public string $active = 'matrix',
     ) {
-        $this->timetablesList = $timetableRepository->getSelectableTimetables();
+        $this->timetablesList = $timetableService->getSelectableTimetables();
 
         if ($this->timetable !== null) {
             $countMap = [

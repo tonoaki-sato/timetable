@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Timetable\ResolveActiveTimetableRedirectAction;
 use App\Http\Requests\DestroyLaneRequest;
 use App\Http\Requests\ReorderLanesRequest;
 use App\Http\Requests\StoreLaneRequest;
@@ -9,7 +10,6 @@ use App\Http\Requests\UpdateLaneRequest;
 use App\Models\Lane;
 use App\Models\Timetable;
 use App\Services\LaneService;
-use App\Services\TimetableService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,27 +19,14 @@ class LaneController extends Controller
 {
     public function __construct(
         protected LaneService $laneService,
-        protected TimetableService $timetableService
     ) {}
 
     /**
      * 担当班編成一覧へのリダイレクト（アクティブまたは直近の運行日へ）
      */
-    public function redirect(Request $request): RedirectResponse
+    public function redirect(Request $request, ResolveActiveTimetableRedirectAction $redirectAction): RedirectResponse
     {
-        if ($request->filled('timetable_id')) {
-            $timetable = $this->timetableService->findOrFail($request->integer('timetable_id'));
-
-            return redirect()->route('timetables.lanes.index', $timetable);
-        }
-
-        $currentTimetable = $this->timetableService->findFirstActiveOrEarliest();
-
-        if ($currentTimetable) {
-            return redirect()->route('timetables.lanes.index', $currentTimetable);
-        }
-
-        return redirect()->route('timetables.index');
+        return $redirectAction->execute($request, 'timetables.lanes.index');
     }
 
     /**
@@ -166,45 +153,33 @@ class LaneController extends Controller
     {
         $this->authorize('delete', $lane);
 
-        $taskCount = $this->laneService->countLaneTasks($lane);
+        $migrateToLaneId = $request->filled('migrate_to_lane_id')
+            ? (int) $request->validated('migrate_to_lane_id')
+            : null;
+        $result = $this->laneService->deleteLaneWithStrategy(
+            timetable: $timetable,
+            lane: $lane,
+            migrateToLaneId: $migrateToLaneId,
+            cascadeDeleteTasks: $request->boolean('cascade_delete_tasks'),
+        );
 
-        // タスク移行先が指定されている場合
-        if ($request->filled('migrate_to_lane_id')) {
-            $migrateToLaneId = (int) $request->validated('migrate_to_lane_id');
-            $targetLane = $this->laneService->findTargetLaneForMigration($timetable, $migrateToLaneId);
-
-            if (! $targetLane || $targetLane->id === $lane->id) {
-                return back()->with('error', '有効な移行先レーンを選択してください。');
-            }
-
-            $this->laneService->migrateTasksAndDeleteLane($lane, $targetLane);
-
-            return redirect()->route('timetables.lanes.index', $timetable)
-                ->with('success', "担当班「{$lane->name}」の作業タスク {$taskCount} 件を「{$targetLane->name}」に引き継ぎ、レーンを削除しました。");
+        if ($result['status'] === 'invalid_target') {
+            return back()->with('error', $result['message']);
         }
 
-        // タスクごと削除が明示的に指定されている場合
-        if ($request->boolean('cascade_delete_tasks')) {
-            $this->laneService->cascadeDeleteTasksAndLane($lane);
-
-            return redirect()->route('timetables.lanes.index', $timetable)
-                ->with('success', "担当班「{$lane->name}」および紐づく作業タスク {$taskCount} 件をすべて削除しました。");
-        }
-
-        // タスクが存在し、移行先もカスケードも指定されていない場合はブロック
-        if ($taskCount > 0) {
-            $msg = "レーン「{$lane->name}」には {$taskCount} 件の作業タスクが紐づいているため削除できません。引き継ぎ先レーンを選択するか、タスクを含めて削除してください。";
+        if ($result['status'] === 'blocked') {
             if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => $msg, 'task_count' => $taskCount], 422);
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                    'task_count' => $result['task_count'],
+                ], 422);
             }
 
-            return back()->with('error', $msg);
+            return back()->with('error', $result['message']);
         }
-
-        $name = $lane->name;
-        $this->laneService->deleteLane($lane);
 
         return redirect()->route('timetables.lanes.index', $timetable)
-            ->with('success', "担当班「{$name}」を削除しました。");
+            ->with('success', $result['message']);
     }
 }

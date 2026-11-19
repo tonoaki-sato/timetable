@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,9 +19,9 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $cad_version
  * @property string $paper_size
- * @property float $scale_ratio
- * @property float $width_meters
- * @property float $height_meters
+ * @property numeric-string|float $scale_ratio
+ * @property numeric-string|float $width_meters
+ * @property numeric-string|float $height_meters
  * @property string $svg_path
  * @property string $pdf_path
  * @property string $viewbox
@@ -30,6 +31,20 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Timetable $timetable
  */
+#[Fillable([
+    'timetable_id',
+    'name',
+    'cad_version',
+    'paper_size',
+    'scale_ratio',
+    'width_meters',
+    'height_meters',
+    'svg_path',
+    'pdf_path',
+    'viewbox',
+    'is_active',
+    'notes',
+])]
 class SiteBaseMap extends Model
 {
     use HasFactory;
@@ -38,24 +53,6 @@ class SiteBaseMap extends Model
      * @var string
      */
     protected $table = 'site_base_maps';
-
-    /**
-     * @var list<string>
-     */
-    protected $fillable = [
-        'timetable_id',
-        'name',
-        'cad_version',
-        'paper_size',
-        'scale_ratio',
-        'width_meters',
-        'height_meters',
-        'svg_path',
-        'pdf_path',
-        'viewbox',
-        'is_active',
-        'notes',
-    ];
 
     /**
      * @return array<string, string>

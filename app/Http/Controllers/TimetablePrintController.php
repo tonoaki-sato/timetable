@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Timetable\DownloadTimetableAssignmentsPdfAction;
 use App\Actions\Timetable\DownloadTimetableMatrixPdfAction;
+use App\Http\Requests\PrintTimetableMatrixRequest;
 use App\Models\Timetable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -34,16 +35,11 @@ class TimetablePrintController extends Controller
     /**
      * 運行日別 進行表（当日タイムテーブル）PDFダウンロード（またはプレビュー表示）
      */
-    public function printMatrix(Timetable $timetable, Request $request): Response|View
+    public function printMatrix(Timetable $timetable, PrintTimetableMatrixRequest $request): Response|View
     {
         $this->authorize('view', $timetable);
 
-        $laneIds = null;
-        if ($request->filled('lane_ids')) {
-            $input = $request->input('lane_ids');
-            $rawIds = is_array($input) ? $input : explode(',', (string) $input);
-            $laneIds = array_values(array_filter(array_map('intval', $rawIds), fn (int $id) => $id > 0));
-        }
+        $laneIds = $request->laneIds();
 
         if ($request->boolean('preview')) {
             return $this->downloadMatrixPdfAction->preview($timetable, $laneIds);

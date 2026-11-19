@@ -206,4 +206,13 @@ class StaffRepository implements StaffRepositoryInterface
             ])
             ->get();
     }
+
+    #[Override]
+    public function getActiveStaffMinimal(): Collection
+    {
+        return Staff::active()
+            ->orderBy('kana')
+            ->orderBy('name')
+            ->get(['id', 'name', 'kana']);
+    }
 }

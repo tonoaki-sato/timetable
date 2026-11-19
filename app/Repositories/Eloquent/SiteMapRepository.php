@@ -2,16 +2,17 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Models\LayoutItem;
 use App\Models\SiteBaseMap;
 use App\Models\SiteMapIconDefinition;
 use App\Models\SiteMapPlacement;
 use App\Models\Timetable;
 use App\Repositories\Contracts\SiteMapRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Override;
 
-class EloquentSiteMapRepository implements SiteMapRepositoryInterface
+class SiteMapRepository implements SiteMapRepositoryInterface
 {
+    #[Override]
     public function getOrCreateActiveBaseMap(Timetable $timetable): SiteBaseMap
     {
         $siteBaseMap = $timetable->siteBaseMaps()
@@ -36,6 +37,7 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
         return $siteBaseMap;
     }
 
+    #[Override]
     public function findActiveBaseMapOrFail(Timetable $timetable): SiteBaseMap
     {
         return $timetable->siteBaseMaps()
@@ -43,6 +45,7 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
             ->firstOrFail();
     }
 
+    #[Override]
     public function getAllIconDefinitions(): Collection
     {
         return SiteMapIconDefinition::all()
@@ -53,11 +56,13 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
             ->values();
     }
 
+    #[Override]
     public function findIconDefinitionByKey(string $iconKey): ?SiteMapIconDefinition
     {
         return SiteMapIconDefinition::where('icon_key', $iconKey)->first();
     }
 
+    #[Override]
     public function getPlacementsByBaseMap(SiteBaseMap $siteBaseMap): Collection
     {
         return $siteBaseMap->placements()
@@ -67,6 +72,19 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
             ->get();
     }
 
+    #[Override]
+    public function findPlacementsByIds(SiteBaseMap $siteBaseMap, array $ids): Collection
+    {
+        if ($ids === []) {
+            return new Collection;
+        }
+
+        return $siteBaseMap->placements()
+            ->whereIn('id', $ids)
+            ->get();
+    }
+
+    #[Override]
     public function savePlacement(SiteMapPlacement $placement, bool $withRelations = true): SiteMapPlacement
     {
         $placement->save();
@@ -78,11 +96,13 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
         return $placement->load(['layoutItem.vendor']);
     }
 
+    #[Override]
     public function deletePlacement(SiteMapPlacement $placement): bool
     {
         return (bool) $placement->delete();
     }
 
+    #[Override]
     public function clearPlacementsByBaseMap(SiteBaseMap $siteBaseMap): bool
     {
         $siteBaseMap->placements()->delete();
@@ -90,9 +110,7 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
         return true;
     }
 
-    /**
-     * @return Collection<int, LayoutItem>
-     */
+    #[Override]
     public function getLayoutItemsForTimetable(Timetable $timetable): Collection
     {
         return $timetable->layoutItems()
@@ -101,11 +119,13 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
             ->get();
     }
 
+    #[Override]
     public function createIconDefinition(array $data): SiteMapIconDefinition
     {
         return SiteMapIconDefinition::create($data);
     }
 
+    #[Override]
     public function updateIconDefinition(SiteMapIconDefinition $iconDefinition, array $data): SiteMapIconDefinition
     {
         $iconDefinition->update($data);
@@ -113,16 +133,19 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
         return $iconDefinition->fresh();
     }
 
+    #[Override]
     public function deleteIconDefinition(SiteMapIconDefinition $iconDefinition): bool
     {
         return (bool) $iconDefinition->delete();
     }
 
+    #[Override]
     public function countPlacementsUsingIcon(string $iconKey): int
     {
         return SiteMapPlacement::where('shape_type', $iconKey)->count();
     }
 
+    #[Override]
     public function deletePlacementsByShapeType(string $shapeType): int
     {
         return SiteMapPlacement::where('shape_type', $shapeType)->delete();

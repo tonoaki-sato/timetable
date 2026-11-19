@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,12 +16,12 @@ use Illuminate\Support\Carbon;
  * @property int|null $layout_item_id
  * @property string $shape_type
  * @property string $display_text
- * @property float|null $font_size
+ * @property numeric-string|float|null $font_size
  * @property string $color_theme
- * @property float $pos_x
- * @property float $pos_y
- * @property float $width
- * @property float $height
+ * @property numeric-string|float $pos_x
+ * @property numeric-string|float $pos_y
+ * @property numeric-string|float $width
+ * @property numeric-string|float $height
  * @property int $rotation
  * @property bool $is_rotation_locked
  * @property bool $show_hygiene_circle
@@ -34,6 +35,26 @@ use Illuminate\Support\Carbon;
  * @property-read SiteBaseMap $siteBaseMap
  * @property-read LayoutItem|null $layoutItem
  */
+#[Fillable([
+    'site_base_map_id',
+    'layout_item_id',
+    'shape_type',
+    'display_text',
+    'font_size',
+    'color_theme',
+    'pos_x',
+    'pos_y',
+    'width',
+    'height',
+    'rotation',
+    'is_rotation_locked',
+    'show_hygiene_circle',
+    'arc_start_angle',
+    'arc_end_angle',
+    'z_index',
+    'notes',
+    'meta_data',
+])]
 class SiteMapPlacement extends Model
 {
     use HasFactory;
@@ -42,30 +63,6 @@ class SiteMapPlacement extends Model
      * @var string
      */
     protected $table = 'site_map_placements';
-
-    /**
-     * @var list<string>
-     */
-    protected $fillable = [
-        'site_base_map_id',
-        'layout_item_id',
-        'shape_type',
-        'display_text',
-        'font_size',
-        'color_theme',
-        'pos_x',
-        'pos_y',
-        'width',
-        'height',
-        'rotation',
-        'is_rotation_locked',
-        'show_hygiene_circle',
-        'arc_start_angle',
-        'arc_end_angle',
-        'z_index',
-        'notes',
-        'meta_data',
-    ];
 
     /**
      * @return array<string, string>

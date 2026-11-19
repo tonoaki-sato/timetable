@@ -25,6 +25,7 @@ return new class extends Migration
             $table->dateTime('updated_at')->nullable();
 
             $table->index(['timetable_id', 'display_order']);
+            $table->index(['timetable_id', 'is_active', 'display_order']);
         });
     }
 

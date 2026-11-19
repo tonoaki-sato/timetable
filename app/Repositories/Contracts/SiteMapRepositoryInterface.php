@@ -41,6 +41,14 @@ interface SiteMapRepositoryInterface
     public function getPlacementsByBaseMap(SiteBaseMap $siteBaseMap): Collection;
 
     /**
+     * 指定ID群に一致する白地図配置オブジェクトを一括取得
+     *
+     * @param  array<int, int>  $ids
+     * @return Collection<int, SiteMapPlacement>
+     */
+    public function findPlacementsByIds(SiteBaseMap $siteBaseMap, array $ids): Collection;
+
+    /**
      * 配置オブジェクトを保存
      */
     public function savePlacement(SiteMapPlacement $placement, bool $withRelations = true): SiteMapPlacement;

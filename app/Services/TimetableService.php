@@ -33,6 +33,26 @@ class TimetableService
     }
 
     /**
+     * 全運行計画を取得
+     *
+     * @return Collection<int, Timetable>
+     */
+    public function getAllTimetables(): Collection
+    {
+        return $this->timetableRepository->getAll();
+    }
+
+    /**
+     * セレクター用の選択可能な運行計画一覧を取得
+     *
+     * @return Collection<int, Timetable>
+     */
+    public function getSelectableTimetables(): Collection
+    {
+        return $this->timetableRepository->getSelectableTimetables();
+    }
+
+    /**
      * デフォルト運行日（準備中・運行中のうち現在日時に最も近い運行日）を取得
      */
     public function findFirstActiveOrEarliest(?Carbon $now = null): ?Timetable

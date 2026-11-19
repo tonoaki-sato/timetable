@@ -2,6 +2,8 @@
 
 namespace App\Presenters;
 
+use App\Enums\ScheduleCategory;
+use App\Enums\ScheduleStatus;
 use App\Models\Schedule;
 
 class SchedulePresenter
@@ -19,13 +21,7 @@ class SchedulePresenter
             return '🏮';
         }
 
-        return match ($this->schedule->category) {
-            'committee' => '🤝',
-            'permit' => '📑',
-            'briefing' => '📢',
-            'operation' => '🎪',
-            default => '📌',
-        };
+        return ScheduleCategory::tryFrom((string) $this->schedule->category)?->icon() ?? '📌';
     }
 
     /**
@@ -33,13 +29,8 @@ class SchedulePresenter
      */
     public function categoryBadgeClass(): string
     {
-        return match ($this->schedule->category) {
-            'committee' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-            'permit' => 'bg-amber-50 text-amber-700 border-amber-200',
-            'briefing' => 'bg-sky-50 text-sky-700 border-sky-200',
-            'operation' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-            default => 'bg-slate-100 text-slate-700 border-slate-200',
-        };
+        return ScheduleCategory::tryFrom((string) $this->schedule->category)?->badgeClasses()
+            ?? 'bg-slate-100 text-slate-700 border-slate-200';
     }
 
     /**
@@ -47,13 +38,8 @@ class SchedulePresenter
      */
     public function statusBadgeClass(): string
     {
-        return match ($this->schedule->status) {
-            'planned' => 'bg-blue-50 text-blue-700 border-blue-200',
-            'in_progress' => 'bg-amber-50 text-amber-700 border-amber-200',
-            'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-            'cancelled' => 'bg-slate-100 text-slate-500 border-slate-200',
-            default => 'bg-slate-100 text-slate-600 border-slate-200',
-        };
+        return ScheduleStatus::tryFrom((string) $this->schedule->status)?->badgeClasses()
+            ?? 'bg-slate-100 text-slate-600 border-slate-200';
     }
 
     /**
@@ -86,11 +72,11 @@ class SchedulePresenter
 
         $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
         $weekday = $weekdayNames[$this->schedule->start_date->dayOfWeek] ?? '';
-        $dateStr = $this->schedule->start_date->format('Y年n月j日') . "({$weekday})";
+        $dateStr = $this->schedule->start_date->format('Y年n月j日')."({$weekday})";
 
         if ($this->schedule->end_date && $this->schedule->end_date->ne($this->schedule->start_date)) {
             $endWeekday = $weekdayNames[$this->schedule->end_date->dayOfWeek] ?? '';
-            $endDateStr = $this->schedule->end_date->format('Y年n月j日') . "({$endWeekday})";
+            $endDateStr = $this->schedule->end_date->format('Y年n月j日')."({$endWeekday})";
 
             return "{$dateStr} 〜 {$endDateStr}";
         }
@@ -146,11 +132,11 @@ class SchedulePresenter
 
         $weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
         $startWeekday = $weekdayNames[$this->schedule->start_date->dayOfWeek] ?? '';
-        $startDateStr = $this->schedule->start_date->format('Y/m/d') . "({$startWeekday})";
+        $startDateStr = $this->schedule->start_date->format('Y/m/d')."({$startWeekday})";
 
         if ($this->schedule->end_date && $this->schedule->end_date->ne($this->schedule->start_date)) {
             $endWeekday = $weekdayNames[$this->schedule->end_date->dayOfWeek] ?? '';
-            $endDateStr = $this->schedule->end_date->format('Y/m/d') . "({$endWeekday})";
+            $endDateStr = $this->schedule->end_date->format('Y/m/d')."({$endWeekday})";
 
             return "{$startDateStr} 〜 {$endDateStr}";
         }

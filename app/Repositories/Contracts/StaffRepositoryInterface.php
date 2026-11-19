@@ -126,4 +126,11 @@ interface StaffRepositoryInterface
      * @return Collection<int, Lane>
      */
     public function loadShiftRelationsAndGetLedLanes(Staff $staff): Collection;
+
+    /**
+     * 稼働可能なスタッフを最小列（id, name, kana）でフリガナ順取得
+     *
+     * @return Collection<int, Staff>
+     */
+    public function getActiveStaffMinimal(): Collection;
 }

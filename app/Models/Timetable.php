@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\TimetableStatus;
+use App\Presenters\TimetablePresenter;
 use App\Support\NavigationCacheInvalidatingBuilder;
 use Carbon\Carbon;
 use Database\Factories\TimetableFactory;
@@ -31,6 +33,24 @@ class Timetable extends Model
 {
     /** @use HasFactory<TimetableFactory> */
     use HasFactory;
+
+    protected ?TimetablePresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): TimetablePresenter
+    {
+        return $this->presenterInstance ??= new TimetablePresenter($this);
+    }
+
+    /**
+     * ステータス Enum
+     */
+    public function getStatusEnumAttribute(): TimetableStatus
+    {
+        return TimetableStatus::tryFrom((string) $this->status) ?? TimetableStatus::Draft;
+    }
 
     /**
      * ステータス定義一覧
@@ -318,7 +338,7 @@ class Timetable extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return self::STATUSES[$this->status] ?? $this->status;
+        return TimetableStatus::tryFrom((string) $this->status)?->label() ?? (string) $this->status;
     }
 
     /**
@@ -382,11 +402,7 @@ class Timetable extends Model
      */
     public function getStatusBadgeClassAttribute(): string
     {
-        return match ($this->status) {
-            'active' => 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold',
-            'completed' => 'bg-slate-100 text-slate-600 border-slate-200',
-            default => 'bg-blue-50 text-blue-700 border-blue-200',
-        };
+        return $this->presenter()->statusBadgeClass();
     }
 
     /**
@@ -396,9 +412,7 @@ class Timetable extends Model
      */
     public static function resolveRoadPeriodsForForm(mixed $oldPeriods = null, ?self $timetable = null): array
     {
-        $periods = $oldPeriods ?? ($timetable?->road_periods ?? []);
-
-        return is_array($periods) ? $periods : [];
+        return TimetablePresenter::resolveRoadPeriodsForForm($oldPeriods, $timetable);
     }
 
     /**
@@ -408,9 +422,7 @@ class Timetable extends Model
      */
     public static function resolveFestivalPeriodsForForm(mixed $oldPeriods = null, ?self $timetable = null): array
     {
-        $periods = $oldPeriods ?? ($timetable?->festival_periods ?? []);
-
-        return is_array($periods) ? $periods : [];
+        return TimetablePresenter::resolveFestivalPeriodsForForm($oldPeriods, $timetable);
     }
 
     /**
@@ -427,5 +439,37 @@ class Timetable extends Model
     public function placements(): HasManyThrough
     {
         return $this->hasManyThrough(SiteMapPlacement::class, SiteBaseMap::class);
+    }
+
+    /**
+     * 運行情報に紐づく配置図面マスター一覧とのリレーション
+     */
+    public function layoutMaps(): HasMany
+    {
+        return $this->hasMany(LayoutMap::class);
+    }
+
+    /**
+     * 運行情報に紐づく配置図面マスターとの1対1リレーション
+     */
+    public function layoutMap(): HasOne
+    {
+        return $this->hasOne(LayoutMap::class);
+    }
+
+    /**
+     * 運行情報に紐づくスタッフ到着チェックイン記録一覧とのリレーション
+     */
+    public function staffCheckIns(): HasMany
+    {
+        return $this->hasMany(StaffCheckIn::class);
+    }
+
+    /**
+     * 運行情報に紐づく班長応援・機材申請一覧とのリレーション
+     */
+    public function laneRequests(): HasMany
+    {
+        return $this->hasMany(LaneRequest::class);
     }
 }

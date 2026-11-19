@@ -2,13 +2,13 @@
 
 namespace App\Services;
 
+use App\Actions\SiteMap\ApplyStandardSiteMapPresetAction;
 use App\Models\LayoutItem;
 use App\Models\SiteBaseMap;
 use App\Models\SiteMapIconDefinition;
 use App\Models\SiteMapPlacement;
 use App\Models\Timetable;
 use App\Repositories\Contracts\SiteMapRepositoryInterface;
-use Database\Seeders\SiteMapStandardPlacementsSeeder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +18,8 @@ use Illuminate\Support\Str;
 class SiteMapService
 {
     public function __construct(
-        protected SiteMapRepositoryInterface $repository
+        protected SiteMapRepositoryInterface $repository,
+        protected ApplyStandardSiteMapPresetAction $applyStandardPresetAction,
     ) {}
 
     /**
@@ -170,11 +171,8 @@ class SiteMapService
      */
     public function bulkUpdatePlacements(SiteBaseMap $siteBaseMap, array $items): Collection
     {
-        $ids = collect($items)->pluck('id')->filter()->unique()->values()->all();
-        $existingMap = $siteBaseMap->placements()
-            ->whereIn('id', $ids)
-            ->get()
-            ->keyBy('id');
+        $ids = collect($items)->pluck('id')->filter()->map(static fn (mixed $id): int => (int) $id)->unique()->values()->all();
+        $existingMap = $this->repository->findPlacementsByIds($siteBaseMap, $ids)->keyBy('id');
 
         DB::transaction(function () use ($items, $existingMap): void {
             foreach ($items as $itemData) {
@@ -214,7 +212,7 @@ class SiteMapService
      */
     public function resetToStandardPreset(SiteBaseMap $siteBaseMap): Collection
     {
-        SiteMapStandardPlacementsSeeder::seedForBaseMap($siteBaseMap);
+        $this->applyStandardPresetAction->execute($siteBaseMap);
 
         return $this->repository->getPlacementsByBaseMap($siteBaseMap);
     }

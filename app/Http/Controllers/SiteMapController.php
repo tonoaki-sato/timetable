@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\SiteMap\DownloadSiteMapPdfAction;
 use App\Http\Requests\BulkUpdateSiteMapPlacementsRequest;
+use App\Http\Requests\DestroySiteMapIconRequest;
 use App\Http\Requests\StoreSiteMapIconRequest;
 use App\Http\Requests\StoreSiteMapPlacementRequest;
 use App\Http\Requests\UpdateSiteMapIconRequest;
@@ -11,7 +13,6 @@ use App\Models\SiteBaseMap;
 use App\Models\SiteMapIconDefinition;
 use App\Models\SiteMapPlacement;
 use App\Models\Timetable;
-use App\Services\SiteMapPdfExporterService;
 use App\Services\SiteMapService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +24,7 @@ class SiteMapController extends Controller
 {
     public function __construct(
         protected SiteMapService $siteMapService,
-        protected SiteMapPdfExporterService $pdfExporterService
+        protected DownloadSiteMapPdfAction $downloadPdfAction,
     ) {}
 
     /**
@@ -163,18 +164,7 @@ class SiteMapController extends Controller
     {
         $this->authorize('viewAny', SiteBaseMap::class);
 
-        $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
-        $placements = $this->siteMapService->getPlacements($siteBaseMap);
-
-        $pdfBinary = $this->pdfExporterService->exportA3VectorPdf($siteBaseMap, $placements);
-
-        $dateStr = $timetable->target_date ? $timetable->target_date->format('Ymd') : date('Ymd');
-        $filename = "ござ市配置図_{$dateStr}_A3_1-400.pdf";
-
-        return response($pdfBinary, 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
-        ]);
+        return $this->downloadPdfAction->execute($timetable);
     }
 
     /**
@@ -229,7 +219,7 @@ class SiteMapController extends Controller
     /**
      * カスタムアイコン定義を削除する API
      */
-    public function destroyIcon(Request $request, Timetable $timetable, SiteMapIconDefinition $iconDefinition): JsonResponse
+    public function destroyIcon(DestroySiteMapIconRequest $request, Timetable $timetable, SiteMapIconDefinition $iconDefinition): JsonResponse
     {
         $this->authorize('delete', SiteBaseMap::class);
 

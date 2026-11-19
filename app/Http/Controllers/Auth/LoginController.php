@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Auth\AuthenticateUserAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class LoginController extends Controller
@@ -26,43 +23,20 @@ class LoginController extends Controller
     /**
      * ログイン認証処理
      */
-    public function login(LoginRequest $request): RedirectResponse
+    public function login(LoginRequest $request, AuthenticateUserAction $authenticateUserAction): RedirectResponse
     {
-        // 1. 入力バリデーション
-        $credentials = $request->safe()->only(['email', 'password']);
+        $validated = $request->validated();
 
-        // レートリミット判定（メールアドレス+IP単位、1分間に5回まで）
-        $throttleKey = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
-            throw ValidationException::withMessages([
-                'email' => [trans('auth.throttle', ['seconds' => $seconds])],
-            ]);
-        }
+        $authenticateUserAction->execute(
+            email: (string) $validated['email'],
+            password: (string) $validated['password'],
+            remember: $request->boolean('remember'),
+            ipAddress: $request->ip(),
+        );
 
-        $remember = $request->boolean('remember');
+        $request->session()->regenerate();
 
-        // 2. 認証試行 (有効アカウント is_active = true のみ許可)
-        if (Auth::attempt(array_merge($credentials, ['is_active' => true]), $remember)) {
-            RateLimiter::clear($throttleKey);
-            $request->session()->regenerate();
-
-            // 最終ログイン日時の更新 (U-101 連携)
-            $user = Auth::user();
-            if ($user instanceof User) {
-                $user->last_login_at = now();
-                $user->save();
-            }
-
-            return redirect()->intended(route('dashboard'));
-        }
-
-        RateLimiter::hit($throttleKey);
-
-        // 3. 認証失敗時（アカウント非存在、誤パスワード、停止中アカウントすべて同一メッセージ）
-        throw ValidationException::withMessages([
-            'email' => [trans('auth.failed')],
-        ]);
+        return redirect()->intended(route('dashboard'));
     }
 
     /**

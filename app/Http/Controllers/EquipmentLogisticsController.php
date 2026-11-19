@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Logistics\DownloadEquipmentLogisticsPdfAction;
+use App\Actions\Timetable\ResolveActiveTimetableRedirectAction;
 use App\Models\Equipment;
 use App\Models\Timetable;
 use App\Services\EquipmentLogisticsService;
@@ -23,21 +24,9 @@ class EquipmentLogisticsController extends Controller
     /**
      * 搬出入計画一覧へのリダイレクト（アクティブまたは直近の運行日へ）
      */
-    public function redirect(Request $request): RedirectResponse
+    public function redirect(Request $request, ResolveActiveTimetableRedirectAction $redirectAction): RedirectResponse
     {
-        if ($request->filled('timetable_id')) {
-            $timetable = $this->timetableService->findOrFail($request->integer('timetable_id'));
-
-            return redirect()->route('timetables.logistics.index', $timetable);
-        }
-
-        $currentTimetable = $this->timetableService->findFirstActiveOrEarliest();
-
-        if ($currentTimetable) {
-            return redirect()->route('timetables.logistics.index', $currentTimetable);
-        }
-
-        return redirect()->route('timetables.index');
+        return $redirectAction->execute($request, 'timetables.logistics.index');
     }
 
     /**

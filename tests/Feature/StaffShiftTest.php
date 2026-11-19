@@ -838,6 +838,7 @@ class StaffShiftTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-11-11 10:00:00'));
 
         try {
+            $this->timetable->update(['target_date' => '2026-11-11']);
             $futureStaff = Staff::factory()->create(['is_active' => true]);
             $futureTimetable = Timetable::factory()->create([
                 'target_date' => '2026-11-20',
@@ -949,6 +950,7 @@ class StaffShiftTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-11-11 10:00:00'));
 
         try {
+            $this->timetable->update(['target_date' => '2026-11-11']);
             $futureTimetable = Timetable::factory()->create([
                 'target_date' => '2026-11-20',
                 'status' => 'draft',
@@ -1013,6 +1015,7 @@ class StaffShiftTest extends TestCase
      */
     public function test_write_endpoints_succeed_when_operation_day_arrives(): void
     {
+        $this->timetable->update(['target_date' => '2026-11-11']);
         $tomorrowStaff = Staff::factory()->create(['is_active' => true]);
         $targetTimetable = Timetable::factory()->create([
             'target_date' => '2026-11-12',

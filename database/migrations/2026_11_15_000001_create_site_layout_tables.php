@@ -70,7 +70,8 @@ return new class extends Migration
 
             $table->index(['layout_map_id', 'item_type']);
             $table->index(['layout_map_id', 'code']);
-            $table->index(['layout_map_id', 'layout_area_id', 'display_order']);
+            $table->index(['layout_map_id', 'layout_area_id', 'display_order', 'code'], 'layout_items_map_area_order_code_idx');
+            $table->index(['vendor_id', 'item_type', 'code']);
         });
     }
 

@@ -29,8 +29,8 @@ return new class extends Migration
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
 
-            $table->index(['timetable_id', 'start_time']);
-            $table->index(['lane_id']);
+            $table->index(['timetable_id', 'start_time', 'end_time']);
+            $table->index(['lane_id', 'status', 'start_time']);
         });
 
         Schema::create('lane_requests', function (Blueprint $table) {
@@ -50,6 +50,9 @@ return new class extends Migration
             $table->dateTime('updated_at')->nullable();
 
             $table->index(['timetable_id', 'lane_id', 'status']);
+            $table->index(['status', 'id']);
+            $table->index(['lane_id', 'status']);
+            $table->index(['timetable_task_id', 'status']);
         });
     }
 

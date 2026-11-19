@@ -63,4 +63,11 @@ interface OrganizationUnitRepositoryInterface
      * @return Collection<int, OrganizationUnit>
      */
     public function getParentOptions(?int $excludeId = null): Collection;
+
+    /**
+     * 組織ユニットの担当スタッフをDnD並び順を保持して同期
+     *
+     * @param  array<int, int|array{staff_id: int, role?: ?string, display_order?: int}>  $staffAssignments
+     */
+    public function syncStaff(OrganizationUnit $organizationUnit, array $staffAssignments): void;
 }

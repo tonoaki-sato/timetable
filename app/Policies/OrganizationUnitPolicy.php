@@ -34,7 +34,7 @@ class OrganizationUnitPolicy
     /**
      * 組織更新権限
      */
-    public function update(User $user, OrganizationUnit $organizationUnit): bool
+    public function update(User $user, ?OrganizationUnit $organizationUnit = null): bool
     {
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }

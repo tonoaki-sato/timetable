@@ -25,6 +25,8 @@ return new class extends Migration
             // 2038年問題対策として DATETIME 型を採用
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
+
+            $table->index(['role', 'is_active']);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

@@ -3,10 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -33,11 +35,43 @@ class User extends Authenticatable
     }
 
     /**
+     * 権限ロール Enum
+     */
+    public function getRoleEnumAttribute(): ?UserRole
+    {
+        return UserRole::tryFrom((string) $this->role);
+    }
+
+    /**
+     * 作成したタイムテーブル一覧とのリレーション
+     */
+    public function timetables(): HasMany
+    {
+        return $this->hasMany(Timetable::class, 'created_by');
+    }
+
+    /**
+     * 登録したスケジュール一覧とのリレーション
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class, 'created_by');
+    }
+
+    /**
+     * 対応した班長応援・機材申請一覧とのリレーション
+     */
+    public function resolvedLaneRequests(): HasMany
+    {
+        return $this->hasMany(LaneRequest::class, 'resolved_by_user_id');
+    }
+
+    /**
      * システム管理者かどうかの判定
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === UserRole::Admin->value;
     }
 
     /**
@@ -45,6 +79,6 @@ class User extends Authenticatable
      */
     public function isOperator(): bool
     {
-        return $this->role === 'operator';
+        return $this->role === UserRole::Operator->value;
     }
 }

@@ -32,6 +32,7 @@ use App\Services\FeatureSettingService;
 use App\Services\GlobalDashboardService;
 use App\Services\SiteMapPdfExporterService;
 use App\Services\StaffAllocationService;
+use App\Services\TimetableService;
 use App\View\Components\TimetableContextBar;
 use Database\Seeders\SiteMapIconDefinitionSeeder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -135,7 +136,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         ]);
 
         $freshTimetable = Timetable::findOrFail($timetable->id);
-        $component = new TimetableContextBar(app(TimetableRepositoryInterface::class), $freshTimetable, 'show');
+        $component = new TimetableContextBar(app(TimetableService::class), $freshTimetable, 'show');
         $html = view('components.timetable-context-bar', [
             'timetable' => $component->timetable,
             'timetablesList' => $component->timetablesList,

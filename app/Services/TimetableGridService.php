@@ -17,29 +17,13 @@ use Illuminate\Support\Collection;
 
 class TimetableGridService
 {
-    protected TimetableRepositoryInterface $timetableRepository;
-
-    protected LaneRepositoryInterface $laneRepository;
-
-    protected TimetableTaskRepositoryInterface $taskRepository;
-
-    protected StaffRepositoryInterface $staffRepository;
-
-    protected StaffCheckInRepositoryInterface $staffCheckInRepository;
-
     public function __construct(
-        ?TimetableRepositoryInterface $timetableRepository = null,
-        ?LaneRepositoryInterface $laneRepository = null,
-        ?TimetableTaskRepositoryInterface $taskRepository = null,
-        ?StaffRepositoryInterface $staffRepository = null,
-        ?StaffCheckInRepositoryInterface $staffCheckInRepository = null,
-    ) {
-        $this->timetableRepository = $timetableRepository ?? app(TimetableRepositoryInterface::class);
-        $this->laneRepository = $laneRepository ?? app(LaneRepositoryInterface::class);
-        $this->taskRepository = $taskRepository ?? app(TimetableTaskRepositoryInterface::class);
-        $this->staffRepository = $staffRepository ?? app(StaffRepositoryInterface::class);
-        $this->staffCheckInRepository = $staffCheckInRepository ?? app(StaffCheckInRepositoryInterface::class);
-    }
+        protected TimetableRepositoryInterface $timetableRepository,
+        protected LaneRepositoryInterface $laneRepository,
+        protected TimetableTaskRepositoryInterface $taskRepository,
+        protected StaffRepositoryInterface $staffRepository,
+        protected StaffCheckInRepositoryInterface $staffCheckInRepository,
+    ) {}
 
     /**
      * 当日進行表（マトリクス画面）用の全表示データを取得

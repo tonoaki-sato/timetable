@@ -2,9 +2,9 @@
 
 namespace App\Actions\Vendor;
 
-use App\Http\Requests\StoreVendorRequest;
 use App\Repositories\Contracts\VendorRepositoryInterface;
 use App\Support\CsvSanitizer;
+use App\Support\Validation\VendorValidationRules;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -52,9 +52,8 @@ class ImportVendorsCsvAction
             ]);
         }
 
-        $formRequest = new StoreVendorRequest;
-        $rules = $formRequest->rules();
-        $attributes = $formRequest->attributes();
+        $rules = VendorValidationRules::rules();
+        $attributes = VendorValidationRules::attributes();
 
         $validatedRows = [];
         $errors = [];

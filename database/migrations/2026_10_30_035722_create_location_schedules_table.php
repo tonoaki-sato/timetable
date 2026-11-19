@@ -21,6 +21,8 @@ return new class extends Migration
             $table->text('note')->nullable()->comment('補足メモ');
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
+
+            $table->index(['location_id', 'start_at']);
         });
     }
 

@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Services\ScheduleService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -33,7 +34,12 @@ class ScheduleServiceTest extends TestCase
             ->once()
             ->andReturn(['total' => 5, 'planned' => 2, 'in_progress' => 1, 'completed' => 2]);
 
-        $service = new ScheduleService($mockRepo);
+        $mockStaffRepo = Mockery::mock(StaffRepositoryInterface::class);
+        $mockStaffRepo->shouldReceive('getActiveStaffList')
+            ->once()
+            ->andReturn(new Collection);
+
+        $service = new ScheduleService($mockRepo, $mockStaffRepo);
 
         $result = $service->getIndexViewData(
             category: 'committee',
@@ -78,7 +84,7 @@ class ScheduleServiceTest extends TestCase
             ->with($inputData + ['created_by' => 42])
             ->andReturn($expectedCreatedSchedule);
 
-        $service = new ScheduleService($mockRepo);
+        $service = new ScheduleService($mockRepo, Mockery::mock(StaffRepositoryInterface::class));
 
         $created = $service->createSchedule($inputData, $user);
 
@@ -98,7 +104,7 @@ class ScheduleServiceTest extends TestCase
             ->with($schedule, ['title' => '更新'])
             ->andReturn(true);
 
-        $service = new ScheduleService($mockRepo);
+        $service = new ScheduleService($mockRepo, Mockery::mock(StaffRepositoryInterface::class));
 
         $this->assertTrue($service->updateSchedule($schedule, ['title' => '更新']));
     }
@@ -116,7 +122,7 @@ class ScheduleServiceTest extends TestCase
             ->with($schedule)
             ->andReturn(true);
 
-        $service = new ScheduleService($mockRepo);
+        $service = new ScheduleService($mockRepo, Mockery::mock(StaffRepositoryInterface::class));
 
         $this->assertTrue($service->deleteSchedule($schedule));
     }
@@ -136,7 +142,7 @@ class ScheduleServiceTest extends TestCase
             ->with(['committee'], 'planned', '検索語', 5, 'upcoming')
             ->andReturn($mockCollection);
 
-        $service = new ScheduleService($mockRepo);
+        $service = new ScheduleService($mockRepo, Mockery::mock(StaffRepositoryInterface::class));
 
         $result = $service->getPdfViewData(
             category: 'committee',

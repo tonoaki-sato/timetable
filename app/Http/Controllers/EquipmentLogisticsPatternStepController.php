@@ -42,18 +42,18 @@ class EquipmentLogisticsPatternStepController extends Controller
      */
     public function update(UpdateEquipmentLogisticsPatternStepRequest $request, EquipmentLogisticsPattern $pattern, EquipmentLogisticsPatternStep $step): RedirectResponse|JsonResponse
     {
-        $this->logisticsService->updatePatternStep($step, $request->validated());
+        $updatedStep = $this->logisticsService->updatePatternStep($step, $request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "ステップ「{$step->title}」を更新しました。",
-                'step' => $step->fresh(),
+                'message' => "ステップ「{$updatedStep->title}」を更新しました。",
+                'step' => $updatedStep,
             ]);
         }
 
         return redirect()->route('equipment-patterns.index')
-            ->with('status', "ステップ「{$step->title}」を更新しました。");
+            ->with('status', "ステップ「{$updatedStep->title}」を更新しました。");
     }
 
     /**

@@ -168,6 +168,40 @@ class Staff extends Model
     }
 
     /**
+     * 所属する組織ユニット一覧との多対多リレーション
+     */
+    public function organizationUnits(): BelongsToMany
+    {
+        return $this->belongsToMany(OrganizationUnit::class, 'organization_unit_staff')
+            ->withPivot(['id', 'role', 'display_order'])
+            ->withTimestamps();
+    }
+
+    /**
+     * 組織ユニット割り当て中間情報とのリレーション
+     */
+    public function organizationUnitAssignments(): HasMany
+    {
+        return $this->hasMany(OrganizationUnitStaff::class, 'staff_id');
+    }
+
+    /**
+     * 送信した班長応援・機材申請一覧とのリレーション
+     */
+    public function laneRequests(): HasMany
+    {
+        return $this->hasMany(LaneRequest::class, 'requested_by_staff_id');
+    }
+
+    /**
+     * 立会を担当する資機材搬出入計画一覧とのリレーション
+     */
+    public function witnessedLogisticsPlans(): HasMany
+    {
+        return $this->hasMany(EquipmentLogisticsPlan::class, 'witness_staff_id');
+    }
+
+    /**
      * 稼働可能スタッフのスコープ
      */
     public function scopeActive(Builder $query): Builder

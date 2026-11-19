@@ -33,6 +33,7 @@ return new class extends Migration
 
             // 検索最適化インデックス
             $table->index(['name', 'kana']);
+            $table->index(['is_active', 'kana', 'name']);
         });
     }
 

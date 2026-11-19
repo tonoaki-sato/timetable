@@ -24,6 +24,8 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->comment('作成者');
             $table->dateTime('created_at')->nullable()->comment('作成日時');
             $table->dateTime('updated_at')->nullable()->comment('更新日時');
+
+            $table->index(['status', 'target_date', 'start_time']);
         });
     }
 

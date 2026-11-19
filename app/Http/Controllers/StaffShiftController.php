@@ -3,16 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Staff\ExportStaffShiftIcsAction;
+use App\Enums\AttendanceStatus;
 use App\Http\Requests\CheckInStaffShiftRequest;
 use App\Http\Requests\ShowStaffShiftRequest;
 use App\Http\Requests\StoreLaneRequestFromShiftRequest;
 use App\Http\Requests\UpdateLaneTaskStatusRequest;
 use App\Http\Requests\UpdateStaffAssignmentStatusRequest;
 use App\Models\Lane;
+use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\TimetableTask;
-use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Services\StaffService;
+use App\Services\TimetableService;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,25 +25,17 @@ use Illuminate\View\View;
 
 class StaffShiftController extends Controller
 {
-    protected TimetableRepositoryInterface $timetableRepository;
-
     public function __construct(
         protected StaffService $staffService,
-        ?TimetableRepositoryInterface $timetableRepository = null,
-    ) {
-        $this->timetableRepository = $timetableRepository ?? app(TimetableRepositoryInterface::class);
-    }
+        protected TimetableService $timetableService,
+    ) {}
 
     /**
      * 現場マイタイムテーブル画面の表示
      */
     public function show(ShowStaffShiftRequest $request, string $token): View
     {
-        $staff = $this->staffService->getStaffByToken($token);
-
-        if (! $staff || ! $staff->is_active) {
-            abort(404, '指定されたタイムテーブルが見つかりません。');
-        }
+        $staff = $this->resolveActiveStaffOrAbort($token, '指定されたタイムテーブルが見つかりません。');
 
         // 端末自動認識用の長期Cookie（30日間）を保持
         Cookie::queue('staff_token', $staff->access_token, 60 * 24 * 30);
@@ -61,11 +55,7 @@ class StaffShiftController extends Controller
         string $token,
         ExportStaffShiftIcsAction $exportStaffShiftIcsAction
     ): Response {
-        $staff = $this->staffService->getStaffByToken($token);
-
-        if (! $staff || ! $staff->is_active) {
-            abort(404, '指定されたスタッフが見つかりません。');
-        }
+        $staff = $this->resolveActiveStaffOrAbort($token);
 
         $timetableFilter = $request->validated('timetable_id');
 
@@ -80,13 +70,9 @@ class StaffShiftController extends Controller
      */
     public function checkIn(CheckInStaffShiftRequest $request, string $token): JsonResponse|RedirectResponse
     {
-        $staff = $this->staffService->getStaffByToken($token);
+        $staff = $this->resolveActiveStaffOrAbort($token);
 
-        if (! $staff || ! $staff->is_active) {
-            abort(404, '指定されたスタッフが見つかりません。');
-        }
-
-        $timetable = $this->timetableRepository->findOrFail((int) $request->validated('timetable_id'));
+        $timetable = $this->timetableService->findOrFail((int) $request->validated('timetable_id'));
 
         try {
             $checkIn = $this->staffService->checkInStaff($staff, $timetable);
@@ -113,11 +99,7 @@ class StaffShiftController extends Controller
      */
     public function updateAssignmentStatus(UpdateStaffAssignmentStatusRequest $request, string $token, TaskStaffAssignment $assignment): JsonResponse|RedirectResponse
     {
-        $staff = $this->staffService->getStaffByToken($token);
-
-        if (! $staff || ! $staff->is_active) {
-            abort(404, '指定されたスタッフが見つかりません。');
-        }
+        $staff = $this->resolveActiveStaffOrAbort($token);
 
         if ($assignment->staff_id !== $staff->id) {
             abort(403, 'ご自身の担当タスクのみ進捗を報告できます。');
@@ -135,7 +117,7 @@ class StaffShiftController extends Controller
             return response()->json([
                 'success' => true,
                 'status' => $status,
-                'status_label' => TaskStaffAssignment::ATTENDANCE_STATUSES[$status] ?? $status,
+                'status_label' => AttendanceStatus::tryFrom((string) $status)?->label() ?? $status,
             ]);
         }
 
@@ -148,14 +130,9 @@ class StaffShiftController extends Controller
      */
     public function updateLaneTaskStatus(UpdateLaneTaskStatusRequest $request, string $token, TimetableTask $task): JsonResponse|RedirectResponse
     {
-        $staff = $this->staffService->getStaffByToken($token);
+        $staff = $this->resolveActiveStaffOrAbort($token);
 
-        if (! $staff || ! $staff->is_active) {
-            abort(404, '指定されたスタッフが見つかりません。');
-        }
-
-        $task->loadMissing('laneRelation');
-        if (! $task->laneRelation || (int) $task->laneRelation->lead_staff_id !== (int) $staff->id) {
+        if (! $this->staffService->isLeaderOfTask($staff, $task)) {
             abort(403, '担当する班の班長のみタスク全体の進捗を更新できます。');
         }
 
@@ -184,11 +161,7 @@ class StaffShiftController extends Controller
      */
     public function storeLaneRequest(StoreLaneRequestFromShiftRequest $request, string $token, Lane $lane): JsonResponse|RedirectResponse
     {
-        $staff = $this->staffService->getStaffByToken($token);
-
-        if (! $staff || ! $staff->is_active) {
-            abort(404, '指定されたスタッフが見つかりません。');
-        }
+        $staff = $this->resolveActiveStaffOrAbort($token);
 
         if ((int) $lane->lead_staff_id !== (int) $staff->id) {
             abort(403, '担当する班の班長のみ管理者への要請・申請を行えます。');
@@ -212,6 +185,22 @@ class StaffShiftController extends Controller
 
         return redirect()->route('staff.myshift', ['token' => $token])
             ->with('success', "管理者（本部）へ「{$label}」を送信しました。");
+    }
+
+    /**
+     * アクセストークンから有効なスタッフを解決（見つからない・無効時は 404）
+     */
+    protected function resolveActiveStaffOrAbort(
+        string $token,
+        string $notFoundMessage = '指定されたスタッフが見つかりません。',
+    ): Staff {
+        $staff = $this->staffService->getStaffByToken($token);
+
+        if (! $staff || ! $staff->is_active) {
+            abort(404, $notFoundMessage);
+        }
+
+        return $staff;
     }
 
     /**

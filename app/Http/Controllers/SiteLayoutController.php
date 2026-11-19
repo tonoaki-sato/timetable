@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DTOs\LayoutItemFilterDTO;
 use App\Enums\BoothCategory;
 use App\Enums\FacilityType;
 use App\Http\Requests\StoreLayoutItemRequest;
@@ -10,7 +11,6 @@ use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
 use App\Services\SiteLayoutService;
-use App\Support\TableQueryOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -46,18 +46,9 @@ class SiteLayoutController extends Controller
         $this->authorize('viewAny', LayoutMap::class);
 
         $map = $this->siteLayoutService->getLayoutWithAreas($timetable);
+        $filter = LayoutItemFilterDTO::fromArray($request->query());
 
-        $perPage = TableQueryOptions::resolvePerPage($request->query('per_page'), 50, [25, 50, 100]);
-        $filters = [
-            'item_type' => $request->query('item_type'),
-            'area_id' => $request->query('area_id'),
-            'category' => $request->query('category'),
-            'search' => $request->query('search'),
-            'sort' => $request->filled('sort') ? (string) $request->query('sort') : null,
-            'direction' => $request->filled('direction') ? (string) $request->query('direction') : null,
-        ];
-
-        $items = $this->siteLayoutService->paginateItems($map, $filters, $perPage);
+        $items = $this->siteLayoutService->paginateItems($map, $filter);
         $vendors = $this->siteLayoutService->getVendorsForSelect($timetable);
 
         return view('site_layouts.booths', [
@@ -65,7 +56,7 @@ class SiteLayoutController extends Controller
             'map' => $map,
             'items' => $items,
             'vendors' => $vendors,
-            'filters' => $filters,
+            'filters' => $filter->toFilterArray(),
             'areas' => $map->areas,
             'boothCategories' => BoothCategory::cases(),
             'facilityTypes' => FacilityType::cases(),

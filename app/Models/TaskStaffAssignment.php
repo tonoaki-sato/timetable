@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AttendanceStatus;
 use Database\Factories\TaskStaffAssignmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -50,11 +51,19 @@ class TaskStaffAssignment extends Model
     }
 
     /**
+     * 出欠ステータス Enum
+     */
+    public function getAttendanceStatusEnumAttribute(): ?AttendanceStatus
+    {
+        return AttendanceStatus::tryFrom((string) $this->attendance_status);
+    }
+
+    /**
      * 出欠ステータスの日本語表示
      */
     public function getAttendanceStatusLabelAttribute(): string
     {
-        return self::ATTENDANCE_STATUSES[$this->attendance_status] ?? $this->attendance_status;
+        return $this->attendance_status_enum?->label() ?? (string) $this->attendance_status;
     }
 
     /**

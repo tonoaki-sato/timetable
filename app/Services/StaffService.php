@@ -27,30 +27,14 @@ use Illuminate\Support\Str;
 
 class StaffService
 {
-    protected TaskStaffAssignmentRepositoryInterface $assignmentRepository;
-
-    protected TimetableTaskRepositoryInterface $taskRepository;
-
-    protected LaneRequestRepositoryInterface $laneRequestRepository;
-
-    protected StaffCheckInRepositoryInterface $staffCheckInRepository;
-
-    protected QRCodeService $qrCodeService;
-
     public function __construct(
         protected StaffRepositoryInterface $staffRepository,
-        ?TaskStaffAssignmentRepositoryInterface $assignmentRepository = null,
-        ?TimetableTaskRepositoryInterface $taskRepository = null,
-        ?LaneRequestRepositoryInterface $laneRequestRepository = null,
-        ?StaffCheckInRepositoryInterface $staffCheckInRepository = null,
-        ?QRCodeService $qrCodeService = null,
-    ) {
-        $this->assignmentRepository = $assignmentRepository ?? app(TaskStaffAssignmentRepositoryInterface::class);
-        $this->taskRepository = $taskRepository ?? app(TimetableTaskRepositoryInterface::class);
-        $this->laneRequestRepository = $laneRequestRepository ?? app(LaneRequestRepositoryInterface::class);
-        $this->staffCheckInRepository = $staffCheckInRepository ?? app(StaffCheckInRepositoryInterface::class);
-        $this->qrCodeService = $qrCodeService ?? app(QRCodeService::class);
-    }
+        protected TaskStaffAssignmentRepositoryInterface $assignmentRepository,
+        protected TimetableTaskRepositoryInterface $taskRepository,
+        protected LaneRequestRepositoryInterface $laneRequestRepository,
+        protected StaffCheckInRepositoryInterface $staffCheckInRepository,
+        protected QRCodeService $qrCodeService,
+    ) {}
 
     /**
      * IDによるスタッフ取得
@@ -725,5 +709,16 @@ class StaffService
             'current_task' => $currentTask,
             'next_task' => $nextTask,
         ];
+    }
+
+    /**
+     * 指定スタッフが指定タスク所属班の班長であるか判定
+     */
+    public function isLeaderOfTask(Staff $staff, TimetableTask $task): bool
+    {
+        $task->loadMissing('laneRelation');
+
+        return $task->laneRelation !== null
+            && (int) $task->laneRelation->lead_staff_id === (int) $staff->id;
     }
 }

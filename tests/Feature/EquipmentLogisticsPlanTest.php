@@ -11,6 +11,7 @@ use App\Models\Staff;
 use App\Models\Timetable;
 use App\Models\User;
 use App\Services\EquipmentLogisticsService;
+use App\Services\LocationAvailabilityService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -352,7 +353,9 @@ class EquipmentLogisticsPlanTest extends TestCase
             'to_location_id' => $this->locationTaxOffice->id,
         ]);
 
-        $warning = $planEarly->checkToLocationAvailability();
+        $availabilityService = app(LocationAvailabilityService::class);
+
+        $warning = $availabilityService->checkToLocationAvailability($planEarly);
         $this->assertNotNull($warning);
         $this->assertEquals('warning', $warning['level']);
         $this->assertStringContainsString('利用開始', $warning['message']);
@@ -364,7 +367,7 @@ class EquipmentLogisticsPlanTest extends TestCase
             'start_time' => '14:00',
             'to_location_id' => $this->locationTaxOffice->id,
         ]);
-        $this->assertNull($planValid->checkToLocationAvailability());
+        $this->assertNull($availabilityService->checkToLocationAvailability($planValid));
 
         // 3. 番所前スペースの中抜け時間帯（10/11 12:00：模擬店使用中）に移動予定を設定すると警告が出ること
         $planMiddleGap = EquipmentLogisticsPlan::factory()->create([
@@ -373,7 +376,7 @@ class EquipmentLogisticsPlanTest extends TestCase
             'start_time' => '12:00',
             'to_location_id' => $this->locationBanshoSpace->id,
         ]);
-        $gapWarning = $planMiddleGap->checkToLocationAvailability();
+        $gapWarning = $availabilityService->checkToLocationAvailability($planMiddleGap);
         $this->assertNotNull($gapWarning);
         $this->assertStringContainsString('利用可能時間外（またはイベントブース使用時間帯）', $gapWarning['message']);
     }

@@ -138,7 +138,7 @@ class Equipment extends Model
     {
         $prefix = $this->is_approximate_quantity ? '約 ' : '';
 
-        return $prefix . number_format((int) $this->quantity) . ' ' . $this->unit;
+        return $prefix.number_format((int) $this->quantity).' '.$this->unit;
     }
 
     /**
@@ -146,7 +146,7 @@ class Equipment extends Model
      */
     public function isRental(): bool
     {
-        return $this->type === EquipmentType::Rental || $this->type === 'rental';
+        return $this->type_enum === EquipmentType::Rental;
     }
 
     /**
@@ -154,7 +154,7 @@ class Equipment extends Model
      */
     public function isPersonal(): bool
     {
-        return $this->type === EquipmentType::Personal || $this->type === 'personal';
+        return $this->type_enum === EquipmentType::Personal;
     }
 
     /**

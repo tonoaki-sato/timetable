@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTOs\VendorFilterDTO;
 use App\Models\Vendor;
 use App\Repositories\Contracts\VendorRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -15,11 +16,14 @@ class VendorService
     /**
      * ページネーション一覧を取得
      *
-     * @param  array{search?: string|null, sort?: string|null, direction?: string|null}  $filters
+     * @param  VendorFilterDTO|array{search?: string|null, sort?: string|null, direction?: string|null}  $filters
      */
-    public function paginateVendors(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    public function paginateVendors(VendorFilterDTO|array $filters = [], ?int $perPage = null): LengthAwarePaginator
     {
-        return $this->vendorRepository->paginate($filters, $perPage);
+        $filterArray = $filters instanceof VendorFilterDTO ? $filters->toFilterArray() : $filters;
+        $resolvedPerPage = $perPage ?? ($filters instanceof VendorFilterDTO ? $filters->perPage : 15);
+
+        return $this->vendorRepository->paginate($filterArray, $resolvedPerPage);
     }
 
     /**

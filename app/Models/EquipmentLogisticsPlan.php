@@ -6,7 +6,7 @@ use App\Enums\EquipmentActionType;
 use App\Enums\EquipmentDayPhase;
 use App\Enums\EquipmentOperatorType;
 use App\Enums\EquipmentPlanStatus;
-use App\Services\LocationAvailabilityService;
+use App\Presenters\EquipmentLogisticsPlanPresenter;
 use Database\Factories\EquipmentLogisticsPlanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -39,6 +39,16 @@ class EquipmentLogisticsPlan extends Model
 {
     /** @use HasFactory<EquipmentLogisticsPlanFactory> */
     use HasFactory;
+
+    protected ?EquipmentLogisticsPlanPresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): EquipmentLogisticsPlanPresenter
+    {
+        return $this->presenterInstance ??= new EquipmentLogisticsPlanPresenter($this);
+    }
 
     /**
      * フェーズ定義一覧（時系列7区分）
@@ -288,7 +298,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function isCompleted(): bool
     {
-        return $this->status === EquipmentPlanStatus::Completed || $this->status === 'completed';
+        return $this->status_enum === EquipmentPlanStatus::Completed;
     }
 
     /**
@@ -296,7 +306,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function isCancelled(): bool
     {
-        return $this->status === EquipmentPlanStatus::Cancelled || $this->status === 'cancelled';
+        return $this->status_enum === EquipmentPlanStatus::Cancelled;
     }
 
     /**
@@ -320,23 +330,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function getRowHighlightClassAttribute(): string
     {
-        if ($this->isCompleted()) {
-            return 'bg-emerald-50/15 hover:bg-slate-50/70';
-        }
-
-        if ($this->isCancelled()) {
-            return 'bg-slate-50/50 text-slate-400 hover:bg-slate-100/50';
-        }
-
-        if ($this->needsTimeWarning()) {
-            return 'bg-amber-50/70 hover:bg-amber-100/60';
-        }
-
-        if ($this->status === EquipmentPlanStatus::InProgress || $this->status === 'in_progress') {
-            return 'bg-sky-50/25 hover:bg-slate-50/70';
-        }
-
-        return 'hover:bg-slate-50/70';
+        return $this->presenter()->rowHighlightClass();
     }
 
     /**
@@ -366,26 +360,6 @@ class EquipmentLogisticsPlan extends Model
             ->orderByRaw("{$endTimeColumn} IS NULL ASC")
             ->orderBy($endTimeColumn, 'asc')
             ->orderBy($idColumn, 'asc');
-    }
-
-    /**
-     * 移動先拠点の貸切・利用可能期間（中抜け時間帯含む）を判定し、警告があれば配列で返却
-     *
-     * @return array{level: string, message: string}|null
-     */
-    public function checkToLocationAvailability(): ?array
-    {
-        return app(LocationAvailabilityService::class)->checkToLocationAvailability($this);
-    }
-
-    /**
-     * 移動元拠点の搬出期限・中抜け時間帯を判定し、警告があれば配列で返却
-     *
-     * @return array{level: string, message: string}|null
-     */
-    public function checkFromLocationAvailability(): ?array
-    {
-        return app(LocationAvailabilityService::class)->checkFromLocationAvailability($this);
     }
 
     /**
@@ -427,15 +401,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function getPhaseBadgeClassAttribute(): string
     {
-        return match ($this->day_phase) {
-            'pre_day' => 'bg-purple-50 text-purple-700 border-purple-200',
-            'day1_morning' => 'bg-sky-50 text-sky-700 border-sky-200',
-            'day1_evening' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-            'day2_morning' => 'bg-teal-50 text-teal-700 border-teal-200',
-            'day2_evening' => 'bg-amber-50 text-amber-700 border-amber-200',
-            'post_day' => 'bg-rose-50 text-rose-700 border-rose-200',
-            default => 'bg-slate-50 text-slate-700 border-slate-200',
-        };
+        return $this->presenter()->phaseBadgeClass();
     }
 
     /**
@@ -465,38 +431,6 @@ class EquipmentLogisticsPlan extends Model
      */
     public function toModalPayload(?Timetable $timetable = null): array
     {
-        return [
-            'id' => $this->id,
-            'equipment_id' => $this->equipment_id,
-            'equipment_name' => $this->equipment?->name ?? '',
-            'status' => $this->status,
-            'status_label' => $this->status_label,
-            'day_phase' => $this->day_phase,
-            'phase_label' => $this->phase_label,
-            'phase_badge_class' => $this->phase_badge_class,
-            'action_type' => $this->action_type,
-            'action_label' => $this->action_label,
-            'title' => $this->title,
-            'target_date' => $this->target_date?->format('Y-m-d'),
-            'start_time' => $this->start_time ? substr($this->start_time, 0, 5) : '',
-            'end_time' => $this->end_time ? substr($this->end_time, 0, 5) : '',
-            'formatted_time_range' => $this->formatted_time_range,
-            'from_location_id' => $this->from_location_id,
-            'from_location' => $this->from_location,
-            'resolved_from_location' => $this->resolved_from_location,
-            'to_location_id' => $this->to_location_id,
-            'to_location' => $this->to_location,
-            'resolved_to_location' => $this->resolved_to_location,
-            'quantity' => $this->quantity,
-            'quantity_note' => $this->quantity_note,
-            'formatted_quantity' => $this->formatted_quantity,
-            'operator_type' => $this->operator_type,
-            'operator_label' => $this->operator_label,
-            'witness_required' => $this->witness_required ? 1 : 0,
-            'witness_staff_id' => $this->witness_staff_id,
-            'witness_staff_name' => $this->witnessStaff?->name ?? '',
-            'notes' => $this->notes,
-            'update_url' => $this->updateUrl($timetable),
-        ];
+        return $this->presenter()->toModalPayload($timetable);
     }
 }

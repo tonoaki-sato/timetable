@@ -20,26 +20,13 @@ use Illuminate\Support\Facades\DB;
 
 class TimetableTaskService
 {
-    protected LaneRepositoryInterface $laneRepository;
-
-    protected StaffRepositoryInterface $staffRepository;
-
-    protected TaskStaffAssignmentRepositoryInterface $assignmentRepository;
-
-    protected TimetableRepositoryInterface $timetableRepository;
-
     public function __construct(
         protected TimetableTaskRepositoryInterface $taskRepository,
-        ?LaneRepositoryInterface $laneRepository = null,
-        ?StaffRepositoryInterface $staffRepository = null,
-        ?TaskStaffAssignmentRepositoryInterface $assignmentRepository = null,
-        ?TimetableRepositoryInterface $timetableRepository = null,
-    ) {
-        $this->laneRepository = $laneRepository ?? app(LaneRepositoryInterface::class);
-        $this->staffRepository = $staffRepository ?? app(StaffRepositoryInterface::class);
-        $this->assignmentRepository = $assignmentRepository ?? app(TaskStaffAssignmentRepositoryInterface::class);
-        $this->timetableRepository = $timetableRepository ?? app(TimetableRepositoryInterface::class);
-    }
+        protected LaneRepositoryInterface $laneRepository,
+        protected StaffRepositoryInterface $staffRepository,
+        protected TaskStaffAssignmentRepositoryInterface $assignmentRepository,
+        protected TimetableRepositoryInterface $timetableRepository,
+    ) {}
 
     /**
      * アサイン情報付きタスク詳細の取得

@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Timetable\ResolveActiveTimetableRedirectAction;
 use App\Actions\TimetableTask\CreateCommonTimetableTasksAction;
 use App\Http\Requests\StoreCommonTimetableTaskRequest;
 use App\Http\Requests\StoreTimetableTaskRequest;
 use App\Http\Requests\UpdateTimetableTaskRequest;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
-use App\Services\ConflictDetectionService;
-use App\Services\StaffAllocationService;
-use App\Services\TimetableService;
 use App\Services\TimetableTaskService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,29 +18,21 @@ class TimetableTaskController extends Controller
 {
     public function __construct(
         protected TimetableTaskService $taskService,
-        protected ConflictDetectionService $conflictService,
-        protected StaffAllocationService $allocationService,
-        protected TimetableService $timetableService
     ) {}
 
     /**
      * タスク一覧
      */
-    public function index(Request $request): View|RedirectResponse
+    public function index(Request $request, ResolveActiveTimetableRedirectAction $redirectAction): View|RedirectResponse
     {
         if ($request->filled('timetable_id')) {
-            $timetable = $this->timetableService->findOrFail($request->integer('timetable_id'));
-
-            return $this->indexByTimetable($timetable);
+            $timetable = $redirectAction->resolveRequestedOrActive($request->integer('timetable_id'));
+            if ($timetable !== null) {
+                return $this->indexByTimetable($timetable);
+            }
         }
 
-        $currentTimetable = $this->timetableService->findFirstActiveOrEarliest();
-
-        if ($currentTimetable) {
-            return redirect()->route('timetables.tasks.index', $currentTimetable);
-        }
-
-        return redirect()->route('timetables.index');
+        return $redirectAction->execute($request, 'timetables.tasks.index');
     }
 
     /**

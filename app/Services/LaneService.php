@@ -171,6 +171,67 @@ class LaneService
     }
 
     /**
+     * 削除方針（タスク移行・カスケード削除・単体削除）に応じてレーン削除を実行
+     *
+     * @return array{status: string, message: string, task_count: int}
+     */
+    public function deleteLaneWithStrategy(
+        Timetable $timetable,
+        Lane $lane,
+        ?int $migrateToLaneId,
+        bool $cascadeDeleteTasks,
+    ): array {
+        $taskCount = $this->countLaneTasks($lane);
+
+        if ($migrateToLaneId !== null && $migrateToLaneId > 0) {
+            $targetLane = $this->findTargetLaneForMigration($timetable, $migrateToLaneId);
+
+            if (! $targetLane || $targetLane->id === $lane->id) {
+                return [
+                    'status' => 'invalid_target',
+                    'message' => '有効な移行先レーンを選択してください。',
+                    'task_count' => $taskCount,
+                ];
+            }
+
+            $this->migrateTasksAndDeleteLane($lane, $targetLane);
+
+            return [
+                'status' => 'migrated',
+                'message' => "担当班「{$lane->name}」の作業タスク {$taskCount} 件を「{$targetLane->name}」に引き継ぎ、レーンを削除しました。",
+                'task_count' => $taskCount,
+            ];
+        }
+
+        if ($cascadeDeleteTasks) {
+            $this->cascadeDeleteTasksAndLane($lane);
+
+            return [
+                'status' => 'cascaded',
+                'message' => "担当班「{$lane->name}」および紐づく作業タスク {$taskCount} 件をすべて削除しました。",
+                'task_count' => $taskCount,
+            ];
+        }
+
+        if ($taskCount > 0) {
+            return [
+                'status' => 'blocked',
+                'message' => "レーン「{$lane->name}」には {$taskCount} 件の作業タスクが紐づいているため削除できません。引き継ぎ先レーンを選択するか、タスクを含めて削除してください。",
+                'task_count' => $taskCount,
+            ];
+        }
+
+        $name = $lane->name;
+        $this->deleteLane($lane);
+
+        return [
+            'status' => 'deleted',
+            'message' => "担当班「{$name}」を削除しました。",
+            'task_count' => 0,
+        ];
+    }
+
+    /**
      * 班長からの応援要請・機材申請ステータスを更新
      */
     public function updateLaneRequestStatus(LaneRequest $laneRequest, string $status, ?int $userId): LaneRequest

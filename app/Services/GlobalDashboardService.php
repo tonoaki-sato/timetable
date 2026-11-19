@@ -12,24 +12,14 @@ use Carbon\Carbon;
 
 class GlobalDashboardService
 {
-    protected StaffRepositoryInterface $staffRepository;
-
-    protected EquipmentRepositoryInterface $equipmentRepository;
-
-    protected LocationRepositoryInterface $locationRepository;
-
     public function __construct(
         protected ScheduleRepositoryInterface $scheduleRepository,
         protected TimetableRepositoryInterface $timetableRepository,
         protected PhaseService $phaseService,
-        ?StaffRepositoryInterface $staffRepository = null,
-        ?EquipmentRepositoryInterface $equipmentRepository = null,
-        ?LocationRepositoryInterface $locationRepository = null,
-    ) {
-        $this->staffRepository = $staffRepository ?? app(StaffRepositoryInterface::class);
-        $this->equipmentRepository = $equipmentRepository ?? app(EquipmentRepositoryInterface::class);
-        $this->locationRepository = $locationRepository ?? app(LocationRepositoryInterface::class);
-    }
+        protected StaffRepositoryInterface $staffRepository,
+        protected EquipmentRepositoryInterface $equipmentRepository,
+        protected LocationRepositoryInterface $locationRepository,
+    ) {}
 
     /**
      * 本部総合統括ダッシュボード表示用集約データを取得

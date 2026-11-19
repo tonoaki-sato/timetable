@@ -155,6 +155,14 @@ class Location extends Model
     }
 
     /**
+     * この拠点に紐づく配置エリア一覧とのリレーション
+     */
+    public function layoutAreas(): HasMany
+    {
+        return $this->hasMany(LayoutArea::class, 'location_id');
+    }
+
+    /**
      * 種別ラベルのアクセサ
      */
     public function getTypeLabelAttribute(): string

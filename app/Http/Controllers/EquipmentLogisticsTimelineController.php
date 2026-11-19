@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Timetable\ResolveActiveTimetableRedirectAction;
 use App\Models\Equipment;
 use App\Models\Timetable;
 use App\Services\EquipmentLogisticsService;
-use App\Services\TimetableService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,27 +14,14 @@ class EquipmentLogisticsTimelineController extends Controller
 {
     public function __construct(
         protected EquipmentLogisticsService $logisticsService,
-        protected TimetableService $timetableService
     ) {}
 
     /**
      * 搬出入タイムラインへのリダイレクト（アクティブまたは直近の運行日へ）
      */
-    public function redirect(Request $request): RedirectResponse
+    public function redirect(Request $request, ResolveActiveTimetableRedirectAction $redirectAction): RedirectResponse
     {
-        if ($request->filled('timetable_id')) {
-            $timetable = $this->timetableService->findOrFail($request->integer('timetable_id'));
-
-            return redirect()->route('timetables.logistics-timeline', $timetable);
-        }
-
-        $currentTimetable = $this->timetableService->findFirstActiveOrEarliest();
-
-        if ($currentTimetable) {
-            return redirect()->route('timetables.logistics-timeline', $currentTimetable);
-        }
-
-        return redirect()->route('timetables.index');
+        return $redirectAction->execute($request, 'timetables.logistics-timeline');
     }
 
     /**

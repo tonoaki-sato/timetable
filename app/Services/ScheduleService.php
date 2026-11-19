@@ -2,23 +2,21 @@
 
 namespace App\Services;
 
+use App\DTOs\ScheduleFilterDTO;
 use App\Models\Schedule;
 use App\Models\Staff;
 use App\Models\User;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
+use DomainException;
 use Illuminate\Database\Eloquent\Collection;
 
 class ScheduleService
 {
-    protected StaffRepositoryInterface $staffRepository;
-
     public function __construct(
         protected ScheduleRepositoryInterface $scheduleRepository,
-        ?StaffRepositoryInterface $staffRepository = null
-    ) {
-        $this->staffRepository = $staffRepository ?? app(StaffRepositoryInterface::class);
-    }
+        protected StaffRepositoryInterface $staffRepository,
+    ) {}
 
     /**
      * リクエスト入力の category を有効な区分キー配列へ正規化（未指定またはすべて選択時は null）
@@ -112,6 +110,41 @@ class ScheduleService
     }
 
     /**
+     * DTO を用いてスケジュール一覧画面表示用データを組み立て
+     *
+     * @return array<string, mixed>
+     */
+    public function getIndexViewDataByFilter(ScheduleFilterDTO $filter): array
+    {
+        return $this->getIndexViewData(
+            category: $filter->category,
+            status: $filter->status,
+            search: $filter->search,
+            staffId: $filter->staffId,
+            tab: $filter->tab,
+            perPage: $filter->perPage,
+            sort: $filter->sort,
+            direction: $filter->direction,
+        );
+    }
+
+    /**
+     * 詳細画面表示用に関連リレーションをロード
+     */
+    public function getScheduleDetails(Schedule $schedule): Schedule
+    {
+        return $schedule->load(['creator', 'assignee', 'timetable']);
+    }
+
+    /**
+     * JSON応答用に担当スタッフをロード
+     */
+    public function loadAssignee(Schedule $schedule): Schedule
+    {
+        return $schedule->load('assignee');
+    }
+
+    /**
      * 稼働可能なスタッフ一覧を取得（フォーム選択用）
      *
      * @return Collection<int, Staff>
@@ -157,9 +190,17 @@ class ScheduleService
 
     /**
      * スケジュールの削除
+     *
+     * @throws DomainException
      */
     public function deleteSchedule(Schedule $schedule): bool
     {
+        if ($schedule->is_linked_to_timetable) {
+            throw new DomainException(
+                "予定「{$schedule->title}」は運行スケジュール（タイムテーブル）と自動連動しているため、スケジュール管理画面からは削除できません。運行情報管理画面から削除してください。"
+            );
+        }
+
         return $this->scheduleRepository->delete($schedule);
     }
 
@@ -221,6 +262,22 @@ class ScheduleService
             'schedules' => $schedules,
             'generatedAt' => now()->format('Y年n月j日 H:i'),
         ];
+    }
+
+    /**
+     * DTO を用いて .ics（iCalendar）出力用の条件付きスケジュール一覧を取得
+     *
+     * @return Collection<int, Schedule>
+     */
+    public function getFilteredForIcsByFilter(ScheduleFilterDTO $filter): Collection
+    {
+        return $this->getFilteredForIcs(
+            category: $filter->category,
+            status: $filter->status,
+            search: $filter->search,
+            staffId: $filter->staffId,
+            tab: $filter->tab,
+        );
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -14,21 +15,39 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $category
  * @property string $render_style
- * @property float $default_width
- * @property float $default_height
+ * @property numeric-string|float $default_width
+ * @property numeric-string|float $default_height
  * @property bool $is_resizable
  * @property bool $is_rotatable
  * @property int $rotation_step
  * @property array<string>|null $supported_colors
  * @property string $default_color
  * @property bool $has_hygiene_circle
- * @property float $hygiene_radius
+ * @property numeric-string|float $hygiene_radius
  * @property bool $is_hygiene_target
  * @property bool $is_preset
  * @property string|null $icon_asset_path
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
+#[Fillable([
+    'icon_key',
+    'name',
+    'category',
+    'render_style',
+    'default_width',
+    'default_height',
+    'is_resizable',
+    'is_rotatable',
+    'rotation_step',
+    'supported_colors',
+    'default_color',
+    'has_hygiene_circle',
+    'hygiene_radius',
+    'is_hygiene_target',
+    'is_preset',
+    'icon_asset_path',
+])]
 class SiteMapIconDefinition extends Model
 {
     use HasFactory;
@@ -37,28 +56,6 @@ class SiteMapIconDefinition extends Model
      * @var string
      */
     protected $table = 'site_map_icon_definitions';
-
-    /**
-     * @var list<string>
-     */
-    protected $fillable = [
-        'icon_key',
-        'name',
-        'category',
-        'render_style',
-        'default_width',
-        'default_height',
-        'is_resizable',
-        'is_rotatable',
-        'rotation_step',
-        'supported_colors',
-        'default_color',
-        'has_hygiene_circle',
-        'hygiene_radius',
-        'is_hygiene_target',
-        'is_preset',
-        'icon_asset_path',
-    ];
 
     /**
      * @return array<string, string>

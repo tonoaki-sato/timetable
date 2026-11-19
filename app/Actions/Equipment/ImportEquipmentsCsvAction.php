@@ -4,11 +4,11 @@ namespace App\Actions\Equipment;
 
 use App\Enums\EquipmentCheckoutRule;
 use App\Enums\EquipmentType;
-use App\Http\Requests\StoreEquipmentRequest;
 use App\Models\Equipment;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
 use App\Services\EquipmentService;
 use App\Support\CsvSanitizer;
+use App\Support\Validation\EquipmentValidationRules;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -56,17 +56,8 @@ class ImportEquipmentsCsvAction
             ]);
         }
 
-        $rules = (new StoreEquipmentRequest)->rules();
-        $attributes = [
-            'name' => '備品名',
-            'type' => '区分',
-            'checkout_rule' => '持ち出しルール',
-            'quantity' => '基準数量',
-            'is_approximate_quantity' => '概数フラグ',
-            'unit' => '単位',
-            'storage_location' => '定常保管場所',
-            'description' => '備考',
-        ];
+        $rules = EquipmentValidationRules::rules();
+        $attributes = EquipmentValidationRules::attributes();
 
         $validatedRows = [];
         $errors = [];

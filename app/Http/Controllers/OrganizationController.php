@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Organization\CreateOrganizationUnitAction;
 use App\Actions\Organization\DownloadOrganizationPdfAction;
 use App\Actions\Organization\DownloadOrganizationStaffListPdfAction;
+use App\Actions\Organization\UpdateOrganizationUnitAction;
 use App\DTOs\Organization\OrganizationUnitData;
+use App\Http\Requests\ReorderOrganizationUnitsRequest;
 use App\Http\Requests\StoreOrganizationUnitRequest;
 use App\Http\Requests\UpdateOrganizationUnitRequest;
 use App\Models\OrganizationUnit;
@@ -13,13 +16,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class OrganizationController extends Controller
 {
     public function __construct(
         protected OrganizationService $organizationService,
+        protected CreateOrganizationUnitAction $createOrganizationUnitAction,
+        protected UpdateOrganizationUnitAction $updateOrganizationUnitAction,
         protected DownloadOrganizationPdfAction $downloadOrganizationPdfAction,
         protected DownloadOrganizationStaffListPdfAction $downloadOrganizationStaffListPdfAction
     ) {}
@@ -56,7 +60,7 @@ class OrganizationController extends Controller
         $this->authorize('create', OrganizationUnit::class);
 
         $dto = OrganizationUnitData::fromArray($request->validated());
-        $unit = $this->organizationService->createUnit($dto);
+        $unit = $this->createOrganizationUnitAction->execute($dto);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -90,7 +94,7 @@ class OrganizationController extends Controller
         $this->authorize('update', $organization);
 
         $dto = OrganizationUnitData::fromArray($request->validated());
-        $unit = $this->organizationService->updateUnit($organization, $dto);
+        $unit = $this->updateOrganizationUnitAction->execute($organization, $dto);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -128,24 +132,11 @@ class OrganizationController extends Controller
     /**
      * 組織ユニットの並び順を一括保存（DnD操作時）
      */
-    public function reorder(Request $request): JsonResponse
+    public function reorder(ReorderOrganizationUnitsRequest $request): JsonResponse
     {
-        $this->authorize('update', new OrganizationUnit);
+        $this->authorize('update', OrganizationUnit::class);
 
-        $validated = $request->validate([
-            'ids' => ['required', 'array'],
-            'ids.*' => ['integer'],
-        ]);
-
-        $ids = array_values(array_map('intval', $validated['ids']));
-        $uniqueIds = array_values(array_unique($ids));
-        if ($uniqueIds !== [] && OrganizationUnit::whereIn('id', $uniqueIds)->count() !== count($uniqueIds)) {
-            throw ValidationException::withMessages([
-                'ids' => ['指定された組織の一部が見つかりません。'],
-            ]);
-        }
-
-        $this->organizationService->reorderUnits($ids);
+        $this->organizationService->reorderUnits($request->orderedIds());
 
         return response()->json([
             'success' => true,

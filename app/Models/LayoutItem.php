@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'layout_map_id',
@@ -68,6 +69,14 @@ class LayoutItem extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    /**
+     * 白地図上のマッピング配置オブジェクト一覧とのリレーション
+     */
+    public function placements(): HasMany
+    {
+        return $this->hasMany(SiteMapPlacement::class, 'layout_item_id');
     }
 
     /**

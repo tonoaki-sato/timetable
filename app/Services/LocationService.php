@@ -20,7 +20,6 @@ class LocationService
         protected LocationTypeRepositoryInterface $locationTypeRepository,
         protected LocationScheduleRepositoryInterface $locationScheduleRepository,
         protected LocationAvailabilityService $availabilityService,
-        protected TimetableService $timetableService,
     ) {}
 
     /**

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\AnnualPhase;
+use App\Enums\ScheduleCategory;
+use App\Enums\ScheduleStatus;
 use App\Presenters\SchedulePresenter;
 use Database\Factories\ScheduleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -29,6 +31,32 @@ class Schedule extends Model
 {
     /** @use HasFactory<ScheduleFactory> */
     use HasFactory;
+
+    protected ?SchedulePresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): SchedulePresenter
+    {
+        return $this->presenterInstance ??= new SchedulePresenter($this);
+    }
+
+    /**
+     * カテゴリ Enum
+     */
+    public function getCategoryEnumAttribute(): ?ScheduleCategory
+    {
+        return ScheduleCategory::tryFrom((string) $this->category);
+    }
+
+    /**
+     * ステータス Enum
+     */
+    public function getStatusEnumAttribute(): ?ScheduleStatus
+    {
+        return ScheduleStatus::tryFrom((string) $this->status);
+    }
 
     /**
      * カテゴリ定義一覧（キー => 日本語ラベル）
@@ -108,7 +136,7 @@ class Schedule extends Model
      */
     public function getCategoryLabelAttribute(): string
     {
-        return self::CATEGORIES[$this->category] ?? $this->category;
+        return $this->category_enum?->label() ?? (string) $this->category;
     }
 
     /**
@@ -116,7 +144,7 @@ class Schedule extends Model
      */
     public function getCategoryIconAttribute(): string
     {
-        return (new SchedulePresenter($this))->categoryIcon();
+        return $this->presenter()->categoryIcon();
     }
 
     /**
@@ -124,13 +152,7 @@ class Schedule extends Model
      */
     public static function categoryFilterIcon(string $categoryKey): string
     {
-        return match ($categoryKey) {
-            'committee' => '🤝',
-            'permit' => '📑',
-            'briefing' => '📢',
-            'operation' => '🎪',
-            default => '📌',
-        };
+        return ScheduleCategory::tryFrom($categoryKey)?->icon() ?? '📌';
     }
 
     /**
@@ -146,7 +168,7 @@ class Schedule extends Model
      */
     public function getCategoryBadgeClassAttribute(): string
     {
-        return (new SchedulePresenter($this))->categoryBadgeClass();
+        return $this->presenter()->categoryBadgeClass();
     }
 
     /**
@@ -154,7 +176,7 @@ class Schedule extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return self::STATUSES[$this->status] ?? $this->status;
+        return $this->status_enum?->label() ?? (string) $this->status;
     }
 
     /**
@@ -162,7 +184,7 @@ class Schedule extends Model
      */
     public function getStatusBadgeClassAttribute(): string
     {
-        return (new SchedulePresenter($this))->statusBadgeClass();
+        return $this->presenter()->statusBadgeClass();
     }
 
     /**
@@ -170,7 +192,7 @@ class Schedule extends Model
      */
     public function getFormattedTimeRangeAttribute(): ?string
     {
-        return (new SchedulePresenter($this))->formattedTimeRange();
+        return $this->presenter()->formattedTimeRange();
     }
 
     /**
@@ -178,7 +200,7 @@ class Schedule extends Model
      */
     public function getFormattedDatetimeAttribute(): string
     {
-        return (new SchedulePresenter($this))->formattedDatetime();
+        return $this->presenter()->formattedDatetime();
     }
 
     /**
@@ -186,7 +208,7 @@ class Schedule extends Model
      */
     public function getPdfDateAttribute(): string
     {
-        return (new SchedulePresenter($this))->pdfDate();
+        return $this->presenter()->pdfDate();
     }
 
     /**
@@ -194,7 +216,7 @@ class Schedule extends Model
      */
     public function getPdfTimeAttribute(): string
     {
-        return (new SchedulePresenter($this))->pdfTime();
+        return $this->presenter()->pdfTime();
     }
 
     /**
@@ -202,7 +224,7 @@ class Schedule extends Model
      */
     public function getShareTextAttribute(): string
     {
-        return (new SchedulePresenter($this))->shareText();
+        return $this->presenter()->shareText();
     }
 
     /**

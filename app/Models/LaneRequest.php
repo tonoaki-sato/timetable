@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\LaneRequestStatus;
+use App\Enums\LaneRequestType;
 use App\Support\NavigationCacheInvalidatingBuilder;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseEloquentBuilder;
@@ -92,11 +94,35 @@ class LaneRequest extends Model
     }
 
     /**
+     * 要請・申請を処理した管理者ユーザーとのリレーション
+     */
+    public function resolvedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'resolved_by_user_id');
+    }
+
+    /**
+     * 要請・申請種別 Enum
+     */
+    public function getRequestTypeEnumAttribute(): ?LaneRequestType
+    {
+        return LaneRequestType::tryFrom((string) $this->request_type);
+    }
+
+    /**
+     * 対応ステータス Enum
+     */
+    public function getStatusEnumAttribute(): ?LaneRequestStatus
+    {
+        return LaneRequestStatus::tryFrom((string) $this->status);
+    }
+
+    /**
      * 種別の日本語表示ラベル
      */
     public function getTypeLabelAttribute(): string
     {
-        return self::TYPES[$this->request_type] ?? $this->request_type;
+        return $this->request_type_enum?->label() ?? (string) $this->request_type;
     }
 
     /**
@@ -104,6 +130,6 @@ class LaneRequest extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return self::STATUSES[$this->status] ?? $this->status;
+        return $this->status_enum?->label() ?? (string) $this->status;
     }
 }

@@ -25,27 +25,14 @@ use Illuminate\Database\Eloquent\Collection;
 
 class EquipmentLogisticsService
 {
-    protected EquipmentRepositoryInterface $equipmentRepository;
-
-    protected LocationRepositoryInterface $locationRepository;
-
-    protected TimetableRepositoryInterface $timetableRepository;
-
-    protected StaffRepositoryInterface $staffRepository;
-
     public function __construct(
         protected EquipmentLogisticsPlanRepositoryInterface $planRepository,
         protected EquipmentLogisticsPatternRepositoryInterface $patternRepository,
-        ?EquipmentRepositoryInterface $equipmentRepository = null,
-        ?LocationRepositoryInterface $locationRepository = null,
-        ?TimetableRepositoryInterface $timetableRepository = null,
-        ?StaffRepositoryInterface $staffRepository = null,
-    ) {
-        $this->equipmentRepository = $equipmentRepository ?? app(EquipmentRepositoryInterface::class);
-        $this->locationRepository = $locationRepository ?? app(LocationRepositoryInterface::class);
-        $this->timetableRepository = $timetableRepository ?? app(TimetableRepositoryInterface::class);
-        $this->staffRepository = $staffRepository ?? app(StaffRepositoryInterface::class);
-    }
+        protected EquipmentRepositoryInterface $equipmentRepository,
+        protected LocationRepositoryInterface $locationRepository,
+        protected TimetableRepositoryInterface $timetableRepository,
+        protected StaffRepositoryInterface $staffRepository,
+    ) {}
 
     /**
      * まつりの代表日程（事前準備、前日、1日目、2日目、翌日）を取得
@@ -275,9 +262,11 @@ class EquipmentLogisticsService
      *
      * @param  array<string, mixed>  $data
      */
-    public function updatePatternStep(EquipmentLogisticsPatternStep $step, array $data): bool
+    public function updatePatternStep(EquipmentLogisticsPatternStep $step, array $data): EquipmentLogisticsPatternStep
     {
-        return $this->patternRepository->updateStep($step, $data);
+        $this->patternRepository->updateStep($step, $data);
+
+        return $step->fresh() ?? $step;
     }
 
     /**

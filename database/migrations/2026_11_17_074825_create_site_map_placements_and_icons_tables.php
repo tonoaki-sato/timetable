@@ -61,6 +61,8 @@ return new class extends Migration
             $table->dateTime('updated_at')->nullable();
 
             $table->index(['site_base_map_id', 'shape_type']);
+            $table->index(['site_base_map_id', 'z_index', 'id'], 'site_map_placements_map_z_id_idx');
+            $table->index('shape_type');
             $table->index('layout_item_id');
         });
     }
