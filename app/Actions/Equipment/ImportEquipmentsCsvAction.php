@@ -127,6 +127,7 @@ class ImportEquipmentsCsvAction
             $existingAll = $this->equipmentRepository->getAllOrdered();
             $byId = $existingAll->keyBy('id');
             $byName = $existingAll->keyBy('name');
+            $nextDisplayOrder = $this->equipmentRepository->getMaxDisplayOrder() + 10;
 
             $created = 0;
             $updated = 0;
@@ -143,7 +144,12 @@ class ImportEquipmentsCsvAction
                     $this->equipmentService->updateEquipment($target, $row['data']);
                     $updated++;
                 } else {
-                    $createdEquipment = $this->equipmentService->createEquipment($row['data'], $userId);
+                    $createData = $row['data'];
+                    if (! isset($createData['display_order']) || $createData['display_order'] === null) {
+                        $createData['display_order'] = $nextDisplayOrder;
+                        $nextDisplayOrder += 10;
+                    }
+                    $createdEquipment = $this->equipmentService->createEquipment($createData, $userId);
                     $byId->put($createdEquipment->id, $createdEquipment);
                     $byName->put($createdEquipment->name, $createdEquipment);
                     $created++;

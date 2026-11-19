@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\LayoutItemStatus;
 use App\Enums\LayoutItemType;
+use App\Models\LayoutMap;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,7 @@ class StoreLayoutItemRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return $this->user()?->can('create', LayoutMap::class) ?? false;
     }
 
     /**

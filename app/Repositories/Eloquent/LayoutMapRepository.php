@@ -40,9 +40,80 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
             'timetable',
             'areas.location',
             'areas.items.vendor',
-            'items.vendor',
-            'items.area',
         ])->find($id);
+    }
+
+    public function findWithAreas(int $id): ?LayoutMap
+    {
+        return LayoutMap::with([
+            'timetable',
+            'areas',
+        ])->find($id);
+    }
+
+    public function getSummaryAggregates(int $mapId): array
+    {
+        $categoryRows = LayoutItem::where('layout_map_id', $mapId)
+            ->selectRaw('item_type, category, COUNT(*) as aggregate_count')
+            ->groupBy('item_type', 'category')
+            ->get();
+
+        $areaTypeRows = LayoutItem::where('layout_map_id', $mapId)
+            ->selectRaw('layout_area_id, booth_type, COUNT(*) as aggregate_count')
+            ->groupBy('layout_area_id', 'booth_type')
+            ->get();
+
+        $totalBooths = 0;
+        $totalFacilities = 0;
+        $totalItems = 0;
+        $boothCategories = [];
+        $facilityCategories = [];
+
+        foreach ($categoryRows as $row) {
+            $typeValue = $row->item_type instanceof \BackedEnum ? $row->item_type->value : (string) $row->item_type;
+            $cnt = (int) $row->aggregate_count;
+            $cat = $row->category !== null ? (string) $row->category : '';
+            $totalItems += $cnt;
+
+            if ($typeValue === 'booth') {
+                $totalBooths += $cnt;
+                if ($cat !== '') {
+                    $boothCategories[$cat] = ($boothCategories[$cat] ?? 0) + $cnt;
+                }
+            } elseif ($typeValue === 'facility') {
+                $totalFacilities += $cnt;
+                if ($cat !== '') {
+                    $facilityCategories[$cat] = ($facilityCategories[$cat] ?? 0) + $cnt;
+                }
+            }
+        }
+
+        $areaTotals = [];
+        $areaBoothTypes = [];
+
+        foreach ($areaTypeRows as $row) {
+            if ($row->layout_area_id === null) {
+                continue;
+            }
+            $areaId = (int) $row->layout_area_id;
+            $cnt = (int) $row->aggregate_count;
+            $areaTotals[$areaId] = ($areaTotals[$areaId] ?? 0) + $cnt;
+
+            if ($row->booth_type !== null && $row->booth_type !== '') {
+                $bt = (string) $row->booth_type;
+                $areaBoothTypes[$areaId][$bt] = ($areaBoothTypes[$areaId][$bt] ?? 0) + $cnt;
+            }
+        }
+
+        return [
+            'total_booths' => $totalBooths,
+            'total_facilities' => $totalFacilities,
+            'total_items' => $totalItems,
+            'booth_categories' => $boothCategories,
+            'facility_categories' => $facilityCategories,
+            'area_totals' => $areaTotals,
+            'area_booth_types' => $areaBoothTypes,
+        ];
     }
 
     /**

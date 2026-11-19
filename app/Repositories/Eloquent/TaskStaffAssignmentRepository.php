@@ -105,6 +105,55 @@ class TaskStaffAssignmentRepository implements TaskStaffAssignmentRepositoryInte
     }
 
     #[Override]
+    public function deleteByTaskIdsAndStaffIdsAndRole(array $taskIds, array $staffIds, string $roleDescription): int
+    {
+        if ($taskIds === [] || $staffIds === []) {
+            return 0;
+        }
+
+        return TaskStaffAssignment::whereIn('timetable_task_id', $taskIds)
+            ->whereIn('staff_id', $staffIds)
+            ->where('role_description', $roleDescription)
+            ->delete();
+    }
+
+    #[Override]
+    public function deleteByIds(array $assignmentIds): int
+    {
+        if ($assignmentIds === []) {
+            return 0;
+        }
+
+        return TaskStaffAssignment::whereIn('id', $assignmentIds)->delete();
+    }
+
+    #[Override]
+    public function updateRoleByIds(array $assignmentIds, string $roleDescription): int
+    {
+        if ($assignmentIds === []) {
+            return 0;
+        }
+
+        return TaskStaffAssignment::whereIn('id', $assignmentIds)
+            ->update(['role_description' => $roleDescription]);
+    }
+
+    #[Override]
+    public function insertOrIgnoreMany(array $rows): int
+    {
+        if ($rows === []) {
+            return 0;
+        }
+
+        $inserted = 0;
+        foreach (array_chunk($rows, 500) as $chunk) {
+            $inserted += TaskStaffAssignment::insertOrIgnore($chunk);
+        }
+
+        return $inserted;
+    }
+
+    #[Override]
     public function deleteByTaskIds(iterable $taskIds): int
     {
         return TaskStaffAssignment::whereIn('timetable_task_id', $taskIds)->delete();

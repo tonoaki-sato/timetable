@@ -23,7 +23,7 @@ class DownloadStaffCardsPdfAction
      */
     public function execute(Request $request): Response
     {
-        $cards = $this->buildCardsForRequest($request);
+        $cards = $this->buildCardsForRequest($request, includeSvg: false, includePng: true);
 
         $filename = 'staff_cards_'.now()->format('Ymd_His').'.pdf';
 
@@ -43,7 +43,7 @@ class DownloadStaffCardsPdfAction
      */
     public function executeForSingle(Staff $staff): Response
     {
-        $cards = $this->buildCardsData(collect([$staff]), 120);
+        $cards = $this->buildCardsData(collect([$staff]), 120, includeSvg: false, includePng: true);
 
         $sanitizedName = preg_replace('/[^\p{L}\p{N}_-]+/u', '_', $staff->name);
         $filename = "staff_card_{$sanitizedName}_".now()->format('Ymd').'.pdf';
@@ -64,7 +64,7 @@ class DownloadStaffCardsPdfAction
      *
      * @return Collection<int, array{staff: Staff, shift_url: string, qr_svg: string, qr_data_uri: string}>
      */
-    public function buildCardsForRequest(Request $request): Collection
+    public function buildCardsForRequest(Request $request, bool $includeSvg = true, bool $includePng = true): Collection
     {
         $ids = null;
         if ($request->has('ids') && is_array($request->input('ids'))) {
@@ -76,7 +76,7 @@ class DownloadStaffCardsPdfAction
 
         $staffList = $this->staffRepository->getActiveByIds($ids);
 
-        return $this->buildCardsData($staffList);
+        return $this->buildCardsData($staffList, 100, $includeSvg, $includePng);
     }
 
     /**
@@ -85,12 +85,16 @@ class DownloadStaffCardsPdfAction
      * @param  Collection<int, Staff>  $staffList
      * @return Collection<int, array{staff: Staff, shift_url: string, qr_svg: string, qr_data_uri: string}>
      */
-    public function buildCardsData(Collection $staffList, int $qrSize = 100): Collection
-    {
-        return $staffList->map(function (Staff $staff) use ($qrSize): array {
+    public function buildCardsData(
+        Collection $staffList,
+        int $qrSize = 100,
+        bool $includeSvg = true,
+        bool $includePng = true
+    ): Collection {
+        return $staffList->map(function (Staff $staff) use ($qrSize, $includeSvg, $includePng): array {
             $shiftUrl = route('staff.myshift', ['token' => $staff->access_token]);
-            $qrSvg = $this->qrCodeService->generateSvg($shiftUrl, $qrSize);
-            $qrDataUri = $this->qrCodeService->generatePngDataUri($shiftUrl, $qrSize * 2);
+            $qrSvg = $includeSvg ? $this->qrCodeService->generateSvg($shiftUrl, $qrSize) : '';
+            $qrDataUri = $includePng ? $this->qrCodeService->generatePngDataUri($shiftUrl, $qrSize * 2) : '';
 
             return [
                 'staff' => $staff,

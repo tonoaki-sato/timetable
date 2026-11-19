@@ -104,12 +104,23 @@ class OrganizationUnitRepository implements OrganizationUnitRepositoryInterface
      */
     public function updateDisplayOrders(array $orderedIds): void
     {
-        DB::transaction(function () use ($orderedIds) {
-            foreach ($orderedIds as $index => $id) {
-                OrganizationUnit::where('id', $id)->update([
-                    'display_order' => ($index + 1) * 10,
-                ]);
-            }
+        $cleanIds = array_values(array_unique(array_map('intval', $orderedIds)));
+        if ($cleanIds === []) {
+            return;
+        }
+
+        $cases = [];
+        $order = 10;
+        foreach ($cleanIds as $id) {
+            $cases[] = "WHEN {$id} THEN {$order}";
+            $order += 10;
+        }
+        $caseSql = 'CASE id '.implode(' ', $cases).' ELSE display_order END';
+
+        DB::transaction(function () use ($cleanIds, $caseSql): void {
+            OrganizationUnit::whereIn('id', $cleanIds)->update([
+                'display_order' => DB::raw($caseSql),
+            ]);
         });
     }
 

@@ -23,7 +23,7 @@ class StaffPrintController extends Controller
 
         // プレビュー指定時はHTMLプレビュー画面を表示
         if ($request->boolean('preview')) {
-            $cards = $this->downloadStaffCardsPdfAction->buildCardsForRequest($request);
+            $cards = $this->downloadStaffCardsPdfAction->buildCardsForRequest($request, includeSvg: false, includePng: true);
 
             return view('staff.print_cards', [
                 'cards' => $cards,
@@ -43,7 +43,7 @@ class StaffPrintController extends Controller
 
         // プレビュー指定時はHTMLプレビュー画面を表示
         if ($request->boolean('preview')) {
-            $cards = $this->downloadStaffCardsPdfAction->buildCardsData(collect([$staff]), 120);
+            $cards = $this->downloadStaffCardsPdfAction->buildCardsData(collect([$staff]), 120, includeSvg: false, includePng: true);
 
             return view('staff.print_cards', [
                 'cards' => $cards,

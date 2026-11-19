@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Vendor;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,7 +13,11 @@ class UpdateVendorRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $vendor = $this->route('vendor');
+
+        return $vendor instanceof Vendor
+            ? ($this->user()?->can('update', $vendor) ?? false)
+            : ($this->user()?->can('update', Vendor::class) ?? false);
     }
 
     /**

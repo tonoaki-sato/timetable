@@ -4,6 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\LaneRequest;
 use App\Repositories\Contracts\LaneRequestRepositoryInterface;
+use App\Support\NavigationCache;
 use Illuminate\Database\Eloquent\Collection;
 use Override;
 
@@ -46,7 +47,10 @@ class LaneRequestRepository implements LaneRequestRepositoryInterface
     #[Override]
     public function deleteByTimetableId(int $timetableId): int
     {
-        return LaneRequest::where('timetable_id', $timetableId)->delete();
+        $deleted = LaneRequest::where('timetable_id', $timetableId)->delete();
+        app(NavigationCache::class)->forgetPendingLaneRequests();
+
+        return $deleted;
     }
 
     #[Override]

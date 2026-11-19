@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateLaneRequestStatusRequest;
-use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Services\LaneService;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +19,7 @@ class LaneRequestController extends Controller
      */
     public function updateStatus(UpdateLaneRequestStatusRequest $request, LaneRequest $laneRequest): JsonResponse|RedirectResponse
     {
-        $this->authorize('update', $laneRequest->lane ?? Lane::class);
+        $this->authorize('update', $laneRequest);
 
         $validated = $request->validated();
 

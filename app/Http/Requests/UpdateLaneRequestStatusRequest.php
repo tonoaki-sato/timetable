@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\LaneRequest;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,7 +13,11 @@ class UpdateLaneRequestStatusRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $laneRequest = $this->route('laneRequest');
+
+        return $laneRequest instanceof LaneRequest
+            ? ($this->user()?->can('update', $laneRequest) ?? false)
+            : ($this->user()?->can('update', LaneRequest::class) ?? false);
     }
 
     /**

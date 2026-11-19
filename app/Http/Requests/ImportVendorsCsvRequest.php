@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Vendor;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,7 +13,7 @@ class ImportVendorsCsvRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() !== null && (bool) $this->user()->is_active;
+        return $this->user()?->can('create', Vendor::class) ?? false;
     }
 
     /**

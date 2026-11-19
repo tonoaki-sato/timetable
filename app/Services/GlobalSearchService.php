@@ -90,7 +90,7 @@ class GlobalSearchService
             }
         }
 
-        if ($user->is_active) {
+        if ($user->can('viewAny', Vendor::class)) {
             $vendorItems = $this->vendorRepository->searchQuick($keyword, $limitPerCategory)
                 ->map(function (Vendor $vendor): array {
                     $subtitle = implode('・', array_filter([$vendor->contact_person, $vendor->contact]));

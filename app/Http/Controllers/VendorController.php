@@ -23,6 +23,8 @@ class VendorController extends Controller
      */
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Vendor::class);
+
         $perPage = TableQueryOptions::resolvePerPage($request->query('per_page'), 15, [15, 30, 50, 100]);
         $filters = [
             'search' => $request->input('search'),
@@ -36,10 +38,22 @@ class VendorController extends Controller
     }
 
     /**
+     * 旧タイムテーブル配下ルートからの互換リダイレクト
+     */
+    public function redirectLegacy(): RedirectResponse
+    {
+        $this->authorize('viewAny', Vendor::class);
+
+        return redirect()->route('vendors.index');
+    }
+
+    /**
      * 出展・出店者を新規登録
      */
     public function store(StoreVendorRequest $request): RedirectResponse|JsonResponse
     {
+        $this->authorize('create', Vendor::class);
+
         $vendor = $this->vendorService->createVendor($request->validated());
 
         if ($request->wantsJson()) {
@@ -59,6 +73,8 @@ class VendorController extends Controller
      */
     public function update(UpdateVendorRequest $request, Vendor $vendor): RedirectResponse|JsonResponse
     {
+        $this->authorize('update', $vendor);
+
         $updated = $this->vendorService->updateVendor($vendor, $request->validated());
 
         if ($request->wantsJson()) {
@@ -78,6 +94,8 @@ class VendorController extends Controller
      */
     public function destroy(Request $request, Vendor $vendor): RedirectResponse|JsonResponse
     {
+        $this->authorize('delete', $vendor);
+
         $name = $vendor->name;
         $this->vendorService->deleteVendor($vendor);
 

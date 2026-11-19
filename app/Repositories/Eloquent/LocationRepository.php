@@ -34,6 +34,23 @@ class LocationRepository implements LocationRepositoryInterface
     }
 
     #[Override]
+    public function getNameIdMapForTimetable(int $timetableId): array
+    {
+        $map = [];
+        $rows = Location::where('timetable_id', $timetableId)
+            ->orderBy('id', 'asc')
+            ->get(['id', 'name']);
+
+        foreach ($rows as $row) {
+            if (! array_key_exists($row->name, $map)) {
+                $map[$row->name] = (int) $row->id;
+            }
+        }
+
+        return $map;
+    }
+
+    #[Override]
     public function getForTimetable(Timetable $timetable): Collection
     {
         return $timetable->locations()
@@ -123,14 +140,23 @@ class LocationRepository implements LocationRepositoryInterface
     #[Override]
     public function reorder(Timetable $timetable, array $locationIds): void
     {
-        DB::transaction(function () use ($timetable, $locationIds): void {
-            $order = 10;
-            foreach ($locationIds as $locationId) {
-                $timetable->locations()->where('id', $locationId)->update([
-                    'display_order' => $order,
-                ]);
-                $order += 10;
-            }
+        $cleanIds = array_values(array_unique(array_map('intval', $locationIds)));
+        if ($cleanIds === []) {
+            return;
+        }
+
+        $cases = [];
+        $order = 10;
+        foreach ($cleanIds as $id) {
+            $cases[] = "WHEN {$id} THEN {$order}";
+            $order += 10;
+        }
+        $caseSql = 'CASE id '.implode(' ', $cases).' ELSE display_order END';
+
+        DB::transaction(function () use ($timetable, $cleanIds, $caseSql): void {
+            $timetable->locations()->whereIn('id', $cleanIds)->update([
+                'display_order' => DB::raw($caseSql),
+            ]);
         });
     }
 

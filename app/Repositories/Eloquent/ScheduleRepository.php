@@ -6,6 +6,7 @@ use App\Models\Schedule;
 use App\Models\Timetable;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Support\TableQueryOptions;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -204,12 +205,22 @@ class ScheduleRepository implements ScheduleRepositoryInterface
             return 0;
         }
 
-        return Schedule::where(function ($query) use ($months): void {
+        return Schedule::where(function ($query) use ($months, $year): void {
             foreach ($months as $m) {
-                $query->orWhereMonth('start_date', $m);
+                $monthInt = (int) $m;
+                if ($monthInt < 1 || $monthInt > 12) {
+                    continue;
+                }
+
+                $startOfMonth = sprintf('%04d-%02d-01', $year, $monthInt);
+                $nextMonthStart = Carbon::createFromDate($year, $monthInt, 1)->addMonth()->format('Y-m-d');
+
+                $query->orWhere(function ($sub) use ($startOfMonth, $nextMonthStart): void {
+                    $sub->where('start_date', '>=', $startOfMonth)
+                        ->where('start_date', '<', $nextMonthStart);
+                });
             }
         })
-            ->whereYear('start_date', $year)
             ->where('status', '!=', 'completed')
             ->count();
     }
@@ -217,11 +228,20 @@ class ScheduleRepository implements ScheduleRepositoryInterface
     #[Override]
     public function getStatusSummary(): array
     {
+        $counts = Schedule::query()
+            ->selectRaw('status, COUNT(*) as aggregate_count')
+            ->groupBy('status')
+            ->pluck('aggregate_count', 'status');
+
+        $planned = (int) ($counts['planned'] ?? 0);
+        $inProgress = (int) ($counts['in_progress'] ?? 0);
+        $completed = (int) ($counts['completed'] ?? 0);
+
         return [
-            'total' => Schedule::count(),
-            'planned' => Schedule::where('status', 'planned')->count(),
-            'in_progress' => Schedule::where('status', 'in_progress')->count(),
-            'completed' => Schedule::where('status', 'completed')->count(),
+            'total' => (int) $counts->sum(),
+            'planned' => $planned,
+            'in_progress' => $inProgress,
+            'completed' => $completed,
         ];
     }
 

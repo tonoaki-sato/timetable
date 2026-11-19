@@ -22,7 +22,7 @@ class PreparationNavigatorService
     public function getNavigatorViewData(): array
     {
         $totalCount = $this->timetableRepository->getTotalCount();
-        $firstActiveTimetable = $this->timetableRepository->getActiveAndDraftWithWorkflowDetails()->first();
+        $firstActiveTimetable = $this->timetableRepository->findFirstActiveOrDraftWithWorkflowDetails();
 
         return [
             'totalCount' => $totalCount,

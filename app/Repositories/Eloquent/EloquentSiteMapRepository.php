@@ -67,9 +67,13 @@ class EloquentSiteMapRepository implements SiteMapRepositoryInterface
             ->get();
     }
 
-    public function savePlacement(SiteMapPlacement $placement): SiteMapPlacement
+    public function savePlacement(SiteMapPlacement $placement, bool $withRelations = true): SiteMapPlacement
     {
         $placement->save();
+
+        if (! $withRelations) {
+            return $placement;
+        }
 
         return $placement->load(['layoutItem.vendor']);
     }

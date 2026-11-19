@@ -31,6 +31,16 @@ class SiteLayoutService
     }
 
     /**
+     * タイムテーブルに紐づく現場配置図面（エリアのみ・アイテム全件ロードなし）を取得
+     */
+    public function getLayoutWithAreas(Timetable $timetable): LayoutMap
+    {
+        $map = $this->layoutMapRepository->getOrCreateForTimetable($timetable);
+
+        return $this->layoutMapRepository->findWithAreas($map->id) ?? $map;
+    }
+
+    /**
      * 配置計画サマリー集計データを生成
      *
      * @return array{
@@ -44,23 +54,20 @@ class SiteLayoutService
      */
     public function getSummary(LayoutMap $map): array
     {
-        $items = $map->items;
-        $booths = $items->filter(fn (LayoutItem $item) => $item->isBooth());
-        $facilities = $items->filter(fn (LayoutItem $item) => $item->isFacility());
+        $aggregates = $this->layoutMapRepository->getSummaryAggregates($map->id);
 
-        $totalBooths = $booths->count();
-        $totalFacilities = $facilities->count();
-        $totalItems = $items->count();
+        $totalBooths = $aggregates['total_booths'];
+        $totalFacilities = $aggregates['total_facilities'];
+        $totalItems = $aggregates['total_items'];
 
         // 1. 出展区分別集計 (BoothCategory)
         $categoryCounts = [];
         foreach (BoothCategory::cases() as $case) {
-            $count = $booths->filter(fn (LayoutItem $b) => $b->category === $case->value)->count();
             $categoryCounts[$case->value] = [
                 'key' => $case->value,
                 'label' => $case->label(),
                 'icon' => $case->icon(),
-                'count' => $count,
+                'count' => $aggregates['booth_categories'][$case->value] ?? 0,
                 'badge' => $case->badgeClasses(),
             ];
         }
@@ -68,12 +75,11 @@ class SiteLayoutService
         // 2. 設備区分別集計 (FacilityType)
         $facilityCounts = [];
         foreach (FacilityType::cases() as $case) {
-            $count = $facilities->filter(fn (LayoutItem $f) => $f->category === $case->value)->count();
             $facilityCounts[$case->value] = [
                 'key' => $case->value,
                 'label' => $case->label(),
                 'icon' => $case->icon(),
-                'count' => $count,
+                'count' => $aggregates['facility_categories'][$case->value] ?? 0,
                 'badge' => $case->badgeClasses(),
             ];
         }
@@ -81,10 +87,10 @@ class SiteLayoutService
         // 3. 所属エリア別のブース形態別集計
         $areaBoothTypes = [];
         foreach ($map->areas as $area) {
-            $areaItems = $items->filter(fn (LayoutItem $i) => $i->layout_area_id === $area->id);
             $types = [];
+            $areaTypeCounts = $aggregates['area_booth_types'][$area->id] ?? [];
             foreach (BoothType::cases() as $type) {
-                $cnt = $areaItems->filter(fn (LayoutItem $i) => $i->booth_type === $type->value)->count();
+                $cnt = $areaTypeCounts[$type->value] ?? 0;
                 if ($cnt > 0) {
                     $types[] = [
                         'value' => $type->value,
@@ -96,7 +102,7 @@ class SiteLayoutService
             $areaBoothTypes[] = [
                 'area_id' => $area->id,
                 'area_name' => $area->name,
-                'total_count' => $areaItems->count(),
+                'total_count' => $aggregates['area_totals'][$area->id] ?? 0,
                 'types' => $types,
             ];
         }
@@ -154,6 +160,6 @@ class SiteLayoutService
      */
     public function getVendorsForSelect(?Timetable $timetable = null): Collection
     {
-        return $this->vendorRepository->getAll();
+        return $this->vendorRepository->getAllForSelect();
     }
 }

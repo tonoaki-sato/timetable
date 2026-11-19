@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Support\NavigationCacheInvalidatingBuilder;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\UseEloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -19,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'resolved_by_user_id',
     'resolved_at',
 ])]
+#[UseEloquentBuilder(NavigationCacheInvalidatingBuilder::class)]
 class LaneRequest extends Model
 {
     /**

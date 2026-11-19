@@ -37,16 +37,16 @@
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'lanes' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>🏷️</span>
             <span>担当班</span>
-            @if(isset($timetable->lanes_count) || $timetable->lanes->isNotEmpty())
-                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->lanes->count() }})</span>
+            @if(($timetable->lanes_count ?? 0) > 0)
+                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->lanes_count }})</span>
             @endif
         </a>
         <a href="{{ route('timetables.tasks.index', $timetable) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'tasks' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>📋</span>
             <span>タスク台帳</span>
-            @if(isset($timetable->tasks_count) || $timetable->tasks->isNotEmpty())
-                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->tasks->count() }})</span>
+            @if(($timetable->tasks_count ?? 0) > 0)
+                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->tasks_count }})</span>
             @endif
         </a>
         <a href="{{ route('timetables.assignments', $timetable) }}"
@@ -58,16 +58,16 @@
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'locations' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>📍</span>
             <span>拠点</span>
-            @if(isset($timetable->locations_count) || $timetable->locations->isNotEmpty())
-                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->locations->count() }})</span>
+            @if(($timetable->locations_count ?? 0) > 0)
+                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->locations_count }})</span>
             @endif
         </a>
         <a href="{{ route('timetables.logistics.index', $timetable) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['logistics', 'logistics-timeline', 'equipments'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>🚚</span>
             <span>搬出入</span>
-            @if(isset($timetable->logistics_plans_count) || $timetable->logisticsPlans->isNotEmpty())
-                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->logistics_plans_count ?? $timetable->logisticsPlans->count() }})</span>
+            @if(($timetable->logistics_plans_count ?? 0) > 0)
+                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->logistics_plans_count }})</span>
             @endif
         </a>
         <a href="{{ route('timetables.layouts.index', $timetable) }}"

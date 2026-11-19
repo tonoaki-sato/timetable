@@ -6,6 +6,7 @@ use App\Models\LaneRequest;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
+use App\Support\NavigationCache;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -45,10 +46,12 @@ class TimetableRepository implements TimetableRepositoryInterface
     #[Override]
     public function getSelectableTimetables(): Collection
     {
-        return Timetable::whereIn('status', ['draft', 'active'])
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->get();
+        return app(NavigationCache::class)->getNavTimetables(function (): Collection {
+            return Timetable::whereIn('status', ['draft', 'active'])
+                ->orderBy('target_date', 'asc')
+                ->orderBy('start_time', 'asc')
+                ->get();
+        });
     }
 
     /**
@@ -98,8 +101,11 @@ class TimetableRepository implements TimetableRepositoryInterface
     #[Override]
     public function getForMonth(int $year, int $month, ?string $search = null): Collection
     {
-        $query = Timetable::whereYear('target_date', $year)
-            ->whereMonth('target_date', $month);
+        $startOfMonth = sprintf('%04d-%02d-01', $year, $month);
+        $nextMonthStart = Carbon::createFromDate($year, $month, 1)->addMonth()->format('Y-m-d');
+
+        $query = Timetable::where('target_date', '>=', $startOfMonth)
+            ->where('target_date', '<', $nextMonthStart);
 
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
@@ -111,7 +117,10 @@ class TimetableRepository implements TimetableRepositoryInterface
     #[Override]
     public function findForDatePrioritizingActive(string $dateStr): ?Timetable
     {
-        return Timetable::whereDate('target_date', $dateStr)
+        $nextDayStr = Carbon::parse($dateStr)->addDay()->format('Y-m-d');
+
+        return Timetable::where('target_date', '>=', $dateStr)
+            ->where('target_date', '<', $nextDayStr)
             ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
             ->orderBy('id')
             ->first();
@@ -127,7 +136,7 @@ class TimetableRepository implements TimetableRepositoryInterface
             },
             'tasks' => function ($q): void {
                 $q->orderBy('start_time', 'asc')
-                    ->with(['assignments.staff']);
+                    ->with(['laneRelation', 'assignments.staff']);
             },
             'logisticsPlans.equipment',
         ])->withCount(['logisticsPlans'])->find($id);
@@ -174,7 +183,13 @@ class TimetableRepository implements TimetableRepositoryInterface
             LaneRequest::where('timetable_id', $timetable->id)->delete();
 
             // タイムテーブル本体を削除
-            return (bool) $timetable->delete();
+            $deleted = (bool) $timetable->delete();
+
+            $cache = app(NavigationCache::class);
+            $cache->forgetTimetables();
+            $cache->forgetPendingLaneRequests();
+
+            return $deleted;
         });
     }
 
@@ -185,6 +200,15 @@ class TimetableRepository implements TimetableRepositoryInterface
             ->where('status', '!=', 'completed')
             ->orderBy('target_date', 'asc')
             ->get();
+    }
+
+    #[Override]
+    public function findFirstActiveOrDraftWithWorkflowDetails(): ?Timetable
+    {
+        return Timetable::with(['lanes.fixedStaff', 'lanes.leadStaff', 'tasks.assignments'])
+            ->where('status', '!=', 'completed')
+            ->orderBy('target_date', 'asc')
+            ->first();
     }
 
     #[Override]

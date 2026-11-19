@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Support\NavigationCacheInvalidatingBuilder;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Database\Factories\FeatureSettingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\UseEloquentBuilder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\Model;
     'closed_at',
     'notice_message',
 ])]
+#[UseEloquentBuilder(NavigationCacheInvalidatingBuilder::class)]
 class FeatureSetting extends Model
 {
     /** @use HasFactory<FeatureSettingFactory> */

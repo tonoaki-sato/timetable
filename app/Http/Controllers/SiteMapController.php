@@ -7,6 +7,7 @@ use App\Http\Requests\StoreSiteMapIconRequest;
 use App\Http\Requests\StoreSiteMapPlacementRequest;
 use App\Http\Requests\UpdateSiteMapIconRequest;
 use App\Http\Requests\UpdateSiteMapPlacementRequest;
+use App\Models\SiteBaseMap;
 use App\Models\SiteMapIconDefinition;
 use App\Models\SiteMapPlacement;
 use App\Models\Timetable;
@@ -30,6 +31,8 @@ class SiteMapController extends Controller
      */
     public function editor(Request $request, Timetable $timetable): View
     {
+        $this->authorize('viewAny', SiteBaseMap::class);
+
         $editorData = $this->siteMapService->getEditorData($timetable);
 
         return view('site_layouts.editor', array_merge($editorData, [
@@ -42,6 +45,8 @@ class SiteMapController extends Controller
      */
     public function storePlacement(StoreSiteMapPlacementRequest $request, Timetable $timetable): JsonResponse
     {
+        $this->authorize('create', SiteBaseMap::class);
+
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
 
         $placement = $this->siteMapService->createPlacement(
@@ -60,6 +65,8 @@ class SiteMapController extends Controller
      */
     public function getPlacements(Timetable $timetable): JsonResponse
     {
+        $this->authorize('viewAny', SiteBaseMap::class);
+
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
         $placements = $this->siteMapService->getPlacements($siteBaseMap);
 
@@ -74,6 +81,8 @@ class SiteMapController extends Controller
      */
     public function updatePlacement(UpdateSiteMapPlacementRequest $request, Timetable $timetable, SiteMapPlacement $placement): JsonResponse
     {
+        $this->authorize('update', SiteBaseMap::class);
+
         $updated = $this->siteMapService->updatePlacementGeometry($placement, $request->validated());
 
         return response()->json([
@@ -87,6 +96,8 @@ class SiteMapController extends Controller
      */
     public function bulkUpdatePlacements(BulkUpdateSiteMapPlacementsRequest $request, Timetable $timetable): JsonResponse
     {
+        $this->authorize('update', SiteBaseMap::class);
+
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
         $placements = $this->siteMapService->bulkUpdatePlacements(
             $siteBaseMap,
@@ -104,6 +115,8 @@ class SiteMapController extends Controller
      */
     public function destroyPlacement(Timetable $timetable, SiteMapPlacement $placement): JsonResponse
     {
+        $this->authorize('delete', SiteBaseMap::class);
+
         $this->siteMapService->deletePlacement($placement);
 
         return response()->json([
@@ -116,6 +129,8 @@ class SiteMapController extends Controller
      */
     public function resetPreset(Timetable $timetable): JsonResponse
     {
+        $this->authorize('update', SiteBaseMap::class);
+
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
         $placements = $this->siteMapService->resetToStandardPreset($siteBaseMap);
 
@@ -130,6 +145,8 @@ class SiteMapController extends Controller
      */
     public function clearPlacements(Timetable $timetable): JsonResponse
     {
+        $this->authorize('delete', SiteBaseMap::class);
+
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
         $this->siteMapService->clearPlacements($siteBaseMap);
 
@@ -144,6 +161,8 @@ class SiteMapController extends Controller
      */
     public function exportPdf(Timetable $timetable): Response
     {
+        $this->authorize('viewAny', SiteBaseMap::class);
+
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
         $placements = $this->siteMapService->getPlacements($siteBaseMap);
 
@@ -163,6 +182,8 @@ class SiteMapController extends Controller
      */
     public function storeIcon(StoreSiteMapIconRequest $request, Timetable $timetable): JsonResponse
     {
+        $this->authorize('create', SiteBaseMap::class);
+
         /** @var UploadedFile $file */
         $file = $request->file('png_file');
         $icon = $this->siteMapService->storeIconFromPng(
@@ -182,6 +203,8 @@ class SiteMapController extends Controller
      */
     public function updateIcon(UpdateSiteMapIconRequest $request, Timetable $timetable, SiteMapIconDefinition $iconDefinition): JsonResponse
     {
+        $this->authorize('update', SiteBaseMap::class);
+
         try {
             $file = $request->file('png_file');
             $updated = $this->siteMapService->updateIcon(
@@ -208,6 +231,8 @@ class SiteMapController extends Controller
      */
     public function destroyIcon(Request $request, Timetable $timetable, SiteMapIconDefinition $iconDefinition): JsonResponse
     {
+        $this->authorize('delete', SiteBaseMap::class);
+
         try {
             $force = $request->boolean('force', false);
             $result = $this->siteMapService->deleteIcon($iconDefinition, $force);
@@ -229,6 +254,8 @@ class SiteMapController extends Controller
      */
     public function getIconUsage(Timetable $timetable, SiteMapIconDefinition $iconDefinition): JsonResponse
     {
+        $this->authorize('viewAny', SiteBaseMap::class);
+
         $count = $this->siteMapService->getIconUsageCount($iconDefinition->icon_key);
 
         return response()->json([

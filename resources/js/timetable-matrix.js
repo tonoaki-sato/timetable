@@ -41,6 +41,14 @@ function initCurrentTimeIndicator() {
     const timeLabel = document.getElementById('matrix-line-time-label');
     if (!container || !lineEl) return;
 
+    const targetDate = container.getAttribute('data-target-date');
+    const initialNow = new Date();
+    const initialTodayStr = `${initialNow.getFullYear()}-${String(initialNow.getMonth() + 1).padStart(2, '0')}-${String(initialNow.getDate()).padStart(2, '0')}`;
+    if (targetDate && targetDate !== initialTodayStr) {
+        lineEl.classList.add('hidden');
+        return;
+    }
+
     function updatePosition() {
         const now = new Date();
         const year = now.getFullYear();
@@ -48,7 +56,6 @@ function initCurrentTimeIndicator() {
         const day = String(now.getDate()).padStart(2, '0');
         const todayStr = `${year}-${month}-${day}`;
 
-        const targetDate = container.getAttribute('data-target-date');
         // 日程が指定されており、当日でない場合は非表示（targetDate未設定時は表示許容）
         if (targetDate && targetDate !== todayStr) {
             lineEl.classList.add('hidden');
@@ -98,7 +105,7 @@ function initCurrentTimeIndicator() {
     }
 
     updatePosition();
-    setInterval(updatePosition, 1000);
+    setInterval(updatePosition, 15000);
     window.addEventListener('resize', updatePosition);
 }
 

@@ -35,14 +35,14 @@ class DashboardController extends Controller
     public function realtime(Request $request): JsonResponse
     {
         $now = Carbon::now('Asia/Tokyo');
-        $overview = $this->globalDashboardService->getOverview($now);
+        $metrics = $this->globalDashboardService->getRealtimeMetrics($now);
 
         return response()->json([
             'server_time_ms' => $now->valueOf(),
             'updated_at_label' => $now->format('H:i:s'),
             'status' => 'ok',
-            'days_until_main_event' => $overview->daysUntilMainEvent,
-            'schedule_completion_rate' => $overview->scheduleCompletionRate,
+            'days_until_main_event' => $metrics['days_until_main_event'],
+            'schedule_completion_rate' => $metrics['schedule_completion_rate'],
         ]);
     }
 }

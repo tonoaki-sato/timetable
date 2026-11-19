@@ -242,7 +242,7 @@ class StaffService
     {
         $staff = $this->staffRepository->findByAccessToken($token);
 
-        if ($staff) {
+        if ($staff && ($staff->last_accessed_at === null || $staff->last_accessed_at->lte(now()->subMinutes(5)))) {
             $this->staffRepository->update($staff, [
                 'last_accessed_at' => now(),
             ]);

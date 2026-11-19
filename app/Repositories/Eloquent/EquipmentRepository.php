@@ -57,11 +57,16 @@ class EquipmentRepository implements EquipmentRepositoryInterface
     #[Override]
     public function getCountsByType(): array
     {
+        $counts = Equipment::query()
+            ->selectRaw('type, COUNT(*) as aggregate_count')
+            ->groupBy('type')
+            ->pluck('aggregate_count', 'type');
+
         return [
-            'total' => Equipment::count(),
-            'committee' => Equipment::where('type', 'committee')->count(),
-            'rental' => Equipment::where('type', 'rental')->count(),
-            'personal' => Equipment::where('type', 'personal')->count(),
+            'total' => (int) $counts->sum(),
+            'committee' => (int) ($counts['committee'] ?? 0),
+            'rental' => (int) ($counts['rental'] ?? 0),
+            'personal' => (int) ($counts['personal'] ?? 0),
         ];
     }
 
@@ -132,14 +137,23 @@ class EquipmentRepository implements EquipmentRepositoryInterface
     #[Override]
     public function reorder(array $equipmentIds): void
     {
-        DB::transaction(function () use ($equipmentIds): void {
-            $order = 10;
-            foreach ($equipmentIds as $equipmentId) {
-                Equipment::where('id', $equipmentId)->update([
-                    'display_order' => $order,
-                ]);
-                $order += 10;
-            }
+        $cleanIds = array_values(array_unique(array_map('intval', $equipmentIds)));
+        if ($cleanIds === []) {
+            return;
+        }
+
+        $cases = [];
+        $order = 10;
+        foreach ($cleanIds as $id) {
+            $cases[] = "WHEN {$id} THEN {$order}";
+            $order += 10;
+        }
+        $caseSql = 'CASE id '.implode(' ', $cases).' ELSE display_order END';
+
+        DB::transaction(function () use ($cleanIds, $caseSql): void {
+            Equipment::whereIn('id', $cleanIds)->update([
+                'display_order' => DB::raw($caseSql),
+            ]);
         });
     }
 

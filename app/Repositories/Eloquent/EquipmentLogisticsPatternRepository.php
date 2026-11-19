@@ -151,14 +151,23 @@ class EquipmentLogisticsPatternRepository implements EquipmentLogisticsPatternRe
     #[Override]
     public function reorderSteps(EquipmentLogisticsPattern $pattern, array $stepIds): void
     {
-        DB::transaction(function () use ($pattern, $stepIds): void {
-            $order = 10;
-            foreach ($stepIds as $stepId) {
-                $pattern->steps()->where('id', $stepId)->update([
-                    'display_order' => $order,
-                ]);
-                $order += 10;
-            }
+        $cleanIds = array_values(array_unique(array_map('intval', $stepIds)));
+        if ($cleanIds === []) {
+            return;
+        }
+
+        $cases = [];
+        $order = 10;
+        foreach ($cleanIds as $id) {
+            $cases[] = "WHEN {$id} THEN {$order}";
+            $order += 10;
+        }
+        $caseSql = 'CASE id '.implode(' ', $cases).' ELSE display_order END';
+
+        DB::transaction(function () use ($pattern, $cleanIds, $caseSql): void {
+            $pattern->steps()->whereIn('id', $cleanIds)->update([
+                'display_order' => DB::raw($caseSql),
+            ]);
         });
     }
 }

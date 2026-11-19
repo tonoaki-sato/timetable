@@ -7,6 +7,7 @@ use App\Enums\FacilityType;
 use App\Http\Requests\StoreLayoutItemRequest;
 use App\Http\Requests\UpdateLayoutItemRequest;
 use App\Models\LayoutItem;
+use App\Models\LayoutMap;
 use App\Models\Timetable;
 use App\Services\SiteLayoutService;
 use App\Support\TableQueryOptions;
@@ -25,6 +26,8 @@ class SiteLayoutController extends Controller
      */
     public function index(Timetable $timetable): View
     {
+        $this->authorize('viewAny', LayoutMap::class);
+
         $map = $this->siteLayoutService->getLayoutDetails($timetable);
         $summary = $this->siteLayoutService->getSummary($map);
 
@@ -40,7 +43,9 @@ class SiteLayoutController extends Controller
      */
     public function booths(Request $request, Timetable $timetable): View
     {
-        $map = $this->siteLayoutService->getLayoutDetails($timetable);
+        $this->authorize('viewAny', LayoutMap::class);
+
+        $map = $this->siteLayoutService->getLayoutWithAreas($timetable);
 
         $perPage = TableQueryOptions::resolvePerPage($request->query('per_page'), 50, [25, 50, 100]);
         $filters = [
@@ -72,7 +77,9 @@ class SiteLayoutController extends Controller
      */
     public function storeBooth(StoreLayoutItemRequest $request, Timetable $timetable): RedirectResponse
     {
-        $map = $this->siteLayoutService->getLayoutDetails($timetable);
+        $this->authorize('create', LayoutMap::class);
+
+        $map = $this->siteLayoutService->getLayoutWithAreas($timetable);
         $item = $this->siteLayoutService->storeItem($map, $request->validated());
 
         return redirect()->back()->with('success', '配置情報（'.$item->code.'）を新規登録しました。');
@@ -83,6 +90,8 @@ class SiteLayoutController extends Controller
      */
     public function updateBooth(UpdateLayoutItemRequest $request, Timetable $timetable, LayoutItem $item): RedirectResponse
     {
+        $this->authorize('update', LayoutMap::class);
+
         $this->siteLayoutService->updateItem($item, $request->validated());
 
         return redirect()->back()->with('success', '配置情報（'.$item->code.'）を更新しました。');
@@ -93,6 +102,8 @@ class SiteLayoutController extends Controller
      */
     public function destroyBooth(Timetable $timetable, LayoutItem $item): RedirectResponse
     {
+        $this->authorize('delete', LayoutMap::class);
+
         $code = $item->code;
         $name = $item->displayName;
         $this->siteLayoutService->deleteItem($item);

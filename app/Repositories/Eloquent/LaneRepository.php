@@ -154,14 +154,23 @@ class LaneRepository implements LaneRepositoryInterface
     #[Override]
     public function reorder(Timetable $timetable, array $laneIds): void
     {
-        DB::transaction(function () use ($timetable, $laneIds): void {
-            $order = 10;
-            foreach ($laneIds as $laneId) {
-                $timetable->lanes()->where('id', $laneId)->update([
-                    'display_order' => $order,
-                ]);
-                $order += 10;
-            }
+        $cleanIds = array_values(array_unique(array_map('intval', $laneIds)));
+        if ($cleanIds === []) {
+            return;
+        }
+
+        $cases = [];
+        $order = 10;
+        foreach ($cleanIds as $id) {
+            $cases[] = "WHEN {$id} THEN {$order}";
+            $order += 10;
+        }
+        $caseSql = 'CASE id '.implode(' ', $cases).' ELSE display_order END';
+
+        DB::transaction(function () use ($timetable, $cleanIds, $caseSql): void {
+            $timetable->lanes()->whereIn('id', $cleanIds)->update([
+                'display_order' => DB::raw($caseSql),
+            ]);
         });
     }
 

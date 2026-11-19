@@ -67,9 +67,13 @@ function initStaffTimelineFilter() {
     }
 
     if (searchInput) {
+        let searchDebounceTimer = null;
         searchInput.addEventListener('input', (e) => {
             currentSearch = e.target.value.trim();
-            applyFilter();
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                applyFilter();
+            }, 150);
         });
     }
 

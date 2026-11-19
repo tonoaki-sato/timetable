@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\FeatureSetting;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,9 +13,7 @@ class UpdateFeatureSettingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $user = $this->user();
-
-        return (bool) ($user && $user->is_active && ($user->isAdmin() || $user->isOperator()));
+        return $this->user()?->can('update', FeatureSetting::class) ?? false;
     }
 
     /**

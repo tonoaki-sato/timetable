@@ -43,7 +43,7 @@ interface SiteMapRepositoryInterface
     /**
      * 配置オブジェクトを保存
      */
-    public function savePlacement(SiteMapPlacement $placement): SiteMapPlacement;
+    public function savePlacement(SiteMapPlacement $placement, bool $withRelations = true): SiteMapPlacement;
 
     /**
      * 配置オブジェクトを削除

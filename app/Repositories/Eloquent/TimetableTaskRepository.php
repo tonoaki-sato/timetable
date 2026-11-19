@@ -58,7 +58,7 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
                 $query->where('start_time', '<', $task->end_time)
                     ->where('end_time', '>', $task->start_time);
             })
-            ->with(['lane', 'assignments'])
+            ->with(['laneRelation', 'assignments'])
             ->get();
     }
 
@@ -77,9 +77,8 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
                 $query->whereIn('staff_id', $staffIds)
                     ->where('attendance_status', '!=', 'absent');
             })
-            ->with(['lane', 'assignments' => function ($query) use ($staffIds): void {
-                $query->whereIn('staff_id', $staffIds)
-                    ->where('attendance_status', '!=', 'absent');
+            ->with(['laneRelation', 'assignments' => function ($query): void {
+                $query->where('attendance_status', '!=', 'absent');
             }])
             ->get();
     }
@@ -185,24 +184,31 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
     #[Override]
     public function bulkAssignStaff(TimetableTask $task, array $staffIds, ?string $roleDescription = null): Collection
     {
-        return DB::transaction(function () use ($task, $staffIds, $roleDescription): Collection {
-            $assignments = new Collection;
+        $cleanIds = array_values(array_unique(array_map('intval', $staffIds)));
+        if ($cleanIds === []) {
+            return new Collection;
+        }
 
-            foreach ($staffIds as $staffId) {
-                $assignment = TaskStaffAssignment::updateOrCreate(
-                    [
-                        'timetable_task_id' => $task->id,
-                        'staff_id' => (int) $staffId,
-                    ],
-                    [
-                        'role_description' => $roleDescription,
-                        'attendance_status' => 'assigned',
-                    ]
-                );
-                $assignments->push($assignment);
-            }
+        return DB::transaction(function () use ($task, $cleanIds, $roleDescription): Collection {
+            $now = now()->format('Y-m-d H:i:s');
+            $rows = array_map(fn (int $staffId): array => [
+                'timetable_task_id' => $task->id,
+                'staff_id' => $staffId,
+                'role_description' => $roleDescription,
+                'attendance_status' => 'assigned',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ], $cleanIds);
 
-            return $assignments;
+            TaskStaffAssignment::upsert(
+                $rows,
+                ['timetable_task_id', 'staff_id'],
+                ['role_description', 'attendance_status', 'updated_at']
+            );
+
+            return TaskStaffAssignment::where('timetable_task_id', $task->id)
+                ->whereIn('staff_id', $cleanIds)
+                ->get();
         });
     }
 

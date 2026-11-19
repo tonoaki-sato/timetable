@@ -71,7 +71,7 @@
         <!-- 左カラム (lg:col-span-4): 会議 & 許認可・申請スケジュール -->
         <div class="lg:col-span-4 space-y-3">
             <!-- 直近の会議・打合せ -->
-            <x-dashboard.upcoming-meetings-card :limit="3" />
+            <x-dashboard.upcoming-meetings-card :meetings="$overview->upcomingMeetings" :limit="3" />
 
             <!-- 直近の許認可・申請・説明会 -->
             <x-dashboard.upcoming-permits-card :permits="$overview->upcomingPermits" />

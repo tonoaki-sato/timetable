@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class OrganizationController extends Controller
@@ -133,10 +134,18 @@ class OrganizationController extends Controller
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['integer', 'exists:organization_units,id'],
+            'ids.*' => ['integer'],
         ]);
 
-        $this->organizationService->reorderUnits($validated['ids']);
+        $ids = array_values(array_map('intval', $validated['ids']));
+        $uniqueIds = array_values(array_unique($ids));
+        if ($uniqueIds !== [] && OrganizationUnit::whereIn('id', $uniqueIds)->count() !== count($uniqueIds)) {
+            throw ValidationException::withMessages([
+                'ids' => ['指定された組織の一部が見つかりません。'],
+            ]);
+        }
+
+        $this->organizationService->reorderUnits($ids);
 
         return response()->json([
             'success' => true,

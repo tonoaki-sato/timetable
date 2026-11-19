@@ -24,6 +24,13 @@ interface LocationRepositoryInterface
     public function findFirstByTimetableAndExactName(int $timetableId, string $name): ?Location;
 
     /**
+     * 指定タイムテーブルの全拠点について「拠点名 => 最小拠点ID」の連想配列を取得
+     *
+     * @return array<string, int>
+     */
+    public function getNameIdMapForTimetable(int $timetableId): array;
+
+    /**
      * 指定タイムテーブルに紐づく拠点一覧をスケジュール付きで取得
      *
      * @return Collection<int, Location>

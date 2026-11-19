@@ -21,6 +21,20 @@ class VendorRepository implements VendorRepositoryInterface
             ->get();
     }
 
+    public function getAllForSelect(): Collection
+    {
+        return Vendor::query()
+            ->select(['id', 'name'])
+            ->orderBy('name', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+    }
+
+    public function getAllBasic(): Collection
+    {
+        return Vendor::orderBy('id', 'asc')->get();
+    }
+
     /**
      * 出展・出店者一覧をページネーション取得
      */
@@ -92,6 +106,13 @@ class VendorRepository implements VendorRepositoryInterface
         $vendor->update($data);
 
         return $vendor->fresh(['items.area']);
+    }
+
+    public function updateWithoutReload(Vendor $vendor, array $data): Vendor
+    {
+        $vendor->update($data);
+
+        return $vendor;
     }
 
     /**

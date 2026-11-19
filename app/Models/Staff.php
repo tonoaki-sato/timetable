@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\StaffFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,7 @@ use Illuminate\Support\Str;
     'token_reissued_at',
     'reissue_count',
 ])]
+#[Hidden(['access_token'])]
 class Staff extends Model
 {
     /** @use HasFactory<StaffFactory> */

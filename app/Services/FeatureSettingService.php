@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\FeatureSetting;
 use App\Repositories\Contracts\FeatureSettingRepositoryInterface;
+use App\Support\NavigationCache;
 use Carbon\CarbonInterface;
 
 class FeatureSettingService
@@ -19,7 +20,14 @@ class FeatureSettingService
      */
     public function getFeature(string $featureKey, array $defaultAttributes = []): FeatureSetting
     {
-        return $this->featureSettingRepository->getOrCreate($featureKey, $defaultAttributes);
+        if ($defaultAttributes !== []) {
+            return $this->featureSettingRepository->getOrCreate($featureKey, $defaultAttributes);
+        }
+
+        return app(NavigationCache::class)->getFeatureSetting(
+            $featureKey,
+            fn (): FeatureSetting => $this->featureSettingRepository->getOrCreate($featureKey)
+        );
     }
 
     /**

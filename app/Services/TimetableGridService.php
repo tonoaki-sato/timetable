@@ -513,10 +513,24 @@ class TimetableGridService
         $grid = [];
         $totalSlots = count($timeSlots);
 
+        $slotStartMinutes = [];
+        foreach ($timeSlots as $sIdx => $slot) {
+            $slotStartMinutes[$sIdx] = $this->hhmmToMinutes((string) $slot['time']);
+        }
+
         foreach ($activeStaff as $staff) {
             $staffGrid = [];
             $coveredUntil = -1;
-            $staffAssignments = $assignmentsByStaff[$staff->id] ?? collect();
+            $staffAssignments = ($assignmentsByStaff[$staff->id] ?? collect())->map(function (array $item): array {
+                $t = $item['task'];
+
+                return [
+                    'task' => $t,
+                    'assignment' => $item['assignment'],
+                    'start_min' => $this->hhmmToMinutes(substr((string) $t->start_time, 0, 5)),
+                    'end_min' => $this->hhmmToMinutes(substr((string) $t->end_time, 0, 5)),
+                ];
+            });
 
             foreach ($timeSlots as $sIdx => $slot) {
                 if ($coveredUntil >= $sIdx) {
@@ -525,32 +539,24 @@ class TimetableGridService
                     continue;
                 }
 
-                $slotCarbon = Carbon::createFromFormat('H:i', $slot['time']);
-                $slotEndCarbon = $slotCarbon->copy()->addMinutes(30);
+                $slotStartMin = $slotStartMinutes[$sIdx];
+                $slotEndMin = $slotStartMin + 30;
 
                 // このスロットの時間帯に開始または進行中のタスクを検索
-                $match = $staffAssignments->first(function ($item) use ($slotCarbon, $slotEndCarbon) {
-                    $t = $item['task'];
-                    $tStart = Carbon::createFromFormat('H:i', substr($t->start_time, 0, 5));
-
-                    return $tStart->gte($slotCarbon) && $tStart->lt($slotEndCarbon);
-                });
+                $match = $staffAssignments->first(
+                    fn (array $item): bool => $item['start_min'] >= $slotStartMin && $item['start_min'] < $slotEndMin
+                );
 
                 if (! $match) {
-                    $match = $staffAssignments->first(function ($item) use ($slotCarbon) {
-                        $t = $item['task'];
-                        $tStart = Carbon::createFromFormat('H:i', substr($t->start_time, 0, 5));
-                        $tEnd = Carbon::createFromFormat('H:i', substr($t->end_time, 0, 5));
-
-                        return $tStart->lte($slotCarbon) && $tEnd->gt($slotCarbon);
-                    });
+                    $match = $staffAssignments->first(
+                        fn (array $item): bool => $item['start_min'] <= $slotStartMin && $item['end_min'] > $slotStartMin
+                    );
                 }
 
                 if ($match) {
                     $task = $match['task'];
                     $assignment = $match['assignment'];
-                    $tEnd = Carbon::createFromFormat('H:i', substr($task->end_time, 0, 5));
-                    $diffMinutes = max(30, $slotCarbon->diffInMinutes($tEnd, false));
+                    $diffMinutes = max(30, $match['end_min'] - $slotStartMin);
                     $span = (int) ceil($diffMinutes / 30);
                     $span = min($span, $totalSlots - $sIdx);
                     $span = max(1, $span);
@@ -594,6 +600,19 @@ class TimetableGridService
         }
 
         return $grid;
+    }
+
+    /**
+     * HH:MM 形式文字列を 00:00 からの経過分数へ変換
+     */
+    private function hhmmToMinutes(string $hhmm): int
+    {
+        $parts = explode(':', $hhmm);
+        if (count($parts) < 2) {
+            return 0;
+        }
+
+        return ((int) $parts[0] * 60) + (int) $parts[1];
     }
 
     /**

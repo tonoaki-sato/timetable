@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Vendor\ExportVendorsCsvAction;
 use App\Actions\Vendor\ImportVendorsCsvAction;
 use App\Http\Requests\ImportVendorsCsvRequest;
+use App\Models\Vendor;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -20,6 +21,8 @@ class VendorCsvController extends Controller
      */
     public function export(): StreamedResponse
     {
+        $this->authorize('viewAny', Vendor::class);
+
         return $this->exportAction->execute();
     }
 
@@ -28,6 +31,8 @@ class VendorCsvController extends Controller
      */
     public function import(ImportVendorsCsvRequest $request): RedirectResponse
     {
+        $this->authorize('create', Vendor::class);
+
         $summary = $this->importAction->execute($request->file('csv_file'));
 
         return redirect()->route('vendors.index')

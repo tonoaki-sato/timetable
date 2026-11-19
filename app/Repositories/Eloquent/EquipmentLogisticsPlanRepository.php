@@ -33,7 +33,6 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
                     $q->where('timetable_id', $timetable->id);
                 }
                 $q->with([
-                    'equipment',
                     'fromLocationModel.schedules',
                     'toLocationModel.schedules',
                     'witnessStaff',
@@ -50,7 +49,15 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
             $query->whereIn('id', $equipmentIds);
         }
 
-        return $query->get();
+        $equipments = $query->get();
+
+        foreach ($equipments as $equipment) {
+            foreach ($equipment->plans as $plan) {
+                $plan->setRelation('equipment', $equipment);
+            }
+        }
+
+        return $equipments;
     }
 
     #[Override]

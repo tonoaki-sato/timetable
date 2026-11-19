@@ -75,6 +75,35 @@ interface TaskStaffAssignmentRepositoryInterface
     public function deleteByTaskAndStaffAndRole(int $taskId, int $staffId, string $roleDescription): int;
 
     /**
+     * 指定タスクID群・スタッフID群・役割に一致するアサインを一括削除
+     *
+     * @param  array<int, int>  $taskIds
+     * @param  array<int, int>  $staffIds
+     */
+    public function deleteByTaskIdsAndStaffIdsAndRole(array $taskIds, array $staffIds, string $roleDescription): int;
+
+    /**
+     * 指定アサインID群を一括削除
+     *
+     * @param  array<int, int>  $assignmentIds
+     */
+    public function deleteByIds(array $assignmentIds): int;
+
+    /**
+     * 指定アサインID群の役割を一括更新
+     *
+     * @param  array<int, int>  $assignmentIds
+     */
+    public function updateRoleByIds(array $assignmentIds, string $roleDescription): int;
+
+    /**
+     * アサイン情報を一括挿入（重複時はスキップ）
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     */
+    public function insertOrIgnoreMany(array $rows): int;
+
+    /**
      * 指定タスクID群に紐づくアサインを一括削除
      *
      * @param  iterable<int>  $taskIds

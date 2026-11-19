@@ -101,6 +101,14 @@ class UserController extends Controller
     }
 
     /**
+     * 自身のプロフィール画面へのリダイレクト
+     */
+    public function profile(Request $request): RedirectResponse
+    {
+        return redirect()->route('users.show', $request->user());
+    }
+
+    /**
      * ユーザー削除処理（admin専用）
      */
     public function destroy(Request $request, User $user): RedirectResponse

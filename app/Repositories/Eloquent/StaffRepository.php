@@ -180,6 +180,11 @@ class StaffRepository implements StaffRepositoryInterface
     public function loadShiftRelationsAndGetLedLanes(Staff $staff): Collection
     {
         $staff->load([
+            'assignments' => function ($query): void {
+                $query->whereHas('task.timetable', function ($tq): void {
+                    $tq->where('status', '!=', 'completed');
+                });
+            },
             'assignments.task.timetable',
             'assignments.task.laneRelation.leadStaff',
             'assignments.task.laneRelation.timetable',
@@ -188,6 +193,9 @@ class StaffRepository implements StaffRepositoryInterface
         ]);
 
         return $staff->ledLanes()
+            ->whereHas('timetable', function ($query): void {
+                $query->where('status', '!=', 'completed');
+            })
             ->ordered()
             ->with([
                 'timetable',

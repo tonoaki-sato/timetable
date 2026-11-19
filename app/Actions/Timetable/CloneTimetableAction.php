@@ -19,6 +19,7 @@ use App\Models\TimetableTask;
 use App\Models\User;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class CloneTimetableAction
@@ -197,6 +198,9 @@ class CloneTimetableAction
             ->orderBy('id')
             ->get();
 
+        $assignmentRows = [];
+        $now = now()->format('Y-m-d H:i:s');
+
         foreach ($sourceTasks as $sourceTask) {
             $newLaneId = $sourceTask->lane_id ? ($laneIdMap[$sourceTask->lane_id] ?? null) : null;
             if (! $newLaneId) {
@@ -224,17 +228,21 @@ class CloneTimetableAction
                         continue;
                     }
 
-                    TaskStaffAssignment::create([
+                    $assignmentRows[] = [
                         'timetable_task_id' => $newTask->id,
                         'staff_id' => $assignment->staff_id,
                         'role_description' => $assignment->role_description,
                         'attendance_status' => 'assigned',
                         'notes' => $assignment->notes,
-                    ]);
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
                     $assignmentsCount++;
                 }
             }
         }
+
+        $this->chunkInsert(TaskStaffAssignment::class, $assignmentRows);
 
         return [$tasksCount, $assignmentsCount];
     }
@@ -254,6 +262,9 @@ class CloneTimetableAction
             ->orderBy('id')
             ->get();
 
+        $scheduleRows = [];
+        $now = now()->format('Y-m-d H:i:s');
+
         foreach ($sourceLocations as $sourceLocation) {
             $newLocation = Location::create([
                 'timetable_id' => $newTimetable->id,
@@ -267,18 +278,22 @@ class CloneTimetableAction
             ]);
 
             foreach ($sourceLocation->schedules as $schedule) {
-                LocationSchedule::create([
+                $scheduleRows[] = [
                     'location_id' => $newLocation->id,
-                    'start_at' => $schedule->start_at?->copy()->addDays($dayOffset),
-                    'end_at' => $schedule->end_at?->copy()->addDays($dayOffset),
+                    'start_at' => $schedule->start_at?->copy()->addDays($dayOffset)->format('Y-m-d H:i:s'),
+                    'end_at' => $schedule->end_at?->copy()->addDays($dayOffset)->format('Y-m-d H:i:s'),
                     'availability_status' => 'unavailable',
                     'title' => $schedule->title,
                     'note' => $schedule->note,
-                ]);
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
 
             $locationIdMap[$sourceLocation->id] = $newLocation->id;
         }
+
+        $this->chunkInsert(LocationSchedule::class, $scheduleRows);
 
         return $locationIdMap;
     }
@@ -294,11 +309,12 @@ class CloneTimetableAction
         array $locationIdMap,
         int $dayOffset
     ): int {
-        $plansCount = 0;
-
         $sourcePlans = EquipmentLogisticsPlan::where('timetable_id', $source->id)
             ->orderBy('id')
             ->get();
+
+        $planRows = [];
+        $now = now()->format('Y-m-d H:i:s');
 
         foreach ($sourcePlans as $sourcePlan) {
             $newFromLocationId = $sourcePlan->from_location_id
@@ -308,10 +324,10 @@ class CloneTimetableAction
                 ? ($locationIdMap[$sourcePlan->to_location_id] ?? null)
                 : null;
 
-            EquipmentLogisticsPlan::create([
+            $planRows[] = [
                 'timetable_id' => $newTimetable->id,
                 'equipment_id' => $sourcePlan->equipment_id,
-                'target_date' => $sourcePlan->target_date?->copy()->addDays($dayOffset),
+                'target_date' => $sourcePlan->target_date?->copy()->addDays($dayOffset)->format('Y-m-d'),
                 'day_phase' => $sourcePlan->day_phase,
                 'action_type' => $sourcePlan->action_type,
                 'title' => $sourcePlan->title,
@@ -324,15 +340,18 @@ class CloneTimetableAction
                 'from_location_id' => $newFromLocationId,
                 'to_location_id' => $newToLocationId,
                 'operator_type' => $sourcePlan->operator_type,
-                'witness_required' => $sourcePlan->witness_required,
+                'witness_required' => (bool) $sourcePlan->witness_required,
                 'witness_staff_id' => $sourcePlan->witness_staff_id,
                 'status' => 'planned',
                 'notes' => $sourcePlan->notes,
-            ]);
-            $plansCount++;
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
 
-        return $plansCount;
+        $this->chunkInsert(EquipmentLogisticsPlan::class, $planRows);
+
+        return count($planRows);
     }
 
     /**
@@ -412,6 +431,9 @@ class CloneTimetableAction
             ->orderBy('id')
             ->get();
 
+        $placementRows = [];
+        $now = now()->format('Y-m-d H:i:s');
+
         foreach ($sourceBaseMaps as $sourceBaseMap) {
             $newBaseMap = SiteBaseMap::create([
                 'timetable_id' => $newTimetable->id,
@@ -433,7 +455,7 @@ class CloneTimetableAction
                     ? ($layoutItemIdMap[$sourcePlacement->layout_item_id] ?? null)
                     : null;
 
-                SiteMapPlacement::create([
+                $placementRows[] = [
                     'site_base_map_id' => $newBaseMap->id,
                     'layout_item_id' => $newLayoutItemId,
                     'shape_type' => $sourcePlacement->shape_type,
@@ -445,18 +467,41 @@ class CloneTimetableAction
                     'width' => $sourcePlacement->width,
                     'height' => $sourcePlacement->height,
                     'rotation' => $sourcePlacement->rotation,
-                    'is_rotation_locked' => $sourcePlacement->is_rotation_locked,
-                    'show_hygiene_circle' => $sourcePlacement->show_hygiene_circle,
+                    'is_rotation_locked' => (bool) $sourcePlacement->is_rotation_locked,
+                    'show_hygiene_circle' => (bool) $sourcePlacement->show_hygiene_circle,
                     'arc_start_angle' => $sourcePlacement->arc_start_angle,
                     'arc_end_angle' => $sourcePlacement->arc_end_angle,
                     'z_index' => $sourcePlacement->z_index,
                     'notes' => $sourcePlacement->notes,
-                    'meta_data' => $sourcePlacement->meta_data,
-                ]);
+                    'meta_data' => $sourcePlacement->meta_data !== null
+                        ? json_encode($sourcePlacement->meta_data, JSON_UNESCAPED_UNICODE)
+                        : null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
                 $placementsCount++;
             }
         }
 
+        $this->chunkInsert(SiteMapPlacement::class, $placementRows);
+
         return [$layoutItemsCount, $placementsCount];
+    }
+
+    /**
+     * チャンク単位でレコードを一括挿入する
+     *
+     * @param  class-string<Model>  $modelClass
+     * @param  array<int, array<string, mixed>>  $rows
+     */
+    protected function chunkInsert(string $modelClass, array $rows, int $chunkSize = 500): void
+    {
+        if ($rows === []) {
+            return;
+        }
+
+        foreach (array_chunk($rows, $chunkSize) as $chunk) {
+            $modelClass::insert($chunk);
+        }
     }
 }

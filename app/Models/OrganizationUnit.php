@@ -56,7 +56,7 @@ class OrganizationUnit extends Model
      */
     public function allChildren(): HasMany
     {
-        return $this->children()->with(['allChildren', 'staffMembers']);
+        return $this->children()->with(['allChildren', 'staff']);
     }
 
     /**

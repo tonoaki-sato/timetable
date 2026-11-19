@@ -26,6 +26,13 @@ class SiteMapPdfExporterService
     ];
 
     /**
+     * パース済み白地図ベースデータのプロセス内キャッシュ
+     *
+     * @var array<string, array{paths: array<int, array<string, mixed>>, labels: array<int, array<string, mixed>>}>
+     */
+    protected static array $parsedBaseMapCache = [];
+
+    /**
      * 日本語フォントの実体ファイルパスを探索して取得
      */
     public function getJapaneseFontPath(): string
@@ -128,45 +135,33 @@ class SiteMapPdfExporterService
      */
     protected function drawBaseMapLayer(CPDF $canvas, string $font, Collection $placements): void
     {
-        $jsonPath = storage_path('app/site_map_base_20260927.json');
-        if (! file_exists($jsonPath)) {
-            return;
-        }
-
-        $baseData = json_decode((string) file_get_contents($jsonPath), true);
-        if (! is_array($baseData)) {
+        $parsedBaseMap = $this->loadParsedBaseMapData();
+        if ($parsedBaseMap === null) {
             return;
         }
 
         // パス描画
-        foreach ($baseData['paths'] ?? [] as $pathItem) {
-            $d = (string) ($pathItem['d'] ?? '');
-            $fill = $pathItem['fill'] ?? null;
-            $stroke = $pathItem['stroke'] ?? null;
-            $w = (float) ($pathItem['w'] ?? 0.42);
+        foreach ($parsedBaseMap['paths'] as $pathItem) {
+            $segments = $pathItem['segments'];
+            $fillRgb = $pathItem['fill_rgb'];
+            $strokeRgb = $pathItem['stroke_rgb'];
+            $w = $pathItem['w'];
 
-            $segments = $this->parseSvgPathToSegments($d);
-            if (empty($segments)) {
-                continue;
-            }
-
-            if ($fill !== null) {
-                $rgb = $this->hexToRgb($fill);
+            if ($fillRgb !== null) {
                 foreach ($segments as $poly) {
                     if (count($poly) >= 6) {
-                        $canvas->polygon($poly, $rgb, null, [], true);
+                        $canvas->polygon($poly, $fillRgb, null, [], true);
                     }
                 }
             }
 
-            if ($stroke !== null) {
-                $rgb = $this->hexToRgb($stroke);
+            if ($strokeRgb !== null) {
                 foreach ($segments as $poly) {
                     if (count($poly) === 4) {
-                        $canvas->line($poly[0], $poly[1], $poly[2], $poly[3], $rgb, $w);
+                        $canvas->line($poly[0], $poly[1], $poly[2], $poly[3], $strokeRgb, $w);
                     } elseif (count($poly) > 4) {
                         for ($i = 0; $i < count($poly) - 2; $i += 2) {
-                            $canvas->line($poly[$i], $poly[$i + 1], $poly[$i + 2], $poly[$i + 3], $rgb, $w);
+                            $canvas->line($poly[$i], $poly[$i + 1], $poly[$i + 2], $poly[$i + 3], $strokeRgb, $w);
                         }
                     }
                 }
@@ -175,11 +170,11 @@ class SiteMapPdfExporterService
 
         // 建物・凡例・タイトルラベル描画
         $labelColor = [0.118, 0.161, 0.231]; // #1e293b
-        foreach ($baseData['labels'] ?? [] as $lbl) {
-            $text = (string) ($lbl['text'] ?? '');
-            $x = (float) ($lbl['x'] ?? 0);
-            $y = (float) ($lbl['y'] ?? 0);
-            $size = (float) ($lbl['size'] ?? 8.0);
+        foreach ($parsedBaseMap['labels'] as $lbl) {
+            $text = $lbl['text'];
+            $x = $lbl['x'];
+            $y = $lbl['y'];
+            $size = $lbl['size'];
             if ($text !== '' && $size > 0) {
                 $this->drawMixedText($canvas, $x, $y - $size * 0.82, $text, $font, $size, $labelColor);
             }
@@ -189,6 +184,66 @@ class SiteMapPdfExporterService
         $waterCount = $placements->where('shape_type', 'water_supply')->count();
         $canvas->filled_rectangle(82.0, 169.0, 100.0, 10.5, [1.0, 1.0, 1.0]);
         $this->drawMixedText($canvas, 84.30, 170.5, "手洗い設備設置　{$waterCount}ヵ所", $font, 7.8, $labelColor);
+    }
+
+    /**
+     * 白地図ベースJSONの読み込みとSVGパスパース結果をプロセス内キャッシュして返却
+     *
+     * @return array{paths: array<int, array<string, mixed>>, labels: array<int, array<string, mixed>>}|null
+     */
+    protected function loadParsedBaseMapData(): ?array
+    {
+        $jsonPath = storage_path('app/site_map_base_20260927.json');
+        if (! file_exists($jsonPath)) {
+            return null;
+        }
+
+        $mtime = (int) (filemtime($jsonPath) ?: 0);
+        $cacheKey = $jsonPath.'|'.$mtime;
+        if (isset(self::$parsedBaseMapCache[$cacheKey])) {
+            return self::$parsedBaseMapCache[$cacheKey];
+        }
+
+        $baseData = json_decode((string) file_get_contents($jsonPath), true);
+        if (! is_array($baseData)) {
+            return null;
+        }
+
+        $parsedPaths = [];
+        foreach ($baseData['paths'] ?? [] as $pathItem) {
+            $d = (string) ($pathItem['d'] ?? '');
+            $segments = $this->parseSvgPathToSegments($d);
+            if ($segments === []) {
+                continue;
+            }
+
+            $fill = $pathItem['fill'] ?? null;
+            $stroke = $pathItem['stroke'] ?? null;
+
+            $parsedPaths[] = [
+                'segments' => $segments,
+                'fill_rgb' => $fill !== null ? $this->hexToRgb((string) $fill) : null,
+                'stroke_rgb' => $stroke !== null ? $this->hexToRgb((string) $stroke) : null,
+                'w' => (float) ($pathItem['w'] ?? 0.42),
+            ];
+        }
+
+        $parsedLabels = [];
+        foreach ($baseData['labels'] ?? [] as $lbl) {
+            $parsedLabels[] = [
+                'text' => (string) ($lbl['text'] ?? ''),
+                'x' => (float) ($lbl['x'] ?? 0),
+                'y' => (float) ($lbl['y'] ?? 0),
+                'size' => (float) ($lbl['size'] ?? 8.0),
+            ];
+        }
+
+        self::$parsedBaseMapCache[$cacheKey] = [
+            'paths' => $parsedPaths,
+            'labels' => $parsedLabels,
+        ];
+
+        return self::$parsedBaseMapCache[$cacheKey];
     }
 
     /**
@@ -430,12 +485,29 @@ class SiteMapPdfExporterService
         $lineHeight = $fontSize * 1.18;
         $totalTextH = $lineHeight * $lineCount;
 
-        // 最大幅を計測
+        // 各行のチャンク分割と幅計測を1回のみ実行し、マスク算出と中央描画の両方で再利用する
+        $measuredLines = [];
         $maxTextW = 0.0;
         foreach ($lines as $line) {
-            $tw = $this->getMixedTextWidth($canvas, $line, $font, $fontSize);
-            if ($tw > $maxTextW) {
-                $maxTextW = $tw;
+            $chunks = $this->splitMixedText($line);
+            $chunkMeasurements = [];
+            $lineWidth = 0.0;
+            foreach ($chunks as $chunk) {
+                $chunkFont = $chunk['is_ascii'] ? 'Helvetica' : $font;
+                $chunkWidth = $canvas->get_text_width($chunk['text'], $chunkFont, $fontSize);
+                $lineWidth += $chunkWidth;
+                $chunkMeasurements[] = [
+                    'text' => $chunk['text'],
+                    'font' => $chunkFont,
+                    'width' => $chunkWidth,
+                ];
+            }
+            $measuredLines[] = [
+                'width' => $lineWidth,
+                'chunks' => $chunkMeasurements,
+            ];
+            if ($lineWidth > $maxTextW) {
+                $maxTextW = $lineWidth;
             }
         }
 
@@ -449,11 +521,21 @@ class SiteMapPdfExporterService
 
         // 各行を中央揃えで描画
         $startY = $y + ($h - $totalTextH) / 2;
-        foreach ($lines as $idx => $line) {
-            $tw = $this->getMixedTextWidth($canvas, $line, $font, $fontSize);
-            $tx = $x + ($w - $tw) / 2;
+        $baseBaseline = $canvas->get_font_baseline($font, $fontSize);
+        $baselines = [
+            $font => $baseBaseline,
+            'Helvetica' => $canvas->get_font_baseline('Helvetica', $fontSize),
+        ];
+
+        foreach ($measuredLines as $idx => $measuredLine) {
+            $tx = $x + ($w - $measuredLine['width']) / 2;
             $ty = $startY + $idx * $lineHeight;
-            $this->drawMixedText($canvas, $tx, $ty, $line, $font, $fontSize, $rgb);
+            $currentX = $tx;
+            foreach ($measuredLine['chunks'] as $chunk) {
+                $yOffset = $baseBaseline - $baselines[$chunk['font']];
+                $canvas->text($currentX, $ty + $yOffset, $chunk['text'], $chunk['font'], $fontSize, $rgb);
+                $currentX += $chunk['width'];
+            }
         }
     }
 

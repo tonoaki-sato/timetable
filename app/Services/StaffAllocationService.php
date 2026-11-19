@@ -33,6 +33,18 @@ class StaffAllocationService
     public function getTransferableSurplusTasks(TimetableTask $targetTask, int $staffId): Collection
     {
         $conflictingTasks = $this->conflictService->getConflictingTasks($targetTask, $staffId);
+
+        return $this->filterTransferableSurplusTasks($conflictingTasks, $staffId);
+    }
+
+    /**
+     * 事前に取得済みの重複タスクコレクションから「人数余剰により他班へ融通可能」なタスク群を判定して返却
+     *
+     * @param  Collection<int, TimetableTask>  $conflictingTasks
+     * @return Collection<int, TimetableTask>
+     */
+    protected function filterTransferableSurplusTasks(Collection $conflictingTasks, int $staffId): Collection
+    {
         if ($conflictingTasks->isEmpty()) {
             return new Collection;
         }
@@ -65,8 +77,8 @@ class StaffAllocationService
             return new Collection;
         }
 
-        $conflictsMap = $this->conflictService->getConflictsMapForStaffList($task, $activeStaff);
         $staffIds = $activeStaff->pluck('id')->map(fn ($id): int => (int) $id)->all();
+        $conflictsByStaffId = $this->conflictService->getConflictingTasksGroupedByStaffIds($task, $staffIds);
         $checkedInStaffIds = $this->staffCheckInRepository->getStaffIdsCheckedInForTimetable((int) $task->timetable_id);
 
         // 当日累計稼働時間の算出（同一運行日）
@@ -97,7 +109,8 @@ class StaffAllocationService
             : [];
 
         foreach ($activeStaff as $staff) {
-            $conflict = $conflictsMap[$staff->id] ?? null;
+            $staffConflicts = $conflictsByStaffId[$staff->id] ?? new Collection;
+            $conflict = $staffConflicts->first();
             $isLaneLead = $leadStaffId !== null && (int) $staff->id === $leadStaffId;
             $isFixedInTaskLane = in_array((int) $staff->id, $taskLaneFixedStaffIds, true);
             $isSameLane = $isLaneLead || $isFixedInTaskLane;
@@ -118,7 +131,7 @@ class StaffAllocationService
                 $surplusType = 'idle';
             } elseif ($conflict !== null) {
                 // パターン2: 自班タスクの必要人数を超過している余剰固定スタッフ（人数余剰）
-                $transferable = $this->getTransferableSurplusTasks($task, (int) $staff->id);
+                $transferable = $this->filterTransferableSurplusTasks($staffConflicts, (int) $staff->id);
                 if ($transferable->isNotEmpty()) {
                     $isSurplusFixed = true;
                     $surplusType = 'over_capacity';

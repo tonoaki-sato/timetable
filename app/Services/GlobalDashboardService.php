@@ -100,4 +100,37 @@ class GlobalDashboardService
             phaseContext: $phaseContext,
         );
     }
+
+    /**
+     * ダッシュボードのリアルタイム更新API向け軽量メトリクス取得
+     *
+     * @return array{days_until_main_event: ?int, schedule_completion_rate: int}
+     */
+    public function getRealtimeMetrics(?Carbon $now = null): array
+    {
+        $now = $now ?? Carbon::now('Asia/Tokyo');
+
+        $statusSummary = $this->scheduleRepository->getStatusSummary();
+        $totalSchedules = $statusSummary['total'] ?? 0;
+        $completedSchedules = $statusSummary['completed'] ?? 0;
+        $completionRate = $totalSchedules > 0 ? (int) round(($completedSchedules / $totalSchedules) * 100) : 0;
+
+        $timetables = $this->timetableRepository->getAll()->sortBy('target_date')->values();
+        $nextTimetable = $timetables->first(function ($t): bool {
+            return $t->target_date !== null && ($t->target_date->isToday() || $t->target_date->isFuture());
+        }) ?? $timetables->first();
+
+        $daysUntilMainEvent = null;
+        if ($nextTimetable && $nextTimetable->target_date) {
+            $today = $now->copy()->startOfDay();
+            $target = $nextTimetable->target_date->copy()->startOfDay();
+            $diffDays = (int) $today->diffInDays($target, false);
+            $daysUntilMainEvent = max(0, $diffDays);
+        }
+
+        return [
+            'days_until_main_event' => $daysUntilMainEvent,
+            'schedule_completion_rate' => $completionRate,
+        ];
+    }
 }

@@ -102,7 +102,7 @@ class ImportVendorsCsvAction
         }
 
         return DB::transaction(function () use ($validatedRows): array {
-            $existingAll = $this->vendorRepository->getAll();
+            $existingAll = $this->vendorRepository->getAllBasic();
             $byId = $existingAll->keyBy('id');
             $byName = $existingAll->keyBy('name');
 
@@ -118,7 +118,7 @@ class ImportVendorsCsvAction
                 }
 
                 if ($target !== null) {
-                    $fresh = $this->vendorRepository->update($target, $row['data']);
+                    $fresh = $this->vendorRepository->updateWithoutReload($target, $row['data']);
                     $byId->put($fresh->id, $fresh);
                     $byName->put($fresh->name, $fresh);
                     $updated++;

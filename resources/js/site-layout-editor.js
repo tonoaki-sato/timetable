@@ -209,25 +209,28 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.round(val * dpr) / dpr;
     }
 
-    function updateTransform() {
+    function updateTransform(scaleChanged = true) {
         const pxX = snapToDevicePixel(state.x);
         const pxY = snapToDevicePixel(state.y);
-        const scaledW = snapToDevicePixel(state.svgWidth * state.scale);
-        const scaledH = snapToDevicePixel(state.svgHeight * state.scale);
 
         viewport.style.transform = 'none';
         viewport.style.left = `${pxX}px`;
         viewport.style.top = `${pxY}px`;
 
-        const svg = svgContainer.querySelector('svg');
-        if (svg) {
-            svg.setAttribute('width', `${scaledW}`);
-            svg.setAttribute('height', `${scaledH}`);
-            svg.style.width = `${scaledW}px`;
-            svg.style.height = `${scaledH}px`;
-        }
+        if (scaleChanged) {
+            const scaledW = snapToDevicePixel(state.svgWidth * state.scale);
+            const scaledH = snapToDevicePixel(state.svgHeight * state.scale);
 
-        if (zoomText) zoomText.textContent = `${Math.round(state.scale * 100)}%`;
+            const svg = svgContainer.querySelector('svg');
+            if (svg) {
+                svg.setAttribute('width', `${scaledW}`);
+                svg.setAttribute('height', `${scaledH}`);
+                svg.style.width = `${scaledW}px`;
+                svg.style.height = `${scaledH}px`;
+            }
+
+            if (zoomText) zoomText.textContent = `${Math.round(state.scale * 100)}%`;
+        }
     }
 
     function fitToScreen() {
@@ -1069,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function apiDeletePlacement(id, recordHistory = true) {
+    async function apiDeletePlacement(id, recordHistory = true, refreshUi = true) {
         const target = state.placements.find(p => p.id === id);
         if (!target) return;
         const snapshot = { ...target };
@@ -1085,9 +1088,11 @@ document.addEventListener('DOMContentLoaded', () => {
             state.selectedIds.delete(id);
             const node = svgContainer.querySelector(`g.site-map-node[data-placement-id="${id}"]`);
             if (node) node.remove();
-            renderHygieneCirclesAndCheck();
-            updateSummaryAndInspector();
-            syncSidebarLayoutItems();
+            if (refreshUi) {
+                renderHygieneCirclesAndCheck();
+                updateSummaryAndInspector();
+                syncSidebarLayoutItems();
+            }
             if (recordHistory) {
                 pushHistory({ type: 'delete', snapshot });
                 showToast(`「${snapshot.display_text || 'オブジェクト'}」を削除しました`, performUndo);
@@ -1101,9 +1106,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function deleteSelectedPlacements() {
         const ids = [...state.selectedIds];
-        for (const id of ids) {
-            await apiDeletePlacement(id, true);
-        }
+        if (ids.length === 0) return;
+
+        await Promise.all(ids.map(id => apiDeletePlacement(id, true, false)));
+        renderHygieneCirclesAndCheck();
+        updateSummaryAndInspector();
+        syncSidebarLayoutItems();
     }
 
     // --- 連番複製 (Ctrl+D) ---
@@ -1179,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 白地図ロード ---
     async function loadSvgMap() {
         try {
-            const res = await fetch(svgUrl, { cache: 'no-cache' });
+            const res = await fetch(svgUrl);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const svgText = await res.text();
             svgContainer.innerHTML = svgText;
@@ -1264,20 +1272,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!e.shiftKey) clearSelection();
     });
 
-    window.addEventListener('mousemove', (e) => {
+    let mouseMoveRafId = null;
+    let pendingMouseEvent = null;
+
+    function processMouseMove(ev) {
         if (state.isPanning) {
-            state.x = e.clientX - state.panStartX;
-            state.y = e.clientY - state.panStartY;
-            updateTransform();
+            state.x = ev.clientX - state.panStartX;
+            state.y = ev.clientY - state.panStartY;
+            updateTransform(false);
             return;
         }
 
         if (state.isMarquee && marqueeBox) {
             const rect = canvasContainer.getBoundingClientRect();
-            const x1 = Math.min(state.marqueeStartClientX, e.clientX) - rect.left;
-            const y1 = Math.min(state.marqueeStartClientY, e.clientY) - rect.top;
-            const w = Math.abs(e.clientX - state.marqueeStartClientX);
-            const h = Math.abs(e.clientY - state.marqueeStartClientY);
+            const x1 = Math.min(state.marqueeStartClientX, ev.clientX) - rect.left;
+            const y1 = Math.min(state.marqueeStartClientY, ev.clientY) - rect.top;
+            const w = Math.abs(ev.clientX - state.marqueeStartClientX);
+            const h = Math.abs(ev.clientY - state.marqueeStartClientY);
             if (w > 4 || h > 4) {
                 marqueeBox.style.left = `${x1}px`;
                 marqueeBox.style.top = `${y1}px`;
@@ -1290,7 +1301,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // リサイズ中 (回転考慮の逆行列変換)
         if (state.isResizing && state.resizeOrig) {
-            const sc = getSvgCoords(e.clientX, e.clientY);
+            const sc = getSvgCoords(ev.clientX, ev.clientY);
             const dx = sc.x - state.resizeStartSvgX;
             const dy = sc.y - state.resizeStartSvgY;
             const target = state.placements.find(p => p.id === state.resizeId);
@@ -1320,22 +1331,23 @@ document.addEventListener('DOMContentLoaded', () => {
             target.width = Math.round(w * 100) / 100;
             target.height = Math.round(h * 100) / 100;
             renderPlacementNode(target);
-            updateSummaryAndInspector();
+            if (inspWidthM) inspWidthM.value = (target.width / scaleRatio).toFixed(2);
+            if (inspHeightM) inspHeightM.value = (target.height / scaleRatio).toFixed(2);
             return;
         }
 
         // ノード移動中
         if (state.isMoving) {
-            const sc = getSvgCoords(e.clientX, e.clientY);
-            let dx = sc.x - state.moveStartSvgX;
-            let dy = sc.y - state.moveStartSvgY;
+            const sc = getSvgCoords(ev.clientX, ev.clientY);
+            const dx = sc.x - state.moveStartSvgX;
+            const dy = sc.y - state.moveStartSvgY;
 
             if (state.selectedIds.size === 1) {
                 const sid = [...state.selectedIds][0];
                 const target = state.placements.find(p => p.id === sid);
                 const orig = state.moveOrigPositions.get(sid);
                 if (target && orig) {
-                    const snapped = e.altKey
+                    const snapped = ev.altKey
                         ? { x: orig.x + dx, y: orig.y + dy }
                         : computeSnap(sid, orig.x + dx, orig.y + dy, parseFloat(target.width), parseFloat(target.height));
                     target.pos_x = Math.round(snapped.x * 100) / 100;
@@ -1355,9 +1367,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         }
+    }
+
+    function flushPendingMouseMove() {
+        if (mouseMoveRafId !== null) {
+            cancelAnimationFrame(mouseMoveRafId);
+            mouseMoveRafId = null;
+        }
+        if (pendingMouseEvent !== null) {
+            const ev = pendingMouseEvent;
+            pendingMouseEvent = null;
+            processMouseMove(ev);
+        }
+    }
+
+    window.addEventListener('mousemove', (e) => {
+        if (!state.isPanning && !state.isMarquee && !state.isResizing && !state.isMoving) {
+            return;
+        }
+        pendingMouseEvent = { clientX: e.clientX, clientY: e.clientY, altKey: e.altKey };
+        if (mouseMoveRafId === null) {
+            mouseMoveRafId = requestAnimationFrame(() => {
+                mouseMoveRafId = null;
+                if (pendingMouseEvent !== null) {
+                    const ev = pendingMouseEvent;
+                    pendingMouseEvent = null;
+                    processMouseMove(ev);
+                }
+            });
+        }
     });
 
     window.addEventListener('mouseup', async (e) => {
+        flushPendingMouseMove();
+
         if (state.isPanning) {
             state.isPanning = false;
             canvasContainer.style.cursor = (state.toolMode === 'pan' || state.spacePressed) ? 'grab' : 'default';

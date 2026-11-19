@@ -15,6 +15,7 @@ use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use DomainException;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 
 class TimetableTaskService
@@ -127,7 +128,7 @@ class TimetableTaskService
         return DB::transaction(function () use ($task, $data): TimetableTask {
             $this->taskRepository->update($task, $data);
 
-            return $task->fresh(['lane', 'assignments']);
+            return $task->fresh(['laneRelation', 'assignments']);
         });
     }
 
@@ -157,9 +158,13 @@ class TimetableTaskService
             if ($autoAssignLead) {
                 $lane = $this->laneRepository->findWithFixedStaff($laneId);
                 if ($lane) {
+                    $preloadedLaneTasks = $this->taskRepository->getActiveForLanes([$laneId]);
+                    $rows = [];
+                    $now = now()->format('Y-m-d H:i:s');
                     foreach ($createdTasks as $task) {
-                        $this->autoAssignLaneMembersToTask($task, $lane);
+                        array_push($rows, ...$this->collectDefaultAssignmentRowsForTask($task, $lane, $preloadedLaneTasks, $now));
                     }
+                    $this->assignmentRepository->insertOrIgnoreMany($rows);
                 }
             }
 
@@ -192,12 +197,16 @@ class TimetableTaskService
 
             if ($dto->autoAssignLead) {
                 $lanesById = $lanes->keyBy('id');
+                $tasksByLane = $this->taskRepository->getActiveForLanes($lanes->pluck('id')->all())->groupBy('lane_id');
+                $rows = [];
+                $now = now()->format('Y-m-d H:i:s');
                 foreach ($createdTasks as $task) {
                     $lane = $lanesById->get($task->lane_id);
                     if ($lane instanceof Lane) {
-                        $this->autoAssignLaneMembersToTask($task, $lane);
+                        array_push($rows, ...$this->collectDefaultAssignmentRowsForTask($task, $lane, $tasksByLane->get($lane->id, collect()), $now));
                     }
                 }
+                $this->assignmentRepository->insertOrIgnoreMany($rows);
             }
 
             return $createdTasks;
@@ -206,28 +215,49 @@ class TimetableTaskService
 
     /**
      * 単一タスクに対して班長および固定スタッフを基本アサインする
+     *
+     * @param  SupportCollection<int, TimetableTask>|null  $preloadedLaneTasks
      */
-    protected function autoAssignLaneMembersToTask(TimetableTask $task, Lane $lane): void
-    {
+    protected function autoAssignLaneMembersToTask(
+        TimetableTask $task,
+        Lane $lane,
+        ?SupportCollection $preloadedLaneTasks = null
+    ): void {
+        $rows = $this->collectDefaultAssignmentRowsForTask($task, $lane, $preloadedLaneTasks, now()->format('Y-m-d H:i:s'));
+        $this->assignmentRepository->insertOrIgnoreMany($rows);
+    }
+
+    /**
+     * 単一タスクに対する班長・固定スタッフの初期アサイン行配列を組み立てる
+     *
+     * @param  SupportCollection<int, TimetableTask>|null  $preloadedLaneTasks
+     * @return array<int, array<string, mixed>>
+     */
+    protected function collectDefaultAssignmentRowsForTask(
+        TimetableTask $task,
+        Lane $lane,
+        ?SupportCollection $preloadedLaneTasks,
+        string $now
+    ): array {
+        $rows = [];
+
         if ($lane->lead_staff_id) {
-            $this->assignmentRepository->firstOrCreate(
-                [
-                    'timetable_task_id' => $task->id,
-                    'staff_id' => $lane->lead_staff_id,
-                ],
-                [
-                    'role_description' => '班長',
-                    'attendance_status' => 'assigned',
-                ]
-            );
+            $rows[] = [
+                'timetable_task_id' => $task->id,
+                'staff_id' => $lane->lead_staff_id,
+                'role_description' => '班長',
+                'attendance_status' => 'assigned',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
 
         if ($lane->fixedStaff->isEmpty()) {
-            return;
+            return $rows;
         }
 
-        if ($this->hasOverlappingActiveTaskInLane($task, $lane->id)) {
-            return;
+        if ($this->hasOverlappingActiveTaskInLane($task, $lane->id, $preloadedLaneTasks)) {
+            return $rows;
         }
 
         foreach ($lane->fixedStaff as $fixedMember) {
@@ -235,24 +265,29 @@ class TimetableTaskService
                 continue;
             }
 
-            $this->assignmentRepository->firstOrCreate(
-                [
-                    'timetable_task_id' => $task->id,
-                    'staff_id' => $fixedMember->id,
-                ],
-                [
-                    'role_description' => '固定スタッフ',
-                    'attendance_status' => 'assigned',
-                ]
-            );
+            $rows[] = [
+                'timetable_task_id' => $task->id,
+                'staff_id' => $fixedMember->id,
+                'role_description' => '固定スタッフ',
+                'attendance_status' => 'assigned',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
+
+        return $rows;
     }
 
     /**
      * 同一班内に当該タスクと時間帯の全部または一部が重なる有効タスクが存在するか判定する
+     *
+     * @param  SupportCollection<int, TimetableTask>|null  $preloadedLaneTasks
      */
-    protected function hasOverlappingActiveTaskInLane(TimetableTask $task, int $laneId): bool
-    {
+    protected function hasOverlappingActiveTaskInLane(
+        TimetableTask $task,
+        int $laneId,
+        ?SupportCollection $preloadedLaneTasks = null
+    ): bool {
         if ($task->status === 'cancelled') {
             return false;
         }
@@ -263,7 +298,9 @@ class TimetableTaskService
             return false;
         }
 
-        $existingTasks = $this->taskRepository->getActiveForLaneExcludingIds($laneId, [$task->id]);
+        $existingTasks = $preloadedLaneTasks !== null
+            ? $preloadedLaneTasks->filter(fn (TimetableTask $existing): bool => $existing->id !== $task->id)
+            : $this->taskRepository->getActiveForLaneExcludingIds($laneId, [$task->id]);
         foreach ($existingTasks as $existing) {
             $exStart = substr((string) $existing->start_time, 0, 5);
             $exEnd = substr((string) $existing->end_time, 0, 5);
@@ -290,6 +327,10 @@ class TimetableTaskService
             $tasks = $this->taskRepository->getActiveForLaneWithAssignments($lane->id);
 
             $syncedCount = 0;
+            $deleteOldAssignmentIds = [];
+            $upgradeToLeadAssignmentIds = [];
+            $newLeadRows = [];
+            $now = now()->format('Y-m-d H:i:s');
 
             foreach ($tasks as $task) {
                 $existingNewLeadAssignment = $task->assignments
@@ -304,9 +345,9 @@ class TimetableTaskService
 
                     if ($oldLeadAssignment) {
                         if ($existingNewLeadAssignment) {
-                            $this->assignmentRepository->delete($oldLeadAssignment);
+                            $deleteOldAssignmentIds[] = $oldLeadAssignment->id;
                             if (empty($existingNewLeadAssignment->role_description) || in_array($existingNewLeadAssignment->role_description, ['一般担当', '固定スタッフ', '班リーダー'], true)) {
-                                $this->assignmentRepository->update($existingNewLeadAssignment, ['role_description' => '班長']);
+                                $upgradeToLeadAssignmentIds[] = $existingNewLeadAssignment->id;
                             }
                         } else {
                             $this->assignmentRepository->update($oldLeadAssignment, [
@@ -321,17 +362,23 @@ class TimetableTaskService
                 }
 
                 if (! $existingNewLeadAssignment) {
-                    $this->assignmentRepository->create([
+                    $newLeadRows[] = [
                         'timetable_task_id' => $task->id,
                         'staff_id' => $newLeadStaffId,
                         'role_description' => '班長',
                         'attendance_status' => 'assigned',
-                    ]);
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
                     $syncedCount++;
                 } elseif (in_array($existingNewLeadAssignment->role_description, [null, '', '一般担当', '固定スタッフ', '班リーダー'], true)) {
-                    $this->assignmentRepository->update($existingNewLeadAssignment, ['role_description' => '班長']);
+                    $upgradeToLeadAssignmentIds[] = $existingNewLeadAssignment->id;
                 }
             }
+
+            $this->assignmentRepository->deleteByIds($deleteOldAssignmentIds);
+            $this->assignmentRepository->updateRoleByIds(array_values(array_unique($upgradeToLeadAssignmentIds)), '班長');
+            $this->assignmentRepository->insertOrIgnoreMany($newLeadRows);
 
             return $syncedCount;
         });
@@ -351,50 +398,61 @@ class TimetableTaskService
 
             $this->laneRepository->syncFixedStaff($lane, $cleanIds);
 
-            $removedIds = array_diff($previousFixedIds, $cleanIds);
+            $leadStaffId = $lane->lead_staff_id ? (int) $lane->lead_staff_id : null;
+            $removedIds = array_values(array_filter(
+                array_diff($previousFixedIds, $cleanIds),
+                fn (int $id): bool => $leadStaffId === null || $id !== $leadStaffId
+            ));
+
             $tasks = $this->taskRepository->getActiveForLaneWithAssignments($lane->id);
 
             // 固定スタッフから外れたメンバーの未着手タスク自動アサインを解除
-            if (! empty($removedIds)) {
-                foreach ($tasks as $task) {
-                    if ($task->status !== 'not_started') {
-                        continue;
-                    }
-                    foreach ($removedIds as $removedId) {
-                        if ($lane->lead_staff_id && (int) $lane->lead_staff_id === (int) $removedId) {
-                            continue;
-                        }
-                        $this->assignmentRepository->deleteByTaskAndStaffAndRole(
-                            $task->id,
-                            (int) $removedId,
-                            '固定スタッフ'
-                        );
-                    }
-                }
+            if ($removedIds !== []) {
+                $notStartedTaskIds = $tasks
+                    ->where('status', 'not_started')
+                    ->pluck('id')
+                    ->map(fn ($id): int => (int) $id)
+                    ->values()
+                    ->all();
+
+                $this->assignmentRepository->deleteByTaskIdsAndStaffIdsAndRole(
+                    $notStartedTaskIds,
+                    $removedIds,
+                    '固定スタッフ'
+                );
             }
 
             // 固定スタッフを全タスクに基本アサイン
-            $syncedCount = 0;
+            $rowsToInsert = [];
+            $now = now()->format('Y-m-d H:i:s');
+
             foreach ($tasks as $task) {
+                $existingStaffIdSet = $task->assignments
+                    ->pluck('staff_id')
+                    ->map(fn ($id): int => (int) $id)
+                    ->flip();
+
                 foreach ($cleanIds as $staffId) {
-                    if ($lane->lead_staff_id && (int) $lane->lead_staff_id === (int) $staffId) {
+                    if ($leadStaffId !== null && $leadStaffId === $staffId) {
                         continue;
                     }
 
-                    $exists = $task->assignments->contains('staff_id', $staffId);
-                    if (! $exists) {
-                        $this->assignmentRepository->create([
+                    if (! isset($existingStaffIdSet[$staffId])) {
+                        $rowsToInsert[] = [
                             'timetable_task_id' => $task->id,
                             'staff_id' => $staffId,
                             'role_description' => '固定スタッフ',
                             'attendance_status' => 'assigned',
-                        ]);
-                        $syncedCount++;
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ];
                     }
                 }
             }
 
-            return $syncedCount;
+            $this->assignmentRepository->insertOrIgnoreMany($rowsToInsert);
+
+            return count($rowsToInsert);
         });
     }
 

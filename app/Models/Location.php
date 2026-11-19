@@ -236,7 +236,7 @@ class Location extends Model
             'date' => $s->start_at ? $s->start_at->format('Y-m-d') : '',
             'start_time' => $s->start_at ? $s->start_at->format('H:i') : '08:00',
             'end_time' => $s->end_at ? $s->end_at->format('H:i') : '18:00',
-            'status' => $s->status ?? 'available',
+            'status' => $s->availability_status ?? 'available',
             'note' => $s->note ?? '',
         ])->all();
     }

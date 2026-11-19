@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTOs\ApplyEquipmentPatternDTO;
 use App\Enums\EquipmentActionType;
+use App\Enums\EquipmentDayPhase;
 use App\Enums\EquipmentPlanStatus;
 use App\Enums\EquipmentType;
 use App\Models\Equipment;
@@ -107,6 +108,7 @@ class EquipmentLogisticsService
         $pattern->loadMissing(['steps.fromLocationModel', 'steps.toLocationModel']);
 
         $createdCount = 0;
+        $locationIdByName = null;
 
         foreach ($pattern->steps as $step) {
             $fromLocId = $step->from_location_id;
@@ -116,15 +118,15 @@ class EquipmentLogisticsService
 
             // 拠点が別運行日マスタの場合、同一名拠点を対象運行日から解決
             if ($fromLocId && $step->fromLocationModel?->timetable_id !== $targetTimetable->id && $step->fromLocationModel?->name) {
-                $matched = $this->locationRepository->findFirstByTimetableAndExactName($targetTimetable->id, $step->fromLocationModel->name);
-                if ($matched) {
-                    $fromLocId = $matched->id;
+                $locationIdByName ??= $this->locationRepository->getNameIdMapForTimetable($targetTimetable->id);
+                if (isset($locationIdByName[$step->fromLocationModel->name])) {
+                    $fromLocId = $locationIdByName[$step->fromLocationModel->name];
                 }
             }
             if ($toLocId && $step->toLocationModel?->timetable_id !== $targetTimetable->id && $step->toLocationModel?->name) {
-                $matched = $this->locationRepository->findFirstByTimetableAndExactName($targetTimetable->id, $step->toLocationModel->name);
-                if ($matched) {
-                    $toLocId = $matched->id;
+                $locationIdByName ??= $this->locationRepository->getNameIdMapForTimetable($targetTimetable->id);
+                if (isset($locationIdByName[$step->toLocationModel->name])) {
+                    $toLocId = $locationIdByName[$step->toLocationModel->name];
                 }
             }
 
@@ -371,7 +373,48 @@ class EquipmentLogisticsService
     public function getLogisticsTimelineViewData(Timetable $timetable): array
     {
         $equipments = $this->getEquipmentsFlowData(null, $timetable);
-        $allPlans = $this->planRepository->getForTimetable($timetable);
+
+        $phaseOrder = [];
+        foreach (EquipmentDayPhase::cases() as $index => $phase) {
+            $phaseOrder[$phase->value] = $index + 1;
+        }
+
+        $allPlans = $equipments->flatMap->plans->sort(function (EquipmentLogisticsPlan $a, EquipmentLogisticsPlan $b) use ($phaseOrder): int {
+            $phaseA = $phaseOrder[$a->day_phase_enum->value] ?? 99;
+            $phaseB = $phaseOrder[$b->day_phase_enum->value] ?? 99;
+            if ($phaseA !== $phaseB) {
+                return $phaseA <=> $phaseB;
+            }
+
+            $dateA = $a->target_date?->format('Y-m-d');
+            $dateB = $b->target_date?->format('Y-m-d');
+            if (($dateA === null) !== ($dateB === null)) {
+                return ($dateA === null) <=> ($dateB === null);
+            }
+            if ($dateA !== $dateB) {
+                return $dateA <=> $dateB;
+            }
+
+            $startA = $a->start_time;
+            $startB = $b->start_time;
+            if (($startA === null) !== ($startB === null)) {
+                return ($startA === null) <=> ($startB === null);
+            }
+            if ($startA !== $startB) {
+                return $startA <=> $startB;
+            }
+
+            $endA = $a->end_time;
+            $endB = $b->end_time;
+            if (($endA === null) !== ($endB === null)) {
+                return ($endA === null) <=> ($endB === null);
+            }
+            if ($endA !== $endB) {
+                return $endA <=> $endB;
+            }
+
+            return $a->id <=> $b->id;
+        })->values();
 
         $timetableDateStr = $timetable->target_date?->format('Y-m-d');
 

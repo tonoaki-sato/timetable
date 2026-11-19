@@ -111,7 +111,7 @@ class SiteMapService
      *
      * @param  array<string, mixed>  $data
      */
-    public function updatePlacementGeometry(SiteMapPlacement $placement, array $data): SiteMapPlacement
+    public function updatePlacementGeometry(SiteMapPlacement $placement, array $data, bool $withRelations = true): SiteMapPlacement
     {
         if (isset($data['pos_x'])) {
             $placement->pos_x = (float) $data['pos_x'];
@@ -159,7 +159,7 @@ class SiteMapService
             $placement->notes = $data['notes'];
         }
 
-        return $this->repository->savePlacement($placement);
+        return $this->repository->savePlacement($placement, $withRelations);
     }
 
     /**
@@ -184,7 +184,7 @@ class SiteMapService
                 if (! $placement) {
                     continue;
                 }
-                $this->updatePlacementGeometry($placement, $itemData);
+                $this->updatePlacementGeometry($placement, $itemData, false);
             }
         });
 

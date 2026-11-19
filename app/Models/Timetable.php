@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Support\NavigationCacheInvalidatingBuilder;
 use Carbon\Carbon;
 use Database\Factories\TimetableFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\UseEloquentBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'festival_periods',
     'created_by',
 ])]
+#[UseEloquentBuilder(NavigationCacheInvalidatingBuilder::class)]
 class Timetable extends Model
 {
     /** @use HasFactory<TimetableFactory> */

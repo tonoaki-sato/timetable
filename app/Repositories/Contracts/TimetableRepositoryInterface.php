@@ -100,6 +100,11 @@ interface TimetableRepositoryInterface
     public function getActiveAndDraftWithWorkflowDetails(): Collection;
 
     /**
+     * 運行準備用の先頭（日付昇順）の進行中・準備中タイムテーブルを1件取得
+     */
+    public function findFirstActiveOrDraftWithWorkflowDetails(): ?Timetable;
+
+    /**
      * タイムテーブルの総登録数を取得
      */
     public function getTotalCount(): int;

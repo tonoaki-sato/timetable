@@ -21,6 +21,34 @@ class TimetableContextBar extends Component
         public string $active = 'matrix',
     ) {
         $this->timetablesList = $timetableRepository->getSelectableTimetables();
+
+        if ($this->timetable !== null) {
+            $countMap = [
+                'lanes' => 'lanes_count',
+                'tasks' => 'tasks_count',
+                'locations' => 'locations_count',
+                'logisticsPlans' => 'logistics_plans_count',
+            ];
+
+            $missingCounts = [];
+            $attributes = $this->timetable->getAttributes();
+
+            foreach ($countMap as $relation => $countAttribute) {
+                if (array_key_exists($countAttribute, $attributes)) {
+                    continue;
+                }
+
+                if ($this->timetable->relationLoaded($relation)) {
+                    $this->timetable->setAttribute($countAttribute, $this->timetable->getRelation($relation)->count());
+                } else {
+                    $missingCounts[] = $relation;
+                }
+            }
+
+            if ($missingCounts !== []) {
+                $this->timetable->loadCount($missingCounts);
+            }
+        }
     }
 
     /**

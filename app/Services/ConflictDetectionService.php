@@ -68,18 +68,54 @@ class ConflictDetectionService
             return [];
         }
 
-        $intStaffIds = array_map('intval', $staffIds);
+        $intStaffIds = array_values(array_unique(array_map('intval', $staffIds)));
+        $staffIdSet = array_flip($intStaffIds);
         $overlappingTasks = $this->taskRepository->getOverlappingTasksForStaffIds($task, $intStaffIds);
 
         $conflictsMap = [];
         foreach ($overlappingTasks as $ovTask) {
             foreach ($ovTask->assignments as $assignment) {
-                if (! isset($conflictsMap[$assignment->staff_id])) {
-                    $conflictsMap[$assignment->staff_id] = $ovTask;
+                $staffId = (int) $assignment->staff_id;
+                if (isset($staffIdSet[$staffId]) && ! isset($conflictsMap[$staffId])) {
+                    $conflictsMap[$staffId] = $ovTask;
                 }
             }
         }
 
         return $conflictsMap;
+    }
+
+    /**
+     * 指定したスタッフID一覧について、該当タスクと時間帯が重複する全タスクをスタッフIDごとにグループ化して取得
+     *
+     * @param  array<int, int>  $staffIds
+     * @return array<int, Collection<int, TimetableTask>>
+     */
+    public function getConflictingTasksGroupedByStaffIds(TimetableTask $task, array $staffIds): array
+    {
+        if (! $task->start_time || ! $task->end_time || empty($staffIds)) {
+            return [];
+        }
+
+        $intStaffIds = array_values(array_unique(array_map('intval', $staffIds)));
+        $staffIdSet = array_flip($intStaffIds);
+        $overlappingTasks = $this->taskRepository->getOverlappingTasksForStaffIds($task, $intStaffIds);
+
+        $grouped = [];
+        foreach ($overlappingTasks as $ovTask) {
+            foreach ($ovTask->assignments as $assignment) {
+                $staffId = (int) $assignment->staff_id;
+                if (! isset($staffIdSet[$staffId])) {
+                    continue;
+                }
+
+                $grouped[$staffId] ??= new Collection;
+                if (! $grouped[$staffId]->contains('id', $ovTask->id)) {
+                    $grouped[$staffId]->push($ovTask);
+                }
+            }
+        }
+
+        return $grouped;
     }
 }
