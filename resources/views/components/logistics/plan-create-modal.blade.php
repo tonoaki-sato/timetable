@@ -8,11 +8,11 @@
 ])
 
 <!-- 搬出入計画 新規作成モーダル（個別ステップ登録 / パターン一括生成 切替対応） -->
-<div id="logistics-plan-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" data-action="close-modal"></div>
+<div id="logistics-plan-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="logistics-plan-create-modal-title">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-action="close-modal"></div>
 
     <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
-        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
+        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
 
             <!-- モーダルヘッダー (固定) -->
             <div class="shrink-0 px-5 py-3.5 bg-white border-b border-slate-100 flex items-center justify-between gap-2">
@@ -21,7 +21,7 @@
                         ➕
                     </div>
                     <div class="min-w-0">
-                        <h3 class="text-base font-bold text-slate-900 truncate">
+                        <h3 id="logistics-plan-create-modal-title" class="text-base font-bold text-slate-900 truncate">
                             搬出入計画の新規作成
                         </h3>
                         <p class="text-[11px] text-slate-500 truncate">
@@ -76,7 +76,7 @@
                     <!-- 共通: 対象資材選択 -->
                     <div>
                         <label for="new_plan_equipment_select" class="block text-[11px] font-bold text-slate-700 mb-1">
-                            対象資材 <span class="text-rose-500">*</span>
+                            対象資材 <span class="text-red-500">*</span>
                         </label>
                         <select id="new_plan_equipment_select"
                             class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
@@ -92,7 +92,7 @@
                                 </option>
                             @endforeach
                         </select>
-                        <p id="new_plan_equipment_error" class="hidden mt-1 text-[11px] font-bold text-rose-600">
+                        <p id="new_plan_equipment_error" class="hidden mt-1 text-[11px] font-bold text-red-600">
                             ⚠️ 対象資材を選択してください。
                         </p>
                     </div>
@@ -171,7 +171,7 @@
                                 <div>
                                     <div class="flex items-center justify-between mb-1">
                                         <label for="new_plan_pattern_id" class="block text-[11px] font-bold text-slate-700">
-                                            適用パターン <span class="text-rose-500">*</span>
+                                            適用パターン <span class="text-red-500">*</span>
                                         </label>
                                         <a href="{{ route('equipment-patterns.index') }}" class="text-[11px] text-indigo-600 hover:underline font-bold">
                                             🧩 パターンを編集・追加

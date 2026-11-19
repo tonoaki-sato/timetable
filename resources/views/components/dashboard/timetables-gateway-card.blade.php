@@ -24,7 +24,7 @@
                         <span class="block text-xs font-black leading-none">
                             {{ $timetable->target_date?->format('n/j') ?? '未定' }}
                         </span>
-                        <span class="block text-[10px] font-bold leading-tight mt-0.5 {{ $timetable->is_active ? 'text-indigo-200' : ($timetable->target_date?->isWeekend() ? 'text-rose-600' : 'text-slate-500') }}">
+                        <span class="block text-[10px] font-bold leading-tight mt-0.5 {{ $timetable->is_active ? 'text-indigo-200' : ($timetable->target_date?->isWeekend() ? 'text-red-600' : 'text-slate-500') }}">
                             ({{ $timetable->target_date?->isoFormat('ddd') ?? '-' }})
                         </span>
                     </div>
@@ -34,7 +34,7 @@
                                 {{ $timetable->name }}
                             </h4>
                             @if($timetable->is_today)
-                            <span class="px-1.5 py-0.2 bg-rose-500 text-white text-[9px] font-bold rounded-full animate-pulse">
+                            <span class="px-1.5 py-0.2 bg-red-500 text-white text-[9px] font-bold rounded-full animate-pulse">
                                 本日
                             </span>
                             @endif

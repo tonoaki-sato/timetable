@@ -7,29 +7,24 @@
             description="祭り実行委員会の組織体制・部門・係・担当スタッフの管理"
         >
             <x-slot:breadcrumbs>
-                <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                    <span>🏮</span>
-                    <span>本部</span>
-                </a>
-                <span class="text-slate-300">/</span>
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-700 font-bold truncate">🏛️ 組織管理</span>
             </x-slot:breadcrumbs>
 
             <x-slot:actions>
-                <a href="{{ route('organizations.print') }}" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer" title="組織図をA4縦PDFでダウンロード">
+                <x-ui.button variant="header-action" :href="route('organizations.print')" title="組織図をA4縦PDFでダウンロード">
                     <span>📄</span>
                     <span>組織図PDF</span>
-                </a>
-                <a href="{{ route('organizations.staff-list-pdf') }}" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer" title="組織別所属スタッフ一覧をA4縦PDFでダウンロード">
+                </x-ui.button>
+                <x-ui.button variant="header-action" :href="route('organizations.staff-list-pdf')" title="組織別所属スタッフ一覧をA4縦PDFでダウンロード">
                     <span>📋</span>
                     <span>所属スタッフ一覧PDF</span>
-                </a>
-                <button type="button" id="btn-open-create-modal" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
+                </x-ui.button>
+                <x-ui.button variant="header-action" id="btn-open-create-modal">
                     <span>➕</span>
                     <span>新規組織追加</span>
-                </button>
+                </x-ui.button>
             </x-slot:actions>
         </x-page-header>
 
@@ -43,12 +38,6 @@
             </button>
         </div>
 
-        <!-- 成功/通知メッセージ -->
-        @if(session('success'))
-            <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-medium flex items-center justify-between">
-                <span>✅ {{ session('success') }}</span>
-            </div>
-        @endif
         <div id="reorder-toast" class="hidden fixed bottom-5 right-5 z-50 p-3 bg-slate-900 text-white rounded-xl shadow-2xl text-xs font-medium flex items-center space-x-2 transition-all">
             <span>✅</span>
             <span id="reorder-toast-message">並び順を更新しました</span>
@@ -60,12 +49,12 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
-                                <th class="w-12 py-3 px-3 text-center">並替</th>
-                                <th class="py-3 px-3">名前</th>
-                                <th class="py-3 px-3">説明</th>
-                                <th class="py-3 px-3">担当</th>
-                                <th class="w-28 py-3 px-3 text-center">操作</th>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                                <th class="w-12 py-2.5 px-3 text-center">並替</th>
+                                <th class="py-2.5 px-3">名前</th>
+                                <th class="py-2.5 px-3">説明</th>
+                                <th class="py-2.5 px-3">担当</th>
+                                <th class="py-2.5 px-3 text-right">操作</th>
                             </tr>
                         </thead>
                         <tbody id="organizations-table-body" class="divide-y divide-slate-100">
@@ -86,7 +75,7 @@
                                                     {{ str_repeat('　', (int) $unit->depth - 1) }}└─
                                                 </span>
                                             @endif
-                                            <button type="button" class="text-indigo-600 hover:text-indigo-800 hover:underline transition font-bold text-left cursor-pointer" data-open-detail-modal="{{ $unit->id }}">
+                                            <button type="button" class="font-bold text-slate-800 hover:text-indigo-600 hover:underline transition text-left cursor-pointer" data-open-detail-modal="{{ $unit->id }}">
                                                 {{ $unit->name }}
                                             </button>
                                         </div>
@@ -94,7 +83,7 @@
 
                                     <!-- 説明 -->
                                     <td class="py-2.5 px-3 text-slate-600 max-w-xs truncate" title="{{ $unit->short_description }}">
-                                        {{ $unit->short_description ?: '-' }}
+                                        {{ $unit->short_description ?: '—' }}
                                     </td>
 
                                     <!-- 担当 (役割を除いた名前のみ) -->
@@ -102,21 +91,21 @@
                                         @if($unit->staff->isNotEmpty())
                                             <span class="text-xs">{{ $unit->staffNamesDisplay }}</span>
                                         @else
-                                            <span class="text-slate-400 italic text-[11px]">-</span>
+                                            <span class="text-slate-400 text-[11px]">—</span>
                                         @endif
                                     </td>
 
                                     <!-- 操作 (編集・削除) -->
-                                    <td class="py-2.5 px-3 text-center whitespace-nowrap">
-                                        <div class="inline-flex items-center space-x-1">
-                                            <button type="button" class="p-1.5 text-xs text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer" data-open-edit-modal="{{ $unit->id }}" title="編集">
+                                    <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                                        <div class="inline-flex items-center space-x-1.5">
+                                            <x-ui.button variant="edit" size="xs" data-open-edit-modal="{{ $unit->id }}" title="編集">
                                                 <span>✏️</span>
-                                                <span class="hidden sm:inline">編集</span>
-                                            </button>
-                                            <button type="button" class="p-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer" data-delete-unit="{{ $unit->id }}" data-unit-name="{{ $unit->name }}" title="削除">
+                                                <span>編集</span>
+                                            </x-ui.button>
+                                            <x-ui.button variant="delete" size="xs" data-delete-unit="{{ $unit->id }}" data-unit-name="{{ $unit->name }}" title="削除">
                                                 <span>🗑️</span>
-                                                <span class="hidden sm:inline">削除</span>
-                                            </button>
+                                                <span>削除</span>
+                                            </x-ui.button>
                                         </div>
                                     </td>
                                 </tr>

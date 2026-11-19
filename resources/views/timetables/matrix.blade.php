@@ -26,29 +26,22 @@
         @if($selectedTimetable)
         <x-slot:actions>
             <!-- スタッフタイムラインボタン -->
-            <a href="{{ route('timetables.staff-timeline', $selectedTimetable) }}"
-                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('timetables.staff-timeline', $selectedTimetable)">
                 <span>👥</span>
                 <span>スタッフタイムライン</span>
-            </a>
+            </x-ui.button>
 
             <!-- A4横 人員配置表PDFダウンロードボタン -->
-            <a href="{{ route('timetables.print-assignments', $selectedTimetable) }}"
-                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
-                title="選択中運行日の人員配置一覧表をA4横PDFでダウンロード">
+            <x-ui.button variant="header-action" :href="route('timetables.print-assignments', $selectedTimetable)" title="選択中運行日の人員配置一覧表をA4横PDFでダウンロード">
                 <span>📄</span>
                 <span>A4横 人員配置表PDF</span>
-            </a>
+            </x-ui.button>
 
             <!-- 進行表PDFダウンロードボタン -->
-            <button type="button"
-                id="btn-download-matrix-pdf"
-                data-timetable-id="{{ $selectedTimetable->id }}"
-                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0"
-                title="画面で選択中の担当班を反映した進行表PDFをダウンロード">
+            <x-ui.button variant="header-action" id="btn-download-matrix-pdf" data-timetable-id="{{ $selectedTimetable->id }}" title="画面で選択中の担当班を反映した進行表PDFをダウンロード">
                 <span>📄</span>
                 <span>進行表PDF</span>
-            </button>
+            </x-ui.button>
         </x-slot:actions>
         @endif
     </x-page-header>
@@ -158,12 +151,12 @@
         <div id="matrix-current-time-line"
             class="hidden absolute left-0 right-0 pointer-events-none z-25 print:hidden transition-[top] duration-1000 ease-linear top-0">
             <!-- 左端の現在時刻ピルバッジ -->
-            <div class="absolute left-1 sm:left-2 -top-3 flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-rose-600 text-white font-mono text-[10px] font-bold shadow-md ring-1 ring-white">
+            <div class="absolute left-1 sm:left-2 -top-3 flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-red-600 text-white font-mono text-[10px] font-bold shadow-md ring-1 ring-white">
                 <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
                 <span id="matrix-line-time-label">{{ $nowTime }}</span>
             </div>
             <!-- テーブル全幅の赤線 -->
-            <div class="w-full border-t-2 border-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]"></div>
+            <div class="w-full border-t-2 border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
         </div>
 
         <table class="w-full border-collapse text-left border-spacing-0 select-text font-sans">
@@ -258,7 +251,7 @@
 
                     @if($hasRoad)
                     <!-- 3. 道路列（車両通行止め） -->
-                    <td class="sticky left-[130px] z-20 {{ !$hasFestival ? 'border-r-2 border-slate-800 print:border-r-2 print:border-black' : 'border-r border-slate-700 print:border-black' }} p-1 text-center text-xs print:static {{ $slot['road']['status'] === 'closed' ? 'bg-rose-100 text-rose-800 font-bold print:bg-rose-50' : 'bg-white text-slate-400 font-mono' }}">
+                    <td class="sticky left-[130px] z-20 {{ !$hasFestival ? 'border-r-2 border-slate-800 print:border-r-2 print:border-black' : 'border-r border-slate-700 print:border-black' }} p-1 text-center text-xs print:static {{ $slot['road']['status'] === 'closed' ? 'bg-red-100 text-red-800 font-bold print:bg-red-50' : 'bg-white text-slate-400 font-mono' }}">
                         {{ $slot['road']['label'] }}
                     </td>
                     @endif
@@ -405,13 +398,13 @@
     </div>
 
     <!-- 5. 担当班クイック追加モーダル（Vanilla JS） -->
-    <div id="laneModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-150">
+    <div id="laneModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="lane-modal-title">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-150">
             <!-- モーダルヘッダー -->
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
                 <div class="flex items-center space-x-2">
                     <span class="text-lg">🏷️</span>
-                    <h3 class="font-bold text-sm">新規担当班を追加</h3>
+                    <h3 id="lane-modal-title" class="font-bold text-sm">新規担当班を追加</h3>
                 </div>
                 <button type="button" data-action="close-lane-modal"
                     class="text-slate-400 hover:text-white text-lg font-bold transition">
@@ -427,7 +420,7 @@
                 <!-- レーン名 -->
                 <div>
                     <label for="modal_lane_name" class="block text-xs font-bold text-slate-700 mb-1">
-                        担当班名（レーン名） <span class="text-rose-600">*</span>
+                        担当班名（レーン名） <span class="text-red-600">*</span>
                     </label>
                     <input type="text" id="modal_lane_name" name="name" required
                         placeholder="例: 会場放送班、美化清掃班、救護班"
@@ -438,7 +431,7 @@
                     <!-- テーマカラー -->
                     <div>
                         <label for="modal_lane_color" class="block text-xs font-bold text-slate-700 mb-1">
-                            カラー <span class="text-rose-600">*</span>
+                            カラー <span class="text-red-600">*</span>
                         </label>
                         <select id="modal_lane_color" name="color" required
                             class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -490,8 +483,9 @@
 
     <!-- 7. クイックアサイン スライドオーバーモーダル (CSP完全準拠・バニラJS駆動) -->
     <div id="quickAssignModal"
-        class="hidden fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-xs flex justify-end">
-        <div class="bg-white w-full max-w-2xl h-full shadow-2xl flex flex-col border-l border-slate-200">
+        class="hidden fixed inset-0 z-50 overflow-hidden bg-slate-900/40 backdrop-blur-xs flex justify-end"
+        role="dialog" aria-modal="true" aria-labelledby="quickAssignTaskTitle">
+        <div class="bg-white w-full max-w-2xl h-full shadow-xl flex flex-col border-l border-slate-200">
 
             <!-- モーダルヘッダー（時間帯・担当班・場所・充足状況・自動配置を集約） -->
             <div class="px-4 py-3 bg-gradient-to-r from-slate-900 to-indigo-950 text-white shrink-0 space-y-1.5">

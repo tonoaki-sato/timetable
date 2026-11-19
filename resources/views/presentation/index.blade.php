@@ -76,7 +76,7 @@
                     </button>
                     <!-- 全画面表示解除ボタン -->
                     <button type="button" id="exitFullscreenBtn"
-                        class="hidden items-center space-x-1 p-1.5 sm:px-3 sm:py-1 bg-rose-900/70 hover:bg-rose-800 text-rose-100 border border-rose-500/60 rounded-lg transition font-bold cursor-pointer shadow-sm ml-2"
+                        class="hidden items-center space-x-1 p-1.5 sm:px-3 sm:py-1 bg-red-900/70 hover:bg-red-800 text-red-100 border border-red-500/60 rounded-lg transition font-bold cursor-pointer shadow-sm ml-2"
                         title="全画面表示を解除する (Escキーでも解除可能)">
                         <span>✕</span>
                         <span>全画面解除 (Esc)</span>
@@ -159,7 +159,7 @@
                 <!-- スライド 03: 当日の私の混乱状況 -->
                 <div class="slide-content hidden" data-title="当日の私の混乱状況（実態）" data-section="第1部: 現状の課題">
                     <div class="max-w-4xl mx-auto">
-                        <div class="text-xs text-rose-400 font-bold uppercase tracking-wider mb-1">Actual Situation</div>
+                        <div class="text-xs text-red-400 font-bold uppercase tracking-wider mb-1">Actual Situation</div>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-white">当日の私の混乱状況：現場で直面した4つの負荷</h2>
                         <p class="text-xs sm:text-sm text-slate-400 mt-1">本陣受付裏への来客集中と備品対応に追われ、運行指示が常に綱渡りでした</p>
 
@@ -207,7 +207,7 @@
                 <!-- スライド 04: 見える化されていないことの課題 -->
                 <div class="slide-content hidden" data-title="運行が見えないことによる指示の限界" data-section="第1部: 現状の課題">
                     <div class="max-w-4xl mx-auto">
-                        <div class="text-xs text-rose-400 font-bold uppercase tracking-wider mb-1">Root Causes</div>
+                        <div class="text-xs text-red-400 font-bold uppercase tracking-wider mb-1">Root Causes</div>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-white">なぜ混乱したのか？ 受付背後での対応集中と、全体共有の仕組み不足</h2>
                         <p class="text-xs sm:text-sm text-slate-400 mt-1">各部会の綿密な運行情報が全体に可視化されておらず、本陣裏へのアクセス集中も重なり指示が後手に回った</p>
 
@@ -222,19 +222,19 @@
                                 <tbody class="divide-y divide-slate-700/60 text-slate-300">
                                     <tr>
                                         <td class="p-3.5 font-bold text-indigo-300">待機場所（本陣受付裏）のオープン性</td>
-                                        <td class="p-3.5">仕切りがなくあらゆる人が直接アクセス可能なため、<strong class="text-rose-400">対面応対や挨拶が途切れず、運行指示に専念できない</strong></td>
+                                        <td class="p-3.5">仕切りがなくあらゆる人が直接アクセス可能なため、<strong class="text-red-400">対面応対や挨拶が途切れず、運行指示に専念できない</strong></td>
                                     </tr>
                                     <tr>
                                         <td class="p-3.5 font-bold text-indigo-300">紙テーブルと時計を見比べる運用</td>
-                                        <td class="p-3.5">応対の合間では、<strong class="text-rose-400">リアルタイムの進行状況の全体把握が追いつかない</strong></td>
+                                        <td class="p-3.5">応対の合間では、<strong class="text-red-400">リアルタイムの進行状況の全体把握が追いつかない</strong></td>
                                     </tr>
                                     <tr>
                                         <td class="p-3.5 font-bold text-indigo-300">通行止め・ござ市の節目対応</td>
-                                        <td class="p-3.5">誰がどこで動けるかが一覧化されておらず、<strong class="text-rose-400">直前になって慌てて人員を確保・指示出し</strong>する</td>
+                                        <td class="p-3.5">誰がどこで動けるかが一覧化されておらず、<strong class="text-red-400">直前になって慌てて人員を確保・指示出し</strong>する</td>
                                     </tr>
                                     <tr>
                                         <td class="p-3.5 font-bold text-indigo-300">台車・備品の管理と日別搬入出<br><span class="text-[11px] font-normal text-slate-400">（※台車の管理は一例）</span></td>
-                                        <td class="p-3.5">コーン、誘導棒、ニッパー・テープ等消耗品や日別搬入出が共有されておらず、<strong class="text-rose-400">本陣裏へ備品問い合わせが集中し確認に追われる</strong></td>
+                                        <td class="p-3.5">コーン、誘導棒、ニッパー・テープ等消耗品や日別搬入出が共有されておらず、<strong class="text-red-400">本陣裏へ備品問い合わせが集中し確認に追われる</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -250,13 +250,13 @@
                         <p class="text-xs sm:text-sm text-slate-400 mt-1">画面一つで全体を把握し、ゆとりを持って的確な先回り指示を出す体制へ</p>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                            <div class="bg-rose-950/30 border border-rose-500/40 p-5 rounded-2xl">
-                                <div class="flex items-center space-x-2 text-rose-400 font-bold text-sm mb-2">
+                            <div class="bg-red-950/30 border border-red-500/40 p-5 rounded-2xl">
+                                <div class="flex items-center space-x-2 text-red-400 font-bold text-sm mb-2">
                                     <span>❌</span>
                                     <span>これまで（状況把握に忙殺）</span>
                                 </div>
-                                <p class="text-xs text-rose-200 mb-2">受付裏で対面応対・備品対応に追われながら紙と時計を見比べ、人を集め、搬入出の確認に奔走</p>
-                                <div class="bg-rose-900/40 p-3 rounded-xl border border-rose-700/50 text-center font-bold text-rose-300 text-xs sm:text-sm">
+                                <p class="text-xs text-red-200 mb-2">受付裏で対面応対・備品対応に追われながら紙と時計を見比べ、人を集め、搬入出の確認に奔走</p>
+                                <div class="bg-red-900/40 p-3 rounded-xl border border-red-700/50 text-center font-bold text-red-300 text-xs sm:text-sm">
                                     「突発対応と状況確認に追われ、指示が後手に回る」
                                 </div>
                             </div>

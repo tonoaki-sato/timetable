@@ -69,13 +69,13 @@ function initMyShiftPage() {
             'bg-emerald-950/90',
             'border-emerald-500/50',
             'text-emerald-200',
-            'bg-rose-950/90',
-            'border-rose-500/50',
-            'text-rose-200'
+            'bg-red-950/90',
+            'border-red-500/50',
+            'text-red-200'
         );
 
         if (isError) {
-            toast.classList.add('bg-rose-950/90', 'border-rose-500/50', 'text-rose-200');
+            toast.classList.add('bg-red-950/90', 'border-red-500/50', 'text-red-200');
         } else {
             toast.classList.add('bg-emerald-950/90', 'border-emerald-500/50', 'text-emerald-200');
         }

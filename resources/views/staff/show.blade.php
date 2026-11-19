@@ -31,18 +31,15 @@
         </x-slot:badges>
 
         <x-slot:actions>
-            <a href="{{ route('staff.print-card', $staff) }}"
-                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0"
-                title="名札カードをPDFでダウンロード">
+            <x-ui.button variant="header-action" :href="route('staff.print-card', $staff)" title="名札カードをPDFでダウンロード">
                 <span>📄</span>
                 <span>名札PDFダウンロード</span>
-            </a>
+            </x-ui.button>
 
-            <a href="{{ route('staff.index') }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('staff.index')">
                 <span>←</span>
                 <span>一覧に戻る</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
@@ -159,7 +156,7 @@
                     <form action="{{ route('staff.regenerate-token', $staff) }}" method="POST"
                           data-confirm="スタッフ「{{ $staff->name }}」の名札紛失・セキュリティ再発行を実行しますか？&#10;&#10;【注意】落とした名札の古いQRコードは即時に無効化（404）され、新しい名札が発行されます。">
                         @csrf
-                        <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer whitespace-nowrap">
+                        <button type="submit" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer whitespace-nowrap">
                             <span>⚠️</span>
                             <span>名札紛失・セキュリティ再発行</span>
                         </button>

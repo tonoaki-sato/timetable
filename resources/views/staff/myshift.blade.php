@@ -2,9 +2,10 @@
 <html lang="ja" class="h-full bg-slate-950 text-slate-100">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $staff->name }} さんのタイムテーブル - まつり運行システム</title>
+    <x-head-meta />
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/staff-myshift.js'])
 </head>
 <body class="min-h-full pb-16 font-sans antialiased bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
@@ -104,7 +105,7 @@
         @endif
 
         @if(session('error'))
-            <div class="p-3.5 bg-rose-950/80 border border-rose-500/50 rounded-2xl text-rose-300 text-xs flex items-center space-x-2">
+            <div class="p-3.5 bg-red-950/80 border border-red-500/50 rounded-2xl text-red-300 text-xs flex items-center space-x-2">
                 <span>⚠️</span>
                 <span>{{ session('error') }}</span>
             </div>
@@ -142,7 +143,7 @@
                                 {{ $ledLanes->count() }}班
                             </span>
                             @if($pendingLeaderRequestCount > 0)
-                                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white">
+                                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-red-500 text-white">
                                     {{ $pendingLeaderRequestCount }}
                                 </span>
                             @endif
@@ -307,7 +308,7 @@
                                                             {{ substr($task?->start_time ?? '', 0, 5) }}〜{{ $task?->end_time ? substr($task->end_time, 0, 5) : '' }}
                                                         </span>
                                                         @if($task?->is_critical)
-                                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-300 border border-red-500/40">
                                                                 重要
                                                             </span>
                                                         @endif
@@ -482,7 +483,7 @@
                                             <span class="text-[10px] opacity-80">({{ $ledLane->timetable->target_date?->format('n/j') }})</span>
                                         @endif
                                         @if($lanePendingCount > 0)
-                                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black {{ $loop->first ? 'bg-slate-950 text-amber-300' : 'bg-rose-500 text-white' }}">
+                                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black {{ $loop->first ? 'bg-slate-950 text-amber-300' : 'bg-red-500 text-white' }}">
                                                 {{ $lanePendingCount }}
                                             </span>
                                         @endif
@@ -549,7 +550,7 @@
                                                             </div>
                                                             <div class="font-bold text-white break-words mt-0.5">{{ $laneTask->title }}</div>
                                                         </div>
-                                                        <span class="shrink-0 text-[10px] px-2 py-0.5 rounded font-bold {{ $laneTask->is_satisfied ? 'bg-emerald-900/70 text-emerald-300 border border-emerald-700/50' : 'bg-rose-900/80 text-rose-200 border border-rose-700/50' }}">
+                                                        <span class="shrink-0 text-[10px] px-2 py-0.5 rounded font-bold {{ $laneTask->is_satisfied ? 'bg-emerald-900/70 text-emerald-300 border border-emerald-700/50' : 'bg-red-900/80 text-red-200 border border-red-700/50' }}">
                                                             配置 {{ $laneTask->assigned_count }} / 必要 {{ $laneTask->required_people_label }}
                                                         </span>
                                                     </div>

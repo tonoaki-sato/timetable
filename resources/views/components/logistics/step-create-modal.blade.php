@@ -1,11 +1,11 @@
 @props(['locations' => collect(), 'staffs' => collect(), 'defaultTargetDate' => ''])
 
 <!-- 個別搬出入ステップ追加モーダル -->
-<div id="plan-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" data-action="close-modal"></div>
+<div id="plan-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="plan-create-modal-title">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-action="close-modal"></div>
 
     <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
-        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
+        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
 
             <!-- モーダルヘッダー (固定) -->
             <div class="shrink-0 px-5 py-3.5 bg-white border-b border-slate-100 flex items-center justify-between gap-2">
@@ -14,7 +14,7 @@
                         ➕
                     </div>
                     <div class="min-w-0">
-                        <h3 class="text-base font-bold text-slate-900 truncate flex items-center space-x-2">
+                        <h3 id="plan-create-modal-title" class="text-base font-bold text-slate-900 truncate flex items-center space-x-2">
                             <span>搬出入ステップ追加:</span>
                             <span id="create_plan_equipment_name" class="text-indigo-600 font-bold truncate"></span>
                         </h3>

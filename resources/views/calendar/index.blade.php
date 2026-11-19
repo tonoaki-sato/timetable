@@ -11,23 +11,21 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('schedules.index') }}"
-                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('schedules.index')">
                 <span>📋</span>
                 <span>リスト表示に切替</span>
-            </a>
+            </x-ui.button>
             @can('create', App\Models\Schedule::class)
-            <button type="button" data-action="open-new-event-modal"
-                class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" data-action="open-new-event-modal">
                 <span>➕</span>
                 <span>新規予定を登録</span>
-            </button>
+            </x-ui.button>
             @endcan
         </x-slot:actions>
     </x-page-header>
 
     <!-- 2. 検索・絞り込みフォーム -->
-    <div class="bg-white p-3 sm:p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-2xs">
         <form method="GET" action="{{ route('calendar.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <input type="hidden" name="year" value="{{ $selectedYear }}">
             <input type="hidden" name="month" value="{{ $currentMonth ?? 4 }}">
@@ -37,13 +35,13 @@
                 <label for="search" class="block text-[11px] font-bold text-slate-600 mb-1">フリーワード</label>
                 <input type="text" id="search" name="search" value="{{ request('search') }}"
                     placeholder="予定名・場所・担当者等"
-                    class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
             <!-- カテゴリ -->
             <div>
                 <label for="category" class="block text-[11px] font-bold text-slate-600 mb-1">区分（カテゴリ）</label>
-                <select id="category" name="category" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <select id="category" name="category" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">すべての区分</option>
                     @foreach($categories as $key => $label)
                     <option value="{{ $key }}" {{ request('category') === $key ? 'selected' : '' }}>
@@ -56,7 +54,7 @@
             <!-- ステータス -->
             <div>
                 <label for="status" class="block text-[11px] font-bold text-slate-600 mb-1">ステータス</label>
-                <select id="status" name="status" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <select id="status" name="status" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">すべてのステータス</option>
                     @foreach($statuses as $key => $label)
                     <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>
@@ -69,7 +67,7 @@
             <!-- 担当者 -->
             <div>
                 <label for="staff_id" class="block text-[11px] font-bold text-slate-600 mb-1">担当者・主催者</label>
-                <select id="staff_id" name="staff_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <select id="staff_id" name="staff_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">すべての担当者</option>
                     @foreach($staffs as $staff)
                     <option value="{{ $staff->id }}" {{ (string) request('staff_id') === (string) $staff->id ? 'selected' : '' }}>
@@ -81,11 +79,11 @@
 
             <!-- 検索 & リセットボタン -->
             <div class="flex items-end space-x-2">
-                <button type="submit" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition cursor-pointer">
+                <button type="submit" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition cursor-pointer">
                     🔍 絞り込み
                 </button>
                 <a href="{{ route('calendar.index', ['year' => $selectedYear, 'month' => $currentMonth ?? 4]) }}"
-                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-medium transition text-center">
+                    class="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition text-center">
                     リセット
                 </a>
             </div>
@@ -215,11 +213,14 @@
 <div id="newEventModal"
     data-schedules-store-url="{{ route('schedules.store') }}"
     data-default-date="{{ $currentYear }}-{{ sprintf('%02d', $currentMonth) }}-01"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modalTitle"
     class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" data-action="close-new-event-modal"></div>
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-action="close-new-event-modal"></div>
     
     <div class="flex min-h-full items-center justify-center p-4">
-        <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-10 transition transform">
+        <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-10 transition transform">
             <!-- モーダルヘッダー -->
             <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
                 <div class="flex items-center space-x-2">
@@ -368,11 +369,11 @@
 <!-- ========================================== -->
 <!-- 7. 予定詳細 & クイック編集モーダル         -->
 <!-- ========================================== -->
-<div id="eventDetailModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" data-action="close-event-detail-modal"></div>
+<div id="eventDetailModal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-action="close-event-detail-modal"></div>
 
     <div class="flex min-h-full items-center justify-center p-4">
-        <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-10">
+        <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-10">
             <!-- ヘッダー -->
             <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
                 <div class="flex items-center space-x-2">

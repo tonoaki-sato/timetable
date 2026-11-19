@@ -19,7 +19,7 @@
             <span>進行中: <strong class="text-indigo-700">{{ $overview->inProgressTasks }}</strong></span>
             <span>未着手: <strong class="text-slate-700">{{ $overview->notStartedTasks }}</strong></span>
             @if($overview->criticalTasksCount > 0)
-                <span class="text-rose-600 font-bold text-[10px] bg-rose-50 px-1 rounded">最優先: {{ $overview->criticalTasksCount }}</span>
+                <span class="text-red-600 font-bold text-[10px] bg-red-50 px-1 rounded">最優先: {{ $overview->criticalTasksCount }}</span>
             @endif
         </div>
     </div>
@@ -44,7 +44,7 @@
             <span>必要: <strong class="text-slate-800">{{ $overview->totalRequiredPeople }}人</strong></span>
             <span>配置: <strong class="{{ $overview->totalAssignedPeople >= $overview->totalRequiredPeople ? 'text-emerald-700' : 'text-amber-700' }}">{{ $overview->totalAssignedPeople }}人</strong></span>
             @if($overview->shortageTasks > 0)
-                <span class="text-rose-600 font-bold text-[10px] bg-rose-50 px-1 rounded">不足: {{ $overview->shortageTasks }}</span>
+                <span class="text-red-600 font-bold text-[10px] bg-red-50 px-1 rounded">不足: {{ $overview->shortageTasks }}</span>
             @endif
         </div>
     </div>
@@ -71,7 +71,7 @@
                 <span>移動中: <strong class="text-sky-600">{{ $overview->inTransitLogisticsPlans }}</strong></span>
             @endif
             @if($overview->witnessRequiredPlans > 0)
-                <span class="text-rose-600 font-bold text-[10px] bg-rose-50 px-1 rounded">立会必須: {{ $overview->witnessRequiredPlans }}</span>
+                <span class="text-red-600 font-bold text-[10px] bg-red-50 px-1 rounded">立会必須: {{ $overview->witnessRequiredPlans }}</span>
             @endif
         </div>
     </div>
@@ -84,11 +84,11 @@
                 <span>規制 ＆ 現場要請</span>
             </span>
             @if($overview->hasActiveRoadClosure)
-                <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-800 animate-pulse">
+                <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-red-100 text-red-800 animate-pulse">
                     車両通行止め中
                 </span>
             @elseif($overview->roadPeriodsCount > 0)
-                <span class="text-[10px] font-mono font-bold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
+                <span class="text-[10px] font-mono font-bold text-red-700 bg-red-50 px-1.5 py-0.2 rounded border border-red-200">
                     {{ $overview->roadPeriodsCount }}件規制予定
                 </span>
             @else

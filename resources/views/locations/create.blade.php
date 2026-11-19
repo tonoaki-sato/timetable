@@ -25,11 +25,10 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.locations.index', $timetable) }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('timetables.locations.index', $timetable)">
                 <span>←</span>
                 <span>拠点一覧に戻る</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
@@ -37,17 +36,7 @@
     <x-timetable-context-bar :timetable="$timetable" active="locations" />
 
     <!-- 入力エラーメッセージ -->
-    @if($errors->any())
-    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl space-y-1">
-        <div class="font-bold flex items-center space-x-1">
-            <span>⚠️</span>
-            <span>入力内容を確認してください</span>
-        </div>
-        @foreach($errors->all() as $err)
-        <div>・{{ $err }}</div>
-        @endforeach
-    </div>
-    @endif
+    <x-ui.validation-errors title="入力内容を確認してください" />
 
     @if($types->isEmpty())
     <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -91,7 +80,7 @@
                     <!-- 拠点名 -->
                     <div>
                         <label for="name" class="block text-xs font-bold text-slate-700 mb-1">
-                            拠点名 <span class="text-rose-500">*</span>
+                            拠点名 <span class="text-red-500">*</span>
                         </label>
                         <input type="text" name="name" id="name" value="{{ old('name') }}" required
                             placeholder="例: 税務署前駐車場, 番所, コミュニティスペースA"
@@ -101,7 +90,7 @@
                     <!-- 拠点タイプ -->
                     <div>
                         <label for="location_type_id" class="block text-xs font-bold text-slate-700 mb-1">
-                            拠点タイプ <span class="text-rose-500">*</span>
+                            拠点タイプ <span class="text-red-500">*</span>
                         </label>
                         <select name="location_type_id" id="location_type_id" required
                             class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -171,8 +160,8 @@
                     <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
                         <thead class="bg-slate-100/75 text-slate-700 font-bold">
                             <tr>
-                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">日時範囲 (年月日時分) <span class="text-rose-500">*</span></th>
-                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">利用ステータス <span class="text-rose-500">*</span></th>
+                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">日時範囲 (年月日時分) <span class="text-red-500">*</span></th>
+                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">利用ステータス <span class="text-red-500">*</span></th>
                                 <th scope="col" class="py-2.5 px-3 whitespace-nowrap">枠名 / タイトル</th>
                                 <th scope="col" class="py-2.5 px-3 whitespace-nowrap">メモ / 特記事項</th>
                                 <th scope="col" class="py-2.5 px-3 whitespace-nowrap text-right">操作</th>
@@ -208,7 +197,7 @@
                                     </td>
                                     <td class="py-2.5 px-3 text-right">
                                         <button type="button" data-action="remove-schedule-row"
-                                            class="px-2 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded text-xs font-bold transition cursor-pointer">
+                                            class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded text-xs font-bold transition cursor-pointer">
                                             ✕ 削除
                                         </button>
                                     </td>

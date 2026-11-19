@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initScheduleFormRows();
     initTypeModal();
     initAutoSubmitSelects();
-    initConfirmForms();
 });
 
 /**
@@ -176,7 +175,7 @@ function initScheduleFormRows() {
                 </td>
                 <td class="py-2.5 px-3 text-right">
                     <button type="button" data-action="remove-schedule-row"
-                        class="px-2 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded text-xs font-bold transition cursor-pointer">
+                        class="px-2 py-1 bg-white hover:bg-red-50 text-red-600 border border-slate-200 hover:border-red-200 rounded text-xs font-bold transition cursor-pointer">
                         ✕ 削除
                     </button>
                 </td>
@@ -279,20 +278,6 @@ function initAutoSubmitSelects() {
 }
 
 /**
- * 5. 削除確認等の確認ダイアログ
- */
-function initConfirmForms() {
-    document.querySelectorAll('form[data-confirm]').forEach((form) => {
-        form.addEventListener('submit', (e) => {
-            const message = form.dataset.confirm || '本当に実行しますか？';
-            if (!window.confirm(message)) {
-                e.preventDefault();
-            }
-        });
-    });
-}
-
-/**
  * トースト通知の表示
  */
 function showToast(message, type = 'success') {
@@ -305,7 +290,7 @@ function showToast(message, type = 'success') {
     }
 
     const toast = document.createElement('div');
-    const bgColor = type === 'success' ? 'bg-emerald-800' : 'bg-rose-800';
+    const bgColor = type === 'success' ? 'bg-emerald-800' : 'bg-red-800';
     toast.className = `${bgColor} text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all transform translate-y-2 opacity-0 pointer-events-auto flex items-center space-x-2`;
     toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span><span>${message}</span>`;
 

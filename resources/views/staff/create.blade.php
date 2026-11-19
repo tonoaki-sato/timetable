@@ -28,17 +28,7 @@
         </div>
 
         <!-- バリデーションエラーサマリー -->
-        @if ($errors->any())
-        <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg space-y-1">
-            <div class="font-bold flex items-center space-x-1">
-                <span>⚠️</span>
-                <span>入力内容を確認してください</span>
-            </div>
-            @foreach ($errors->all() as $error)
-            <div>・{{ $error }}</div>
-            @endforeach
-        </div>
-        @endif
+        <x-ui.validation-errors title="入力内容を確認してください" />
 
         <!-- 入力フォーム -->
         <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-xs">
@@ -48,7 +38,7 @@
                 <!-- 氏名 -->
                 <div>
                     <label for="name" class="block text-xs font-bold text-slate-700 mb-1">
-                        氏名 <span class="text-rose-500">*</span>
+                        氏名 <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="name" name="name" value="{{ old('name') }}" required
                         placeholder="例: 山田 太郎"

@@ -21,19 +21,15 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.staff-timeline', $timetable) }}"
-                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
-                title="スタッフ軸のガントチャートタイムラインを表示">
+            <x-ui.button variant="header-action" :href="route('timetables.staff-timeline', $timetable)" title="スタッフ軸のガントチャートタイムラインを表示">
                 <span>📊</span>
                 <span>スタッフタイムライン</span>
-            </a>
+            </x-ui.button>
 
-            <a href="{{ route('timetables.print-assignments', $timetable) }}"
-                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
-                title="運行日別人員配置一覧表をPDFでダウンロード">
+            <x-ui.button variant="header-action" :href="route('timetables.print-assignments', $timetable)" title="運行日別人員配置一覧表をPDFでダウンロード">
                 <span>📄</span>
                 <span>配置表PDF</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
@@ -143,7 +139,7 @@
 
                         <div class="flex items-center space-x-1 shrink-0">
                             @if($task->is_critical)
-                            <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
+                            <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
                                 🚨 最優先
                             </span>
                             @endif

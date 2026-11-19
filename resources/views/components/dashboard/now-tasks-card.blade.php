@@ -66,7 +66,7 @@
 
                     <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
                         @if ($task->required_people_count > 0 && ! $task->is_satisfied)
-                            <span class="text-xs font-bold px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded">
+                            <span class="text-xs font-bold px-2 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded">
                                 ⚠️ {{ $task->assigned_count }} / {{ $task->required_people_label }} (不足{{ $task->shortage_count }}名)
                             </span>
                         @elseif ($task->required_people_count > 0)

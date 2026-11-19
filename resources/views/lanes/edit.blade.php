@@ -29,16 +29,14 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.lanes.show', [$timetable, $lane]) }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('timetables.lanes.show', [$timetable, $lane])">
                 <span>👁️</span>
                 <span>詳細を見る</span>
-            </a>
-            <a href="{{ route('timetables.lanes.index', $timetable) }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            </x-ui.button>
+            <x-ui.button variant="header-action" :href="route('timetables.lanes.index', $timetable)">
                 <span>←</span>
                 <span>一覧に戻る</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
@@ -46,17 +44,7 @@
     <x-timetable-context-bar :timetable="$timetable" active="lanes" />
 
     <!-- 入力エラーメッセージ -->
-    @if($errors->any())
-    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl space-y-1">
-        <div class="font-bold flex items-center space-x-1">
-            <span>⚠️</span>
-            <span>入力内容を確認してください</span>
-        </div>
-        @foreach($errors->all() as $err)
-        <div>・{{ $err }}</div>
-        @endforeach
-    </div>
-    @endif
+    <x-ui.validation-errors title="入力内容を確認してください" />
 
     <!-- 編集フォームカード -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -84,7 +72,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="name" class="block text-xs font-bold text-slate-700 mb-1">
-                                担当班名（レーン名） <span class="text-rose-600">*</span>
+                                担当班名（レーン名） <span class="text-red-600">*</span>
                             </label>
                             <input type="text" id="name" name="name" value="{{ old('name', $lane->name) }}" required
                                 placeholder="例: 会場放送班、音響PA班"
@@ -209,7 +197,7 @@
                         <div class="sm:col-span-7 space-y-2">
                             <div class="flex items-center justify-between">
                                 <label class="block text-xs font-bold text-slate-700">
-                                    テーマカラー選択 <span class="text-rose-600">*</span>
+                                    テーマカラー選択 <span class="text-red-600">*</span>
                                 </label>
                                 <span class="text-[10px] text-slate-400">見本を確認</span>
                             </div>

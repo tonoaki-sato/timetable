@@ -17,14 +17,7 @@
         </x-page-header>
 
         <!-- エラー表示 -->
-        @if ($errors->any())
-        <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg space-y-1">
-            <div class="font-bold">⚠️ 入力内容を確認してください</div>
-            @foreach ($errors->all() as $error)
-            <div>・{{ $error }}</div>
-            @endforeach
-        </div>
-        @endif
+        <x-ui.validation-errors title="入力内容を確認してください" />
 
         <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-xs">
             <form action="{{ route('users.update', $user) }}" method="POST" class="space-y-4">
@@ -33,14 +26,14 @@
 
                 <!-- 氏名 -->
                 <div>
-                    <label for="name" class="block text-xs font-bold text-slate-700 mb-1">氏名 <span class="text-rose-500">*</span></label>
+                    <label for="name" class="block text-xs font-bold text-slate-700 mb-1">氏名 <span class="text-red-500">*</span></label>
                     <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" required
                         class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
                 <!-- メールアドレス -->
                 <div>
-                    <label for="email" class="block text-xs font-bold text-slate-700 mb-1">メールアドレス <span class="text-rose-500">*</span></label>
+                    <label for="email" class="block text-xs font-bold text-slate-700 mb-1">メールアドレス <span class="text-red-500">*</span></label>
                     <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required
                         class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
@@ -48,7 +41,7 @@
                 <!-- 権限ロール (adminのみ変更可能、本人は表示のみ) -->
                 @if(auth()->user()->isAdmin())
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">権限ロール <span class="text-rose-500">*</span></label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">権限ロール <span class="text-red-500">*</span></label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <label class="flex items-center p-2.5 border rounded-lg cursor-pointer hover:bg-slate-50 transition border-slate-200">
                             <input type="radio" name="role" value="operator" {{ old('role', $user->role) === 'operator' ? 'checked' : '' }}

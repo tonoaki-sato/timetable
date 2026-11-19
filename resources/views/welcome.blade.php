@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>まつり総合管理システム 2026</title>
+    <title>まつり総合管理システム</title>
+    <x-head-meta />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -51,7 +52,7 @@
         <div class="relative bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white py-16 sm:py-24 overflow-hidden border-b border-slate-800">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 mb-4">
-                    2026年10月16日(金) 〜 10月19日(月) 開催
+                    {{ $eventDateLabel }}
                 </span>
                 <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">
                     まつりの安心・円滑な現場運行を、<br class="hidden sm:inline">リアルタイムに統合管理。
@@ -73,6 +74,11 @@
                     <a href="{{ route('login') }}" class="w-full sm:w-auto px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-lg transition">
                         🔐 本部オペレーター ログイン
                     </a>
+                    @if($selfRegistrationStatus['isOpen'] ?? false)
+                    <a href="{{ route('staff.join') }}" class="w-full sm:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold shadow-lg transition">
+                        📝 スタッフ・ボランティア登録フォームへ
+                    </a>
+                    @endif
                     <a href="#field-guide" class="w-full sm:w-auto px-6 py-3.5 bg-slate-700/80 hover:bg-slate-600 text-slate-200 rounded-xl text-sm font-bold border border-slate-600 transition">
                         📱 現場スタッフ・ボランティアの方へ
                     </a>
@@ -107,14 +113,22 @@
                 </div>
 
                 <!-- 現場マイシフト -->
-                <div id="field-guide" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
-                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-2xl mb-4">
+                <div id="field-guide" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-2xl">
                         📱
                     </div>
-                    <h3 class="font-bold text-base text-slate-900 mb-2">現場スマホ向けマイシフト</h3>
+                    <h3 class="font-bold text-base text-slate-900">現場スマホ向けマイシフト</h3>
                     <p class="text-xs text-slate-600 leading-relaxed">
                         ボランティア・現場スタッフはログイン不要の専用URL/QRコードから、自分の担当タスクのみを縦タイムラインで確認・完了報告可能。
                     </p>
+                    @if($selfRegistrationStatus['isOpen'] ?? false)
+                    <div class="pt-1">
+                        <a href="{{ route('staff.join') }}" class="inline-flex items-center space-x-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline transition">
+                            <span>📝 セルフ登録フォームを開く（現在受付中）</span>
+                            <span>→</span>
+                        </a>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -123,7 +137,7 @@
     <!-- フッター -->
     <footer class="bg-white border-t border-slate-200 py-6">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
-            &copy; 2026 まつり実行委員会 運行本部システム
+            &copy; {{ now()->year }} まつり実行委員会 運行本部
         </div>
     </footer>
 </body>

@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title }} - まつり総合管理システム</title>
+    <x-head-meta />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -588,7 +589,7 @@
                                                 受付終了
                                             </span>
                                             @else
-                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30">
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/20 text-red-300 border border-red-400/30">
                                                 停止中(手動)
                                             </span>
                                             @endif
@@ -606,7 +607,7 @@
                                                 @csrf
                                                 @method('PATCH')
                                                 @if($selfRegistrationSetting->is_enabled)
-                                                <button type="submit" class="w-full py-1 px-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
+                                                <button type="submit" class="w-full py-1 px-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
                                                     <span>⏹️</span>
                                                     <span>{{ $selfRegistrationStatus['status'] === 'upcoming' ? '受付予約を停止' : '即時停止' }}</span>
                                                 </button>
@@ -711,8 +712,8 @@
         </div>
 
         <!-- モバイル用メニューモーダル -->
-        <div id="mobileMenuModal" class="hidden md:hidden fixed inset-0 z-50">
-            <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity" data-toggle="mobile-menu"></div>
+        <div id="mobileMenuModal" class="hidden md:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="モバイルメニュー">
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-toggle="mobile-menu"></div>
             <div class="fixed inset-x-0 bottom-0 bg-slate-900 border-t border-slate-800 rounded-t-3xl p-4 z-10 max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
                     <span class="text-sm font-bold text-white flex items-center space-x-2">
@@ -891,6 +892,10 @@
                             <span class="text-[9px] text-indigo-300 font-mono">年間・共通</span>
                         </div>
                         <div class="grid grid-cols-2 gap-1.5 text-xs">
+                            <a href="{{ route('organizations.print') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0 hover:bg-slate-700/80 transition">
+                                <span class="text-base shrink-0">🏛️</span>
+                                <span class="font-bold truncate">組織図 (PDF) ↓</span>
+                            </a>
                             <a href="{{ route('staff.print-cards') }}" target="_blank" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🪪</span>
                                 <span class="font-bold truncate">名札一括印刷 ↗</span>
@@ -899,15 +904,12 @@
                                 <span class="text-base shrink-0">📥</span>
                                 <span class="font-bold truncate">スタッフCSV ↓</span>
                             </a>
-                            <div class="p-2 bg-slate-800/40 rounded-xl flex items-center justify-between text-slate-500 min-w-0 opacity-70">
-                                <div class="flex items-center space-x-1.5 truncate">
-                                    <span class="text-base shrink-0">📅</span>
-                                    <span class="truncate">年間スケジュール</span>
-                                </div>
-                                <span class="text-[9px] bg-slate-800 text-slate-400 px-1 rounded font-mono shrink-0">準備中</span>
-                            </div>
+                            <a href="{{ route('schedules.pdf') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0 hover:bg-slate-700/80 transition">
+                                <span class="text-base shrink-0">📅</span>
+                                <span class="font-bold truncate">年間スケジュール (PDF) ↓</span>
+                            </a>
                             <a href="{{ route('staff.pdf') }}"
-                                class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0 hover:bg-slate-700/80 transition"
+                                class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0 hover:bg-slate-700/80 transition"
                                 title="全登録スタッフ一覧のA4縦・2段組帳票PDFをダウンロード">
                                 <span class="text-base shrink-0">👥</span>
                                 <span class="font-bold truncate">スタッフ名簿 (PDF) ↓</span>
@@ -969,7 +971,7 @@
                                         受付終了
                                     </span>
                                     @else
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30">
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/20 text-red-300 border border-red-400/30">
                                         停止中(手動)
                                     </span>
                                     @endif
@@ -987,7 +989,7 @@
                                         @csrf
                                         @method('PATCH')
                                         @if($selfRegistrationSetting->is_enabled)
-                                        <button type="submit" class="w-full py-1 px-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
+                                        <button type="submit" class="w-full py-1 px-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
                                             <span>⏹️</span>
                                             <span>{{ $selfRegistrationStatus['status'] === 'upcoming' ? '受付予約を停止' : '即時停止' }}</span>
                                         </button>
@@ -1026,16 +1028,16 @@
 
         <!-- 共通: セルフ登録受付設定モーダル (全画面から起動可能) -->
         @if(isset($selfRegistrationSetting))
-        <div id="registrationSettingModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-            <div data-close-target="#registrationSettingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity cursor-pointer"></div>
+        <div id="registrationSettingModal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="registrationSettingModal-title">
+            <div data-close-target="#registrationSettingModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity cursor-pointer"></div>
             <div class="flex min-h-full items-center justify-center p-4">
-                <div class="relative transform overflow-hidden rounded-2xl bg-white p-6 text-left shadow-2xl transition-all sm:w-full sm:max-w-md border border-slate-200 z-10 text-slate-800">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white p-6 text-left shadow-xl transition-all sm:w-full sm:max-w-md border border-slate-200 z-10 text-slate-800">
                     <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                        <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
+                        <h3 id="registrationSettingModal-title" class="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
                             <span>⚙️</span>
                             <span>スタッフセルフ登録 受付設定</span>
                         </h3>
-                        <button type="button" data-close-target="#registrationSettingModal" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">✕</button>
+                        <button type="button" data-close-target="#registrationSettingModal" aria-label="閉じる" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">✕</button>
                     </div>
 
                     <form action="{{ route('feature-settings.update', 'staff_self_registration') }}" method="POST" class="space-y-4">
@@ -1114,34 +1116,39 @@
     </header>
 
     <!-- グローバルフラッシュメッセージ -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3">
+    @if (session('success') || session('status') || session('error'))
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3 space-y-2">
         @if (session('success'))
-        <div class="p-3 mb-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl font-medium flex items-center justify-between shadow-2xs">
+        <div data-alert-box role="status" class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl font-bold flex items-center justify-between gap-2 shadow-2xs">
             <div class="flex items-center space-x-2">
-                <span>✔</span>
+                <span>✅</span>
                 <span>{{ session('success') }}</span>
             </div>
+            <button type="button" data-dismiss-alert aria-label="メッセージを閉じる" class="text-emerald-600 hover:text-emerald-900 font-bold px-1 cursor-pointer">✕</button>
         </div>
         @endif
 
         @if (session('status'))
-        <div class="p-3 mb-2 bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs rounded-xl font-medium flex items-center justify-between shadow-2xs">
+        <div data-alert-box role="status" class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl font-bold flex items-center justify-between gap-2 shadow-2xs">
             <div class="flex items-center space-x-2">
-                <span>ℹ️</span>
+                <span>✅</span>
                 <span>{{ session('status') }}</span>
             </div>
+            <button type="button" data-dismiss-alert aria-label="メッセージを閉じる" class="text-emerald-600 hover:text-emerald-900 font-bold px-1 cursor-pointer">✕</button>
         </div>
         @endif
 
         @if (session('error'))
-        <div class="p-3 mb-2 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl font-medium flex items-center justify-between shadow-2xs">
+        <div data-alert-box role="alert" class="p-3 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl font-bold flex items-center justify-between gap-2 shadow-2xs">
             <div class="flex items-center space-x-2">
                 <span>⚠️</span>
                 <span>{{ session('error') }}</span>
             </div>
+            <button type="button" data-dismiss-alert aria-label="メッセージを閉じる" class="text-red-600 hover:text-red-900 font-bold px-1 cursor-pointer">✕</button>
         </div>
         @endif
     </div>
+    @endif
 
     <!-- メインコンテンツスロット -->
     <main class="flex-1">
@@ -1151,7 +1158,7 @@
     <!-- フッター (スリム統一) -->
     <footer class="bg-white border-t border-slate-200 mt-8 py-4 text-center text-xs text-slate-500">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p>© 2026 まつり実行委員会 運行本部総合システム</p>
+            <p>© {{ now()->year }} まつり実行委員会 運行本部</p>
         </div>
     </footer>
 

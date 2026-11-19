@@ -12,11 +12,12 @@
     class="hidden fixed inset-0 z-50 overflow-y-auto"
     role="dialog"
     aria-modal="true"
+    aria-labelledby="task-common-create-modal-title"
     data-reopen-on-error="{{ $isReopenOnError ? '1' : '0' }}">
-    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" data-action="close-modal"></div>
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-action="close-modal"></div>
 
     <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
-        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
+        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
 
             <!-- モーダルヘッダー (固定) -->
             <div class="shrink-0 px-5 py-3.5 bg-white border-b border-slate-100 flex items-center justify-between">
@@ -26,7 +27,7 @@
                     </div>
                     <div class="min-w-0">
                         <div class="flex items-center space-x-2">
-                            <h3 class="text-base font-bold text-slate-900 truncate">
+                            <h3 id="task-common-create-modal-title" class="text-base font-bold text-slate-900 truncate">
                                 共通タスク一括登録
                             </h3>
                             <span class="px-2 py-0.5 rounded text-[11px] font-bold border bg-indigo-50 text-indigo-700 border-indigo-200 shrink-0">
@@ -49,7 +50,7 @@
             <!-- 警告・エラーメッセージエリア (固定ヘッダー直下) -->
             <div class="shrink-0 px-5 pt-3 space-y-2 empty:hidden">
                 @if($isReopenOnError)
-                <div id="common-modal-server-errors" class="p-2.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl shadow-2xs">
+                <div id="common-modal-server-errors" class="p-2.5 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl shadow-2xs">
                     <div class="font-bold flex items-center space-x-1.5 mb-1">
                         <span>⚠️</span>
                         <span>登録できませんでした。入力内容を確認してください。</span>
@@ -88,7 +89,7 @@
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div class="flex items-center space-x-2">
                                 <label class="text-xs font-bold text-slate-800">
-                                    🚩 登録対象の担当班 <span class="text-rose-500">*</span>
+                                    🚩 登録対象の担当班 <span class="text-red-500">*</span>
                                 </label>
                                 <span id="common-modal-selected-count" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-100 text-indigo-700">
                                     {{ count($selectedLaneIds) }} / {{ $lanes->count() }} 班選択中
@@ -133,7 +134,7 @@
                     <!-- 2. 作業タスク名 -->
                     <div>
                         <label for="common-modal-title" class="block text-[11px] font-bold text-slate-700 mb-1">
-                            作業タスク名 <span class="text-rose-500">*</span>
+                            作業タスク名 <span class="text-red-500">*</span>
                         </label>
                         <input type="text"
                             id="common-modal-title"
@@ -148,7 +149,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label for="common-modal-start-time" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                ⏱️ 開始時刻 <span class="text-rose-500">*</span>
+                                ⏱️ 開始時刻 <span class="text-red-500">*</span>
                             </label>
                             <input type="time"
                                 id="common-modal-start-time"
@@ -160,7 +161,7 @@
 
                         <div>
                             <label for="common-modal-end-time" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                ⏱️ 終了時刻 <span class="text-rose-500">*</span>
+                                ⏱️ 終了時刻 <span class="text-red-500">*</span>
                             </label>
                             <input type="time"
                                 id="common-modal-end-time"
@@ -175,7 +176,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
                         <div>
                             <label for="common-modal-people" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                👥 必要人員（1班あたり） <span class="text-rose-500">*</span>
+                                👥 必要人員（1班あたり） <span class="text-red-500">*</span>
                             </label>
                             <div class="flex items-center space-x-2">
                                 <input type="number"
@@ -197,14 +198,14 @@
                         </div>
 
                         <div class="pb-0.5">
-                            <label class="inline-flex items-center space-x-2 cursor-pointer select-none px-3 py-1.5 bg-rose-50/60 hover:bg-rose-50 border border-rose-200/80 rounded-lg transition w-full">
+                            <label class="inline-flex items-center space-x-2 cursor-pointer select-none px-3 py-1.5 bg-red-50/60 hover:bg-red-50 border border-red-200/80 rounded-lg transition w-full">
                                 <input type="checkbox"
                                     id="common-modal-critical"
                                     name="is_critical"
                                     value="1"
                                     {{ old('_form') === 'common_task' && old('is_critical') ? 'checked' : '' }}
-                                    class="rounded border-rose-300 text-rose-600 focus:ring-rose-500 h-4 w-4">
-                                <span class="text-xs font-bold text-rose-700">🚨 最優先タスク</span>
+                                    class="rounded border-red-300 text-red-600 focus:ring-red-500 h-4 w-4">
+                                <span class="text-xs font-bold text-red-700">🚨 最優先タスク</span>
                             </label>
                         </div>
                     </div>
@@ -225,7 +226,7 @@
 
                         <div>
                             <label for="common-modal-status" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                📊 進行ステータス <span class="text-rose-500">*</span>
+                                📊 進行ステータス <span class="text-red-500">*</span>
                             </label>
                             @php
                                 $selectedStatus = old('_form') === 'common_task' ? old('status', 'not_started') : 'not_started';

@@ -1,9 +1,9 @@
 <!-- 搬出入パターン詳細モーダル (全ステップ一覧表示) -->
-<div id="pattern-detail-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" data-action="close-modal"></div>
+<div id="pattern-detail-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="pattern-detail-modal-title">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-action="close-modal"></div>
 
     <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
-        <div class="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
+        <div class="relative w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
 
             <!-- モーダルヘッダー (固定) -->
             <div class="shrink-0 px-5 py-3.5 bg-white border-b border-slate-100 flex items-center justify-between">
@@ -12,7 +12,7 @@
                         🧩
                     </div>
                     <div class="min-w-0">
-                        <h3 class="text-base font-bold text-slate-900 truncate flex items-center space-x-2">
+                        <h3 id="pattern-detail-modal-title" class="text-base font-bold text-slate-900 truncate flex items-center space-x-2">
                             <span>パターン詳細:</span>
                             <span id="detail_pattern_name" class="text-indigo-600"></span>
                         </h3>

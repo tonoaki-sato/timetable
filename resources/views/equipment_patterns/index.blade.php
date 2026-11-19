@@ -7,10 +7,7 @@
             icon="🧩"
             description="全運行日で共通利用可能な、機材・備品の搬出入・中継・夜間保管・撤収ステップの標準テンプレート台帳です。">
             <x-slot:breadcrumbs>
-                <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                    <span>🏮</span>
-                    <span>ダッシュボード</span>
-                </a>
+                <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>
                 <a href="{{ route('equipments.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                     <span>📦</span>
@@ -21,32 +18,14 @@
             </x-slot:breadcrumbs>
 
             <x-slot:actions>
-                <button type="button"
-                    data-action="open-pattern-create"
-                    class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0 cursor-pointer">
+                <x-ui.button variant="header-action" data-action="open-pattern-create">
                     <span>➕</span>
                     <span>新規パターン作成</span>
-                </button>
+                </x-ui.button>
             </x-slot:actions>
         </x-page-header>
 
-        <!-- アラートメッセージ -->
-        @if (session('status'))
-        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between">
-            <span>✅ {{ session('status') }}</span>
-        </div>
-        @endif
-
-        @if ($errors->any())
-        <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-1">
-            <div class="font-bold">⚠️ 入力内容に不備があります：</div>
-            <ul class="list-disc list-inside space-y-0.5">
-                @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
+        <x-ui.validation-errors title="入力内容に不備があります" />
 
         <!-- セクションヘッダーバー (見出し + 折りたたみトグル) -->
         <div class="flex items-center justify-between gap-2.5 px-1">
@@ -82,7 +61,7 @@
                             <button type="button"
                                 data-action="open-pattern-detail"
                                 data-pattern='@json($pattern->toModalPayload())'
-                                class="text-indigo-600 hover:text-indigo-800 font-bold text-xs sm:text-sm truncate hover:underline text-left cursor-pointer"
+                                class="text-slate-800 hover:text-indigo-600 font-bold text-xs sm:text-sm truncate hover:underline text-left cursor-pointer"
                                 title="パターンの詳細・全ステップを表示">
                                 {{ $pattern->name }}
                             </button>
@@ -199,9 +178,9 @@
                                 <!-- 立会 -->
                                 <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
                                     @if($step->witness_required)
-                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200">必須</span>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-bold text-[10px] border border-red-200">必須</span>
                                     @else
-                                    <span class="text-slate-300 text-xs">-</span>
+                                    <span class="text-slate-300 text-xs">—</span>
                                     @endif
                                 </td>
 
@@ -261,14 +240,14 @@
         <div class="pattern-step-row p-3 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2.5 text-xs">
             <div class="flex items-center justify-between gap-2 border-b border-slate-200/60 pb-1.5">
                 <span class="font-bold text-slate-700 step-row-number">ステップ #1</span>
-                <button type="button" data-action="remove-pattern-step" class="text-rose-600 hover:text-rose-800 font-bold text-xs cursor-pointer">
+                <button type="button" data-action="remove-pattern-step" class="text-red-600 hover:text-red-800 font-bold text-xs cursor-pointer">
                     ✕ この行を削除
                 </button>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-500 mb-0.5">フェーズ <span class="text-rose-500">*</span></label>
+                    <label class="block text-[10px] font-bold text-slate-500 mb-0.5">フェーズ <span class="text-red-500">*</span></label>
                     <select data-field="day_phase" required class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800">
                         @foreach(\App\Models\EquipmentLogisticsPlan::DAY_PHASES as $key => $lbl)
                         <option value="{{ $key }}">{{ $lbl }}</option>
@@ -276,7 +255,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-500 mb-0.5">アクション種別 <span class="text-rose-500">*</span></label>
+                    <label class="block text-[10px] font-bold text-slate-500 mb-0.5">アクション種別 <span class="text-red-500">*</span></label>
                     <select data-field="action_type" required class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800">
                         @foreach(\App\Models\EquipmentLogisticsPlan::ACTION_TYPES as $key => $lbl)
                         <option value="{{ $key }}">{{ $lbl }}</option>
@@ -284,7 +263,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-500 mb-0.5">作業主体 <span class="text-rose-500">*</span></label>
+                    <label class="block text-[10px] font-bold text-slate-500 mb-0.5">作業主体 <span class="text-red-500">*</span></label>
                     <select data-field="operator_type" required class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800">
                         <option value="committee">👥 委員会スタッフ</option>
                         <option value="event_company">🏢 イベント会社</option>
@@ -293,7 +272,7 @@
             </div>
 
             <div>
-                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">ステップ表示名 <span class="text-rose-500">*</span></label>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">ステップ表示名 <span class="text-red-500">*</span></label>
                 <input type="text" data-field="title" required placeholder="例: 前日倉庫出し・現場へ搬送、夕方夜間保管場所へ移動"
                     class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500">
             </div>

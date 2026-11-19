@@ -1,11 +1,11 @@
 @props(['locations' => collect()])
 
 <!-- 搬出入パターン ステップ追加モーダル -->
-<div id="pattern-step-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" data-action="close-modal"></div>
+<div id="pattern-step-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="pattern-step-create-modal-title">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-action="close-modal"></div>
 
     <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
-        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
+        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
 
             <!-- モーダルヘッダー (固定) -->
             <div class="shrink-0 px-5 py-3.5 bg-white border-b border-slate-100 flex items-center justify-between">
@@ -14,7 +14,7 @@
                         ➕
                     </div>
                     <div class="min-w-0">
-                        <h3 class="text-base font-bold text-slate-900 truncate flex items-center space-x-2">
+                        <h3 id="pattern-step-create-modal-title" class="text-base font-bold text-slate-900 truncate flex items-center space-x-2">
                             <span>ステップ追加:</span>
                             <span id="step_create_pattern_name" class="text-indigo-600 font-bold"></span>
                         </h3>
@@ -36,7 +36,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label for="step_create_day_phase" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                フェーズ <span class="text-rose-500">*</span>
+                                フェーズ <span class="text-red-500">*</span>
                             </label>
                             <select id="step_create_day_phase" name="day_phase" required
                                 class="w-full px-2.5 py-2 bg-slate-50/60 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
@@ -48,7 +48,7 @@
 
                         <div>
                             <label for="step_create_action_type" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                アクション種別 <span class="text-rose-500">*</span>
+                                アクション種別 <span class="text-red-500">*</span>
                             </label>
                             <select id="step_create_action_type" name="action_type" required
                                 class="w-full px-2.5 py-2 bg-slate-50/60 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
@@ -60,7 +60,7 @@
 
                         <div>
                             <label for="step_create_operator_type" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                作業主体 <span class="text-rose-500">*</span>
+                                作業主体 <span class="text-red-500">*</span>
                             </label>
                             <select id="step_create_operator_type" name="operator_type" required
                                 class="w-full px-2.5 py-2 bg-slate-50/60 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
@@ -73,7 +73,7 @@
 
                     <div>
                         <label for="step_create_title" class="block text-[11px] font-bold text-slate-700 mb-1">
-                            ステップ表示名 <span class="text-rose-500">*</span>
+                            ステップ表示名 <span class="text-red-500">*</span>
                         </label>
                         <input type="text" id="step_create_title" name="title" required
                             placeholder="例: 前日倉庫出し・現場へ搬送、夕方夜間保管場所へ移動"

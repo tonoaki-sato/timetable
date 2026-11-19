@@ -21,53 +21,25 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.lanes.print', $timetable) }}"
-                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0"
-                title="担当班一覧をA4縦PDFでダウンロード">
+            <x-ui.button variant="header-action" :href="route('timetables.lanes.print', $timetable)" title="担当班一覧をA4縦PDFでダウンロード">
                 <span>📄</span>
                 <span>担当班一覧PDF</span>
-            </a>
+            </x-ui.button>
 
-            <a href="{{ route('timetables.lanes.create', $timetable) }}"
-                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('timetables.lanes.create', $timetable)">
                 <span>➕</span>
                 <span>新規担当班を追加</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
     <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
     <x-timetable-context-bar :timetable="$timetable" active="lanes" />
 
-    <!-- アラートメッセージ -->
-    @if(session('success'))
-    <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>✅</span>
-        <span>{{ session('success') }}</span>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>⚠️</span>
-        <span>{{ session('error') }}</span>
-    </div>
-    @endif
-
-    @if($errors->any())
-    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl space-y-1">
-        <div class="font-bold flex items-center space-x-1">
-            <span>⚠️</span>
-            <span>入力内容を確認してください</span>
-        </div>
-        @foreach($errors->all() as $err)
-        <div>・{{ $err }}</div>
-        @endforeach
-    </div>
-    @endif
+    <x-ui.validation-errors title="入力内容を確認してください" />
 
     <!-- 登録済みレーン一覧（ドラッグ＆ドロップ対応） -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
                 <h2 class="font-bold text-base text-slate-900 flex items-center space-x-2">
@@ -85,13 +57,13 @@
 
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
-                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
                     <tr>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap">班名</th>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap">バッジ</th>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap">班長名</th>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap">役割概要</th>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap text-right">操作</th>
+                        <th scope="col" class="px-4 py-2.5 whitespace-nowrap">班名</th>
+                        <th scope="col" class="px-4 py-2.5 whitespace-nowrap">バッジ</th>
+                        <th scope="col" class="px-4 py-2.5 whitespace-nowrap">班長名</th>
+                        <th scope="col" class="px-4 py-2.5 whitespace-nowrap">役割概要</th>
+                        <th scope="col" class="px-4 py-2.5 whitespace-nowrap text-right">操作</th>
                     </tr>
                 </thead>
                 <tbody id="lanes-container"
@@ -138,35 +110,34 @@
                         </td>
 
                         <!-- 操作 -->
-                        <td class="px-4 py-3 whitespace-nowrap text-right space-x-1">
-                            <a href="{{ route('timetables.lanes.edit', [$timetable, $lane]) }}"
-                                class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1">
-                                <span>✏️</span>
-                                <span>編集</span>
-                            </a>
-                            @if($lane->tasks->count() > 0)
-                            <button type="button"
-                                data-action="open-delete-modal"
-                                data-lane-id="{{ $lane->id }}"
-                                data-lane-name="{{ $lane->name }}"
-                                data-task-count="{{ $lane->tasks->count() }}"
-                                data-delete-url="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}"
-                                class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center space-x-1">
-                                <span>🗑️</span>
-                                <span>削除...</span>
-                            </button>
-                            @else
-                            <form action="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}" method="POST" class="inline"
-                                data-confirm="レーン「{{ $lane->name }}」を削除しますか？">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                    class="px-2.5 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center space-x-1">
+                        <td class="px-4 py-2.5 whitespace-nowrap text-right">
+                            <div class="inline-flex items-center space-x-1.5">
+                                <x-ui.button variant="edit" size="xs" :href="route('timetables.lanes.edit', [$timetable, $lane])">
+                                    <span>✏️</span>
+                                    <span>編集</span>
+                                </x-ui.button>
+                                @if($lane->tasks->count() > 0)
+                                <x-ui.button variant="delete" size="xs"
+                                    data-action="open-delete-modal"
+                                    data-lane-id="{{ $lane->id }}"
+                                    data-lane-name="{{ $lane->name }}"
+                                    data-task-count="{{ $lane->tasks->count() }}"
+                                    data-delete-url="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}">
                                     <span>🗑️</span>
-                                    <span>削除</span>
-                                </button>
-                            </form>
-                            @endif
+                                    <span>削除...</span>
+                                </x-ui.button>
+                                @else
+                                <form action="{{ route('timetables.lanes.destroy', [$timetable, $lane]) }}" method="POST" class="inline"
+                                    data-confirm="レーン「{{ $lane->name }}」を削除しますか？">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-ui.button variant="delete" size="xs" type="submit">
+                                        <span>🗑️</span>
+                                        <span>削除</span>
+                                    </x-ui.button>
+                                </form>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -208,14 +179,14 @@
 
 
 <!-- タスク移行削除モーダル -->
-<div id="delete-migration-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+<div id="delete-migration-modal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-migration-modal-title">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden">
         <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="text-base font-bold text-rose-900 flex items-center space-x-2">
+            <h3 id="delete-migration-modal-title" class="text-base font-bold text-red-900 flex items-center space-x-2">
                 <span>⚠️</span>
                 <span>担当班の削除とタスク引き継ぎ</span>
             </h3>
-            <button type="button" data-close-modal class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+            <button type="button" data-close-modal aria-label="閉じる" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer">✕</button>
         </div>
 
         <form id="delete-migration-form" action="" method="POST" class="p-5 space-y-4">
@@ -224,7 +195,7 @@
 
             <p class="text-xs text-slate-700 leading-relaxed">
                 担当班「<strong id="modal-delete-lane-name" class="text-slate-900"></strong>」には、現在
-                <strong id="modal-delete-task-count" class="text-rose-600 font-mono">0</strong> 件の作業タスクが登録されています。
+                <strong id="modal-delete-task-count" class="text-red-600 font-mono">0</strong> 件の作業タスクが登録されています。
             </p>
 
             <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-xl space-y-3">
@@ -247,19 +218,19 @@
                 <div class="pt-2 border-t border-amber-200/80">
                     <label class="flex items-center space-x-2 cursor-pointer select-none">
                         <input type="checkbox" name="cascade_delete_tasks" value="1"
-                            class="w-4 h-4 text-rose-600 rounded border-amber-400 focus:ring-rose-500">
-                        <span class="text-xs font-bold text-rose-800">引き継がず、タスクも含めてすべて削除する</span>
+                            class="w-4 h-4 text-red-600 rounded border-amber-400 focus:ring-red-500">
+                        <span class="text-xs font-bold text-red-800">引き継がず、タスクも含めてすべて削除する</span>
                     </label>
                 </div>
             </div>
 
             <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
                 <button type="button" data-close-modal
-                    class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
+                    class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition cursor-pointer">
                     キャンセル
                 </button>
                 <button type="submit"
-                    class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                    class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
                     削除を実行する
                 </button>
             </div>

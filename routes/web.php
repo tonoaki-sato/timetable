@@ -10,6 +10,7 @@ use App\Http\Controllers\EquipmentLogisticsPatternStepController;
 use App\Http\Controllers\EquipmentLogisticsPlanController;
 use App\Http\Controllers\EquipmentLogisticsTimelineController;
 use App\Http\Controllers\FeatureSettingController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LanePrintController;
 use App\Http\Controllers\LaneRequestController;
@@ -41,9 +42,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // 1. トップページ
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 // 2. スタッフセルフ登録ルート (未ログインでアクセス可)
 Route::get('/join', [StaffJoinController::class, 'create'])->name('staff.join');

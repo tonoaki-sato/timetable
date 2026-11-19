@@ -26,22 +26,18 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.site-maps.pdf', $timetable) }}"
-                id="btn-export-pdf"
-                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" id="btn-export-pdf" :href="route('timetables.site-maps.pdf', $timetable)">
                 <span>📥</span>
                 <span>PDFダウンロード (A3 1/400)</span>
-            </a>
-            <a href="{{ route('timetables.layouts.booths', $timetable) }}"
-                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            </x-ui.button>
+            <x-ui.button variant="header-action" :href="route('timetables.layouts.booths', $timetable)">
                 <span>📋</span>
                 <span>配置一覧</span>
-            </a>
-            <a href="{{ route('timetables.layouts.index', $timetable) }}"
-                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            </x-ui.button>
+            <x-ui.button variant="header-action" :href="route('timetables.layouts.index', $timetable)">
                 <span>📊</span>
                 <span>配置計画サマリー</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
@@ -528,10 +524,10 @@
 </div>
 
 {{-- モーダル 1: PNG画像からアイコン新規生成 --}}
-<div id="modal-create-icon" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+<div id="modal-create-icon" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4" role="dialog" aria-modal="true" aria-labelledby="modal-create-icon-title">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+            <h3 id="modal-create-icon-title" class="text-sm font-bold text-slate-800 flex items-center space-x-2">
                 <span>➕</span>
                 <span>PNG画像からアイコン生成</span>
             </h3>
@@ -630,10 +626,10 @@
 </div>
 
 {{-- モーダル 2: アイコン編集 --}}
-<div id="modal-edit-icon" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+<div id="modal-edit-icon" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4" role="dialog" aria-modal="true" aria-labelledby="modal-edit-icon-title">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+            <h3 id="modal-edit-icon-title" class="text-sm font-bold text-slate-800 flex items-center space-x-2">
                 <span>✏️</span>
                 <span>アイコン編集</span>
             </h3>
@@ -728,10 +724,10 @@
 </div>
 
 {{-- モーダル 3: アイコン削除確認 --}}
-<div id="modal-delete-icon" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+<div id="modal-delete-icon" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4" role="dialog" aria-modal="true" aria-labelledby="modal-delete-icon-title">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-5 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="text-sm font-bold text-red-600 flex items-center space-x-2">
+            <h3 id="modal-delete-icon-title" class="text-sm font-bold text-red-600 flex items-center space-x-2">
                 <span>🗑️</span>
                 <span>カスタムアイコンの削除</span>
             </h3>

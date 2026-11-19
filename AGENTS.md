@@ -175,7 +175,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
      - 動的な初期値やURL、件数などは HTML 側の `data-*` 属性（`dataset`）に保持させ、JavaScript 側では `element.dataset.*` 経由で取得すること（Blade 式を JS 内に展開しない）。
      - **Vite スクリプトの読み込み方式（スロット内末尾への直接配置）**: 本アプリケーションの親レイアウト（`resources/views/components/layouts/app.blade.php` 等）は各画面のビューをメインスロット `{{ $slot }}` として展開する設計となっており、親レイアウト側に `@stack('scripts')` の受け皿は設けていない。個別の Blade テンプレートで `@push('scripts')` を使用するとスクリプトタグが出力されず破棄されるため、画面専用のスクリプトは他の全画面と同様に、`<x-layouts.app>` のスロット内末尾に直接 `@vite(['resources/js/{feature}.js'])` と記述して読み込ませること。
    - **一覧画面のレイアウト・パーツデザイン標準規約**:
-     一覧画面を新規作成または改修する際は、**インフラ設備一覧（`resources/views/site_layouts/facilities.blade.php`）**の構成とパーツデザインを基本標準として統一すること。
+     一覧画面を新規作成または改修する際は、**共通 UI コンポーネント（`resources/views/components/ui/*`）および取引先管理（`resources/views/vendors/index.blade.php`）・屋台配置一覧（`resources/views/site_layouts/booths.blade.php`）**の構成とパーツデザインを基本標準として統一すること。
      - **ページヘッダー**: 画面のタイトル行は「タイトル（アイコン付き見出し）」「説明文」「リンク・アクションボタン」が横並びの一行に収まるレイアウトとする。タイトルと説明文を左側にインライン配置し、説明文は一行に収まる簡潔な短文とし、右側にアクションボタングループ（新規作成ボタン、画面遷移ボタン等）を右寄せ配置して画面上部の縦領域を圧迫しないようにする。
      - **ヘッダーアクションボタンの配色規約**: 画面タイトル行（`<x-slot:actions>`）に配置する操作ボタン（新規追加、画面遷移、一覧表示等）は、通常時（非ホバー時）は未選択・セカンダリカラー（白背景・微細グレー枠線・ダークテキスト: `bg-white border border-slate-300 text-slate-700`）とし、カーソルホバー（マウス搭乗）時にプライマリカラー（インディゴ背景・インディゴ枠線・白文字: `hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition`）へと滑らかに切り替えること。
      - **内部識別コード（ゾーンコード等）の露出防止**: 配置計画や一覧・サマリーカードなどの表示において、データベース管理上の内部識別コード（例: `ZONE_A`, `AREA_KITAGAWA`, `KIDS_VILLAGE` などのゾーンコード）は画面上に露出させず、ユーザーにとって直感的で分かりやすい正式な名称（例: `メイン通りA列（東側歩道）`, `北川駐車場内`, `キッズ村`）と件数情報のみをシンプルに表示すること。

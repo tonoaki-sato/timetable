@@ -16,28 +16,20 @@
             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold shrink-0 {{ $user->isAdmin() ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700 border border-slate-200' }}">
                 {{ $user->role_label }}
             </span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold shrink-0 {{ $user->is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200' }}">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold shrink-0 {{ $user->is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200' }}">
                 {{ $user->is_active ? '有効' : '停止中' }}
             </span>
         </x-slot:badges>
 
         <x-slot:actions>
             @can('update', $user)
-            <a href="{{ route('users.edit', $user) }}"
-                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('users.edit', $user)">
                 <span>✏️</span>
                 <span>編集</span>
-            </a>
+            </x-ui.button>
             @endcan
         </x-slot:actions>
     </x-page-header>
-
-    <!-- 成功通知メッセージ -->
-    @if(session('success'))
-    <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-lg font-medium">
-        ✔ {{ session('success') }}
-    </div>
-    @endif
 
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-6 space-y-6">

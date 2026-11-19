@@ -148,7 +148,7 @@ function showToast(message, type = 'success') {
     }
 
     const toast = document.createElement('div');
-    const bgColor = type === 'success' ? 'bg-emerald-800' : 'bg-rose-800';
+    const bgColor = type === 'success' ? 'bg-emerald-800' : 'bg-red-800';
     toast.className = `${bgColor} text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all transform translate-y-2 opacity-0 pointer-events-auto flex items-center space-x-2`;
     toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span><span>${message}</span>`;
 

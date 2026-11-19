@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
  * CSP対応: 宣言的属性（data-*）に基づくグローバルイベントハンドラ
  */
 function initGlobalEventHandlers() {
-    // 1. フォーム送信前の確認ダイアログ (data-confirm)
+    // 1. フォーム送信前の確認ダイアログ (data-confirm) & 二重送信防止 (data-disable-on-submit)
     document.addEventListener('submit', (e) => {
         const form = e.target;
         if (!form) return;
@@ -20,6 +20,21 @@ function initGlobalEventHandlers() {
         if (message && !window.confirm(message)) {
             e.preventDefault();
             e.stopImmediatePropagation();
+            return;
+        }
+
+        if (form.hasAttribute('data-disable-on-submit')) {
+            const loadingText = form.getAttribute('data-disable-on-submit') || '送信中...';
+            const submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+            submitBtns.forEach((btn) => {
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'cursor-not-allowed');
+                if (btn.tagName === 'BUTTON') {
+                    btn.textContent = loadingText;
+                } else {
+                    btn.value = loadingText;
+                }
+            });
         }
     });
 
@@ -113,6 +128,36 @@ function initGlobalEventHandlers() {
             }
             return;
         }
+
+        // 9. アラート通知閉じる (data-dismiss-alert)
+        const dismissAlertBtn = e.target.closest('[data-dismiss-alert]');
+        if (dismissAlertBtn) {
+            const alertBox = dismissAlertBtn.closest('[data-alert-box]');
+            if (alertBox) {
+                alertBox.remove();
+            }
+            return;
+        }
+
+        // 10. パスワード表示/非表示トグル (data-toggle-password="inputId")
+        const togglePwBtn = e.target.closest('[data-toggle-password]');
+        if (togglePwBtn) {
+            const targetId = togglePwBtn.getAttribute('data-toggle-password');
+            const input = targetId ? document.getElementById(targetId) : null;
+            if (input) {
+                const isMasked = input.getAttribute('type') === 'password';
+                input.setAttribute('type', isMasked ? 'text' : 'password');
+                togglePwBtn.setAttribute('aria-pressed', isMasked ? 'true' : 'false');
+                togglePwBtn.setAttribute('aria-label', isMasked ? 'パスワードを隠す' : 'パスワードを表示');
+                togglePwBtn.textContent = isMasked ? '隠す' : '表示';
+            }
+            return;
+        }
+
+        // 11. ページ再読み込みアクション (data-action="reload")
+        if (e.target.closest('[data-action="reload"]')) {
+            window.location.reload();
+        }
     });
 }
 
@@ -148,12 +193,16 @@ function initNavigation() {
         }
     });
 
-    // Escキーで閉じる
+    // Escキーで閉じる（ドロップダウン / モバイルメニュー / 汎用ダイアログモーダル）
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
             const mobileMenu = document.getElementById('mobileMenuModal');
             if (mobileMenu) mobileMenu.classList.add('hidden');
+            document.querySelectorAll('[role="dialog"].fixed.inset-0:not(.hidden)').forEach((dialog) => {
+                if (dialog.id === 'mobileMenuModal') return;
+                dialog.classList.add('hidden');
+            });
         }
     });
 }

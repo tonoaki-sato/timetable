@@ -1,6 +1,6 @@
 <!-- 組織詳細モーダル（閲覧専用・スクロールフリー設計） -->
-<div id="organization-detail-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4" aria-modal="true" role="dialog">
-    <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+<div id="organization-detail-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4" aria-modal="true" role="dialog" aria-labelledby="detail-modal-title">
+    <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transform transition-all">
         <!-- ヘッダー -->
         <div class="flex items-center justify-between px-5 py-3.5 bg-slate-50 border-b border-slate-200">
             <div class="flex items-center space-x-2 min-w-0">

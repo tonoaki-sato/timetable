@@ -21,29 +21,19 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.site-maps.editor', $timetable) }}"
-                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('timetables.site-maps.editor', $timetable)">
                 <span>🎨</span>
                 <span>白地図エディタ</span>
-            </a>
-            <a href="{{ route('timetables.layouts.booths', $timetable) }}"
-                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            </x-ui.button>
+            <x-ui.button variant="header-action" :href="route('timetables.layouts.booths', $timetable)">
                 <span>📋</span>
                 <span>配置一覧</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
     <!-- 運行日コンテキストバー -->
     <x-timetable-context-bar :timetable="$timetable" active="layouts" />
-
-    <!-- フラッシュメッセージ -->
-    @if(session('success'))
-    <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>✅</span>
-        <span>{{ session('success') }}</span>
-    </div>
-    @endif
 
     <!-- 1段目: 区分別内訳（出展区分・設備区分 2列構成） -->
     <div class="space-y-2">

@@ -25,55 +25,21 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.locations.edit', [$timetable, $location]) }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('timetables.locations.edit', [$timetable, $location])">
                 <span>✏️</span>
                 <span>基本情報を編集</span>
-            </a>
-            <a href="{{ route('timetables.locations.index', $timetable) }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            </x-ui.button>
+            <x-ui.button variant="header-action" :href="route('timetables.locations.index', $timetable)">
                 <span>←</span>
                 <span>拠点一覧に戻る</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
     <!-- 運行日コンテキストバー -->
     <x-timetable-context-bar :timetable="$timetable" active="locations" />
 
-    <!-- アラートメッセージ -->
-    @if(session('success'))
-    <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>✅</span>
-        <span>{{ session('success') }}</span>
-    </div>
-    @endif
-
-    @if(session('status'))
-    <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>✅</span>
-        <span>{{ session('status') }}</span>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>⚠️</span>
-        <span>{{ session('error') }}</span>
-    </div>
-    @endif
-
-    @if($errors->any())
-    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl space-y-1">
-        <div class="font-bold flex items-center space-x-1">
-            <span>⚠️</span>
-            <span>入力内容を確認してください</span>
-        </div>
-        @foreach($errors->all() as $err)
-        <div>・{{ $err }}</div>
-        @endforeach
-    </div>
-    @endif
+    <x-ui.validation-errors title="入力内容を確認してください" />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
@@ -203,7 +169,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                            class="px-2.5 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center space-x-1 shadow-2xs">
+                                            class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center space-x-1">
                                             <span>🗑️</span>
                                             <span>削除</span>
                                         </button>

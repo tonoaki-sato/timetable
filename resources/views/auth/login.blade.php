@@ -51,10 +51,17 @@
             <label for="password" class="block text-xs font-bold text-slate-700">
                 パスワード
             </label>
-            <div class="mt-1">
+            <div class="mt-1 relative">
                 <input id="password" name="password" type="password" autocomplete="current-password" required
-                    class="w-full px-3.5 py-2.5 bg-slate-50 border @error('password') border-red-400 @else border-slate-300 @enderror rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    class="w-full pl-3.5 pr-12 py-2.5 bg-slate-50 border @error('password') border-red-400 @else border-slate-300 @enderror rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                     placeholder="••••••••">
+                <button type="button"
+                    data-toggle-password="password"
+                    aria-label="パスワードを表示"
+                    aria-pressed="false"
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-1 text-[11px] font-bold text-slate-500 hover:text-indigo-600 rounded-md transition cursor-pointer">
+                    表示
+                </button>
             </div>
         </div>
 
@@ -75,7 +82,8 @@
         </div>
     </form>
 
-    <!-- デモ・開発用アカウント案内 -->
+    @if(app()->isLocal())
+    <!-- デモ・開発用アカウント案内 (ローカル環境のみ表示) -->
     <div class="mt-6 p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600">
         <div class="font-bold text-slate-700 mb-1 flex items-center space-x-1">
             <span>🔑</span>
@@ -86,6 +94,7 @@
             <div>・オペレーター: <span class="text-slate-800 font-bold select-all">operator@example.com</span></div>
         </div>
     </div>
+    @endif
 
     <!-- 戻るリンク -->
     <div class="mt-5 text-center border-t border-slate-100 pt-4">

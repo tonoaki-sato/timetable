@@ -7,34 +7,18 @@
             icon="🎪"
             description="ござ市出店者、特設企画、企業協賛ブース等の出展・出店者マスター台帳を管理します。">
             <x-slot:breadcrumbs>
-                <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                    <span>🏮</span>
-                    <span>本部</span>
-                </a>
-                <span class="text-slate-300">/</span>
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-700 font-bold truncate">🎪 出展・出店者マスター</span>
             </x-slot:breadcrumbs>
 
             <x-slot:actions>
-                <button type="button"
-                    id="btn-open-create-vendor"
-                    data-store-url="{{ route('vendors.store') }}"
-                    class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
+                <x-ui.button variant="header-action" id="btn-open-create-vendor" data-store-url="{{ route('vendors.store') }}">
                     <span>➕</span>
                     <span>新規登録</span>
-                </button>
+                </x-ui.button>
             </x-slot:actions>
         </x-page-header>
-
-        <!-- フラッシュメッセージ -->
-        @if(session('success'))
-            <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-                <span>✅</span>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
 
         <!-- 検索・フィルターバー -->
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs">
@@ -229,7 +213,7 @@
                         <!-- 出展・出店者名 -->
                         <div>
                             <label for="vendor_name" class="block font-bold text-slate-700 mb-1">
-                                出展・出店者名・屋号 <span class="text-rose-500">*</span>
+                                出展・出店者名・屋号 <span class="text-red-500">*</span>
                             </label>
                             <input type="text"
                                 name="name"

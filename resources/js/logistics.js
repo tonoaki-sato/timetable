@@ -209,7 +209,7 @@ function initLogisticsPlanModals() {
         }
         if (status === 'cancelled') {
             return {
-                classes: 'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border bg-rose-100 text-rose-700 border-rose-200',
+                classes: 'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border bg-red-100 text-red-700 border-red-200',
                 text: `⛔ ${label || '中止'}`,
             };
         }

@@ -182,7 +182,7 @@ function initAssignmentWorkspace() {
         const isSuccess = type === 'success';
         const isWarning = type === 'warning';
         const bgClass = isSuccess ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-            : (isWarning ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-rose-50 border-rose-200 text-rose-800');
+            : (isWarning ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-red-50 border-red-200 text-red-800');
 
         alertArea.innerHTML = `
             <div class="p-2.5 rounded-lg border text-xs flex items-center justify-between ${bgClass}">
@@ -221,10 +221,10 @@ function initAssignmentWorkspace() {
             const loadingEl = document.getElementById('detail-loading');
             if (loadingEl) {
                 loadingEl.innerHTML = `
-                    <div class="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs inline-block text-left">
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs inline-block text-left">
                         <p class="font-bold mb-1">エラーが発生しました</p>
                         <p>${escapeHtml(err.message || '読み込みに失敗しました')}</p>
-                        <button type="button" id="btn-retry-task" class="mt-2 px-3 py-1 bg-white border border-rose-300 rounded text-xs font-bold text-rose-700 hover:bg-rose-50 cursor-pointer">再試行</button>
+                        <button type="button" id="btn-retry-task" class="mt-2 px-3 py-1 bg-white border border-red-300 rounded text-xs font-bold text-red-700 hover:bg-red-50 cursor-pointer">再試行</button>
                     </div>
                 `;
                 document.getElementById('btn-retry-task')?.addEventListener('click', () => selectTask(taskId));
@@ -330,7 +330,7 @@ function initAssignmentWorkspace() {
                     </span>
                 ` : `
                     <button type="button" data-action="remove-staff" data-staff-id="${a.staff_id}" data-staff-name="${escapeHtml(a.staff_name)}"
-                        class="px-1.5 py-0.5 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded text-[11px] font-bold transition cursor-pointer shrink-0"
+                        class="px-1.5 py-0.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded text-[11px] font-bold transition cursor-pointer shrink-0"
                         title="配置を解除">
                         解除
                     </button>
@@ -407,7 +407,7 @@ function initAssignmentWorkspace() {
                 badgeHtml += `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">🟢 空き</span> `;
             }
             if (c.is_conflicted) {
-                badgeHtml += `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200" title="${escapeHtml(c.conflicted_label)}">⚠️ 重複中</span> `;
+                badgeHtml += `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200" title="${escapeHtml(c.conflicted_label)}">⚠️ 重複中</span> `;
             }
             if (c.is_checked_in) {
                 badgeHtml += `<span class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">📍 受付済</span> `;
@@ -437,7 +437,7 @@ function initAssignmentWorkspace() {
 
                     <div class="flex items-center space-x-1.5 shrink-0 pl-2">
                         ${badgeHtml}
-                        ${c.is_conflicted ? `<span class="text-[10px] text-rose-500 hidden md:inline truncate max-w-[100px]" title="${escapeHtml(c.conflicted_label)}">${escapeHtml(c.conflicted_task_title)}</span>` : ''}
+                        ${c.is_conflicted ? `<span class="text-[10px] text-red-500 hidden md:inline truncate max-w-[100px]" title="${escapeHtml(c.conflicted_label)}">${escapeHtml(c.conflicted_task_title)}</span>` : ''}
                     </div>
                 </label>
             `;

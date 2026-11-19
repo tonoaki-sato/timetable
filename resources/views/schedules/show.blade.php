@@ -26,7 +26,7 @@
             </span>
 
             @if($schedule->is_today)
-            <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+            <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-red-50 text-red-700 border border-red-200">
                 本日開催
             </span>
             @endif
@@ -38,11 +38,10 @@
 
         <x-slot:actions>
             @can('update', $schedule)
-            <a href="{{ route('schedules.edit', $schedule) }}"
-                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+            <x-ui.button variant="header-action" :href="route('schedules.edit', $schedule)">
                 <span>✏️</span>
                 <span>編集する</span>
-            </a>
+            </x-ui.button>
             @endcan
 
             @if(! $schedule->is_linked_to_timetable)
@@ -51,11 +50,10 @@
                 data-confirm="予定「{{ $schedule->title }}」を削除しますか？&#10;この操作は取り消せません。">
                 @csrf
                 @method('DELETE')
-                <button type="submit"
-                    class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs cursor-pointer">
+                <x-ui.button variant="delete" size="sm" type="submit">
                     <span>🗑️</span>
                     <span>削除</span>
-                </button>
+                </x-ui.button>
             </form>
             @endcan
             @endif
@@ -68,13 +66,13 @@
         <!-- 左カラム: 予定詳細情報（col-span-7） -->
         <div class="lg:col-span-7 space-y-3">
             @if($schedule->is_linked_to_timetable)
-            <div class="bg-gradient-to-r from-rose-50 to-indigo-50 border border-rose-200/80 rounded-xl p-3 sm:p-3.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div class="bg-gradient-to-r from-red-50 to-indigo-50 border border-red-200/80 rounded-xl p-3 sm:p-3.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <div class="flex items-center space-x-2.5">
-                    <span class="text-lg p-1 bg-white rounded-lg shadow-2xs border border-rose-200 shrink-0">🏮</span>
+                    <span class="text-lg p-1 bg-white rounded-lg shadow-2xs border border-red-200 shrink-0">🏮</span>
                     <div>
                         <div class="flex items-center space-x-2">
                             <h3 class="text-xs font-bold text-slate-900">タイムテーブル連動</h3>
-                            <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-800">公式運行枠</span>
+                            <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-red-100 text-red-800">公式運行枠</span>
                         </div>
                         <p class="text-[11px] text-slate-600 mt-0.5">
                             運行表と自動同期されています。班編成や削除は運行管理から行えます。

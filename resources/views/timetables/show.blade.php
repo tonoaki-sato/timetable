@@ -18,18 +18,16 @@
         <x-slot:actions>
             <div class="flex items-center space-x-2 shrink-0">
                 @can('update', $timetable)
-                <a href="{{ route('timetables.edit', $timetable) }}"
-                    class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
+                <x-ui.button variant="header-action" :href="route('timetables.edit', $timetable)">
                     <span>✏️</span>
                     <span>基本情報を編集</span>
-                </a>
+                </x-ui.button>
                 @endcan
 
-                <a href="{{ route('timetables.index') }}"
-                    class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
+                <x-ui.button variant="header-action" :href="route('timetables.index')">
                     <span>←</span>
                     <span>運行情報一覧に戻る</span>
-                </a>
+                </x-ui.button>
             </div>
         </x-slot:actions>
     </x-page-header>
@@ -252,7 +250,7 @@
                         <span class="text-[10px] font-bold text-slate-500 block">開催年月日</span>
                         <div class="flex items-baseline space-x-1 font-mono font-bold text-slate-900 text-xs">
                             <span>{{ $timetable->target_date?->format('Y年m月d日') }}</span>
-                            <span class="{{ $overview->isWeekend ? 'text-rose-600' : 'text-slate-600' }}">({{ $overview->weekdayLabel }})</span>
+                            <span class="{{ $overview->isWeekend ? 'text-red-600' : 'text-slate-600' }}">({{ $overview->weekdayLabel }})</span>
                         </div>
                     </div>
 
@@ -284,7 +282,7 @@
                                 <span>🚧</span>
                                 <span>道路の状況（交通規制・通行止め）</span>
                             </h3>
-                            <span class="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold {{ !empty($timetable->road_periods) ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-500' }}">
+                            <span class="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold {{ !empty($timetable->road_periods) ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-slate-100 text-slate-500' }}">
                                 {{ !empty($timetable->road_periods) ? count($timetable->road_periods) . '件' : '終日規制なし' }}
                             </span>
                         </div>
@@ -292,14 +290,14 @@
                         @if(!empty($timetable->road_periods))
                         <div class="space-y-1 max-h-24 overflow-y-auto pr-0.5">
                             @foreach($timetable->road_periods as $rp)
-                            <div class="flex items-center justify-between p-1.5 bg-white rounded border border-rose-100 text-xs">
+                            <div class="flex items-center justify-between p-1.5 bg-white rounded border border-red-100 text-xs">
                                 <div class="flex items-center space-x-1.5 truncate">
-                                    <span class="px-1 py-0.2 rounded font-mono font-bold bg-rose-100 text-rose-800 text-[9px] shrink-0">
+                                    <span class="px-1 py-0.2 rounded font-mono font-bold bg-red-100 text-red-800 text-[9px] shrink-0">
                                         {{ substr($rp['start_time'] ?? '', 0, 5) }}〜{{ substr($rp['end_time'] ?? '', 0, 5) }}
                                     </span>
-                                    <strong class="text-rose-950 font-bold text-[11px] truncate">{{ $rp['label'] ?? '通行止め' }}</strong>
+                                    <strong class="text-red-950 font-bold text-[11px] truncate">{{ $rp['label'] ?? '通行止め' }}</strong>
                                 </div>
-                                <span class="text-[9px] text-rose-600 font-bold bg-rose-50 px-1 py-0.2 rounded border border-rose-200 shrink-0 ml-1">
+                                <span class="text-[9px] text-red-600 font-bold bg-red-50 px-1 py-0.2 rounded border border-red-200 shrink-0 ml-1">
                                     {{ ($rp['status'] ?? 'closed') === 'closed' ? '車両通行止め' : $rp['status'] }}
                                 </span>
                             </div>
@@ -351,19 +349,19 @@
 
             <!-- 重点管理タスク (クリティカル・最優先) Spotlight -->
             @if($overview->criticalTasksCount > 0)
-            <div class="bg-white rounded-xl border border-rose-200/90 shadow-2xs p-3 space-y-2">
-                <div class="flex items-center justify-between pb-1.5 border-b border-rose-100">
-                    <h3 class="font-bold text-xs text-rose-900 flex items-center space-x-1">
+            <div class="bg-white rounded-xl border border-red-200/90 shadow-2xs p-3 space-y-2">
+                <div class="flex items-center justify-between pb-1.5 border-b border-red-100">
+                    <h3 class="font-bold text-xs text-red-900 flex items-center space-x-1">
                         <span>🎯</span>
                         <span>重点管理タスク（最優先・通行止め連動）</span>
                     </h3>
-                    <span class="text-[10px] font-mono font-bold bg-rose-100 text-rose-800 px-1.5 py-0.2 rounded">
+                    <span class="text-[10px] font-mono font-bold bg-red-100 text-red-800 px-1.5 py-0.2 rounded">
                         {{ $overview->criticalTasksCount }}件
                     </span>
                 </div>
                 <div class="space-y-1 max-h-28 overflow-y-auto pr-0.5">
                     @foreach($overview->criticalTasks as $critTask)
-                    <div class="p-1.5 bg-rose-50/60 rounded border border-rose-100 flex items-center justify-between text-xs">
+                    <div class="p-1.5 bg-red-50/60 rounded border border-red-100 flex items-center justify-between text-xs">
                         <div class="min-w-0 flex-1 pr-2">
                             <div class="font-bold text-slate-900 text-[11px] truncate">
                                 [{{ $critTask->laneRelation?->name ?? '班' }}] {{ $critTask->title }}
@@ -430,7 +428,7 @@
                     <div class="p-2 bg-slate-50 rounded-lg border border-slate-100">
                         <span class="text-[10px] font-bold text-slate-500 block">スタッフ立会必須</span>
                         <div class="flex items-baseline space-x-1">
-                            <strong class="text-base font-bold font-mono {{ $overview->witnessRequiredPlans > 0 ? 'text-rose-600' : 'text-slate-700' }}">{{ $overview->witnessRequiredPlans }}</strong>
+                            <strong class="text-base font-bold font-mono {{ $overview->witnessRequiredPlans > 0 ? 'text-red-600' : 'text-slate-700' }}">{{ $overview->witnessRequiredPlans }}</strong>
                             <span class="text-[10px] text-slate-500">件</span>
                         </div>
                     </div>
@@ -453,7 +451,7 @@
                         <span>👑</span>
                         <span>当計画の現場要請（人員・機材申請）</span>
                     </h3>
-                    <span class="text-[9px] font-bold px-1.5 py-0.2 rounded {{ $overview->pendingLaneRequestsCount > 0 ? 'bg-rose-100 text-rose-700 font-mono' : 'bg-emerald-50 text-emerald-700' }}">
+                    <span class="text-[9px] font-bold px-1.5 py-0.2 rounded {{ $overview->pendingLaneRequestsCount > 0 ? 'bg-red-100 text-red-700 font-mono' : 'bg-emerald-50 text-emerald-700' }}">
                         未対応 {{ $overview->pendingLaneRequestsCount }}件
                     </span>
                 </div>
@@ -524,7 +522,7 @@
                     @csrf
                     @method('DELETE')
                     <button type="submit"
-                        class="px-2.5 py-1 bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 rounded-lg text-xs font-bold transition cursor-pointer flex items-center space-x-1">
+                        class="px-2.5 py-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 rounded-lg text-xs font-bold transition cursor-pointer flex items-center space-x-1">
                         <span>🗑️</span>
                         <span>このタイムテーブルを削除する</span>
                     </button>

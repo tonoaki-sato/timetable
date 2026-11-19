@@ -204,7 +204,7 @@ function initEquipmentPatternModals() {
                         tr.className = 'hover:bg-slate-50/70 transition';
 
                         const witnessHtml = step.witness_required
-                            ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200">必須</span>'
+                            ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-bold text-[10px] border border-red-200">必須</span>'
                             : '<span class="text-slate-300">-</span>';
 
                         tr.innerHTML = `
@@ -465,7 +465,7 @@ function showToast(message, type = 'success') {
     }
 
     const toast = document.createElement('div');
-    const bgColor = type === 'success' ? 'bg-emerald-800' : 'bg-rose-800';
+    const bgColor = type === 'success' ? 'bg-emerald-800' : 'bg-red-800';
     toast.className = `${bgColor} text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all transform translate-y-2 opacity-0 pointer-events-auto flex items-center space-x-2`;
     toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span><span>${escapeHtml(message)}</span>`;
 

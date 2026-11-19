@@ -70,7 +70,7 @@
                         </span>
 
                         @if ($task->required_people_count > 0 && ! $task->is_satisfied)
-                            <span class="shrink-0 font-bold px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded text-[10px]">
+                            <span class="shrink-0 font-bold px-1.5 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded text-[10px]">
                                 ⚠️ {{ $task->assigned_count }}/{{ $task->required_people_label }} (不足{{ $task->shortage_count }}名)
                             </span>
                         @elseif ($task->required_people_count > 0)

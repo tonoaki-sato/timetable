@@ -39,7 +39,7 @@ enum EquipmentCheckoutRule: string
     {
         return match ($this) {
             self::Free => 'bg-slate-50 text-slate-600 border border-slate-200',
-            self::PermissionRequired => 'bg-rose-50 text-rose-700 border border-rose-200',
+            self::PermissionRequired => 'bg-red-50 text-red-700 border border-red-200',
             self::LeaderOnly => 'bg-purple-50 text-purple-700 border border-purple-200',
         };
     }

@@ -33,24 +33,20 @@
         </x-slot:badges>
 
         <x-slot:actions>
-            <a href="{{ route('preparation-navigator.index') }}"
-                class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('preparation-navigator.index')">
                 <span>🚀</span>
                 <span>準備ナビ</span>
-            </a>
+            </x-ui.button>
 
-            <a href="{{ route('timetables.print-assignments', $timetable) }}"
-                class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
-                title="運行日の人員配置表をA4横PDFでダウンロード">
+            <x-ui.button variant="header-action" :href="route('timetables.print-assignments', $timetable)" title="運行日の人員配置表をA4横PDFでダウンロード">
                 <span>📄</span>
                 <span>A4横 配置表PDF</span>
-            </a>
+            </x-ui.button>
 
-            <a href="{{ route('timetables.show', $timetable) }}"
-                class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('timetables.show', $timetable)">
                 <span>📅</span>
                 <span>運行日詳細</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
@@ -209,10 +205,11 @@
 
     <!-- 空き枠からのタスク配置モーダル (CSP完全準拠・バニラJS) -->
     <div id="timelineQuickAssignModal"
-        class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl border border-slate-200 text-left">
+        class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
+        role="dialog" aria-modal="true" aria-labelledby="timeline-quick-assign-title">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-xl border border-slate-200 text-left">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                <h3 id="timeline-quick-assign-title" class="text-sm font-bold text-slate-900 flex items-center space-x-2">
                     <span>⏱️</span>
                     <span>空き時間枠へのタスク配置</span>
                 </h3>

@@ -1,5 +1,5 @@
 <x-layouts.app :title="$equipment->name . ' - 機材・備品詳細'">
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
@@ -24,11 +24,6 @@
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-700 font-bold truncate">{{ $equipment->name }}</span>
             @else
-                <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                    <span>🏮</span>
-                    <span>本部</span>
-                </a>
-                <span class="text-slate-300">/</span>
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>
                 <a href="{{ route('equipments.index') }}" class="hover:text-indigo-600 transition truncate">
@@ -40,24 +35,15 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ $indexUrl }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="$indexUrl">
                 <span>←</span>
                 <span>機材・備品一覧に戻る</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
     @if($isTimetableScoped)
         <x-timetable-context-bar :timetable="$timetable" active="logistics" />
-    @endif
-
-    <!-- アラートメッセージ -->
-    @if(session('status'))
-        <div class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-            <span>✅</span>
-            <span>{{ session('status') }}</span>
-        </div>
     @endif
 
     <!-- 資材基本台帳情報カード -->

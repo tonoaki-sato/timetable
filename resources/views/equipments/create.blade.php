@@ -24,11 +24,6 @@
                 <span class="text-slate-300">/</span>
                 <span class="text-slate-700 font-bold truncate">➕ 新規登録</span>
             @else
-                <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                    <span>🏮</span>
-                    <span>本部</span>
-                </a>
-                <span class="text-slate-300">/</span>
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>
                 <a href="{{ route('equipments.index') }}" class="hover:text-indigo-600 transition truncate">
@@ -40,11 +35,10 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ $indexUrl }}"
-                class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="$indexUrl">
                 <span>←</span>
                 <span>機材・備品一覧に戻る</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
@@ -53,17 +47,7 @@
     @endif
 
     <!-- 入力エラーメッセージ -->
-    @if ($errors->any())
-        <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl space-y-1">
-            <div class="font-bold flex items-center space-x-1">
-                <span>⚠️</span>
-                <span>入力内容を確認してください</span>
-            </div>
-            @foreach ($errors->all() as $error)
-                <div>・{{ $error }}</div>
-            @endforeach
-        </div>
-    @endif
+    <x-ui.validation-errors title="入力内容を確認してください" />
 
     <div class="max-w-4xl mx-auto space-y-3.5">
         <!-- フォームカード（高密度コンパクトグリッド） -->
@@ -75,7 +59,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                     <div class="md:col-span-2">
                         <label for="name" class="block text-xs font-bold text-slate-700 mb-1">
-                            資機材名 <span class="text-rose-600">*</span>
+                            資機材名 <span class="text-red-600">*</span>
                         </label>
                         <input type="text" id="name" name="name" value="{{ old('name') }}" required
                             placeholder="例: カラーコーン一式、足踏み式給水設備、パイプテント 2K×3K"
@@ -84,7 +68,7 @@
 
                     <div>
                         <label for="type" class="block text-xs font-bold text-slate-700 mb-1">
-                            所有・調達区分 <span class="text-rose-600">*</span>
+                            所有・調達区分 <span class="text-red-600">*</span>
                         </label>
                         <select id="type" name="type" required
                             class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -101,7 +85,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">
-                            基準数量 & 単位 <span class="text-rose-600">*</span>
+                            基準数量 & 単位 <span class="text-red-600">*</span>
                         </label>
                         <div class="space-y-1.5">
                             <div class="flex items-center space-x-1.5">
@@ -122,7 +106,7 @@
 
                     <div>
                         <label for="checkout_rule" class="block text-xs font-bold text-slate-700 mb-1">
-                            持出・利用ルール <span class="text-rose-600">*</span>
+                            持出・利用ルール <span class="text-red-600">*</span>
                         </label>
                         <select id="checkout_rule" name="checkout_rule" required
                             class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">

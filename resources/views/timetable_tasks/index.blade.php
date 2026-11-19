@@ -21,31 +21,17 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.print-assignments', $timetable) }}"
-                class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs whitespace-nowrap shrink-0"
-                title="運行日別人員配置一覧表をPDFでダウンロード">
+            <x-ui.button variant="header-action" :href="route('timetables.print-assignments', $timetable)" title="運行日別人員配置一覧表をPDFでダウンロード">
                 <span>📄</span>
                 <span>人員配置表印刷</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
     <!-- 運行日コンテキストバー (日程切替・サブナビ) -->
     <x-timetable-context-bar :timetable="$timetable" active="tasks" />
 
-    @if($errors->any())
-    <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl shadow-2xs">
-        <div class="font-bold flex items-center space-x-1.5 mb-1">
-            <span>⚠️</span>
-            <span>入力内容または時間帯にエラーがあります。</span>
-        </div>
-        <ul class="list-disc list-inside space-y-0.5 text-[11px]">
-            @foreach($errors->all() as $error)
-            <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-    @endif
+    <x-ui.validation-errors title="入力内容または時間帯にエラーがあります。" />
 
     <!-- 作業タスク一覧セクションヘッダーバー -->
     <div class="flex items-center justify-between gap-2.5 px-1">
@@ -175,7 +161,7 @@
                                 <button type="button"
                                     data-action="open-task-detail"
                                     data-task-id="{{ $task->id }}"
-                                    class="font-bold text-slate-900 hover:text-indigo-600 transition text-left cursor-pointer">
+                                    class="font-bold text-slate-900 hover:text-indigo-600 hover:underline transition text-left cursor-pointer">
                                     {{ $task->title }}
                                 </button>
                             </td>

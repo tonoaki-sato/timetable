@@ -2,8 +2,9 @@
 <html lang="ja" class="h-full bg-slate-100">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>登録完了 - まつり運行システム</title>
+    <x-head-meta />
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/staff-myshift.js'])
 </head>
 <body class="min-h-full flex flex-col justify-center py-6 px-4 font-sans antialiased bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-900 text-slate-100">

@@ -2,8 +2,9 @@
 <html lang="ja" class="h-full bg-slate-100">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>スタッフ登録 - まつり運行システム</title>
+    <x-head-meta />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-full flex flex-col justify-center py-6 px-4 font-sans antialiased bg-gradient-to-b from-indigo-900 via-slate-900 to-slate-900 text-slate-100">
@@ -31,14 +32,14 @@
             </div>
             @endif
 
-            <form id="staffJoinForm" action="{{ route('staff.join.store') }}" method="POST">
+            <form id="staffJoinForm" action="{{ route('staff.join.store') }}" method="POST" data-disable-on-submit="送信中...">
                 @csrf
 
                 <div class="space-y-4">
                     <!-- お名前（漢字） -->
                     <div>
                         <label for="name" class="block text-xs font-bold text-slate-700 mb-1.5">
-                            お名前（氏名） <span class="text-rose-500 font-bold">*必須</span>
+                            お名前（氏名） <span class="text-red-500 font-bold">*必須</span>
                         </label>
                         <input type="text" id="name" name="name" value="{{ old('name') }}" required
                                placeholder="例）山田 太郎"
@@ -48,7 +49,7 @@
                     <!-- フリガナ（カタカナ） -->
                     <div>
                         <label for="kana" class="block text-xs font-bold text-slate-700 mb-1.5">
-                            フリガナ（全角カナ） <span class="text-rose-500 font-bold">*必須</span>
+                            フリガナ（全角カナ） <span class="text-red-500 font-bold">*必須</span>
                         </label>
                         <input type="text" id="kana" name="kana" value="{{ old('kana') }}" required inputmode="katakana"
                                placeholder="例）ヤマダ タロウ"
@@ -57,12 +58,15 @@
                 </div>
 
                 <!-- 登録ボタン -->
-                <div class="mt-6">
+                <div class="mt-6 space-y-3">
                     <button type="submit" id="submitBtn"
                             class="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold tracking-wide shadow-lg shadow-indigo-600/30 transition transform active:scale-[0.98] cursor-pointer flex items-center justify-center space-x-2">
                         <span>登録を完了してタイムテーブルを確認</span>
                         <span>→</span>
                     </button>
+                    <p class="text-[11px] text-slate-500 leading-relaxed text-center">
+                        ご入力いただいた氏名・フリガナは、まつり当日のシフト管理・受付確認の目的のみに使用します。
+                    </p>
                 </div>
             </form>
         </div>

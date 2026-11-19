@@ -21,53 +21,20 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.locations.create', $timetable) }}"
-                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('timetables.locations.create', $timetable)">
                 <span>➕</span>
                 <span>新規拠点を追加</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
     <!-- 運行日コンテキストバー -->
     <x-timetable-context-bar :timetable="$timetable" active="locations" />
 
-    <!-- アラートメッセージ -->
-    @if(session('success'))
-    <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>✅</span>
-        <span>{{ session('success') }}</span>
-    </div>
-    @endif
-
-    @if(session('status'))
-    <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>✅</span>
-        <span>{{ session('status') }}</span>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>⚠️</span>
-        <span>{{ session('error') }}</span>
-    </div>
-    @endif
-
-    @if($errors->any())
-    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl space-y-1">
-        <div class="font-bold flex items-center space-x-1">
-            <span>⚠️</span>
-            <span>入力内容を確認してください</span>
-        </div>
-        @foreach($errors->all() as $err)
-        <div>・{{ $err }}</div>
-        @endforeach
-    </div>
-    @endif
+    <x-ui.validation-errors title="入力内容を確認してください" />
 
     <!-- 登録拠点一覧カード -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
                 <h2 class="font-bold text-base text-slate-900 flex items-center space-x-2">
@@ -88,13 +55,13 @@
 
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
-                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
                     <tr>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap">拠点名</th>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap">現在の状態</th>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap">本日の利用可能枠</th>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap">備考・メモ</th>
-                        <th scope="col" class="px-4 py-3 whitespace-nowrap text-right">操作</th>
+                        <th scope="col" class="px-4 py-2.5 whitespace-nowrap">拠点名</th>
+                        <th scope="col" class="px-4 py-2.5 whitespace-nowrap">現在の状態</th>
+                        <th scope="col" class="px-4 py-2.5 whitespace-nowrap">本日の利用可能枠</th>
+                        <th scope="col" class="px-4 py-2.5 whitespace-nowrap">備考・メモ</th>
+                        <th scope="col" class="px-4 py-2.5 whitespace-nowrap text-right">操作</th>
                     </tr>
                 </thead>
                 <tbody id="locations-container"
@@ -147,27 +114,30 @@
                             </td>
 
                             <!-- 操作 -->
-                            <td class="px-4 py-3 whitespace-nowrap text-right space-x-1">
-                                <a href="{{ route('timetables.locations.edit', [$timetable, $item->location]) }}"
-                                    class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1 shadow-2xs">
-                                    <span>✏️</span>
-                                    <span>編集</span>
-                                </a>
-                                <form action="{{ route('timetables.locations.destroy', [$timetable, $item->location]) }}" method="POST" class="inline"
-                                      data-confirm="拠点「{{ $item->location->name }}」を削除しますか？&#10;（関連する時間帯データも削除されます）">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                        class="px-2.5 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center space-x-1 shadow-2xs">
-                                        <span>🗑️</span>
-                                        <span>削除</span>
-                                    </button>
-                                </form>
+                            <td class="px-4 py-2.5 whitespace-nowrap text-right">
+                                <div class="inline-flex items-center space-x-1.5">
+                                    <x-ui.button variant="edit" size="xs" :href="route('timetables.locations.edit', [$timetable, $item->location])">
+                                        <span>✏️</span>
+                                        <span>編集</span>
+                                    </x-ui.button>
+                                    <form action="{{ route('timetables.locations.destroy', [$timetable, $item->location]) }}" method="POST" class="inline"
+                                          data-confirm="拠点「{{ $item->location->name }}」を削除しますか？&#10;（関連する時間帯データも削除されます）">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-ui.button variant="delete" size="xs" type="submit">
+                                            <span>🗑️</span>
+                                            <span>削除</span>
+                                        </x-ui.button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="p-8 text-center text-slate-400 text-xs">
+                            <td colspan="5">
+                                <x-ui.empty-state icon="📍" title="この運行日に登録されている拠点はありません。" />
+                            </td>
+                        </tr>
                                 拠点がまだ登録されていません。ヘッダーの「➕ 新規拠点を追加」から登録してください。
                             </td>
                         </tr>

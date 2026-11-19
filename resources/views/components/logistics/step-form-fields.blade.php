@@ -9,7 +9,7 @@
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
     <div>
         <label for="{{ $prefix }}_day_phase" class="block text-[11px] font-bold text-slate-700 mb-1">
-            実施フェーズ <span class="text-rose-500">*</span>
+            実施フェーズ <span class="text-red-500">*</span>
         </label>
         <select id="{{ $prefix }}_day_phase" name="day_phase" required
             class="w-full px-2.5 py-2 bg-slate-50/60 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
@@ -21,7 +21,7 @@
 
     <div>
         <label for="{{ $prefix }}_action_type" class="block text-[11px] font-bold text-slate-700 mb-1">
-            動作アクション種別 <span class="text-rose-500">*</span>
+            動作アクション種別 <span class="text-red-500">*</span>
         </label>
         <select id="{{ $prefix }}_action_type" name="action_type" required
             class="w-full px-2.5 py-2 bg-slate-50/60 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
@@ -33,7 +33,7 @@
 
     <div>
         <label for="{{ $prefix }}_status" class="block text-[11px] font-bold text-slate-700 mb-1">
-            進捗ステータス <span class="text-rose-500">*</span>
+            進捗ステータス <span class="text-red-500">*</span>
         </label>
         <select id="{{ $prefix }}_status" name="status" required
             class="w-full px-2.5 py-2 bg-slate-50/60 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
@@ -47,7 +47,7 @@
 <!-- ステップ表示名 -->
 <div>
     <label for="{{ $prefix }}_title" class="block text-[11px] font-bold text-slate-700 mb-1">
-        ステップ表示名 <span class="text-rose-500">*</span>
+        ステップ表示名 <span class="text-red-500">*</span>
     </label>
     <input type="text" id="{{ $prefix }}_title" name="title" required
         placeholder="例: 前日倉庫出し・現場へ搬送"
@@ -122,7 +122,7 @@
 
     <div>
         <label for="{{ $prefix }}_operator_type" class="block text-[11px] font-bold text-slate-700 mb-1">
-            作業主体 <span class="text-rose-500">*</span>
+            作業主体 <span class="text-red-500">*</span>
         </label>
         <select id="{{ $prefix }}_operator_type" name="operator_type" required
             class="w-full px-2.5 py-2 bg-slate-50/60 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">

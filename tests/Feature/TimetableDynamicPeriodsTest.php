@@ -52,9 +52,9 @@ class TimetableDynamicPeriodsTest extends TestCase
 
         $response->assertStatus(200);
 
-        // 道路状況の表示検証（通行止め、既存デザインのCSSクラスbg-rose-100が含まれること）
+        // 道路状況の表示検証（通行止め、統一デザインカラーのCSSクラスbg-red-100が含まれること）
         $response->assertSee('通行止め');
-        $response->assertSee('bg-rose-100 text-rose-800 font-bold', false);
+        $response->assertSee('bg-red-100 text-red-800 font-bold', false);
 
         // まつり状況の表示検証（ござ市受付開始、開催中、既存デザインのCSSクラスbg-emerald-100が含まれること）
         $response->assertSee('ござ市受付開始');
@@ -82,8 +82,8 @@ class TimetableDynamicPeriodsTest extends TestCase
         $response = $this->get(route('timetable.index', ['timetable_id' => $timetable->id]));
 
         $response->assertStatus(200);
-        // 通行止め用（bg-rose-100）・開催中用（bg-emerald-100）のスタイルクラスが描画されないこと
-        $response->assertDontSee('bg-rose-100 text-rose-800 font-bold', false);
+        // 通行止め用（bg-red-100）・開催中用（bg-emerald-100）のスタイルクラスが描画されないこと
+        $response->assertDontSee('bg-red-100 text-red-800 font-bold', false);
         $response->assertDontSee('bg-emerald-100 text-emerald-800 font-bold', false);
         $response->assertDontSee('ござ市受付開始');
     }

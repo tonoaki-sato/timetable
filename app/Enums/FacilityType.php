@@ -65,7 +65,7 @@ enum FacilityType: string
             self::ToiletPaid => 'bg-amber-50 text-amber-800 border-amber-300',
             self::ToiletFree => 'bg-emerald-50 text-emerald-800 border-emerald-300',
             self::NursingRoom => 'bg-pink-50 text-pink-800 border-pink-300',
-            self::FirstAid => 'bg-rose-50 text-rose-800 border-rose-300 font-bold',
+            self::FirstAid => 'bg-red-50 text-red-800 border-red-300 font-bold',
             self::Headquarters => 'bg-indigo-50 text-indigo-800 border-indigo-300 font-bold',
             self::StaffRoom => 'bg-slate-100 text-slate-800 border-slate-300',
         };

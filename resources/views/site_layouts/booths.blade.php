@@ -26,53 +26,28 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.site-maps.editor', $timetable) }}"
-                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('timetables.site-maps.editor', $timetable)">
                 <span>🎨</span>
                 <span>白地図エディタ</span>
-            </a>
-            <button type="button"
-                id="btnOpenCreateItemModal"
-                data-store-url="{{ route('timetables.layouts.booths.store', $timetable) }}"
-                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0 cursor-pointer">
+            </x-ui.button>
+            <x-ui.button variant="header-action" id="btnOpenCreateItemModal" data-store-url="{{ route('timetables.layouts.booths.store', $timetable) }}">
                 <span>➕</span>
                 <span>新規配置追加</span>
-            </button>
-            <a href="{{ route('timetables.layouts.index', $timetable) }}"
-                class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-2xs transition flex items-center space-x-1 whitespace-nowrap shrink-0">
+            </x-ui.button>
+            <x-ui.button variant="header-action" :href="route('timetables.layouts.index', $timetable)">
                 <span>←</span>
                 <span>配置計画に戻る</span>
-            </a>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
     <!-- 運行日コンテキストバー -->
     <x-timetable-context-bar :timetable="$timetable" active="layouts-booths" />
 
-    <!-- フラッシュメッセージ -->
-    @if(session('success'))
-    <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center space-x-2">
-        <span>✅</span>
-        <span>{{ session('success') }}</span>
-    </div>
-    @endif
-
-    @if($errors->any())
-    <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl space-y-1">
-        <div class="font-bold flex items-center space-x-1">
-            <span>⚠️</span>
-            <span>入力内容をご確認ください</span>
-        </div>
-        <ul class="list-disc list-inside text-[11px] pl-2 space-y-0.5">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-    @endif
+    <x-ui.validation-errors title="入力内容をご確認ください" />
 
     <!-- 検索・絞り込みバー -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-2xs space-y-3">
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs space-y-3">
         <!-- 表示種別クイックチップ (すべて / 出店ブース / 現場設備) -->
         <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-2.5">
             <span class="text-xs font-bold text-slate-600 flex items-center mr-1">
@@ -153,7 +128,7 @@
     </div>
 
     <!-- 統合配置一覧テーブル -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
         <div class="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
             <span class="font-bold text-slate-700 flex items-center space-x-1.5">
                 <span>📋</span>
@@ -286,8 +261,8 @@
     </div>
 
     <!-- 閲覧専用詳細モーダル (上部見切れ防止＆固定ヘッダー・フッター構造) -->
-    <div id="modal-item-detail" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex justify-center items-start sm:items-center p-3 sm:p-6 min-h-screen">
-        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 my-auto">
+    <div id="modal-item-detail" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex justify-center items-start sm:items-center p-3 sm:p-6 min-h-screen" role="dialog" aria-modal="true" aria-labelledby="detail-name">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-xl border border-slate-200 my-auto">
             <!-- 固定ヘッダー (見切れ防止) -->
             <div class="flex items-center justify-between border-b border-slate-200 p-4 shrink-0">
                 <div class="flex items-center space-x-2.5 min-w-0">
@@ -362,8 +337,8 @@
     </div>
 
     <!-- 配置 登録・編集兼用モーダル (2列対称グリッドレイアウト) -->
-    <div id="itemEditModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-5 shadow-2xl space-y-3.5 border border-slate-200">
+    <div id="itemEditModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modalFormTitle">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-5 shadow-xl space-y-3.5 border border-slate-200">
             <div class="flex items-center justify-between border-b border-slate-200 pb-2.5">
                 <h3 class="text-base font-bold text-slate-900 flex items-center space-x-1.5">
                     <span id="modalFormIcon">✏️</span>
@@ -386,7 +361,7 @@
                 <!-- 第1段: 配置種別 ＆ 配置状態 (横幅均等2列グリッド) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">配置種別 <span class="text-rose-500">*</span></label>
+                        <label class="block font-bold text-slate-700 mb-1">配置種別 <span class="text-red-500">*</span></label>
                         <input type="hidden" name="item_type" id="inputItemType" value="booth">
                         <div class="inline-flex rounded-lg border border-slate-300 bg-slate-100 p-0.5 w-full">
                             <button type="button" id="typeBtnBooth" data-type-val="booth"
@@ -402,7 +377,7 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">配置状態 <span class="text-rose-500">*</span></label>
+                        <label class="block font-bold text-slate-700 mb-1">配置状態 <span class="text-red-500">*</span></label>
                         <input type="hidden" name="status" id="inputItemStatus" value="confirmed">
                         <div class="inline-flex rounded-lg border border-slate-300 bg-slate-100 p-0.5 w-full">
                             <button type="button" id="statusBtnConfirmed" data-status-val="confirmed"
@@ -422,7 +397,7 @@
                 <!-- 第2段: 識別コード ＆ 所属エリア (2列グリッド) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label for="inputItemCode" class="block font-bold text-slate-700 mb-1">識別コード <span class="text-rose-500">*</span></label>
+                        <label for="inputItemCode" class="block font-bold text-slate-700 mb-1">識別コード <span class="text-red-500">*</span></label>
                         <input type="text" id="inputItemCode" name="code" required
                             class="w-full bg-slate-50 border border-slate-300 rounded-lg py-1.5 px-2.5 font-mono uppercase text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500"
                             placeholder="例: A01, B12, W-01, HQ-01">

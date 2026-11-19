@@ -1,11 +1,11 @@
 @props(['timetable' => null, 'statuses' => \App\Models\TimetableTask::STATUSES])
 
 <!-- タスク追加モーダル (再利用可能独立コンポーネント) -->
-<div id="task-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" data-action="close-modal"></div>
+<div id="task-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="task-create-modal-title">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-action="close-modal"></div>
 
     <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
-        <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
+        <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
 
             <!-- モーダルヘッダー (固定) -->
             <div class="shrink-0 px-5 py-3.5 bg-white border-b border-slate-100 flex items-center justify-between">
@@ -15,7 +15,7 @@
                     </div>
                     <div class="min-w-0">
                         <div class="flex items-center space-x-2">
-                            <h3 class="text-base font-bold text-slate-900 truncate">
+                            <h3 id="task-create-modal-title" class="text-base font-bold text-slate-900 truncate">
                                 新規作業タスク追加
                             </h3>
                             <span id="create-modal-lane-badge" class="px-2 py-0.5 rounded text-[11px] font-bold border bg-indigo-50 text-indigo-700 border-indigo-200 shrink-0">
@@ -51,7 +51,7 @@
                     <!-- 1. 作業タスク名 (1行全幅) -->
                     <div>
                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                            作業タスク名 <span class="text-rose-500">*</span>
+                            作業タスク名 <span class="text-red-500">*</span>
                         </label>
                         <input type="text"
                             id="create-modal-title"
@@ -65,7 +65,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                ⏱️ 開始時刻 <span class="text-rose-500">*</span>
+                                ⏱️ 開始時刻 <span class="text-red-500">*</span>
                             </label>
                             <input type="time"
                                 id="create-modal-start-time"
@@ -77,7 +77,7 @@
 
                         <div>
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                ⏱️ 終了時刻 <span class="text-rose-500">*</span>
+                                ⏱️ 終了時刻 <span class="text-red-500">*</span>
                             </label>
                             <input type="time"
                                 id="create-modal-end-time"
@@ -92,7 +92,7 @@
                     <div class="grid grid-cols-2 gap-3 items-end">
                         <div>
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                👥 必要人員 <span class="text-rose-500">*</span>
+                                👥 必要人員 <span class="text-red-500">*</span>
                             </label>
                             <div class="flex items-center space-x-2">
                                 <input type="number"
@@ -113,13 +113,13 @@
                         </div>
 
                         <div class="pb-0.5">
-                            <label class="inline-flex items-center space-x-2 cursor-pointer select-none px-3 py-1.5 bg-rose-50/60 hover:bg-rose-50 border border-rose-200/80 rounded-lg transition w-full">
+                            <label class="inline-flex items-center space-x-2 cursor-pointer select-none px-3 py-1.5 bg-red-50/60 hover:bg-red-50 border border-red-200/80 rounded-lg transition w-full">
                                 <input type="checkbox"
                                     id="create-modal-critical"
                                     name="is_critical"
                                     value="1"
-                                    class="rounded border-rose-300 text-rose-600 focus:ring-rose-500 h-4 w-4">
-                                <span class="text-xs font-bold text-rose-700">🚨 最優先タスク</span>
+                                    class="rounded border-red-300 text-red-600 focus:ring-red-500 h-4 w-4">
+                                <span class="text-xs font-bold text-red-700">🚨 最優先タスク</span>
                             </label>
                         </div>
                     </div>
@@ -139,7 +139,7 @@
 
                         <div>
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                📊 進行ステータス <span class="text-rose-500">*</span>
+                                📊 進行ステータス <span class="text-red-500">*</span>
                             </label>
                             <select
                                 id="create-modal-status"

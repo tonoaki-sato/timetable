@@ -14,7 +14,7 @@
                 </p>
             </div>
             <button type="button" id="btn-preset-road"
-                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition self-start sm:self-auto cursor-pointer">
+                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition self-start sm:self-auto cursor-pointer">
                 <span>⚡</span>
                 <span>プリセット: 10:00〜18:00 通行止め</span>
             </button>

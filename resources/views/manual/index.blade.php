@@ -16,11 +16,10 @@
                         class="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs">
                 </div>
                 <!-- 印刷ボタン -->
-                <button type="button" data-action="print"
-                    class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer print:hidden shrink-0">
+                <x-ui.button variant="header-action" data-action="print" class="print:hidden">
                     <span>🖨️</span>
                     <span>印刷 / PDF出力</span>
-                </button>
+                </x-ui.button>
             </x-slot:actions>
         </x-page-header>
 
@@ -1305,7 +1304,7 @@
     </div>
 
     <!-- 画像拡大表示モーダル (ライトボックス・CSP準拠) -->
-    <div id="imageModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-50 hidden flex flex-col items-center justify-center p-4">
+    <div id="imageModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex flex-col items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modalCaption">
         <div class="max-w-6xl w-full bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex flex-col max-h-[92vh]">
             <div class="px-4 py-2.5 bg-slate-800 border-b border-slate-700 flex items-center justify-between text-xs text-white">
                 <span id="modalCaption" class="font-bold flex items-center space-x-2">

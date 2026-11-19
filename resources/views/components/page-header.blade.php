@@ -42,5 +42,9 @@
         @endif
     </div>
 
+    @if($description)
+        <p class="lg:hidden text-[11px] text-slate-500 leading-snug pt-0.5">{{ $description }}</p>
+    @endif
+
     {{ $slot ?? '' }}
 </div>

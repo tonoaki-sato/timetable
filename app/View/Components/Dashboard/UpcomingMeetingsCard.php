@@ -68,7 +68,7 @@ class UpcomingMeetingsCard extends Component
         if ($meeting->start_date->isSameDay($this->now)) {
             return [
                 'text' => '本日開催',
-                'class' => 'bg-rose-50 text-rose-700 border-rose-200',
+                'class' => 'bg-red-50 text-red-700 border-red-200',
             ];
         }
 

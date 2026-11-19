@@ -1,6 +1,6 @@
 <!-- 組織登録・編集モーダル（左右2カラム・スタッフDnD・スクロールフリー設計） -->
-<div id="organization-form-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4" aria-modal="true" role="dialog">
-    <div class="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+<div id="organization-form-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4" aria-modal="true" role="dialog" aria-labelledby="form-modal-title">
+    <div class="relative w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transform transition-all">
         <!-- フォームタグ -->
         <form id="organization-form" method="POST" action="{{ route('organizations.store') }}">
             @csrf

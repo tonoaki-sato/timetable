@@ -1,11 +1,11 @@
 @props(['locations' => collect()])
 
 <!-- 新規搬出入パターン追加モーダル (独立コンポーネント) -->
-<div id="pattern-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" data-action="close-modal"></div>
+<div id="pattern-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="pattern-create-modal-title">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-action="close-modal"></div>
 
     <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
-        <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
+        <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
 
             <!-- モーダルヘッダー (固定) -->
             <div class="shrink-0 px-5 py-3.5 bg-white border-b border-slate-100 flex items-center justify-between">
@@ -14,7 +14,7 @@
                         🧩
                     </div>
                     <div class="min-w-0">
-                        <h3 class="text-base font-bold text-slate-900 truncate">
+                        <h3 id="pattern-create-modal-title" class="text-base font-bold text-slate-900 truncate">
                             新規搬出入パターンの作成
                         </h3>
                     </div>
@@ -36,7 +36,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div class="sm:col-span-2">
                             <label for="create_pattern_name" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                パターン名 <span class="text-rose-500">*</span>
+                                パターン名 <span class="text-red-500">*</span>
                             </label>
                             <input type="text"
                                 id="create_pattern_name"
@@ -48,7 +48,7 @@
 
                         <div>
                             <label for="create_pattern_target_type" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                主な対象区分 <span class="text-rose-500">*</span>
+                                主な対象区分 <span class="text-red-500">*</span>
                             </label>
                             <select id="create_pattern_target_type"
                                 name="target_type"
@@ -79,7 +79,7 @@
                             <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
                                 <span>📋</span>
                                 <span>構成ステップ一覧</span>
-                                <span class="text-rose-500">*</span>
+                                <span class="text-red-500">*</span>
                             </label>
                             <button type="button"
                                 data-action="add-pattern-step"

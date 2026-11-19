@@ -11,24 +11,19 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('calendar.index') }}"
-                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('calendar.index')">
                 <span>📅</span>
                 <span>カレンダー表示に切替</span>
-            </a>
-            <a href="{{ route('schedules.pdf', request()->query()) }}"
-                id="btn-download-schedule-pdf"
-                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0 cursor-pointer"
-                title="現在の表示条件でスケジュール一覧をA4縦PDFダウンロード">
+            </x-ui.button>
+            <x-ui.button variant="header-action" id="btn-download-schedule-pdf" :href="route('schedules.pdf', request()->query())" title="現在の表示条件でスケジュール一覧をA4縦PDFダウンロード">
                 <span>📄</span>
                 <span>年間スケジュール一覧PDF</span>
-            </a>
+            </x-ui.button>
             @can('create', App\Models\Schedule::class)
-            <a href="{{ route('schedules.create') }}"
-                class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('schedules.create')">
                 <span>➕</span>
                 <span>新規スケジュールを登録</span>
-            </a>
+            </x-ui.button>
             @endcan
         </x-slot:actions>
     </x-page-header>
@@ -50,7 +45,7 @@
     </div>
 
     <!-- 3. 検索・絞り込みフォーム & 表示区分トグルフィルター -->
-    <div class="bg-white p-3 sm:p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-2xs space-y-3">
         <!-- 表示区分切り替えフィルターバー（トグル方式） -->
         <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-3">
             <span class="text-xs font-bold text-slate-700 flex items-center mr-1">
@@ -100,13 +95,13 @@
                 <label for="search" class="block text-[11px] font-bold text-slate-600 mb-1">フリーワード</label>
                 <input type="text" id="search" name="search" value="{{ request('search') }}"
                     placeholder="予定名・場所・議題・特記等"
-                    class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
             <!-- ステータス -->
             <div>
                 <label for="status" class="block text-[11px] font-bold text-slate-600 mb-1">ステータス</label>
-                <select id="status" name="status" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <select id="status" name="status" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">すべてのステータス</option>
                     @foreach($statuses as $key => $label)
                     <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>
@@ -119,7 +114,7 @@
             <!-- 担当者 -->
             <div>
                 <label for="staff_id" class="block text-[11px] font-bold text-slate-600 mb-1">担当・主催スタッフ</label>
-                <select id="staff_id" name="staff_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <select id="staff_id" name="staff_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">すべてのスタッフ</option>
                     @foreach($staffs as $staff)
                     <option value="{{ $staff->id }}" {{ (string) request('staff_id') === (string) $staff->id ? 'selected' : '' }}>
@@ -131,11 +126,11 @@
 
             <!-- 検索 & リセットボタン -->
             <div class="flex items-end space-x-2">
-                <button type="submit" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition cursor-pointer">
+                <button type="submit" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition cursor-pointer">
                     🔍 絞り込み
                 </button>
                 <a href="{{ route('schedules.index') }}"
-                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-medium transition text-center">
+                    class="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition text-center">
                     リセット
                 </a>
             </div>
@@ -143,17 +138,17 @@
     </div>
 
     <!-- 4. スケジュール一覧テーブル -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full border-collapse text-left text-xs">
-                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 select-none">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold select-none">
                     <tr>
-                        <th class="px-4 py-2.5 font-bold whitespace-nowrap">開催日・期間</th>
-                        <th class="px-4 py-2.5 font-bold">タイトル・議題</th>
-                        <th class="px-4 py-2.5 font-bold whitespace-nowrap">場所</th>
-                        <th class="px-4 py-2.5 font-bold whitespace-nowrap">担当・主催</th>
-                        <th class="px-4 py-2.5 font-bold whitespace-nowrap text-center">状態</th>
-                        <th class="px-4 py-2.5 font-bold text-right whitespace-nowrap">操作</th>
+                        <th class="px-4 py-2.5 whitespace-nowrap">開催日・期間</th>
+                        <th class="px-4 py-2.5">タイトル・議題</th>
+                        <th class="px-4 py-2.5 whitespace-nowrap">場所</th>
+                        <th class="px-4 py-2.5 whitespace-nowrap">担当・主催</th>
+                        <th class="px-4 py-2.5 whitespace-nowrap text-center">状態</th>
+                        <th class="px-4 py-2.5 text-right whitespace-nowrap">操作</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -175,7 +170,7 @@
                                 <span class="text-indigo-600 font-medium text-[11px] ml-1">⏰ {{ $schedule->formatted_time_range }}</span>
                                 @endif
                                 @if($schedule->is_today)
-                                <span class="ml-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">本日</span>
+                                <span class="ml-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">本日</span>
                                 @endif
                             </div>
                         </td>
@@ -184,7 +179,7 @@
                         <td class="px-4 py-2.5">
                             <div class="flex items-center space-x-1.5 min-w-[200px]">
                                 <span class="text-sm shrink-0" title="{{ $schedule->is_linked_to_timetable ? '運行スケジュール' : $schedule->category_label }}">{{ $schedule->category_icon }}</span>
-                                <a href="{{ route('schedules.show', $schedule) }}" class="font-bold text-slate-900 hover:text-indigo-600 transition truncate">
+                                <a href="{{ route('schedules.show', $schedule) }}" class="font-bold text-slate-800 hover:text-indigo-600 hover:underline transition truncate">
                                     {{ $schedule->title }}
                                 </a>
                             </div>
@@ -192,7 +187,7 @@
 
                         <!-- 場所 -->
                         <td class="px-4 py-2.5 whitespace-nowrap text-slate-600">
-                            {{ $schedule->location ?: '-' }}
+                            {{ $schedule->location ?: '—' }}
                         </td>
 
                         <!-- 担当・主催 -->
@@ -203,7 +198,7 @@
                             <span class="text-[11px] text-slate-400 ml-1">({{ $schedule->assignee->affiliation }})</span>
                             @endif
                             @else
-                            <span class="text-slate-400 italic">未定</span>
+                            <span class="text-slate-400">未定</span>
                             @endif
                         </td>
 
@@ -218,12 +213,10 @@
                         <td class="px-4 py-2.5 whitespace-nowrap text-right">
                             <div class="flex items-center justify-end space-x-1.5">
                                 @can('update', $schedule)
-                                <a href="{{ route('schedules.edit', $schedule) }}"
-                                    class="inline-flex items-center space-x-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition"
-                                    title="編集">
+                                <x-ui.button variant="edit" size="xs" :href="route('schedules.edit', $schedule)" title="編集">
                                     <span>✏️</span>
                                     <span>編集</span>
-                                </a>
+                                </x-ui.button>
                                 @endcan
 
                                 @if($schedule->is_linked_to_timetable)
@@ -238,12 +231,10 @@
                                     data-confirm="予定「{{ $schedule->title }}」を削除しますか？">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit"
-                                        class="inline-flex items-center space-x-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition cursor-pointer"
-                                        title="削除">
+                                    <x-ui.button variant="delete" size="xs" type="submit" title="削除">
                                         <span>🗑️</span>
                                         <span>削除</span>
-                                    </button>
+                                    </x-ui.button>
                                 </form>
                                 @endcan
                                 @endif
@@ -252,9 +243,8 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-4 py-8 text-center text-slate-400">
-                            <span class="text-2xl block mb-2">📋</span>
-                            条件に一致するスケジュールはありません。
+                        <td colspan="6">
+                            <x-ui.empty-state icon="📋" title="条件に一致するスケジュールはありません。" />
                         </td>
                     </tr>
                     @endforelse

@@ -17,19 +17,7 @@
     </x-page-header>
 
     <div class="max-w-4xl mx-auto space-y-3.5">
-        @if($errors->any())
-        <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-medium">
-            <div class="font-bold mb-1 flex items-center space-x-1">
-                <span>⚠️</span>
-                <span>入力内容にエラーがあります</span>
-            </div>
-            <ul class="list-disc list-inside space-y-0.5">
-                @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
+        <x-ui.validation-errors title="入力内容にエラーがあります" />
 
         <!-- 入力フォーム -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-2xs p-5 sm:p-6">
@@ -40,7 +28,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="sm:col-span-2">
                     <label for="title" class="block text-xs font-bold text-slate-700 mb-1">
-                        タイトル（予定名・会議名） <span class="text-rose-500">*</span>
+                        タイトル（予定名・会議名） <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="title" name="title" value="{{ old('title') }}" required
                         placeholder="例: 第1回 幹事会、道路使用許可申請、出店者説明会など"
@@ -49,7 +37,7 @@
 
                 <div>
                     <label for="category" class="block text-xs font-bold text-slate-700 mb-1">
-                        区分（カテゴリ） <span class="text-rose-500">*</span>
+                        区分（カテゴリ） <span class="text-red-500">*</span>
                     </label>
                     <select id="category" name="category" required
                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -72,7 +60,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                         <label for="start_date" class="block text-[11px] font-bold text-slate-600 mb-1">
-                            開始日・開催日 <span class="text-rose-500">*</span>
+                            開始日・開催日 <span class="text-red-500">*</span>
                         </label>
                         <input type="date" id="start_date" name="start_date"
                             value="{{ old('start_date', $defaultDate) }}" required
@@ -136,7 +124,7 @@
 
                 <div>
                     <label for="status" class="block text-xs font-bold text-slate-700 mb-1">
-                        ステータス <span class="text-rose-500">*</span>
+                        ステータス <span class="text-red-500">*</span>
                     </label>
                     <select id="status" name="status" required
                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">

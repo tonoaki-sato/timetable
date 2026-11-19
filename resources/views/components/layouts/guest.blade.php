@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title }}</title>
+    <x-head-meta />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -34,7 +35,7 @@
 
         <!-- コピーライト -->
         <p class="mt-6 text-center text-xs text-slate-500 font-mono">
-            © 2026 まつり実行委員会 運行本部
+            © {{ now()->year }} まつり実行委員会 運行本部
         </p>
     </div>
 

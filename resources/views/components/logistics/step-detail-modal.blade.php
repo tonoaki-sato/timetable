@@ -1,9 +1,9 @@
 <!-- 個別搬出入ステップ詳細モーダル -->
-<div id="plan-detail-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" data-action="close-modal"></div>
+<div id="plan-detail-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="plan-detail-modal-title">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" data-action="close-modal"></div>
 
     <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
-        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
+        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden transform transition-all max-h-[calc(100vh-2.5rem)] flex flex-col">
 
             <!-- モーダルヘッダー (固定) -->
             <div class="shrink-0 px-5 py-3.5 bg-white border-b border-slate-100 flex items-center justify-between gap-2">
@@ -13,7 +13,7 @@
                     </div>
                     <div class="min-w-0">
                         <div class="flex items-center space-x-2 flex-wrap gap-y-1">
-                            <h3 class="text-base font-bold text-slate-900 truncate">
+                            <h3 id="plan-detail-modal-title" class="text-base font-bold text-slate-900 truncate">
                                 搬出入ステップ詳細
                             </h3>
                             <span id="detail_plan_equipment_name" class="px-2 py-0.5 rounded text-[11px] font-bold border bg-slate-50 text-slate-700 border-slate-200 truncate max-w-[220px]">
@@ -35,7 +35,7 @@
                 <div class="space-y-2">
                     <div class="flex items-center flex-wrap gap-1.5">
                         <span id="detail_plan_phase_badge" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border"></span>
-                        <span id="detail_plan_witness_badge" class="hidden inline-flex items-center px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200">立会</span>
+                        <span id="detail_plan_witness_badge" class="hidden inline-flex items-center px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-bold text-[10px] border border-red-200">立会</span>
                         <span id="detail_plan_status_badge" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border"></span>
                     </div>
                     <div id="detail_plan_title" class="text-sm sm:text-base font-bold text-slate-900 bg-slate-50/60 px-3 py-2 rounded-lg border border-slate-200/80">

@@ -31,7 +31,7 @@ enum EquipmentPlanStatus: string
             self::Planned => 'bg-slate-100 text-slate-700 border border-slate-200',
             self::InProgress => 'bg-amber-50 text-amber-800 border border-amber-200 animate-pulse',
             self::Completed => 'bg-emerald-50 text-emerald-800 border border-emerald-200',
-            self::Cancelled => 'bg-rose-50 text-rose-700 border border-rose-200',
+            self::Cancelled => 'bg-red-50 text-red-700 border border-red-200',
         };
     }
 

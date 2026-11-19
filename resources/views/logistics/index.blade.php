@@ -21,22 +21,16 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ $printUrl }}"
-               id="btn-download-logistics-pdf"
-               data-base-print-url="{{ route('timetables.logistics.print', $timetable) }}"
-               class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition whitespace-nowrap shrink-0"
-               title="画面で選択中の資材を反映した搬出入指示書兼現場チェックリストPDFをダウンロード">
+            <x-ui.button variant="header-action" id="btn-download-logistics-pdf" :href="$printUrl" data-base-print-url="{{ route('timetables.logistics.print', $timetable) }}" title="画面で選択中の資材を反映した搬出入指示書兼現場チェックリストPDFをダウンロード">
                 <span>📄</span>
                 <span>搬出入指示書PDF</span>
-            </a>
+            </x-ui.button>
 
             @can('create', \App\Models\EquipmentLogisticsPlan::class)
-                <button type="button"
-                    data-action="open-logistics-plan-create"
-                    class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
+                <x-ui.button variant="header-action" data-action="open-logistics-plan-create">
                     <span>➕</span>
                     <span>計画の新規作成</span>
-                </button>
+                </x-ui.button>
             @endcan
         </x-slot:actions>
     </x-page-header>
@@ -44,29 +38,7 @@
     <!-- 運行日コンテキストバー -->
     <x-timetable-context-bar :timetable="$timetable" active="logistics" />
 
-    <!-- アラートメッセージ -->
-    @if (session('status'))
-        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between">
-            <span>✅ {{ session('status') }}</span>
-        </div>
-    @endif
-
-    @if (session('success'))
-        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between">
-            <span>✅ {{ session('success') }}</span>
-        </div>
-    @endif
-
-    @if ($errors->any())
-        <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-1">
-            <div class="font-bold">⚠️ 入力内容に不備があります：</div>
-            <ul class="list-disc list-inside space-y-0.5">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    <x-ui.validation-errors title="入力内容に不備があります" />
 
     <!-- 表示資材切り替えフィルターバー -->
     <div class="print:hidden bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
@@ -243,7 +215,7 @@
                                                     {{ $plan->phase_label }}
                                                 </span>
                                                 @if($plan->witness_required)
-                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200" title="スタッフ立会必須">
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-bold text-[10px] border border-red-200" title="スタッフ立会必須">
                                                         立会
                                                     </span>
                                                 @endif
@@ -270,12 +242,12 @@
 
                                         <!-- 日付 -->
                                         <td class="px-3.5 py-2.5 font-mono text-xs whitespace-nowrap {{ $plan->target_date ? 'text-slate-700' : 'text-slate-400' }}">
-                                            {{ $plan->target_date?->format('Y-m-d') ?: '-' }}
+                                            {{ $plan->target_date?->format('Y-m-d') ?: '—' }}
                                         </td>
 
                                         <!-- 時間 -->
                                         <td class="px-3.5 py-2.5 font-mono text-xs whitespace-nowrap {{ $plan->formatted_time_range ? 'text-slate-700' : 'text-slate-400' }}">
-                                            {{ $plan->formatted_time_range ?: '-' }}
+                                            {{ $plan->formatted_time_range ?: '—' }}
                                         </td>
 
                                         <!-- 移動元 ➔ 移動先 -->

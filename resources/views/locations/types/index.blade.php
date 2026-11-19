@@ -7,48 +7,32 @@
         icon="🏷️"
         description="「コミュニティスペース」「駐車場」など、拠点の種別を追加・編集・整理できます。">
         <x-slot:breadcrumbs>
-            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>⏱️</span>
-                <span>運行情報一覧</span>
-            </a>
+            <span class="text-slate-500">🗂️ マスター管理</span>
             <span class="text-slate-300">/</span>
-            <span class="text-slate-800 font-bold truncate">🏷️ 拠点タイプマスタ管理</span>
+            <span class="text-slate-800 font-bold truncate">🏷️ 拠点タイプ管理</span>
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <a href="{{ route('timetables.index') }}"
-                class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition whitespace-nowrap shrink-0">
+            <x-ui.button variant="header-action" :href="route('timetables.index')">
                 <span>← 運行情報一覧に戻る</span>
-            </a>
-            <button type="button"
-                    data-action="open-type-modal"
-                    data-mode="create"
-                    data-store-url="{{ route('location-types.store') }}"
-                    class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap shrink-0">
+            </x-ui.button>
+            <x-ui.button variant="header-action" data-action="open-type-modal" data-mode="create" data-store-url="{{ route('location-types.store') }}">
                 <span>➕</span>
                 <span>新しいタイプを追加</span>
-            </button>
+            </x-ui.button>
         </x-slot:actions>
     </x-page-header>
 
-    @if($errors->any())
-        <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl">
-            <ul class="list-disc list-inside space-y-1">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    <x-ui.validation-errors title="入力内容を確認してください" />
 
     <!-- タイプ一覧テーブル -->
     <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs divide-y divide-slate-100">
-                <thead class="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-bold text-[11px]">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
                     <tr>
-                        <th class="py-2.5 px-4">表示名 (label)</th>
-                        <th class="py-2.5 px-4">内部処理用文字列 (name / slug)</th>
+                        <th class="py-2.5 px-4">拠点タイプ名</th>
+                        <th class="py-2.5 px-4">識別キー</th>
                         <th class="py-2.5 px-4">説明</th>
                         <th class="py-2.5 px-4 text-center">所属拠点数</th>
                         <th class="py-2.5 px-4 text-center">表示順</th>
@@ -85,29 +69,32 @@
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-400">無効</span>
                                 @endif
                             </td>
-                            <td class="py-2.5 px-4 text-right space-x-1 whitespace-nowrap">
-                                <button type="button"
+                            <td class="py-2.5 px-4 text-right whitespace-nowrap">
+                                <div class="inline-flex items-center space-x-1.5">
+                                    <x-ui.button variant="edit" size="xs"
                                         data-action="open-type-modal"
                                         data-mode="edit"
                                         data-update-url="{{ route('location-types.update', $type) }}"
-                                        data-type="{{ json_encode($type) }}"
-                                        class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[11px] font-bold transition cursor-pointer">
-                                    編集
-                                </button>
-                                @if($type->locations_count === 0)
-                                    <form method="POST" action="{{ route('location-types.destroy', $type) }}"
-                                          data-confirm="拠点タイプ「{{ $type->label }}」を削除しますか？" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[11px] font-medium transition cursor-pointer">
-                                            削除
-                                        </button>
-                                    </form>
-                                @else
-                                    <span class="text-[11px] text-slate-300 cursor-not-allowed" title="拠点が紐付いているため削除できません">
-                                        削除不可
-                                    </span>
-                                @endif
+                                        data-type="{{ json_encode($type) }}">
+                                        <span>✏️</span>
+                                        <span>編集</span>
+                                    </x-ui.button>
+                                    @if($type->locations_count === 0)
+                                        <form method="POST" action="{{ route('location-types.destroy', $type) }}"
+                                              data-confirm="拠点タイプ「{{ $type->label }}」を削除しますか？" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <x-ui.button variant="delete" size="xs" type="submit">
+                                                <span>🗑️</span>
+                                                <span>削除</span>
+                                            </x-ui.button>
+                                        </form>
+                                    @else
+                                        <span class="px-2 py-1 text-[11px] text-slate-400 cursor-not-allowed" title="拠点が紐付いているため削除できません">
+                                            🔒 使用中
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -125,14 +112,14 @@
 </div>
 
 <!-- タイプ追加・編集モーダル (既存標準モーダルデザイン・CSP準拠) -->
-<div id="type-modal" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-left space-y-4">
+<div id="type-modal" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-labelledby="type-modal-title">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl border border-slate-200 text-left space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 id="type-modal-title" class="text-sm sm:text-base font-bold text-slate-900 flex items-center space-x-2">
                 <span>🏷️</span>
                 <span>拠点タイプの追加</span>
             </h3>
-            <button type="button" data-action="close-type-modal" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">✕</button>
+            <button type="button" data-action="close-type-modal" aria-label="閉じる" class="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer">✕</button>
         </div>
 
         <form id="type-modal-form" method="POST" action="{{ route('location-types.store') }}" class="space-y-4">
@@ -140,14 +127,14 @@
             <div id="type-form-method"></div>
 
             <div>
-                <label for="type_label" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">表示名 (label) <span class="text-rose-500">*</span></label>
+                <label for="type_label" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">拠点タイプ名 <span class="text-red-500">*</span></label>
                 <input type="text" name="label" id="type_label" required placeholder="例: 駐車場, コミュニティスペース, 広場"
                        class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
             <div>
                 <label for="type_name" class="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1">
-                    内部処理用文字列 (name / slug) <span class="text-rose-500">*</span>
+                    識別キー <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="name" id="type_name" required placeholder="例: parking, community_space, plaza"
                        class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
