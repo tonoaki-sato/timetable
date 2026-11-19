@@ -123,4 +123,16 @@ interface TimetableRepositoryInterface
      * 作業タスク管理画面用のリレーションをロード
      */
     public function loadForTasksIndex(Timetable $timetable): Timetable;
+
+    /**
+     * 複製元選択用の全タイムテーブル一覧を取得（日付降順・関連件数付き）
+     *
+     * @return Collection<int, Timetable>
+     */
+    public function getAllForCloneSelection(): Collection;
+
+    /**
+     * 複製元タイムテーブルを関連件数付きで取得
+     */
+    public function findForClone(int $id): ?Timetable;
 }

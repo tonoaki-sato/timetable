@@ -40,6 +40,22 @@ class StoreTimetableRequest extends FormRequest
                 'create_default_lanes' => $this->boolean('create_default_lanes'),
             ]);
         }
+
+        foreach ([
+            'copy_lanes',
+            'copy_lane_staff',
+            'copy_tasks',
+            'copy_task_assignments',
+            'copy_locations',
+            'copy_logistics_plans',
+            'copy_site_layouts',
+        ] as $copyFlag) {
+            if ($this->has($copyFlag)) {
+                $this->merge([
+                    $copyFlag => $this->boolean($copyFlag),
+                ]);
+            }
+        }
     }
 
     /**
@@ -67,6 +83,14 @@ class StoreTimetableRequest extends FormRequest
             'festival_periods.*.label' => ['required_with:festival_periods', 'string', 'max:50'],
             'festival_periods.*.status' => ['nullable', 'string', 'max:30'],
             'create_default_lanes' => ['nullable', 'boolean'],
+            'source_timetable_id' => ['nullable', 'integer', 'exists:timetables,id'],
+            'copy_lanes' => ['nullable', 'boolean'],
+            'copy_lane_staff' => ['nullable', 'boolean'],
+            'copy_tasks' => ['nullable', 'boolean'],
+            'copy_task_assignments' => ['nullable', 'boolean'],
+            'copy_locations' => ['nullable', 'boolean'],
+            'copy_logistics_plans' => ['nullable', 'boolean'],
+            'copy_site_layouts' => ['nullable', 'boolean'],
         ];
     }
 
@@ -84,6 +108,7 @@ class StoreTimetableRequest extends FormRequest
             'start_time' => '運行開始時刻',
             'end_time' => '運行終了時刻',
             'status' => 'ステータス',
+            'source_timetable_id' => '複製元の運行情報',
             'road_periods' => '道路状況設定',
             'road_periods.*.start_time' => '道路規制の開始時刻',
             'road_periods.*.end_time' => '道路規制の終了時刻',

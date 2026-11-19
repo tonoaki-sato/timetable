@@ -245,4 +245,33 @@ class TimetableRepository implements TimetableRepositoryInterface
             },
         ]);
     }
+
+    #[Override]
+    public function getAllForCloneSelection(): Collection
+    {
+        return Timetable::withCount([
+            'lanes',
+            'tasks',
+            'locations',
+            'logisticsPlans',
+            'layoutItems',
+            'placements',
+        ])
+            ->orderBy('target_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
+    #[Override]
+    public function findForClone(int $id): ?Timetable
+    {
+        return Timetable::withCount([
+            'lanes',
+            'tasks',
+            'locations',
+            'logisticsPlans',
+            'layoutItems',
+            'placements',
+        ])->find($id);
+    }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Timetable\CloneTimetableAction;
+use App\DTOs\Timetable\CloneTimetableOptionsDTO;
 use App\Http\Requests\StoreTimetableRequest;
 use App\Http\Requests\UpdateTimetableRequest;
 use App\Models\Timetable;
@@ -15,7 +17,8 @@ class TimetableController extends Controller
 {
     public function __construct(
         protected TimetableService $timetableService,
-        protected TimetableOverviewService $timetableOverviewService
+        protected TimetableOverviewService $timetableOverviewService,
+        protected CloneTimetableAction $cloneTimetableAction
     ) {}
 
     /**
@@ -39,9 +42,16 @@ class TimetableController extends Controller
     {
         $this->authorize('create', Timetable::class);
 
+        $sourceTimetableId = $request->integer('source_timetable_id');
+        $sourceTimetable = $sourceTimetableId > 0
+            ? $this->timetableService->findForClone($sourceTimetableId)
+            : null;
+
         return view('timetables.create', [
             'statuses' => Timetable::STATUSES,
             'defaultDate' => $request->input('target_date', now()->toDateString()),
+            'cloneSourceOptions' => $this->timetableService->getAllForCloneSelection(),
+            'sourceTimetable' => $sourceTimetable,
         ]);
     }
 
@@ -52,8 +62,23 @@ class TimetableController extends Controller
     {
         $this->authorize('create', Timetable::class);
 
+        $validated = $request->validated();
+
+        if (! empty($validated['source_timetable_id'])) {
+            $options = CloneTimetableOptionsDTO::fromValidated($validated);
+            $result = $this->cloneTimetableAction->execute($validated, $options, $request->user());
+            $timetable = $result['timetable'];
+            $counts = $result['counts'];
+
+            return redirect()->route('timetables.show', $timetable)
+                ->with(
+                    'success',
+                    "過去の運行情報をもとに「{$timetable->name}」を作成しました（担当班 {$counts['lanes']}件 / タスク {$counts['tasks']}件 / 拠点 {$counts['locations']}件 / 搬出入 {$counts['logistics_plans']}件 / 配置 {$counts['layout_items']}件 / 白地図 {$counts['placements']}件を引き継ぎ）。"
+                );
+        }
+
         $timetable = $this->timetableService->createTimetable(
-            $request->validated(),
+            $validated,
             $request->user()
         );
 

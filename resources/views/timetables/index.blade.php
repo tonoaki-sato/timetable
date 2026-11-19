@@ -133,6 +133,16 @@
                                     </div>
                                 </details>
 
+                                <!-- 複製リンク -->
+                                @can('create', App\Models\Timetable::class)
+                                <a href="{{ route('timetables.create', ['source_timetable_id' => $timetable->id]) }}"
+                                    class="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-300 hover:border-indigo-300 rounded-lg text-xs font-bold transition whitespace-nowrap"
+                                    title="この運行情報をもとに新しく運行情報を作成する">
+                                    <span>📋</span>
+                                    <span>複製</span>
+                                </a>
+                                @endcan
+
                                 <!-- 編集リンク -->
                                 @can('update', $timetable)
                                 <x-ui.button variant="edit" size="xs" :href="route('timetables.edit', $timetable)">

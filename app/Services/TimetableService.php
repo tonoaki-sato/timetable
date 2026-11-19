@@ -95,6 +95,24 @@ class TimetableService
     }
 
     /**
+     * 複製元選択用の全タイムテーブル一覧を取得
+     *
+     * @return Collection<int, Timetable>
+     */
+    public function getAllForCloneSelection(): Collection
+    {
+        return $this->timetableRepository->getAllForCloneSelection();
+    }
+
+    /**
+     * 複製元タイムテーブルを関連件数付きで取得
+     */
+    public function findForClone(int $id): ?Timetable
+    {
+        return $this->timetableRepository->findForClone($id);
+    }
+
+    /**
      * 新規タイムテーブルの作成
      *
      * @param  array<string, mixed>  $data

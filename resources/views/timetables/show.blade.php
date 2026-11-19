@@ -17,6 +17,13 @@
 
         <x-slot:actions>
             <div class="flex items-center space-x-2 shrink-0">
+                @can('create', App\Models\Timetable::class)
+                <x-ui.button variant="header-action" :href="route('timetables.create', ['source_timetable_id' => $timetable->id])">
+                    <span>📋</span>
+                    <span>この運行から新規作成</span>
+                </x-ui.button>
+                @endcan
+
                 @can('update', $timetable)
                 <x-ui.button variant="header-action" :href="route('timetables.edit', $timetable)">
                     <span>✏️</span>

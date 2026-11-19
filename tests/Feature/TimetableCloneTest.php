@@ -1,0 +1,445 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Enums\BoothCategory;
+use App\Enums\BoothType;
+use App\Enums\LayoutItemStatus;
+use App\Enums\LayoutItemType;
+use App\Models\Equipment;
+use App\Models\EquipmentLogisticsPlan;
+use App\Models\Lane;
+use App\Models\LaneRequest;
+use App\Models\LayoutArea;
+use App\Models\LayoutItem;
+use App\Models\LayoutMap;
+use App\Models\Location;
+use App\Models\LocationSchedule;
+use App\Models\LocationType;
+use App\Models\Schedule;
+use App\Models\SiteBaseMap;
+use App\Models\SiteMapPlacement;
+use App\Models\Staff;
+use App\Models\StaffCheckIn;
+use App\Models\TaskStaffAssignment;
+use App\Models\Timetable;
+use App\Models\TimetableTask;
+use App\Models\User;
+use App\Models\Vendor;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class TimetableCloneTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $operator;
+
+    private User $viewer;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->operator = User::factory()->create([
+            'role' => 'operator',
+            'is_active' => true,
+        ]);
+
+        $this->viewer = User::factory()->create([
+            'role' => 'viewer',
+            'is_active' => true,
+        ]);
+    }
+
+    /**
+     * 複製元データを一式生成するヘルパー
+     *
+     * @return array<string, mixed>
+     */
+    private function createSourceTimetableDataset(): array
+    {
+        $sourceTimetable = Timetable::factory()->create([
+            'name' => '2025年本祭 1日目',
+            'target_date' => '2025-10-18',
+            'start_time' => '08:00:00',
+            'end_time' => '18:00:00',
+            'status' => 'completed',
+            'description' => '前年運行の注意事項',
+            'road_periods' => [
+                ['start_time' => '10:00', 'end_time' => '17:00', 'label' => '歩行者天国', 'status' => 'closed'],
+            ],
+            'festival_periods' => [
+                ['start_time' => '11:00', 'end_time' => '16:30', 'label' => '本祭開催', 'status' => 'active'],
+            ],
+            'created_by' => $this->operator->id,
+        ]);
+
+        $leadStaff = Staff::factory()->create(['name' => '山田 班長', 'is_active' => true]);
+        $fixedStaff = Staff::factory()->create(['name' => '佐藤 固定', 'is_active' => true]);
+        $assignStaff = Staff::factory()->create(['name' => '鈴木 配置', 'is_active' => true]);
+        $absentStaff = Staff::factory()->create(['name' => '高橋 欠席', 'is_active' => true]);
+
+        $lane = Lane::factory()->create([
+            'timetable_id' => $sourceTimetable->id,
+            'name' => 'カラーコーン班',
+            'icon' => '🔺',
+            'color' => 'amber',
+            'lead_staff_id' => $leadStaff->id,
+            'display_order' => 10,
+        ]);
+        $lane->fixedStaff()->sync([$fixedStaff->id]);
+
+        $task = TimetableTask::factory()->create([
+            'timetable_id' => $sourceTimetable->id,
+            'lane_id' => $lane->id,
+            'title' => 'コーン設置',
+            'start_time' => '08:30:00',
+            'end_time' => '09:30:00',
+            'required_people_count' => 3,
+            'status' => 'completed',
+        ]);
+
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $task->id,
+            'staff_id' => $assignStaff->id,
+            'role_description' => 'リーダー補助',
+            'attendance_status' => 'completed',
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $task->id,
+            'staff_id' => $absentStaff->id,
+            'attendance_status' => 'absent',
+        ]);
+
+        $locationType = LocationType::factory()->create();
+        $locationA = Location::factory()->create([
+            'timetable_id' => $sourceTimetable->id,
+            'location_type_id' => $locationType->id,
+            'name' => '番所地下倉庫',
+            'display_order' => 10,
+        ]);
+        $locationB = Location::factory()->create([
+            'timetable_id' => $sourceTimetable->id,
+            'location_type_id' => $locationType->id,
+            'name' => 'メイン通り本部',
+            'display_order' => 20,
+        ]);
+
+        LocationSchedule::create([
+            'location_id' => $locationA->id,
+            'start_at' => '2025-10-18 07:00:00',
+            'end_at' => '2025-10-18 19:00:00',
+            'availability_status' => 'available',
+            'title' => '倉庫鍵開放時間',
+        ]);
+
+        $equipment = Equipment::factory()->create(['name' => 'カラーコーン']);
+        EquipmentLogisticsPlan::create([
+            'timetable_id' => $sourceTimetable->id,
+            'equipment_id' => $equipment->id,
+            'target_date' => '2025-10-17',
+            'day_phase' => 'pre_day',
+            'action_type' => 'storage_out',
+            'title' => '前日倉庫出し',
+            'quantity' => 20,
+            'start_time' => '13:00:00',
+            'end_time' => '14:00:00',
+            'from_location' => '番所地下倉庫',
+            'to_location' => 'メイン通り本部',
+            'from_location_id' => $locationA->id,
+            'to_location_id' => $locationB->id,
+            'operator_type' => 'committee',
+            'witness_required' => false,
+            'status' => 'completed',
+        ]);
+
+        $vendor = Vendor::create(['name' => '商店街カフェ']);
+        $layoutMap = LayoutMap::create([
+            'timetable_id' => $sourceTimetable->id,
+            'name' => 'メイン通り配置図',
+            'version_tag' => '確定版',
+            'created_by' => $this->operator->id,
+        ]);
+        $layoutArea = LayoutArea::create([
+            'layout_map_id' => $layoutMap->id,
+            'location_id' => $locationB->id,
+            'zone_code' => 'MAIN_A',
+            'name' => 'メイン通りA列',
+            'display_order' => 10,
+        ]);
+        $layoutItem = LayoutItem::create([
+            'layout_map_id' => $layoutMap->id,
+            'layout_area_id' => $layoutArea->id,
+            'item_type' => LayoutItemType::Booth,
+            'code' => 'A-01',
+            'name' => 'カフェブース',
+            'status' => LayoutItemStatus::Confirmed,
+            'category' => BoothCategory::GozaGeneralGoods->value,
+            'booth_type' => BoothType::Tent->value,
+            'vendor_id' => $vendor->id,
+            'display_order' => 1,
+        ]);
+
+        $siteBaseMap = SiteBaseMap::create([
+            'timetable_id' => $sourceTimetable->id,
+            'name' => '平面図 1/400 A3',
+            'cad_version' => '260927',
+            'paper_size' => 'A3',
+            'scale_ratio' => 7.0866,
+            'width_meters' => 118.8,
+            'height_meters' => 168.0,
+            'svg_path' => 'maps/shopping_street_base_map_260813.svg',
+            'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
+            'viewbox' => '0 0 842 1191',
+            'is_active' => true,
+        ]);
+        SiteMapPlacement::create([
+            'site_base_map_id' => $siteBaseMap->id,
+            'layout_item_id' => $layoutItem->id,
+            'shape_type' => 'booth_tent',
+            'display_text' => 'A-01 カフェ',
+            'color_theme' => 'indigo',
+            'pos_x' => 120.50,
+            'pos_y' => 240.25,
+            'width' => 30.00,
+            'height' => 20.00,
+            'rotation' => 0,
+            'z_index' => 10,
+        ]);
+
+        // 当日運用ログ（複製対象外）
+        StaffCheckIn::create([
+            'timetable_id' => $sourceTimetable->id,
+            'staff_id' => $leadStaff->id,
+            'checked_in_at' => '2025-10-18 07:45:00',
+        ]);
+        LaneRequest::create([
+            'timetable_id' => $sourceTimetable->id,
+            'lane_id' => $lane->id,
+            'timetable_task_id' => $task->id,
+            'staff_id' => $leadStaff->id,
+            'request_type' => 'staffing',
+            'requested_count' => 2,
+            'status' => 'pending',
+            'reason' => '前年応援要請',
+        ]);
+
+        return compact('sourceTimetable', 'leadStaff', 'fixedStaff', 'assignStaff', 'absentStaff', 'vendor');
+    }
+
+    /**
+     * 一覧画面および詳細画面に複製導線が表示され、新規登録画面で複製元プリセットとVite JSがレンダリングされること
+     */
+    public function test_clone_entry_links_and_preset_create_form_render_cleanly(): void
+    {
+        $dataset = $this->createSourceTimetableDataset();
+        $source = $dataset['sourceTimetable'];
+
+        // 一覧画面に複製リンクが表示される
+        $indexResponse = $this->actingAs($this->operator)->get(route('timetables.index'));
+        $indexResponse->assertOk()
+            ->assertSee(route('timetables.create', ['source_timetable_id' => $source->id]));
+
+        // 詳細画面に複製導線ボタンが表示される
+        $showResponse = $this->actingAs($this->operator)->get(route('timetables.show', $source));
+        $showResponse->assertOk()
+            ->assertSee(route('timetables.create', ['source_timetable_id' => $source->id]))
+            ->assertSee('この運行から新規作成');
+
+        // 複製元指定で新規登録画面を開くとプリセット・チェックボックス・Viteスクリプトが描画される
+        $createResponse = $this->actingAs($this->operator)
+            ->get(route('timetables.create', ['source_timetable_id' => $source->id]));
+
+        $createResponse->assertOk()
+            ->assertSee('過去の運行情報をもとに作成')
+            ->assertSee('2025年本祭 1日目 (複製)')
+            ->assertSee('歩行者天国')
+            ->assertSee('本祭開催')
+            ->assertSee('id="source_timetable_id"', false)
+            ->assertSee('id="copy_lanes"', false)
+            ->assertSee('id="copy_site_layouts"', false)
+            ->assertSee('timetable-create');
+
+        // CSP準拠検証（インラインスクリプト・インラインイベント・インラインスタイルなし）
+        $content = $createResponse->getContent();
+        $this->assertDoesNotMatchRegularExpression('/<script(?![^>]*(?:\bsrc=|\bnonce=))[^>]*>/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/\sstyle=/i', $content);
+    }
+
+    /**
+     * 過去の運行情報をもとに全データをディープコピーし、IDリマップ・日付シフト・ステータス初期化が行われること
+     */
+    public function test_can_clone_timetable_with_all_related_data_remapped_and_reset(): void
+    {
+        $dataset = $this->createSourceTimetableDataset();
+        $source = $dataset['sourceTimetable'];
+
+        // 2025-10-18 から 2026-10-18（+365日）へ複製
+        $response = $this->actingAs($this->operator)->post(route('timetables.store'), [
+            'source_timetable_id' => $source->id,
+            'target_date' => '2026-10-18',
+            'status' => 'draft',
+            'name' => '2026年本祭 1日目',
+            'start_time' => '08:00',
+            'end_time' => '18:00',
+            'description' => '2026年版の注意事項',
+            'road_periods' => [
+                ['start_time' => '10:00', 'end_time' => '17:00', 'label' => '歩行者天国', 'status' => 'closed'],
+            ],
+            'festival_periods' => [
+                ['start_time' => '11:00', 'end_time' => '16:30', 'label' => '本祭開催', 'status' => 'active'],
+            ],
+            'copy_lanes' => '1',
+            'copy_lane_staff' => '1',
+            'copy_tasks' => '1',
+            'copy_task_assignments' => '1',
+            'copy_locations' => '1',
+            'copy_logistics_plans' => '1',
+            'copy_site_layouts' => '1',
+        ]);
+
+        $newTimetable = Timetable::where('target_date', '2026-10-18')->first();
+        $this->assertNotNull($newTimetable);
+        $response->assertRedirect(route('timetables.show', $newTimetable));
+        $response->assertSessionHas('success');
+
+        // 1. Timetable本体とSchedule同期
+        $this->assertSame('2026年本祭 1日目', $newTimetable->name);
+        $this->assertSame('draft', $newTimetable->status);
+        $this->assertNotNull(Schedule::where('timetable_id', $newTimetable->id)->first());
+
+        // 2. Lane & 固定スタッフ
+        $newLane = Lane::where('timetable_id', $newTimetable->id)->first();
+        $this->assertNotNull($newLane);
+        $this->assertSame('カラーコーン班', $newLane->name);
+        $this->assertSame($dataset['leadStaff']->id, $newLane->lead_staff_id);
+        $this->assertTrue($newLane->fixedStaff()->where('staff_id', $dataset['fixedStaff']->id)->exists());
+
+        // 3. TimetableTask (lane_id リマップ & status=not_started) & Assignment (absent除外 & assigned初期化)
+        $newTask = TimetableTask::where('timetable_id', $newTimetable->id)->first();
+        $this->assertNotNull($newTask);
+        $this->assertSame($newLane->id, $newTask->lane_id);
+        $this->assertSame('not_started', $newTask->status);
+        $this->assertSame(1, $newTask->assignments()->count());
+        $newAssignment = $newTask->assignments()->first();
+        $this->assertSame($dataset['assignStaff']->id, $newAssignment->staff_id);
+        $this->assertSame('assigned', $newAssignment->attendance_status);
+
+        // 4. Location & LocationSchedule (日付+365日シフト & unavailableリセット)
+        $newLocA = Location::where('timetable_id', $newTimetable->id)->where('name', '番所地下倉庫')->first();
+        $newLocB = Location::where('timetable_id', $newTimetable->id)->where('name', 'メイン通り本部')->first();
+        $this->assertNotNull($newLocA);
+        $this->assertNotNull($newLocB);
+        $newLocSchedule = $newLocA->schedules()->first();
+        $this->assertNotNull($newLocSchedule);
+        $this->assertSame('2026-10-18 07:00:00', $newLocSchedule->start_at->format('Y-m-d H:i:s'));
+        $this->assertSame('unavailable', $newLocSchedule->availability_status);
+
+        // 5. EquipmentLogisticsPlan (拠点IDリマップ・日付+365日シフト・plannedリセット)
+        $newPlan = EquipmentLogisticsPlan::where('timetable_id', $newTimetable->id)->first();
+        $this->assertNotNull($newPlan);
+        $this->assertSame('2026-10-17', $newPlan->target_date->format('Y-m-d'));
+        $this->assertSame($newLocA->id, $newPlan->from_location_id);
+        $this->assertSame($newLocB->id, $newPlan->to_location_id);
+        $this->assertSame('planned', $newPlan->status);
+
+        // 6. LayoutMap / LayoutArea / LayoutItem (vendor_id維持・tentativeリセット) & SiteMapPlacement (layout_item_id リマップ)
+        $newLayoutMap = LayoutMap::where('timetable_id', $newTimetable->id)->first();
+        $this->assertNotNull($newLayoutMap);
+        $newArea = LayoutArea::where('layout_map_id', $newLayoutMap->id)->first();
+        $this->assertNotNull($newArea);
+        $this->assertSame($newLocB->id, $newArea->location_id);
+        $newItem = LayoutItem::where('layout_map_id', $newLayoutMap->id)->first();
+        $this->assertNotNull($newItem);
+        $this->assertSame($dataset['vendor']->id, $newItem->vendor_id);
+        $this->assertSame(LayoutItemStatus::Tentative, $newItem->status);
+
+        $newBaseMap = SiteBaseMap::where('timetable_id', $newTimetable->id)->first();
+        $this->assertNotNull($newBaseMap);
+        $newPlacement = SiteMapPlacement::where('site_base_map_id', $newBaseMap->id)->first();
+        $this->assertNotNull($newPlacement);
+        $this->assertSame($newItem->id, $newPlacement->layout_item_id);
+
+        // 7. 当日運用ログ (StaffCheckIn / LaneRequest) は複製されないこと
+        $this->assertSame(0, StaffCheckIn::where('timetable_id', $newTimetable->id)->count());
+        $this->assertSame(0, LaneRequest::where('timetable_id', $newTimetable->id)->count());
+    }
+
+    /**
+     * 個別引き継ぎオプションをOFFにした場合は対象データが複製されないこと
+     */
+    public function test_clone_respects_disabled_options(): void
+    {
+        $dataset = $this->createSourceTimetableDataset();
+        $source = $dataset['sourceTimetable'];
+
+        $this->actingAs($this->operator)->post(route('timetables.store'), [
+            'source_timetable_id' => $source->id,
+            'target_date' => '2026-10-19',
+            'status' => 'draft',
+            'name' => '2026年 最小複製',
+            'start_time' => '09:00',
+            'end_time' => '17:00',
+            'copy_lanes' => '1',
+            'copy_lane_staff' => '0',
+            'copy_tasks' => '1',
+            'copy_task_assignments' => '0',
+            'copy_locations' => '0',
+            'copy_logistics_plans' => '0',
+            'copy_site_layouts' => '0',
+        ])->assertRedirect();
+
+        $newTimetable = Timetable::where('target_date', '2026-10-19')->firstOrFail();
+
+        // 担当班とタスクはコピーされるが、班長・固定スタッフ・タスクアサインはコピーされない
+        $newLane = Lane::where('timetable_id', $newTimetable->id)->first();
+        $this->assertNotNull($newLane);
+        $this->assertNull($newLane->lead_staff_id);
+        $this->assertSame(0, $newLane->fixedStaff()->count());
+
+        $newTask = TimetableTask::where('timetable_id', $newTimetable->id)->first();
+        $this->assertNotNull($newTask);
+        $this->assertSame(0, $newTask->assignments()->count());
+
+        // 拠点・搬出入・配置計画・白地図はコピーされない
+        $this->assertSame(0, Location::where('timetable_id', $newTimetable->id)->count());
+        $this->assertSame(0, EquipmentLogisticsPlan::where('timetable_id', $newTimetable->id)->count());
+        $this->assertSame(0, LayoutMap::where('timetable_id', $newTimetable->id)->count());
+        $this->assertSame(0, SiteBaseMap::where('timetable_id', $newTimetable->id)->count());
+    }
+
+    /**
+     * 存在しない複製元IDや重複開催日ではバリデーションエラーとなり、権限のない閲覧ユーザーは403となること
+     */
+    public function test_clone_validation_and_authorization(): void
+    {
+        $dataset = $this->createSourceTimetableDataset();
+        $source = $dataset['sourceTimetable'];
+
+        // 閲覧専用ユーザーは403
+        $this->actingAs($this->viewer)
+            ->post(route('timetables.store'), [
+                'source_timetable_id' => $source->id,
+                'target_date' => '2026-10-20',
+                'status' => 'draft',
+                'name' => '権限なしテスト',
+                'start_time' => '08:00',
+                'end_time' => '18:00',
+            ])
+            ->assertForbidden();
+
+        // 存在しない複製元ID・同一開催日でバリデーションエラー
+        $this->actingAs($this->operator)
+            ->post(route('timetables.store'), [
+                'source_timetable_id' => 999999,
+                'target_date' => '2025-10-18',
+                'status' => 'draft',
+                'name' => 'エラーテスト',
+                'start_time' => '08:00',
+                'end_time' => '18:00',
+            ])
+            ->assertSessionHasErrors(['source_timetable_id', 'target_date']);
+    }
+}
