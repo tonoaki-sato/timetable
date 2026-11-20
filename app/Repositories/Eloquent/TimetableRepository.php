@@ -90,14 +90,6 @@ class TimetableRepository implements TimetableRepositoryInterface
     public function getFiltered(?string $status = null): Collection
     {
         $query = Timetable::query()
-            ->withCount([
-                'lanes',
-                'tasks',
-                'locations',
-                'logisticsPlans',
-                'layoutItems',
-                'placements',
-            ])
             ->orderBy('target_date', 'asc');
 
         if ($status) {

@@ -61,10 +61,7 @@
                                     <input type="checkbox" id="modal_copy_lanes" name="copy_lanes" value="1" checked
                                         class="w-4 h-4 mt-0.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
                                     <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-slate-900 flex items-center justify-between">
-                                            <span>🏷️ 担当班（レーン）</span>
-                                            <span id="badge-clone-lanes-count" class="font-mono text-[10px] text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">0件</span>
-                                        </div>
+                                        <div class="font-bold text-slate-900">🏷️ 担当班（レーン）</div>
                                         <p class="text-[10px] text-slate-500 mt-0.5">班名・色・アイコン・表示順</p>
                                     </div>
                                 </label>
@@ -86,10 +83,7 @@
                                     <input type="checkbox" id="modal_copy_tasks" name="copy_tasks" value="1" checked
                                         class="w-4 h-4 mt-0.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
                                     <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-slate-900 flex items-center justify-between">
-                                            <span>📝 作業タスク</span>
-                                            <span id="badge-clone-tasks-count" class="font-mono text-[10px] text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">0件</span>
-                                        </div>
+                                        <div class="font-bold text-slate-900">📝 作業タスク</div>
                                         <p class="text-[10px] text-slate-500 mt-0.5">時間枠・必要人数（未着手に初期化）</p>
                                     </div>
                                 </label>
@@ -111,10 +105,7 @@
                                     <input type="checkbox" id="modal_copy_locations" name="copy_locations" value="1" checked
                                         class="w-4 h-4 mt-0.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
                                     <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-slate-900 flex items-center justify-between">
-                                            <span>📍 拠点スケジュール</span>
-                                            <span id="badge-clone-locations-count" class="font-mono text-[10px] text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">0件</span>
-                                        </div>
+                                        <div class="font-bold text-slate-900">📍 拠点スケジュール</div>
                                         <p class="text-[10px] text-slate-500 mt-0.5">日付を新開催日に自動シフト</p>
                                     </div>
                                 </label>
@@ -125,10 +116,7 @@
                                     <input type="checkbox" id="modal_copy_logistics_plans" name="copy_logistics_plans" value="1" checked
                                         class="w-4 h-4 mt-0.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
                                     <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-slate-900 flex items-center justify-between">
-                                            <span>🚚 資材搬出入計画</span>
-                                            <span id="badge-clone-logistics-count" class="font-mono text-[10px] text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">0件</span>
-                                        </div>
+                                        <div class="font-bold text-slate-900">🚚 資材搬出入計画</div>
                                         <p class="text-[10px] text-slate-500 mt-0.5">日付を自動シフト（計画中に初期化）</p>
                                     </div>
                                 </label>
@@ -139,10 +127,7 @@
                                     <input type="checkbox" id="modal_copy_site_layouts" name="copy_site_layouts" value="1" checked
                                         class="w-4 h-4 mt-0.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
                                     <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-slate-900 flex items-center justify-between">
-                                            <span>🗺️ 現場配置計画＆白地図配置</span>
-                                            <span id="badge-clone-layouts-count" class="font-mono text-[10px] text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">0件</span>
-                                        </div>
+                                        <div class="font-bold text-slate-900">🗺️ 現場配置計画＆白地図配置</div>
                                         <p class="text-[10px] text-slate-500 mt-0.5">エリア・ブース・設備・CAD図面配置を引き継ぐ</p>
                                     </div>
                                 </label>

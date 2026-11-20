@@ -481,22 +481,9 @@ function initTimetableFormModal() {
             if (sectionClone) sectionClone.classList.remove('hidden');
             if (sectionDefaultLanes) sectionDefaultLanes.classList.add('hidden');
 
-            // 複製元情報カードおよびバッジの更新
+            // 複製元情報カードの更新
             if (cloneSourceName) cloneSourceName.textContent = btn.dataset.name || '—';
             if (cloneSourceDate) cloneSourceDate.textContent = btn.dataset.targetDate || '—';
-
-            const updateBadge = (id, count) => {
-                const badge = document.getElementById(id);
-                if (badge) badge.textContent = `${count || 0}件`;
-            };
-            updateBadge('badge-clone-lanes-count', btn.dataset.lanesCount);
-            updateBadge('badge-clone-tasks-count', btn.dataset.tasksCount);
-            updateBadge('badge-clone-locations-count', btn.dataset.locationsCount);
-            updateBadge('badge-clone-logistics-count', btn.dataset.logisticsCount);
-            const layoutBadge = document.getElementById('badge-clone-layouts-count');
-            if (layoutBadge) {
-                layoutBadge.textContent = `配置 ${btn.dataset.layoutsCount || 0} / 白地図 ${btn.dataset.placementsCount || 0}`;
-            }
 
             const today = new Date().toISOString().split('T')[0];
             if (inputTargetDate) inputTargetDate.value = today;

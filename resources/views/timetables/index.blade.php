@@ -195,13 +195,7 @@
                                     data-target-date="{{ $timetable->target_date?->format('Y-m-d') }}"
                                     data-start-time="{{ substr($timetable->start_time, 0, 5) }}"
                                     data-end-time="{{ substr($timetable->end_time, 0, 5) }}"
-                                    data-description="{{ $timetable->description }}"
-                                    data-lanes-count="{{ $timetable->lanes_count ?? 0 }}"
-                                    data-tasks-count="{{ $timetable->tasks_count ?? 0 }}"
-                                    data-locations-count="{{ $timetable->locations_count ?? 0 }}"
-                                    data-logistics-count="{{ $timetable->logistics_plans_count ?? 0 }}"
-                                    data-layouts-count="{{ $timetable->layout_items_count ?? 0 }}"
-                                    data-placements-count="{{ $timetable->placements_count ?? 0 }}">
+                                    data-description="{{ $timetable->description }}">
                                     <span>📋</span>
                                     <span>複製</span>
                                 </button>
