@@ -33,7 +33,14 @@ class TimetableTaskManagementTest extends TestCase
             'target_date' => '2026-10-17',
             'name' => '1日目 本祭運行',
         ]);
-        $this->timetable->createDefaultLanes();
+
+        foreach (['カラーコーン', '給水設備', '衛生', '巡回', 'キッズ村'] as $i => $name) {
+            Lane::factory()->create([
+                'timetable_id' => $this->timetable->id,
+                'name' => $name,
+                'display_order' => ($i + 1) * 10,
+            ]);
+        }
     }
 
     /**

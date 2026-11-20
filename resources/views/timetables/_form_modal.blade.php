@@ -204,23 +204,6 @@
                     <!-- 6. 運行状況・時間帯指定（道路・まつり） -->
                     @include('timetables._periods_form', ['timetable' => null])
 
-                    <!-- 7. 白紙作成時の初期班自動生成オプション (新規時のみ表示) -->
-                    <div id="section-default-lanes" class="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl">
-                        <label class="flex items-start space-x-2.5 cursor-pointer select-none">
-                            <input type="hidden" name="create_default_lanes" value="0">
-                            <input type="checkbox" id="modal_create_default_lanes" name="create_default_lanes" value="1" checked
-                                class="w-4 h-4 mt-0.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                            <div>
-                                <span class="text-xs font-bold text-indigo-950">
-                                    🏷️ まつり標準10班（カラーコーン・給水・衛生・巡回・キッズ村など）を自動生成する（推奨）
-                                </span>
-                                <p class="text-[10px] text-slate-500 mt-0.5">
-                                    標準の担当班が自動生成され、登録完了後すぐに各班の作業タスクや配置を管理できます。
-                                </p>
-                            </div>
-                        </label>
-                    </div>
-
                 </div>
 
                 <!-- モーダルフッター (固定) -->

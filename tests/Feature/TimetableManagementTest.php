@@ -161,33 +161,11 @@ class TimetableManagementTest extends TestCase
             'status' => 'active',
             'created_by' => $this->operator->id,
         ]);
-        $this->assertCount(count(Lane::DEFAULT_LANES), $timetable->lanes);
-    }
-
-    /**
-     * create_default_lanes を false にすると初期班が自動生成されないこと
-     */
-    public function test_can_create_timetable_without_default_lanes(): void
-    {
-        $this->actingAs($this->operator);
-
-        $response = $this->post(route('timetables.store'), [
-            'target_date' => '2026-10-18',
-            'name' => '2日目 独自班編成',
-            'start_time' => '08:00',
-            'end_time' => '18:00',
-            'status' => 'active',
-            'create_default_lanes' => 0,
-        ]);
-
-        $timetable = Timetable::where('name', '2日目 独自班編成')->firstOrFail();
-        $response->assertRedirect(route('timetables.index'));
-
         $this->assertCount(0, $timetable->lanes);
     }
 
     /**
-     * 一覧画面のモーダルフォーム内にデフォルト班自動生成のhidden inputおよび共通要素が存在すること
+     * 一覧画面のモーダルフォーム内に共通要素が存在し、初期班自動生成の項目が存在しないこと
      */
     public function test_index_view_displays_form_modal_and_hidden_input(): void
     {
@@ -197,8 +175,8 @@ class TimetableManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('modal-timetable-form');
         $response->assertSee('btn-open-create-timetable');
-        $response->assertSee('<input type="hidden" name="create_default_lanes" value="0">', false);
-        $response->assertSee('まつり標準10班（カラーコーン・給水・衛生・巡回・キッズ村など）を自動生成する（推奨）');
+        $response->assertDontSee('create_default_lanes');
+        $response->assertDontSee('まつり標準10班');
         $this->assertTrue(
             str_contains($response->getContent(), 'timetables.js') || str_contains($response->getContent(), 'timetables-'),
             'timetables script asset is loaded'
@@ -216,28 +194,6 @@ class TimetableManagementTest extends TestCase
         $response->assertStatus(200);
         $today = now()->toDateString();
         $response->assertSee('value="'.$today.'"', false);
-    }
-
-    /**
-     * チェックを外して文字列 '0' が送信された場合に標準10班が作成されないこと
-     */
-    public function test_can_create_timetable_without_default_lanes_with_string_zero(): void
-    {
-        $this->actingAs($this->operator);
-
-        $response = $this->post(route('timetables.store'), [
-            'target_date' => '2026-10-19',
-            'name' => '3日目 ゼロ班編成',
-            'start_time' => '08:00',
-            'end_time' => '18:00',
-            'status' => 'active',
-            'create_default_lanes' => '0',
-        ]);
-
-        $timetable = Timetable::where('name', '3日目 ゼロ班編成')->firstOrFail();
-        $response->assertRedirect(route('timetables.index'));
-
-        $this->assertCount(0, $timetable->lanes);
     }
 
     /**
@@ -346,9 +302,7 @@ class TimetableManagementTest extends TestCase
         $this->actingAs($this->operator);
 
         $timetable = Timetable::factory()->create(['name' => 'タスク付き運行']);
-        $timetable->createDefaultLanes();
-
-        $lane = $timetable->lanes->first();
+        $lane = Lane::factory()->create(['timetable_id' => $timetable->id]);
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
             'lane_id' => $lane->id,
@@ -402,7 +356,6 @@ class TimetableManagementTest extends TestCase
             'start_time' => '07:30',
             'end_time' => '20:30',
             'status' => 'active',
-            'create_default_lanes' => 1,
         ]);
 
         $timetable = Timetable::where('name', 'Day 1 本番運行スケジュール')->firstOrFail();

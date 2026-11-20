@@ -42,35 +42,41 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 1. タイムテーブル作成時、デフォルト10レーンが生成され、主担当は未設定（後付け可能）であること
+     * 1. タイムテーブル作成時、初期状態ではレーンは自動生成されず0件であること
      */
-    public function test_default_ten_lanes_are_created_for_timetable(): void
+    public function test_new_timetable_has_zero_lanes_initially(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->assertCount(0, $this->timetable->lanes()->get());
+    }
 
-        $lanes = $this->timetable->lanes()->get();
-        $this->assertCount(10, $lanes);
-
-        $expectedLaneNames = [
-            'カラーコーン',
-            '給水設備',
-            '衛生',
-            '巡回',
-            'キッズ村',
-            'ちょうちん',
-            'ござ市',
-            '本陣',
-            '道路清掃',
-            'ステカン',
+    /**
+     * テスト用のサンプルレーンを一括生成するヘルパー
+     */
+    private function createSampleLanes(Timetable $timetable): void
+    {
+        $sampleLanes = [
+            ['name' => 'カラーコーン', 'icon' => '🔺', 'color' => 'amber', 'description' => '路上規制バー・コーン搬入・本設置・撤去', 'display_order' => 10],
+            ['name' => '給水設備', 'icon' => '🚰', 'color' => 'sky', 'description' => '給水タンク・仮設手洗い場・配管ホース設置', 'display_order' => 20],
+            ['name' => '衛生', 'icon' => '🚻', 'color' => 'emerald', 'description' => '仮設トイレ・ごみステーション設置・回収袋交換', 'display_order' => 30],
+            ['name' => '巡回', 'icon' => '🚨', 'color' => 'purple', 'description' => '会場警備・迷子対応・防犯パトロール・動線監視', 'display_order' => 40],
+            ['name' => 'キッズ村', 'icon' => '🎈', 'color' => 'pink', 'description' => 'こども体験ブース設営・運営・安全管理', 'display_order' => 50],
+            ['name' => 'ちょうちん', 'icon' => '🏮', 'color' => 'red', 'description' => '提灯取付・配線点検・点灯確認・翌日回収', 'display_order' => 60],
+            ['name' => 'ござ市', 'icon' => '🧺', 'color' => 'orange', 'description' => 'ござ敷設・出店区画案内・境界管理・漆原さん連携', 'display_order' => 70],
+            ['name' => '本陣', 'icon' => '🏛️', 'color' => 'indigo', 'description' => '本部運営・来賓応接・放送アナウンス・総合案内', 'display_order' => 80],
+            ['name' => '道路清掃', 'icon' => '🧹', 'color' => 'teal', 'description' => '開催前清掃・巡回清掃・規制解除前の最終路面清掃', 'display_order' => 90],
+            ['name' => 'ステカン', 'icon' => '🪧', 'color' => 'yellow', 'description' => '捨て看板（案内標識）の電柱・フェンス設置および完全回収', 'display_order' => 100],
         ];
 
-        $this->assertSame($expectedLaneNames, $lanes->pluck('name')->toArray());
-
-        // 初期状態では主担当は未設定（null）であること
-        foreach ($lanes as $lane) {
-            $this->assertNull($lane->lead_staff_id);
-            $this->assertNull($lane->leadStaff);
-            $this->assertFalse($lane->hasLead());
+        foreach ($sampleLanes as $laneData) {
+            Lane::factory()->create([
+                'timetable_id' => $timetable->id,
+                'name' => $laneData['name'],
+                'icon' => $laneData['icon'],
+                'color' => $laneData['color'],
+                'description' => $laneData['description'],
+                'display_order' => $laneData['display_order'],
+                'lead_staff_id' => null,
+            ]);
         }
     }
 
@@ -79,7 +85,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_admin_and_operator_can_view_lanes_index(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
 
         $response = $this->actingAs($this->adminUser)
             ->get(route('timetables.lanes.index', $this->timetable));
@@ -172,7 +178,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_can_update_lane_and_assign_lead_staff(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lane = $this->timetable->lanes()->where('name', 'カラーコーン')->firstOrFail();
 
         $staff = Staff::factory()->create([
@@ -207,7 +213,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_can_update_lead_staff(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lane = $this->timetable->lanes()->where('name', '衛生')->firstOrFail();
 
         $staff = Staff::factory()->create([
@@ -261,7 +267,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_cannot_delete_lane_with_tasks(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lane = $this->timetable->lanes()->where('name', 'カラーコーン')->firstOrFail();
 
         // タスクを作成
@@ -283,7 +289,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_can_delete_lane_without_tasks(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lane = $this->timetable->lanes()->where('name', 'ステカン')->firstOrFail();
 
         $response = $this->actingAs($this->adminUser)
@@ -298,7 +304,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_task_creation_with_lane_and_auto_assign_lead(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lane = $this->timetable->lanes()->where('name', '給水設備')->firstOrFail();
 
         $leadStaff = Staff::factory()->create([
@@ -345,7 +351,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_task_creation_auto_assigns_lead_staff_by_default_when_param_omitted(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lane = $this->timetable->lanes()->where('name', 'カラーコーン')->firstOrFail();
 
         $leadStaff = Staff::factory()->create([
@@ -383,7 +389,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_updating_lane_lead_staff_syncs_to_existing_tasks(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lane = $this->timetable->lanes()->where('name', '衛生')->firstOrFail();
 
         // 主担当未設定の状態でタスクを2件作成
@@ -452,7 +458,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_default_ten_lanes_are_created_properly(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
 
         $this->assertCount(10, $this->timetable->lanes);
 
@@ -472,7 +478,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_can_reorder_lanes(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lanes = $this->timetable->lanes()->ordered()->get();
 
         // 逆順の ID 配列を用意
@@ -498,7 +504,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_can_delete_lane_with_task_migration(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $sourceLane = $this->timetable->lanes()->where('name', 'ステカン')->firstOrFail();
         $targetLane = $this->timetable->lanes()->where('name', '道路清掃')->firstOrFail();
 
@@ -533,7 +539,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_can_delete_lane_with_cascade_tasks(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lane = $this->timetable->lanes()->where('name', 'キッズ村')->firstOrFail();
 
         $task = TimetableTask::factory()->create([
@@ -573,8 +579,8 @@ class LaneManagementTest extends TestCase
             'name' => '本祭2日目',
             'target_date' => '2027-10-18',
         ]);
-        $this->timetable->createDefaultLanes();
-        $secondTimetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
+        $this->createSampleLanes($secondTimetable);
 
         $response = $this->actingAs($this->adminUser)
             ->get(route('timetables.lanes.index', $this->timetable));
@@ -640,7 +646,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_user_can_view_lane_show_screen(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lane = $this->timetable->lanes()->where('name', '給水設備')->firstOrFail();
 
         $lead = Staff::factory()->create(['name' => '給水班長 佐藤', 'is_active' => true]);
@@ -687,7 +693,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_admin_and_operator_can_view_lane_edit_screen(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lane = $this->timetable->lanes()->where('name', '本陣')->firstOrFail();
 
         $response = $this->actingAs($this->adminUser)
@@ -723,7 +729,7 @@ class LaneManagementTest extends TestCase
      */
     public function test_lane_index_displays_crud_navigation_links(): void
     {
-        $this->timetable->createDefaultLanes();
+        $this->createSampleLanes($this->timetable);
         $lane = $this->timetable->lanes()->firstOrFail();
 
         $response = $this->actingAs($this->adminUser)

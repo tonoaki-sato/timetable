@@ -249,9 +249,6 @@ function initTimetableFormModal() {
     const cloneSourceName = document.getElementById('clone-source-name');
     const cloneSourceDate = document.getElementById('clone-source-date');
 
-    const sectionDefaultLanes = document.getElementById('section-default-lanes');
-    const inputDefaultLanes = document.getElementById('modal_create_default_lanes');
-
     const copyLanes = document.getElementById('modal_copy_lanes');
     const copyLaneStaff = document.getElementById('modal_copy_lane_staff');
     const copyTasks = document.getElementById('modal_copy_tasks');
@@ -442,8 +439,6 @@ function initTimetableFormModal() {
 
             if (inputSourceId) inputSourceId.value = '';
             if (sectionClone) sectionClone.classList.add('hidden');
-            if (sectionDefaultLanes) sectionDefaultLanes.classList.remove('hidden');
-            if (inputDefaultLanes) inputDefaultLanes.checked = true;
 
             const today = new Date().toISOString().split('T')[0];
             if (inputTargetDate) inputTargetDate.value = today;
@@ -479,7 +474,6 @@ function initTimetableFormModal() {
 
             if (inputSourceId) inputSourceId.value = sourceId || '';
             if (sectionClone) sectionClone.classList.remove('hidden');
-            if (sectionDefaultLanes) sectionDefaultLanes.classList.add('hidden');
 
             // 複製元情報カードの更新
             if (cloneSourceName) cloneSourceName.textContent = btn.dataset.name || '—';
@@ -522,9 +516,8 @@ function initTimetableFormModal() {
             if (btnSaveLabel) btnSaveLabel.textContent = '変更内容を保存する';
             if (btnSaveIcon) btnSaveIcon.textContent = '💾';
 
-            // 複製および初期班セクションは編集時は非表示
+            // 複製セクションは編集時は非表示
             if (sectionClone) sectionClone.classList.add('hidden');
-            if (sectionDefaultLanes) sectionDefaultLanes.classList.add('hidden');
 
             if (inputTargetDate) inputTargetDate.value = btn.dataset.targetDate || '';
             if (inputStatus) inputStatus.value = btn.dataset.status || 'draft';

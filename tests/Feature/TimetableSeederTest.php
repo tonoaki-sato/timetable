@@ -105,7 +105,6 @@ class TimetableSeederTest extends TestCase
 
         // レーンおよびステータスが定義に合致していること
         $validLanes = array_values(array_unique(array_merge(
-            collect(Lane::DEFAULT_LANES)->pluck('name')->toArray(),
             Lane::pluck('name')->toArray(),
             ['幹事会']
         )));

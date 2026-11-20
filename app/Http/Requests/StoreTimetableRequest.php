@@ -35,12 +35,6 @@ class StoreTimetableRequest extends FormRequest
             $this->merge(['festival_periods' => empty($filtered) ? null : $filtered]);
         }
 
-        if ($this->has('create_default_lanes')) {
-            $this->merge([
-                'create_default_lanes' => $this->boolean('create_default_lanes'),
-            ]);
-        }
-
         foreach ([
             'copy_lanes',
             'copy_lane_staff',
@@ -82,7 +76,6 @@ class StoreTimetableRequest extends FormRequest
             'festival_periods.*.end_time' => ['required_with:festival_periods', 'date_format:H:i', 'after:festival_periods.*.start_time'],
             'festival_periods.*.label' => ['required_with:festival_periods', 'string', 'max:50'],
             'festival_periods.*.status' => ['nullable', 'string', 'max:30'],
-            'create_default_lanes' => ['nullable', 'boolean'],
             'source_timetable_id' => ['nullable', 'integer', 'exists:timetables,id'],
             'copy_lanes' => ['nullable', 'boolean'],
             'copy_lane_staff' => ['nullable', 'boolean'],

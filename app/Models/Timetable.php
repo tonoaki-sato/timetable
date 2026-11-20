@@ -280,25 +280,6 @@ class Timetable extends Model
     }
 
     /**
-     * デフォルト10レーンを一括生成
-     */
-    public function createDefaultLanes(): void
-    {
-        foreach (Lane::DEFAULT_LANES as $laneData) {
-            $this->lanes()->firstOrCreate(
-                ['name' => $laneData['name']],
-                [
-                    'icon' => $laneData['icon'],
-                    'color' => $laneData['color'],
-                    'description' => $laneData['description'],
-                    'display_order' => $laneData['display_order'],
-                    'lead_staff_id' => null,
-                ]
-            );
-        }
-    }
-
-    /**
      * デフォルト拠点一覧を一括生成
      */
     public function createDefaultLocations(): void
