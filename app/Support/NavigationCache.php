@@ -44,12 +44,33 @@ class NavigationCache
             return $this->memoizedTimetables;
         }
 
+        $cached = Cache::get(self::KEY_NAV_TIMETABLES);
+
+        if (is_array($cached)) {
+            /** @var Collection<int, Timetable> $timetables */
+            $timetables = Timetable::hydrate($cached);
+            $this->memoizedTimetables = $timetables;
+
+            return $timetables;
+        }
+
+        // 不正なキャッシュ値（__PHP_Incomplete_Class や古いシリアライズ形式など）を安全に自己修復
+        if ($cached !== null) {
+            Cache::forget(self::KEY_NAV_TIMETABLES);
+        }
+
         /** @var Collection<int, Timetable> $timetables */
-        $timetables = Cache::remember(
-            self::KEY_NAV_TIMETABLES,
-            self::TTL_NAV_TIMETABLES,
-            $loader
-        );
+        $timetables = $loader();
+
+        if (! $timetables instanceof Collection) {
+            $timetables = new Collection($timetables);
+        }
+
+        $rawAttributes = $timetables->map(
+            fn (Timetable $t): array => $t->getRawOriginal() ?: $t->getAttributes()
+        )->all();
+
+        Cache::put(self::KEY_NAV_TIMETABLES, $rawAttributes, self::TTL_NAV_TIMETABLES);
         $this->memoizedTimetables = $timetables;
 
         return $timetables;
@@ -67,15 +88,22 @@ class NavigationCache
         }
 
         $cachedMap = Cache::get(self::KEY_FEATURE_SETTINGS);
-        if (is_array($cachedMap) && isset($cachedMap[$featureKey]) && $cachedMap[$featureKey] instanceof FeatureSetting) {
-            $this->memoizedFeatures[$featureKey] = $cachedMap[$featureKey];
 
-            return $cachedMap[$featureKey];
+        if (is_array($cachedMap) && isset($cachedMap[$featureKey]) && is_array($cachedMap[$featureKey])) {
+            $setting = (new FeatureSetting)->newFromBuilder($cachedMap[$featureKey]);
+            $this->memoizedFeatures[$featureKey] = $setting;
+
+            return $setting;
+        }
+
+        if ($cachedMap !== null && ! is_array($cachedMap)) {
+            Cache::forget(self::KEY_FEATURE_SETTINGS);
+            $cachedMap = [];
         }
 
         $setting = $loader();
         $map = is_array($cachedMap) ? $cachedMap : [];
-        $map[$featureKey] = $setting;
+        $map[$featureKey] = $setting->getRawOriginal() ?: $setting->getAttributes();
         Cache::put(self::KEY_FEATURE_SETTINGS, $map, self::TTL_FEATURE_SETTING);
         $this->memoizedFeatures[$featureKey] = $setting;
 
@@ -94,12 +122,34 @@ class NavigationCache
             return $this->memoizedPendingLaneRequests;
         }
 
+        $cached = Cache::get(self::KEY_PENDING_LANE_REQUESTS);
+
+        if (is_array($cached) && isset($cached['count'], $cached['recent']) && is_array($cached['recent'])) {
+            $summary = [
+                'count' => (int) $cached['count'],
+                'recent' => LaneRequest::hydrate($cached['recent']),
+            ];
+            $this->memoizedPendingLaneRequests = $summary;
+
+            return $summary;
+        }
+
+        if ($cached !== null) {
+            Cache::forget(self::KEY_PENDING_LANE_REQUESTS);
+        }
+
         /** @var array{count: int, recent: Collection<int, LaneRequest>} $summary */
-        $summary = Cache::remember(
-            self::KEY_PENDING_LANE_REQUESTS,
-            self::TTL_PENDING_LANE_REQUESTS,
-            $loader
-        );
+        $summary = $loader();
+
+        $recent = $summary['recent'] instanceof Collection ? $summary['recent'] : new Collection($summary['recent']);
+        $cachedPayload = [
+            'count' => (int) $summary['count'],
+            'recent' => $recent->map(
+                fn (LaneRequest $r): array => $r->getRawOriginal() ?: $r->getAttributes()
+            )->all(),
+        ];
+
+        Cache::put(self::KEY_PENDING_LANE_REQUESTS, $cachedPayload, self::TTL_PENDING_LANE_REQUESTS);
         $this->memoizedPendingLaneRequests = $summary;
 
         return $summary;

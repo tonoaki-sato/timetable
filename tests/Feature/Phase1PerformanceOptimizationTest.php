@@ -33,6 +33,7 @@ use App\Services\GlobalDashboardService;
 use App\Services\SiteMapPdfExporterService;
 use App\Services\StaffAllocationService;
 use App\Services\TimetableService;
+use App\Support\NavigationCache;
 use App\View\Components\TimetableContextBar;
 use Database\Seeders\SiteMapIconDefinitionSeeder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -237,6 +238,14 @@ class Phase1PerformanceOptimizationTest extends TestCase
         $this->assertCount(1, $timetableRepo->getForNavigation());
         Timetable::query()->delete();
         $this->assertCount(0, $timetableRepo->getForNavigation());
+
+        // 3. キャッシュ値に破損データや __PHP_Incomplete_Class が混入しても自己修復すること
+        $timetableNew = Timetable::factory()->create(['name' => '復旧テスト運行', 'status' => 'active']);
+        app(NavigationCache::class)->clearRequestCache();
+        Cache::put(NavigationCache::KEY_NAV_TIMETABLES, 'corrupted-non-array-payload');
+        $recovered = $timetableRepo->getForNavigation();
+        $this->assertCount(1, $recovered);
+        $this->assertSame('復旧テスト運行', $recovered->first()?->name);
     }
 
     public function test_single_query_reorder_and_bulk_clone_work_accurately(): void
