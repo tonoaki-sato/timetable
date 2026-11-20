@@ -93,6 +93,32 @@ class TimetableManagementTest extends TestCase
         $response->assertDontSee('タスク・人員台帳');
         $response->assertSee('運行時間枠');
         $response->assertDontSee('登録タスク');
+
+        // ステータス絞り込みトグルボタン群の描画検証
+        $response->assertSee('絞り込み:');
+        $response->assertSee('すべての運行日');
+        $response->assertSee('準備中');
+        $response->assertSee('運行中');
+        $response->assertSee('運行完了');
+        $response->assertSee('id="chip-status-all"', false);
+        $response->assertSee('id="chip-status-draft"', false);
+        $response->assertSee('id="chip-status-active"', false);
+        $response->assertSee('id="chip-status-completed"', false);
+        $response->assertSee('id="visible-timetable-count"', false);
+
+        // 管理メニューのプルダウンDOM構造検証（detailsではなくオーバーレイドロップダウン）
+        $response->assertDontSee('<details', false);
+        $response->assertSee('timetable-menu-container', false);
+        $response->assertSee('timetable-menu-trigger', false);
+        $response->assertSee('timetable-menu-dropdown', false);
+
+        // 専用 JavaScript アセットの読み込み検証
+        $content = $response->getContent();
+        $this->assertTrue(
+            str_contains($content, 'timetables.js') || str_contains($content, 'timetables-'),
+            'timetables.js script asset should be rendered on the page.'
+        );
+
         $response->assertSeeInOrder([
             'タイムテーブル名 / 概要',
             '運行日',

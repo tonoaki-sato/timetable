@@ -20,18 +20,59 @@
         @endcan
     </x-page-header>
 
-    <!-- ステータス絞り込みタブ -->
-    <div class="flex items-center space-x-1.5 border-b border-slate-200 pb-1.5 overflow-x-auto scrollbar-none flex-nowrap">
-        <a href="{{ route('timetables.index') }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition {{ !request('status') ? 'bg-slate-900 text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
-            すべての運行日
-        </a>
-        @foreach($statuses as $key => $label)
-        <a href="{{ route('timetables.index', ['status' => $key]) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition {{ request('status') === $key ? 'bg-slate-900 text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
-            {{ $label }}
-        </a>
-        @endforeach
+    <!-- ステータス絞り込みトグルフィルターバー -->
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-slate-700 flex items-center mr-1">
+                <span>🔍 絞り込み:</span>
+            </span>
+
+            <!-- トグルボタン群 -->
+            <div class="flex flex-wrap items-center gap-1.5" id="timetable-filter-chips">
+                <!-- すべての運行日 ボタン -->
+                <button type="button"
+                    id="chip-status-all"
+                    data-status="all"
+                    class="timetable-status-chip inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border transition whitespace-nowrap shrink-0 cursor-pointer opacity-40 bg-slate-100 text-slate-600 border-slate-300">
+                    <span class="chip-icon mr-1 text-[10px] text-slate-400 font-bold">✕</span>
+                    <span>すべての運行日</span>
+                </button>
+
+                <!-- 準備中 ボタン (デフォルトON) -->
+                <button type="button"
+                    id="chip-status-draft"
+                    data-status="draft"
+                    class="timetable-status-chip inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border transition whitespace-nowrap shrink-0 cursor-pointer bg-white text-indigo-700 border-indigo-400 shadow-2xs">
+                    <span class="chip-icon mr-1 text-[10px] text-emerald-600 font-bold">✔</span>
+                    <span>準備中</span>
+                </button>
+
+                <!-- 運行中 ボタン (デフォルトON) -->
+                <button type="button"
+                    id="chip-status-active"
+                    data-status="active"
+                    class="timetable-status-chip inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border transition whitespace-nowrap shrink-0 cursor-pointer bg-white text-indigo-700 border-indigo-400 shadow-2xs">
+                    <span class="chip-icon mr-1 text-[10px] text-emerald-600 font-bold">✔</span>
+                    <span>運行中</span>
+                </button>
+
+                <!-- 運行完了 ボタン (デフォルトOFF) -->
+                <button type="button"
+                    id="chip-status-completed"
+                    data-status="completed"
+                    class="timetable-status-chip inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border transition whitespace-nowrap shrink-0 cursor-pointer opacity-40 bg-slate-100 text-slate-600 border-slate-300">
+                    <span class="chip-icon mr-1 text-[10px] text-slate-400 font-bold">✕</span>
+                    <span>運行完了</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 件数インジケータ -->
+        <div class="flex items-center space-x-2 shrink-0 text-xs text-slate-500 font-mono">
+            <span id="timetable-count-indicator">
+                全 {{ $timetables->count() }} 件中 <span class="font-bold text-slate-700" id="visible-timetable-count">{{ $timetables->filter(fn($t) => in_array($t->status, ['draft', 'active'], true))->count() }}</span> 件表示中
+            </span>
+        </div>
     </div>
 
     <!-- 運行日一覧テーブル -->
@@ -47,9 +88,14 @@
                         <th class="px-3.5 py-2 font-bold text-right whitespace-nowrap">操作</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-100" id="timetables-table-body">
                     @forelse($timetables as $timetable)
-                    <tr class="hover:bg-slate-50/70 transition">
+                    @php
+                        $isInitiallyVisible = in_array($timetable->status, ['draft', 'active'], true);
+                    @endphp
+                    <tr class="timetable-row hover:bg-slate-50/70 transition {{ $isInitiallyVisible ? '' : 'hidden' }}"
+                        data-status="{{ $timetable->status }}"
+                        id="timetable-row-{{ $timetable->id }}">
                         <!-- タイムテーブル名 / 概要 -->
                         <td class="px-3.5 py-2.5 min-w-[200px]">
                             <div class="font-bold text-slate-900 text-xs sm:text-sm">
@@ -98,40 +144,45 @@
                                     <span>進行表</span>
                                 </a>
 
-                                <!-- 管理メニュー (担当班・拠点・搬出入・タスク台帳・人員配置) -->
-                                <details class="inline-block align-middle text-left">
-                                    <summary class="list-none inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition cursor-pointer select-none whitespace-nowrap">
+                                <!-- 管理メニュー (プルダウンメニュー: 担当班・拠点・搬出入・タスク台帳・人員配置) -->
+                                <div class="relative inline-block text-left timetable-menu-container">
+                                    <button type="button"
+                                        class="timetable-menu-trigger inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition cursor-pointer select-none whitespace-nowrap shadow-2xs"
+                                        aria-haspopup="true"
+                                        aria-expanded="false">
                                         <span>管理メニュー</span>
-                                        <span class="text-[10px]">▾</span>
-                                    </summary>
-                                    <div class="inline-flex flex-wrap items-center gap-1 mt-1.5">
-                                        <a href="{{ route('timetables.lanes.index', $timetable) }}"
-                                            class="inline-flex items-center space-x-1 px-2 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition shadow-2xs whitespace-nowrap">
-                                            <span>🏷️</span>
-                                            <span>担当班</span>
-                                        </a>
-                                        <a href="{{ route('timetables.locations.index', $timetable) }}"
-                                            class="inline-flex items-center space-x-1 px-2 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition shadow-2xs whitespace-nowrap">
-                                            <span>📍</span>
-                                            <span>拠点</span>
-                                        </a>
-                                        <a href="{{ route('timetables.logistics.index', $timetable) }}"
-                                            class="inline-flex items-center space-x-1 px-2 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition shadow-2xs whitespace-nowrap">
-                                            <span>🚚</span>
-                                            <span>搬出入</span>
-                                        </a>
-                                        <a href="{{ route('timetables.tasks.index', $timetable) }}"
-                                            class="inline-flex items-center space-x-1 px-2 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition shadow-2xs whitespace-nowrap">
-                                            <span>📋</span>
-                                            <span>タスク台帳</span>
-                                        </a>
-                                        <a href="{{ route('timetables.staff-timeline', $timetable) }}"
-                                            class="inline-flex items-center space-x-1 px-2 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition shadow-2xs whitespace-nowrap">
-                                            <span>👥</span>
-                                            <span>人員配置</span>
-                                        </a>
+                                        <span class="text-[10px] text-slate-500">▾</span>
+                                    </button>
+                                    <div class="timetable-menu-dropdown hidden absolute right-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-1 divide-y divide-slate-100">
+                                        <div class="py-1">
+                                            <a href="{{ route('timetables.lanes.index', $timetable) }}"
+                                                class="flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition">
+                                                <span>🏷️</span>
+                                                <span class="font-medium">担当班</span>
+                                            </a>
+                                            <a href="{{ route('timetables.locations.index', $timetable) }}"
+                                                class="flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition">
+                                                <span>📍</span>
+                                                <span class="font-medium">拠点</span>
+                                            </a>
+                                            <a href="{{ route('timetables.logistics.index', $timetable) }}"
+                                                class="flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition">
+                                                <span>🚚</span>
+                                                <span class="font-medium">搬出入</span>
+                                            </a>
+                                            <a href="{{ route('timetables.tasks.index', $timetable) }}"
+                                                class="flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition">
+                                                <span>📋</span>
+                                                <span class="font-medium">タスク台帳</span>
+                                            </a>
+                                            <a href="{{ route('timetables.staff-timeline', $timetable) }}"
+                                                class="flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition">
+                                                <span>👥</span>
+                                                <span class="font-medium">人員配置</span>
+                                            </a>
+                                        </div>
                                     </div>
-                                </details>
+                                </div>
 
                                 <!-- 複製リンク -->
                                 @can('create', App\Models\Timetable::class)
@@ -173,10 +224,18 @@
                         </td>
                     </tr>
                     @endforelse
+                    <!-- 絞り込み結果が0件の場合のエンプティステート行 -->
+                    <tr id="timetable-filter-empty-state" class="hidden">
+                        <td colspan="5" class="py-8">
+                            <x-ui.empty-state icon="🔍" title="選択したステータスに該当する運行情報はありません。" />
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
 </div>
+
+@vite(['resources/js/timetables.js'])
 </x-layouts.app>
