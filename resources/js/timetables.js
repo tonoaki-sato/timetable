@@ -148,6 +148,7 @@ function initTimetableStatusFilters() {
 
 /**
  * 管理メニューのプルダウン（ドロップダウン）開閉制御
+ * (テーブルの overflow-x-auto / overflow-hidden による見切れを防止するため position: fixed を使用)
  */
 function initTimetableActionMenus() {
     const containers = document.querySelectorAll('.timetable-menu-container');
@@ -168,19 +169,34 @@ function initTimetableActionMenus() {
             closeAllMenus();
 
             if (!isCurrentlyOpen) {
-                // ウィンドウ下端との距離を判定し、狭い場合は上向きに展開
-                const rect = trigger.getBoundingClientRect();
-                const spaceBelow = window.innerHeight - rect.bottom;
-                if (spaceBelow < 180) {
-                    dropdown.classList.remove('top-full', 'mt-1');
-                    dropdown.classList.add('bottom-full', 'mb-1');
-                } else {
-                    dropdown.classList.remove('bottom-full', 'mb-1');
-                    dropdown.classList.add('top-full', 'mt-1');
-                }
-
                 dropdown.classList.remove('hidden');
                 trigger.setAttribute('aria-expanded', 'true');
+
+                // トリガーボタンの位置・サイズとメニューのサイズを取得
+                const rect = trigger.getBoundingClientRect();
+                const menuWidth = dropdown.offsetWidth || 176;
+                const menuHeight = dropdown.offsetHeight || 190;
+                const gap = 4;
+
+                let top = rect.bottom + gap;
+                let left = rect.right - menuWidth;
+
+                // 画面下端の余白が不足している場合は上向きに展開
+                const spaceBelow = window.innerHeight - rect.bottom;
+                const spaceAbove = rect.top;
+                if (spaceBelow < menuHeight + gap && spaceAbove > menuHeight + gap) {
+                    top = rect.top - menuHeight - gap;
+                }
+
+                // 画面左右端の安全マージン（8px）を確保
+                if (left < 8) {
+                    left = 8;
+                } else if (left + menuWidth > window.innerWidth - 8) {
+                    left = window.innerWidth - menuWidth - 8;
+                }
+
+                dropdown.style.top = `${Math.round(top)}px`;
+                dropdown.style.left = `${Math.round(left)}px`;
             }
         });
     });
@@ -199,9 +215,17 @@ function initTimetableActionMenus() {
         }
     });
 
+    // ウィンドウおよびテーブルのスクロール時にメニューを閉じる（capture: true で overflow 内のスクロールも捕捉）
+    window.addEventListener('scroll', closeAllMenus, { capture: true, passive: true });
+
+    // ウィンドウリサイズ時にメニューを閉じる
+    window.addEventListener('resize', closeAllMenus);
+
     function closeAllMenus() {
         document.querySelectorAll('.timetable-menu-dropdown').forEach((menu) => {
             menu.classList.add('hidden');
+            menu.style.top = '';
+            menu.style.left = '';
         });
         document.querySelectorAll('.timetable-menu-trigger').forEach((trigger) => {
             trigger.setAttribute('aria-expanded', 'false');

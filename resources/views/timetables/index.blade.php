@@ -153,7 +153,7 @@
                                         <span>管理メニュー</span>
                                         <span class="text-[10px] text-slate-500">▾</span>
                                     </button>
-                                    <div class="timetable-menu-dropdown hidden absolute right-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-1 divide-y divide-slate-100">
+                                    <div class="timetable-menu-dropdown hidden fixed w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 divide-y divide-slate-100">
                                         <div class="py-1">
                                             <a href="{{ route('timetables.lanes.index', $timetable) }}"
                                                 class="flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition">
