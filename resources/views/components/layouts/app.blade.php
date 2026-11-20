@@ -158,7 +158,7 @@
                                         <div class="space-y-0.5">
                                             <!-- 運行日程管理 (Step 1) -->
                                             <a href="{{ route('timetables.index') }}"
-                                                class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.index') || request()->routeIs('timetables.show') || request()->routeIs('timetables.create') || request()->routeIs('timetables.edit') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.index') || request()->routeIs('timetables.show') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                                 <span class="text-base shrink-0">📅</span>
                                                 <div class="min-w-0 flex-1">
                                                     <div class="text-xs font-bold whitespace-nowrap truncate">運行日程管理</div>

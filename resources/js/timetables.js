@@ -1,12 +1,13 @@
 /**
- * 運行情報一覧画面（/timetables）
- * ステータス絞り込みトグルボタン & 管理メニュープルダウン操作スクリプト
+ * 運行情報一覧画面（/timetables）および詳細画面（/timetables/{id}）
+ * ステータス絞り込みトグルボタン、管理メニュープルダウン、および登録・編集モーダルフォーム操作スクリプト
  * (CSP完全準拠・Vanilla JS)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     initTimetableStatusFilters();
     initTimetableActionMenus();
+    initTimetableFormModal();
 });
 
 /**
@@ -110,7 +111,6 @@ function initTimetableStatusFilters() {
      * テーブル行の表示/非表示および件数の更新
      */
     function updateTableVisibility() {
-        // 現在アクティブなステータス一覧を取得
         const activeStatuses = new Set();
         statusChips.forEach((chip) => {
             if (isChipActive(chip)) {
@@ -118,7 +118,6 @@ function initTimetableStatusFilters() {
             }
         });
 
-        // 「すべての運行日」チップの表示状態を同期
         setChipState(allChip, isAllSelected());
 
         let visibleCount = 0;
@@ -148,7 +147,6 @@ function initTimetableStatusFilters() {
 
 /**
  * 管理メニューのプルダウン（ドロップダウン）開閉制御
- * (テーブルの overflow-x-auto / overflow-hidden による見切れを防止するため position: fixed を使用)
  */
 function initTimetableActionMenus() {
     const containers = document.querySelectorAll('.timetable-menu-container');
@@ -165,14 +163,12 @@ function initTimetableActionMenus() {
             e.stopPropagation();
             const isCurrentlyOpen = !dropdown.classList.contains('hidden');
 
-            // 他の開いている全メニューを閉じる
             closeAllMenus();
 
             if (!isCurrentlyOpen) {
                 dropdown.classList.remove('hidden');
                 trigger.setAttribute('aria-expanded', 'true');
 
-                // トリガーボタンの位置・サイズとメニューのサイズを取得
                 const rect = trigger.getBoundingClientRect();
                 const menuWidth = dropdown.offsetWidth || 176;
                 const menuHeight = dropdown.offsetHeight || 190;
@@ -181,14 +177,12 @@ function initTimetableActionMenus() {
                 let top = rect.bottom + gap;
                 let left = rect.right - menuWidth;
 
-                // 画面下端の余白が不足している場合は上向きに展開
                 const spaceBelow = window.innerHeight - rect.bottom;
                 const spaceAbove = rect.top;
                 if (spaceBelow < menuHeight + gap && spaceAbove > menuHeight + gap) {
                     top = rect.top - menuHeight - gap;
                 }
 
-                // 画面左右端の安全マージン（8px）を確保
                 if (left < 8) {
                     left = 8;
                 } else if (left + menuWidth > window.innerWidth - 8) {
@@ -201,24 +195,19 @@ function initTimetableActionMenus() {
         });
     });
 
-    // 外側クリックでメニューを閉じる
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.timetable-menu-container')) {
             closeAllMenus();
         }
     });
 
-    // Escape キーでメニューを閉じる
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             closeAllMenus();
         }
     });
 
-    // ウィンドウおよびテーブルのスクロール時にメニューを閉じる（capture: true で overflow 内のスクロールも捕捉）
     window.addEventListener('scroll', closeAllMenus, { capture: true, passive: true });
-
-    // ウィンドウリサイズ時にメニューを閉じる
     window.addEventListener('resize', closeAllMenus);
 
     function closeAllMenus() {
@@ -230,5 +219,409 @@ function initTimetableActionMenus() {
         document.querySelectorAll('.timetable-menu-trigger').forEach((trigger) => {
             trigger.setAttribute('aria-expanded', 'false');
         });
+    }
+}
+
+/**
+ * 運行情報 登録・編集・複製モーダル制御
+ */
+function initTimetableFormModal() {
+    const modal = document.getElementById('modal-timetable-form');
+    if (!modal) return;
+
+    const form = document.getElementById('form-timetable-mutation');
+    const formMethod = document.getElementById('timetable-form-method');
+    const modalTitle = document.getElementById('timetable-modal-title');
+    const modalSubtitle = document.getElementById('timetable-modal-subtitle');
+    const modalIcon = document.getElementById('timetable-modal-icon');
+    const btnSaveLabel = document.getElementById('btn-save-label');
+    const btnSaveIcon = document.getElementById('btn-save-icon');
+
+    const inputTargetDate = document.getElementById('modal_target_date');
+    const inputStatus = document.getElementById('modal_status');
+    const inputName = document.getElementById('modal_name');
+    const inputStartTime = document.getElementById('modal_start_time');
+    const inputEndTime = document.getElementById('modal_end_time');
+    const inputDescription = document.getElementById('modal_description');
+
+    const sectionClone = document.getElementById('section-clone-options');
+    const selectSource = document.getElementById('modal_source_timetable_id');
+    const cloneDetail = document.getElementById('clone-options-detail');
+    const btnResetToBlank = document.getElementById('btn-reset-to-blank');
+
+    const sectionDefaultLanes = document.getElementById('section-default-lanes');
+    const inputDefaultLanes = document.getElementById('modal_create_default_lanes');
+
+    const copyLanes = document.getElementById('modal_copy_lanes');
+    const copyLaneStaff = document.getElementById('modal_copy_lane_staff');
+    const copyTasks = document.getElementById('modal_copy_tasks');
+    const copyTaskAssignments = document.getElementById('modal_copy_task_assignments');
+
+    const roadContainer = document.getElementById('road-periods-container');
+    const festivalContainer = document.getElementById('festival-periods-container');
+    const btnAddRoad = document.getElementById('btn-add-road-row');
+    const btnAddFestival = document.getElementById('btn-add-festival-row');
+    const btnPresetRoad = document.getElementById('btn-preset-road');
+    const btnPresetFestival = document.getElementById('btn-preset-festival');
+
+    const openModal = () => {
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    };
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    };
+
+    // 閉じるボタンおよびBackdropクリックイベント
+    modal.querySelectorAll('.btn-close-timetable-modal, .modal-backdrop').forEach((el) => {
+        el.addEventListener('click', closeModal);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
+
+    // ----------------------------------------------------
+    // 道路・まつり時間帯の動的生成ヘルパー
+    // ----------------------------------------------------
+    function createRoadPeriodRow(index, period = {}) {
+        const row = document.createElement('div');
+        row.className = 'period-row grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-slate-200 shadow-2xs';
+        row.innerHTML = `
+            <input type="hidden" name="road_periods[${index}][status]" value="${period.status || 'closed'}">
+            <div class="col-span-3 sm:col-span-3">
+                <label class="block text-[10px] text-slate-400 font-bold mb-0.5">開始時刻</label>
+                <input type="time" name="road_periods[${index}][start_time]" value="${(period.start_time || '10:00').substring(0, 5)}" required
+                    class="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs font-mono">
+            </div>
+            <div class="col-span-3 sm:col-span-3">
+                <label class="block text-[10px] text-slate-400 font-bold mb-0.5">終了時刻</label>
+                <input type="time" name="road_periods[${index}][end_time]" value="${(period.end_time || '18:00').substring(0, 5)}" required
+                    class="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs font-mono">
+            </div>
+            <div class="col-span-5 sm:col-span-5">
+                <label class="block text-[10px] text-slate-400 font-bold mb-0.5">表示文言</label>
+                <input type="text" name="road_periods[${index}][label]" value="${period.label || '通行止め'}" required
+                    placeholder="例: 通行止め"
+                    class="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs">
+            </div>
+            <div class="col-span-1 sm:col-span-1 flex items-end justify-center pt-3">
+                <button type="button" class="btn-remove-row text-slate-400 hover:text-red-600 transition p-1 text-sm font-bold cursor-pointer" title="削除">
+                    ✕
+                </button>
+            </div>
+        `;
+        return row;
+    }
+
+    function createFestivalPeriodRow(index, period = {}) {
+        const row = document.createElement('div');
+        row.className = 'period-row grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-slate-200 shadow-2xs';
+        row.innerHTML = `
+            <input type="hidden" name="festival_periods[${index}][status]" value="${period.status || 'active'}">
+            <div class="col-span-3 sm:col-span-3">
+                <label class="block text-[10px] text-slate-400 font-bold mb-0.5">開始時刻</label>
+                <input type="time" name="festival_periods[${index}][start_time]" value="${(period.start_time || '11:00').substring(0, 5)}" required
+                    class="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs font-mono">
+            </div>
+            <div class="col-span-3 sm:col-span-3">
+                <label class="block text-[10px] text-slate-400 font-bold mb-0.5">終了時刻</label>
+                <input type="time" name="festival_periods[${index}][end_time]" value="${(period.end_time || '17:00').substring(0, 5)}" required
+                    class="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs font-mono">
+            </div>
+            <div class="col-span-5 sm:col-span-5">
+                <label class="block text-[10px] text-slate-400 font-bold mb-0.5">表示文言</label>
+                <input type="text" name="festival_periods[${index}][label]" value="${period.label || '開催中'}" required
+                    placeholder="例: 開催中"
+                    class="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs">
+            </div>
+            <div class="col-span-1 sm:col-span-1 flex items-end justify-center pt-3">
+                <button type="button" class="btn-remove-row text-slate-400 hover:text-red-600 transition p-1 text-sm font-bold cursor-pointer" title="削除">
+                    ✕
+                </button>
+            </div>
+        `;
+        return row;
+    }
+
+    function setRoadPeriods(periods = []) {
+        if (!roadContainer) return;
+        roadContainer.innerHTML = '';
+        if (periods.length === 0) return;
+        periods.forEach((p, idx) => {
+            roadContainer.appendChild(createRoadPeriodRow(idx, p));
+        });
+    }
+
+    function setFestivalPeriods(periods = []) {
+        if (!festivalContainer) return;
+        festivalContainer.innerHTML = '';
+        if (periods.length === 0) return;
+        periods.forEach((p, idx) => {
+            festivalContainer.appendChild(createFestivalPeriodRow(idx, p));
+        });
+    }
+
+    // 行削除イベント委任
+    modal.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.btn-remove-row');
+        if (removeBtn) {
+            removeBtn.closest('.period-row')?.remove();
+        }
+    });
+
+    // 行追加ボタン
+    if (btnAddRoad) {
+        btnAddRoad.addEventListener('click', () => {
+            if (!roadContainer) return;
+            const index = roadContainer.querySelectorAll('.period-row').length;
+            roadContainer.appendChild(createRoadPeriodRow(index));
+        });
+    }
+
+    if (btnAddFestival) {
+        btnAddFestival.addEventListener('click', () => {
+            if (!festivalContainer) return;
+            const index = festivalContainer.querySelectorAll('.period-row').length;
+            festivalContainer.appendChild(createFestivalPeriodRow(index));
+        });
+    }
+
+    // プリセットボタン
+    if (btnPresetRoad) {
+        btnPresetRoad.addEventListener('click', () => {
+            setRoadPeriods([{ start_time: '10:00', end_time: '18:00', label: '通行止め', status: 'closed' }]);
+        });
+    }
+
+    if (btnPresetFestival) {
+        btnPresetFestival.addEventListener('click', () => {
+            setFestivalPeriods([
+                { start_time: '09:00', end_time: '11:00', label: '受付開始・準備', status: 'active' },
+                { start_time: '11:00', end_time: '17:00', label: '開催中', status: 'active' },
+            ]);
+        });
+    }
+
+    // ----------------------------------------------------
+    // 複製オプション連動
+    // ----------------------------------------------------
+    function syncCloneOptionDependencies() {
+        if (!copyLanes || !copyLaneStaff || !copyTasks || !copyTaskAssignments) return;
+
+        const setChildState = (checkbox, enabled) => {
+            checkbox.disabled = !enabled;
+            if (!enabled) checkbox.checked = false;
+            const wrapper = checkbox.closest('[data-clone-option-item]');
+            if (wrapper) wrapper.classList.toggle('opacity-50', !enabled);
+        };
+
+        const lanesEnabled = copyLanes.checked;
+        setChildState(copyLaneStaff, lanesEnabled);
+        setChildState(copyTasks, lanesEnabled);
+
+        const tasksEnabled = lanesEnabled && copyTasks.checked;
+        setChildState(copyTaskAssignments, tasksEnabled);
+    }
+
+    if (copyLanes) copyLanes.addEventListener('change', syncCloneOptionDependencies);
+    if (copyTasks) copyTasks.addEventListener('change', syncCloneOptionDependencies);
+
+    function updateCloneSourceSelection(selectedId) {
+        if (!selectSource) return;
+        selectSource.value = selectedId ? String(selectedId) : '';
+
+        const selectedOption = selectSource.options[selectSource.selectedIndex];
+        const isCloning = Boolean(selectedId && selectedOption && selectedOption.value);
+
+        if (isCloning) {
+            if (cloneDetail) cloneDetail.classList.remove('hidden');
+            if (btnResetToBlank) btnResetToBlank.classList.remove('hidden');
+            if (sectionDefaultLanes) sectionDefaultLanes.classList.add('hidden');
+
+            // 件数バッジ更新
+            const updateBadge = (id, count) => {
+                const badge = document.getElementById(id);
+                if (badge) badge.textContent = `${count || 0}件`;
+            };
+            updateBadge('badge-clone-lanes-count', selectedOption.dataset.lanesCount);
+            updateBadge('badge-clone-tasks-count', selectedOption.dataset.tasksCount);
+            updateBadge('badge-clone-locations-count', selectedOption.dataset.locationsCount);
+            updateBadge('badge-clone-logistics-count', selectedOption.dataset.logisticsCount);
+            const layoutBadge = document.getElementById('badge-clone-layouts-count');
+            if (layoutBadge) {
+                layoutBadge.textContent = `配置 ${selectedOption.dataset.layoutsCount || 0} / 白地図 ${selectedOption.dataset.placementsCount || 0}`;
+            }
+
+            // フィールド初期値投入
+            if (inputName && (!inputName.value || inputName.value.includes('(複製)'))) {
+                inputName.value = `${selectedOption.dataset.name || ''} (複製)`;
+            }
+            if (inputStartTime) inputStartTime.value = selectedOption.dataset.startTime || '08:00';
+            if (inputEndTime) inputEndTime.value = selectedOption.dataset.endTime || '18:00';
+            if (inputDescription && !inputDescription.value) {
+                inputDescription.value = selectedOption.dataset.description || '';
+            }
+
+            if (modalTitle) modalTitle.textContent = '過去運行をもとに新規登録';
+            if (modalSubtitle) modalSubtitle.textContent = `「${selectedOption.dataset.name || ''}」の構成を引き継いで新しい運行情報を作成します。`;
+            if (modalIcon) modalIcon.textContent = '📋';
+            if (btnSaveLabel) btnSaveLabel.textContent = '過去運行をもとに新規登録する';
+            if (btnSaveIcon) btnSaveIcon.textContent = '📋';
+
+            syncCloneOptionDependencies();
+        } else {
+            if (cloneDetail) cloneDetail.classList.add('hidden');
+            if (btnResetToBlank) btnResetToBlank.classList.add('hidden');
+            if (sectionDefaultLanes) sectionDefaultLanes.classList.remove('hidden');
+
+            if (modalTitle) modalTitle.textContent = '新規運行情報登録';
+            if (modalSubtitle) modalSubtitle.textContent = 'まつり開催日の基本枠および規制時間帯を設定します。';
+            if (modalIcon) modalIcon.textContent = '⏱️';
+            if (btnSaveLabel) btnSaveLabel.textContent = '運行日を登録して担当班編成へ進む';
+            if (btnSaveIcon) btnSaveIcon.textContent = '➕';
+        }
+    }
+
+    if (selectSource) {
+        selectSource.addEventListener('change', () => {
+            updateCloneSourceSelection(selectSource.value);
+        });
+    }
+
+    if (btnResetToBlank) {
+        btnResetToBlank.addEventListener('click', () => {
+            updateCloneSourceSelection('');
+            if (inputName && inputName.value.includes('(複製)')) {
+                inputName.value = '';
+            }
+        });
+    }
+
+    // ----------------------------------------------------
+    // 3. 新規登録モーダルを開く
+    // ----------------------------------------------------
+    const btnCreate = document.getElementById('btn-open-create-timetable');
+    if (btnCreate) {
+        btnCreate.addEventListener('click', () => {
+            if (!form) return;
+            form.action = btnCreate.dataset.storeUrl || '/timetables';
+            formMethod.value = 'POST';
+
+            if (sectionClone) sectionClone.classList.remove('hidden');
+            if (sectionDefaultLanes) sectionDefaultLanes.classList.remove('hidden');
+            if (inputDefaultLanes) inputDefaultLanes.checked = true;
+
+            const today = new Date().toISOString().split('T')[0];
+            if (inputTargetDate) inputTargetDate.value = today;
+            if (inputStatus) inputStatus.value = 'draft';
+            if (inputName) inputName.value = '';
+            if (inputStartTime) inputStartTime.value = '08:00';
+            if (inputEndTime) inputEndTime.value = '18:00';
+            if (inputDescription) inputDescription.value = '';
+
+            updateCloneSourceSelection('');
+            setRoadPeriods([{ start_time: '10:00', end_time: '18:00', label: '通行止め', status: 'closed' }]);
+            setFestivalPeriods([{ start_time: '11:00', end_time: '17:00', label: '開催中', status: 'active' }]);
+
+            openModal();
+            inputName?.focus();
+        });
+    }
+
+    // ----------------------------------------------------
+    // 4. 複製モーダルを開く
+    // ----------------------------------------------------
+    document.querySelectorAll('.btn-clone-timetable').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            if (!form) return;
+            const sourceId = btn.dataset.sourceId;
+            form.action = btn.dataset.storeUrl || '/timetables';
+            formMethod.value = 'POST';
+
+            if (sectionClone) sectionClone.classList.remove('hidden');
+
+            const today = new Date().toISOString().split('T')[0];
+            if (inputTargetDate) inputTargetDate.value = today;
+            if (inputStatus) inputStatus.value = 'draft';
+
+            updateCloneSourceSelection(sourceId);
+
+            openModal();
+            inputTargetDate?.focus();
+        });
+    });
+
+    // ----------------------------------------------------
+    // 5. 編集モーダルを開く
+    // ----------------------------------------------------
+    document.querySelectorAll('.btn-edit-timetable').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            if (!form) return;
+            form.action = btn.dataset.updateUrl || '';
+            formMethod.value = 'PUT';
+
+            const name = btn.dataset.name || '';
+            if (modalTitle) modalTitle.textContent = `運行情報の編集: ${name}`;
+            if (modalSubtitle) modalSubtitle.textContent = `「${name}」の基本設定および規制時間帯を更新します。`;
+            if (modalIcon) modalIcon.textContent = '✏️';
+            if (btnSaveLabel) btnSaveLabel.textContent = '変更内容を保存する';
+            if (btnSaveIcon) btnSaveIcon.textContent = '💾';
+
+            // 複製および初期班セクションは編集時は非表示
+            if (sectionClone) sectionClone.classList.add('hidden');
+            if (sectionDefaultLanes) sectionDefaultLanes.classList.add('hidden');
+
+            if (inputTargetDate) inputTargetDate.value = btn.dataset.targetDate || '';
+            if (inputStatus) inputStatus.value = btn.dataset.status || 'draft';
+            if (inputName) inputName.value = name;
+            if (inputStartTime) inputStartTime.value = btn.dataset.startTime || '08:00';
+            if (inputEndTime) inputEndTime.value = btn.dataset.endTime || '18:00';
+            if (inputDescription) inputDescription.value = btn.dataset.description || '';
+
+            // 時間帯設定の反映
+            try {
+                const roadPeriods = JSON.parse(btn.dataset.roadPeriods || '[]');
+                setRoadPeriods(roadPeriods);
+            } catch (err) {
+                setRoadPeriods([]);
+            }
+
+            try {
+                const festivalPeriods = JSON.parse(btn.dataset.festivalPeriods || '[]');
+                setFestivalPeriods(festivalPeriods);
+            } catch (err) {
+                setFestivalPeriods([]);
+            }
+
+            openModal();
+            inputName?.focus();
+        });
+    });
+
+    // ----------------------------------------------------
+    // 6. URLクエリによる自動モーダル起動 (?action=create, ?edit=ID, ?clone=ID)
+    // ----------------------------------------------------
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'create') {
+        const createBtn = document.getElementById('btn-open-create-timetable');
+        if (createBtn) createBtn.click();
+    } else if (urlParams.get('edit')) {
+        const editId = urlParams.get('edit');
+        const editBtn = document.querySelector(`.btn-edit-timetable[data-timetable-id="${editId}"]`) || document.getElementById('btn-open-edit-timetable');
+        if (editBtn) editBtn.click();
+    } else if (urlParams.get('clone')) {
+        const cloneId = urlParams.get('clone');
+        const cloneBtn = document.querySelector(`.btn-clone-timetable[data-source-id="${cloneId}"]`);
+        if (cloneBtn) {
+            cloneBtn.click();
+        } else if (btnCreate) {
+            btnCreate.click();
+            updateCloneSourceSelection(cloneId);
+        }
     }
 }

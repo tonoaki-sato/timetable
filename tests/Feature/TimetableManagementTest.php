@@ -39,7 +39,6 @@ class TimetableManagementTest extends TestCase
     public function test_unauthenticated_users_are_redirected_to_login(): void
     {
         $this->get(route('timetables.index'))->assertRedirect(route('login'));
-        $this->get(route('timetables.create'))->assertRedirect(route('login'));
     }
 
     /**
@@ -76,7 +75,7 @@ class TimetableManagementTest extends TestCase
         $response->assertSee('1日目 本祭運行');
         $response->assertSee('前日 設営運行');
         $response->assertSee(route('timetables.show', $timetableA));
-        $response->assertSee(route('timetables.edit', $timetableA));
+        $response->assertSee(route('timetables.update', $timetableA));
         $response->assertSee(route('timetable.index', ['timetable_id' => $timetableA->id]));
         $response->assertSee(route('timetables.lanes.index', $timetableA));
         $response->assertSee(route('timetables.tasks.index', $timetableA));
@@ -188,39 +187,35 @@ class TimetableManagementTest extends TestCase
     }
 
     /**
-     * 新規作成画面にゆとりあるコンテナ幅、およびデフォルト班自動生成のhidden inputが存在すること（ステップガイドは非表示）
+     * 一覧画面のモーダルフォーム内にデフォルト班自動生成のhidden inputおよび共通要素が存在すること
      */
-    public function test_create_view_displays_expanded_width_and_hidden_input(): void
+    public function test_index_view_displays_form_modal_and_hidden_input(): void
     {
         $this->actingAs($this->operator);
 
-        $response = $this->get(route('timetables.create'));
+        $response = $this->get(route('timetables.index'));
         $response->assertStatus(200);
-        $response->assertSee('運行情報登録');
-        $response->assertSee('運行情報一覧');
-        $response->assertSee('max-w-5xl');
-        $response->assertDontSee('まつり運行準備ステップガイド');
+        $response->assertSee('modal-timetable-form');
+        $response->assertSee('btn-open-create-timetable');
         $response->assertSee('<input type="hidden" name="create_default_lanes" value="0">', false);
         $response->assertSee('まつり標準10班（カラーコーン・給水・衛生・巡回・キッズ村など）を自動生成する（推奨）');
+        $this->assertTrue(
+            str_contains($response->getContent(), 'timetables.js') || str_contains($response->getContent(), 'timetables-'),
+            'timetables script asset is loaded'
+        );
     }
 
     /**
-     * 新規作成画面の開催日初期値が当日の日付（またはクエリ指定値）であること
+     * 一覧画面の開催日初期値フィールドが存在すること
      */
-    public function test_create_view_presets_target_date_to_today_or_query_param(): void
+    public function test_modal_form_has_target_date_input(): void
     {
         $this->actingAs($this->operator);
 
-        // 指定なしの場合: 当日の日付がプリセットされる
-        $response = $this->get(route('timetables.create'));
+        $response = $this->get(route('timetables.index'));
         $response->assertStatus(200);
         $today = now()->toDateString();
-        $response->assertSee('value="'.$today.'"', false);
-
-        // クエリパラメータで target_date を指定した場合: その日付がプリセットされる
-        $customDateResponse = $this->get(route('timetables.create', ['target_date' => '2026-11-20']));
-        $customDateResponse->assertStatus(200);
-        $customDateResponse->assertSee('value="2026-11-20"', false);
+        $response->assertSee('value="' . $today . '"', false);
     }
 
     /**
@@ -254,7 +249,11 @@ class TimetableManagementTest extends TestCase
 
         $timetable = Timetable::factory()->create();
 
-        $this->get(route('timetables.create'))->assertStatus(403);
+        // 一覧画面に新規登録ボタンや編集ボタンが表示されないこと
+        $indexResponse = $this->get(route('timetables.index'));
+        $indexResponse->assertDontSee('btn-open-create-timetable');
+        $indexResponse->assertDontSee('btn-edit-timetable');
+
         $this->post(route('timetables.store'), [
             'target_date' => '2026-10-25',
             'name' => 'テスト運行',
@@ -263,7 +262,6 @@ class TimetableManagementTest extends TestCase
             'status' => 'draft',
         ])->assertStatus(403);
 
-        $this->get(route('timetables.edit', $timetable))->assertStatus(403);
         $this->put(route('timetables.update', $timetable), [
             'target_date' => $timetable->target_date->format('Y-m-d'),
             'name' => '改変運行',
@@ -279,9 +277,9 @@ class TimetableManagementTest extends TestCase
     }
 
     /**
-     * 運行情報編集画面が正常に表示されること
+     * 詳細画面に編集モーダル起動ボタンおよびモーダルDOMが存在すること
      */
-    public function test_edit_view_renders_cleanly(): void
+    public function test_show_view_renders_edit_modal(): void
     {
         $this->actingAs($this->operator);
 
@@ -289,10 +287,10 @@ class TimetableManagementTest extends TestCase
             'name' => '1日目 本祭運行',
         ]);
 
-        $response = $this->get(route('timetables.edit', $timetable));
+        $response = $this->get(route('timetables.show', $timetable));
         $response->assertStatus(200);
-        $response->assertSee('運行情報編集');
-        $response->assertSee('運行情報一覧');
+        $response->assertSee('btn-open-edit-timetable');
+        $response->assertSee('modal-timetable-form');
         $response->assertSee('1日目 本祭運行');
     }
 

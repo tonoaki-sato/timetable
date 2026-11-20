@@ -49,7 +49,7 @@
 
                 <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                     @if($totalCount === 0)
-                    <a href="{{ route('timetables.create') }}" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
+                    <a href="{{ route('timetables.index', ['action' => 'create']) }}" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
                         <span>＋ 新規作成へ</span>
                         <span>→</span>
                     </a>

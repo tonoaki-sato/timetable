@@ -36,10 +36,10 @@
             </div>
         </div>
         @if($schedule->timetable_id)
-        <a href="{{ route('timetables.edit', $schedule->timetable_id) }}"
+        <a href="{{ route('timetables.show', $schedule->timetable_id) }}"
             class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5 shrink-0 whitespace-nowrap">
             <span>⏱️</span>
-            <span>運行タイムテーブルを編集</span>
+            <span>運行タイムテーブル詳細</span>
         </a>
         @endif
     </div>

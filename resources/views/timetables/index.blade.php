@@ -12,7 +12,7 @@
 
         @can('create', App\Models\Timetable::class)
         <x-slot:actions>
-            <x-ui.button variant="header-action" :href="route('timetables.create')">
+            <x-ui.button variant="header-action" id="btn-open-create-timetable" type="button" data-store-url="{{ route('timetables.store') }}">
                 <span>➕</span>
                 <span>新規運行情報登録</span>
             </x-ui.button>
@@ -184,22 +184,36 @@
                                     </div>
                                 </div>
 
-                                <!-- 複製リンク -->
+                                <!-- 複製ボタン (モーダル起動) -->
                                 @can('create', App\Models\Timetable::class)
-                                <a href="{{ route('timetables.create', ['source_timetable_id' => $timetable->id]) }}"
-                                    class="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-300 hover:border-indigo-300 rounded-lg text-xs font-bold transition whitespace-nowrap"
-                                    title="この運行情報をもとに新しく運行情報を作成する">
+                                <button type="button"
+                                    class="btn-clone-timetable inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-300 hover:border-indigo-300 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer shadow-2xs"
+                                    title="この運行情報をもとに新しく運行情報を作成する"
+                                    data-source-id="{{ $timetable->id }}"
+                                    data-store-url="{{ route('timetables.store') }}">
                                     <span>📋</span>
                                     <span>複製</span>
-                                </a>
+                                </button>
                                 @endcan
 
-                                <!-- 編集リンク -->
+                                <!-- 編集ボタン (モーダル起動) -->
                                 @can('update', $timetable)
-                                <x-ui.button variant="edit" size="xs" :href="route('timetables.edit', $timetable)">
+                                <button type="button"
+                                    class="btn-edit-timetable inline-flex items-center space-x-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition cursor-pointer shadow-2xs"
+                                    title="運行情報を編集"
+                                    data-timetable-id="{{ $timetable->id }}"
+                                    data-update-url="{{ route('timetables.update', $timetable) }}"
+                                    data-name="{{ $timetable->name }}"
+                                    data-target-date="{{ $timetable->target_date?->format('Y-m-d') }}"
+                                    data-status="{{ $timetable->status }}"
+                                    data-start-time="{{ substr($timetable->start_time, 0, 5) }}"
+                                    data-end-time="{{ substr($timetable->end_time, 0, 5) }}"
+                                    data-description="{{ $timetable->description }}"
+                                    data-road-periods='@json($timetable->road_periods ?? [])'
+                                    data-festival-periods='@json($timetable->festival_periods ?? [])'>
                                     <span>✏️</span>
                                     <span>編集</span>
-                                </x-ui.button>
+                                </button>
                                 @endcan
 
                                 <!-- 削除ボタン -->
@@ -234,6 +248,13 @@
             </table>
         </div>
     </div>
+
+    <!-- 運行情報 登録・編集・複製モーダル -->
+    @include('timetables._form_modal', [
+        'statuses' => $statuses,
+        'cloneSourceOptions' => $cloneSourceOptions ?? collect(),
+        'redirectTo' => 'index',
+    ])
 
 </div>
 

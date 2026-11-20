@@ -36,26 +36,6 @@ class TimetableController extends Controller
     }
 
     /**
-     * タイムテーブル新規登録画面の表示
-     */
-    public function create(Request $request): View
-    {
-        $this->authorize('create', Timetable::class);
-
-        $sourceTimetableId = $request->integer('source_timetable_id');
-        $sourceTimetable = $sourceTimetableId > 0
-            ? $this->timetableService->findForClone($sourceTimetableId)
-            : null;
-
-        return view('timetables.create', [
-            'statuses' => Timetable::STATUSES,
-            'defaultDate' => $request->input('target_date', now()->toDateString()),
-            'cloneSourceOptions' => $this->timetableService->getAllForCloneSelection(),
-            'sourceTimetable' => $sourceTimetable,
-        ]);
-    }
-
-    /**
      * タイムテーブル新規登録処理
      */
     public function store(StoreTimetableRequest $request): RedirectResponse
@@ -103,19 +83,6 @@ class TimetableController extends Controller
     }
 
     /**
-     * タイムテーブル編集画面の表示
-     */
-    public function edit(Timetable $timetable): View
-    {
-        $this->authorize('update', $timetable);
-
-        return view('timetables.edit', [
-            'timetable' => $timetable,
-            'statuses' => Timetable::STATUSES,
-        ]);
-    }
-
-    /**
      * タイムテーブル更新処理
      */
     public function update(UpdateTimetableRequest $request, Timetable $timetable): RedirectResponse
@@ -124,7 +91,11 @@ class TimetableController extends Controller
 
         $this->timetableService->updateTimetable($timetable, $request->validated());
 
-        return redirect()->route('timetables.show', $timetable)
+        $redirectUrl = $request->input('redirect_to') === 'index'
+            ? route('timetables.index')
+            : route('timetables.show', $timetable);
+
+        return redirect($redirectUrl)
             ->with('success', "タイムテーブル「{$timetable->name}」を更新しました。");
     }
 

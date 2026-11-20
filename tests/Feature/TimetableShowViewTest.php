@@ -100,10 +100,12 @@ class TimetableShowViewTest extends TestCase
         $response->assertSee('運行中');
 
         // カード内編集ボタン
-        $response->assertSee(route('timetables.edit', $this->timetable));
+        $response->assertSee('btn-open-edit-timetable');
+        $response->assertSee(route('timetables.update', $this->timetable));
         $response->assertSee('基本情報を編集');
 
         // ヘッダーから削除されたリンクが表示されていないこと
+        $response->assertDontSee('この運行から新規作成');
         $response->assertDontSee('マトリクス進行表');
 
         // 道路規制・まつり状況カード
@@ -132,7 +134,7 @@ class TimetableShowViewTest extends TestCase
         $response = $this->get(route('timetables.show', $this->timetable));
 
         $response->assertStatus(200);
-        $response->assertDontSee(route('timetables.edit', $this->timetable));
+        $response->assertDontSee('btn-open-edit-timetable');
         $response->assertDontSee('基本情報を編集');
         $response->assertDontSee('このタイムテーブルを削除する');
     }

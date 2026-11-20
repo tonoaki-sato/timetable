@@ -27,7 +27,6 @@ export default defineConfig({
                 'resources/js/vendors.js',
                 'resources/js/booths.js',
                 'resources/js/site-layout-editor.js',
-                'resources/js/timetable-create.js',
                 'resources/js/timetables.js',
             ],
             refresh: true,

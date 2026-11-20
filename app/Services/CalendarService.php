@@ -83,7 +83,7 @@ class CalendarService
                         'description' => $timetable->description,
                         'share_text' => null,
                         'show_url' => route('timetables.show', $timetable),
-                        'edit_url' => route('timetables.edit', $timetable),
+                        'edit_url' => route('timetables.show', $timetable),
                     ];
                 }
             }

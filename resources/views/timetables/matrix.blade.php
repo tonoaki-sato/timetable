@@ -74,7 +74,7 @@
         <h3 class="text-base font-bold text-slate-800">表示できるタイムテーブルがありません</h3>
         <p class="text-xs text-slate-500 mt-1">「運行情報一覧」から新規タイムテーブルを登録してください。</p>
         <div class="mt-4">
-            <a href="{{ route('timetables.create') }}" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow transition">
+            <a href="{{ route('timetables.index', ['action' => 'create']) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow transition">
                 新規タイムテーブルを登録
             </a>
         </div>

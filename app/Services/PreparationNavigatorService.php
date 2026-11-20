@@ -37,7 +37,7 @@ class PreparationNavigatorService
     {
         $totalCount = $this->timetableRepository->getTotalCount();
         if ($totalCount === 0) {
-            return route('timetables.create');
+            return route('timetables.index', ['action' => 'create']);
         }
 
         $targetTimetable = null;
@@ -57,7 +57,7 @@ class PreparationNavigatorService
         }
 
         if (! $targetTimetable) {
-            return route('timetables.create');
+            return route('timetables.index', ['action' => 'create']);
         }
 
         $state = $this->calculateWorkflowStateForTimetable($targetTimetable);

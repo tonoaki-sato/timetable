@@ -76,7 +76,7 @@ class PreparationNavigatorTest extends TestCase
         $response->assertSee('まつり運行準備ナビゲーター');
         $response->assertSee('未着手');
         $response->assertSee('＋ 新規作成へ');
-        $response->assertSee(route('timetables.create'));
+        $response->assertSee(route('timetables.index', ['action' => 'create']));
     }
 
     /**
@@ -141,7 +141,7 @@ class PreparationNavigatorTest extends TestCase
         // タイムテーブル未登録時は Step 1 (timetables.create) へリダイレクト
         $response = $this->actingAs($this->user)->get(route('preparation-navigator.run'));
 
-        $response->assertRedirect(route('timetables.create'));
+        $response->assertRedirect(route('timetables.index', ['action' => 'create']));
     }
 
     /**

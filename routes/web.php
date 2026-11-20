@@ -116,7 +116,7 @@ Route::middleware('auth')->group(function () {
     Route::get('timetables/{timetable}/print-matrix', [TimetablePrintController::class, 'printMatrix'])->name('timetables.print-matrix');
     Route::get('timetables/{timetable}/staff-timeline', [StaffTimelineController::class, 'index'])->name('timetables.staff-timeline');
     Route::get('timetables/{timetable}/tasks', [TimetableTaskController::class, 'indexByTimetable'])->name('timetables.tasks.index');
-    Route::resource('timetables', TimetableController::class);
+    Route::resource('timetables', TimetableController::class)->except(['create', 'edit']);
 
     // 担当班管理
     Route::get('/lanes', [LaneController::class, 'redirect'])->name('lanes.index');

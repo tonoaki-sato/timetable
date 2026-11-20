@@ -103,6 +103,7 @@ class TimetableService
             'timetables' => $timetables,
             'status' => $status,
             'statuses' => Timetable::STATUSES,
+            'cloneSourceOptions' => $this->getAllForCloneSelection(),
         ];
     }
 

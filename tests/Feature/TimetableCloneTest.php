@@ -236,33 +236,28 @@ class TimetableCloneTest extends TestCase
         $dataset = $this->createSourceTimetableDataset();
         $source = $dataset['sourceTimetable'];
 
-        // 一覧画面に複製リンクが表示される
+        // 一覧画面に複製ボタンおよびモーダルが表示される
         $indexResponse = $this->actingAs($this->operator)->get(route('timetables.index'));
         $indexResponse->assertOk()
-            ->assertSee(route('timetables.create', ['source_timetable_id' => $source->id]));
+            ->assertSee('btn-clone-timetable')
+            ->assertSee('data-source-id="' . $source->id . '"', false)
+            ->assertSee('modal-timetable-form')
+            ->assertSee('id="modal_source_timetable_id"', false)
+            ->assertSee('id="modal_copy_lanes"', false)
+            ->assertSee('id="modal_copy_site_layouts"', false);
 
-        // 詳細画面に複製導線ボタンが表示される
+        $this->assertTrue(
+            str_contains($indexResponse->getContent(), 'timetables.js') || str_contains($indexResponse->getContent(), 'timetables-'),
+            'timetables script asset is loaded'
+        );
+
+        // 詳細画面には「この運行から新規作成」が表示されないこと（不要化）
         $showResponse = $this->actingAs($this->operator)->get(route('timetables.show', $source));
         $showResponse->assertOk()
-            ->assertSee(route('timetables.create', ['source_timetable_id' => $source->id]))
-            ->assertSee('この運行から新規作成');
-
-        // 複製元指定で新規登録画面を開くとプリセット・チェックボックス・Viteスクリプトが描画される
-        $createResponse = $this->actingAs($this->operator)
-            ->get(route('timetables.create', ['source_timetable_id' => $source->id]));
-
-        $createResponse->assertOk()
-            ->assertSee('過去の運行情報をもとに作成')
-            ->assertSee('2025年本祭 1日目 (複製)')
-            ->assertSee('歩行者天国')
-            ->assertSee('本祭開催')
-            ->assertSee('id="source_timetable_id"', false)
-            ->assertSee('id="copy_lanes"', false)
-            ->assertSee('id="copy_site_layouts"', false)
-            ->assertSee('timetable-create');
+            ->assertDontSee('この運行から新規作成');
 
         // CSP準拠検証（インラインスクリプト・インラインイベント・インラインスタイルなし）
-        $content = $createResponse->getContent();
+        $content = $indexResponse->getContent();
         $this->assertDoesNotMatchRegularExpression('/<script(?![^>]*(?:\bsrc=|\bnonce=))[^>]*>/i', $content);
         $this->assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $content);
         $this->assertDoesNotMatchRegularExpression('/\sstyle=/i', $content);
