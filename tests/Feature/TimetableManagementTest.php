@@ -153,7 +153,7 @@ class TimetableManagementTest extends TestCase
         ]);
 
         $timetable = Timetable::where('name', '1日目 (Day 1) 本祭運行')->firstOrFail();
-        $response->assertRedirect(route('timetables.lanes.index', $timetable));
+        $response->assertRedirect(route('timetables.index'));
 
         $this->assertDatabaseHas('timetables', [
             'id' => $timetable->id,
@@ -181,7 +181,7 @@ class TimetableManagementTest extends TestCase
         ]);
 
         $timetable = Timetable::where('name', '2日目 独自班編成')->firstOrFail();
-        $response->assertRedirect(route('timetables.lanes.index', $timetable));
+        $response->assertRedirect(route('timetables.index'));
 
         $this->assertCount(0, $timetable->lanes);
     }
@@ -215,7 +215,7 @@ class TimetableManagementTest extends TestCase
         $response = $this->get(route('timetables.index'));
         $response->assertStatus(200);
         $today = now()->toDateString();
-        $response->assertSee('value="' . $today . '"', false);
+        $response->assertSee('value="'.$today.'"', false);
     }
 
     /**
@@ -235,7 +235,7 @@ class TimetableManagementTest extends TestCase
         ]);
 
         $timetable = Timetable::where('name', '3日目 ゼロ班編成')->firstOrFail();
-        $response->assertRedirect(route('timetables.lanes.index', $timetable));
+        $response->assertRedirect(route('timetables.index'));
 
         $this->assertCount(0, $timetable->lanes);
     }
@@ -406,7 +406,7 @@ class TimetableManagementTest extends TestCase
         ]);
 
         $timetable = Timetable::where('name', 'Day 1 本番運行スケジュール')->firstOrFail();
-        $response->assertRedirect(route('timetables.lanes.index', $timetable));
+        $response->assertRedirect(route('timetables.index'));
 
         // schedules テーブルに同期されていることを検証
         $this->assertDatabaseHas('schedules', [

@@ -245,9 +245,9 @@ function initTimetableFormModal() {
     const inputDescription = document.getElementById('modal_description');
 
     const sectionClone = document.getElementById('section-clone-options');
-    const selectSource = document.getElementById('modal_source_timetable_id');
-    const cloneDetail = document.getElementById('clone-options-detail');
-    const btnResetToBlank = document.getElementById('btn-reset-to-blank');
+    const inputSourceId = document.getElementById('modal_source_timetable_id');
+    const cloneSourceName = document.getElementById('clone-source-name');
+    const cloneSourceDate = document.getElementById('clone-source-date');
 
     const sectionDefaultLanes = document.getElementById('section-default-lanes');
     const inputDefaultLanes = document.getElementById('modal_create_default_lanes');
@@ -401,7 +401,6 @@ function initTimetableFormModal() {
     if (btnPresetFestival) {
         btnPresetFestival.addEventListener('click', () => {
             setFestivalPeriods([
-                { start_time: '09:00', end_time: '11:00', label: '受付開始・準備', status: 'active' },
                 { start_time: '11:00', end_time: '17:00', label: '開催中', status: 'active' },
             ]);
         });
@@ -431,77 +430,6 @@ function initTimetableFormModal() {
     if (copyLanes) copyLanes.addEventListener('change', syncCloneOptionDependencies);
     if (copyTasks) copyTasks.addEventListener('change', syncCloneOptionDependencies);
 
-    function updateCloneSourceSelection(selectedId) {
-        if (!selectSource) return;
-        selectSource.value = selectedId ? String(selectedId) : '';
-
-        const selectedOption = selectSource.options[selectSource.selectedIndex];
-        const isCloning = Boolean(selectedId && selectedOption && selectedOption.value);
-
-        if (isCloning) {
-            if (cloneDetail) cloneDetail.classList.remove('hidden');
-            if (btnResetToBlank) btnResetToBlank.classList.remove('hidden');
-            if (sectionDefaultLanes) sectionDefaultLanes.classList.add('hidden');
-
-            // 件数バッジ更新
-            const updateBadge = (id, count) => {
-                const badge = document.getElementById(id);
-                if (badge) badge.textContent = `${count || 0}件`;
-            };
-            updateBadge('badge-clone-lanes-count', selectedOption.dataset.lanesCount);
-            updateBadge('badge-clone-tasks-count', selectedOption.dataset.tasksCount);
-            updateBadge('badge-clone-locations-count', selectedOption.dataset.locationsCount);
-            updateBadge('badge-clone-logistics-count', selectedOption.dataset.logisticsCount);
-            const layoutBadge = document.getElementById('badge-clone-layouts-count');
-            if (layoutBadge) {
-                layoutBadge.textContent = `配置 ${selectedOption.dataset.layoutsCount || 0} / 白地図 ${selectedOption.dataset.placementsCount || 0}`;
-            }
-
-            // フィールド初期値投入
-            if (inputName && (!inputName.value || inputName.value.includes('(複製)'))) {
-                inputName.value = `${selectedOption.dataset.name || ''} (複製)`;
-            }
-            if (inputStartTime) inputStartTime.value = selectedOption.dataset.startTime || '08:00';
-            if (inputEndTime) inputEndTime.value = selectedOption.dataset.endTime || '18:00';
-            if (inputDescription && !inputDescription.value) {
-                inputDescription.value = selectedOption.dataset.description || '';
-            }
-
-            if (modalTitle) modalTitle.textContent = '過去運行をもとに新規登録';
-            if (modalSubtitle) modalSubtitle.textContent = `「${selectedOption.dataset.name || ''}」の構成を引き継いで新しい運行情報を作成します。`;
-            if (modalIcon) modalIcon.textContent = '📋';
-            if (btnSaveLabel) btnSaveLabel.textContent = '過去運行をもとに新規登録する';
-            if (btnSaveIcon) btnSaveIcon.textContent = '📋';
-
-            syncCloneOptionDependencies();
-        } else {
-            if (cloneDetail) cloneDetail.classList.add('hidden');
-            if (btnResetToBlank) btnResetToBlank.classList.add('hidden');
-            if (sectionDefaultLanes) sectionDefaultLanes.classList.remove('hidden');
-
-            if (modalTitle) modalTitle.textContent = '新規運行情報登録';
-            if (modalSubtitle) modalSubtitle.textContent = 'まつり開催日の基本枠および規制時間帯を設定します。';
-            if (modalIcon) modalIcon.textContent = '⏱️';
-            if (btnSaveLabel) btnSaveLabel.textContent = '運行日を登録して担当班編成へ進む';
-            if (btnSaveIcon) btnSaveIcon.textContent = '➕';
-        }
-    }
-
-    if (selectSource) {
-        selectSource.addEventListener('change', () => {
-            updateCloneSourceSelection(selectSource.value);
-        });
-    }
-
-    if (btnResetToBlank) {
-        btnResetToBlank.addEventListener('click', () => {
-            updateCloneSourceSelection('');
-            if (inputName && inputName.value.includes('(複製)')) {
-                inputName.value = '';
-            }
-        });
-    }
-
     // ----------------------------------------------------
     // 3. 新規登録モーダルを開く
     // ----------------------------------------------------
@@ -512,7 +440,8 @@ function initTimetableFormModal() {
             form.action = btnCreate.dataset.storeUrl || '/timetables';
             formMethod.value = 'POST';
 
-            if (sectionClone) sectionClone.classList.remove('hidden');
+            if (inputSourceId) inputSourceId.value = '';
+            if (sectionClone) sectionClone.classList.add('hidden');
             if (sectionDefaultLanes) sectionDefaultLanes.classList.remove('hidden');
             if (inputDefaultLanes) inputDefaultLanes.checked = true;
 
@@ -524,7 +453,12 @@ function initTimetableFormModal() {
             if (inputEndTime) inputEndTime.value = '18:00';
             if (inputDescription) inputDescription.value = '';
 
-            updateCloneSourceSelection('');
+            if (modalTitle) modalTitle.textContent = '新規運行情報登録';
+            if (modalSubtitle) modalSubtitle.textContent = 'まつり開催日の基本枠および規制時間帯を設定します。';
+            if (modalIcon) modalIcon.textContent = '⏱️';
+            if (btnSaveLabel) btnSaveLabel.textContent = '登録する';
+            if (btnSaveIcon) btnSaveIcon.textContent = '💾';
+
             setRoadPeriods([{ start_time: '10:00', end_time: '18:00', label: '通行止め', status: 'closed' }]);
             setFestivalPeriods([{ start_time: '11:00', end_time: '17:00', label: '開催中', status: 'active' }]);
 
@@ -543,13 +477,42 @@ function initTimetableFormModal() {
             form.action = btn.dataset.storeUrl || '/timetables';
             formMethod.value = 'POST';
 
+            if (inputSourceId) inputSourceId.value = sourceId || '';
             if (sectionClone) sectionClone.classList.remove('hidden');
+            if (sectionDefaultLanes) sectionDefaultLanes.classList.add('hidden');
+
+            // 複製元情報カードおよびバッジの更新
+            if (cloneSourceName) cloneSourceName.textContent = btn.dataset.name || '—';
+            if (cloneSourceDate) cloneSourceDate.textContent = btn.dataset.targetDate || '—';
+
+            const updateBadge = (id, count) => {
+                const badge = document.getElementById(id);
+                if (badge) badge.textContent = `${count || 0}件`;
+            };
+            updateBadge('badge-clone-lanes-count', btn.dataset.lanesCount);
+            updateBadge('badge-clone-tasks-count', btn.dataset.tasksCount);
+            updateBadge('badge-clone-locations-count', btn.dataset.locationsCount);
+            updateBadge('badge-clone-logistics-count', btn.dataset.logisticsCount);
+            const layoutBadge = document.getElementById('badge-clone-layouts-count');
+            if (layoutBadge) {
+                layoutBadge.textContent = `配置 ${btn.dataset.layoutsCount || 0} / 白地図 ${btn.dataset.placementsCount || 0}`;
+            }
 
             const today = new Date().toISOString().split('T')[0];
             if (inputTargetDate) inputTargetDate.value = today;
             if (inputStatus) inputStatus.value = 'draft';
+            if (inputName) inputName.value = `${btn.dataset.name || ''} (複製)`;
+            if (inputStartTime) inputStartTime.value = btn.dataset.startTime || '08:00';
+            if (inputEndTime) inputEndTime.value = btn.dataset.endTime || '18:00';
+            if (inputDescription) inputDescription.value = btn.dataset.description || '';
 
-            updateCloneSourceSelection(sourceId);
+            if (modalTitle) modalTitle.textContent = '過去運行をもとに新規登録';
+            if (modalSubtitle) modalSubtitle.textContent = `「${btn.dataset.name || ''}」の構成を引き継いで新しい運行情報を作成します。`;
+            if (modalIcon) modalIcon.textContent = '📋';
+            if (btnSaveLabel) btnSaveLabel.textContent = '複製して登録する';
+            if (btnSaveIcon) btnSaveIcon.textContent = '📋';
+
+            syncCloneOptionDependencies();
 
             openModal();
             inputTargetDate?.focus();
@@ -621,7 +584,6 @@ function initTimetableFormModal() {
             cloneBtn.click();
         } else if (btnCreate) {
             btnCreate.click();
-            updateCloneSourceSelection(cloneId);
         }
     }
 }

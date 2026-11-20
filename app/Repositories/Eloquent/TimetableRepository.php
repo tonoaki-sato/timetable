@@ -89,7 +89,16 @@ class TimetableRepository implements TimetableRepositoryInterface
     #[Override]
     public function getFiltered(?string $status = null): Collection
     {
-        $query = Timetable::query()->orderBy('target_date', 'asc');
+        $query = Timetable::query()
+            ->withCount([
+                'lanes',
+                'tasks',
+                'locations',
+                'logisticsPlans',
+                'layoutItems',
+                'placements',
+            ])
+            ->orderBy('target_date', 'asc');
 
         if ($status) {
             $query->status($status);
@@ -268,22 +277,6 @@ class TimetableRepository implements TimetableRepositoryInterface
                 ]);
             },
         ]);
-    }
-
-    #[Override]
-    public function getAllForCloneSelection(): Collection
-    {
-        return Timetable::withCount([
-            'lanes',
-            'tasks',
-            'locations',
-            'logisticsPlans',
-            'layoutItems',
-            'placements',
-        ])
-            ->orderBy('target_date', 'desc')
-            ->orderBy('id', 'desc')
-            ->get();
     }
 
     #[Override]

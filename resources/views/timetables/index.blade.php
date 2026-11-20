@@ -190,7 +190,18 @@
                                     class="btn-clone-timetable inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-300 hover:border-indigo-300 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer shadow-2xs"
                                     title="この運行情報をもとに新しく運行情報を作成する"
                                     data-source-id="{{ $timetable->id }}"
-                                    data-store-url="{{ route('timetables.store') }}">
+                                    data-store-url="{{ route('timetables.store') }}"
+                                    data-name="{{ $timetable->name }}"
+                                    data-target-date="{{ $timetable->target_date?->format('Y-m-d') }}"
+                                    data-start-time="{{ substr($timetable->start_time, 0, 5) }}"
+                                    data-end-time="{{ substr($timetable->end_time, 0, 5) }}"
+                                    data-description="{{ $timetable->description }}"
+                                    data-lanes-count="{{ $timetable->lanes_count ?? 0 }}"
+                                    data-tasks-count="{{ $timetable->tasks_count ?? 0 }}"
+                                    data-locations-count="{{ $timetable->locations_count ?? 0 }}"
+                                    data-logistics-count="{{ $timetable->logistics_plans_count ?? 0 }}"
+                                    data-layouts-count="{{ $timetable->layout_items_count ?? 0 }}"
+                                    data-placements-count="{{ $timetable->placements_count ?? 0 }}">
                                     <span>📋</span>
                                     <span>複製</span>
                                 </button>
@@ -252,7 +263,6 @@
     <!-- 運行情報 登録・編集・複製モーダル -->
     @include('timetables._form_modal', [
         'statuses' => $statuses,
-        'cloneSourceOptions' => $cloneSourceOptions ?? collect(),
         'redirectTo' => 'index',
     ])
 

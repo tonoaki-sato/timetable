@@ -62,8 +62,14 @@ class TimetableController extends Controller
             $request->user()
         );
 
-        return redirect()->route('timetables.lanes.index', $timetable)
-            ->with('success', "タイムテーブル「{$timetable->name}」を登録しました。続けて各班の班長および固定スタッフを編成しましょう（Step 3）。");
+        $redirectUrl = $request->input('redirect_to') === 'lanes'
+            ? route('timetables.lanes.index', $timetable)
+            : ($request->input('redirect_to') === 'show'
+                ? route('timetables.show', $timetable)
+                : route('timetables.index'));
+
+        return redirect($redirectUrl)
+            ->with('success', "タイムテーブル「{$timetable->name}」を登録しました。");
     }
 
     /**

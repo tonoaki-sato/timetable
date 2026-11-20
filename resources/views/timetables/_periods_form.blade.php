@@ -72,7 +72,7 @@
             <button type="button" id="btn-preset-festival"
                 class="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold transition self-start sm:self-auto cursor-pointer">
                 <span>⚡</span>
-                <span>プリセット: 9:00受付開始 ＆ 11:00〜17:00開催中</span>
+                <span>プリセット: 11:00〜17:00 開催中</span>
             </button>
         </div>
 

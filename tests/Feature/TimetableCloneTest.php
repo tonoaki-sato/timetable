@@ -240,11 +240,13 @@ class TimetableCloneTest extends TestCase
         $indexResponse = $this->actingAs($this->operator)->get(route('timetables.index'));
         $indexResponse->assertOk()
             ->assertSee('btn-clone-timetable')
-            ->assertSee('data-source-id="' . $source->id . '"', false)
+            ->assertSee('data-source-id="'.$source->id.'"', false)
             ->assertSee('modal-timetable-form')
             ->assertSee('id="modal_source_timetable_id"', false)
             ->assertSee('id="modal_copy_lanes"', false)
-            ->assertSee('id="modal_copy_site_layouts"', false);
+            ->assertSee('id="modal_copy_site_layouts"', false)
+            ->assertDontSee('btn-reset-to-blank')
+            ->assertDontSee('白紙作成に戻す');
 
         $this->assertTrue(
             str_contains($indexResponse->getContent(), 'timetables.js') || str_contains($indexResponse->getContent(), 'timetables-'),

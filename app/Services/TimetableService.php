@@ -103,7 +103,6 @@ class TimetableService
             'timetables' => $timetables,
             'status' => $status,
             'statuses' => Timetable::STATUSES,
-            'cloneSourceOptions' => $this->getAllForCloneSelection(),
         ];
     }
 
@@ -113,16 +112,6 @@ class TimetableService
     public function getTimetableDetails(int $id): ?Timetable
     {
         return $this->timetableRepository->findWithDetails($id);
-    }
-
-    /**
-     * 複製元選択用の全タイムテーブル一覧を取得
-     *
-     * @return Collection<int, Timetable>
-     */
-    public function getAllForCloneSelection(): Collection
-    {
-        return $this->timetableRepository->getAllForCloneSelection();
     }
 
     /**
