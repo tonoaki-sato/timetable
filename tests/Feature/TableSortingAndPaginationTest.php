@@ -147,10 +147,9 @@ class TableSortingAndPaginationTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
         $area = LayoutArea::create([
-            'layout_map_id' => $map->id,
-            'zone_code' => 'ZONE_A',
             'name' => 'メイン通りA列',
             'display_order' => 10,
+            'is_active' => true,
         ]);
 
         LayoutItem::create([

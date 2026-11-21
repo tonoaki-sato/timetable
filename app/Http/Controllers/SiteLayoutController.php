@@ -28,12 +28,14 @@ class SiteLayoutController extends Controller
     {
         $this->authorize('viewAny', LayoutMap::class);
 
-        $map = $this->siteLayoutService->getLayoutDetails($timetable);
-        $summary = $this->siteLayoutService->getSummary($map);
+        $map = $this->siteLayoutService->getLayoutMap($timetable);
+        $areas = $this->siteLayoutService->getAreasForMap($map, true);
+        $summary = $this->siteLayoutService->getSummary($map, $areas);
 
         return view('site_layouts.index', [
             'timetable' => $timetable,
             'map' => $map,
+            'areas' => $areas,
             'summary' => $summary,
         ]);
     }
@@ -45,11 +47,13 @@ class SiteLayoutController extends Controller
     {
         $this->authorize('viewAny', LayoutMap::class);
 
-        $map = $this->siteLayoutService->getLayoutWithAreas($timetable);
+        $map = $this->siteLayoutService->getLayoutMap($timetable);
         $filter = LayoutItemFilterDTO::fromArray($request->query());
 
         $items = $this->siteLayoutService->paginateItems($map, $filter);
         $vendors = $this->siteLayoutService->getVendorsForSelect($timetable);
+        $areas = $this->siteLayoutService->getAreasForMap($map, false);
+        $areaCounts = $this->siteLayoutService->getAreaItemCounts($map);
 
         return view('site_layouts.booths', [
             'timetable' => $timetable,
@@ -57,7 +61,9 @@ class SiteLayoutController extends Controller
             'items' => $items,
             'vendors' => $vendors,
             'filters' => $filter->toFilterArray(),
-            'areas' => $map->areas,
+            'areas' => $areas,
+            'totalMapItemsCount' => $areaCounts['total_items'],
+            'areaItemCounts' => $areaCounts['area_totals'],
             'boothCategories' => BoothCategory::cases(),
             'facilityTypes' => FacilityType::cases(),
         ]);
@@ -70,7 +76,7 @@ class SiteLayoutController extends Controller
     {
         $this->authorize('create', LayoutMap::class);
 
-        $map = $this->siteLayoutService->getLayoutWithAreas($timetable);
+        $map = $this->siteLayoutService->getLayoutMap($timetable);
         $item = $this->siteLayoutService->storeItem($map, $request->validated());
 
         return redirect()->back()->with('success', '配置情報（'.$item->code.'）を新規登録しました。');

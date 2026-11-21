@@ -6,9 +6,11 @@ use App\DTOs\LayoutItemFilterDTO;
 use App\Enums\BoothCategory;
 use App\Enums\BoothType;
 use App\Enums\FacilityType;
+use App\Models\LayoutArea;
 use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
+use App\Repositories\Contracts\LayoutAreaRepositoryInterface;
 use App\Repositories\Contracts\LayoutMapRepositoryInterface;
 use App\Repositories\Contracts\VendorRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -18,42 +20,57 @@ class SiteLayoutService
 {
     public function __construct(
         protected LayoutMapRepositoryInterface $layoutMapRepository,
+        protected LayoutAreaRepositoryInterface $layoutAreaRepository,
         protected VendorRepositoryInterface $vendorRepository,
     ) {}
 
     /**
-     * タイムテーブルに紐づく現場配置図面詳細を取得
+     * タイムテーブルに紐づく現場配置図面を取得（なければ作成）
      */
-    public function getLayoutDetails(Timetable $timetable): LayoutMap
+    public function getLayoutMap(Timetable $timetable): LayoutMap
     {
-        $map = $this->layoutMapRepository->getOrCreateForTimetable($timetable);
-
-        return $this->layoutMapRepository->findWithDetails($map->id) ?? $map;
+        return $this->layoutMapRepository->getOrCreateForTimetable($timetable);
     }
 
     /**
-     * タイムテーブルに紐づく現場配置図面（エリアのみ・アイテム全件ロードなし）を取得
+     * 指定配置図面で利用対象となる会場エリア一覧を取得
+     *
+     * @return Collection<int, LayoutArea>
      */
-    public function getLayoutWithAreas(Timetable $timetable): LayoutMap
+    public function getAreasForMap(LayoutMap $map, bool $withScopedItems = false): Collection
     {
-        $map = $this->layoutMapRepository->getOrCreateForTimetable($timetable);
+        return $this->layoutAreaRepository->getForLayoutMap($map, $withScopedItems);
+    }
 
-        return $this->layoutMapRepository->findWithAreas($map->id) ?? $map;
+    /**
+     * 指定配置図面における全体およびエリア別の配置アイテム件数を取得
+     *
+     * @return array{total_items: int, area_totals: array<int, int>}
+     */
+    public function getAreaItemCounts(LayoutMap $map): array
+    {
+        $aggregates = $this->layoutMapRepository->getSummaryAggregates($map->id);
+
+        return [
+            'total_items' => $aggregates['total_items'],
+            'area_totals' => $aggregates['area_totals'],
+        ];
     }
 
     /**
      * 配置計画サマリー集計データを生成
      *
+     * @param  Collection<int, LayoutArea>  $areas
      * @return array{
      *   total_booths: int,
      *   total_facilities: int,
      *   total_items: int,
-     *   categories: array<string, array{label: string, icon: string, count: int, badge: string}>,
-     *   facilities: array<string, array{label: string, icon: string, count: int, badge: string}>,
-     *   area_booth_types: array<int, array{area_id: int, area_name: string, total_count: int, types: array<int, array{value: string, label: string, count: int}>}>
+     *   categories: array<string, array{key: string, label: string, icon: string, count: int, badge: string}>,
+     *   facilities: array<string, array{key: string, label: string, icon: string, count: int, badge: string}>,
+     *   area_booth_types: array<int, array{area_id: int, area_name: string, is_active: bool, total_count: int, types: array<int, array{value: string, label: string, count: int}>}>
      * }
      */
-    public function getSummary(LayoutMap $map): array
+    public function getSummary(LayoutMap $map, Collection $areas): array
     {
         $aggregates = $this->layoutMapRepository->getSummaryAggregates($map->id);
 
@@ -87,7 +104,7 @@ class SiteLayoutService
 
         // 3. 所属エリア別のブース形態別集計
         $areaBoothTypes = [];
-        foreach ($map->areas as $area) {
+        foreach ($areas as $area) {
             $types = [];
             $areaTypeCounts = $aggregates['area_booth_types'][$area->id] ?? [];
             foreach (BoothType::cases() as $type) {
@@ -103,6 +120,7 @@ class SiteLayoutService
             $areaBoothTypes[] = [
                 'area_id' => $area->id,
                 'area_name' => $area->name,
+                'is_active' => (bool) $area->is_active,
                 'total_count' => $aggregates['area_totals'][$area->id] ?? 0,
                 'types' => $types,
             ];

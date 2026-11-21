@@ -25,18 +25,20 @@ return new class extends Migration
             $table->index('timetable_id');
         });
 
-        // 2. 特設エリア・ゾーン（北川P, S&S前P, 税務署前P, 通りゾーン, KIDS_VILLAGE）
+        // 2. 会場エリアマスター（timetables / layout_maps から独立し全運行日で共有）
         Schema::create('layout_areas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('layout_map_id')->constrained('layout_maps')->cascadeOnDelete();
             $table->foreignId('location_id')->nullable()->constrained('locations')->nullOnDelete();
-            $table->string('zone_code', 50)->comment('識別コード（ZONE_A, ZONE_B, AREA_KITAGAWA, AREA_SS, AREA_TAX, KIDS_VILLAGE）');
-            $table->string('name')->comment('エリア名（例: 北川駐車場内, メイン通りA列（東側）, キッズ村）');
-            $table->integer('display_order')->default(0);
+            $table->string('name')->unique()->comment('エリア名（例: 北川駐車場内, メイン通りA列（東側歩道）, キッズ村）');
+            $table->text('notes')->nullable()->comment('エリアの特記事項・設備メモ等');
+            $table->integer('display_order')->default(0)->comment('表示順');
+            $table->boolean('is_active')->default(true)->comment('有効フラグ');
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
 
-            $table->index(['layout_map_id', 'display_order']);
+            $table->index(['is_active', 'display_order', 'id'], 'layout_areas_active_order_id_idx');
+            $table->index(['display_order', 'id'], 'layout_areas_order_id_idx');
+            $table->index('location_id');
         });
 
         // 3. 出展・出店者マスターテーブル（timetablesから独立）
@@ -54,7 +56,7 @@ return new class extends Migration
         Schema::create('layout_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('layout_map_id')->constrained('layout_maps')->cascadeOnDelete();
-            $table->foreignId('layout_area_id')->nullable()->constrained('layout_areas')->nullOnDelete();
+            $table->foreignId('layout_area_id')->nullable()->constrained('layout_areas')->restrictOnDelete();
             $table->string('item_type', 30)->default('booth')->comment('種別: booth(出店ブース), facility(現場設備)');
             $table->string('code', 30)->comment('識別コード（コマ番号 A01〜 または 設備コード W-01〜）');
             $table->string('name')->nullable()->comment('名称（ブース個別表示名または設備名。未入力時ブースはvendor名を表示）');

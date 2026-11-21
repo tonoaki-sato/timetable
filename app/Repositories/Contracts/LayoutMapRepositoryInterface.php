@@ -15,14 +15,9 @@ interface LayoutMapRepositoryInterface
     public function getOrCreateForTimetable(Timetable $timetable): LayoutMap;
 
     /**
-     * 図面詳細（エリア、アイテム一覧等）を取得
+     * 図面詳細を取得
      */
     public function findWithDetails(int $id): ?LayoutMap;
-
-    /**
-     * 図面基本情報およびエリア一覧のみを取得（アイテム全件ロードなし）
-     */
-    public function findWithAreas(int $id): ?LayoutMap;
 
     /**
      * 図面内の配置アイテム集計値（区分別・エリア×形態別）を DB 側で集計して取得

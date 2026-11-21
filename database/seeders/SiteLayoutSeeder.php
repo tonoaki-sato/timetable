@@ -8,7 +8,6 @@ use App\Enums\LayoutItemType;
 use App\Models\LayoutArea;
 use App\Models\LayoutItem;
 use App\Models\LayoutMap;
-use App\Models\Location;
 use App\Models\Timetable;
 use App\Models\Vendor;
 use Illuminate\Database\Seeder;
@@ -20,6 +19,8 @@ class SiteLayoutSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(LayoutAreaSeeder::class);
+
         $timetables = Timetable::all();
         if ($timetables->isEmpty()) {
             return;
@@ -49,57 +50,13 @@ class SiteLayoutSeeder extends Seeder
             'created_by' => $timetable->created_by,
         ]);
 
-        // 既存拠点マップ（マスター参照）
-        $locations = Location::all()->keyBy('name');
-
-        // 2. 特設エリア・ゾーン作成
-        $areaKitagawa = LayoutArea::create([
-            'layout_map_id' => $map->id,
-            'location_id' => $locations->get('長島駐車場（旧北川駐車場）')?->id,
-            'zone_code' => 'AREA_KITAGAWA',
-            'name' => '北川駐車場内',
-            'display_order' => 10,
-        ]);
-
-        $areaSS = LayoutArea::create([
-            'layout_map_id' => $map->id,
-            'location_id' => $locations->get('S&S駐車場')?->id,
-            'zone_code' => 'AREA_SS',
-            'name' => 'S&S前駐車場内',
-            'display_order' => 20,
-        ]);
-
-        $areaTax = LayoutArea::create([
-            'layout_map_id' => $map->id,
-            'location_id' => $locations->get('税務署前駐車場')?->id,
-            'zone_code' => 'AREA_TAX',
-            'name' => '税務署前駐車場内',
-            'display_order' => 30,
-        ]);
-
-        $areaKidsVillage = LayoutArea::create([
-            'layout_map_id' => $map->id,
-            'location_id' => null,
-            'zone_code' => 'KIDS_VILLAGE',
-            'name' => 'キッズ村',
-            'display_order' => 35,
-        ]);
-
-        $areaA = LayoutArea::create([
-            'layout_map_id' => $map->id,
-            'location_id' => null,
-            'zone_code' => 'ZONE_A',
-            'name' => 'メイン通りA列（東側歩道）',
-            'display_order' => 40,
-        ]);
-
-        $areaB = LayoutArea::create([
-            'layout_map_id' => $map->id,
-            'location_id' => null,
-            'zone_code' => 'ZONE_B',
-            'name' => 'メイン通りB列（西側歩道）',
-            'display_order' => 50,
-        ]);
+        // 2. 会場エリアマスター参照（全運行日で共有）
+        $areas = LayoutArea::all()->keyBy('name');
+        $areaKitagawa = $areas->get('北川駐車場内') ?? LayoutArea::firstOrCreate(['name' => '北川駐車場内'], ['display_order' => 10, 'is_active' => true]);
+        $areaSS = $areas->get('S&S前駐車場内') ?? LayoutArea::firstOrCreate(['name' => 'S&S前駐車場内'], ['display_order' => 20, 'is_active' => true]);
+        $areaTax = $areas->get('税務署前駐車場内') ?? LayoutArea::firstOrCreate(['name' => '税務署前駐車場内'], ['display_order' => 30, 'is_active' => true]);
+        $areaA = $areas->get('メイン通りA列（東側歩道）') ?? LayoutArea::firstOrCreate(['name' => 'メイン通りA列（東側歩道）'], ['display_order' => 40, 'is_active' => true]);
+        $areaB = $areas->get('メイン通りB列（西側歩道）') ?? LayoutArea::firstOrCreate(['name' => 'メイン通りB列（西側歩道）'], ['display_order' => 50, 'is_active' => true]);
 
         // 3. 現場設備・インフラ（給水5ヵ所、トイレ、授乳室、救護所、本陣、待機所）
         $facilitiesData = [

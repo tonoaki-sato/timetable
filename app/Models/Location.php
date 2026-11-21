@@ -150,7 +150,7 @@ class Location extends Model
      */
     public function layoutAreas(): HasMany
     {
-        return $this->hasMany(LayoutArea::class, 'location_id');
+        return $this->hasMany(LayoutArea::class, 'location_id')->ordered();
     }
 
     /**

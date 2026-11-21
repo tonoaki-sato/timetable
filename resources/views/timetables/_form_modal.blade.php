@@ -117,7 +117,7 @@
                                         class="w-4 h-4 mt-0.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
                                     <div class="min-w-0 flex-1">
                                         <div class="font-bold text-slate-900">🗺️ 現場配置計画＆白地図配置</div>
-                                        <p class="text-[10px] text-slate-500 mt-0.5">エリア・ブース・設備・CAD図面配置を引き継ぐ</p>
+                                        <p class="text-[10px] text-slate-500 mt-0.5">ブース・設備・CAD図面配置を引き継ぐ</p>
                                     </div>
                                 </label>
                             </div>

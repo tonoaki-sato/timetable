@@ -136,17 +136,15 @@ class VendorManagementTest extends TestCase
         ]);
 
         $areaA = LayoutArea::create([
-            'layout_map_id' => $map->id,
-            'zone_code' => 'ZONE_A',
             'name' => 'メイン通りA列',
             'display_order' => 1,
+            'is_active' => true,
         ]);
 
         $areaPark = LayoutArea::create([
-            'layout_map_id' => $map->id,
-            'zone_code' => 'AREA_KITAGAWA',
             'name' => '北川駐車場内',
             'display_order' => 2,
+            'is_active' => true,
         ]);
 
         $vendor = Vendor::create([

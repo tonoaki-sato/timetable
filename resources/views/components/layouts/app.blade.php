@@ -379,6 +379,14 @@
                                                         <p class="text-[10px] text-slate-400 truncate mt-0.5">CAD白地図・縮尺・図面SVGの一元台帳</p>
                                                     </div>
                                                 </a>
+                                                <a href="{{ route('layout-areas.index') }}"
+                                                    class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('layout-areas.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                    <span class="text-base shrink-0">📐</span>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="text-xs font-bold whitespace-nowrap truncate">会場エリアマスター</div>
+                                                        <p class="text-[10px] text-slate-400 truncate mt-0.5">配置計画・一覧で共有する会場エリア定義</p>
+                                                    </div>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -1006,6 +1014,10 @@
                                 <span class="text-base shrink-0">🗺️</span>
                                 <span class="font-bold truncate">白地図マスター</span>
                             </a>
+                            <a href="{{ route('layout-areas.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                                <span class="text-base shrink-0">📐</span>
+                                <span class="font-bold truncate">会場エリアマスター</span>
+                            </a>
                             <a href="{{ route('equipments.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">📦</span>
                                 <span class="font-bold truncate">機材・備品一覧</span>
@@ -1018,7 +1030,7 @@
                                 <span class="text-base shrink-0">🏷️</span>
                                 <span class="font-bold truncate">拠点タイプ管理</span>
                             </a>
-                            <a href="{{ route('equipment-patterns.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            <a href="{{ route('equipment-patterns.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🧩</span>
                                 <span class="font-bold truncate">搬出入パターン</span>
                             </a>

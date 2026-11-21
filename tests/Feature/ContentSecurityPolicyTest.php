@@ -5,6 +5,9 @@ namespace Tests\Feature;
 use App\Models\Equipment;
 use App\Models\Lane;
 use App\Models\LaneRequest;
+use App\Models\LayoutArea;
+use App\Models\LayoutItem;
+use App\Models\LayoutMap;
 use App\Models\Location;
 use App\Models\LocationSchedule;
 use App\Models\SiteBaseMap;
@@ -13,6 +16,7 @@ use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
+use App\Models\Vendor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -102,6 +106,30 @@ class ContentSecurityPolicyTest extends TestCase
         SiteBaseMap::factory()->asDefault()->create([
             'name' => 'CSP検証用白地図',
         ]);
+        $layoutArea = LayoutArea::factory()->forLocation($location)->create([
+            'name' => 'CSP検証用会場エリア',
+            'notes' => 'CSP検証メモ',
+        ]);
+        $layoutMap = LayoutMap::create([
+            'timetable_id' => $timetable->id,
+            'name' => 'CSP検証配置図',
+        ]);
+        $vendor = Vendor::create([
+            'name' => 'CSP検証出店者',
+            'contact_person' => '検証 太郎',
+            'contact' => '090-0000-1111',
+        ]);
+        LayoutItem::create([
+            'layout_map_id' => $layoutMap->id,
+            'layout_area_id' => $layoutArea->id,
+            'item_type' => 'booth',
+            'code' => 'A01',
+            'name' => 'CSP検証ブース',
+            'status' => 'confirmed',
+            'category' => 'goza_cooked_food',
+            'booth_type' => 'tent',
+            'vendor_id' => $vendor->id,
+        ]);
 
         $routesToTest = [
             route('dashboard'),
@@ -118,6 +146,9 @@ class ContentSecurityPolicyTest extends TestCase
             route('timetables.lanes.edit', [$timetable, $lane]),
             route('locations.index'),
             route('site-base-maps.index'),
+            route('layout-areas.index'),
+            route('timetables.layouts.index', $timetable),
+            route('timetables.layouts.booths', $timetable),
             route('timetables.logistics.index', $timetable),
             route('timetables.site-maps.editor', $timetable),
             route('timetables.staff-timeline', $timetable),

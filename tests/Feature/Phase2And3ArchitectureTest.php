@@ -80,6 +80,11 @@ class Phase2And3ArchitectureTest extends TestCase
                 ['display_order'],
             ],
             'location_schedules' => [['location_id', 'start_at']],
+            'layout_areas' => [
+                ['is_active', 'display_order', 'id'],
+                ['display_order', 'id'],
+                ['location_id'],
+            ],
             'layout_items' => [
                 ['layout_map_id', 'layout_area_id', 'display_order', 'code'],
                 ['vendor_id', 'item_type', 'code'],
@@ -167,11 +172,10 @@ class Phase2And3ArchitectureTest extends TestCase
 
         $layoutMap = LayoutMap::create(['timetable_id' => $timetable->id, 'name' => '配置図']);
         $area = LayoutArea::create([
-            'layout_map_id' => $layoutMap->id,
             'location_id' => $location->id,
-            'zone_code' => 'Z_ARCH',
             'name' => 'テストエリア',
             'display_order' => 1,
+            'is_active' => true,
         ]);
         $layoutItem = LayoutItem::create([
             'layout_map_id' => $layoutMap->id,
@@ -241,7 +245,7 @@ class Phase2And3ArchitectureTest extends TestCase
         $this->assertDatabaseCount('location_schedules', 1);
         $this->assertDatabaseCount('equipment_logistics_plans', 0);
         $this->assertDatabaseCount('layout_maps', 0);
-        $this->assertDatabaseCount('layout_areas', 0);
+        $this->assertDatabaseCount('layout_areas', 1);
         $this->assertDatabaseCount('layout_items', 0);
         $this->assertDatabaseCount('site_base_maps', 1);
         $this->assertDatabaseCount('site_map_placements', 0);

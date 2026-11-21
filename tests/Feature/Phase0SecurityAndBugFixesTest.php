@@ -155,10 +155,9 @@ class Phase0SecurityAndBugFixesTest extends TestCase
             'version_tag' => 'v1',
         ]);
         $area = LayoutArea::create([
-            'layout_map_id' => $map->id,
-            'zone_code' => 'ZONE_A',
             'name' => 'Aエリア',
             'display_order' => 1,
+            'is_active' => true,
         ]);
         $baseMap = SiteBaseMap::create([
             'name' => '平面図',
@@ -236,6 +235,11 @@ class Phase0SecurityAndBugFixesTest extends TestCase
         $this->postJson(route('site-base-maps.store'), ['name' => '不正白地図'])->assertStatus(403);
         $this->putJson(route('site-base-maps.update', $baseMap), ['name' => '不正白地図'])->assertStatus(403);
         $this->deleteJson(route('site-base-maps.destroy', $baseMap))->assertStatus(403);
+        $this->get(route('layout-areas.index'))->assertOk();
+        $this->postJson(route('layout-areas.store'), ['name' => '不正エリア'])->assertStatus(403);
+        $this->putJson(route('layout-areas.update', $area), ['name' => '不正エリア'])->assertStatus(403);
+        $this->deleteJson(route('layout-areas.destroy', $area))->assertStatus(403);
+        $this->postJson(route('layout-areas.reorder'), ['layout_area_ids' => [$area->id]])->assertStatus(403);
         $this->patchJson(route('lane-requests.update-status', $laneRequest), [
             'status' => 'approved',
         ])->assertStatus(403);
@@ -243,6 +247,7 @@ class Phase0SecurityAndBugFixesTest extends TestCase
         // operator は登録・更新が可能
         $this->actingAs($operator);
         $this->postJson(route('vendors.store'), ['name' => '正規登録'])->assertOk();
+        $this->postJson(route('layout-areas.store'), ['name' => '正規エリア登録'])->assertOk();
         $this->postJson(route('site-base-maps.store'), [
             'name' => '正規白地図登録',
             'cad_version' => '260813',

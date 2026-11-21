@@ -6,7 +6,6 @@ use App\DTOs\Timetable\CloneTimetableOptionsDTO;
 use App\Enums\LayoutItemStatus;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Lane;
-use App\Models\LayoutArea;
 use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\SiteMapPlacement;
@@ -280,7 +279,7 @@ class CloneTimetableAction
     }
 
     /**
-     * 現場配置計画（LayoutMap / LayoutArea / LayoutItem）および白地図配置（SiteMapPlacement）を複製
+     * 現場配置計画（LayoutMap / LayoutItem）および白地図配置（SiteMapPlacement）を複製
      *
      * @return array{0: int, 1: int}
      */
@@ -293,7 +292,7 @@ class CloneTimetableAction
         $placementsCount = 0;
         $layoutItemIdMap = [];
 
-        $sourceMaps = LayoutMap::with(['areas', 'items'])
+        $sourceMaps = LayoutMap::with(['items'])
             ->where('timetable_id', $source->id)
             ->orderBy('id')
             ->get();
@@ -307,29 +306,10 @@ class CloneTimetableAction
                 'created_by' => $creator?->id ?? $sourceMap->created_by,
             ]);
 
-            $areaIdMap = [];
-            foreach ($sourceMap->areas as $sourceArea) {
-                $newArea = LayoutArea::create([
-                    'layout_map_id' => $newMap->id,
-                    'location_id' => $sourceArea->location_id,
-                    'zone_code' => $sourceArea->zone_code,
-                    'name' => $sourceArea->name,
-                    'display_order' => $sourceArea->display_order,
-                ]);
-                $areaIdMap[$sourceArea->id] = $newArea->id;
-            }
-
             foreach ($sourceMap->items as $sourceItem) {
-                $newAreaId = $sourceItem->layout_area_id
-                    ? ($areaIdMap[$sourceItem->layout_area_id] ?? null)
-                    : null;
-                if (! $newAreaId) {
-                    continue;
-                }
-
                 $newItem = LayoutItem::create([
                     'layout_map_id' => $newMap->id,
-                    'layout_area_id' => $newAreaId,
+                    'layout_area_id' => $sourceItem->layout_area_id,
                     'item_type' => $sourceItem->item_type,
                     'code' => $sourceItem->code,
                     'name' => $sourceItem->name,

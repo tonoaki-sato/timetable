@@ -246,6 +246,21 @@ function initItemFormModal() {
     statusBtnConfirmed?.addEventListener('click', () => updateStatusUI('confirmed'));
     statusBtnTentative?.addEventListener('click', () => updateStatusUI('tentative'));
 
+    const syncAreaOptions = (selectedAreaId = '') => {
+        if (!selectArea) return;
+        const selectedStr = selectedAreaId !== null && selectedAreaId !== undefined ? String(selectedAreaId) : '';
+        Array.from(selectArea.options).forEach((option) => {
+            if (option.dataset.inactive === '1') {
+                const allowCurrent = selectedStr !== '' && option.value === selectedStr;
+                option.disabled = !allowCurrent;
+                option.hidden = !allowCurrent;
+            } else {
+                option.disabled = false;
+                option.hidden = false;
+            }
+        });
+    };
+
     const closeModal = () => {
         modal.classList.add('hidden');
     };
@@ -275,6 +290,7 @@ function initItemFormModal() {
 
         // フィールドリセット
         inputCode.value = '';
+        syncAreaOptions('');
         selectArea.value = '';
         inputName.value = '';
         if (selectVendor) selectVendor.value = '';
@@ -304,6 +320,7 @@ function initItemFormModal() {
             if (modalSubmitBtn) modalSubmitBtn.textContent = '💾 変更を保存する';
 
             inputCode.value = data.code || '';
+            syncAreaOptions(data.areaId || '');
             selectArea.value = data.areaId || '';
             inputName.value = data.name || '';
             inputLocation.value = data.location || '';

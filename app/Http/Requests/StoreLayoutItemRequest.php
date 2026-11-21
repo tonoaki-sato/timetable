@@ -20,6 +20,20 @@ class StoreLayoutItemRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('layout_area_id') === '') {
+            $this->merge(['layout_area_id' => null]);
+        }
+
+        if ($this->input('vendor_id') === '') {
+            $this->merge(['vendor_id' => null]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -29,7 +43,7 @@ class StoreLayoutItemRequest extends FormRequest
         return [
             'item_type' => ['required', Rule::enum(LayoutItemType::class)],
             'code' => ['required', 'string', 'max:30'],
-            'layout_area_id' => ['nullable', 'exists:layout_areas,id'],
+            'layout_area_id' => ['nullable', 'integer', Rule::exists('layout_areas', 'id')->where('is_active', true)],
             'name' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::enum(LayoutItemStatus::class)],
             'category' => ['nullable', 'string', 'max:50'],

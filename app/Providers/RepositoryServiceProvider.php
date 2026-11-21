@@ -8,6 +8,7 @@ use App\Repositories\Contracts\EquipmentRepositoryInterface;
 use App\Repositories\Contracts\FeatureSettingRepositoryInterface;
 use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Repositories\Contracts\LaneRequestRepositoryInterface;
+use App\Repositories\Contracts\LayoutAreaRepositoryInterface;
 use App\Repositories\Contracts\LayoutMapRepositoryInterface;
 use App\Repositories\Contracts\LocationRepositoryInterface;
 use App\Repositories\Contracts\LocationScheduleRepositoryInterface;
@@ -28,6 +29,7 @@ use App\Repositories\Eloquent\EquipmentRepository;
 use App\Repositories\Eloquent\FeatureSettingRepository;
 use App\Repositories\Eloquent\LaneRepository;
 use App\Repositories\Eloquent\LaneRequestRepository;
+use App\Repositories\Eloquent\LayoutAreaRepository;
 use App\Repositories\Eloquent\LayoutMapRepository;
 use App\Repositories\Eloquent\LocationRepository;
 use App\Repositories\Eloquent\LocationScheduleRepository;
@@ -70,6 +72,7 @@ class RepositoryServiceProvider extends ServiceProvider
         LocationScheduleRepositoryInterface::class => LocationScheduleRepository::class,
         TaskStaffAssignmentRepositoryInterface::class => TaskStaffAssignmentRepository::class,
         OrganizationUnitRepositoryInterface::class => OrganizationUnitRepository::class,
+        LayoutAreaRepositoryInterface::class => LayoutAreaRepository::class,
         LayoutMapRepositoryInterface::class => LayoutMapRepository::class,
         VendorRepositoryInterface::class => VendorRepository::class,
     ];

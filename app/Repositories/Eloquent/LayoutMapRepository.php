@@ -9,12 +9,14 @@ use App\Repositories\Contracts\LayoutMapRepositoryInterface;
 use App\Support\TableQueryOptions;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Override;
 
 class LayoutMapRepository implements LayoutMapRepositoryInterface
 {
     /**
      * タイムテーブルに紐づく現場配置図面を取得（なければ作成）
      */
+    #[Override]
     public function getOrCreateForTimetable(Timetable $timetable): LayoutMap
     {
         $map = LayoutMap::where('timetable_id', $timetable->id)->first();
@@ -34,23 +36,13 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
     /**
      * 図面詳細を取得
      */
+    #[Override]
     public function findWithDetails(int $id): ?LayoutMap
     {
-        return LayoutMap::with([
-            'timetable',
-            'areas.location',
-            'areas.items.vendor',
-        ])->find($id);
+        return LayoutMap::with(['timetable'])->find($id);
     }
 
-    public function findWithAreas(int $id): ?LayoutMap
-    {
-        return LayoutMap::with([
-            'timetable',
-            'areas',
-        ])->find($id);
-    }
-
+    #[Override]
     public function getSummaryAggregates(int $mapId): array
     {
         $categoryRows = LayoutItem::where('layout_map_id', $mapId)
@@ -119,31 +111,34 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
     /**
      * 配置アイテム一覧をページネーション取得
      */
+    #[Override]
     public function paginateItems(LayoutMap $map, array $filters = [], int $perPage = 50): LengthAwarePaginator
     {
         $query = LayoutItem::with(['area', 'vendor'])
-            ->where('layout_map_id', $map->id);
+            ->leftJoin('layout_areas', 'layout_areas.id', '=', 'layout_items.layout_area_id')
+            ->where('layout_items.layout_map_id', $map->id)
+            ->select('layout_items.*');
 
         if (! empty($filters['item_type'])) {
-            $query->where('item_type', $filters['item_type']);
+            $query->where('layout_items.item_type', $filters['item_type']);
         }
 
         if (! empty($filters['area_id'])) {
-            $query->where('layout_area_id', $filters['area_id']);
+            $query->where('layout_items.layout_area_id', $filters['area_id']);
         }
 
         if (! empty($filters['category'])) {
-            $query->where('category', $filters['category']);
+            $query->where('layout_items.category', $filters['category']);
         }
 
         if (! empty($filters['search'])) {
-            $search = '%'.trim($filters['search']).'%';
-            $query->where(function (Builder $q) use ($search) {
-                $q->where('code', 'like', $search)
-                    ->orWhere('name', 'like', $search)
-                    ->orWhere('location_description', 'like', $search)
-                    ->orWhere('notes', 'like', $search)
-                    ->orWhereHas('vendor', function (Builder $sq) use ($search) {
+            $search = '%'.trim((string) $filters['search']).'%';
+            $query->where(function (Builder $q) use ($search): void {
+                $q->where('layout_items.code', 'like', $search)
+                    ->orWhere('layout_items.name', 'like', $search)
+                    ->orWhere('layout_items.location_description', 'like', $search)
+                    ->orWhere('layout_items.notes', 'like', $search)
+                    ->orWhereHas('vendor', function (Builder $sq) use ($search): void {
                         $sq->where('name', 'like', $search)
                             ->orWhere('contact_person', 'like', $search);
                     });
@@ -159,12 +154,18 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
         );
 
         if ($resolved['sort'] === 'display_order' && $resolved['direction'] === 'asc') {
-            $query->orderBy('layout_area_id', 'asc')
-                ->orderBy('display_order', 'asc')
-                ->orderBy('code', 'asc');
+            $query->orderByRaw('COALESCE(layout_areas.display_order, 999999) ASC')
+                ->orderBy('layout_items.display_order', 'asc')
+                ->orderBy('layout_items.code', 'asc');
+        } elseif ($resolved['sort'] === 'layout_area_id') {
+            $dir = $resolved['direction'] === 'desc' ? 'DESC' : 'ASC';
+            $nullOrder = $resolved['direction'] === 'desc' ? -1 : 999999;
+            $query->orderByRaw("COALESCE(layout_areas.display_order, {$nullOrder}) {$dir}")
+                ->orderBy('layout_items.display_order', 'asc')
+                ->orderBy('layout_items.code', 'asc');
         } else {
-            $query->orderBy($resolved['sort'], $resolved['direction'])
-                ->orderBy('code', 'asc');
+            $query->orderBy('layout_items.'.$resolved['sort'], $resolved['direction'])
+                ->orderBy('layout_items.code', 'asc');
         }
 
         return $query->paginate($perPage)->withQueryString();
@@ -173,6 +174,7 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
     /**
      * 配置アイテムを新規登録
      */
+    #[Override]
     public function storeItem(LayoutMap $map, array $data): LayoutItem
     {
         $data['layout_map_id'] = $map->id;
@@ -187,6 +189,7 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
     /**
      * 配置アイテムを更新
      */
+    #[Override]
     public function updateItem(LayoutItem $item, array $data): LayoutItem
     {
         $item->update($data);
@@ -197,6 +200,7 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
     /**
      * 配置アイテムを削除
      */
+    #[Override]
     public function deleteItem(LayoutItem $item): void
     {
         $item->delete();

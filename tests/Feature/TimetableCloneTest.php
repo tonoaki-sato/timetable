@@ -159,11 +159,10 @@ class TimetableCloneTest extends TestCase
             'created_by' => $this->operator->id,
         ]);
         $layoutArea = LayoutArea::create([
-            'layout_map_id' => $layoutMap->id,
             'location_id' => $locationB->id,
-            'zone_code' => 'MAIN_A',
             'name' => 'メイン通りA列',
             'display_order' => 10,
+            'is_active' => true,
         ]);
         $layoutItem = LayoutItem::create([
             'layout_map_id' => $layoutMap->id,
@@ -224,7 +223,7 @@ class TimetableCloneTest extends TestCase
             'reason' => '前年応援要請',
         ]);
 
-        return compact('sourceTimetable', 'leadStaff', 'fixedStaff', 'assignStaff', 'absentStaff', 'vendor', 'locationA', 'locationB');
+        return compact('sourceTimetable', 'leadStaff', 'fixedStaff', 'assignStaff', 'absentStaff', 'vendor', 'locationA', 'locationB', 'layoutItem');
     }
 
     /**
@@ -333,14 +332,13 @@ class TimetableCloneTest extends TestCase
         $this->assertSame($dataset['locationB']->id, $newPlan->to_location_id);
         $this->assertSame('planned', $newPlan->status);
 
-        // 6. LayoutMap / LayoutArea / LayoutItem (vendor_id維持・tentativeリセット) & SiteMapPlacement (layout_item_id リマップ)
+        // 6. LayoutMap / LayoutItem (マスターLayoutArea参照・vendor_id維持・tentativeリセット) & SiteMapPlacement (layout_item_id リマップ)
         $newLayoutMap = LayoutMap::where('timetable_id', $newTimetable->id)->first();
         $this->assertNotNull($newLayoutMap);
-        $newArea = LayoutArea::where('layout_map_id', $newLayoutMap->id)->first();
-        $this->assertNotNull($newArea);
-        $this->assertSame($dataset['locationB']->id, $newArea->location_id);
+        $this->assertSame(1, LayoutArea::count());
         $newItem = LayoutItem::where('layout_map_id', $newLayoutMap->id)->first();
         $this->assertNotNull($newItem);
+        $this->assertSame($dataset['layoutItem']->layout_area_id, $newItem->layout_area_id);
         $this->assertSame($dataset['vendor']->id, $newItem->vendor_id);
         $this->assertSame(LayoutItemStatus::Tentative, $newItem->status);
 

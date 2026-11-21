@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\LayoutItemStatus;
 use App\Enums\LayoutItemType;
+use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -20,16 +21,44 @@ class UpdateLayoutItemRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('layout_area_id') === '') {
+            $this->merge(['layout_area_id' => null]);
+        }
+
+        if ($this->input('vendor_id') === '') {
+            $this->merge(['vendor_id' => null]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        $item = $this->route('item');
+        $currentAreaId = $item instanceof LayoutItem ? $item->layout_area_id : null;
+
         return [
             'item_type' => ['sometimes', 'required', Rule::enum(LayoutItemType::class)],
             'code' => ['sometimes', 'required', 'string', 'max:30'],
-            'layout_area_id' => ['nullable', 'exists:layout_areas,id'],
+            'layout_area_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('layout_areas', 'id')->where(function ($query) use ($currentAreaId): void {
+                    $query->where(function ($sub) use ($currentAreaId): void {
+                        $sub->where('is_active', true);
+                        if ($currentAreaId !== null) {
+                            $sub->orWhere('id', $currentAreaId);
+                        }
+                    });
+                }),
+            ],
             'name' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::enum(LayoutItemStatus::class)],
             'category' => ['nullable', 'string', 'max:50'],

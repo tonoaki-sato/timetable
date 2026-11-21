@@ -26,6 +26,7 @@ export default defineConfig({
                 'resources/js/organizations.js',
                 'resources/js/vendors.js',
                 'resources/js/booths.js',
+                'resources/js/layout-areas.js',
                 'resources/js/site-layout-editor.js',
                 'resources/js/site-base-maps.js',
                 'resources/js/timetables.js',

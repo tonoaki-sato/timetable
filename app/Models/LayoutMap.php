@@ -49,14 +49,6 @@ class LayoutMap extends Model
     }
 
     /**
-     * 特設エリア一覧
-     */
-    public function areas(): HasMany
-    {
-        return $this->hasMany(LayoutArea::class)->orderBy('display_order', 'asc');
-    }
-
-    /**
      * 現場配置アイテム一覧（出店ブース・現場設備）
      */
     public function items(): HasMany

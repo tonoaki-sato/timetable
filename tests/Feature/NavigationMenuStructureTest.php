@@ -135,12 +135,14 @@ class NavigationMenuStructureTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // スタッフ・組織管理・資材・拠点タイプ・パターン・白地図マスターが存在すること
+        // スタッフ・組織管理・資材・拠点タイプ・パターン・白地図・会場エリアマスターが存在すること
         $response->assertSee(route('organizations.index'));
         $response->assertSee(route('staff.index'));
         $response->assertSee(route('vendors.index'));
         $response->assertSee(route('site-base-maps.index'));
         $response->assertSee('白地図マスター');
+        $response->assertSee(route('layout-areas.index'));
+        $response->assertSee('会場エリアマスター');
         $response->assertSee('出展・図面マスター');
         $response->assertSee(route('equipments.index'));
         $response->assertSee(route('location-types.index'));
@@ -244,6 +246,7 @@ class NavigationMenuStructureTest extends TestCase
             route('locations.index'),
             route('location-types.index'),
             route('site-base-maps.index'),
+            route('layout-areas.index'),
             route('timetables.print-assignments', $this->timetable),
             route('timetables.logistics.print', $this->timetable),
             route('staff.print-cards'),

@@ -70,17 +70,15 @@ class SiteLayoutTest extends TestCase
         ]);
 
         $this->areaA = LayoutArea::create([
-            'layout_map_id' => $this->map->id,
-            'zone_code' => 'ZONE_A',
             'name' => 'メイン通りA列（東側歩道）',
             'display_order' => 10,
+            'is_active' => true,
         ]);
 
         $this->areaPark = LayoutArea::create([
-            'layout_map_id' => $this->map->id,
-            'zone_code' => 'AREA_KITAGAWA',
             'name' => '北川駐車場内',
             'display_order' => 20,
+            'is_active' => true,
         ]);
 
         // 出展者マスター

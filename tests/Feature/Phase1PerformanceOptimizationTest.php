@@ -26,6 +26,7 @@ use App\Models\TimetableTask;
 use App\Models\User;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
 use App\Repositories\Contracts\LaneRepositoryInterface;
+use App\Repositories\Contracts\LayoutAreaRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use App\Services\FeatureSettingService;
@@ -285,6 +286,22 @@ class Phase1PerformanceOptimizationTest extends TestCase
         $this->assertSame(1, $laneUpdateCount);
         $this->assertSame(10, $lane2->fresh()->display_order);
 
+        // LayoutAreaRepository::reorder も単一UPDATEで動作すること
+        $la1 = LayoutArea::factory()->create(['display_order' => 10]);
+        $la2 = LayoutArea::factory()->create(['display_order' => 20]);
+        $laRepo = app(LayoutAreaRepositoryInterface::class);
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $laRepo->reorder([$la2->id, $la1->id]);
+        $laQueries = DB::getQueryLog();
+        DB::disableQueryLog();
+        $laUpdateCount = collect($laQueries)
+            ->filter(fn (array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
+            ->count();
+        $this->assertSame(1, $laUpdateCount);
+        $this->assertSame(10, $la2->fresh()->display_order);
+
         // CloneTimetableAction のバルクインサートがJSONメタデータ含め正確に複製すること
         $user = User::factory()->create(['role' => 'admin', 'is_active' => true]);
         $staff = Staff::factory()->create();
@@ -312,11 +329,10 @@ class Phase1PerformanceOptimizationTest extends TestCase
         ]);
         $layoutMap = LayoutMap::create(['timetable_id' => $timetable->id, 'name' => '配置図']);
         $area = LayoutArea::create([
-            'layout_map_id' => $layoutMap->id,
             'location_id' => $loc->id,
-            'zone_code' => 'Z1',
             'name' => 'エリア1',
             'display_order' => 1,
+            'is_active' => true,
         ]);
         $layoutItem = LayoutItem::create([
             'layout_map_id' => $layoutMap->id,

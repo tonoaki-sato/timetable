@@ -16,6 +16,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LanePrintController;
 use App\Http\Controllers\LaneRequestController;
+use App\Http\Controllers\LayoutAreaController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\LocationTypeController;
 use App\Http\Controllers\ManualController;
@@ -235,4 +236,8 @@ Route::middleware('auth')->group(function () {
 
     // 白地図マスター管理 (Site Base Maps)
     Route::resource('site-base-maps', SiteBaseMapController::class)->except(['create', 'show', 'edit']);
+
+    // 会場エリアマスター管理 (Layout Areas)
+    Route::post('layout-areas/reorder', [LayoutAreaController::class, 'reorder'])->name('layout-areas.reorder');
+    Route::resource('layout-areas', LayoutAreaController::class)->except(['create', 'show', 'edit']);
 });
