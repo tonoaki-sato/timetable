@@ -7,6 +7,7 @@ use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\Location;
 use App\Models\LocationSchedule;
+use App\Models\SiteBaseMap;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
@@ -98,6 +99,9 @@ class ContentSecurityPolicyTest extends TestCase
             'name' => 'CSP検証用機材',
             'storage_location_id' => $location->id,
         ]);
+        SiteBaseMap::factory()->asDefault()->create([
+            'name' => 'CSP検証用白地図',
+        ]);
 
         $routesToTest = [
             route('dashboard'),
@@ -113,6 +117,7 @@ class ContentSecurityPolicyTest extends TestCase
             route('timetables.lanes.show', [$timetable, $lane]),
             route('timetables.lanes.edit', [$timetable, $lane]),
             route('locations.index'),
+            route('site-base-maps.index'),
             route('timetables.logistics.index', $timetable),
             route('timetables.site-maps.editor', $timetable),
             route('timetables.staff-timeline', $timetable),

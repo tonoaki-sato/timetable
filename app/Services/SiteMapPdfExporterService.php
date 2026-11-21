@@ -85,8 +85,14 @@ class SiteMapPdfExporterService
             $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>@page { margin: 0; }</style></head><body style="margin:0;padding:0;"></body></html>';
         }
 
+        $isLegacyPreset = $siteBaseMap->svg_path === 'maps/shopping_street_base_map_260813.svg'
+            && file_exists(storage_path('app/site_map_base_20260927.json'));
+        $paperDims = $isLegacyPreset
+            ? ['width' => 842.0, 'height' => 1191.0]
+            : $siteBaseMap->getViewboxDimensions();
+
         $dompdf->loadHtml($html);
-        $dompdf->setPaper([0, 0, 842.0, 1191.0], 'portrait');
+        $dompdf->setPaper([0, 0, $paperDims['width'], $paperDims['height']], 'portrait');
         $dompdf->render();
 
         // 初回生成時のWebサーバー・CLI間の所有権不一致（Permission denied）を防止
@@ -108,7 +114,11 @@ class SiteMapPdfExporterService
         $iconDefs = SiteMapIconDefinition::all()->keyBy('icon_key');
 
         // 1. 白地図ベースレイヤーの描画
-        $this->drawBaseMapLayer($canvas, $font, $placements);
+        if ($isLegacyPreset) {
+            $this->drawBaseMapLayer($canvas, $font, $placements);
+        } else {
+            $this->drawSvgFallbackBaseMapLayer($canvas, $siteBaseMap);
+        }
 
         // 2. 給水20m衛生サークルレイヤーの描画 (最背面配置レイヤー)
         foreach ($placements as $placement) {
@@ -633,6 +643,206 @@ class SiteMapPdfExporterService
         }
 
         return $segments;
+    }
+
+    /**
+     * カスタムSVG白地図ファイルから基本図形（path/rect/line/polygon/polyline）をパースして描画
+     */
+    protected function drawSvgFallbackBaseMapLayer(CPDF $canvas, SiteBaseMap $siteBaseMap): void
+    {
+        $svgFullPath = public_path((string) $siteBaseMap->svg_path);
+        if (! is_file($svgFullPath)) {
+            return;
+        }
+
+        $xml = (string) file_get_contents($svgFullPath);
+        if (trim($xml) === '') {
+            return;
+        }
+
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $prevErrors = libxml_use_internal_errors(true);
+        $loaded = $dom->loadXML($xml, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+        libxml_clear_errors();
+        libxml_use_internal_errors($prevErrors);
+
+        if (! $loaded || ! $dom->documentElement instanceof \DOMElement) {
+            return;
+        }
+
+        $offsetX = 0.0;
+        $offsetY = 0.0;
+        $rawVb = trim($dom->documentElement->getAttribute('viewBox') ?: $dom->documentElement->getAttribute('viewbox'));
+        $vbParts = preg_split('/[\s,]+/', $rawVb);
+        if (is_array($vbParts) && count($vbParts) === 4) {
+            $offsetX = (float) $vbParts[0];
+            $offsetY = (float) $vbParts[1];
+        }
+
+        $this->renderSvgNodeForPdf($canvas, $dom->documentElement, 'none', '#1e293b', 0.5, $offsetX, $offsetY);
+    }
+
+    /**
+     * SVGノードツリーを再帰走査して基本ベクター図形を描画
+     */
+    protected function renderSvgNodeForPdf(
+        CPDF $canvas,
+        \DOMElement $element,
+        string $inheritedFill,
+        string $inheritedStroke,
+        float $inheritedStrokeWidth,
+        float $offsetX,
+        float $offsetY
+    ): void {
+        $tag = strtolower((string) ($element->localName ?: $element->nodeName));
+        if (in_array($tag, ['defs', 'style', 'script', 'metadata', 'title', 'desc'], true)) {
+            return;
+        }
+
+        $fillAttr = $element->hasAttribute('fill') ? trim($element->getAttribute('fill')) : $inheritedFill;
+        $strokeAttr = $element->hasAttribute('stroke') ? trim($element->getAttribute('stroke')) : $inheritedStroke;
+        $strokeW = $element->hasAttribute('stroke-width')
+            ? max(0.1, (float) $element->getAttribute('stroke-width'))
+            : $inheritedStrokeWidth;
+
+        $fillRgb = $this->parseSvgColor($fillAttr);
+        $strokeRgb = $this->parseSvgColor($strokeAttr);
+
+        if ($tag === 'rect') {
+            $rx = (float) $element->getAttribute('x') - $offsetX;
+            $ry = (float) $element->getAttribute('y') - $offsetY;
+            $rw = (float) $element->getAttribute('width');
+            $rh = (float) $element->getAttribute('height');
+            if ($rw > 0 && $rh > 0) {
+                if ($fillRgb !== null) {
+                    $canvas->filled_rectangle($rx, $ry, $rw, $rh, $fillRgb);
+                }
+                if ($strokeRgb !== null) {
+                    $canvas->rectangle($rx, $ry, $rw, $rh, $strokeRgb, $strokeW);
+                }
+            }
+        } elseif ($tag === 'line') {
+            if ($strokeRgb !== null) {
+                $canvas->line(
+                    (float) $element->getAttribute('x1') - $offsetX,
+                    (float) $element->getAttribute('y1') - $offsetY,
+                    (float) $element->getAttribute('x2') - $offsetX,
+                    (float) $element->getAttribute('y2') - $offsetY,
+                    $strokeRgb,
+                    $strokeW
+                );
+            }
+        } elseif ($tag === 'polygon' || $tag === 'polyline') {
+            $points = $this->parseSvgPoints($element->getAttribute('points'), $offsetX, $offsetY);
+            if (count($points) >= 4) {
+                if ($tag === 'polygon' && $fillRgb !== null && count($points) >= 6) {
+                    $canvas->polygon($points, $fillRgb, null, [], true);
+                }
+                if ($strokeRgb !== null) {
+                    for ($i = 0; $i < count($points) - 2; $i += 2) {
+                        $canvas->line($points[$i], $points[$i + 1], $points[$i + 2], $points[$i + 3], $strokeRgb, $strokeW);
+                    }
+                    if ($tag === 'polygon' && count($points) >= 6) {
+                        $last = count($points) - 2;
+                        $canvas->line($points[$last], $points[$last + 1], $points[0], $points[1], $strokeRgb, $strokeW);
+                    }
+                }
+            }
+        } elseif ($tag === 'path') {
+            $segments = $this->parseSvgPathToSegments($element->getAttribute('d'));
+            foreach ($segments as $poly) {
+                if ($offsetX !== 0.0 || $offsetY !== 0.0) {
+                    for ($i = 0; $i < count($poly); $i += 2) {
+                        $poly[$i] -= $offsetX;
+                        if (isset($poly[$i + 1])) {
+                            $poly[$i + 1] -= $offsetY;
+                        }
+                    }
+                }
+                if ($fillRgb !== null && count($poly) >= 6) {
+                    $canvas->polygon($poly, $fillRgb, null, [], true);
+                }
+                if ($strokeRgb !== null) {
+                    for ($i = 0; $i < count($poly) - 2; $i += 2) {
+                        $canvas->line($poly[$i], $poly[$i + 1], $poly[$i + 2], $poly[$i + 3], $strokeRgb, $strokeW);
+                    }
+                }
+            }
+        }
+
+        foreach ($element->childNodes as $child) {
+            if ($child instanceof \DOMElement) {
+                $this->renderSvgNodeForPdf($canvas, $child, $fillAttr, $strokeAttr, $strokeW, $offsetX, $offsetY);
+            }
+        }
+    }
+
+    /**
+     * SVG の points 属性をフラット座標配列にパース
+     *
+     * @return array<int, float>
+     */
+    protected function parseSvgPoints(string $pointsAttr, float $offsetX, float $offsetY): array
+    {
+        $coords = [];
+        if (preg_match_all('/-?\d+(?:\.\d+)?/', $pointsAttr, $matches)) {
+            $nums = $matches[0];
+            $count = count($nums);
+            for ($i = 0; $i + 1 < $count; $i += 2) {
+                $coords[] = (float) $nums[$i] - $offsetX;
+                $coords[] = (float) $nums[$i + 1] - $offsetY;
+            }
+        }
+
+        return $coords;
+    }
+
+    /**
+     * SVG の色表現を [R, G, B] (0.0〜1.0) に変換（none/transparent は null）
+     *
+     * @return array{float, float, float}|null
+     */
+    protected function parseSvgColor(?string $color): ?array
+    {
+        if ($color === null) {
+            return null;
+        }
+
+        $trimmed = strtolower(trim($color));
+        if ($trimmed === '' || $trimmed === 'none' || $trimmed === 'transparent') {
+            return null;
+        }
+
+        $named = [
+            'black' => '#000000',
+            'white' => '#ffffff',
+            'gray' => '#808080',
+            'grey' => '#808080',
+            'red' => '#dc2626',
+            'blue' => '#2563eb',
+            'green' => '#16a34a',
+        ];
+        if (isset($named[$trimmed])) {
+            $trimmed = $named[$trimmed];
+        }
+
+        if (preg_match('/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/', $trimmed, $m) === 1) {
+            return [
+                min(255, (int) $m[1]) / 255.0,
+                min(255, (int) $m[2]) / 255.0,
+                min(255, (int) $m[3]) / 255.0,
+            ];
+        }
+
+        $hex = ltrim($trimmed, '#');
+        if (strlen($hex) === 3) {
+            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        }
+        if (strlen($hex) === 6 && ctype_xdigit($hex)) {
+            return $this->hexToRgb($hex);
+        }
+
+        return [0.278, 0.333, 0.412];
     }
 
     /**

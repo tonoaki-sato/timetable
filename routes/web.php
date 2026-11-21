@@ -23,6 +23,7 @@ use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PreparationNavigatorController;
 use App\Http\Controllers\PresentationController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\SiteBaseMapController;
 use App\Http\Controllers\SiteLayoutController;
 use App\Http\Controllers\SiteMapController;
 use App\Http\Controllers\StaffController;
@@ -210,6 +211,7 @@ Route::middleware('auth')->group(function () {
 
         // 白地図マッピングエディタ (Site Map Editor)
         Route::get('timetables/{timetable}/site-maps/editor', [SiteMapController::class, 'editor'])->name('timetables.site-maps.editor');
+        Route::patch('timetables/{timetable}/site-maps/base-map', [SiteMapController::class, 'updateBaseMap'])->name('timetables.site-maps.base-map.update');
         Route::get('timetables/{timetable}/site-maps/pdf', [SiteMapController::class, 'exportPdf'])->name('timetables.site-maps.pdf');
         Route::post('timetables/{timetable}/site-maps/reset-preset', [SiteMapController::class, 'resetPreset'])->name('timetables.site-maps.reset-preset');
         Route::post('timetables/{timetable}/site-maps/clear-placements', [SiteMapController::class, 'clearPlacements'])->name('timetables.site-maps.clear-placements');
@@ -230,4 +232,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('vendors', VendorController::class)->except(['create', 'show', 'edit']);
 
     Route::resource('location-types', LocationTypeController::class)->except(['create', 'show', 'edit']);
+
+    // 白地図マスター管理 (Site Base Maps)
+    Route::resource('site-base-maps', SiteBaseMapController::class)->except(['create', 'show', 'edit']);
 });

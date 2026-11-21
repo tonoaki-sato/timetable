@@ -27,6 +27,7 @@ class SiteMapService
      *
      * @return array{
      *   siteBaseMap: SiteBaseMap,
+     *   availableBaseMaps: Collection<int, SiteBaseMap>,
      *   iconDefinitions: Collection<int, SiteMapIconDefinition>,
      *   placements: Collection<int, SiteMapPlacement>,
      *   layoutItems: Collection<int, LayoutItem>
@@ -34,32 +35,54 @@ class SiteMapService
      */
     public function getEditorData(Timetable $timetable): array
     {
-        $siteBaseMap = $this->repository->getOrCreateActiveBaseMap($timetable);
+        $siteBaseMap = $this->repository->resolveBaseMapForTimetable($timetable);
+        $availableBaseMaps = $this->repository->getActiveBaseMaps();
+
+        if (! $availableBaseMaps->contains('id', $siteBaseMap->id)) {
+            $availableBaseMaps = (new Collection([$siteBaseMap]))->merge($availableBaseMaps);
+        }
 
         return [
             'siteBaseMap' => $siteBaseMap,
+            'availableBaseMaps' => $availableBaseMaps,
             'iconDefinitions' => $this->repository->getAllIconDefinitions(),
-            'placements' => $this->repository->getPlacementsByBaseMap($siteBaseMap),
+            'placements' => $this->repository->getPlacements($timetable, $siteBaseMap),
             'layoutItems' => $this->repository->getLayoutItemsForTimetable($timetable),
         ];
     }
 
     /**
-     * 運行情報に紐づくアクティブな白地図を取得する
+     * 運行情報で使用する白地図マスターを取得する
      */
     public function getActiveBaseMap(Timetable $timetable): SiteBaseMap
     {
-        return $this->repository->findActiveBaseMapOrFail($timetable);
+        return $this->repository->findBaseMapForTimetableOrFail($timetable);
     }
 
     /**
-     * 白地図のアクティブな配置一覧を取得する
+     * 運行情報で使用する白地図マスターを切り替える
+     */
+    public function switchTimetableBaseMap(Timetable $timetable, SiteBaseMap $siteBaseMap): SiteBaseMap
+    {
+        if (! $siteBaseMap->is_active && $timetable->site_base_map_id !== $siteBaseMap->id) {
+            throw new \DomainException('無効化された白地図マスターは選択できません。');
+        }
+
+        $timetable->update([
+            'site_base_map_id' => $siteBaseMap->id,
+        ]);
+
+        return $siteBaseMap;
+    }
+
+    /**
+     * 運行情報・白地図の配置一覧を取得する
      *
      * @return Collection<int, SiteMapPlacement>
      */
-    public function getPlacements(SiteBaseMap $siteBaseMap): Collection
+    public function getPlacements(Timetable $timetable, SiteBaseMap $siteBaseMap): Collection
     {
-        return $this->repository->getPlacementsByBaseMap($siteBaseMap);
+        return $this->repository->getPlacements($timetable, $siteBaseMap);
     }
 
     /**
@@ -67,7 +90,7 @@ class SiteMapService
      *
      * @param  array<string, mixed>  $data
      */
-    public function createPlacement(SiteBaseMap $siteBaseMap, array $data): SiteMapPlacement
+    public function createPlacement(Timetable $timetable, SiteBaseMap $siteBaseMap, array $data): SiteMapPlacement
     {
         $shapeType = $data['shape_type'] ?? 'booth_standard';
         $iconDef = $this->repository->findIconDefinitionByKey($shapeType);
@@ -85,6 +108,7 @@ class SiteMapService
         };
 
         $placement = new SiteMapPlacement([
+            'timetable_id' => $timetable->id,
             'site_base_map_id' => $siteBaseMap->id,
             'layout_item_id' => $data['layout_item_id'] ?? null,
             'shape_type' => $shapeType,
@@ -169,10 +193,10 @@ class SiteMapService
      * @param  array<int, array<string, mixed>>  $items
      * @return Collection<int, SiteMapPlacement>
      */
-    public function bulkUpdatePlacements(SiteBaseMap $siteBaseMap, array $items): Collection
+    public function bulkUpdatePlacements(Timetable $timetable, SiteBaseMap $siteBaseMap, array $items): Collection
     {
         $ids = collect($items)->pluck('id')->filter()->map(static fn (mixed $id): int => (int) $id)->unique()->values()->all();
-        $existingMap = $this->repository->findPlacementsByIds($siteBaseMap, $ids)->keyBy('id');
+        $existingMap = $this->repository->findPlacementsByIds($timetable, $siteBaseMap, $ids)->keyBy('id');
 
         DB::transaction(function () use ($items, $existingMap): void {
             foreach ($items as $itemData) {
@@ -186,7 +210,7 @@ class SiteMapService
             }
         });
 
-        return $this->repository->getPlacementsByBaseMap($siteBaseMap);
+        return $this->repository->getPlacements($timetable, $siteBaseMap);
     }
 
     /**
@@ -200,9 +224,9 @@ class SiteMapService
     /**
      * 白地図上の全配置オブジェクトを一括削除（クリア）する
      */
-    public function clearPlacements(SiteBaseMap $siteBaseMap): bool
+    public function clearPlacements(Timetable $timetable, SiteBaseMap $siteBaseMap): bool
     {
-        return $this->repository->clearPlacementsByBaseMap($siteBaseMap);
+        return $this->repository->clearPlacements($timetable, $siteBaseMap);
     }
 
     /**
@@ -210,11 +234,11 @@ class SiteMapService
      *
      * @return Collection<int, SiteMapPlacement>
      */
-    public function resetToStandardPreset(SiteBaseMap $siteBaseMap): Collection
+    public function resetToStandardPreset(Timetable $timetable, SiteBaseMap $siteBaseMap): Collection
     {
-        $this->applyStandardPresetAction->execute($siteBaseMap);
+        $this->applyStandardPresetAction->execute($timetable, $siteBaseMap);
 
-        return $this->repository->getPlacementsByBaseMap($siteBaseMap);
+        return $this->repository->getPlacements($timetable, $siteBaseMap);
     }
 
     /**

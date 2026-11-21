@@ -12,14 +12,72 @@ use Illuminate\Database\Eloquent\Collection;
 interface SiteMapRepositoryInterface
 {
     /**
-     * 運行情報に紐づくアクティブな白地図を取得（なければ初期作成）
+     * 運行情報数・配置数カウント付きで全白地図マスターを取得
+     *
+     * @return Collection<int, SiteBaseMap>
      */
-    public function getOrCreateActiveBaseMap(Timetable $timetable): SiteBaseMap;
+    public function getAllBaseMapsWithCounts(): Collection;
 
     /**
-     * 運行情報に紐づくアクティブな白地図を取得（存在しない場合は例外）
+     * 有効な白地図マスター一覧を取得（デフォルト優先）
+     *
+     * @return Collection<int, SiteBaseMap>
      */
-    public function findActiveBaseMapOrFail(Timetable $timetable): SiteBaseMap;
+    public function getActiveBaseMaps(): Collection;
+
+    /**
+     * IDで白地図マスターを取得
+     */
+    public function findBaseMapById(int $id): ?SiteBaseMap;
+
+    /**
+     * 有効なデフォルト白地図マスターを取得（存在しない場合は標準白地図を作成）
+     */
+    public function getOrCreateDefaultBaseMap(): SiteBaseMap;
+
+    /**
+     * 運行情報で使用する白地図マスターを解決（未設定時はデフォルト白地図を取得・作成）
+     */
+    public function resolveBaseMapForTimetable(Timetable $timetable): SiteBaseMap;
+
+    /**
+     * 運行情報で使用する白地図マスターを取得（存在しない場合は例外）
+     */
+    public function findBaseMapForTimetableOrFail(Timetable $timetable): SiteBaseMap;
+
+    /**
+     * 白地図マスターを作成
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function createBaseMap(array $data): SiteBaseMap;
+
+    /**
+     * 白地図マスターを更新
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function updateBaseMap(SiteBaseMap $siteBaseMap, array $data): SiteBaseMap;
+
+    /**
+     * 白地図マスターを削除
+     */
+    public function deleteBaseMap(SiteBaseMap $siteBaseMap): bool;
+
+    /**
+     * 指定ID以外の白地図マスターのデフォルトフラグを解除
+     */
+    public function clearDefaultFlagExcept(?int $exceptId = null): void;
+
+    /**
+     * 指定白地図を使用している運行情報件数を取得
+     */
+    public function countTimetablesUsingBaseMap(SiteBaseMap $siteBaseMap): int;
+
+    /**
+     * 指定白地図に紐づく配置オブジェクト件数を取得
+     */
+    public function countPlacementsUsingBaseMap(SiteBaseMap $siteBaseMap): int;
 
     /**
      * CADシンボル定義一覧を取得
@@ -34,11 +92,11 @@ interface SiteMapRepositoryInterface
     public function findIconDefinitionByKey(string $iconKey): ?SiteMapIconDefinition;
 
     /**
-     * 白地図に配置された全オブジェクトを取得
+     * 運行情報・白地図に紐づく全配置オブジェクトを取得
      *
      * @return Collection<int, SiteMapPlacement>
      */
-    public function getPlacementsByBaseMap(SiteBaseMap $siteBaseMap): Collection;
+    public function getPlacements(Timetable $timetable, SiteBaseMap $siteBaseMap): Collection;
 
     /**
      * 指定ID群に一致する白地図配置オブジェクトを一括取得
@@ -46,7 +104,7 @@ interface SiteMapRepositoryInterface
      * @param  array<int, int>  $ids
      * @return Collection<int, SiteMapPlacement>
      */
-    public function findPlacementsByIds(SiteBaseMap $siteBaseMap, array $ids): Collection;
+    public function findPlacementsByIds(Timetable $timetable, SiteBaseMap $siteBaseMap, array $ids): Collection;
 
     /**
      * 配置オブジェクトを保存
@@ -59,9 +117,9 @@ interface SiteMapRepositoryInterface
     public function deletePlacement(SiteMapPlacement $placement): bool;
 
     /**
-     * 白地図上の全配置オブジェクトを一括削除
+     * 運行情報・白地図上の全配置オブジェクトを一括削除
      */
-    public function clearPlacementsByBaseMap(SiteBaseMap $siteBaseMap): bool;
+    public function clearPlacements(Timetable $timetable, SiteBaseMap $siteBaseMap): bool;
 
     /**
      * 運行情報に紐づく既存ブース・設備台帳一覧を取得

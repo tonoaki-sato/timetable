@@ -4,6 +4,7 @@ namespace App\Actions\SiteMap;
 
 use App\Models\SiteBaseMap;
 use App\Models\SiteMapPlacement;
+use App\Models\Timetable;
 use App\Repositories\Contracts\SiteMapRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -14,11 +15,11 @@ class ApplyStandardSiteMapPresetAction
     ) {}
 
     /**
-     * 指定白地図に対して標準プリセット配置を一括適用
+     * 指定運行情報および白地図に対して標準プリセット配置を一括適用
      *
      * @param  array<int, array<string, mixed>>|null  $items
      */
-    public function execute(SiteBaseMap $baseMap, ?array $items = null): int
+    public function execute(Timetable $timetable, SiteBaseMap $baseMap, ?array $items = null): int
     {
         if ($items === null) {
             $jsonPath = storage_path('app/site_map_standard_placements.json');
@@ -30,16 +31,13 @@ class ApplyStandardSiteMapPresetAction
             $items = is_array($decoded) ? $decoded : [];
         }
 
-        return DB::transaction(function () use ($baseMap, $items): int {
-            $this->siteMapRepository->clearPlacementsByBaseMap($baseMap);
+        return DB::transaction(function () use ($timetable, $baseMap, $items): int {
+            $this->siteMapRepository->clearPlacements($timetable, $baseMap);
 
-            $layoutItemsByCode = [];
-            if ($baseMap->timetable) {
-                $layoutItemsByCode = $this->siteMapRepository
-                    ->getLayoutItemsForTimetable($baseMap->timetable)
-                    ->keyBy('code')
-                    ->all();
-            }
+            $layoutItemsByCode = $this->siteMapRepository
+                ->getLayoutItemsForTimetable($timetable)
+                ->keyBy('code')
+                ->all();
 
             $now = now();
             $rows = [];
@@ -56,6 +54,7 @@ class ApplyStandardSiteMapPresetAction
                 };
 
                 $rows[] = [
+                    'timetable_id' => $timetable->id,
                     'site_base_map_id' => $baseMap->id,
                     'layout_item_id' => $matchedLayoutItem?->id,
                     'shape_type' => (string) ($item['shape_type'] ?? 'booth_standard'),

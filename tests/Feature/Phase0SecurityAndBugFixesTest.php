@@ -161,7 +161,6 @@ class Phase0SecurityAndBugFixesTest extends TestCase
             'display_order' => 1,
         ]);
         $baseMap = SiteBaseMap::create([
-            'timetable_id' => $timetable->id,
             'name' => '平面図',
             'cad_version' => '260927',
             'paper_size' => 'A3',
@@ -171,10 +170,13 @@ class Phase0SecurityAndBugFixesTest extends TestCase
             'svg_path' => 'maps/shopping_street_base_map_260813.svg',
             'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
             'viewbox' => '0 0 842 1191',
+            'is_default' => true,
             'is_active' => true,
         ]);
+        $timetable->update(['site_base_map_id' => $baseMap->id]);
         $vendor = Vendor::create(['name' => '既存出店者']);
         $placement = SiteMapPlacement::create([
+            'timetable_id' => $timetable->id,
             'site_base_map_id' => $baseMap->id,
             'shape_type' => 'booth_standard',
             'display_text' => 'A01',
@@ -230,6 +232,10 @@ class Phase0SecurityAndBugFixesTest extends TestCase
             ->assertStatus(403);
         $this->postJson(route('timetables.site-maps.clear-placements', $timetable))
             ->assertStatus(403);
+        $this->get(route('site-base-maps.index'))->assertOk();
+        $this->postJson(route('site-base-maps.store'), ['name' => '不正白地図'])->assertStatus(403);
+        $this->putJson(route('site-base-maps.update', $baseMap), ['name' => '不正白地図'])->assertStatus(403);
+        $this->deleteJson(route('site-base-maps.destroy', $baseMap))->assertStatus(403);
         $this->patchJson(route('lane-requests.update-status', $laneRequest), [
             'status' => 'approved',
         ])->assertStatus(403);
@@ -237,6 +243,15 @@ class Phase0SecurityAndBugFixesTest extends TestCase
         // operator は登録・更新が可能
         $this->actingAs($operator);
         $this->postJson(route('vendors.store'), ['name' => '正規登録'])->assertOk();
+        $this->postJson(route('site-base-maps.store'), [
+            'name' => '正規白地図登録',
+            'cad_version' => '260813',
+            'paper_size' => 'A3',
+            'scale_ratio' => 7.0866,
+            'width_meters' => 118.80,
+            'height_meters' => 168.00,
+            'svg_path' => 'maps/shopping_street_base_map_260813.svg',
+        ])->assertOk();
         $this->patchJson(route('lane-requests.update-status', $laneRequest), [
             'status' => 'approved',
         ])->assertOk();

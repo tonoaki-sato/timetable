@@ -21,11 +21,13 @@ return new class extends Migration
             $table->json('road_periods')->nullable()->comment('道路規制時間帯[]');
             $table->json('festival_periods')->nullable()->comment('お祭り時間帯[]');
             $table->string('status', 30)->default('draft')->comment('ステータス');
+            $table->foreignId('site_base_map_id')->nullable()->constrained('site_base_maps')->nullOnDelete()->comment('使用白地図マスターID');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->comment('作成者');
             $table->dateTime('created_at')->nullable()->comment('作成日時');
             $table->dateTime('updated_at')->nullable()->comment('更新日時');
 
             $table->index(['status', 'target_date', 'start_time']);
+            $table->index('site_base_map_id');
         });
     }
 

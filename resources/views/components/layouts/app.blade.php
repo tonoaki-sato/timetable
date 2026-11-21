@@ -328,86 +328,102 @@
                                 <span>マスター管理</span>
                                 <span class="text-[9px] opacity-75">▼</span>
                             </button>
-                            <div class="dropdown-menu hidden absolute left-0 mt-1.5 w-76 max-h-[calc(100vh-4.5rem)] overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 z-50">
-                                <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
-                                    <span>👥 組織・人員マスター</span>
-                                    <span class="text-[9px] text-indigo-300 font-mono font-bold">体制</span>
-                                </div>
-                                <div class="py-1 space-y-0.5">
-                                    <a href="{{ route('organizations.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('organizations.*') && !request()->routeIs('organizations.print*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">🏛️</span>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">組織管理</div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">実行委員会の部門・係・役職・担当者体制</p>
+                            <div class="dropdown-menu hidden absolute left-0 mt-1.5 w-[620px] lg:w-[650px] max-h-[calc(100vh-4.5rem)] overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-2 z-50">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <!-- 左カラム: 👥 組織・人員 & 🎪 出展・図面マスター -->
+                                    <div class="space-y-2">
+                                        <div class="space-y-1">
+                                            <div class="px-2.5 py-1 text-[10px] font-bold text-slate-300 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
+                                                <span>👥 組織・人員マスター</span>
+                                                <span class="text-[9px] text-indigo-300 font-mono font-bold">体制</span>
+                                            </div>
+                                            <div class="space-y-0.5">
+                                                <a href="{{ route('organizations.index') }}"
+                                                    class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('organizations.*') && !request()->routeIs('organizations.print*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                    <span class="text-base shrink-0">🏛️</span>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="text-xs font-bold whitespace-nowrap truncate">組織管理</div>
+                                                        <p class="text-[10px] text-slate-400 truncate mt-0.5">実行委員会の部門・係・役職・担当者体制</p>
+                                                    </div>
+                                                </a>
+                                                <a href="{{ route('staff.index') }}"
+                                                    class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('staff.*') && !request()->routeIs('staff.print*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                    <span class="text-base shrink-0">👷</span>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="text-xs font-bold whitespace-nowrap truncate">スタッフ名簿</div>
+                                                        <p class="text-[10px] text-slate-400 truncate mt-0.5">ボランティア・幹事・個別QRコード</p>
+                                                    </div>
+                                                </a>
+                                            </div>
                                         </div>
-                                    </a>
-                                    <a href="{{ route('staff.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('staff.*') && !request()->routeIs('staff.print*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">👷</span>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">スタッフ名簿</div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">ボランティア・幹事・個別QRコード</p>
-                                        </div>
-                                    </a>
-                                </div>
 
-                                <div class="border-t border-slate-800/80 my-1"></div>
+                                        <div class="space-y-1">
+                                            <div class="px-2.5 py-1 text-[10px] font-bold text-slate-300 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
+                                                <span>🎪 出展・図面マスター</span>
+                                                <span class="text-[9px] text-emerald-300 font-mono font-bold">会場</span>
+                                            </div>
+                                            <div class="space-y-0.5">
+                                                <a href="{{ route('vendors.index') }}"
+                                                    class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('vendors.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                    <span class="text-base shrink-0">🏪</span>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="text-xs font-bold whitespace-nowrap truncate">出展・出店者マスター</div>
+                                                        <p class="text-[10px] text-slate-400 truncate mt-0.5">ござ市・企業ブース・特設企画の全出展者台帳</p>
+                                                    </div>
+                                                </a>
+                                                <a href="{{ route('site-base-maps.index') }}"
+                                                    class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('site-base-maps.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                    <span class="text-base shrink-0">🗺️</span>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="text-xs font-bold whitespace-nowrap truncate">白地図マスター</div>
+                                                        <p class="text-[10px] text-slate-400 truncate mt-0.5">CAD白地図・縮尺・図面SVGの一元台帳</p>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
-                                    <span>🎪 出展・出店者マスター</span>
-                                    <span class="text-[9px] text-emerald-300 font-mono font-bold">出店</span>
-                                </div>
-                                <div class="py-1 space-y-0.5">
-                                    <a href="{{ route('vendors.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('vendors.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">🏪</span>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">出展・出店者マスター</div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">ござ市・企業ブース・特設企画の全出展者台帳</p>
+                                    <!-- 右カラム: 📦 資材・拠点マスター -->
+                                    <div class="space-y-1">
+                                        <div class="px-2.5 py-1 text-[10px] font-bold text-slate-300 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
+                                            <span>📦 資材・拠点マスター</span>
+                                            <span class="text-[9px] text-amber-300 font-mono font-bold">リソース</span>
                                         </div>
-                                    </a>
-                                </div>
-
-                                <div class="border-t border-slate-800/80 my-1"></div>
-
-                                <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
-                                    <span>📦 資材・拠点マスター</span>
-                                    <span class="text-[9px] text-amber-300 font-mono font-bold">リソース</span>
-                                </div>
-                                <div class="py-1 space-y-0.5">
-                                    <a href="{{ route('equipments.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('equipments.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">📦</span>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">機材・備品一覧</div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">自前備品・レンタル機材・私物の一元台帳</p>
+                                        <div class="space-y-0.5">
+                                            <a href="{{ route('equipments.index') }}"
+                                                class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('equipments.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                <span class="text-base shrink-0">📦</span>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="text-xs font-bold whitespace-nowrap truncate">機材・備品一覧</div>
+                                                    <p class="text-[10px] text-slate-400 truncate mt-0.5">自前備品・レンタル機材・私物の一元台帳</p>
+                                                </div>
+                                            </a>
+                                            <a href="{{ route('locations.index') }}"
+                                                class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('locations.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                <span class="text-base shrink-0">📍</span>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="text-xs font-bold whitespace-nowrap truncate">拠点マスター</div>
+                                                    <p class="text-[10px] text-slate-400 truncate mt-0.5">倉庫・駐車場・オープンスペース台帳</p>
+                                                </div>
+                                            </a>
+                                            <a href="{{ route('location-types.index') }}"
+                                                class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('location-types.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                <span class="text-base shrink-0">🏷️</span>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="text-xs font-bold whitespace-nowrap truncate">拠点タイプ管理</div>
+                                                    <p class="text-[10px] text-slate-400 truncate mt-0.5">拠点種別・アイコン設定</p>
+                                                </div>
+                                            </a>
+                                            <a href="{{ route('equipment-patterns.index') }}"
+                                                class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('equipment-patterns.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                <span class="text-base shrink-0">🧩</span>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="text-xs font-bold whitespace-nowrap truncate">搬出入パターン</div>
+                                                    <p class="text-[10px] text-slate-400 truncate mt-0.5">資材搬出入ステップ・テンプレート</p>
+                                                </div>
+                                            </a>
                                         </div>
-                                    </a>
-                                    <a href="{{ route('locations.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('locations.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">📍</span>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">拠点マスター</div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">倉庫・駐車場・オープンスペース台帳</p>
-                                        </div>
-                                    </a>
-                                    <a href="{{ route('location-types.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('location-types.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">🏷️</span>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">拠点タイプ管理</div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">拠点種別・アイコン設定</p>
-                                        </div>
-                                    </a>
-                                    <a href="{{ route('equipment-patterns.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('equipment-patterns.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
-                                        <span class="text-base shrink-0">🧩</span>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-xs font-bold whitespace-nowrap truncate">搬出入パターン</div>
-                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">資材搬出入ステップ・テンプレート</p>
-                                        </div>
-                                    </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -982,9 +998,13 @@
                                 <span class="text-base shrink-0">👷</span>
                                 <span class="font-bold truncate">スタッフ名簿</span>
                             </a>
-                            <a href="{{ route('vendors.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            <a href="{{ route('vendors.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🎪</span>
                                 <span class="font-bold truncate">出展・出店者マスター</span>
+                            </a>
+                            <a href="{{ route('site-base-maps.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                                <span class="text-base shrink-0">🗺️</span>
+                                <span class="font-bold truncate">白地図マスター</span>
                             </a>
                             <a href="{{ route('equipments.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">📦</span>

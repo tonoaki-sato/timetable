@@ -90,7 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const bulkUrl = appEl.dataset.bulkUrl;
     const resetUrl = appEl.dataset.resetUrl;
     const clearUrl = appEl.dataset.clearUrl;
+    const baseMapUpdateUrl = appEl.dataset.baseMapUpdateUrl;
     const iconStoreUrl = appEl.dataset.iconStoreUrl;
+    const selectTimetableBaseMap = document.getElementById('select-timetable-base-map');
     const iconBaseUrl = appEl.dataset.iconBaseUrl;
     const csrfToken = appEl.dataset.csrfToken;
 
@@ -1632,6 +1634,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 setSaveStatus('saved');
             } catch (err) {
                 console.error(err);
+                setSaveStatus('error');
+            }
+        });
+    }
+
+    if (selectTimetableBaseMap && baseMapUpdateUrl) {
+        selectTimetableBaseMap.addEventListener('change', async () => {
+            const newId = selectTimetableBaseMap.value;
+            const prevId = selectTimetableBaseMap.dataset.currentBaseMapId;
+            if (!newId || newId === prevId) return;
+
+            const selectedLabel = selectTimetableBaseMap.options[selectTimetableBaseMap.selectedIndex]?.textContent?.trim() || '選択した白地図';
+            const ok = await confirmDialog(
+                `使用する白地図を「${selectedLabel}」に切り替えますか？\n切り替え後は白地図エディタを再読み込みします。`,
+                { variant: 'primary', icon: '🗺️', title: '使用白地図の切り替え', confirmText: '切り替える' }
+            );
+            if (!ok) {
+                selectTimetableBaseMap.value = prevId;
+                return;
+            }
+
+            setSaveStatus('saving');
+            try {
+                const res = await fetch(baseMapUpdateUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        Accept: 'application/json',
+                    },
+                    body: JSON.stringify({ site_base_map_id: parseInt(newId, 10) }),
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    showToast(data.message || '白地図の切り替えに失敗しました');
+                    selectTimetableBaseMap.value = prevId;
+                    setSaveStatus('error');
+                    return;
+                }
+                window.location.reload();
+            } catch (err) {
+                console.error('Failed to switch base map:', err);
+                showToast('通信エラーが発生しました');
+                selectTimetableBaseMap.value = prevId;
                 setSaveStatus('error');
             }
         });

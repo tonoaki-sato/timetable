@@ -39,7 +39,8 @@ return new class extends Migration
         // 2. マッピング配置テーブル (site_map_placements)
         Schema::create('site_map_placements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('site_base_map_id')->constrained('site_base_maps')->cascadeOnDelete();
+            $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
+            $table->foreignId('site_base_map_id')->constrained('site_base_maps')->restrictOnDelete();
             $table->foreignId('layout_item_id')->nullable()->constrained('layout_items')->nullOnDelete();
             $table->string('shape_type', 50)->default('booth_standard')->comment('シンボル種別キー');
             $table->string('display_text', 255)->default('')->comment('中央表示テキスト (改行可)');
@@ -60,8 +61,9 @@ return new class extends Migration
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
 
-            $table->index(['site_base_map_id', 'shape_type']);
-            $table->index(['site_base_map_id', 'z_index', 'id'], 'site_map_placements_map_z_id_idx');
+            $table->index(['timetable_id', 'site_base_map_id', 'shape_type'], 'site_map_placements_tt_map_shape_idx');
+            $table->index(['timetable_id', 'site_base_map_id', 'z_index', 'id'], 'site_map_placements_tt_map_z_id_idx');
+            $table->index('site_base_map_id');
             $table->index('shape_type');
             $table->index('layout_item_id');
         });

@@ -66,7 +66,8 @@ class NavigationPresenter
             || request()->routeIs('locations.*')
             || request()->routeIs('location-types.*')
             || request()->routeIs('equipment-patterns.*')
-            || request()->routeIs('vendors.*');
+            || request()->routeIs('vendors.*')
+            || request()->routeIs('site-base-maps.*');
     }
 
     /**

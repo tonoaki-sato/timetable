@@ -40,7 +40,6 @@ class StoreTimetableRequest extends FormRequest
             'copy_lane_staff',
             'copy_tasks',
             'copy_task_assignments',
-            'copy_locations',
             'copy_logistics_plans',
             'copy_site_layouts',
         ] as $copyFlag) {
@@ -66,6 +65,7 @@ class StoreTimetableRequest extends FormRequest
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'status' => ['required', 'string', 'in:'.implode(',', array_keys(Timetable::STATUSES))],
+            'site_base_map_id' => ['nullable', 'integer', 'exists:site_base_maps,id'],
             'road_periods' => ['nullable', 'array'],
             'road_periods.*.start_time' => ['required_with:road_periods', 'date_format:H:i'],
             'road_periods.*.end_time' => ['required_with:road_periods', 'date_format:H:i', 'after:road_periods.*.start_time'],
@@ -81,7 +81,6 @@ class StoreTimetableRequest extends FormRequest
             'copy_lane_staff' => ['nullable', 'boolean'],
             'copy_tasks' => ['nullable', 'boolean'],
             'copy_task_assignments' => ['nullable', 'boolean'],
-            'copy_locations' => ['nullable', 'boolean'],
             'copy_logistics_plans' => ['nullable', 'boolean'],
             'copy_site_layouts' => ['nullable', 'boolean'],
         ];
@@ -101,6 +100,7 @@ class StoreTimetableRequest extends FormRequest
             'start_time' => '運行開始時刻',
             'end_time' => '運行終了時刻',
             'status' => 'ステータス',
+            'site_base_map_id' => '使用白地図',
             'source_timetable_id' => '複製元の運行情報',
             'road_periods' => '道路状況設定',
             'road_periods.*.start_time' => '道路規制の開始時刻',

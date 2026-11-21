@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
  * 白地図マッピング配置モデル
  *
  * @property int $id
+ * @property int $timetable_id
  * @property int $site_base_map_id
  * @property int|null $layout_item_id
  * @property string $shape_type
@@ -32,10 +33,12 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed>|null $meta_data
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read Timetable $timetable
  * @property-read SiteBaseMap $siteBaseMap
  * @property-read LayoutItem|null $layoutItem
  */
 #[Fillable([
+    'timetable_id',
     'site_base_map_id',
     'layout_item_id',
     'shape_type',
@@ -70,6 +73,7 @@ class SiteMapPlacement extends Model
     protected function casts(): array
     {
         return [
+            'timetable_id' => 'integer',
             'site_base_map_id' => 'integer',
             'layout_item_id' => 'integer',
             'font_size' => 'decimal:2',
@@ -85,6 +89,16 @@ class SiteMapPlacement extends Model
             'z_index' => 'integer',
             'meta_data' => 'array',
         ];
+    }
+
+    /**
+     * 所属する運行情報 (Timetable)
+     *
+     * @return BelongsTo<Timetable, $this>
+     */
+    public function timetable(): BelongsTo
+    {
+        return $this->belongsTo(Timetable::class, 'timetable_id');
     }
 
     /**

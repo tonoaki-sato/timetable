@@ -40,7 +40,6 @@ class SiteMapIconManagementTest extends TestCase
         ]);
 
         $this->siteBaseMap = SiteBaseMap::create([
-            'timetable_id' => $this->timetable->id,
             'name' => '保土ヶ谷宿場まつり 平面図 1/400 A3',
             'cad_version' => '260927',
             'paper_size' => 'A3',
@@ -50,8 +49,11 @@ class SiteMapIconManagementTest extends TestCase
             'svg_path' => 'maps/shopping_street_base_map_260813.svg',
             'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
             'viewbox' => '0 0 842 1191',
+            'is_default' => true,
             'is_active' => true,
         ]);
+
+        $this->timetable->update(['site_base_map_id' => $this->siteBaseMap->id]);
 
         $this->seed(SiteMapIconDefinitionSeeder::class);
     }
@@ -238,12 +240,14 @@ class SiteMapIconManagementTest extends TestCase
         ]);
 
         SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'custom_checkpoint',
             'pos_x' => 100,
             'pos_y' => 100,
         ]);
         SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'custom_checkpoint',
             'pos_x' => 150,
@@ -281,6 +285,7 @@ class SiteMapIconManagementTest extends TestCase
         ]);
 
         $p = SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'custom_guard',
             'pos_x' => 200,
@@ -329,6 +334,7 @@ class SiteMapIconManagementTest extends TestCase
         ]);
 
         SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'custom_kankou',
             'display_text' => '案内所',

@@ -20,7 +20,7 @@ class DownloadSiteMapPdfAction
     public function execute(Timetable $timetable): Response
     {
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
-        $placements = $this->siteMapService->getPlacements($siteBaseMap);
+        $placements = $this->siteMapService->getPlacements($timetable, $siteBaseMap);
 
         $pdfBinary = $this->pdfExporterService->exportA3VectorPdf($siteBaseMap, $placements);
 

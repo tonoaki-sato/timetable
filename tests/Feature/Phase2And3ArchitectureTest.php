@@ -85,7 +85,8 @@ class Phase2And3ArchitectureTest extends TestCase
                 ['vendor_id', 'item_type', 'code'],
             ],
             'site_map_placements' => [
-                ['site_base_map_id', 'z_index', 'id'],
+                ['timetable_id', 'site_base_map_id', 'z_index', 'id'],
+                ['timetable_id', 'site_base_map_id', 'shape_type'],
                 ['shape_type'],
             ],
         ];
@@ -180,7 +181,6 @@ class Phase2And3ArchitectureTest extends TestCase
             'status' => 'confirmed',
         ]);
         $baseMap = SiteBaseMap::create([
-            'timetable_id' => $timetable->id,
             'name' => '白地図',
             'cad_version' => '260927',
             'paper_size' => 'A3',
@@ -190,9 +190,12 @@ class Phase2And3ArchitectureTest extends TestCase
             'svg_path' => 'maps/shopping_street_base_map_260813.svg',
             'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
             'viewbox' => '0 0 842 1191',
+            'is_default' => true,
             'is_active' => true,
         ]);
+        $timetable->update(['site_base_map_id' => $baseMap->id]);
         $placement = SiteMapPlacement::create([
+            'timetable_id' => $timetable->id,
             'site_base_map_id' => $baseMap->id,
             'layout_item_id' => $layoutItem->id,
             'shape_type' => 'booth_standard',
@@ -240,7 +243,7 @@ class Phase2And3ArchitectureTest extends TestCase
         $this->assertDatabaseCount('layout_maps', 0);
         $this->assertDatabaseCount('layout_areas', 0);
         $this->assertDatabaseCount('layout_items', 0);
-        $this->assertDatabaseCount('site_base_maps', 0);
+        $this->assertDatabaseCount('site_base_maps', 1);
         $this->assertDatabaseCount('site_map_placements', 0);
         $this->assertDatabaseCount('staff_check_ins', 0);
         $this->assertDatabaseCount('schedules', 0);
@@ -344,7 +347,6 @@ class Phase2And3ArchitectureTest extends TestCase
 
         // 3. ApplyStandardSiteMapPresetAction & DownloadSiteMapPdfAction
         $baseMap = SiteBaseMap::create([
-            'timetable_id' => $activeTimetable->id,
             'name' => '平面図',
             'cad_version' => '260927',
             'paper_size' => 'A3',
@@ -354,9 +356,11 @@ class Phase2And3ArchitectureTest extends TestCase
             'svg_path' => 'maps/shopping_street_base_map_260813.svg',
             'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
             'viewbox' => '0 0 842 1191',
+            'is_default' => true,
             'is_active' => true,
         ]);
-        $insertedCount = app(ApplyStandardSiteMapPresetAction::class)->execute($baseMap, [
+        $activeTimetable->update(['site_base_map_id' => $baseMap->id]);
+        $insertedCount = app(ApplyStandardSiteMapPresetAction::class)->execute($activeTimetable, $baseMap, [
             [
                 'shape_type' => 'booth_standard',
                 'display_text' => 'A01',

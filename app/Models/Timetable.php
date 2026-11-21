@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'start_time',
     'end_time',
     'status',
+    'site_base_map_id',
     'road_periods',
     'festival_periods',
     'created_by',
@@ -72,6 +73,7 @@ class Timetable extends Model
     {
         return [
             'target_date' => 'date',
+            'site_base_map_id' => 'integer',
             'road_periods' => 'array',
             'festival_periods' => 'array',
         ];
@@ -372,19 +374,23 @@ class Timetable extends Model
     }
 
     /**
-     * 運行情報に紐づく白地図一覧を取得
+     * この運行情報で使用する白地図マスター
+     *
+     * @return BelongsTo<SiteBaseMap, $this>
      */
-    public function siteBaseMaps(): HasMany
+    public function siteBaseMap(): BelongsTo
     {
-        return $this->hasMany(SiteBaseMap::class);
+        return $this->belongsTo(SiteBaseMap::class, 'site_base_map_id');
     }
 
     /**
      * 運行情報に紐づく白地図上の全配置アイテムを取得
+     *
+     * @return HasMany<SiteMapPlacement, $this>
      */
-    public function placements(): HasManyThrough
+    public function placements(): HasMany
     {
-        return $this->hasManyThrough(SiteMapPlacement::class, SiteBaseMap::class);
+        return $this->hasMany(SiteMapPlacement::class, 'timetable_id');
     }
 
     /**

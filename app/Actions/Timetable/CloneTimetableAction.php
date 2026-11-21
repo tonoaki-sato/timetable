@@ -9,7 +9,6 @@ use App\Models\Lane;
 use App\Models\LayoutArea;
 use App\Models\LayoutItem;
 use App\Models\LayoutMap;
-use App\Models\SiteBaseMap;
 use App\Models\SiteMapPlacement;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
@@ -281,7 +280,7 @@ class CloneTimetableAction
     }
 
     /**
-     * 現場配置計画（LayoutMap / LayoutArea / LayoutItem）および白地図配置（SiteBaseMap / SiteMapPlacement）を複製
+     * 現場配置計画（LayoutMap / LayoutArea / LayoutItem）および白地図配置（SiteMapPlacement）を複製
      *
      * @return array{0: int, 1: int}
      */
@@ -348,7 +347,13 @@ class CloneTimetableAction
             }
         }
 
-        $sourceBaseMaps = SiteBaseMap::with('placements')
+        if ($source->site_base_map_id !== null) {
+            $newTimetable->update([
+                'site_base_map_id' => $source->site_base_map_id,
+            ]);
+        }
+
+        $sourcePlacements = SiteMapPlacement::query()
             ->where('timetable_id', $source->id)
             ->orderBy('id')
             ->get();
@@ -356,53 +361,37 @@ class CloneTimetableAction
         $placementRows = [];
         $now = now()->format('Y-m-d H:i:s');
 
-        foreach ($sourceBaseMaps as $sourceBaseMap) {
-            $newBaseMap = SiteBaseMap::create([
+        foreach ($sourcePlacements as $sourcePlacement) {
+            $newLayoutItemId = $sourcePlacement->layout_item_id
+                ? ($layoutItemIdMap[$sourcePlacement->layout_item_id] ?? null)
+                : null;
+
+            $placementRows[] = [
                 'timetable_id' => $newTimetable->id,
-                'name' => $sourceBaseMap->name,
-                'cad_version' => $sourceBaseMap->cad_version,
-                'paper_size' => $sourceBaseMap->paper_size,
-                'scale_ratio' => $sourceBaseMap->scale_ratio,
-                'width_meters' => $sourceBaseMap->width_meters,
-                'height_meters' => $sourceBaseMap->height_meters,
-                'svg_path' => $sourceBaseMap->svg_path,
-                'pdf_path' => $sourceBaseMap->pdf_path,
-                'viewbox' => $sourceBaseMap->viewbox,
-                'is_active' => $sourceBaseMap->is_active,
-                'notes' => $sourceBaseMap->notes,
-            ]);
-
-            foreach ($sourceBaseMap->placements as $sourcePlacement) {
-                $newLayoutItemId = $sourcePlacement->layout_item_id
-                    ? ($layoutItemIdMap[$sourcePlacement->layout_item_id] ?? null)
-                    : null;
-
-                $placementRows[] = [
-                    'site_base_map_id' => $newBaseMap->id,
-                    'layout_item_id' => $newLayoutItemId,
-                    'shape_type' => $sourcePlacement->shape_type,
-                    'display_text' => $sourcePlacement->display_text,
-                    'font_size' => $sourcePlacement->font_size,
-                    'color_theme' => $sourcePlacement->color_theme,
-                    'pos_x' => $sourcePlacement->pos_x,
-                    'pos_y' => $sourcePlacement->pos_y,
-                    'width' => $sourcePlacement->width,
-                    'height' => $sourcePlacement->height,
-                    'rotation' => $sourcePlacement->rotation,
-                    'is_rotation_locked' => (bool) $sourcePlacement->is_rotation_locked,
-                    'show_hygiene_circle' => (bool) $sourcePlacement->show_hygiene_circle,
-                    'arc_start_angle' => $sourcePlacement->arc_start_angle,
-                    'arc_end_angle' => $sourcePlacement->arc_end_angle,
-                    'z_index' => $sourcePlacement->z_index,
-                    'notes' => $sourcePlacement->notes,
-                    'meta_data' => $sourcePlacement->meta_data !== null
-                        ? json_encode($sourcePlacement->meta_data, JSON_UNESCAPED_UNICODE)
-                        : null,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-                $placementsCount++;
-            }
+                'site_base_map_id' => $sourcePlacement->site_base_map_id,
+                'layout_item_id' => $newLayoutItemId,
+                'shape_type' => $sourcePlacement->shape_type,
+                'display_text' => $sourcePlacement->display_text,
+                'font_size' => $sourcePlacement->font_size,
+                'color_theme' => $sourcePlacement->color_theme,
+                'pos_x' => $sourcePlacement->pos_x,
+                'pos_y' => $sourcePlacement->pos_y,
+                'width' => $sourcePlacement->width,
+                'height' => $sourcePlacement->height,
+                'rotation' => $sourcePlacement->rotation,
+                'is_rotation_locked' => (bool) $sourcePlacement->is_rotation_locked,
+                'show_hygiene_circle' => (bool) $sourcePlacement->show_hygiene_circle,
+                'arc_start_angle' => $sourcePlacement->arc_start_angle,
+                'arc_end_angle' => $sourcePlacement->arc_end_angle,
+                'z_index' => $sourcePlacement->z_index,
+                'notes' => $sourcePlacement->notes,
+                'meta_data' => $sourcePlacement->meta_data !== null
+                    ? json_encode($sourcePlacement->meta_data, JSON_UNESCAPED_UNICODE)
+                    : null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+            $placementsCount++;
         }
 
         $this->chunkInsert(SiteMapPlacement::class, $placementRows);

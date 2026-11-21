@@ -56,6 +56,7 @@
         data-placements-url="{{ route('timetables.site-maps.placements.index', $timetable) }}"
         data-reset-url="{{ route('timetables.site-maps.reset-preset', $timetable) }}"
         data-clear-url="{{ route('timetables.site-maps.clear-placements', $timetable) }}"
+        data-base-map-update-url="{{ route('timetables.site-maps.base-map.update', $timetable) }}"
         data-icon-store-url="{{ route('timetables.site-maps.icons.store', $timetable) }}"
         data-icon-base-url="{{ url('timetables/' . $timetable->id . '/site-maps/icons') }}"
         data-csrf-token="{{ csrf_token() }}">
@@ -138,8 +139,29 @@
                 </div>
             </div>
 
-            <!-- 右側: 衛生20m圏 / スナップ / ズーム / 保存状態 -->
+            <!-- 右側: 使用白地図 / 衛生20m圏 / スナップ / ズーム / 保存状態 -->
             <div class="flex flex-wrap items-center gap-1.5">
+                @can('update', App\Models\SiteBaseMap::class)
+                    <div class="inline-flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-lg px-2 py-0.5" title="この運行日程で使用する白地図マスターを切り替え">
+                        <span class="text-[11px] font-bold text-slate-600 shrink-0">🗺️</span>
+                        <select id="select-timetable-base-map"
+                            data-current-base-map-id="{{ $siteBaseMap->id }}"
+                            aria-label="使用白地図マスター"
+                            class="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer max-w-[180px] sm:max-w-[220px]">
+                            @foreach($availableBaseMaps as $bm)
+                                <option value="{{ $bm->id }}" {{ $bm->id === $siteBaseMap->id ? 'selected' : '' }}>
+                                    {{ $bm->name }}@if(!$bm->is_active)（無効）@endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @else
+                    <span id="current-base-map-badge" class="inline-flex items-center space-x-1 px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700">
+                        <span>🗺️</span>
+                        <span>{{ $siteBaseMap->name }}</span>
+                    </span>
+                @endcan
+
                 <button type="button" id="btn-toggle-hygiene"
                     class="px-2.5 py-1 bg-sky-600 text-white border border-sky-600 rounded-lg font-bold shadow-2xs transition cursor-pointer"
                     title="給水設備の半径20m衛生チェック円を表示/非表示">

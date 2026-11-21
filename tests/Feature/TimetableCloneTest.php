@@ -179,7 +179,6 @@ class TimetableCloneTest extends TestCase
         ]);
 
         $siteBaseMap = SiteBaseMap::create([
-            'timetable_id' => $sourceTimetable->id,
             'name' => '平面図 1/400 A3',
             'cad_version' => '260927',
             'paper_size' => 'A3',
@@ -189,9 +188,12 @@ class TimetableCloneTest extends TestCase
             'svg_path' => 'maps/shopping_street_base_map_260813.svg',
             'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
             'viewbox' => '0 0 842 1191',
+            'is_default' => true,
             'is_active' => true,
         ]);
+        $sourceTimetable->update(['site_base_map_id' => $siteBaseMap->id]);
         SiteMapPlacement::create([
+            'timetable_id' => $sourceTimetable->id,
             'site_base_map_id' => $siteBaseMap->id,
             'layout_item_id' => $layoutItem->id,
             'shape_type' => 'booth_tent',
@@ -237,7 +239,7 @@ class TimetableCloneTest extends TestCase
         $indexResponse = $this->actingAs($this->operator)->get(route('timetables.index'));
         $indexResponse->assertOk()
             ->assertSee('btn-clone-timetable')
-            ->assertSee('data-source-id="' . $source->id . '"', false)
+            ->assertSee('data-source-id="'.$source->id.'"', false)
             ->assertSee('modal-timetable-form')
             ->assertSee('id="modal_source_timetable_id"', false)
             ->assertSee('id="modal_copy_lanes"', false)
@@ -342,10 +344,12 @@ class TimetableCloneTest extends TestCase
         $this->assertSame($dataset['vendor']->id, $newItem->vendor_id);
         $this->assertSame(LayoutItemStatus::Tentative, $newItem->status);
 
-        $newBaseMap = SiteBaseMap::where('timetable_id', $newTimetable->id)->first();
-        $this->assertNotNull($newBaseMap);
-        $newPlacement = SiteMapPlacement::where('site_base_map_id', $newBaseMap->id)->first();
+        // 白地図マスターは重複コピーされず、参照IDと配置オブジェクトのみ複製されること
+        $this->assertSame(1, SiteBaseMap::count());
+        $this->assertSame($source->site_base_map_id, $newTimetable->site_base_map_id);
+        $newPlacement = SiteMapPlacement::where('timetable_id', $newTimetable->id)->first();
         $this->assertNotNull($newPlacement);
+        $this->assertSame($source->site_base_map_id, $newPlacement->site_base_map_id);
         $this->assertSame($newItem->id, $newPlacement->layout_item_id);
 
         // 7. 当日運用ログ (StaffCheckIn / LaneRequest) は複製されないこと
@@ -388,10 +392,12 @@ class TimetableCloneTest extends TestCase
         $this->assertNotNull($newTask);
         $this->assertSame(0, $newTask->assignments()->count());
 
-        // 搬出入・配置計画・白地図はコピーされない
+        // 搬出入・配置計画・白地図配置はコピーされず、既存の白地図マスターも維持されること
         $this->assertSame(0, EquipmentLogisticsPlan::where('timetable_id', $newTimetable->id)->count());
         $this->assertSame(0, LayoutMap::where('timetable_id', $newTimetable->id)->count());
-        $this->assertSame(0, SiteBaseMap::where('timetable_id', $newTimetable->id)->count());
+        $this->assertSame(1, SiteBaseMap::count());
+        $this->assertNull($newTimetable->site_base_map_id);
+        $this->assertSame(0, SiteMapPlacement::where('timetable_id', $newTimetable->id)->count());
     }
 
     /**

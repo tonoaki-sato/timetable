@@ -112,7 +112,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
 
         $this->assertCount(2, $prioritized2);
         $this->assertCount(10, $prioritized);
-        $this->assertTrue($prioritized->every(fn(Staff $s): bool => (bool) $s->is_surplus_fixed && $s->surplus_type === 'over_capacity'));
+        $this->assertTrue($prioritized->every(fn (Staff $s): bool => (bool) $s->is_surplus_fixed && $s->surplus_type === 'over_capacity'));
         $this->assertLessThanOrEqual(10, count($allocationQueries));
         $this->assertSame(count($queriesFor2), count($allocationQueries));
     }
@@ -142,7 +142,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
             'timetable' => $component->timetable,
             'timetablesList' => $component->timetablesList,
             'active' => $component->active,
-            'targetRouteFor' => fn(Timetable $tt): string => $component->targetRouteFor($tt),
+            'targetRouteFor' => fn (Timetable $tt): string => $component->targetRouteFor($tt),
         ])->render();
 
         $this->assertStringContainsString('(1)', $html);
@@ -261,7 +261,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         DB::disableQueryLog();
 
         $updateCount = collect($reorderQueries)
-            ->filter(fn(array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
+            ->filter(fn (array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
             ->count();
         $this->assertSame(1, $updateCount);
         $this->assertSame(10, $eq3->fresh()->display_order);
@@ -280,7 +280,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         $laneQueries = DB::getQueryLog();
         DB::disableQueryLog();
         $laneUpdateCount = collect($laneQueries)
-            ->filter(fn(array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
+            ->filter(fn (array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
             ->count();
         $this->assertSame(1, $laneUpdateCount);
         $this->assertSame(10, $lane2->fresh()->display_order);
@@ -326,7 +326,6 @@ class Phase1PerformanceOptimizationTest extends TestCase
             'status' => 'confirmed',
         ]);
         $baseMap = SiteBaseMap::create([
-            'timetable_id' => $timetable->id,
             'name' => '白地図',
             'cad_version' => '260927',
             'paper_size' => 'A3',
@@ -336,9 +335,12 @@ class Phase1PerformanceOptimizationTest extends TestCase
             'svg_path' => 'maps/shopping_street_base_map_260813.svg',
             'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
             'viewbox' => '0 0 842 1191',
+            'is_default' => true,
             'is_active' => true,
         ]);
+        $timetable->update(['site_base_map_id' => $baseMap->id]);
         SiteMapPlacement::create([
+            'timetable_id' => $timetable->id,
             'site_base_map_id' => $baseMap->id,
             'layout_item_id' => $layoutItem->id,
             'shape_type' => 'booth_standard',
@@ -366,7 +368,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
             $user
         );
 
-        $clonedPlacement = SiteMapPlacement::whereHas('siteBaseMap', fn($q) => $q->where('timetable_id', $result['timetable']->id))->firstOrFail();
+        $clonedPlacement = SiteMapPlacement::where('timetable_id', $result['timetable']->id)->firstOrFail();
         $this->assertSame(['note' => '角地', 'power' => true], $clonedPlacement->meta_data);
         $this->assertSame(1, $result['counts']['assignments']);
         $this->assertSame(1, $result['counts']['logistics_plans']);
@@ -390,7 +392,6 @@ class Phase1PerformanceOptimizationTest extends TestCase
         $this->seed(SiteMapIconDefinitionSeeder::class);
         $timetable = Timetable::factory()->create();
         $baseMap = SiteBaseMap::create([
-            'timetable_id' => $timetable->id,
             'name' => '平面図',
             'cad_version' => '260927',
             'paper_size' => 'A3',
@@ -400,9 +401,12 @@ class Phase1PerformanceOptimizationTest extends TestCase
             'svg_path' => 'maps/shopping_street_base_map_260813.svg',
             'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
             'viewbox' => '0 0 842 1191',
+            'is_default' => true,
             'is_active' => true,
         ]);
+        $timetable->update(['site_base_map_id' => $baseMap->id]);
         $placement = SiteMapPlacement::create([
+            'timetable_id' => $timetable->id,
             'site_base_map_id' => $baseMap->id,
             'shape_type' => 'booth_standard',
             'display_text' => "A01\n焼鳥",

@@ -9,6 +9,7 @@ use App\Http\Requests\StoreSiteMapIconRequest;
 use App\Http\Requests\StoreSiteMapPlacementRequest;
 use App\Http\Requests\UpdateSiteMapIconRequest;
 use App\Http\Requests\UpdateSiteMapPlacementRequest;
+use App\Http\Requests\UpdateTimetableSiteBaseMapRequest;
 use App\Models\SiteBaseMap;
 use App\Models\SiteMapIconDefinition;
 use App\Models\SiteMapPlacement;
@@ -16,6 +17,7 @@ use App\Models\Timetable;
 use App\Services\SiteMapService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
@@ -42,6 +44,40 @@ class SiteMapController extends Controller
     }
 
     /**
+     * 運行情報で使用する白地図マスターを切り替える API / アクション
+     */
+    public function updateBaseMap(UpdateTimetableSiteBaseMapRequest $request, Timetable $timetable): RedirectResponse|JsonResponse
+    {
+        $this->authorize('update', SiteBaseMap::class);
+
+        try {
+            $siteBaseMap = SiteBaseMap::findOrFail((int) $request->validated('site_base_map_id'));
+            $updated = $this->siteMapService->switchTimetableBaseMap($timetable, $siteBaseMap);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "使用白地図を「{$updated->name}」に切り替えました。",
+                    'site_base_map' => $updated,
+                ]);
+            }
+
+            return redirect()->route('timetables.site-maps.editor', $timetable)
+                ->with('status', "使用白地図を「{$updated->name}」に切り替えました。");
+        } catch (\DomainException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
+            return redirect()->route('timetables.site-maps.editor', $timetable)
+                ->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * 新規配置を保存する (ドラッグ＆ドロップ配置・複製 API)
      */
     public function storePlacement(StoreSiteMapPlacementRequest $request, Timetable $timetable): JsonResponse
@@ -51,6 +87,7 @@ class SiteMapController extends Controller
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
 
         $placement = $this->siteMapService->createPlacement(
+            $timetable,
             $siteBaseMap,
             $request->validated()
         );
@@ -69,7 +106,7 @@ class SiteMapController extends Controller
         $this->authorize('viewAny', SiteBaseMap::class);
 
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
-        $placements = $this->siteMapService->getPlacements($siteBaseMap);
+        $placements = $this->siteMapService->getPlacements($timetable, $siteBaseMap);
 
         return response()->json([
             'success' => true,
@@ -101,6 +138,7 @@ class SiteMapController extends Controller
 
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
         $placements = $this->siteMapService->bulkUpdatePlacements(
+            $timetable,
             $siteBaseMap,
             $request->validated('items')
         );
@@ -133,7 +171,7 @@ class SiteMapController extends Controller
         $this->authorize('update', SiteBaseMap::class);
 
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
-        $placements = $this->siteMapService->resetToStandardPreset($siteBaseMap);
+        $placements = $this->siteMapService->resetToStandardPreset($timetable, $siteBaseMap);
 
         return response()->json([
             'success' => true,
@@ -149,7 +187,7 @@ class SiteMapController extends Controller
         $this->authorize('delete', SiteBaseMap::class);
 
         $siteBaseMap = $this->siteMapService->getActiveBaseMap($timetable);
-        $this->siteMapService->clearPlacements($siteBaseMap);
+        $this->siteMapService->clearPlacements($timetable, $siteBaseMap);
 
         return response()->json([
             'success' => true,

@@ -36,7 +36,6 @@ class SiteMapPlacementTest extends TestCase
         ]);
 
         $this->siteBaseMap = SiteBaseMap::create([
-            'timetable_id' => $this->timetable->id,
             'name' => '保土ヶ谷宿場まつり 平面図 1/400 A3',
             'cad_version' => '260927',
             'paper_size' => 'A3',
@@ -46,8 +45,11 @@ class SiteMapPlacementTest extends TestCase
             'svg_path' => 'maps/shopping_street_base_map_260813.svg',
             'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
             'viewbox' => '0 0 842 1191',
+            'is_default' => true,
             'is_active' => true,
         ]);
+
+        $this->timetable->update(['site_base_map_id' => $this->siteBaseMap->id]);
 
         $this->seed(SiteMapIconDefinitionSeeder::class);
     }
@@ -153,6 +155,7 @@ class SiteMapPlacementTest extends TestCase
     public function test_placements_are_listed_and_embedded(): void
     {
         $placement = SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'booth_standard',
             'display_text' => 'B08',
@@ -184,6 +187,7 @@ class SiteMapPlacementTest extends TestCase
     public function test_can_update_placement_via_api(): void
     {
         $placement = SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'free_area',
             'display_text' => 'ミニバス体験',
@@ -224,6 +228,7 @@ class SiteMapPlacementTest extends TestCase
     public function test_can_bulk_update_placements_via_api(): void
     {
         $p1 = SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'booth_standard',
             'display_text' => 'A01',
@@ -233,6 +238,7 @@ class SiteMapPlacementTest extends TestCase
             'height' => 13.86,
         ]);
         $p2 = SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'booth_standard',
             'display_text' => 'A02',
@@ -262,6 +268,7 @@ class SiteMapPlacementTest extends TestCase
     public function test_can_delete_placement_via_api(): void
     {
         $placement = SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'booth_standard',
             'display_text' => 'A02',
@@ -287,8 +294,9 @@ class SiteMapPlacementTest extends TestCase
             ->postJson(route('timetables.site-maps.reset-preset', $this->timetable));
 
         $response->assertStatus(200)->assertJson(['success' => true]);
-        $this->assertGreaterThan(100, $this->siteBaseMap->placements()->count());
+        $this->assertGreaterThan(100, $this->timetable->placements()->count());
         $this->assertDatabaseHas('site_map_placements', [
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'display_text' => 'A51',
         ]);
@@ -300,6 +308,7 @@ class SiteMapPlacementTest extends TestCase
     public function test_can_export_a3_vector_pdf(): void
     {
         SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'booth_standard',
             'display_text' => 'A01',
@@ -310,6 +319,7 @@ class SiteMapPlacementTest extends TestCase
             'height' => 13.86,
         ]);
         SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'water_supply',
             'display_text' => '水1',
@@ -369,6 +379,7 @@ class SiteMapPlacementTest extends TestCase
     public function test_export_pdf_renders_japanese_and_ascii_text_correctly(): void
     {
         SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'booth_standard',
             'display_text' => 'A01',
@@ -540,7 +551,7 @@ class SiteMapPlacementTest extends TestCase
         $response->assertStatus(200);
 
         // 配置オブジェクトのカウントが 0件であることを検証
-        $this->assertSame(0, $this->siteBaseMap->placements()->count());
+        $this->assertSame(0, $this->timetable->placements()->count());
 
         // 「標準見本配置に復元」および「全配置をクリア」ボタンが存在することを検証
         $response->assertSee('id="btn-reset-preset"', false);
@@ -555,6 +566,7 @@ class SiteMapPlacementTest extends TestCase
     {
         // 事前に2件の配置を作成
         SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'booth_standard',
             'display_text' => 'B01',
@@ -565,6 +577,7 @@ class SiteMapPlacementTest extends TestCase
             'height' => 12.48,
         ]);
         SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
             'site_base_map_id' => $this->siteBaseMap->id,
             'shape_type' => 'booth_with_tent',
             'display_text' => 'A01',
@@ -575,7 +588,7 @@ class SiteMapPlacementTest extends TestCase
             'height' => 13.86,
         ]);
 
-        $this->assertSame(2, $this->siteBaseMap->placements()->count());
+        $this->assertSame(2, $this->timetable->placements()->count());
 
         // クリアAPIを実行
         $response = $this->actingAs($this->user)
@@ -587,6 +600,61 @@ class SiteMapPlacementTest extends TestCase
                 'placements' => [],
             ]);
 
-        $this->assertSame(0, $this->siteBaseMap->placements()->count());
+        $this->assertSame(0, $this->timetable->placements()->count());
+    }
+
+    /**
+     * 複数の運行日が同一白地図マスターを共有しても配置は完全に独立し、他運行日の配置への越境操作は404となる
+     */
+    public function test_multiple_timetables_share_same_base_map_with_isolated_placements_and_scoped_routes(): void
+    {
+        $secondTimetable = Timetable::factory()->create([
+            'name' => '2026年本祭 2日目',
+            'target_date' => '2026-10-19',
+            'site_base_map_id' => $this->siteBaseMap->id,
+            'created_by' => $this->user->id,
+        ]);
+
+        $p1 = SiteMapPlacement::create([
+            'timetable_id' => $this->timetable->id,
+            'site_base_map_id' => $this->siteBaseMap->id,
+            'shape_type' => 'booth_standard',
+            'display_text' => 'DAY1-A01',
+            'pos_x' => 100.0,
+            'pos_y' => 100.0,
+        ]);
+
+        $p2 = SiteMapPlacement::create([
+            'timetable_id' => $secondTimetable->id,
+            'site_base_map_id' => $this->siteBaseMap->id,
+            'shape_type' => 'booth_standard',
+            'display_text' => 'DAY2-B01',
+            'pos_x' => 200.0,
+            'pos_y' => 200.0,
+        ]);
+
+        // 各運行日の配置一覧が独立していること
+        $this->actingAs($this->user)
+            ->getJson(route('timetables.site-maps.placements.index', $this->timetable))
+            ->assertOk()
+            ->assertJsonFragment(['display_text' => 'DAY1-A01'])
+            ->assertJsonMissing(['display_text' => 'DAY2-B01']);
+
+        // 他運行日の配置を別運行日のURL経由で更新・削除しようとすると404になること（scopeBindings保護）
+        $this->actingAs($this->user)
+            ->putJson(route('timetables.site-maps.placements.update', [$this->timetable, $p2]), ['pos_x' => 300.0])
+            ->assertNotFound();
+
+        $this->actingAs($this->user)
+            ->deleteJson(route('timetables.site-maps.placements.destroy', [$this->timetable, $p2]))
+            ->assertNotFound();
+
+        // 2日目の全配置クリアを実行しても1日目の配置は消えないこと
+        $this->actingAs($this->user)
+            ->postJson(route('timetables.site-maps.clear-placements', $secondTimetable))
+            ->assertOk();
+
+        $this->assertDatabaseHas('site_map_placements', ['id' => $p1->id]);
+        $this->assertDatabaseMissing('site_map_placements', ['id' => $p2->id]);
     }
 }

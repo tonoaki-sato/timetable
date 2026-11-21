@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Actions\SiteMap\ApplyStandardSiteMapPresetAction;
 use App\Models\SiteBaseMap;
+use App\Models\Timetable;
+use App\Repositories\Contracts\SiteMapRepositoryInterface;
 use Illuminate\Database\Seeder;
 
 class SiteMapStandardPlacementsSeeder extends Seeder
@@ -23,20 +25,26 @@ class SiteMapStandardPlacementsSeeder extends Seeder
             return;
         }
 
-        $baseMaps = SiteBaseMap::where('is_active', true)->get();
+        $timetables = Timetable::all();
+        if ($timetables->isEmpty()) {
+            return;
+        }
 
-        foreach ($baseMaps as $baseMap) {
-            self::seedForBaseMap($baseMap, $items);
+        $repository = app(SiteMapRepositoryInterface::class);
+
+        foreach ($timetables as $timetable) {
+            $baseMap = $repository->resolveBaseMapForTimetable($timetable);
+            self::seedForTimetable($timetable, $baseMap, $items);
         }
     }
 
     /**
-     * 指定した白地図に対して標準配置データを適用する
+     * 指定した運行日および白地図に対して標準配置データを適用する
      *
      * @param  array<int, array<string, mixed>>|null  $items
      */
-    public static function seedForBaseMap(SiteBaseMap $baseMap, ?array $items = null): int
+    public static function seedForTimetable(Timetable $timetable, SiteBaseMap $baseMap, ?array $items = null): int
     {
-        return app(ApplyStandardSiteMapPresetAction::class)->execute($baseMap, $items);
+        return app(ApplyStandardSiteMapPresetAction::class)->execute($timetable, $baseMap, $items);
     }
 }

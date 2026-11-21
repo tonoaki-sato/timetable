@@ -13,23 +13,53 @@ use Override;
 class SiteMapRepository implements SiteMapRepositoryInterface
 {
     #[Override]
-    public function getOrCreateActiveBaseMap(Timetable $timetable): SiteBaseMap
+    public function getAllBaseMapsWithCounts(): Collection
     {
-        $siteBaseMap = $timetable->siteBaseMaps()
+        return SiteBaseMap::query()
+            ->withCount(['timetables', 'placements'])
+            ->orderByDesc('is_default')
+            ->orderByDesc('is_active')
+            ->orderBy('id')
+            ->get();
+    }
+
+    #[Override]
+    public function getActiveBaseMaps(): Collection
+    {
+        return SiteBaseMap::query()
             ->where('is_active', true)
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->get();
+    }
+
+    #[Override]
+    public function findBaseMapById(int $id): ?SiteBaseMap
+    {
+        return SiteBaseMap::find($id);
+    }
+
+    #[Override]
+    public function getOrCreateDefaultBaseMap(): SiteBaseMap
+    {
+        $siteBaseMap = SiteBaseMap::query()
+            ->where('is_active', true)
+            ->orderByDesc('is_default')
+            ->orderBy('id')
             ->first();
 
         if (! $siteBaseMap) {
-            $siteBaseMap = $timetable->siteBaseMaps()->create([
+            $siteBaseMap = SiteBaseMap::create([
                 'name' => '保土ヶ谷宿場まつり 平面図 1/400 A3',
                 'cad_version' => '260927',
                 'paper_size' => 'A3',
                 'scale_ratio' => 7.0866,
-                'width_meters' => 118.8,
-                'height_meters' => 168.0,
+                'width_meters' => 118.80,
+                'height_meters' => 168.00,
                 'svg_path' => 'maps/shopping_street_base_map_260813.svg',
                 'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
                 'viewbox' => '0 0 842 1191',
+                'is_default' => true,
                 'is_active' => true,
             ]);
         }
@@ -38,11 +68,74 @@ class SiteMapRepository implements SiteMapRepositoryInterface
     }
 
     #[Override]
-    public function findActiveBaseMapOrFail(Timetable $timetable): SiteBaseMap
+    public function resolveBaseMapForTimetable(Timetable $timetable): SiteBaseMap
     {
-        return $timetable->siteBaseMaps()
+        if ($timetable->site_base_map_id !== null) {
+            $assigned = $timetable->siteBaseMap()->first();
+            if ($assigned !== null) {
+                return $assigned;
+            }
+        }
+
+        return $this->getOrCreateDefaultBaseMap();
+    }
+
+    #[Override]
+    public function findBaseMapForTimetableOrFail(Timetable $timetable): SiteBaseMap
+    {
+        if ($timetable->site_base_map_id !== null) {
+            $assigned = $timetable->siteBaseMap()->first();
+            if ($assigned !== null) {
+                return $assigned;
+            }
+        }
+
+        return SiteBaseMap::query()
             ->where('is_active', true)
+            ->orderByDesc('is_default')
+            ->orderBy('id')
             ->firstOrFail();
+    }
+
+    #[Override]
+    public function createBaseMap(array $data): SiteBaseMap
+    {
+        return SiteBaseMap::create($data);
+    }
+
+    #[Override]
+    public function updateBaseMap(SiteBaseMap $siteBaseMap, array $data): SiteBaseMap
+    {
+        $siteBaseMap->update($data);
+
+        return $siteBaseMap->fresh();
+    }
+
+    #[Override]
+    public function deleteBaseMap(SiteBaseMap $siteBaseMap): bool
+    {
+        return (bool) $siteBaseMap->delete();
+    }
+
+    #[Override]
+    public function clearDefaultFlagExcept(?int $exceptId = null): void
+    {
+        SiteBaseMap::query()
+            ->when($exceptId !== null, fn ($q) => $q->where('id', '!=', $exceptId))
+            ->where('is_default', true)
+            ->update(['is_default' => false]);
+    }
+
+    #[Override]
+    public function countTimetablesUsingBaseMap(SiteBaseMap $siteBaseMap): int
+    {
+        return $siteBaseMap->timetables()->count();
+    }
+
+    #[Override]
+    public function countPlacementsUsingBaseMap(SiteBaseMap $siteBaseMap): int
+    {
+        return $siteBaseMap->placements()->count();
     }
 
     #[Override]
@@ -63,9 +156,11 @@ class SiteMapRepository implements SiteMapRepositoryInterface
     }
 
     #[Override]
-    public function getPlacementsByBaseMap(SiteBaseMap $siteBaseMap): Collection
+    public function getPlacements(Timetable $timetable, SiteBaseMap $siteBaseMap): Collection
     {
-        return $siteBaseMap->placements()
+        return SiteMapPlacement::query()
+            ->where('timetable_id', $timetable->id)
+            ->where('site_base_map_id', $siteBaseMap->id)
             ->with(['layoutItem.vendor'])
             ->orderBy('z_index', 'asc')
             ->orderBy('id', 'asc')
@@ -73,13 +168,15 @@ class SiteMapRepository implements SiteMapRepositoryInterface
     }
 
     #[Override]
-    public function findPlacementsByIds(SiteBaseMap $siteBaseMap, array $ids): Collection
+    public function findPlacementsByIds(Timetable $timetable, SiteBaseMap $siteBaseMap, array $ids): Collection
     {
         if ($ids === []) {
             return new Collection;
         }
 
-        return $siteBaseMap->placements()
+        return SiteMapPlacement::query()
+            ->where('timetable_id', $timetable->id)
+            ->where('site_base_map_id', $siteBaseMap->id)
             ->whereIn('id', $ids)
             ->get();
     }
@@ -103,9 +200,12 @@ class SiteMapRepository implements SiteMapRepositoryInterface
     }
 
     #[Override]
-    public function clearPlacementsByBaseMap(SiteBaseMap $siteBaseMap): bool
+    public function clearPlacements(Timetable $timetable, SiteBaseMap $siteBaseMap): bool
     {
-        $siteBaseMap->placements()->delete();
+        SiteMapPlacement::query()
+            ->where('timetable_id', $timetable->id)
+            ->where('site_base_map_id', $siteBaseMap->id)
+            ->delete();
 
         return true;
     }

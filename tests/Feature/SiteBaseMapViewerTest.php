@@ -47,18 +47,18 @@ class SiteBaseMapViewerTest extends TestCase
      */
     public function test_editor_screen_renders_successfully_with_vite_script(): void
     {
-        // 既存の白地図レコードを作成
+        // 既存の白地図マスターレコードを作成
         $siteBaseMap = SiteBaseMap::create([
-            'timetable_id' => $this->timetable->id,
             'name' => '商店街平面図 260813版 A3 1/400',
             'cad_version' => '260813',
             'paper_size' => 'A3',
             'scale_ratio' => 26.000,
-            'width_meters' => 32.4,
-            'height_meters' => 45.8,
+            'width_meters' => 118.80,
+            'height_meters' => 168.00,
             'svg_path' => 'maps/shopping_street_base_map_260813.svg',
             'pdf_path' => 'maps/shopping_street_base_map_260813.pdf',
             'viewbox' => '0 0 842 1191',
+            'is_default' => true,
             'is_active' => true,
         ]);
 
@@ -92,21 +92,34 @@ class SiteBaseMapViewerTest extends TestCase
     }
 
     /**
-     * 白地図未登録の場合はデフォルト白地図が自動生成される
+     * 白地図未登録の場合はデフォルト白地図が1件だけ作成され、複数の運行日程で共有される
      */
-    public function test_editor_creates_default_base_map_if_none_exists(): void
+    public function test_editor_creates_default_base_map_if_none_exists_and_shares_across_timetables(): void
     {
         $this->assertDatabaseCount('site_base_maps', 0);
 
-        $response = $this->actingAs($this->user)
+        $secondTimetable = Timetable::factory()->create([
+            'name' => '2026年本祭 2日目',
+            'target_date' => '2026-10-19',
+            'created_by' => $this->user->id,
+        ]);
+
+        $response1 = $this->actingAs($this->user)
             ->get(route('timetables.site-maps.editor', $this->timetable));
 
-        $response->assertStatus(200);
+        $response1->assertStatus(200);
+        $this->assertDatabaseCount('site_base_maps', 1);
+
+        // 別日程でエディタを開いても同一デフォルト白地図が共有され重複生成されないこと
+        $response2 = $this->actingAs($this->user)
+            ->get(route('timetables.site-maps.editor', $secondTimetable));
+
+        $response2->assertStatus(200);
         $this->assertDatabaseCount('site_base_maps', 1);
 
         $this->assertDatabaseHas('site_base_maps', [
-            'timetable_id' => $this->timetable->id,
             'name' => '保土ヶ谷宿場まつり 平面図 1/400 A3',
+            'is_default' => true,
             'is_active' => true,
         ]);
     }
