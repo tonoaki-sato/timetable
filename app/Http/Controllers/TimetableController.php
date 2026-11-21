@@ -53,7 +53,7 @@ class TimetableController extends Controller
             return redirect()->route('timetables.show', $timetable)
                 ->with(
                     'success',
-                    "過去の運行情報をもとに「{$timetable->name}」を作成しました（担当班 {$counts['lanes']}件 / タスク {$counts['tasks']}件 / 拠点 {$counts['locations']}件 / 搬出入 {$counts['logistics_plans']}件 / 配置 {$counts['layout_items']}件 / 白地図 {$counts['placements']}件を引き継ぎ）。"
+                    "過去の運行情報をもとに「{$timetable->name}」を作成しました（担当班 {$counts['lanes']}件 / タスク {$counts['tasks']}件 / 搬出入 {$counts['logistics_plans']}件 / 配置 {$counts['layout_items']}件 / 白地図 {$counts['placements']}件を引き継ぎ）。"
                 );
         }
 

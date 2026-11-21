@@ -42,11 +42,9 @@ class EquipmentLogisticsTest extends TestCase
         $this->timetable2 = Timetable::factory()->create(['target_date' => '2026-10-12', 'name' => '2日目']);
 
         $this->locationTaxOffice = Location::factory()->create([
-            'timetable_id' => $this->timetable1->id,
             'name' => '税務署前駐車場',
         ]);
         $this->locationKitagawa = Location::factory()->create([
-            'timetable_id' => $this->timetable1->id,
             'name' => '長島駐車場（旧北川駐車場）',
         ]);
 

@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Location;
 use App\Models\LocationSchedule;
 use App\Models\LocationType;
-use App\Models\Timetable;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -92,61 +91,33 @@ class LocationSeeder extends Seeder
             ],
         ];
 
-        $timetables = Timetable::all();
-        if ($timetables->isEmpty()) {
-            $timetables = collect([Timetable::factory()->create([
-                'name' => '本番日',
-                'target_date' => '2026-10-11',
-            ])]);
-        }
+        foreach ($locations as $locData) {
+            $location = Location::updateOrCreate(
+                [
+                    'name' => $locData['name'],
+                ],
+                [
+                    'location_type_id' => $locData['type_id'],
+                    'notes' => $locData['notes'],
+                    'is_all_day' => $locData['is_all_day'],
+                    'display_order' => $locData['display_order'],
+                    'is_active' => true,
+                    'created_by' => $adminId,
+                ]
+            );
 
-        $day4Orders = [
-            'コミュニティルーム' => 10,
-            '番所倉庫' => 20,
-            '番所地下倉庫' => 30,
-            '番所前スペース' => 40,
-            '税務署前駐車場' => 50,
-            '長島駐車場（旧北川駐車場）' => 60,
-            'S&S駐車場' => 70,
-            '横浜銀行駐車場' => 80,
-        ];
-
-        foreach ($timetables as $timetable) {
-            $isDay4 = str_contains($timetable->name, '第35回');
-
-            foreach ($locations as $locData) {
-                $displayOrder = ($isDay4 && isset($day4Orders[$locData['name']]))
-                    ? $day4Orders[$locData['name']]
-                    : $locData['display_order'];
-
-                $location = Location::updateOrCreate(
-                    [
-                        'timetable_id' => $timetable->id,
-                        'name' => $locData['name'],
-                    ],
-                    [
-                        'location_type_id' => $locData['type_id'],
-                        'notes' => $locData['notes'],
-                        'is_all_day' => $locData['is_all_day'],
-                        'display_order' => $displayOrder,
-                        'is_active' => true,
-                        'created_by' => $adminId,
-                    ]
-                );
-
-                // スケジュール設定
-                if (! empty($locData['schedules'])) {
-                    $location->schedules()->delete();
-                    foreach ($locData['schedules'] as $sch) {
-                        LocationSchedule::create([
-                            'location_id' => $location->id,
-                            'start_at' => Carbon::parse($sch['start_at']),
-                            'end_at' => Carbon::parse($sch['end_at']),
-                            'availability_status' => $sch['availability_status'],
-                            'title' => $sch['title'],
-                            'note' => $sch['note'],
-                        ]);
-                    }
+            // スケジュール設定
+            if (! empty($locData['schedules'])) {
+                $location->schedules()->delete();
+                foreach ($locData['schedules'] as $sch) {
+                    LocationSchedule::create([
+                        'location_id' => $location->id,
+                        'start_at' => Carbon::parse($sch['start_at']),
+                        'end_at' => Carbon::parse($sch['end_at']),
+                        'availability_status' => $sch['availability_status'],
+                        'title' => $sch['title'],
+                        'note' => $sch['note'],
+                    ]);
                 }
             }
         }

@@ -277,7 +277,6 @@ class TimetableRepository implements TimetableRepositoryInterface
         return Timetable::withCount([
             'lanes',
             'tasks',
-            'locations',
             'logisticsPlans',
             'layoutItems',
             'placements',

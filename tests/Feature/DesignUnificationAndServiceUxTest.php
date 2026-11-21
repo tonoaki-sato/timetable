@@ -63,7 +63,7 @@ class DesignUnificationAndServiceUxTest extends TestCase
             route('vendors.index'),
             route('users.index'),
             route('equipments.index'),
-            route('timetables.locations.index', $this->timetable),
+            route('locations.index'),
             route('timetables.lanes.index', $this->timetable),
             route('organizations.index'),
             route('timetables.layouts.booths', $this->timetable),

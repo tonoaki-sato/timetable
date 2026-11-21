@@ -29,8 +29,11 @@ class UpdateLocationRequest extends FormRequest
      */
     public function rules(): array
     {
+        $location = $this->route('location');
+        $locationId = $location instanceof Location ? $location->id : $location;
+
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('locations', 'name')->ignore($locationId)],
             'location_type_id' => ['required', 'exists:location_types,id'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_all_day' => ['boolean'],

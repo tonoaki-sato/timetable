@@ -32,26 +32,26 @@ class ParkingConstraintService
             $query->whereHas('type', fn ($q) => $q->where('name', 'parking'));
         }
 
-        if ($timetable) {
-            $query->where('timetable_id', $timetable->id);
-        }
-
         $locations = $query->get();
         $locationIds = $locations->pluck('id')->all();
 
-        $allPlansTo = EquipmentLogisticsPlan::with(['equipment'])
+        $plansToQuery = EquipmentLogisticsPlan::with(['equipment'])
             ->whereIn('to_location_id', $locationIds)
             ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->get()
-            ->groupBy('to_location_id');
+            ->orderBy('start_time', 'asc');
 
-        $allPlansFrom = EquipmentLogisticsPlan::with(['equipment'])
+        $plansFromQuery = EquipmentLogisticsPlan::with(['equipment'])
             ->whereIn('from_location_id', $locationIds)
             ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->get()
-            ->groupBy('from_location_id');
+            ->orderBy('start_time', 'asc');
+
+        if ($timetable) {
+            $plansToQuery->where('timetable_id', $timetable->id);
+            $plansFromQuery->where('timetable_id', $timetable->id);
+        }
+
+        $allPlansTo = $plansToQuery->get()->groupBy('to_location_id');
+        $allPlansFrom = $plansFromQuery->get()->groupBy('from_location_id');
 
         $locationStatuses = collect();
         $violationCount = 0;

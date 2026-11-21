@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'timetable_id',
     'location_type_id',
     'name',
     'notes',
@@ -104,14 +103,6 @@ class Location extends Model
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
-    }
-
-    /**
-     * 運行計画（タイムテーブル）とのリレーション
-     */
-    public function timetable(): BelongsTo
-    {
-        return $this->belongsTo(Timetable::class);
     }
 
     /**
@@ -208,16 +199,6 @@ class Location extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
-    }
-
-    /**
-     * 特定の運行計画に属する拠点を抽出
-     */
-    public function scopeForTimetable(Builder $query, Timetable|int $timetable): Builder
-    {
-        $id = $timetable instanceof Timetable ? $timetable->id : $timetable;
-
-        return $query->where('timetable_id', $id);
     }
 
     /**

@@ -18,28 +18,22 @@ class LocationRepository implements LocationRepositoryInterface
     }
 
     #[Override]
-    public function findFirstByTimetableAndNameLike(int $timetableId, string $keyword): ?Location
+    public function findFirstByNameLike(string $keyword): ?Location
     {
-        return Location::where('timetable_id', $timetableId)
-            ->where('name', 'like', "%{$keyword}%")
-            ->first();
+        return Location::where('name', 'like', "%{$keyword}%")->first();
     }
 
     #[Override]
-    public function findFirstByTimetableAndExactName(int $timetableId, string $name): ?Location
+    public function findFirstByExactName(string $name): ?Location
     {
-        return Location::where('timetable_id', $timetableId)
-            ->where('name', $name)
-            ->first();
+        return Location::where('name', $name)->first();
     }
 
     #[Override]
-    public function getNameIdMapForTimetable(int $timetableId): array
+    public function getNameIdMap(): array
     {
         $map = [];
-        $rows = Location::where('timetable_id', $timetableId)
-            ->orderBy('id', 'asc')
-            ->get(['id', 'name']);
+        $rows = Location::orderBy('id', 'asc')->get(['id', 'name']);
 
         foreach ($rows as $row) {
             if (! array_key_exists($row->name, $map)) {
@@ -51,34 +45,55 @@ class LocationRepository implements LocationRepositoryInterface
     }
 
     #[Override]
-    public function getForTimetable(Timetable $timetable): Collection
+    public function findFirstByTimetableAndNameLike(?int $timetableId, string $keyword): ?Location
     {
-        return $timetable->locations()
-            ->with(['type', 'schedules' => function ($query): void {
-                $query->orderBy('start_at', 'asc');
-            }])
+        return $this->findFirstByNameLike($keyword);
+    }
+
+    #[Override]
+    public function findFirstByTimetableAndExactName(?int $timetableId, string $name): ?Location
+    {
+        return $this->findFirstByExactName($name);
+    }
+
+    #[Override]
+    public function getNameIdMapForTimetable(?int $timetableId = null): array
+    {
+        return $this->getNameIdMap();
+    }
+
+    #[Override]
+    public function getAllOrdered(): Collection
+    {
+        return Location::with(['type', 'schedules' => function ($query): void {
+            $query->orderBy('start_at', 'asc');
+        }])
             ->ordered()
             ->get();
     }
 
     #[Override]
-    public function getActiveOrderedForTimetable(Timetable $timetable): Collection
+    public function getForTimetable(?Timetable $timetable = null): Collection
     {
-        return Location::forTimetable($timetable)
-            ->active()
-            ->ordered()
-            ->get();
+        return $this->getAllOrdered();
+    }
+
+    #[Override]
+    public function getActiveOrdered(): Collection
+    {
+        return Location::active()->ordered()->get();
+    }
+
+    #[Override]
+    public function getActiveOrderedForTimetable(?Timetable $timetable = null): Collection
+    {
+        return $this->getActiveOrdered();
     }
 
     #[Override]
     public function getActiveWithTypeAndSchedules(?Timetable $timetable = null): Collection
     {
-        $query = Location::active()->ordered()->with(['type', 'schedules']);
-        if ($timetable) {
-            $query->where('timetable_id', $timetable->id);
-        }
-
-        return $query->get();
+        return Location::active()->ordered()->with(['type', 'schedules'])->get();
     }
 
     #[Override]
@@ -101,18 +116,17 @@ class LocationRepository implements LocationRepositoryInterface
     }
 
     #[Override]
-    public function findWithDetails(Timetable $timetable, int $locationId): ?Location
+    public function findWithDetails(int $locationId): ?Location
     {
         /** @var Location|null $location */
-        $location = $timetable->locations()
-            ->with([
-                'type',
-                'schedules' => function ($query): void {
-                    $query->orderBy('start_at', 'asc');
-                },
-                'plansTo.equipment',
-                'plansFrom.equipment',
-            ])
+        $location = Location::with([
+            'type',
+            'schedules' => function ($query): void {
+                $query->orderBy('start_at', 'asc');
+            },
+            'plansTo.equipment',
+            'plansFrom.equipment',
+        ])
             ->where('id', $locationId)
             ->first();
 
@@ -120,9 +134,9 @@ class LocationRepository implements LocationRepositoryInterface
     }
 
     #[Override]
-    public function create(Timetable $timetable, array $attributes): Location
+    public function create(array $attributes): Location
     {
-        return $timetable->locations()->create($attributes);
+        return Location::create($attributes);
     }
 
     #[Override]
@@ -138,7 +152,7 @@ class LocationRepository implements LocationRepositoryInterface
     }
 
     #[Override]
-    public function reorder(Timetable $timetable, array $locationIds): void
+    public function reorder(array $locationIds): void
     {
         $cleanIds = array_values(array_unique(array_map('intval', $locationIds)));
         if ($cleanIds === []) {
@@ -153,17 +167,17 @@ class LocationRepository implements LocationRepositoryInterface
         }
         $caseSql = 'CASE id '.implode(' ', $cases).' ELSE display_order END';
 
-        DB::transaction(function () use ($timetable, $cleanIds, $caseSql): void {
-            $timetable->locations()->whereIn('id', $cleanIds)->update([
+        DB::transaction(function () use ($cleanIds, $caseSql): void {
+            Location::whereIn('id', $cleanIds)->update([
                 'display_order' => DB::raw($caseSql),
             ]);
         });
     }
 
     #[Override]
-    public function getMaxDisplayOrder(Timetable $timetable): int
+    public function getMaxDisplayOrder(): int
     {
-        return (int) ($timetable->locations()->max('display_order') ?? 0);
+        return (int) (Location::max('display_order') ?? 0);
     }
 
     #[Override]

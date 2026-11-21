@@ -27,15 +27,15 @@ class EquipmentSeeder extends Seeder
         $timetableDay4 = Timetable::where('name', 'like', '%第35回%')->first()
             ?? Timetable::where('target_date', '2027-10-10')->first();
 
-        // 関連拠点 (Day 1 / Day 2)
-        $banshoSpace1 = Location::where('timetable_id', $timetableDay1?->id)->where('name', '番所前スペース')->first();
-        $taxOfficeParking1 = Location::where('timetable_id', $timetableDay1?->id)->where('name', '税務署前駐車場')->first();
-        $banshoSpace2 = Location::where('timetable_id', $timetableDay2?->id)->where('name', '番所前スペース')->first() ?? $banshoSpace1;
+        // 関連拠点 (マスター参照)
+        $banshoSpace1 = Location::where('name', '番所前スペース')->first();
+        $taxOfficeParking1 = Location::where('name', '税務署前駐車場')->first();
+        $banshoSpace2 = $banshoSpace1;
 
         // 関連拠点 (Day 4)
-        $banshoUnderground4 = Location::where('timetable_id', $timetableDay4?->id)->where('name', '番所地下倉庫')->first();
-        $banshoSpace4 = Location::where('timetable_id', $timetableDay4?->id)->where('name', '番所前スペース')->first();
-        $taxOfficeParking4 = Location::where('timetable_id', $timetableDay4?->id)->where('name', '税務署前駐車場')->first();
+        $banshoUnderground4 = Location::where('name', '番所地下倉庫')->first();
+        $banshoSpace4 = $banshoSpace1;
+        $taxOfficeParking4 = $taxOfficeParking1;
 
         // 1. 機材: カラーコーン
         $coneEquipment = Equipment::updateOrCreate(

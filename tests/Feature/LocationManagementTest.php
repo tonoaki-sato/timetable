@@ -6,7 +6,6 @@ use App\Enums\LocationCurrentStatus;
 use App\Models\Location;
 use App\Models\LocationSchedule;
 use App\Models\LocationType;
-use App\Models\Timetable;
 use App\Models\User;
 use App\Services\LocationAvailabilityService;
 use Carbon\Carbon;
@@ -21,8 +20,6 @@ class LocationManagementTest extends TestCase
 
     private LocationType $type;
 
-    private Timetable $timetable;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -30,11 +27,6 @@ class LocationManagementTest extends TestCase
         $this->admin = User::factory()->create([
             'role' => 'admin',
             'is_active' => true,
-        ]);
-
-        $this->timetable = Timetable::factory()->create([
-            'name' => 'テスト本番日',
-            'target_date' => '2026-10-11',
         ]);
 
         $this->type = LocationType::create([
@@ -50,39 +42,37 @@ class LocationManagementTest extends TestCase
     public function test_can_view_location_index_screen(): void
     {
         $location = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'name' => '番所',
             'notes' => '鍵は暗証番号4920で開錠。',
         ]);
 
-        $response = $this->actingAs($this->admin)->get(route('timetables.locations.index', $this->timetable));
+        $response = $this->actingAs($this->admin)->get(route('locations.index'));
 
         $response->assertOk()
-            ->assertSee('拠点一覧')
+            ->assertSee('拠点マスター')
             ->assertSee('番所')
-            ->assertDontSee('<th>種別</th>', false)
-            ->assertDontSee('class="text-[10px] text-slate-500 truncate max-w-[200px]', false)
-            ->assertSee(route('timetables.locations.show', [$this->timetable, $location]))
             ->assertSee('編集')
-            ->assertSee('削除');
+            ->assertSee('削除')
+            ->assertSee('modal-location-detail')
+            ->assertSee('btn-open-create-location');
 
-        // メモは詳細画面で確認可能
-        $showResponse = $this->actingAs($this->admin)->get(route('timetables.locations.show', [$this->timetable, $location]));
+        // メモは詳細画面・詳細モーダルデータで確認可能
+        $showResponse = $this->actingAs($this->admin)->get(route('locations.show', $location));
         $showResponse->assertOk()
             ->assertSee('鍵は暗証番号4920で開錠。')
             ->assertSee('基本情報を編集');
 
-        // 編集画面のキャンセルボタンは拠点一覧画面を指す
-        $editResponse = $this->actingAs($this->admin)->get(route('timetables.locations.edit', [$this->timetable, $location]));
+        // 編集画面のキャンセルボタンは拠点マスター一覧画面を指す
+        $editResponse = $this->actingAs($this->admin)->get(route('locations.edit', $location));
         $editResponse->assertOk()
-            ->assertSee(route('timetables.locations.index', $this->timetable))
+            ->assertSee(route('locations.index'))
             ->assertSee('キャンセル');
     }
 
     public function test_can_create_new_location(): void
     {
-        $response = $this->actingAs($this->admin)->post(route('timetables.locations.store', $this->timetable), [
+        $response = $this->actingAs($this->admin)->post(route('locations.store'), [
             'name' => '税務署前駐車場',
             'location_type_id' => $this->type->id,
             'notes' => "【連絡先】090-0000-0000\n【注意事項】夜間施錠必須",
@@ -91,27 +81,25 @@ class LocationManagementTest extends TestCase
             'is_active' => true,
         ]);
 
-        $location = Location::where('timetable_id', $this->timetable->id)->where('name', '税務署前駐車場')->first();
+        $location = Location::where('name', '税務署前駐車場')->first();
         $this->assertNotNull($location);
         $this->assertEquals($this->type->id, $location->location_type_id);
-        $this->assertEquals($this->timetable->id, $location->timetable_id);
         $this->assertStringContainsString('090-0000-0000', $location->notes);
         $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $location->created_at);
         $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $location->updated_at);
 
-        $response->assertRedirect(route('timetables.locations.show', [$this->timetable, $location]));
+        $response->assertRedirect(route('locations.index'));
     }
 
     public function test_can_update_location(): void
     {
         $location = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'name' => '旧拠点名',
             'notes' => '旧メモ',
         ]);
 
-        $response = $this->actingAs($this->admin)->put(route('timetables.locations.update', [$this->timetable, $location]), [
+        $response = $this->actingAs($this->admin)->put(route('locations.update', $location), [
             'name' => '新拠点名',
             'location_type_id' => $this->type->id,
             'notes' => '更新されたメモ内容',
@@ -120,7 +108,7 @@ class LocationManagementTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response->assertRedirect(route('timetables.locations.index', $this->timetable));
+        $response->assertRedirect(route('locations.index'));
         $location->refresh();
         $this->assertEquals('新拠点名', $location->name);
         $this->assertEquals('更新されたメモ内容', $location->notes);
@@ -130,14 +118,13 @@ class LocationManagementTest extends TestCase
     public function test_can_delete_location(): void
     {
         $location = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'name' => '削除対象拠点',
         ]);
 
-        $response = $this->actingAs($this->admin)->delete(route('timetables.locations.destroy', [$this->timetable, $location]));
+        $response = $this->actingAs($this->admin)->delete(route('locations.destroy', $location));
 
-        $response->assertRedirect(route('timetables.locations.index', $this->timetable));
+        $response->assertRedirect(route('locations.index'));
         $this->assertDatabaseMissing('locations', ['id' => $location->id]);
     }
 
@@ -178,7 +165,6 @@ class LocationManagementTest extends TestCase
     public function test_cannot_delete_location_type_with_associated_locations(): void
     {
         Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
         ]);
 
@@ -191,30 +177,29 @@ class LocationManagementTest extends TestCase
     public function test_can_add_multiple_time_slots_on_same_day(): void
     {
         $location = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'name' => '番所前スペース',
         ]);
 
         // 午前スロット（利用可能）
-        $response1 = $this->actingAs($this->admin)->post(route('timetables.locations.schedules.store', [$this->timetable, $location]), [
+        $response1 = $this->actingAs($this->admin)->post(route('locations.schedules.store', $location), [
             'start_at' => '2026-10-10 09:00:00',
             'end_at' => '2026-10-10 12:00:00',
             'availability_status' => 'available',
             'title' => '午前準備枠',
             'note' => '搬入受取用',
         ]);
-        $response1->assertRedirect(route('timetables.locations.show', [$this->timetable, $location]));
+        $response1->assertRedirect(route('locations.show', $location));
 
         // 夜間スロット（利用不可）
-        $response2 = $this->actingAs($this->admin)->post(route('timetables.locations.schedules.store', [$this->timetable, $location]), [
+        $response2 = $this->actingAs($this->admin)->post(route('locations.schedules.store', $location), [
             'start_at' => '2026-10-10 18:00:00',
             'end_at' => '2026-10-10 21:00:00',
             'availability_status' => 'unavailable',
             'title' => '夜間枠',
             'note' => '模擬店準備のため利用不可',
         ]);
-        $response2->assertRedirect(route('timetables.locations.show', [$this->timetable, $location]));
+        $response2->assertRedirect(route('locations.show', $location));
 
         $this->assertCount(2, $location->schedules);
         $schedules = $location->schedules()->orderBy('start_at')->get();
@@ -225,7 +210,6 @@ class LocationManagementTest extends TestCase
     public function test_can_update_schedule_availability_status_quickly(): void
     {
         $location = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
         ]);
         $schedule = LocationSchedule::create([
@@ -236,11 +220,11 @@ class LocationManagementTest extends TestCase
             'title' => '午前枠',
         ]);
 
-        $response = $this->actingAs($this->admin)->patch(route('timetables.locations.schedules.update-status', [$this->timetable, $location, $schedule]), [
+        $response = $this->actingAs($this->admin)->patch(route('locations.schedules.update-status', [$location, $schedule]), [
             'availability_status' => 'available',
         ]);
 
-        $response->assertRedirect(route('timetables.locations.show', [$this->timetable, $location]));
+        $response->assertRedirect(route('locations.show', $location));
         $schedule->refresh();
         $this->assertEquals('available', $schedule->availability_status);
     }
@@ -248,7 +232,6 @@ class LocationManagementTest extends TestCase
     public function test_evaluate_status_at_specific_times(): void
     {
         $location = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'is_all_day' => false,
             'is_active' => true,
@@ -296,7 +279,6 @@ class LocationManagementTest extends TestCase
     public function test_all_day_location_is_always_available(): void
     {
         $location = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'is_all_day' => true,
             'is_active' => true,
@@ -312,7 +294,7 @@ class LocationManagementTest extends TestCase
         LocationType::query()->delete();
 
         $this->actingAs($this->admin)
-            ->get(route('timetables.locations.create', $this->timetable))
+            ->get(route('locations.create'))
             ->assertOk()
             ->assertSee('拠点タイプ（種別マスタ）がまだ登録されていません');
 
@@ -327,11 +309,11 @@ class LocationManagementTest extends TestCase
      */
     public function test_can_reorder_locations(): void
     {
-        $loc1 = Location::factory()->create(['timetable_id' => $this->timetable->id, 'display_order' => 10]);
-        $loc2 = Location::factory()->create(['timetable_id' => $this->timetable->id, 'display_order' => 20]);
-        $loc3 = Location::factory()->create(['timetable_id' => $this->timetable->id, 'display_order' => 30]);
+        $loc1 = Location::factory()->create(['display_order' => 10]);
+        $loc2 = Location::factory()->create(['display_order' => 20]);
+        $loc3 = Location::factory()->create(['display_order' => 30]);
 
-        $response = $this->actingAs($this->admin)->postJson(route('timetables.locations.reorder', $this->timetable), [
+        $response = $this->actingAs($this->admin)->postJson(route('locations.reorder'), [
             'location_ids' => [$loc3->id, $loc1->id, $loc2->id],
         ]);
 
@@ -351,7 +333,7 @@ class LocationManagementTest extends TestCase
      */
     public function test_can_create_location_with_schedules(): void
     {
-        $response = $this->actingAs($this->admin)->post(route('timetables.locations.store', $this->timetable), [
+        $response = $this->actingAs($this->admin)->post(route('locations.store'), [
             'name' => '番所本部',
             'location_type_id' => $this->type->id,
             'is_all_day' => false,
@@ -376,11 +358,11 @@ class LocationManagementTest extends TestCase
 
         $response->assertSessionHasNoErrors();
 
-        $location = Location::where('timetable_id', $this->timetable->id)->where('name', '番所本部')->first();
+        $location = Location::where('name', '番所本部')->first();
         $this->assertNotNull($location);
         $this->assertEquals(10, $location->display_order); // 自動採番
         $this->assertCount(2, $location->schedules);
-        $response->assertRedirect(route('timetables.locations.show', [$this->timetable, $location]));
+        $response->assertRedirect(route('locations.index'));
     }
 
     /**
@@ -389,7 +371,6 @@ class LocationManagementTest extends TestCase
     public function test_can_update_location_with_schedules(): void
     {
         $location = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'is_all_day' => false,
             'display_order' => 50,
@@ -411,7 +392,7 @@ class LocationManagementTest extends TestCase
         ]);
 
         // schedule1を更新、schedule2は送信せず削除、新規枠3を追加
-        $response = $this->actingAs($this->admin)->put(route('timetables.locations.update', [$this->timetable, $location]), [
+        $response = $this->actingAs($this->admin)->put(route('locations.update', $location), [
             'name' => '番所本部更新',
             'location_type_id' => $this->type->id,
             'is_all_day' => false,
@@ -433,7 +414,7 @@ class LocationManagementTest extends TestCase
             ],
         ]);
 
-        $response->assertRedirect(route('timetables.locations.index', $this->timetable));
+        $response->assertRedirect(route('locations.index'));
 
         $location->refresh();
         $this->assertEquals(50, $location->display_order); // 既存の表示順を維持
@@ -458,12 +439,11 @@ class LocationManagementTest extends TestCase
     public function test_location_show_screen_has_no_delete_card_or_add_schedule_link(): void
     {
         $location = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'name' => 'テスト対象拠点',
         ]);
 
-        $response = $this->actingAs($this->admin)->get(route('timetables.locations.show', [$this->timetable, $location]));
+        $response = $this->actingAs($this->admin)->get(route('locations.show', $location));
 
         $response->assertOk()
             ->assertDontSee('この拠点を完全に削除する')
@@ -477,14 +457,13 @@ class LocationManagementTest extends TestCase
     public function test_create_and_edit_screens_have_no_display_order_input(): void
     {
         $location = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
         ]);
 
-        $createRes = $this->actingAs($this->admin)->get(route('timetables.locations.create', $this->timetable));
+        $createRes = $this->actingAs($this->admin)->get(route('locations.create'));
         $createRes->assertOk()->assertDontSee('name="display_order"', false);
 
-        $editRes = $this->actingAs($this->admin)->get(route('timetables.locations.edit', [$this->timetable, $location]));
+        $editRes = $this->actingAs($this->admin)->get(route('locations.edit', $location));
         $editRes->assertOk()->assertDontSee('name="display_order"', false);
     }
 
@@ -494,14 +473,13 @@ class LocationManagementTest extends TestCase
     public function test_create_and_edit_screens_have_no_add_type_link(): void
     {
         $location = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
         ]);
 
-        $createRes = $this->actingAs($this->admin)->get(route('timetables.locations.create', $this->timetable));
+        $createRes = $this->actingAs($this->admin)->get(route('locations.create'));
         $createRes->assertOk()->assertDontSee('新しいタイプを追加');
 
-        $editRes = $this->actingAs($this->admin)->get(route('timetables.locations.edit', [$this->timetable, $location]));
+        $editRes = $this->actingAs($this->admin)->get(route('locations.edit', $location));
         $editRes->assertOk()->assertDontSee('新しいタイプを追加');
     }
 
@@ -510,9 +488,10 @@ class LocationManagementTest extends TestCase
      */
     public function test_locations_daily_availability_status_display(): void
     {
+        $today = Carbon::today()->format('Y-m-d');
+
         // 1. 終日利用可能拠点 -> 利用可（確保済）
         $loc1 = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'name' => '終日利用拠点A',
             'is_all_day' => true,
@@ -520,47 +499,44 @@ class LocationManagementTest extends TestCase
 
         // 2. スロットあり（全て確保済） -> 利用可（確保済）
         $loc2 = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'name' => '時間枠確保済拠点B',
             'is_all_day' => false,
         ]);
         LocationSchedule::create([
             'location_id' => $loc2->id,
-            'start_at' => '2026-10-11 09:00:00',
-            'end_at' => '2026-10-11 17:00:00',
+            'start_at' => "{$today} 09:00:00",
+            'end_at' => "{$today} 17:00:00",
             'availability_status' => 'available',
         ]);
 
         // 3. スロットあり（一部未確保） -> 一部未確保
         $loc3 = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'name' => '一部未確保拠点C',
             'is_all_day' => false,
         ]);
         LocationSchedule::create([
             'location_id' => $loc3->id,
-            'start_at' => '2026-10-11 09:00:00',
-            'end_at' => '2026-10-11 12:00:00',
+            'start_at' => "{$today} 09:00:00",
+            'end_at' => "{$today} 12:00:00",
             'availability_status' => 'available',
         ]);
         LocationSchedule::create([
             'location_id' => $loc3->id,
-            'start_at' => '2026-10-11 13:00:00',
-            'end_at' => '2026-10-11 17:00:00',
+            'start_at' => "{$today} 13:00:00",
+            'end_at' => "{$today} 17:00:00",
             'availability_status' => 'unavailable',
         ]);
 
         // 4. スロットなし -> 本日枠無し
         $loc4 = Location::factory()->create([
-            'timetable_id' => $this->timetable->id,
             'location_type_id' => $this->type->id,
             'name' => '枠未登録拠点D',
             'is_all_day' => false,
         ]);
 
-        $response = $this->actingAs($this->admin)->get(route('timetables.locations.index', $this->timetable));
+        $response = $this->actingAs($this->admin)->get(route('locations.index'));
 
         $response->assertOk();
         $response->assertSee('利用可（確保済）');

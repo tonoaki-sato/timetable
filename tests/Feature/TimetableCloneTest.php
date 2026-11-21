@@ -114,13 +114,11 @@ class TimetableCloneTest extends TestCase
 
         $locationType = LocationType::factory()->create();
         $locationA = Location::factory()->create([
-            'timetable_id' => $sourceTimetable->id,
             'location_type_id' => $locationType->id,
             'name' => '番所地下倉庫',
             'display_order' => 10,
         ]);
         $locationB = Location::factory()->create([
-            'timetable_id' => $sourceTimetable->id,
             'location_type_id' => $locationType->id,
             'name' => 'メイン通り本部',
             'display_order' => 20,
@@ -225,7 +223,7 @@ class TimetableCloneTest extends TestCase
             'reason' => '前年応援要請',
         ]);
 
-        return compact('sourceTimetable', 'leadStaff', 'fixedStaff', 'assignStaff', 'absentStaff', 'vendor');
+        return compact('sourceTimetable', 'leadStaff', 'fixedStaff', 'assignStaff', 'absentStaff', 'vendor', 'locationA', 'locationB');
     }
 
     /**
@@ -240,7 +238,7 @@ class TimetableCloneTest extends TestCase
         $indexResponse = $this->actingAs($this->operator)->get(route('timetables.index'));
         $indexResponse->assertOk()
             ->assertSee('btn-clone-timetable')
-            ->assertSee('data-source-id="'.$source->id.'"', false)
+            ->assertSee('data-source-id="' . $source->id . '"', false)
             ->assertSee('modal-timetable-form')
             ->assertSee('id="modal_source_timetable_id"', false)
             ->assertSee('id="modal_copy_lanes"', false)
@@ -292,7 +290,6 @@ class TimetableCloneTest extends TestCase
             'copy_lane_staff' => '1',
             'copy_tasks' => '1',
             'copy_task_assignments' => '1',
-            'copy_locations' => '1',
             'copy_logistics_plans' => '1',
             'copy_site_layouts' => '1',
         ]);
@@ -324,22 +321,15 @@ class TimetableCloneTest extends TestCase
         $this->assertSame($dataset['assignStaff']->id, $newAssignment->staff_id);
         $this->assertSame('assigned', $newAssignment->attendance_status);
 
-        // 4. Location & LocationSchedule (日付+365日シフト & unavailableリセット)
-        $newLocA = Location::where('timetable_id', $newTimetable->id)->where('name', '番所地下倉庫')->first();
-        $newLocB = Location::where('timetable_id', $newTimetable->id)->where('name', 'メイン通り本部')->first();
-        $this->assertNotNull($newLocA);
-        $this->assertNotNull($newLocB);
-        $newLocSchedule = $newLocA->schedules()->first();
-        $this->assertNotNull($newLocSchedule);
-        $this->assertSame('2026-10-18 07:00:00', $newLocSchedule->start_at->format('Y-m-d H:i:s'));
-        $this->assertSame('unavailable', $newLocSchedule->availability_status);
+        // 4. Location はマスター管理のため、運行情報複製時に重複作成されないこと
+        $this->assertSame(2, Location::count());
 
-        // 5. EquipmentLogisticsPlan (拠点IDリマップ・日付+365日シフト・plannedリセット)
+        // 5. EquipmentLogisticsPlan (マスター拠点IDをそのまま保持・日付+365日シフト・plannedリセット)
         $newPlan = EquipmentLogisticsPlan::where('timetable_id', $newTimetable->id)->first();
         $this->assertNotNull($newPlan);
         $this->assertSame('2026-10-17', $newPlan->target_date->format('Y-m-d'));
-        $this->assertSame($newLocA->id, $newPlan->from_location_id);
-        $this->assertSame($newLocB->id, $newPlan->to_location_id);
+        $this->assertSame($dataset['locationA']->id, $newPlan->from_location_id);
+        $this->assertSame($dataset['locationB']->id, $newPlan->to_location_id);
         $this->assertSame('planned', $newPlan->status);
 
         // 6. LayoutMap / LayoutArea / LayoutItem (vendor_id維持・tentativeリセット) & SiteMapPlacement (layout_item_id リマップ)
@@ -347,7 +337,7 @@ class TimetableCloneTest extends TestCase
         $this->assertNotNull($newLayoutMap);
         $newArea = LayoutArea::where('layout_map_id', $newLayoutMap->id)->first();
         $this->assertNotNull($newArea);
-        $this->assertSame($newLocB->id, $newArea->location_id);
+        $this->assertSame($dataset['locationB']->id, $newArea->location_id);
         $newItem = LayoutItem::where('layout_map_id', $newLayoutMap->id)->first();
         $this->assertNotNull($newItem);
         $this->assertSame($dataset['vendor']->id, $newItem->vendor_id);
@@ -383,7 +373,6 @@ class TimetableCloneTest extends TestCase
             'copy_lane_staff' => '0',
             'copy_tasks' => '1',
             'copy_task_assignments' => '0',
-            'copy_locations' => '0',
             'copy_logistics_plans' => '0',
             'copy_site_layouts' => '0',
         ])->assertRedirect();
@@ -400,8 +389,7 @@ class TimetableCloneTest extends TestCase
         $this->assertNotNull($newTask);
         $this->assertSame(0, $newTask->assignments()->count());
 
-        // 拠点・搬出入・配置計画・白地図はコピーされない
-        $this->assertSame(0, Location::where('timetable_id', $newTimetable->id)->count());
+        // 搬出入・配置計画・白地図はコピーされない
         $this->assertSame(0, EquipmentLogisticsPlan::where('timetable_id', $newTimetable->id)->count());
         $this->assertSame(0, LayoutMap::where('timetable_id', $newTimetable->id)->count());
         $this->assertSame(0, SiteBaseMap::where('timetable_id', $newTimetable->id)->count());

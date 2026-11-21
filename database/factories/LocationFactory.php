@@ -23,9 +23,8 @@ class LocationFactory extends Factory
     public function definition(): array
     {
         return [
-            'timetable_id' => Timetable::factory(),
             'location_type_id' => LocationType::factory(),
-            'name' => fake()->city().'待機所',
+            'name' => fake()->city() . '待機所' . fake()->unique()->numberBetween(100, 999),
             'notes' => fake()->paragraph(),
             'is_all_day' => false,
             'display_order' => fake()->numberBetween(1, 50),
@@ -39,7 +38,7 @@ class LocationFactory extends Factory
      */
     public function allDay(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'is_all_day' => true,
         ]);
     }

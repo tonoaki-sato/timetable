@@ -212,23 +212,20 @@ Route::middleware('auth')->group(function () {
         Route::delete('plans/{plan}', [EquipmentLogisticsPlanController::class, 'destroyLegacy'])->name('plans.destroy');
     });
 
-    // 拠点管理・時間帯スケジュール・拠点タイプ管理
+    // 拠点マスター管理 (Locations)
+    Route::post('locations/reorder', [LocationController::class, 'reorder'])->name('locations.reorder');
+    Route::resource('locations', LocationController::class);
+
+    // 拠点スケジュール枠
+    Route::post('locations/{location}/schedules', [LocationScheduleController::class, 'store'])->name('locations.schedules.store');
+    Route::put('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'update'])->name('locations.schedules.update');
+    Route::patch('locations/{location}/schedules/{schedule}/status', [LocationScheduleController::class, 'updateStatus'])->name('locations.schedules.update-status');
+    Route::delete('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'destroy'])->name('locations.schedules.destroy');
+
+    // 旧タイムテーブル配下ルートからの互換リダイレクト
+    Route::get('timetables/{timetable}/locations', [LocationController::class, 'redirectLegacy'])->name('timetables.locations.index');
+
     Route::scopeBindings()->group(function () {
-        Route::get('timetables/{timetable}/locations', [LocationController::class, 'index'])->name('timetables.locations.index');
-        Route::post('timetables/{timetable}/locations/reorder', [LocationController::class, 'reorder'])->name('timetables.locations.reorder');
-        Route::get('timetables/{timetable}/locations/create', [LocationController::class, 'create'])->name('timetables.locations.create');
-        Route::post('timetables/{timetable}/locations', [LocationController::class, 'store'])->name('timetables.locations.store');
-        Route::get('timetables/{timetable}/locations/{location}', [LocationController::class, 'show'])->name('timetables.locations.show');
-        Route::get('timetables/{timetable}/locations/{location}/edit', [LocationController::class, 'edit'])->name('timetables.locations.edit');
-        Route::put('timetables/{timetable}/locations/{location}', [LocationController::class, 'update'])->name('timetables.locations.update');
-        Route::delete('timetables/{timetable}/locations/{location}', [LocationController::class, 'destroy'])->name('timetables.locations.destroy');
-
-        // 拠点スケジュール枠
-        Route::post('timetables/{timetable}/locations/{location}/schedules', [LocationScheduleController::class, 'store'])->name('timetables.locations.schedules.store');
-        Route::put('timetables/{timetable}/locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'update'])->name('timetables.locations.schedules.update');
-        Route::patch('timetables/{timetable}/locations/{location}/schedules/{schedule}/status', [LocationScheduleController::class, 'updateStatus'])->name('timetables.locations.schedules.update-status');
-        Route::delete('timetables/{timetable}/locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'destroy'])->name('timetables.locations.schedules.destroy');
-
         // 現場配置計画 (Site Layout)
         Route::get('timetables/{timetable}/layouts', [SiteLayoutController::class, 'index'])->name('timetables.layouts.index');
         Route::get('timetables/{timetable}/layouts/booths', [SiteLayoutController::class, 'booths'])->name('timetables.layouts.booths');

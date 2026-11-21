@@ -99,17 +99,6 @@
                                     </div>
                                 </label>
 
-                                <!-- 拠点・スケジュール -->
-                                <label data-clone-option-item class="flex items-start space-x-2 p-2 bg-white rounded-lg border border-indigo-200/80 cursor-pointer select-none">
-                                    <input type="hidden" name="copy_locations" value="0">
-                                    <input type="checkbox" id="modal_copy_locations" name="copy_locations" value="1" checked
-                                        class="w-4 h-4 mt-0.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                                    <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-slate-900">📍 拠点スケジュール</div>
-                                        <p class="text-[10px] text-slate-500 mt-0.5">日付を新開催日に自動シフト</p>
-                                    </div>
-                                </label>
-
                                 <!-- 搬出入計画 -->
                                 <label data-clone-option-item class="flex items-start space-x-2 p-2 bg-white rounded-lg border border-indigo-200/80 cursor-pointer select-none">
                                     <input type="hidden" name="copy_logistics_plans" value="0">

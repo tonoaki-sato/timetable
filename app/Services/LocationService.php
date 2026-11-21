@@ -23,20 +23,25 @@ class LocationService
     ) {}
 
     /**
-     * 指定タイムテーブルにおける拠点一覧表示用データを取得
+     * 拠点一覧表示用データを取得
      *
      * @return array{
-     *     timetable: Timetable,
+     *     timetable: ?Timetable,
      *     locationsWithStatus: \Illuminate\Support\Collection<int, LocationListItemData>,
      *     now: Carbon
      * }
      */
-    public function getIndexViewData(Timetable $timetable, ?Carbon $now = null): array
+    public function getIndexViewData(Timetable|Carbon|null $timetable = null, ?Carbon $now = null): array
     {
-        $now = $now ?? Carbon::now('Asia/Tokyo');
-        $targetDate = $timetable->target_date?->format('Y-m-d') ?? $now->format('Y-m-d');
+        if ($timetable instanceof Carbon) {
+            $now = $timetable;
+            $timetable = null;
+        }
 
-        $locations = $this->locationRepository->getForTimetable($timetable);
+        $now = $now ?? Carbon::now('Asia/Tokyo');
+        $targetDate = $timetable?->target_date?->format('Y-m-d') ?? $now->format('Y-m-d');
+
+        $locations = $this->locationRepository->getAllOrdered();
 
         $locationsWithStatus = $locations->map(function (Location $location) use ($now, $targetDate): LocationListItemData {
             $evaluation = $this->availabilityService->evaluateLocationStatus($location, $now);
@@ -75,18 +80,25 @@ class LocationService
      *
      * @param  array<string, mixed>  $validated
      */
-    public function createLocation(Timetable $timetable, array $validated, ?int $userId = null): Location
+    public function createLocation(array|Timetable $timetableOrValidated, array|int|null $validatedOrUserId = null, ?int $userId = null): Location
     {
+        if ($timetableOrValidated instanceof Timetable) {
+            $validated = is_array($validatedOrUserId) ? $validatedOrUserId : [];
+        } else {
+            $validated = $timetableOrValidated;
+            $userId = is_int($validatedOrUserId) ? $validatedOrUserId : $userId;
+        }
+
         $validated['created_by'] = $userId;
 
         if (! isset($validated['display_order']) || $validated['display_order'] === null) {
-            $validated['display_order'] = $this->locationRepository->getMaxDisplayOrder($timetable) + 10;
+            $validated['display_order'] = $this->locationRepository->getMaxDisplayOrder() + 10;
         }
 
         $schedules = $validated['schedules'] ?? [];
         unset($validated['schedules']);
 
-        $location = $this->locationRepository->create($timetable, $validated);
+        $location = $this->locationRepository->create($validated);
 
         if (! empty($schedules) && ! ($validated['is_all_day'] ?? false)) {
             $this->locationRepository->syncSchedules($location, $schedules);
@@ -98,11 +110,13 @@ class LocationService
     /**
      * 拠点の表示順を一括更新
      *
-     * @param  array<int, int>  $locationIds
+     * @param  array<int, int>|Timetable  $timetableOrLocationIds
+     * @param  array<int, int>|null  $locationIds
      */
-    public function reorderLocations(Timetable $timetable, array $locationIds): void
+    public function reorderLocations(array|Timetable $timetableOrLocationIds, ?array $locationIds = null): void
     {
-        $this->locationRepository->reorder($timetable, $locationIds);
+        $cleanIds = is_array($timetableOrLocationIds) ? $timetableOrLocationIds : ($locationIds ?? []);
+        $this->locationRepository->reorder($cleanIds);
     }
 
     /**
@@ -110,10 +124,20 @@ class LocationService
      *
      * @return array<string, mixed>
      */
-    public function getShowViewData(Timetable $timetable, Location $location, ?Carbon $now = null): array
+    public function getShowViewData(Timetable|Location $timetableOrLocation, Location|Carbon|null $locationOrNow = null, ?Carbon $now = null): array
     {
+        if ($timetableOrLocation instanceof Timetable && $locationOrNow instanceof Location) {
+            $timetable = $timetableOrLocation;
+            $location = $locationOrNow;
+        } else {
+            $timetable = null;
+            /** @var Location $location */
+            $location = $timetableOrLocation;
+            $now = $locationOrNow instanceof Carbon ? $locationOrNow : $now;
+        }
+
         $now = $now ?? Carbon::now('Asia/Tokyo');
-        $locationWithDetails = $this->locationRepository->findWithDetails($timetable, $location->id) ?? $location;
+        $locationWithDetails = $this->locationRepository->findWithDetails($location->id) ?? $location;
         $evaluation = $this->availabilityService->evaluateLocationStatus($locationWithDetails, $now);
 
         return [
@@ -128,9 +152,14 @@ class LocationService
      *
      * @return array<string, mixed>
      */
-    public function getEditViewData(Timetable $timetable, Location $location): array
+    public function getEditViewData(Timetable|Location $timetableOrLocation, ?Location $location = null): array
     {
-        $locationWithDetails = $this->locationRepository->findWithDetails($timetable, $location->id) ?? $location;
+        $targetLocation = $location ?? ($timetableOrLocation instanceof Location ? $timetableOrLocation : null);
+        $timetable = $timetableOrLocation instanceof Timetable ? $timetableOrLocation : null;
+
+        $locationWithDetails = $targetLocation
+            ? ($this->locationRepository->findWithDetails($targetLocation->id) ?? $targetLocation)
+            : null;
         $types = $this->locationTypeRepository->getActiveOrdered();
 
         return [

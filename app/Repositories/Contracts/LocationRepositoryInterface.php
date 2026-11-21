@@ -14,38 +14,69 @@ interface LocationRepositoryInterface
     public function findById(int $id): ?Location;
 
     /**
-     * 指定タイムテーブルで名称が部分一致する最初の拠点を取得
+     * 名称が部分一致する最初の拠点を取得
      */
-    public function findFirstByTimetableAndNameLike(int $timetableId, string $keyword): ?Location;
+    public function findFirstByNameLike(string $keyword): ?Location;
 
     /**
-     * 指定タイムテーブルで名称が完全一致する最初の拠点を取得
+     * 名称が完全一致する最初の拠点を取得
      */
-    public function findFirstByTimetableAndExactName(int $timetableId, string $name): ?Location;
+    public function findFirstByExactName(string $name): ?Location;
 
     /**
-     * 指定タイムテーブルの全拠点について「拠点名 => 最小拠点ID」の連想配列を取得
+     * 全拠点について「拠点名 => 拠点ID」の連想配列を取得
      *
      * @return array<string, int>
      */
-    public function getNameIdMapForTimetable(int $timetableId): array;
+    public function getNameIdMap(): array;
 
     /**
-     * 指定タイムテーブルに紐づく拠点一覧をスケジュール付きで取得
+     * 【互換】指定タイムテーブルで名称が部分一致する最初の拠点を取得
+     */
+    public function findFirstByTimetableAndNameLike(?int $timetableId, string $keyword): ?Location;
+
+    /**
+     * 【互換】指定タイムテーブルで名称が完全一致する最初の拠点を取得
+     */
+    public function findFirstByTimetableAndExactName(?int $timetableId, string $name): ?Location;
+
+    /**
+     * 【互換】全拠点について「拠点名 => 最小拠点ID」の連想配列を取得
+     *
+     * @return array<string, int>
+     */
+    public function getNameIdMapForTimetable(?int $timetableId = null): array;
+
+    /**
+     * 全拠点一覧を表示順で取得
      *
      * @return Collection<int, Location>
      */
-    public function getForTimetable(Timetable $timetable): Collection;
+    public function getAllOrdered(): Collection;
 
     /**
-     * 指定タイムテーブルの有効な拠点一覧を表示順で取得
+     * 【互換】全拠点一覧をスケジュール付きで取得
      *
      * @return Collection<int, Location>
      */
-    public function getActiveOrderedForTimetable(Timetable $timetable): Collection;
+    public function getForTimetable(?Timetable $timetable = null): Collection;
 
     /**
-     * 有効な拠点一覧をタイプ・スケジュール付きで表示順に取得（タイムテーブル指定可）
+     * 有効な拠点一覧を表示順で取得
+     *
+     * @return Collection<int, Location>
+     */
+    public function getActiveOrdered(): Collection;
+
+    /**
+     * 【互換】指定タイムテーブルの有効な拠点一覧を表示順で取得
+     *
+     * @return Collection<int, Location>
+     */
+    public function getActiveOrderedForTimetable(?Timetable $timetable = null): Collection;
+
+    /**
+     * 有効な拠点一覧をタイプ・スケジュール付きで表示順に取得
      *
      * @return Collection<int, Location>
      */
@@ -66,14 +97,14 @@ interface LocationRepositoryInterface
     /**
      * 詳細画面用の拠点を取得（スケジュール・関連計画付き）
      */
-    public function findWithDetails(Timetable $timetable, int $locationId): ?Location;
+    public function findWithDetails(int $locationId): ?Location;
 
     /**
      * 新規拠点を作成
      *
      * @param  array<string, mixed>  $attributes
      */
-    public function create(Timetable $timetable, array $attributes): Location;
+    public function create(array $attributes): Location;
 
     /**
      * 拠点を更新
@@ -88,16 +119,16 @@ interface LocationRepositoryInterface
     public function delete(Location $location): bool;
 
     /**
-     * 指定タイムテーブルの拠点表示順を一括更新
+     * 拠点表示順を一括更新
      *
      * @param  array<int, int>  $locationIds
      */
-    public function reorder(Timetable $timetable, array $locationIds): void;
+    public function reorder(array $locationIds): void;
 
     /**
-     * 指定タイムテーブルにおける最大の表示順を取得
+     * 最大の表示順を取得
      */
-    public function getMaxDisplayOrder(Timetable $timetable): int;
+    public function getMaxDisplayOrder(): int;
 
     /**
      * 拠点の利用可能時間帯スケジュールを一括同期（作成・更新・削除）

@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateLocationScheduleRequest;
 use App\Http\Requests\UpdateLocationScheduleStatusRequest;
 use App\Models\Location;
 use App\Models\LocationSchedule;
-use App\Models\Timetable;
 use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -22,9 +21,8 @@ class LocationScheduleController extends Controller
     /**
      * スケジュール枠の新規登録
      */
-    public function store(StoreLocationScheduleRequest $request, Timetable $timetable, Location $location): RedirectResponse|JsonResponse
+    public function store(StoreLocationScheduleRequest $request, Location $location): RedirectResponse|JsonResponse
     {
-        abort_if($location->timetable_id !== $timetable->id, 404);
         $this->authorize('create', LocationSchedule::class);
 
         $schedule = $this->locationService->createSchedule($location, $request->validated());
@@ -37,16 +35,16 @@ class LocationScheduleController extends Controller
             ]);
         }
 
-        return redirect()->route('timetables.locations.show', [$timetable, $location])
+        return redirect()->route('locations.show', $location)
             ->with('status', '利用可能時間帯を登録しました。');
     }
 
     /**
      * スケジュール枠の更新
      */
-    public function update(UpdateLocationScheduleRequest $request, Timetable $timetable, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
+    public function update(UpdateLocationScheduleRequest $request, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
     {
-        abort_if($location->timetable_id !== $timetable->id || $schedule->location_id !== $location->id, 404);
+        abort_if($schedule->location_id !== $location->id, 404);
         $this->authorize('update', $schedule);
 
         $schedule = $this->locationService->updateSchedule($schedule, $request->validated());
@@ -59,16 +57,16 @@ class LocationScheduleController extends Controller
             ]);
         }
 
-        return redirect()->route('timetables.locations.show', [$timetable, $location])
+        return redirect()->route('locations.show', $location)
             ->with('status', '利用可能時間帯を更新しました。');
     }
 
     /**
      * スケジュール枠のステータス更新
      */
-    public function updateStatus(UpdateLocationScheduleStatusRequest $request, Timetable $timetable, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
+    public function updateStatus(UpdateLocationScheduleStatusRequest $request, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
     {
-        abort_if($location->timetable_id !== $timetable->id || $schedule->location_id !== $location->id, 404);
+        abort_if($schedule->location_id !== $location->id, 404);
         $this->authorize('update', $schedule);
 
         $schedule = $this->locationService->updateScheduleStatus(
@@ -84,16 +82,16 @@ class LocationScheduleController extends Controller
             ]);
         }
 
-        return redirect()->route('timetables.locations.show', [$timetable, $location])
+        return redirect()->route('locations.show', $location)
             ->with('status', 'ステータスを更新しました。');
     }
 
     /**
      * スケジュール枠の削除
      */
-    public function destroy(Request $request, Timetable $timetable, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
+    public function destroy(Request $request, Location $location, LocationSchedule $schedule): RedirectResponse|JsonResponse
     {
-        abort_if($location->timetable_id !== $timetable->id || $schedule->location_id !== $location->id, 404);
+        abort_if($schedule->location_id !== $location->id, 404);
         $this->authorize('delete', $schedule);
 
         $this->locationService->deleteSchedule($schedule);
@@ -105,7 +103,7 @@ class LocationScheduleController extends Controller
             ]);
         }
 
-        return redirect()->route('timetables.locations.show', [$timetable, $location])
+        return redirect()->route('locations.show', $location)
             ->with('status', '利用可能時間帯を削除しました。');
     }
 }

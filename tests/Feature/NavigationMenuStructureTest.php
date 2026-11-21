@@ -236,7 +236,7 @@ class NavigationMenuStructureTest extends TestCase
             route('schedules.index'),
             route('staff.index'),
             route('equipments.index'),
-            route('timetables.locations.index', $this->timetable),
+            route('locations.index'),
             route('location-types.index'),
             route('timetables.print-assignments', $this->timetable),
             route('logistics.print'),

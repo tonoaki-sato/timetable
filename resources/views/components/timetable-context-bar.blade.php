@@ -54,14 +54,6 @@
             <span>👥</span>
             <span>人員配置</span>
         </a>
-        <a href="{{ route('timetables.locations.index', $timetable) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'locations' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
-            <span>📍</span>
-            <span>拠点</span>
-            @if(($timetable->locations_count ?? 0) > 0)
-                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->locations_count }})</span>
-            @endif
-        </a>
         <a href="{{ route('timetables.logistics.index', $timetable) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['logistics', 'logistics-timeline', 'equipments'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>🚚</span>

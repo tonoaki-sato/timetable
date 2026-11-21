@@ -13,8 +13,8 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <x-ui.button variant="header-action" :href="route('timetables.index')">
-                <span>← 運行情報一覧に戻る</span>
+            <x-ui.button variant="header-action" :href="route('locations.index')">
+                <span>← 拠点マスターに戻る</span>
             </x-ui.button>
             <x-ui.button variant="header-action" data-action="open-type-modal" data-mode="create" data-store-url="{{ route('location-types.store') }}">
                 <span>➕</span>

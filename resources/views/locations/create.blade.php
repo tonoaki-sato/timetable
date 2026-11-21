@@ -1,174 +1,163 @@
-<x-layouts.app :title="'新規拠点の追加 - ' . $timetable->name">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
+<x-layouts.app title="新規拠点の追加 - 拠点マスター">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
-    <!-- ナビゲーション & ヘッダー -->
-    <x-page-header
-        title="新規拠点の追加"
-        icon="➕"
-        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）に新しい拠点（番所・駐車場・倉庫等）を追加します。'">
-        <x-slot:breadcrumbs>
-            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>⏱️</span>
-                <span>運行情報一覧</span>
-            </a>
-            <span class="text-slate-300">/</span>
-            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>📅</span>
-                <span>{{ $timetable->name }}</span>
-            </a>
-            <span class="text-slate-300">/</span>
-            <a href="{{ route('timetables.locations.index', $timetable) }}" class="hover:text-indigo-600 transition truncate">
-                📍 拠点一覧
-            </a>
-            <span class="text-slate-300">/</span>
-            <span class="text-slate-700 font-bold truncate">➕ 新規追加</span>
-        </x-slot:breadcrumbs>
+        <!-- ナビゲーション & ヘッダー -->
+        <x-page-header
+            title="新規拠点の追加"
+            icon="➕"
+            description="拠点マスター（番所・駐車場・倉庫等）に新しい拠点を追加します。">
+            <x-slot:breadcrumbs>
+                <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                    <span>🗂️</span>
+                    <span>マスター管理</span>
+                </a>
+                <span class="text-slate-300">/</span>
+                <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition truncate">
+                    📍 拠点マスター
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-700 font-bold truncate">➕ 新規追加</span>
+            </x-slot:breadcrumbs>
 
-        <x-slot:actions>
-            <x-ui.button variant="header-action" :href="route('timetables.locations.index', $timetable)">
-                <span>←</span>
-                <span>拠点一覧に戻る</span>
-            </x-ui.button>
-        </x-slot:actions>
-    </x-page-header>
+            <x-slot:actions>
+                <x-ui.button variant="header-action" :href="route('locations.index')">
+                    <span>←</span>
+                    <span>拠点マスターに戻る</span>
+                </x-ui.button>
+            </x-slot:actions>
+        </x-page-header>
 
-    <!-- 運行日コンテキストバー -->
-    <x-timetable-context-bar :timetable="$timetable" active="locations" />
+        <!-- 入力エラーメッセージ -->
+        <x-ui.validation-errors title="入力内容を確認してください" />
 
-    <!-- 入力エラーメッセージ -->
-    <x-ui.validation-errors title="入力内容を確認してください" />
-
-    @if($types->isEmpty())
-    <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="space-y-1">
-            <div class="font-bold flex items-center space-x-1.5">
-                <span>⚠️</span>
-                <span>拠点タイプ（種別マスタ）がまだ登録されていません</span>
+        @if($types->isEmpty())
+        <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1">
+                <div class="font-bold flex items-center space-x-1.5">
+                    <span>⚠️</span>
+                    <span>拠点タイプ（種別マスタ）がまだ登録されていません</span>
+                </div>
+                <p class="text-[11px] text-amber-800">
+                    拠点を登録するには、先に「タイプマスタ管理」画面から拠点タイプ（駐車場・保管倉庫・コミュニティスペース等）を追加してください。
+                </p>
             </div>
-            <p class="text-[11px] text-amber-800">
-                拠点を登録するには、先に「タイプマスタ管理」画面から拠点タイプ（駐車場・保管倉庫・コミュニティスペース等）を追加してください。
-            </p>
+            <a href="{{ route('location-types.index') }}"
+                class="inline-flex items-center space-x-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-xs transition shrink-0">
+                <span>🏷️</span>
+                <span>タイプマスタ管理へ移動</span>
+            </a>
         </div>
-        <a href="{{ route('location-types.index') }}"
-            class="inline-flex items-center space-x-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-xs transition shrink-0">
-            <span>🏷️</span>
-            <span>タイプマスタ管理へ移動</span>
-        </a>
-    </div>
-    @endif
+        @endif
 
-    <!-- 作成フォームカード -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-            <h2 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
-                <span>📍</span>
-                <span>拠点の基本情報設定</span>
-            </h2>
-            <span class="text-xs text-slate-500 font-mono">
-                日付: {{ $timetable->target_date?->format('Y/m/d') }}
-            </span>
-        </div>
+        <!-- 作成フォームカード -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <h2 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                    <span>📍</span>
+                    <span>拠点の基本情報設定</span>
+                </h2>
+            </div>
 
-        <form action="{{ route('timetables.locations.store', $timetable) }}" method="POST" class="p-6 space-y-6">
-            @csrf
+            <form action="{{ route('locations.store') }}" method="POST" class="p-6 space-y-6">
+                @csrf
 
-            <!-- 2段組みグリッド -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                <!-- 2段組みグリッド -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
-                <!-- 左カラム: 拠点名 & タイプ & 終日設定 & 有効フラグ -->
-                <div class="space-y-4">
-                    <!-- 拠点名 -->
-                    <div>
-                        <label for="name" class="block text-xs font-bold text-slate-700 mb-1">
-                            拠点名 <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" name="name" id="name" value="{{ old('name') }}" required
-                            placeholder="例: 税務署前駐車場, 番所, コミュニティスペースA"
-                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-
-                    <!-- 拠点タイプ -->
-                    <div>
-                        <label for="location_type_id" class="block text-xs font-bold text-slate-700 mb-1">
-                            拠点タイプ <span class="text-red-500">*</span>
-                        </label>
-                        <select name="location_type_id" id="location_type_id" required
-                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="">選択してください</option>
-                            @foreach($types as $type)
-                            <option value="{{ $type->id }}" {{ old('location_type_id') == $type->id ? 'selected' : '' }}>
-                                {{ $type->label }} ({{ $type->name }})
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- 終日利用可能フラグ -->
-                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-start space-x-3">
-                        <input type="checkbox" name="is_all_day" id="is_all_day" value="1" {{ old('is_all_day') ? 'checked' : '' }}
-                            class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    <!-- 左カラム: 拠点名 & タイプ & 終日設定 & 有効フラグ -->
+                    <div class="space-y-4">
+                        <!-- 拠点名 -->
                         <div>
-                            <label for="is_all_day" class="text-xs font-bold text-slate-800 cursor-pointer">終日（24時間）常時利用可能な拠点</label>
-                            <p class="text-[11px] text-slate-500 mt-0.5">時間制限なく利用できる場合にチェックしてください。チェックを外すと下部で年月日時分単位の時間帯スロットを設定できます。</p>
+                            <label for="name" class="block text-xs font-bold text-slate-700 mb-1">
+                                拠点名 <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="name" id="name" value="{{ old('name') }}" required
+                                placeholder="例: 税務署前駐車場, 番所, コミュニティスペースA"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <!-- 拠点タイプ -->
+                        <div>
+                            <label for="location_type_id" class="block text-xs font-bold text-slate-700 mb-1">
+                                拠点タイプ <span class="text-red-500">*</span>
+                            </label>
+                            <select name="location_type_id" id="location_type_id" required
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">選択してください</option>
+                                @foreach($types as $type)
+                                <option value="{{ $type->id }}" {{ old('location_type_id') == $type->id ? 'selected' : '' }}>
+                                    {{ $type->label }} ({{ $type->name }})
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- 終日利用可能フラグ -->
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-start space-x-3">
+                            <input type="checkbox" name="is_all_day" id="is_all_day" value="1" {{ old('is_all_day') ? 'checked' : '' }}
+                                class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                            <div>
+                                <label for="is_all_day" class="text-xs font-bold text-slate-800 cursor-pointer">終日（24時間）常時利用可能な拠点</label>
+                                <p class="text-[11px] text-slate-500 mt-0.5">時間制限なく利用できる場合にチェックしてください。チェックを外すと下部で年月日時分単位の時間帯スロットを設定できます。</p>
+                            </div>
+                        </div>
+
+                        <!-- 有効フラグ -->
+                        <div class="flex items-center space-x-2 pt-2">
+                            <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
+                                class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                            <label for="is_active" class="text-xs font-bold text-slate-700 cursor-pointer">有効（稼働中）</label>
                         </div>
                     </div>
 
-                    <!-- 有効フラグ -->
-                    <div class="flex items-center space-x-2 pt-2">
-                        <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
-                            class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                        <label for="is_active" class="text-xs font-bold text-slate-700 cursor-pointer">有効（稼働中）</label>
+                    <!-- 右カラム: 備考・案内メモ -->
+                    <div class="space-y-4">
+                        <div>
+                            <label for="notes" class="block text-xs font-bold text-slate-700 mb-1">
+                                メモ欄（注意事項・連絡先・鍵管理）
+                            </label>
+                            <textarea name="notes" id="notes" rows="8"
+                                placeholder="例: &#10;・鍵の受渡方法・暗証番号&#10;・管理担当者の連絡先&#10;・利用時の注意事項・駐車制限等"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed">{{ old('notes') }}</textarea>
+                            <p class="text-[11px] text-slate-500 mt-1">連絡先や注意事項、鍵の保管場所など自由に記録できます。</p>
+                        </div>
                     </div>
+
                 </div>
 
-                <!-- 右カラム: 備考・案内メモ -->
-                <div class="space-y-4">
-                    <div>
-                        <label for="notes" class="block text-xs font-bold text-slate-700 mb-1">
-                            メモ欄（注意事項・連絡先・鍵管理）
-                        </label>
-                        <textarea name="notes" id="notes" rows="8"
-                            placeholder="例: &#10;・鍵の受渡方法・暗証番号&#10;・管理担当者の連絡先&#10;・利用時の注意事項・駐車制限等"
-                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed">{{ old('notes') }}</textarea>
-                        <p class="text-[11px] text-slate-500 mt-1">連絡先や注意事項、鍵の保管場所など自由に記録できます。</p>
+                <!-- 利用可能時間帯スロット設定セクション -->
+                <div id="schedules-form-container" class="space-y-3 pt-6 border-t border-slate-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                                <span>⏱️</span>
+                                <span>利用可能時間帯スロット設定</span>
+                            </h3>
+                            <p class="text-[11px] text-slate-500 mt-0.5">
+                                終日常時利用でない場合、この運行日における利用枠（年月日時分）を設定します。
+                            </p>
+                        </div>
+                        <button type="button" id="add-schedule-row-btn"
+                            data-target-date="{{ now()->format('Y-m-d') }}"
+                            class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 self-start sm:self-auto cursor-pointer">
+                            <span>➕</span>
+                            <span>時間帯枠を追加</span>
+                        </button>
                     </div>
-                </div>
 
-            </div>
-
-            <!-- 利用可能時間帯スロット設定セクション -->
-            <div id="schedules-form-container" class="space-y-3 pt-6 border-t border-slate-100">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                        <h3 class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
-                            <span>⏱️</span>
-                            <span>利用可能時間帯スロット設定</span>
-                        </h3>
-                        <p class="text-[11px] text-slate-500 mt-0.5">
-                            終日常時利用でない場合、この運行日における利用枠（年月日時分）を設定します。
-                        </p>
-                    </div>
-                    <button type="button" id="add-schedule-row-btn"
-                        data-target-date="{{ $timetable->target_date?->format('Y-m-d') }}"
-                        class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center space-x-1 self-start sm:self-auto cursor-pointer">
-                        <span>➕</span>
-                        <span>時間帯枠を追加</span>
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto border border-slate-200 rounded-xl bg-slate-50/50">
-                    <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
-                        <thead class="bg-slate-100/75 text-slate-700 font-bold">
-                            <tr>
-                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">日時範囲 (年月日時分) <span class="text-red-500">*</span></th>
-                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">利用ステータス <span class="text-red-500">*</span></th>
-                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">枠名 / タイトル</th>
-                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">メモ / 特記事項</th>
-                                <th scope="col" class="py-2.5 px-3 whitespace-nowrap text-right">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="schedules-form-body" class="divide-y divide-slate-100 bg-white">
-                            @foreach(old('schedules', []) as $index => $sch)
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl bg-slate-50/50">
+                        <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
+                            <thead class="bg-slate-100/75 text-slate-700 font-bold">
+                                <tr>
+                                    <th scope="col" class="py-2.5 px-3 whitespace-nowrap">日時範囲 (年月日時分) <span class="text-red-500">*</span></th>
+                                    <th scope="col" class="py-2.5 px-3 whitespace-nowrap">利用ステータス <span class="text-red-500">*</span></th>
+                                    <th scope="col" class="py-2.5 px-3 whitespace-nowrap">枠名 / タイトル</th>
+                                    <th scope="col" class="py-2.5 px-3 whitespace-nowrap">メモ / 特記事項</th>
+                                    <th scope="col" class="py-2.5 px-3 whitespace-nowrap text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedules-form-body" class="divide-y divide-slate-100 bg-white">
+                                @foreach(old('schedules', []) as $index => $sch)
                                 <tr data-schedule-row="true" class="border-b border-slate-100 hover:bg-slate-50/60 transition">
                                     <td class="py-2.5 px-3">
                                         <div class="flex items-center space-x-1 font-mono">
@@ -183,7 +172,7 @@
                                         <select name="schedules[{{ $index }}][availability_status]" required
                                             class="px-2 py-1 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                                             @foreach(\App\Models\LocationSchedule::AVAILABILITY_STATUSES as $k => $l)
-                                                <option value="{{ $k }}" {{ ($sch['availability_status'] ?? 'available') === $k ? 'selected' : '' }}>{{ $l }}</option>
+                                            <option value="{{ $k }}" {{ ($sch['availability_status'] ?? 'available') === $k ? 'selected' : '' }}>{{ $l }}</option>
                                             @endforeach
                                         </select>
                                     </td>
@@ -202,30 +191,30 @@
                                         </button>
                                     </td>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                    <div id="schedules-empty-message" class="p-6 text-center text-slate-400 text-xs {{ !empty(old('schedules', [])) ? 'hidden' : '' }}">
-                        利用可能時間帯枠がありません。「➕ 時間帯枠を追加」から登録してください。
+                                @endforeach
+                            </tbody>
+                        </table>
+                        <div id="schedules-empty-message" class="p-6 text-center text-slate-400 text-xs {{ !empty(old('schedules', [])) ? 'hidden' : '' }}">
+                            利用可能時間帯枠がありません。「➕ 時間帯枠を追加」から登録してください。
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- アクションボタン -->
-            <div class="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100">
-                <a href="{{ route('timetables.locations.index', $timetable) }}"
-                    class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
-                    キャンセル
-                </a>
-                <button type="submit" @disabled($types->isEmpty())
-                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
-                    登録を完了する
-                </button>
-            </div>
-        </form>
+                <!-- アクションボタン -->
+                <div class="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100">
+                    <a href="{{ route('locations.index') }}"
+                        class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
+                        キャンセル
+                    </a>
+                    <button type="submit" @disabled($types->isEmpty())
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer">
+                        登録を完了する
+                    </button>
+                </div>
+            </form>
+        </div>
+
     </div>
 
-</div>
-
-@vite(['resources/js/locations.js'])
+    @vite(['resources/js/locations.js'])
 </x-layouts.app>

@@ -46,7 +46,7 @@ class Phase0SecurityAndBugFixesTest extends TestCase
     public function test_location_schedules_for_form_preserves_unavailable_status(): void
     {
         $timetable = Timetable::factory()->create();
-        $location = Location::factory()->create(['timetable_id' => $timetable->id]);
+        $location = Location::factory()->create();
 
         LocationSchedule::create([
             'location_id' => $location->id,

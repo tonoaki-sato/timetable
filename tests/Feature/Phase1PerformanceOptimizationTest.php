@@ -112,7 +112,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
 
         $this->assertCount(2, $prioritized2);
         $this->assertCount(10, $prioritized);
-        $this->assertTrue($prioritized->every(fn (Staff $s): bool => (bool) $s->is_surplus_fixed && $s->surplus_type === 'over_capacity'));
+        $this->assertTrue($prioritized->every(fn(Staff $s): bool => (bool) $s->is_surplus_fixed && $s->surplus_type === 'over_capacity'));
         $this->assertLessThanOrEqual(10, count($allocationQueries));
         $this->assertSame(count($queriesFor2), count($allocationQueries));
     }
@@ -129,7 +129,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
             'display_order' => 1,
             'is_active' => true,
         ]);
-        Location::factory()->create(['timetable_id' => $timetable->id, 'location_type_id' => $locationType->id]);
+        Location::factory()->create(['location_type_id' => $locationType->id]);
         $equipment = Equipment::factory()->create();
         EquipmentLogisticsPlan::factory()->create([
             'timetable_id' => $timetable->id,
@@ -142,13 +142,12 @@ class Phase1PerformanceOptimizationTest extends TestCase
             'timetable' => $component->timetable,
             'timetablesList' => $component->timetablesList,
             'active' => $component->active,
-            'targetRouteFor' => fn (Timetable $tt): string => $component->targetRouteFor($tt),
+            'targetRouteFor' => fn(Timetable $tt): string => $component->targetRouteFor($tt),
         ])->render();
 
         $this->assertStringContainsString('(1)', $html);
         $this->assertFalse($freshTimetable->relationLoaded('lanes'));
         $this->assertFalse($freshTimetable->relationLoaded('tasks'));
-        $this->assertFalse($freshTimetable->relationLoaded('locations'));
         $this->assertFalse($freshTimetable->relationLoaded('logisticsPlans'));
     }
 
@@ -262,7 +261,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         DB::disableQueryLog();
 
         $updateCount = collect($reorderQueries)
-            ->filter(fn (array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
+            ->filter(fn(array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
             ->count();
         $this->assertSame(1, $updateCount);
         $this->assertSame(10, $eq3->fresh()->display_order);
@@ -281,7 +280,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         $laneQueries = DB::getQueryLog();
         DB::disableQueryLog();
         $laneUpdateCount = collect($laneQueries)
-            ->filter(fn (array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
+            ->filter(fn(array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
             ->count();
         $this->assertSame(1, $laneUpdateCount);
         $this->assertSame(10, $lane2->fresh()->display_order);
@@ -298,7 +297,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
             'display_order' => 1,
             'is_active' => true,
         ]);
-        $loc = Location::factory()->create(['timetable_id' => $timetable->id, 'location_type_id' => $locType->id]);
+        $loc = Location::factory()->create(['location_type_id' => $locType->id]);
         LocationSchedule::create([
             'location_id' => $loc->id,
             'start_at' => '2026-10-17 09:00:00',
@@ -361,14 +360,13 @@ class Phase1PerformanceOptimizationTest extends TestCase
                 copyLaneStaff: true,
                 copyTasks: true,
                 copyTaskAssignments: true,
-                copyLocations: true,
                 copyLogisticsPlans: true,
                 copySiteLayouts: true,
             ),
             $user
         );
 
-        $clonedPlacement = SiteMapPlacement::whereHas('siteBaseMap', fn ($q) => $q->where('timetable_id', $result['timetable']->id))->firstOrFail();
+        $clonedPlacement = SiteMapPlacement::whereHas('siteBaseMap', fn($q) => $q->where('timetable_id', $result['timetable']->id))->firstOrFail();
         $this->assertSame(['note' => '角地', 'power' => true], $clonedPlacement->meta_data);
         $this->assertSame(1, $result['counts']['assignments']);
         $this->assertSame(1, $result['counts']['logistics_plans']);

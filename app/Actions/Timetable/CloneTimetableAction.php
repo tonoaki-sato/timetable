@@ -9,8 +9,6 @@ use App\Models\Lane;
 use App\Models\LayoutArea;
 use App\Models\LayoutItem;
 use App\Models\LayoutMap;
-use App\Models\Location;
-use App\Models\LocationSchedule;
 use App\Models\SiteBaseMap;
 use App\Models\SiteMapPlacement;
 use App\Models\TaskStaffAssignment;
@@ -39,7 +37,6 @@ class CloneTimetableAction
      *         lanes: int,
      *         tasks: int,
      *         assignments: int,
-     *         locations: int,
      *         logistics_plans: int,
      *         layout_items: int,
      *         placements: int
@@ -87,17 +84,9 @@ class CloneTimetableAction
                 }
             }
 
-            $locationIdMap = [];
-            $locationsCount = 0;
-
-            if ($options->copyLocations) {
-                $locationIdMap = $this->cloneLocations($source, $newTimetable, $dayOffset, $creator);
-                $locationsCount = count($locationIdMap);
-            }
-
             $logisticsPlansCount = 0;
             if ($options->copyLogisticsPlans) {
-                $logisticsPlansCount = $this->cloneLogisticsPlans($source, $newTimetable, $locationIdMap, $dayOffset);
+                $logisticsPlansCount = $this->cloneLogisticsPlans($source, $newTimetable, $dayOffset);
             }
 
             $layoutItemsCount = 0;
@@ -106,7 +95,6 @@ class CloneTimetableAction
                 [$layoutItemsCount, $placementsCount] = $this->cloneSiteLayouts(
                     $source,
                     $newTimetable,
-                    $locationIdMap,
                     $creator
                 );
             }
@@ -117,7 +105,6 @@ class CloneTimetableAction
                     'lanes' => $lanesCount,
                     'tasks' => $tasksCount,
                     'assignments' => $assignmentsCount,
-                    'locations' => $locationsCount,
                     'logistics_plans' => $logisticsPlansCount,
                     'layout_items' => $layoutItemsCount,
                     'placements' => $placementsCount,
@@ -248,65 +235,11 @@ class CloneTimetableAction
     }
 
     /**
-     * 拠点および利用時間帯スケジュールを複製（日付は日数差でシフト、確保ステータスは未確保にリセット）
-     *
-     * @return array<int, int>
-     */
-    protected function cloneLocations(Timetable $source, Timetable $newTimetable, int $dayOffset, ?User $creator): array
-    {
-        $locationIdMap = [];
-
-        $sourceLocations = Location::with('schedules')
-            ->where('timetable_id', $source->id)
-            ->orderBy('display_order')
-            ->orderBy('id')
-            ->get();
-
-        $scheduleRows = [];
-        $now = now()->format('Y-m-d H:i:s');
-
-        foreach ($sourceLocations as $sourceLocation) {
-            $newLocation = Location::create([
-                'timetable_id' => $newTimetable->id,
-                'location_type_id' => $sourceLocation->location_type_id,
-                'name' => $sourceLocation->name,
-                'notes' => $sourceLocation->notes,
-                'is_all_day' => $sourceLocation->is_all_day,
-                'display_order' => $sourceLocation->display_order,
-                'is_active' => $sourceLocation->is_active,
-                'created_by' => $creator?->id ?? $sourceLocation->created_by,
-            ]);
-
-            foreach ($sourceLocation->schedules as $schedule) {
-                $scheduleRows[] = [
-                    'location_id' => $newLocation->id,
-                    'start_at' => $schedule->start_at?->copy()->addDays($dayOffset)->format('Y-m-d H:i:s'),
-                    'end_at' => $schedule->end_at?->copy()->addDays($dayOffset)->format('Y-m-d H:i:s'),
-                    'availability_status' => 'unavailable',
-                    'title' => $schedule->title,
-                    'note' => $schedule->note,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-
-            $locationIdMap[$sourceLocation->id] = $newLocation->id;
-        }
-
-        $this->chunkInsert(LocationSchedule::class, $scheduleRows);
-
-        return $locationIdMap;
-    }
-
-    /**
-     * 資材搬出入計画を複製（拠点IDリマップ・日付シフト・ステータス初期化）
-     *
-     * @param  array<int, int>  $locationIdMap
+     * 資材搬出入計画を複製（日付シフト・ステータス初期化）
      */
     protected function cloneLogisticsPlans(
         Timetable $source,
         Timetable $newTimetable,
-        array $locationIdMap,
         int $dayOffset
     ): int {
         $sourcePlans = EquipmentLogisticsPlan::where('timetable_id', $source->id)
@@ -317,13 +250,6 @@ class CloneTimetableAction
         $now = now()->format('Y-m-d H:i:s');
 
         foreach ($sourcePlans as $sourcePlan) {
-            $newFromLocationId = $sourcePlan->from_location_id
-                ? ($locationIdMap[$sourcePlan->from_location_id] ?? null)
-                : null;
-            $newToLocationId = $sourcePlan->to_location_id
-                ? ($locationIdMap[$sourcePlan->to_location_id] ?? null)
-                : null;
-
             $planRows[] = [
                 'timetable_id' => $newTimetable->id,
                 'equipment_id' => $sourcePlan->equipment_id,
@@ -337,8 +263,8 @@ class CloneTimetableAction
                 'end_time' => $sourcePlan->end_time,
                 'from_location' => $sourcePlan->from_location,
                 'to_location' => $sourcePlan->to_location,
-                'from_location_id' => $newFromLocationId,
-                'to_location_id' => $newToLocationId,
+                'from_location_id' => $sourcePlan->from_location_id,
+                'to_location_id' => $sourcePlan->to_location_id,
                 'operator_type' => $sourcePlan->operator_type,
                 'witness_required' => (bool) $sourcePlan->witness_required,
                 'witness_staff_id' => $sourcePlan->witness_staff_id,
@@ -357,13 +283,11 @@ class CloneTimetableAction
     /**
      * 現場配置計画（LayoutMap / LayoutArea / LayoutItem）および白地図配置（SiteBaseMap / SiteMapPlacement）を複製
      *
-     * @param  array<int, int>  $locationIdMap
      * @return array{0: int, 1: int}
      */
     protected function cloneSiteLayouts(
         Timetable $source,
         Timetable $newTimetable,
-        array $locationIdMap,
         ?User $creator
     ): array {
         $layoutItemsCount = 0;
@@ -388,9 +312,7 @@ class CloneTimetableAction
             foreach ($sourceMap->areas as $sourceArea) {
                 $newArea = LayoutArea::create([
                     'layout_map_id' => $newMap->id,
-                    'location_id' => $sourceArea->location_id
-                        ? ($locationIdMap[$sourceArea->location_id] ?? null)
-                        : null,
+                    'location_id' => $sourceArea->location_id,
                     'zone_code' => $sourceArea->zone_code,
                     'name' => $sourceArea->name,
                     'display_order' => $sourceArea->display_order,

@@ -26,7 +26,6 @@ class TimetableContextBar extends Component
             $countMap = [
                 'lanes' => 'lanes_count',
                 'tasks' => 'tasks_count',
-                'locations' => 'locations_count',
                 'logisticsPlans' => 'logistics_plans_count',
             ];
 
@@ -61,7 +60,6 @@ class TimetableContextBar extends Component
             'tasks' => route('timetables.tasks.index', $tt),
             'assignments' => route('timetables.assignments', $tt),
             'timeline' => route('timetables.staff-timeline', $tt),
-            'locations' => route('timetables.locations.index', $tt),
             'equipments' => route('timetables.equipments.index', $tt),
             'logistics' => route('timetables.logistics.index', $tt),
             'logistics-timeline' => route('timetables.logistics-timeline', $tt),

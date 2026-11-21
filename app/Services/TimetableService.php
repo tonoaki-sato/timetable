@@ -129,18 +129,11 @@ class TimetableService
      */
     public function createTimetable(array $data, ?User $creator): Timetable
     {
-        $createDefaultLocations = array_key_exists('create_default_locations', $data)
-            ? (bool) $data['create_default_locations']
-            : true;
         unset($data['create_default_locations']);
 
         $data['created_by'] = $creator?->id;
 
         $timetable = $this->timetableRepository->create($data);
-
-        if ($createDefaultLocations) {
-            $timetable->createDefaultLocations();
-        }
 
         $this->scheduleRepository->syncForTimetable($timetable);
 

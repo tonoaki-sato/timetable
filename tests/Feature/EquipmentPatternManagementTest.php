@@ -31,7 +31,6 @@ class EquipmentPatternManagementTest extends TestCase
 
         $timetable = Timetable::factory()->create(['target_date' => '2026-10-11', 'name' => '1日目']);
         $this->location = Location::factory()->create([
-            'timetable_id' => $timetable->id,
             'name' => '番所地下倉庫',
         ]);
     }

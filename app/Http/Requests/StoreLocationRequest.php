@@ -26,8 +26,7 @@ class StoreLocationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'timetable_id' => ['nullable', 'exists:timetables,id'],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:locations,name'],
             'location_type_id' => ['required', 'exists:location_types,id'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_all_day' => ['boolean'],

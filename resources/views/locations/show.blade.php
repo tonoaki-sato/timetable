@@ -5,39 +5,31 @@
     <x-page-header
         :title="$location->name"
         icon="📍"
-        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）における拠点「' . $location->name . '」の基本仕様、利用可能時間帯、現在の利用状況およびスケジュール管理です。'">
+        :description="'拠点「' . $location->name . '」の基本仕様、利用可能時間帯、現在の利用状況およびスケジュール管理です。'">
         <x-slot:breadcrumbs>
-            <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>⏱️</span>
-                <span>運行情報一覧</span>
+            <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
+                <span>🗂️</span>
+                <span>マスター管理</span>
             </a>
             <span class="text-slate-300">/</span>
-            <a href="{{ route('timetables.show', $timetable) }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
-                <span>📅</span>
-                <span>{{ $timetable->name }}</span>
-            </a>
-            <span class="text-slate-300">/</span>
-            <a href="{{ route('timetables.locations.index', $timetable) }}" class="hover:text-indigo-600 transition truncate">
-                📍 拠点一覧
+            <a href="{{ route('locations.index') }}" class="hover:text-indigo-600 transition truncate">
+                📍 拠点マスター
             </a>
             <span class="text-slate-300">/</span>
             <span class="text-slate-700 font-bold truncate">{{ $location->name }}</span>
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
-            <x-ui.button variant="header-action" :href="route('timetables.locations.edit', [$timetable, $location])">
+            <x-ui.button variant="header-action" :href="route('locations.edit', $location)">
                 <span>✏️</span>
                 <span>基本情報を編集</span>
             </x-ui.button>
-            <x-ui.button variant="header-action" :href="route('timetables.locations.index', $timetable)">
+            <x-ui.button variant="header-action" :href="route('locations.index')">
                 <span>←</span>
-                <span>拠点一覧に戻る</span>
+                <span>拠点マスターに戻る</span>
             </x-ui.button>
         </x-slot:actions>
     </x-page-header>
-
-    <!-- 運行日コンテキストバー -->
-    <x-timetable-context-bar :timetable="$timetable" active="locations" />
 
     <x-ui.validation-errors title="入力内容を確認してください" />
 
@@ -146,7 +138,7 @@
                                     {{ $schedule->title ?: '—' }}
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <form method="POST" action="{{ route('timetables.locations.schedules.update-status', [$timetable, $location, $schedule]) }}" class="inline-flex items-center space-x-1.5">
+                                    <form method="POST" action="{{ route('locations.schedules.update-status', [$location, $schedule]) }}" class="inline-flex items-center space-x-1.5">
                                         @csrf
                                         @method('PATCH')
                                         <select name="availability_status"
@@ -164,7 +156,7 @@
                                     {{ $schedule->note ?: '—' }}
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-right space-x-1">
-                                    <form method="POST" action="{{ route('timetables.locations.schedules.destroy', [$timetable, $location, $schedule]) }}"
+                                    <form method="POST" action="{{ route('locations.schedules.destroy', [$location, $schedule]) }}"
                                           data-confirm="この時間帯枠を削除しますか？" class="inline">
                                         @csrf
                                         @method('DELETE')

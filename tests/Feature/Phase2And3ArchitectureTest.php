@@ -76,7 +76,10 @@ class Phase2And3ArchitectureTest extends TestCase
                 ['lane_id', 'status'],
                 ['timetable_task_id', 'status'],
             ],
-            'locations' => [['timetable_id', 'is_active', 'display_order']],
+            'locations' => [
+                ['is_active', 'display_order'],
+                ['display_order'],
+            ],
             'location_schedules' => [['location_id', 'start_at']],
             'layout_items' => [
                 ['layout_map_id', 'layout_area_id', 'display_order', 'code'],
@@ -94,15 +97,15 @@ class Phase2And3ArchitectureTest extends TestCase
 
             foreach ($indexes as $index) {
                 $cols = DB::select("PRAGMA index_info('{$index->name}')");
-                usort($cols, static fn (object $a, object $b): int => $a->seqno <=> $b->seqno);
-                $actualColumnSets[] = array_map(static fn (object $col): string => (string) $col->name, $cols);
+                usort($cols, static fn(object $a, object $b): int => $a->seqno <=> $b->seqno);
+                $actualColumnSets[] = array_map(static fn(object $col): string => (string) $col->name, $cols);
             }
 
             foreach ($columnSets as $expectedColumns) {
                 $this->assertContains(
                     $expectedColumns,
                     $actualColumnSets,
-                    "テーブル {$table} に複合インデックス (".implode(', ', $expectedColumns).') が不足しています。'
+                    "テーブル {$table} に複合インデックス (" . implode(', ', $expectedColumns) . ') が不足しています。'
                 );
             }
         }
@@ -144,7 +147,6 @@ class Phase2And3ArchitectureTest extends TestCase
             'is_active' => true,
         ]);
         $location = Location::factory()->create([
-            'timetable_id' => $timetable->id,
             'location_type_id' => $locType->id,
             'created_by' => $user->id,
         ]);
@@ -233,8 +235,8 @@ class Phase2And3ArchitectureTest extends TestCase
         $this->assertDatabaseCount('timetable_tasks', 0);
         $this->assertDatabaseCount('task_staff_assignments', 0);
         $this->assertDatabaseCount('lane_requests', 0);
-        $this->assertDatabaseCount('locations', 0);
-        $this->assertDatabaseCount('location_schedules', 0);
+        $this->assertDatabaseCount('locations', 1);
+        $this->assertDatabaseCount('location_schedules', 1);
         $this->assertDatabaseCount('equipment_logistics_plans', 0);
         $this->assertDatabaseCount('layout_maps', 0);
         $this->assertDatabaseCount('layout_areas', 0);

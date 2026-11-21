@@ -49,8 +49,8 @@ class SiteLayoutSeeder extends Seeder
             'created_by' => $timetable->created_by,
         ]);
 
-        // 既存拠点マップ（名前ベース）
-        $locations = Location::where('timetable_id', $timetable->id)->get()->keyBy('name');
+        // 既存拠点マップ（マスター参照）
+        $locations = Location::all()->keyBy('name');
 
         // 2. 特設エリア・ゾーン作成
         $areaKitagawa = LayoutArea::create([

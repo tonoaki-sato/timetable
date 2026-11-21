@@ -384,6 +384,14 @@
                                             <p class="text-[10px] text-slate-400 truncate mt-0.5">自前備品・レンタル機材・私物の一元台帳</p>
                                         </div>
                                     </a>
+                                    <a href="{{ route('locations.index') }}"
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('locations.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        <span class="text-base shrink-0">📍</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold whitespace-nowrap truncate">拠点マスター</div>
+                                            <p class="text-[10px] text-slate-400 truncate mt-0.5">倉庫・駐車場・オープンスペース台帳</p>
+                                        </div>
+                                    </a>
                                     <a href="{{ route('location-types.index') }}"
                                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('location-types.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">🏷️</span>
@@ -981,6 +989,10 @@
                             <a href="{{ route('equipments.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">📦</span>
                                 <span class="font-bold truncate">機材・備品一覧</span>
+                            </a>
+                            <a href="{{ route('locations.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                                <span class="text-base shrink-0">📍</span>
+                                <span class="font-bold truncate">拠点マスター</span>
                             </a>
                             <a href="{{ route('location-types.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🏷️</span>

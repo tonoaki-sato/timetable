@@ -47,13 +47,11 @@ class EquipmentLogisticsPlanTest extends TestCase
 
         $this->locationBansho = Location::factory()->allDay()->create([
             'name' => '番所地下倉庫',
-            'timetable_id' => $timetable1->id,
         ]);
 
         // 番所前スペースは当日昼間が模擬店使用のため、前日枠と翌日枠に分割
         $this->locationBanshoSpace = Location::factory()->create([
             'name' => '番所前スペース',
-            'timetable_id' => $timetable1->id,
             'is_all_day' => false,
         ]);
         LocationSchedule::create([
@@ -73,7 +71,6 @@ class EquipmentLogisticsPlanTest extends TestCase
 
         $this->locationTaxOffice = Location::factory()->create([
             'name' => '税務署前駐車場',
-            'timetable_id' => $timetable1->id,
             'is_all_day' => false,
         ]);
         LocationSchedule::create([
@@ -86,7 +83,6 @@ class EquipmentLogisticsPlanTest extends TestCase
 
         $this->locationKitagawa = Location::factory()->create([
             'name' => '長島駐車場（旧北川駐車場）',
-            'timetable_id' => $timetable1->id,
             'is_all_day' => false,
         ]);
         LocationSchedule::create([

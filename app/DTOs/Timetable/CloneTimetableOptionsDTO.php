@@ -10,7 +10,6 @@ readonly class CloneTimetableOptionsDTO
         public bool $copyLaneStaff = true,
         public bool $copyTasks = true,
         public bool $copyTaskAssignments = false,
-        public bool $copyLocations = true,
         public bool $copyLogisticsPlans = true,
         public bool $copySiteLayouts = true,
     ) {}
@@ -33,7 +32,6 @@ readonly class CloneTimetableOptionsDTO
             copyLaneStaff: $copyLaneStaff,
             copyTasks: $copyTasks,
             copyTaskAssignments: $copyTaskAssignments,
-            copyLocations: (bool) ($validated['copy_locations'] ?? true),
             copyLogisticsPlans: (bool) ($validated['copy_logistics_plans'] ?? true),
             copySiteLayouts: (bool) ($validated['copy_site_layouts'] ?? true),
         );

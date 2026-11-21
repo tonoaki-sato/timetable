@@ -13,9 +13,8 @@ return new class extends Migration
     {
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
             $table->foreignId('location_type_id')->constrained('location_types')->restrictOnDelete();
-            $table->string('name')->comment('拠点名');
+            $table->string('name')->unique()->comment('拠点名');
             $table->text('notes')->nullable()->comment('メモ欄（フリーテキスト）');
             $table->boolean('is_all_day')->default(false)->comment('終日利用可能フラグ');
             $table->integer('display_order')->default(0)->comment('表示順');
@@ -24,8 +23,8 @@ return new class extends Migration
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
 
-            $table->index(['timetable_id', 'display_order']);
-            $table->index(['timetable_id', 'is_active', 'display_order']);
+            $table->index(['display_order']);
+            $table->index(['is_active', 'display_order']);
         });
     }
 
