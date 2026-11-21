@@ -17,7 +17,6 @@ use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LanePrintController;
 use App\Http\Controllers\LaneRequestController;
 use App\Http\Controllers\LocationController;
-use App\Http\Controllers\LocationScheduleController;
 use App\Http\Controllers\LocationTypeController;
 use App\Http\Controllers\ManualController;
 use App\Http\Controllers\OrganizationController;
@@ -214,13 +213,7 @@ Route::middleware('auth')->group(function () {
 
     // 拠点マスター管理 (Locations)
     Route::post('locations/reorder', [LocationController::class, 'reorder'])->name('locations.reorder');
-    Route::resource('locations', LocationController::class);
-
-    // 拠点スケジュール枠
-    Route::post('locations/{location}/schedules', [LocationScheduleController::class, 'store'])->name('locations.schedules.store');
-    Route::put('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'update'])->name('locations.schedules.update');
-    Route::patch('locations/{location}/schedules/{schedule}/status', [LocationScheduleController::class, 'updateStatus'])->name('locations.schedules.update-status');
-    Route::delete('locations/{location}/schedules/{schedule}', [LocationScheduleController::class, 'destroy'])->name('locations.schedules.destroy');
+    Route::resource('locations', LocationController::class)->except(['create', 'show', 'edit']);
 
     // 旧タイムテーブル配下ルートからの互換リダイレクト
     Route::get('timetables/{timetable}/locations', [LocationController::class, 'redirectLegacy'])->name('timetables.locations.index');

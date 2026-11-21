@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\Location;
+use App\Models\LocationSchedule;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
@@ -74,6 +75,30 @@ class ContentSecurityPolicyTest extends TestCase
             'staff_id' => $staff->id,
         ]);
         $location = Location::factory()->create();
+        LocationSchedule::create([
+            'location_id' => $location->id,
+            'start_at' => now()->subHours(3),
+            'end_at' => now()->subHour(),
+            'availability_status' => 'available',
+            'title' => '過去枠',
+            'note' => '終了済み枠',
+        ]);
+        LocationSchedule::create([
+            'location_id' => $location->id,
+            'start_at' => now()->subMinutes(30),
+            'end_at' => now()->addHours(2),
+            'availability_status' => 'available',
+            'title' => '現在枠',
+            'note' => '稼働中枠',
+        ]);
+        LocationSchedule::create([
+            'location_id' => $location->id,
+            'start_at' => now()->addDay(),
+            'end_at' => now()->addDay()->addHours(3),
+            'availability_status' => 'unavailable',
+            'title' => '未来枠',
+            'note' => '調整中',
+        ]);
 
         $routesToTest = [
             route('dashboard'),
@@ -89,9 +114,6 @@ class ContentSecurityPolicyTest extends TestCase
             route('timetables.lanes.show', [$timetable, $lane]),
             route('timetables.lanes.edit', [$timetable, $lane]),
             route('locations.index'),
-            route('locations.create'),
-            route('locations.show', $location),
-            route('locations.edit', $location),
             route('timetables.logistics.index', $timetable),
             route('timetables.site-maps.editor', $timetable),
             route('timetables.staff-timeline', $timetable),

@@ -95,11 +95,6 @@ interface LocationRepositoryInterface
     public function getTotalCount(): int;
 
     /**
-     * 詳細画面用の拠点を取得（スケジュール・関連計画付き）
-     */
-    public function findWithDetails(int $locationId): ?Location;
-
-    /**
      * 新規拠点を作成
      *
      * @param  array<string, mixed>  $attributes

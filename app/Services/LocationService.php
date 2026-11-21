@@ -8,7 +8,6 @@ use App\Models\LocationSchedule;
 use App\Models\LocationType;
 use App\Models\Timetable;
 use App\Repositories\Contracts\LocationRepositoryInterface;
-use App\Repositories\Contracts\LocationScheduleRepositoryInterface;
 use App\Repositories\Contracts\LocationTypeRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,7 +17,6 @@ class LocationService
     public function __construct(
         protected LocationRepositoryInterface $locationRepository,
         protected LocationTypeRepositoryInterface $locationTypeRepository,
-        protected LocationScheduleRepositoryInterface $locationScheduleRepository,
         protected LocationAvailabilityService $availabilityService,
     ) {}
 
@@ -50,11 +48,24 @@ class LocationService
                 return $s->start_at->format('Y-m-d') === $targetDate || $s->end_at->format('Y-m-d') === $targetDate;
             });
 
+            // 現在日時を含む未来の利用枠（end_at >= $now、開始日時昇順）
+            $upcomingSchedules = $location->schedules
+                ->filter(fn (LocationSchedule $s): bool => $s->end_at !== null && $s->end_at->greaterThanOrEqualTo($now))
+                ->values();
+
+            // 現在日時を含まない過去の利用枠（end_at < $now、開始日時降順）
+            $pastSchedules = $location->schedules
+                ->filter(fn (LocationSchedule $s): bool => $s->end_at !== null && $s->end_at->lessThan($now))
+                ->sortByDesc('start_at')
+                ->values();
+
             return new LocationListItemData(
                 location: $location,
                 currentEvaluation: $evaluation,
                 dailyStatus: $dailyStatus,
                 todaySchedules: $targetSchedules,
+                upcomingSchedules: $upcomingSchedules,
+                pastSchedules: $pastSchedules,
             );
         });
 
@@ -90,10 +101,7 @@ class LocationService
         }
 
         $validated['created_by'] = $userId;
-
-        if (! isset($validated['display_order']) || $validated['display_order'] === null) {
-            $validated['display_order'] = $this->locationRepository->getMaxDisplayOrder() + 10;
-        }
+        $validated['display_order'] = $this->locationRepository->getMaxDisplayOrder() + 10;
 
         $schedules = $validated['schedules'] ?? [];
         unset($validated['schedules']);
@@ -120,56 +128,6 @@ class LocationService
     }
 
     /**
-     * 拠点詳細画面の表示用データを取得
-     *
-     * @return array<string, mixed>
-     */
-    public function getShowViewData(Timetable|Location $timetableOrLocation, Location|Carbon|null $locationOrNow = null, ?Carbon $now = null): array
-    {
-        if ($timetableOrLocation instanceof Timetable && $locationOrNow instanceof Location) {
-            $timetable = $timetableOrLocation;
-            $location = $locationOrNow;
-        } else {
-            $timetable = null;
-            /** @var Location $location */
-            $location = $timetableOrLocation;
-            $now = $locationOrNow instanceof Carbon ? $locationOrNow : $now;
-        }
-
-        $now = $now ?? Carbon::now('Asia/Tokyo');
-        $locationWithDetails = $this->locationRepository->findWithDetails($location->id) ?? $location;
-        $evaluation = $this->availabilityService->evaluateLocationStatus($locationWithDetails, $now);
-
-        return [
-            'timetable' => $timetable,
-            'location' => $locationWithDetails,
-            'evaluation' => $evaluation,
-        ];
-    }
-
-    /**
-     * 拠点編集画面の表示用データを取得
-     *
-     * @return array<string, mixed>
-     */
-    public function getEditViewData(Timetable|Location $timetableOrLocation, ?Location $location = null): array
-    {
-        $targetLocation = $location ?? ($timetableOrLocation instanceof Location ? $timetableOrLocation : null);
-        $timetable = $timetableOrLocation instanceof Timetable ? $timetableOrLocation : null;
-
-        $locationWithDetails = $targetLocation
-            ? ($this->locationRepository->findWithDetails($targetLocation->id) ?? $targetLocation)
-            : null;
-        $types = $this->locationTypeRepository->getActiveOrdered();
-
-        return [
-            'timetable' => $timetable,
-            'location' => $locationWithDetails,
-            'types' => $types,
-        ];
-    }
-
-    /**
      * 拠点の更新処理（およびスケジュール同期）
      *
      * @param  array<string, mixed>  $validated
@@ -177,7 +135,7 @@ class LocationService
     public function updateLocation(Location $location, array $validated): Location
     {
         $schedules = $validated['schedules'] ?? [];
-        unset($validated['schedules']);
+        unset($validated['schedules'], $validated['display_order']);
 
         $this->locationRepository->update($location, $validated);
 
@@ -194,50 +152,6 @@ class LocationService
     public function deleteLocation(Location $location): bool
     {
         return $this->locationRepository->delete($location);
-    }
-
-    /**
-     * 拠点スケジュール枠の新規登録
-     *
-     * @param  array<string, mixed>  $validated
-     */
-    public function createSchedule(Location $location, array $validated): LocationSchedule
-    {
-        $validated['location_id'] = $location->id;
-
-        return $this->locationScheduleRepository->create($validated);
-    }
-
-    /**
-     * 拠点スケジュール枠の更新
-     *
-     * @param  array<string, mixed>  $validated
-     */
-    public function updateSchedule(LocationSchedule $schedule, array $validated): LocationSchedule
-    {
-        $this->locationScheduleRepository->update($schedule, $validated);
-
-        return $schedule;
-    }
-
-    /**
-     * 拠点スケジュール枠のステータス更新
-     */
-    public function updateScheduleStatus(LocationSchedule $schedule, string $availabilityStatus): LocationSchedule
-    {
-        $this->locationScheduleRepository->update($schedule, [
-            'availability_status' => $availabilityStatus,
-        ]);
-
-        return $schedule;
-    }
-
-    /**
-     * 拠点スケジュール枠の削除
-     */
-    public function deleteSchedule(LocationSchedule $schedule): bool
-    {
-        return $this->locationScheduleRepository->delete($schedule);
     }
 
     /**

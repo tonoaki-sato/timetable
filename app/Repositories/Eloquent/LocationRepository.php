@@ -116,24 +116,6 @@ class LocationRepository implements LocationRepositoryInterface
     }
 
     #[Override]
-    public function findWithDetails(int $locationId): ?Location
-    {
-        /** @var Location|null $location */
-        $location = Location::with([
-            'type',
-            'schedules' => function ($query): void {
-                $query->orderBy('start_at', 'asc');
-            },
-            'plansTo.equipment',
-            'plansFrom.equipment',
-        ])
-            ->where('id', $locationId)
-            ->first();
-
-        return $location;
-    }
-
-    #[Override]
     public function create(array $attributes): Location
     {
         return Location::create($attributes);
@@ -211,7 +193,11 @@ class LocationRepository implements LocationRepositoryInterface
                 }
             }
 
-            $location->schedules()->whereNotIn('id', $updatedIds)->delete();
+            if ($updatedIds === []) {
+                $location->schedules()->delete();
+            } else {
+                $location->schedules()->whereNotIn('id', $updatedIds)->delete();
+            }
         });
     }
 }

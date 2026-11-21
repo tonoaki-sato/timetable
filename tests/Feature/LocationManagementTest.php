@@ -2,14 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\DTOs\LocationListItemData;
 use App\Enums\LocationCurrentStatus;
 use App\Models\Location;
 use App\Models\LocationSchedule;
 use App\Models\LocationType;
 use App\Models\User;
 use App\Services\LocationAvailabilityService;
+use App\Services\LocationService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class LocationManagementTest extends TestCase
@@ -39,6 +42,12 @@ class LocationManagementTest extends TestCase
         ]);
     }
 
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
+
     public function test_can_view_location_index_screen(): void
     {
         $location = Location::factory()->create([
@@ -47,27 +56,123 @@ class LocationManagementTest extends TestCase
             'notes' => '鍵は暗証番号4920で開錠。',
         ]);
 
+        LocationSchedule::create([
+            'location_id' => $location->id,
+            'start_at' => now()->addHour(),
+            'end_at' => now()->addHours(3),
+            'availability_status' => 'available',
+            'title' => '午後枠',
+            'note' => '鍵受取後に開放',
+        ]);
+
         $response = $this->actingAs($this->admin)->get(route('locations.index'));
 
         $response->assertOk()
             ->assertSee('拠点マスター')
             ->assertSee('番所')
+            ->assertSee('鍵は暗証番号4920で開錠。')
+            ->assertSee('午後枠')
             ->assertSee('編集')
             ->assertSee('削除')
+            // KPIサマリーカードは非表示
+            ->assertDontSee('登録拠点総数')
+            ->assertDontSee('終日利用可能（常設）')
+            ->assertDontSee('時間枠指定（貸切等）')
+            // 表示順入力欄・管理画面リンク・枠管理ボタンが存在しないこと
+            ->assertDontSee('name="display_order"', false)
+            ->assertDontSee('利用可能枠の管理画面を開く')
+            ->assertDontSee('>枠管理<', false)
+            // モーダル・利用枠フォーム・Viteアセットの存在確認
             ->assertSee('modal-location-detail')
-            ->assertSee('btn-open-create-location');
+            ->assertSee('modal-location-form')
+            ->assertSee('btn-open-create-location')
+            ->assertSee('schedules-form-container')
+            ->assertSee('add-schedule-row-btn')
+            ->assertSee('detail-upcoming-list')
+            ->assertSee('detail-past-list')
+            ->assertSee('locations-');
+    }
 
-        // メモは詳細画面・詳細モーダルデータで確認可能
-        $showResponse = $this->actingAs($this->admin)->get(route('locations.show', $location));
-        $showResponse->assertOk()
-            ->assertSee('鍵は暗証番号4920で開錠。')
-            ->assertSee('基本情報を編集');
+    /**
+     * 詳細モーダル用に、現在日時を含まない過去枠と現在日時を含む未来枠が正しく分離されること
+     */
+    public function test_detail_modal_splits_past_and_upcoming_schedules_based_on_now(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-21 12:00:00', 'Asia/Tokyo'));
 
-        // 編集画面のキャンセルボタンは拠点マスター一覧画面を指す
-        $editResponse = $this->actingAs($this->admin)->get(route('locations.edit', $location));
-        $editResponse->assertOk()
-            ->assertSee(route('locations.index'))
-            ->assertSee('キャンセル');
+        $location = Location::factory()->create([
+            'location_type_id' => $this->type->id,
+            'name' => 'テスト集約スペース',
+            'is_all_day' => false,
+        ]);
+
+        // 1. 過去枠（現在日時より前に終了）
+        LocationSchedule::create([
+            'location_id' => $location->id,
+            'start_at' => '2026-11-21 08:00:00',
+            'end_at' => '2026-11-21 11:59:00',
+            'availability_status' => 'available',
+            'title' => '終了済み午前枠',
+        ]);
+
+        // 2. さらに古い過去枠（過去枠の降順確認用）
+        LocationSchedule::create([
+            'location_id' => $location->id,
+            'start_at' => '2026-11-20 09:00:00',
+            'end_at' => '2026-11-20 17:00:00',
+            'availability_status' => 'unavailable',
+            'title' => '前日調整枠',
+        ]);
+
+        // 3. 現在進行中枠（start_at <= now <= end_at -> 現在・今後へ分類 + is_current = true）
+        LocationSchedule::create([
+            'location_id' => $location->id,
+            'start_at' => '2026-11-21 11:00:00',
+            'end_at' => '2026-11-21 14:00:00',
+            'availability_status' => 'available',
+            'title' => '現在進行中枠',
+        ]);
+
+        // 4. 未来枠（start_at > now -> 現在・今後へ分類 + is_current = false）
+        LocationSchedule::create([
+            'location_id' => $location->id,
+            'start_at' => '2026-11-22 09:00:00',
+            'end_at' => '2026-11-22 17:00:00',
+            'availability_status' => 'unavailable',
+            'title' => '翌日予約枠',
+        ]);
+
+        $viewData = app(LocationService::class)->getIndexViewData();
+        /** @var LocationListItemData $item */
+        $item = $viewData['locationsWithStatus']->firstWhere('location.id', $location->id);
+        $this->assertNotNull($item);
+
+        // サービス側分類検証
+        $this->assertCount(2, $item->upcomingSchedules);
+        $this->assertSame(['現在進行中枠', '翌日予約枠'], $item->upcomingSchedules->pluck('title')->all());
+
+        $this->assertCount(2, $item->pastSchedules);
+        $this->assertSame(['終了済み午前枠', '前日調整枠'], $item->pastSchedules->pluck('title')->all());
+
+        // ペイロード検証
+        $detailPayload = $item->toDetailSchedulesPayload($viewData['now']);
+        $this->assertCount(2, $detailPayload['upcoming']);
+        $this->assertTrue($detailPayload['upcoming'][0]['is_current']);
+        $this->assertFalse($detailPayload['upcoming'][1]['is_current']);
+        $this->assertCount(2, $detailPayload['past']);
+
+        $formPayload = $item->toFormSchedulesPayload($viewData['now']);
+        $this->assertCount(4, $formPayload);
+        $this->assertTrue($formPayload[0]['is_past']);
+        $this->assertFalse($formPayload[2]['is_past']);
+
+        // レスポンスHTMLにJSONデータが出力されていること
+        $response = $this->actingAs($this->admin)->get(route('locations.index'));
+        $response->assertOk()
+            ->assertSee('data-detail-schedules', false)
+            ->assertSee('data-schedules', false)
+            ->assertSee('現在進行中枠')
+            ->assertSee('終了済み午前枠');
     }
 
     public function test_can_create_new_location(): void
@@ -77,13 +182,14 @@ class LocationManagementTest extends TestCase
             'location_type_id' => $this->type->id,
             'notes' => "【連絡先】090-0000-0000\n【注意事項】夜間施錠必須",
             'is_all_day' => false,
-            'display_order' => 20,
+            'display_order' => 999, // 無視され自動採番されること
             'is_active' => true,
         ]);
 
         $location = Location::where('name', '税務署前駐車場')->first();
         $this->assertNotNull($location);
         $this->assertEquals($this->type->id, $location->location_type_id);
+        $this->assertEquals(10, $location->display_order);
         $this->assertStringContainsString('090-0000-0000', $location->notes);
         $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $location->created_at);
         $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $location->updated_at);
@@ -97,6 +203,8 @@ class LocationManagementTest extends TestCase
             'location_type_id' => $this->type->id,
             'name' => '旧拠点名',
             'notes' => '旧メモ',
+            'display_order' => 50,
+            'is_active' => true,
         ]);
 
         $response = $this->actingAs($this->admin)->put(route('locations.update', $location), [
@@ -104,8 +212,8 @@ class LocationManagementTest extends TestCase
             'location_type_id' => $this->type->id,
             'notes' => '更新されたメモ内容',
             'is_all_day' => true,
-            'display_order' => 5,
-            'is_active' => true,
+            'display_order' => 999, // フォーム送信されても無視され既存値を維持
+            'is_active' => false,
         ]);
 
         $response->assertRedirect(route('locations.index'));
@@ -113,6 +221,8 @@ class LocationManagementTest extends TestCase
         $this->assertEquals('新拠点名', $location->name);
         $this->assertEquals('更新されたメモ内容', $location->notes);
         $this->assertTrue($location->is_all_day);
+        $this->assertFalse($location->is_active);
+        $this->assertEquals(50, $location->display_order);
     }
 
     public function test_can_delete_location(): void
@@ -172,61 +282,6 @@ class LocationManagementTest extends TestCase
 
         $response->assertSessionHasErrors('error');
         $this->assertDatabaseHas('location_types', ['id' => $this->type->id]);
-    }
-
-    public function test_can_add_multiple_time_slots_on_same_day(): void
-    {
-        $location = Location::factory()->create([
-            'location_type_id' => $this->type->id,
-            'name' => '番所前スペース',
-        ]);
-
-        // 午前スロット（利用可能）
-        $response1 = $this->actingAs($this->admin)->post(route('locations.schedules.store', $location), [
-            'start_at' => '2026-10-10 09:00:00',
-            'end_at' => '2026-10-10 12:00:00',
-            'availability_status' => 'available',
-            'title' => '午前準備枠',
-            'note' => '搬入受取用',
-        ]);
-        $response1->assertRedirect(route('locations.show', $location));
-
-        // 夜間スロット（利用不可）
-        $response2 = $this->actingAs($this->admin)->post(route('locations.schedules.store', $location), [
-            'start_at' => '2026-10-10 18:00:00',
-            'end_at' => '2026-10-10 21:00:00',
-            'availability_status' => 'unavailable',
-            'title' => '夜間枠',
-            'note' => '模擬店準備のため利用不可',
-        ]);
-        $response2->assertRedirect(route('locations.show', $location));
-
-        $this->assertCount(2, $location->schedules);
-        $schedules = $location->schedules()->orderBy('start_at')->get();
-        $this->assertEquals('available', $schedules[0]->availability_status);
-        $this->assertEquals('unavailable', $schedules[1]->availability_status);
-    }
-
-    public function test_can_update_schedule_availability_status_quickly(): void
-    {
-        $location = Location::factory()->create([
-            'location_type_id' => $this->type->id,
-        ]);
-        $schedule = LocationSchedule::create([
-            'location_id' => $location->id,
-            'start_at' => '2026-10-10 09:00:00',
-            'end_at' => '2026-10-10 12:00:00',
-            'availability_status' => 'unavailable',
-            'title' => '午前枠',
-        ]);
-
-        $response = $this->actingAs($this->admin)->patch(route('locations.schedules.update-status', [$location, $schedule]), [
-            'availability_status' => 'available',
-        ]);
-
-        $response->assertRedirect(route('locations.show', $location));
-        $schedule->refresh();
-        $this->assertEquals('available', $schedule->availability_status);
     }
 
     public function test_evaluate_status_at_specific_times(): void
@@ -289,12 +344,12 @@ class LocationManagementTest extends TestCase
         $this->assertStringContainsString('終日利用可能', $eval->detail);
     }
 
-    public function test_location_create_and_type_index_render_cleanly_when_no_location_types_exist(): void
+    public function test_location_index_and_type_index_render_cleanly_when_no_location_types_exist(): void
     {
         LocationType::query()->delete();
 
         $this->actingAs($this->admin)
-            ->get(route('locations.create'))
+            ->get(route('locations.index'))
             ->assertOk()
             ->assertSee('拠点タイプ（種別マスタ）がまだ登録されていません');
 
@@ -329,9 +384,9 @@ class LocationManagementTest extends TestCase
     }
 
     /**
-     * 拠点登録画面から利用可能時間帯スロットを一括保存でき、display_orderが自動採番されること
+     * 拠点登録時に利用枠を一括保存でき、display_orderが自動採番されること
      */
-    public function test_can_create_location_with_schedules(): void
+    public function test_can_create_location_with_schedules_and_auto_display_order(): void
     {
         $response = $this->actingAs($this->admin)->post(route('locations.store'), [
             'name' => '番所本部',
@@ -366,9 +421,9 @@ class LocationManagementTest extends TestCase
     }
 
     /**
-     * 拠点編集画面から利用可能時間帯スロットを一括更新・削除・新規追加できること
+     * 拠点編集モーダル経由で利用枠を一括更新・削除・新規追加および全削除できること
      */
-    public function test_can_update_location_with_schedules(): void
+    public function test_can_update_location_with_schedules_including_delete_all(): void
     {
         $location = Location::factory()->create([
             'location_type_id' => $this->type->id,
@@ -391,11 +446,12 @@ class LocationManagementTest extends TestCase
             'title' => '旧枠2（削除対象）',
         ]);
 
-        // schedule1を更新、schedule2は送信せず削除、新規枠3を追加
+        // 1. schedule1を更新、schedule2は送信せず削除、新規枠3を追加
         $response = $this->actingAs($this->admin)->put(route('locations.update', $location), [
             'name' => '番所本部更新',
             'location_type_id' => $this->type->id,
             'is_all_day' => false,
+            'is_active' => true,
             'schedules' => [
                 [
                     'id' => $schedule1->id,
@@ -431,56 +487,72 @@ class LocationManagementTest extends TestCase
             'location_id' => $location->id,
             'title' => '新規枠3',
         ]);
+
+        // 2. schedules を空にして送信すると全枠が削除されること
+        $clearRes = $this->actingAs($this->admin)->put(route('locations.update', $location), [
+            'name' => '番所本部更新',
+            'location_type_id' => $this->type->id,
+            'is_all_day' => false,
+            'is_active' => true,
+        ]);
+        $clearRes->assertRedirect(route('locations.index'));
+        $this->assertCount(0, $location->fresh()->schedules);
     }
 
     /**
-     * 詳細画面から削除カード、時間帯追加リンク、基本仕様の編集リンクが削除されていること
+     * 他拠点に属するスケジュールIDを編集送信しても拒否されること（IDOR防止）
      */
-    public function test_location_show_screen_has_no_delete_card_or_add_schedule_link(): void
+    public function test_cannot_update_another_locations_schedule_id(): void
     {
-        $location = Location::factory()->create([
-            'location_type_id' => $this->type->id,
-            'name' => 'テスト対象拠点',
+        $locationA = Location::factory()->create(['location_type_id' => $this->type->id]);
+        $locationB = Location::factory()->create(['location_type_id' => $this->type->id]);
+        $otherSchedule = LocationSchedule::create([
+            'location_id' => $locationB->id,
+            'start_at' => '2026-10-11 08:00:00',
+            'end_at' => '2026-10-11 12:00:00',
+            'availability_status' => 'available',
+            'title' => '他拠点枠',
         ]);
 
-        $response = $this->actingAs($this->admin)->get(route('locations.show', $location));
+        $response = $this->actingAs($this->admin)->put(route('locations.update', $locationA), [
+            'name' => $locationA->name,
+            'location_type_id' => $this->type->id,
+            'is_all_day' => false,
+            'is_active' => true,
+            'schedules' => [
+                [
+                    'id' => $otherSchedule->id,
+                    'start_at' => '2026-10-11 09:00:00',
+                    'end_at' => '2026-10-11 11:00:00',
+                    'availability_status' => 'available',
+                ],
+            ],
+        ]);
 
-        $response->assertOk()
-            ->assertDontSee('この拠点を完全に削除する')
-            ->assertDontSee('data-action="open-schedule-modal"')
-            ->assertDontSee('✏️ 編集する');
+        $response->assertSessionHasErrors('schedules.0.id');
+        $this->assertSame($locationB->id, $otherSchedule->fresh()->location_id);
     }
 
     /**
-     * 登録・編集画面に表示順フォームが存在しないこと
+     * モーダル完結化に伴い廃止された独立ページおよび個別スケジュールルートが存在しないこと
      */
-    public function test_create_and_edit_screens_have_no_display_order_input(): void
+    public function test_obsolete_location_pages_and_routes_do_not_exist(): void
     {
         $location = Location::factory()->create([
             'location_type_id' => $this->type->id,
         ]);
 
-        $createRes = $this->actingAs($this->admin)->get(route('locations.create'));
-        $createRes->assertOk()->assertDontSee('name="display_order"', false);
+        $this->assertFalse(Route::has('locations.create'));
+        $this->assertFalse(Route::has('locations.show'));
+        $this->assertFalse(Route::has('locations.edit'));
+        $this->assertFalse(Route::has('locations.schedules.store'));
+        $this->assertFalse(Route::has('locations.schedules.update'));
+        $this->assertFalse(Route::has('locations.schedules.update-status'));
+        $this->assertFalse(Route::has('locations.schedules.destroy'));
 
-        $editRes = $this->actingAs($this->admin)->get(route('locations.edit', $location));
-        $editRes->assertOk()->assertDontSee('name="display_order"', false);
-    }
-
-    /**
-     * 登録・編集画面に「新しいタイプを追加」リンクが存在しないこと
-     */
-    public function test_create_and_edit_screens_have_no_add_type_link(): void
-    {
-        $location = Location::factory()->create([
-            'location_type_id' => $this->type->id,
-        ]);
-
-        $createRes = $this->actingAs($this->admin)->get(route('locations.create'));
-        $createRes->assertOk()->assertDontSee('新しいタイプを追加');
-
-        $editRes = $this->actingAs($this->admin)->get(route('locations.edit', $location));
-        $editRes->assertOk()->assertDontSee('新しいタイプを追加');
+        $this->actingAs($this->admin)->get('/locations/create')->assertStatus(405);
+        $this->actingAs($this->admin)->get("/locations/{$location->id}")->assertStatus(405);
+        $this->actingAs($this->admin)->get("/locations/{$location->id}/edit")->assertNotFound();
     }
 
     /**
@@ -491,7 +563,7 @@ class LocationManagementTest extends TestCase
         $today = Carbon::today()->format('Y-m-d');
 
         // 1. 終日利用可能拠点 -> 利用可（確保済）
-        $loc1 = Location::factory()->create([
+        Location::factory()->create([
             'location_type_id' => $this->type->id,
             'name' => '終日利用拠点A',
             'is_all_day' => true,
@@ -530,7 +602,7 @@ class LocationManagementTest extends TestCase
         ]);
 
         // 4. スロットなし -> 本日枠無し
-        $loc4 = Location::factory()->create([
+        Location::factory()->create([
             'location_type_id' => $this->type->id,
             'name' => '枠未登録拠点D',
             'is_all_day' => false,

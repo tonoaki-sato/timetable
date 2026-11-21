@@ -14,23 +14,4 @@ interface LocationScheduleRepositoryInterface
      * @return Collection<int, LocationSchedule>
      */
     public function getForLocationOrdered(Location $location): Collection;
-
-    /**
-     * 新規拠点スケジュール枠を作成
-     *
-     * @param  array<string, mixed>  $attributes
-     */
-    public function create(array $attributes): LocationSchedule;
-
-    /**
-     * 拠点スケジュール枠を更新
-     *
-     * @param  array<string, mixed>  $attributes
-     */
-    public function update(LocationSchedule $schedule, array $attributes): bool;
-
-    /**
-     * 拠点スケジュール枠を削除
-     */
-    public function delete(LocationSchedule $schedule): bool;
 }

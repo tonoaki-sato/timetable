@@ -213,7 +213,7 @@ class Location extends Model
      * 編集フォーム表示用の利用スケジュール配列を取得
      *
      * @param  array<int, array<string, mixed>>|null  $oldSchedules
-     * @return array<int, array{date: string, start_time: string, end_time: string, status: string, note: string}>
+     * @return array<int, array{id: int, start_at: string, end_at: string, availability_status: string, title: string, note: string}>
      */
     public function schedulesForForm(?array $oldSchedules = null): array
     {
@@ -221,11 +221,12 @@ class Location extends Model
             return $oldSchedules;
         }
 
-        return $this->schedules->map(fn (LocationSchedule $s) => [
-            'date' => $s->start_at ? $s->start_at->format('Y-m-d') : '',
-            'start_time' => $s->start_at ? $s->start_at->format('H:i') : '08:00',
-            'end_time' => $s->end_at ? $s->end_at->format('H:i') : '18:00',
-            'status' => $s->availability_status ?? 'available',
+        return $this->schedules->map(fn (LocationSchedule $s): array => [
+            'id' => (int) $s->id,
+            'start_at' => $s->start_at ? $s->start_at->format('Y-m-d\TH:i') : '',
+            'end_at' => $s->end_at ? $s->end_at->format('Y-m-d\TH:i') : '',
+            'availability_status' => $s->availability_status ?? 'available',
+            'title' => $s->title ?? '',
             'note' => $s->note ?? '',
         ])->all();
     }

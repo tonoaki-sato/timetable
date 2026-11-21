@@ -49,20 +49,6 @@ class LocationController extends Controller
     }
 
     /**
-     * 拠点の新規登録画面
-     */
-    public function create(): View
-    {
-        $this->authorize('create', Location::class);
-
-        $types = $this->locationService->getActiveLocationTypes();
-
-        return view('locations.create', [
-            'types' => $types,
-        ]);
-    }
-
-    /**
      * 拠点の新規登録処理
      */
     public function store(StoreLocationRequest $request): RedirectResponse|JsonResponse
@@ -99,26 +85,6 @@ class LocationController extends Controller
             'success' => true,
             'message' => '拠点の表示順を更新しました。',
         ]);
-    }
-
-    /**
-     * 拠点の詳細・時間帯スケジュール管理画面
-     */
-    public function show(Location $location): View
-    {
-        $this->authorize('view', $location);
-
-        return view('locations.show', $this->locationService->getShowViewData($location));
-    }
-
-    /**
-     * 拠点の編集画面
-     */
-    public function edit(Location $location): View
-    {
-        $this->authorize('update', $location);
-
-        return view('locations.edit', $this->locationService->getEditViewData($location));
     }
 
     /**

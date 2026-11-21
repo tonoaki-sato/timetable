@@ -68,8 +68,10 @@ class Phase0SecurityAndBugFixesTest extends TestCase
         $rows = $location->schedulesForForm();
 
         $this->assertCount(2, $rows);
-        $this->assertSame('unavailable', $rows[0]['status']);
-        $this->assertSame('available', $rows[1]['status']);
+        $this->assertSame('unavailable', $rows[0]['availability_status']);
+        $this->assertSame('available', $rows[1]['availability_status']);
+        $this->assertSame('2026-10-18T09:00', $rows[0]['start_at']);
+        $this->assertSame('午前調整中', $rows[0]['title']);
     }
 
     public function test_staff_hides_access_token_from_array_and_json_serialization(): void

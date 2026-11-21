@@ -6,9 +6,7 @@ import { confirmDialog } from './utils/ui.js';
 document.addEventListener('DOMContentLoaded', () => {
     initDragAndDropReorder();
     initLocationModals();
-    initScheduleFormRows();
     initTypeModal();
-    initAutoSubmitSelects();
 });
 
 /**
@@ -55,7 +53,7 @@ function initDragAndDropReorder() {
         if (!draggedItem) return;
 
         const items = Array.from(container.querySelectorAll('[data-location-id]'));
-        const locationIds = items.map(el => parseInt(el.dataset.locationId, 10)).filter(Boolean);
+        const locationIds = items.map((el) => parseInt(el.dataset.locationId, 10)).filter(Boolean);
         const reorderUrl = container.dataset.reorderUrl;
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
@@ -67,7 +65,7 @@ function initDragAndDropReorder() {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                 },
                 body: JSON.stringify({ location_ids: locationIds }),
             });
@@ -98,16 +96,31 @@ function initLocationModals() {
     const inputName = document.getElementById('location_name');
     const selectType = document.getElementById('location_type_id');
     const checkboxAllDay = document.getElementById('location_is_all_day');
-    const inputOrder = document.getElementById('location_display_order');
+    const checkboxActive = document.getElementById('location_is_active');
     const inputNotes = document.getElementById('location_notes');
+
+    const schedulesContainer = document.getElementById('schedules-form-container');
+    const schedulesBody = document.getElementById('schedules-form-body');
+    const schedulesEmptyMsg = document.getElementById('schedules-empty-message');
+    const btnAddSchedule = document.getElementById('add-schedule-row-btn');
 
     const detailTitle = document.getElementById('detail-modal-title');
     const detailName = document.getElementById('detail-location-name');
+    const detailInactiveBadge = document.getElementById('detail-inactive-badge');
     const detailTypeLabel = document.getElementById('detail-type-label');
     const detailIsAllDay = document.getElementById('detail-is-all-day');
-    const detailDisplayOrder = document.getElementById('detail-display-order');
+    const detailDailyStatus = document.getElementById('detail-daily-status');
     const detailNotes = document.getElementById('detail-notes');
-    const detailShowLink = document.getElementById('detail-show-link');
+    const detailSchedulesAllDay = document.getElementById('detail-schedules-all-day');
+    const detailSchedulesSplit = document.getElementById('detail-schedules-split');
+    const detailUpcomingCount = document.getElementById('detail-upcoming-count');
+    const detailUpcomingList = document.getElementById('detail-upcoming-list');
+    const detailUpcomingEmpty = document.getElementById('detail-upcoming-empty');
+    const detailPastCount = document.getElementById('detail-past-count');
+    const detailPastList = document.getElementById('detail-past-list');
+    const detailPastEmpty = document.getElementById('detail-past-empty');
+
+    let scheduleRowCounter = 0;
 
     const openModal = (modal) => {
         if (modal) {
@@ -122,6 +135,246 @@ function initLocationModals() {
             document.body.classList.remove('overflow-hidden');
         }
     };
+
+    const updateSchedulesEmptyState = () => {
+        if (!schedulesBody || !schedulesEmptyMsg) return;
+        const hasRows = schedulesBody.querySelectorAll('[data-schedule-row]').length > 0;
+        schedulesEmptyMsg.classList.toggle('hidden', hasRows);
+    };
+
+    /**
+     * 終日フラグに応じて利用枠フォームセクション表示と入力欄活性状態を切り替え
+     * 非表示の required input によるフォーム送信ブロックを防止する
+     */
+    const setSchedulesFormVisibility = () => {
+        if (!schedulesContainer || !checkboxAllDay) return;
+        const isAllDay = checkboxAllDay.checked;
+        schedulesContainer.classList.toggle('hidden', isAllDay);
+        schedulesContainer.querySelectorAll('input, select').forEach((el) => {
+            el.disabled = isAllDay;
+        });
+    };
+
+    /**
+     * 追加・編集モーダル内の利用枠行を XSS 安全な DOM API で構築
+     */
+    const createScheduleRow = (schedule = {}) => {
+        const idx = scheduleRowCounter++;
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-schedule-row', 'true');
+        tr.className = schedule.is_past
+            ? 'bg-slate-50/80 hover:bg-slate-100/70 transition'
+            : 'hover:bg-slate-50/70 transition';
+
+        // 1. 開始〜終了日時セル
+        const tdDates = document.createElement('td');
+        tdDates.className = 'py-2 px-2.5 align-top';
+
+        if (schedule.id) {
+            const hiddenId = document.createElement('input');
+            hiddenId.type = 'hidden';
+            hiddenId.name = `schedules[${idx}][id]`;
+            hiddenId.value = String(schedule.id);
+            tdDates.appendChild(hiddenId);
+        }
+
+        const dateWrap = document.createElement('div');
+        dateWrap.className = 'flex flex-wrap items-center gap-1 font-mono';
+
+        const inputStart = document.createElement('input');
+        inputStart.type = 'datetime-local';
+        inputStart.name = `schedules[${idx}][start_at]`;
+        inputStart.value = schedule.start_at || '';
+        inputStart.required = true;
+        inputStart.className = 'px-2 py-1 bg-white border border-slate-300 rounded text-[11px] text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 font-mono';
+
+        const separator = document.createElement('span');
+        separator.className = 'text-slate-400';
+        separator.textContent = '〜';
+
+        const inputEnd = document.createElement('input');
+        inputEnd.type = 'datetime-local';
+        inputEnd.name = `schedules[${idx}][end_at]`;
+        inputEnd.value = schedule.end_at || '';
+        inputEnd.required = true;
+        inputEnd.className = 'px-2 py-1 bg-white border border-slate-300 rounded text-[11px] text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 font-mono';
+
+        dateWrap.append(inputStart, separator, inputEnd);
+
+        if (schedule.is_past) {
+            const pastBadge = document.createElement('span');
+            pastBadge.className = 'px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 text-[10px] font-sans font-bold';
+            pastBadge.textContent = '過去';
+            dateWrap.appendChild(pastBadge);
+        }
+        tdDates.appendChild(dateWrap);
+
+        // 2. 利用ステータスセル
+        const tdStatus = document.createElement('td');
+        tdStatus.className = 'py-2 px-2.5 align-top';
+        const selectStatus = document.createElement('select');
+        selectStatus.name = `schedules[${idx}][availability_status]`;
+        selectStatus.required = true;
+        selectStatus.className = 'px-2 py-1 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-500';
+
+        [
+            { value: 'available', label: '利用可（確保済）' },
+            { value: 'unavailable', label: '未確保（調整中）' },
+        ].forEach((opt) => {
+            const optionEl = document.createElement('option');
+            optionEl.value = opt.value;
+            optionEl.textContent = opt.label;
+            if ((schedule.availability_status || 'available') === opt.value) {
+                optionEl.selected = true;
+            }
+            selectStatus.appendChild(optionEl);
+        });
+        tdStatus.appendChild(selectStatus);
+
+        // 3. 枠名 / タイトルセル
+        const tdTitle = document.createElement('td');
+        tdTitle.className = 'py-2 px-2.5 align-top';
+        const inputTitle = document.createElement('input');
+        inputTitle.type = 'text';
+        inputTitle.name = `schedules[${idx}][title]`;
+        inputTitle.value = schedule.title || '';
+        inputTitle.maxLength = 255;
+        inputTitle.placeholder = '例: 午前設営枠';
+        inputTitle.className = 'w-full min-w-28 px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-500';
+        tdTitle.appendChild(inputTitle);
+
+        // 4. メモセル
+        const tdNote = document.createElement('td');
+        tdNote.className = 'py-2 px-2.5 align-top';
+        const inputNote = document.createElement('input');
+        inputNote.type = 'text';
+        inputNote.name = `schedules[${idx}][note]`;
+        inputNote.value = schedule.note || '';
+        inputNote.maxLength = 1000;
+        inputNote.placeholder = '例: 鍵の受取あり';
+        inputNote.className = 'w-full min-w-28 px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-500';
+        tdNote.appendChild(inputNote);
+
+        // 5. 削除ボタンセル
+        const tdRemove = document.createElement('td');
+        tdRemove.className = 'py-2 px-2.5 align-top text-right whitespace-nowrap';
+        const btnRemove = document.createElement('button');
+        btnRemove.type = 'button';
+        btnRemove.setAttribute('data-action', 'remove-schedule-row');
+        btnRemove.className = 'px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded text-xs font-bold transition cursor-pointer';
+        btnRemove.textContent = '✕';
+        btnRemove.title = 'この利用枠を削除';
+        btnRemove.addEventListener('click', () => {
+            tr.remove();
+            updateSchedulesEmptyState();
+        });
+        tdRemove.appendChild(btnRemove);
+
+        tr.append(tdDates, tdStatus, tdTitle, tdNote, tdRemove);
+        return tr;
+    };
+
+    const renderFormSchedules = (schedules = []) => {
+        if (!schedulesBody) return;
+        schedulesBody.innerHTML = '';
+        schedules.forEach((sch) => {
+            schedulesBody.appendChild(createScheduleRow(sch));
+        });
+        updateSchedulesEmptyState();
+        setSchedulesFormVisibility();
+    };
+
+    /**
+     * 詳細モーダル用の利用枠リストを XSS 安全に描画
+     */
+    const renderDetailScheduleGroup = (items, listEl, emptyEl, countEl, isPastGroup) => {
+        if (!listEl || !emptyEl || !countEl) return;
+
+        listEl.innerHTML = '';
+        countEl.textContent = `${items.length}件`;
+
+        if (items.length === 0) {
+            listEl.classList.add('hidden');
+            emptyEl.classList.remove('hidden');
+            return;
+        }
+
+        listEl.classList.remove('hidden');
+        emptyEl.classList.add('hidden');
+
+        items.forEach((item) => {
+            const card = document.createElement('div');
+            card.className = isPastGroup
+                ? 'p-2.5 rounded-xl border border-slate-200 bg-slate-50/80 text-slate-600 space-y-1'
+                : 'p-2.5 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-1';
+
+            const topRow = document.createElement('div');
+            topRow.className = 'flex flex-wrap items-center justify-between gap-2';
+
+            const leftGroup = document.createElement('div');
+            leftGroup.className = 'flex flex-wrap items-center gap-1.5';
+
+            const timeSpan = document.createElement('span');
+            timeSpan.className = isPastGroup
+                ? 'font-mono font-bold text-slate-600 text-xs'
+                : 'font-mono font-bold text-slate-800 text-xs';
+            timeSpan.textContent = `📅 ${item.start_at_display} 〜 ${item.end_at_display}`;
+            leftGroup.appendChild(timeSpan);
+
+            if (item.is_current) {
+                const currentBadge = document.createElement('span');
+                currentBadge.className = 'px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-bold';
+                currentBadge.textContent = '現在';
+                leftGroup.appendChild(currentBadge);
+            }
+
+            if (item.title) {
+                const titleSpan = document.createElement('span');
+                titleSpan.className = isPastGroup
+                    ? 'font-bold text-slate-600 text-xs'
+                    : 'font-bold text-slate-900 text-xs';
+                titleSpan.textContent = item.title;
+                leftGroup.appendChild(titleSpan);
+            }
+
+            const statusBadge = document.createElement('span');
+            statusBadge.className = `inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${item.status_badge_class || 'bg-slate-100 text-slate-600 border-slate-200'}`;
+            statusBadge.textContent = item.status_label || '';
+
+            topRow.append(leftGroup, statusBadge);
+            card.appendChild(topRow);
+
+            if (item.note) {
+                const noteEl = document.createElement('p');
+                noteEl.className = 'text-[11px] text-slate-500 leading-snug';
+                noteEl.textContent = item.note;
+                card.appendChild(noteEl);
+            }
+
+            listEl.appendChild(card);
+        });
+    };
+
+    if (checkboxAllDay) {
+        checkboxAllDay.addEventListener('change', setSchedulesFormVisibility);
+    }
+
+    if (btnAddSchedule && schedulesBody) {
+        btnAddSchedule.addEventListener('click', () => {
+            const defaultDate = btnAddSchedule.dataset.defaultDate || '';
+            const row = createScheduleRow({
+                start_at: defaultDate ? `${defaultDate}T09:00` : '',
+                end_at: defaultDate ? `${defaultDate}T17:00` : '',
+                availability_status: 'available',
+                title: '',
+                note: '',
+                is_past: false,
+            });
+            schedulesBody.appendChild(row);
+            updateSchedulesEmptyState();
+            setSchedulesFormVisibility();
+        });
+    }
 
     // 閉じるボタンおよびBackdropクリックの共通イベント
     document.querySelectorAll('.btn-close-modal, .modal-backdrop').forEach((el) => {
@@ -143,40 +396,47 @@ function initLocationModals() {
     const btnCreate = document.getElementById('btn-open-create-location');
     if (btnCreate) {
         btnCreate.addEventListener('click', () => {
-            if (formMutation) {
-                formMutation.action = btnCreate.dataset.storeUrl || '';
-                if (formMethod) formMethod.value = 'POST';
-                if (formModalTitle) formModalTitle.textContent = '拠点の新規登録';
+            if (!formMutation || btnCreate.disabled) return;
+            formMutation.action = btnCreate.dataset.storeUrl || '';
+            if (formMethod) formMethod.value = 'POST';
+            if (formModalTitle) formModalTitle.textContent = '📍 拠点の新規登録';
 
-                if (inputName) inputName.value = '';
-                if (selectType && selectType.options.length > 0) selectType.selectedIndex = 0;
-                if (checkboxAllDay) checkboxAllDay.checked = false;
-                if (inputOrder) inputOrder.value = '';
-                if (inputNotes) inputNotes.value = '';
+            if (inputName) inputName.value = '';
+            if (selectType && selectType.options.length > 0) selectType.selectedIndex = 0;
+            if (checkboxAllDay) checkboxAllDay.checked = false;
+            if (checkboxActive) checkboxActive.checked = true;
+            if (inputNotes) inputNotes.value = '';
 
-                openModal(formModal);
-                inputName?.focus();
-            }
+            renderFormSchedules([]);
+            openModal(formModal);
+            inputName?.focus();
         });
     }
 
     // 編集モーダルを開く
     document.querySelectorAll('.btn-edit-location').forEach((btn) => {
         btn.addEventListener('click', () => {
-            if (formMutation) {
-                formMutation.action = btn.dataset.updateUrl || '';
-                if (formMethod) formMethod.value = 'PUT';
-                if (formModalTitle) formModalTitle.textContent = `拠点の編集: ${btn.dataset.name || ''}`;
+            if (!formMutation) return;
+            formMutation.action = btn.dataset.updateUrl || '';
+            if (formMethod) formMethod.value = 'PUT';
+            if (formModalTitle) formModalTitle.textContent = `✏️ 拠点の編集: ${btn.dataset.name || ''}`;
 
-                if (inputName) inputName.value = btn.dataset.name || '';
-                if (selectType) selectType.value = btn.dataset.locationTypeId || '';
-                if (checkboxAllDay) checkboxAllDay.checked = btn.dataset.isAllDay === '1';
-                if (inputOrder) inputOrder.value = btn.dataset.displayOrder || '';
-                if (inputNotes) inputNotes.value = btn.dataset.notes || '';
+            if (inputName) inputName.value = btn.dataset.name || '';
+            if (selectType) selectType.value = btn.dataset.locationTypeId || '';
+            if (checkboxAllDay) checkboxAllDay.checked = btn.dataset.isAllDay === '1';
+            if (checkboxActive) checkboxActive.checked = btn.dataset.isActive !== '0';
+            if (inputNotes) inputNotes.value = btn.dataset.notes || '';
 
-                openModal(formModal);
-                inputName?.focus();
+            let schedules = [];
+            try {
+                schedules = JSON.parse(btn.dataset.schedules || '[]');
+            } catch (e) {
+                console.error('Failed to parse schedules payload', e);
             }
+
+            renderFormSchedules(Array.isArray(schedules) ? schedules : []);
+            openModal(formModal);
+            inputName?.focus();
         });
     });
 
@@ -186,20 +446,56 @@ function initLocationModals() {
             const name = btn.dataset.name || '';
             const typeLabel = btn.dataset.typeLabel || '未分類';
             const isAllDay = btn.dataset.isAllDay === '1';
-            const displayOrder = btn.dataset.displayOrder || '0';
+            const isActive = btn.dataset.isActive !== '0';
             const notes = btn.dataset.notes || '—';
-            const showUrl = btn.dataset.showUrl || '#';
             const schedulesCount = btn.dataset.schedulesCount || '0';
+            const dailyStatusLabel = btn.dataset.dailyStatusLabel || '—';
+            const dailyStatusIcon = btn.dataset.dailyStatusIcon || '';
+            const dailyStatusClass = btn.dataset.dailyStatusClass || 'bg-slate-100 text-slate-600 border-slate-200';
 
-            if (detailTitle) detailTitle.textContent = `拠点詳細: ${name}`;
+            if (detailTitle) detailTitle.textContent = `📍 拠点詳細: ${name}`;
             if (detailName) detailName.textContent = name;
+            if (detailInactiveBadge) detailInactiveBadge.classList.toggle('hidden', isActive);
             if (detailTypeLabel) detailTypeLabel.textContent = typeLabel;
             if (detailIsAllDay) {
-                detailIsAllDay.textContent = isAllDay ? '終日利用可（常設保管等）' : `時間枠指定 (${schedulesCount}枠設定中)`;
+                detailIsAllDay.textContent = isAllDay
+                    ? '終日利用可（常設保管等）'
+                    : `時間枠指定 (${schedulesCount}枠設定中)`;
             }
-            if (detailDisplayOrder) detailDisplayOrder.textContent = displayOrder;
+            if (detailDailyStatus) {
+                detailDailyStatus.className = `inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-bold border mt-0.5 ${dailyStatusClass}`;
+                detailDailyStatus.textContent = dailyStatusIcon ? `${dailyStatusIcon} ${dailyStatusLabel}` : dailyStatusLabel;
+            }
             if (detailNotes) detailNotes.textContent = notes || '—';
-            if (detailShowLink) detailShowLink.href = showUrl;
+
+            let detailSchedules = { upcoming: [], past: [] };
+            try {
+                detailSchedules = JSON.parse(btn.dataset.detailSchedules || '{"upcoming":[],"past":[]}');
+            } catch (e) {
+                console.error('Failed to parse detail schedules payload', e);
+            }
+
+            if (detailSchedulesAllDay && detailSchedulesSplit) {
+                detailSchedulesAllDay.classList.toggle('hidden', !isAllDay);
+                detailSchedulesSplit.classList.toggle('hidden', isAllDay);
+            }
+
+            if (!isAllDay) {
+                renderDetailScheduleGroup(
+                    Array.isArray(detailSchedules.upcoming) ? detailSchedules.upcoming : [],
+                    detailUpcomingList,
+                    detailUpcomingEmpty,
+                    detailUpcomingCount,
+                    false
+                );
+                renderDetailScheduleGroup(
+                    Array.isArray(detailSchedules.past) ? detailSchedules.past : [],
+                    detailPastList,
+                    detailPastEmpty,
+                    detailPastCount,
+                    true
+                );
+            }
 
             openModal(detailModal);
         });
@@ -222,113 +518,7 @@ function initLocationModals() {
 }
 
 /**
- * 3. 登録・編集フォームでの利用可能時間帯行の動的追加・削除制御
- */
-function initScheduleFormRows() {
-    const isAllDayCheckbox = document.getElementById('is_all_day');
-    const schedulesContainer = document.getElementById('schedules-form-container');
-    const tableBody = document.getElementById('schedules-form-body');
-    const addBtn = document.getElementById('add-schedule-row-btn');
-
-    if (!schedulesContainer || !tableBody) {
-        return;
-    }
-
-    // 終日利用可能トグルに応じて表示切り替え
-    const toggleSchedulesVisibility = () => {
-        if (isAllDayCheckbox && isAllDayCheckbox.checked) {
-            schedulesContainer.classList.add('hidden');
-        } else {
-            schedulesContainer.classList.remove('hidden');
-        }
-    };
-
-    if (isAllDayCheckbox) {
-        isAllDayCheckbox.addEventListener('change', toggleSchedulesVisibility);
-        toggleSchedulesVisibility();
-    }
-
-    // 行削除ハンドラーの設定
-    const bindRemoveButtons = () => {
-        tableBody.querySelectorAll('[data-action="remove-schedule-row"]').forEach(btn => {
-            btn.onclick = () => {
-                const row = btn.closest('[data-schedule-row]');
-                if (row) {
-                    row.remove();
-                    checkEmptyState();
-                }
-            };
-        });
-    };
-
-    const checkEmptyState = () => {
-        const rows = tableBody.querySelectorAll('[data-schedule-row]');
-        const emptyMsg = document.getElementById('schedules-empty-message');
-        if (emptyMsg) {
-            if (rows.length === 0) {
-                emptyMsg.classList.remove('hidden');
-            } else {
-                emptyMsg.classList.add('hidden');
-            }
-        }
-    };
-
-    bindRemoveButtons();
-    checkEmptyState();
-
-    // 新規行追加
-    if (addBtn) {
-        addBtn.addEventListener('click', () => {
-            const index = Date.now();
-            const targetDateStr = addBtn.dataset.targetDate || '';
-            const defaultStart = targetDateStr ? `${targetDateStr}T09:00` : '';
-            const defaultEnd = targetDateStr ? `${targetDateStr}T17:00` : '';
-
-            const tr = document.createElement('tr');
-            tr.setAttribute('data-schedule-row', 'true');
-            tr.className = 'border-b border-slate-100 hover:bg-slate-50/60 transition';
-            tr.innerHTML = `
-                <td class="py-2.5 px-3">
-                    <div class="flex items-center space-x-1 font-mono">
-                        <input type="datetime-local" name="schedules[${index}][start_at]" value="${defaultStart}" required
-                            class="px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono">
-                        <span class="text-slate-400">〜</span>
-                        <input type="datetime-local" name="schedules[${index}][end_at]" value="${defaultEnd}" required
-                            class="px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono">
-                    </div>
-                </td>
-                <td class="py-2.5 px-3">
-                    <select name="schedules[${index}][availability_status]" required
-                        class="px-2 py-1 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                        <option value="available" selected>利用可（確保済）</option>
-                        <option value="unavailable">未確保（調整中）</option>
-                    </select>
-                </td>
-                <td class="py-2.5 px-3">
-                    <input type="text" name="schedules[${index}][title]" placeholder="例: 午前設営枠, 夜間枠"
-                        class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                </td>
-                <td class="py-2.5 px-3">
-                    <input type="text" name="schedules[${index}][note]" placeholder="例: 道路使用許可申請中"
-                        class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                </td>
-                <td class="py-2.5 px-3 text-right">
-                    <button type="button" data-action="remove-schedule-row"
-                        class="px-2 py-1 bg-white hover:bg-red-50 text-red-600 border border-slate-200 hover:border-red-200 rounded text-xs font-bold transition cursor-pointer">
-                        ✕ 削除
-                    </button>
-                </td>
-            `;
-
-            tableBody.appendChild(tr);
-            bindRemoveButtons();
-            checkEmptyState();
-        });
-    }
-}
-
-/**
- * 4. 拠点タイプ（種別マスタ）登録・編集モーダル
+ * 3. 拠点タイプ（種別マスタ）登録・編集モーダル
  */
 function initTypeModal() {
     const modal = document.getElementById('type-modal');
@@ -399,20 +589,6 @@ function initTypeModal() {
         if (e.target === modal) {
             modal.classList.add('hidden');
         }
-    });
-}
-
-/**
- * 5. 申請ステータスの自動送信セレクトボックス
- */
-function initAutoSubmitSelects() {
-    document.querySelectorAll('select[data-action="auto-submit-status"]').forEach((select) => {
-        select.addEventListener('change', () => {
-            const form = select.closest('form');
-            if (form) {
-                form.submit();
-            }
-        });
     });
 }
 

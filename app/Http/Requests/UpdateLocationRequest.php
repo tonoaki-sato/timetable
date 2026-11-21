@@ -37,15 +37,37 @@ class UpdateLocationRequest extends FormRequest
             'location_type_id' => ['required', 'exists:location_types,id'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_all_day' => ['boolean'],
-            'display_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active' => ['boolean'],
             'schedules' => ['nullable', 'array'],
-            'schedules.*.id' => ['nullable', 'integer', 'exists:location_schedules,id'],
+            'schedules.*.id' => [
+                'nullable',
+                'integer',
+                Rule::exists('location_schedules', 'id')->where('location_id', $locationId),
+            ],
             'schedules.*.start_at' => ['required_with:schedules', 'date'],
             'schedules.*.end_at' => ['required_with:schedules', 'date', 'after:schedules.*.start_at'],
             'schedules.*.availability_status' => ['required_with:schedules', Rule::in(array_keys(LocationSchedule::AVAILABILITY_STATUSES))],
             'schedules.*.title' => ['nullable', 'string', 'max:255'],
             'schedules.*.note' => ['nullable', 'string', 'max:1000'],
+        ];
+    }
+
+    /**
+     * バリデーションエラー表示用の属性名
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'name' => '拠点名',
+            'location_type_id' => '拠点タイプ',
+            'notes' => '特記事項・備考',
+            'schedules.*.start_at' => '利用開始日時',
+            'schedules.*.end_at' => '利用終了日時',
+            'schedules.*.availability_status' => '利用ステータス',
+            'schedules.*.title' => '枠名 / タイトル',
+            'schedules.*.note' => 'メモ / 特記事項',
         ];
     }
 
@@ -68,10 +90,6 @@ class UpdateLocationRequest extends FormRequest
 
         if ($filteredSchedules !== null) {
             $mergeData['schedules'] = $filteredSchedules;
-        }
-
-        if ($this->has('display_order') && $this->input('display_order') !== null && $this->input('display_order') !== '') {
-            $mergeData['display_order'] = (int) $this->input('display_order');
         }
 
         $this->merge($mergeData);
