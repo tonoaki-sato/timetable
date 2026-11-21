@@ -262,11 +262,11 @@
                                         </tr>
                                         <tr class="hover:bg-slate-50/70">
                                             <td class="py-2.5 px-3.5 font-bold">
-                                                <a href="{{ route('lanes.index') }}" class="text-indigo-600 hover:underline">🏷️ 担当班編成</a>
+                                                <a href="{{ route('timetable-lanes.index') }}" class="text-indigo-600 hover:underline">🏷️ 担当班編成</a>
                                             </td>
-                                            <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/lanes</td>
+                                            <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/timetable-lanes</td>
                                             <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 font-bold text-[10px]">管理者 (編成)</span></td>
-                                            <td class="py-2.5 px-3.5 text-slate-600">班の登録、テーマカラー・アイコン設定、👑班長の任命、📌固定スタッフの紐付け、進行表の左右表示順ドラッグ変更。</td>
+                                            <td class="py-2.5 px-3.5 text-slate-600"><a href="{{ route('lanes.index') }}" class="text-indigo-600 font-bold hover:underline">担当班マスター（/lanes）</a>からの日別編成、👑班長の任命、📌固定スタッフの紐付け、進行表の左右表示順ドラッグ変更。</td>
                                         </tr>
                                         <tr class="hover:bg-slate-50/70">
                                             <td class="py-2.5 px-3.5 font-bold">
@@ -638,7 +638,7 @@
                                 <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
                                     <div class="font-bold text-indigo-700">Step 2. 担当班・班長・固定人員</div>
                                     <p class="text-[11px] text-slate-600 leading-relaxed">
-                                        <a href="{{ route('lanes.index') }}" class="text-indigo-600 font-bold hover:underline">担当班編成</a>で班を作成し、👑班長と📌固定スタッフを指定すると、その班の全タスクに自動基本配置されます。
+                                        <a href="{{ route('timetable-lanes.index') }}" class="text-indigo-600 font-bold hover:underline">担当班編成</a>で<a href="{{ route('lanes.index') }}" class="text-indigo-600 font-bold hover:underline">担当班マスター</a>から班を編成し、👑班長と📌固定スタッフを指定すると、その班の全タスクに自動基本配置されます。
                                     </p>
                                 </div>
                                 <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
@@ -1371,7 +1371,7 @@
                                 <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
-                                <span class="ml-2">【実画面】担当班管理 (/lanes)</span>
+                                <span class="ml-2">【実画面】担当班編成 (/timetable-lanes)</span>
                             </span>
                             <span class="text-[10px] text-slate-400">クリックで拡大</span>
                         </div>
@@ -1439,8 +1439,8 @@
                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                             <h4 class="font-bold text-slate-900">班編成と班長・固定スタッフ設定の手順</h4>
                             <ol class="list-decimal list-inside space-y-1.5 text-slate-600 leading-relaxed">
-                                <li>「担当班管理」画面（<code class="px-1 py-0.2 bg-white rounded text-indigo-600 font-mono">/lanes</code>）で、該当日を選択します。</li>
-                                <li>「新規レーン追加」から班名（例: 道路警備班）、表示色、無線チャンネル等を設定します。</li>
+                                <li><a href="{{ route('lanes.index') }}" class="text-indigo-600 font-bold hover:underline">担当班マスター</a>（<code class="px-1 py-0.2 bg-white rounded text-indigo-600 font-mono">/lanes</code>）で班名・表示色・標準役割を登録しておき、「担当班編成」画面（<code class="px-1 py-0.2 bg-white rounded text-indigo-600 font-mono">/timetable-lanes</code>）で該当日を選択します。</li>
+                                <li>「担当班を追加」からマスター上の担当班を選択し（複数一括追加も可）、当該運行日の体制に組み込みます。</li>
                                 <li>各レーンに「👑 班長」および「📌 固定スタッフ」を設定すると、全タスクへ自動基本配置されます。</li>
                                 <li>ドラッグ操作で進行表上の並び順変更や、「担当班編成表PDF」の出力も行えます。</li>
                             </ol>

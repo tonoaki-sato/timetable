@@ -7,6 +7,7 @@ use App\Models\Staff;
 use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,7 +21,7 @@ class StaffShiftTest extends TestCase
 
     private Timetable $timetable;
 
-    private Lane $lane;
+    private TimetableLane $lane;
 
     protected function setUp(): void
     {
@@ -38,9 +39,12 @@ class StaffShiftTest extends TestCase
             'name' => 'まつり本番 1日目',
         ]);
 
-        $this->lane = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $master = Lane::factory()->create([
             'name' => '給水設備班',
+        ]);
+        $this->lane = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $master->id,
         ]);
     }
 
@@ -80,7 +84,7 @@ class StaffShiftTest extends TestCase
         // 自分のタスク
         $myTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '給水所A タンク設置',
         ]);
         TaskStaffAssignment::factory()->create([
@@ -92,7 +96,7 @@ class StaffShiftTest extends TestCase
         // 他者のタスク
         $otherTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '給水所B バルブ点検（他スタッフ専任）',
         ]);
         TaskStaffAssignment::factory()->create([
@@ -202,7 +206,7 @@ class StaffShiftTest extends TestCase
         // 1つ目のタスク (09:00 - 10:00)
         $firstTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '09:00:00',
             'end_time' => '10:00:00',
         ]);
@@ -215,7 +219,7 @@ class StaffShiftTest extends TestCase
         // 2つ目のタスク (11:00 - 12:00)
         $secondTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '11:00:00',
             'end_time' => '12:00:00',
         ]);
@@ -244,7 +248,7 @@ class StaffShiftTest extends TestCase
     {
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
         ]);
         $assignment = TaskStaffAssignment::factory()->create([
             'timetable_task_id' => $task->id,
@@ -297,7 +301,7 @@ class StaffShiftTest extends TestCase
         $otherStaff = Staff::factory()->create();
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
         ]);
         $otherAssignment = TaskStaffAssignment::factory()->create([
             'timetable_task_id' => $task->id,
@@ -322,7 +326,7 @@ class StaffShiftTest extends TestCase
     {
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '朝礼と準備作業',
         ]);
         TaskStaffAssignment::factory()->create([
@@ -357,7 +361,7 @@ class StaffShiftTest extends TestCase
         // 現在進行中のタスク
         $currentTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '現在実施中の警備業務',
             'start_time' => $now->copy()->subMinutes(15)->format('H:i:s'),
             'end_time' => $now->copy()->addMinutes(45)->format('H:i:s'),
@@ -371,7 +375,7 @@ class StaffShiftTest extends TestCase
         // 次の予定タスク
         $nextTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '次に行う清掃業務',
             'start_time' => $now->copy()->addMinutes(60)->format('H:i:s'),
             'end_time' => $now->copy()->addMinutes(120)->format('H:i:s'),
@@ -407,15 +411,16 @@ class StaffShiftTest extends TestCase
             'is_active' => true,
         ]);
 
-        $laneWithLead = Lane::factory()->create([
+        $masterWithLead = Lane::factory()->create(['name' => '設営班']);
+        $laneWithLead = TimetableLane::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'name' => '設営班',
+            'lane_id' => $masterWithLead->id,
             'lead_staff_id' => $laneLead->id,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $laneWithLead->id,
+            'timetable_lane_id' => $laneWithLead->id,
             'title' => 'テント設営と安全確認',
             'location' => '中央広場ステージ前',
             'content' => '大型パイプテント4張りの組み立てとペグ打ち固定作業。',
@@ -456,24 +461,27 @@ class StaffShiftTest extends TestCase
                 'target_date' => '2026-10-10',
                 'name' => '過去イベント',
             ]);
-            $pastLane = Lane::factory()->create(['timetable_id' => $pastTimetable->id, 'name' => '過去班']);
-            $pastTask = TimetableTask::factory()->create(['timetable_id' => $pastTimetable->id, 'lane_id' => $pastLane->id, 'title' => '過去のみタスク']);
+            $pastMaster = Lane::factory()->create(['name' => '過去班']);
+            $pastLane = TimetableLane::factory()->create(['timetable_id' => $pastTimetable->id, 'lane_id' => $pastMaster->id]);
+            $pastTask = TimetableTask::factory()->create(['timetable_id' => $pastTimetable->id, 'timetable_lane_id' => $pastLane->id, 'title' => '過去のみタスク']);
             TaskStaffAssignment::factory()->create(['timetable_task_id' => $pastTask->id, 'staff_id' => $this->staff->id]);
 
             $farFutureTimetable = Timetable::factory()->create([
                 'target_date' => '2027-10-10',
                 'name' => '来年イベント',
             ]);
-            $farLane = Lane::factory()->create(['timetable_id' => $farFutureTimetable->id, 'name' => '来年班']);
-            $farTask = TimetableTask::factory()->create(['timetable_id' => $farFutureTimetable->id, 'lane_id' => $farLane->id, 'title' => '来年のタスク']);
+            $farMaster = Lane::factory()->create(['name' => '来年班']);
+            $farLane = TimetableLane::factory()->create(['timetable_id' => $farFutureTimetable->id, 'lane_id' => $farMaster->id]);
+            $farTask = TimetableTask::factory()->create(['timetable_id' => $farFutureTimetable->id, 'timetable_lane_id' => $farLane->id, 'title' => '来年のタスク']);
             TaskStaffAssignment::factory()->create(['timetable_task_id' => $farTask->id, 'staff_id' => $this->staff->id]);
 
             $nearFutureTimetable = Timetable::factory()->create([
                 'target_date' => '2026-12-01',
                 'name' => '来月イベント',
             ]);
-            $nearLane = Lane::factory()->create(['timetable_id' => $nearFutureTimetable->id, 'name' => '来月班']);
-            $nearTask = TimetableTask::factory()->create(['timetable_id' => $nearFutureTimetable->id, 'lane_id' => $nearLane->id, 'title' => '来月のタスク']);
+            $nearMaster = Lane::factory()->create(['name' => '来月班']);
+            $nearLane = TimetableLane::factory()->create(['timetable_id' => $nearFutureTimetable->id, 'lane_id' => $nearMaster->id]);
+            $nearTask = TimetableTask::factory()->create(['timetable_id' => $nearFutureTimetable->id, 'timetable_lane_id' => $nearLane->id, 'title' => '来月のタスク']);
             TaskStaffAssignment::factory()->create(['timetable_task_id' => $nearTask->id, 'staff_id' => $this->staff->id]);
 
             // 1. 本日がなく過去・未来がある場合は最短未来日が初期選択されること
@@ -486,7 +494,7 @@ class StaffShiftTest extends TestCase
             // 2. 本日のタスクが追加された場合は本日（$this->timetable）が最優先で初期選択されること
             $todayTask = TimetableTask::factory()->create([
                 'timetable_id' => $this->timetable->id,
-                'lane_id' => $this->lane->id,
+                'timetable_lane_id' => $this->lane->id,
                 'title' => '本日のタスク',
             ]);
             TaskStaffAssignment::factory()->create([
@@ -506,11 +514,12 @@ class StaffShiftTest extends TestCase
                 'target_date' => '2025-10-10',
                 'name' => '一昨年イベント',
             ]);
-            $olderLane = Lane::factory()->create(['timetable_id' => $olderPastTimetable->id, 'name' => '旧班']);
-            $olderTask = TimetableTask::factory()->create(['timetable_id' => $olderPastTimetable->id, 'lane_id' => $olderLane->id, 'title' => '古い過去タスク']);
+            $olderMaster = Lane::factory()->create(['name' => '旧班']);
+            $olderLane = TimetableLane::factory()->create(['timetable_id' => $olderPastTimetable->id, 'lane_id' => $olderMaster->id]);
+            $olderTask = TimetableTask::factory()->create(['timetable_id' => $olderPastTimetable->id, 'timetable_lane_id' => $olderLane->id, 'title' => '古い過去タスク']);
             TaskStaffAssignment::factory()->create(['timetable_task_id' => $olderTask->id, 'staff_id' => $pastOnlyStaff->id]);
 
-            $latestPastTask = TimetableTask::factory()->create(['timetable_id' => $pastTimetable->id, 'lane_id' => $pastLane->id, 'title' => '直近の過去タスク']);
+            $latestPastTask = TimetableTask::factory()->create(['timetable_id' => $pastTimetable->id, 'timetable_lane_id' => $pastLane->id, 'title' => '直近の過去タスク']);
             TaskStaffAssignment::factory()->create(['timetable_task_id' => $latestPastTask->id, 'staff_id' => $pastOnlyStaff->id]);
 
             $pastPriorityResponse = $this->get(route('staff.myshift', ['token' => $pastOnlyStaff->access_token]));
@@ -534,14 +543,15 @@ class StaffShiftTest extends TestCase
                 'target_date' => '2026-10-11',
                 'name' => '宿場まつり 1日目',
             ]);
-            $pastLane = Lane::factory()->create([
+            $pastMaster2 = Lane::factory()->create(['name' => '巡回班']);
+            $pastLane = TimetableLane::factory()->create([
                 'timetable_id' => $pastTimetable->id,
-                'name' => '巡回班',
+                'lane_id' => $pastMaster2->id,
                 'lead_staff_id' => $this->staff->id,
             ]);
             $pastTask = TimetableTask::factory()->create([
                 'timetable_id' => $pastTimetable->id,
-                'lane_id' => $pastLane->id,
+                'timetable_lane_id' => $pastLane->id,
                 'title' => '過去の巡回タスク',
             ]);
             TaskStaffAssignment::factory()->create([
@@ -553,13 +563,14 @@ class StaffShiftTest extends TestCase
                 'target_date' => '2027-10-10',
                 'name' => '次回宿場まつり',
             ]);
-            $futureLane = Lane::factory()->create([
+            $futureMaster = Lane::factory()->create(['name' => 'ステカン班']);
+            $futureLane = TimetableLane::factory()->create([
                 'timetable_id' => $futureTimetable->id,
-                'name' => 'ステカン班',
+                'lane_id' => $futureMaster->id,
             ]);
             $futureTask = TimetableTask::factory()->create([
                 'timetable_id' => $futureTimetable->id,
-                'lane_id' => $futureLane->id,
+                'timetable_lane_id' => $futureLane->id,
                 'title' => '次回の看板設置',
             ]);
             TaskStaffAssignment::factory()->create([
@@ -596,9 +607,10 @@ class StaffShiftTest extends TestCase
      */
     public function test_my_shift_displays_lane_filters_notes_coworkers_and_leader_lane_tabs(): void
     {
-        $secondLane = Lane::factory()->create([
+        $secondMaster = Lane::factory()->create(['name' => '清掃誘導班']);
+        $secondLane = TimetableLane::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'name' => '清掃誘導班',
+            'lane_id' => $secondMaster->id,
             'lead_staff_id' => $this->staff->id,
         ]);
         $this->lane->update(['lead_staff_id' => $this->staff->id]);
@@ -610,7 +622,7 @@ class StaffShiftTest extends TestCase
 
         $task1 = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '給水機材搬入',
             'content' => 'タンク20本を中央へ搬入します。',
         ]);
@@ -629,7 +641,7 @@ class StaffShiftTest extends TestCase
 
         $task2 = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $secondLane->id,
+            'timetable_lane_id' => $secondLane->id,
             'title' => '会場周辺巡回清掃',
         ]);
         TaskStaffAssignment::factory()->create([
@@ -672,14 +684,15 @@ class StaffShiftTest extends TestCase
             'name' => '完了済み宿場まつり',
             'status' => 'completed',
         ]);
-        $completedLane = Lane::factory()->create([
+        $completedMaster = Lane::factory()->create(['name' => '完了済み誘導班']);
+        $completedLane = TimetableLane::factory()->create([
             'timetable_id' => $completedTimetable->id,
-            'name' => '完了済み誘導班',
+            'lane_id' => $completedMaster->id,
             'lead_staff_id' => $this->staff->id,
         ]);
         $completedTask = TimetableTask::factory()->create([
             'timetable_id' => $completedTimetable->id,
-            'lane_id' => $completedLane->id,
+            'timetable_lane_id' => $completedLane->id,
             'title' => '完了済みタスク',
         ]);
         TaskStaffAssignment::factory()->create([
@@ -690,7 +703,7 @@ class StaffShiftTest extends TestCase
         // アクティブ予定がある状態でアクセスすると完了済みは除外されること
         $activeTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '稼働中タスク',
         ]);
         TaskStaffAssignment::factory()->create([
@@ -737,14 +750,15 @@ class StaffShiftTest extends TestCase
             'name' => '前回運行 予備日',
             'status' => 'active',
         ]);
-        $secondLane = Lane::factory()->create([
+        $secondMaster2 = Lane::factory()->create(['name' => '次回給水班']);
+        $secondLane = TimetableLane::factory()->create([
             'timetable_id' => $secondTimetable->id,
-            'name' => '次回給水班',
+            'lane_id' => $secondMaster2->id,
         ]);
 
         $firstTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '09:00:00',
         ]);
         $firstAssignment = TaskStaffAssignment::factory()->create([
@@ -755,7 +769,7 @@ class StaffShiftTest extends TestCase
 
         $secondTask = TimetableTask::factory()->create([
             'timetable_id' => $secondTimetable->id,
-            'lane_id' => $secondLane->id,
+            'timetable_lane_id' => $secondLane->id,
             'start_time' => '09:00:00',
         ]);
         $secondAssignment = TaskStaffAssignment::factory()->create([
@@ -845,14 +859,15 @@ class StaffShiftTest extends TestCase
                 'name' => '未来の運行計画',
                 'status' => 'draft',
             ]);
-            $futureLane = Lane::factory()->create([
+            $futureMaster2 = Lane::factory()->create(['name' => '未来設営班']);
+            $futureLane = TimetableLane::factory()->create([
                 'timetable_id' => $futureTimetable->id,
-                'name' => '未来設営班',
+                'lane_id' => $futureMaster2->id,
                 'lead_staff_id' => $futureStaff->id,
             ]);
             $futureTask = TimetableTask::factory()->create([
                 'timetable_id' => $futureTimetable->id,
-                'lane_id' => $futureLane->id,
+                'timetable_lane_id' => $futureLane->id,
                 'title' => '事前準備テント設営',
                 'start_time' => '09:00:00',
                 'end_time' => '11:00:00',
@@ -902,7 +917,7 @@ class StaffShiftTest extends TestCase
             $this->lane->update(['lead_staff_id' => $this->staff->id]);
             $todayTask = TimetableTask::factory()->create([
                 'timetable_id' => $this->timetable->id,
-                'lane_id' => $this->lane->id,
+                'timetable_lane_id' => $this->lane->id,
                 'title' => '本日テント作業',
             ]);
 
@@ -911,14 +926,15 @@ class StaffShiftTest extends TestCase
                 'name' => '後日運行計画',
                 'status' => 'draft',
             ]);
-            $futureLane = Lane::factory()->create([
+            $futureMaster3 = Lane::factory()->create(['name' => '後日設営班']);
+            $futureLane = TimetableLane::factory()->create([
                 'timetable_id' => $futureTimetable->id,
-                'name' => '後日設営班',
+                'lane_id' => $futureMaster3->id,
                 'lead_staff_id' => $this->staff->id,
             ]);
             $futureTask = TimetableTask::factory()->create([
                 'timetable_id' => $futureTimetable->id,
-                'lane_id' => $futureLane->id,
+                'timetable_lane_id' => $futureLane->id,
                 'title' => '後日テント作業',
             ]);
 
@@ -934,9 +950,9 @@ class StaffShiftTest extends TestCase
 
             // 当日分のみ操作UIが出力され、後日分には出力されないこと
             $response->assertSee(route('staff.myshift.lane-task-status', ['token' => $this->staff->access_token, 'task' => $todayTask->id], false), false);
-            $response->assertSee(route('staff.myshift.lane-requests.store', ['token' => $this->staff->access_token, 'lane' => $this->lane->id], false), false);
+            $response->assertSee(route('staff.myshift.lane-requests.store', ['token' => $this->staff->access_token, 'timetableLane' => $this->lane->id], false), false);
             $response->assertDontSee(route('staff.myshift.lane-task-status', ['token' => $this->staff->access_token, 'task' => $futureTask->id], false), false);
-            $response->assertDontSee(route('staff.myshift.lane-requests.store', ['token' => $this->staff->access_token, 'lane' => $futureLane->id], false), false);
+            $response->assertDontSee(route('staff.myshift.lane-requests.store', ['token' => $this->staff->access_token, 'timetableLane' => $futureLane->id], false), false);
         } finally {
             Carbon::setTestNow();
         }
@@ -955,13 +971,13 @@ class StaffShiftTest extends TestCase
                 'target_date' => '2026-11-20',
                 'status' => 'draft',
             ]);
-            $futureLane = Lane::factory()->create([
+            $futureLane = TimetableLane::factory()->create([
                 'timetable_id' => $futureTimetable->id,
                 'lead_staff_id' => $this->staff->id,
             ]);
             $futureTask = TimetableTask::factory()->create([
                 'timetable_id' => $futureTimetable->id,
-                'lane_id' => $futureLane->id,
+                'timetable_lane_id' => $futureLane->id,
                 'status' => 'not_started',
             ]);
             $futureAssignment = TaskStaffAssignment::factory()->create([
@@ -990,7 +1006,7 @@ class StaffShiftTest extends TestCase
 
             $this->postJson(route('staff.myshift.lane-requests.store', [
                 'token' => $this->staff->access_token,
-                'lane' => $futureLane->id,
+                'timetableLane' => $futureLane->id,
             ]), [
                 'request_type' => 'staffing',
                 'requested_count' => 1,
@@ -1003,7 +1019,7 @@ class StaffShiftTest extends TestCase
             $this->assertSame('assigned', $futureAssignment->fresh()->attendance_status);
             $this->assertSame('not_started', $futureTask->fresh()->status);
             $this->assertDatabaseMissing('lane_requests', [
-                'lane_id' => $futureLane->id,
+                'timetable_lane_id' => $futureLane->id,
             ]);
         } finally {
             Carbon::setTestNow();
@@ -1022,13 +1038,13 @@ class StaffShiftTest extends TestCase
             'name' => '翌日移行テスト運行',
             'status' => 'active',
         ]);
-        $targetLane = Lane::factory()->create([
+        $targetLane = TimetableLane::factory()->create([
             'timetable_id' => $targetTimetable->id,
             'lead_staff_id' => $tomorrowStaff->id,
         ]);
         $targetTask = TimetableTask::factory()->create([
             'timetable_id' => $targetTimetable->id,
-            'lane_id' => $targetLane->id,
+            'timetable_lane_id' => $targetLane->id,
             'start_time' => '09:00:00',
             'end_time' => '11:00:00',
             'status' => 'not_started',
@@ -1078,7 +1094,7 @@ class StaffShiftTest extends TestCase
 
             $this->postJson(route('staff.myshift.lane-requests.store', [
                 'token' => $tomorrowStaff->access_token,
-                'lane' => $targetLane->id,
+                'timetableLane' => $targetLane->id,
             ]), [
                 'request_type' => 'staffing',
                 'requested_count' => 1,
@@ -1091,7 +1107,7 @@ class StaffShiftTest extends TestCase
                 'staff_id' => $tomorrowStaff->id,
             ]);
             $this->assertDatabaseHas('lane_requests', [
-                'lane_id' => $targetLane->id,
+                'timetable_lane_id' => $targetLane->id,
                 'requested_by_staff_id' => $tomorrowStaff->id,
             ]);
         } finally {

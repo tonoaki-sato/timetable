@@ -6,7 +6,7 @@ use App\DTOs\Lane\LaneListPrintDataDTO;
 use App\DTOs\Lane\LanePrintRowDTO;
 use App\Models\Lane;
 use App\Models\Timetable;
-use App\Repositories\Contracts\LaneRepositoryInterface;
+use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
 use App\Services\PdfService;
 use Dompdf\Frame;
 use Dompdf\Frame\FrameTreeIterator;
@@ -20,7 +20,7 @@ class DownloadLanesPdfAction
 {
     public function __construct(
         protected PdfService $pdfService,
-        protected LaneRepositoryInterface $laneRepository
+        protected TimetableLaneRepositoryInterface $timetableLaneRepository
     ) {}
 
     /**
@@ -49,7 +49,7 @@ class DownloadLanesPdfAction
      */
     public function buildPrintData(Timetable $timetable): LaneListPrintDataDTO
     {
-        $lanes = $this->laneRepository->getForTimetablePrint($timetable);
+        $lanes = $this->timetableLaneRepository->getForTimetablePrint($timetable);
 
         $rows = [];
 

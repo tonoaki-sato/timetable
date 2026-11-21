@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'timetable_id',
-    'lane_id',
+    'timetable_lane_id',
     'timetable_task_id',
     'requested_by_staff_id',
     'request_type',
@@ -70,11 +70,13 @@ class LaneRequest extends Model
     }
 
     /**
-     * 対象班（レーン）とのリレーション
+     * 対象日別担当班編成とのリレーション
+     *
+     * @return BelongsTo<TimetableLane, $this>
      */
-    public function lane(): BelongsTo
+    public function timetableLane(): BelongsTo
     {
-        return $this->belongsTo(Lane::class);
+        return $this->belongsTo(TimetableLane::class, 'timetable_lane_id');
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
@@ -18,6 +19,10 @@ class TimetableSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Lane::count() === 0) {
+            $this->call(LaneSeeder::class);
+        }
+
         $admin = User::where('role', 'admin')->first() ?? User::factory()->create(['role' => 'admin']);
 
         // =========================================================================
@@ -156,23 +161,23 @@ class TimetableSeeder extends Seeder
                 $laneItem['lead_staff_id'] = null;
             }
 
-            $lane = Lane::updateOrCreate(
+            $master = Lane::where('name', $laneItem['name'])->firstOrFail();
+
+            $timetableLane = TimetableLane::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay1->id,
-                    'name' => $laneItem['name'],
+                    'lane_id' => $master->id,
                 ],
                 [
-                    'color' => $laneItem['color'],
-                    'icon' => $laneItem['icon'],
-                    'display_order' => $laneItem['display_order'],
                     'lead_staff_id' => $laneItem['lead_staff_id'],
-                    'description' => $laneItem['description'],
+                    'display_order' => $laneItem['display_order'],
+                    'notes' => null,
                 ]
             );
 
-            $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
+            $timetableLane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
 
-            $lanesDay1[$laneItem['name']] = $lane;
+            $lanesDay1[$laneItem['name']] = $timetableLane;
         }
 
         $tasksDay1 = [
@@ -687,12 +692,12 @@ class TimetableSeeder extends Seeder
         ];
 
         foreach ($tasksDay1 as $taskData) {
-            $lane = $lanesDay1[$taskData['lane_name']];
+            $timetableLane = $lanesDay1[$taskData['lane_name']];
 
             $task = TimetableTask::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay1->id,
-                    'lane_id' => $lane->id,
+                    'timetable_lane_id' => $timetableLane->id,
                     'title' => $taskData['title'],
                     'start_time' => $taskData['start_time'],
                 ],
@@ -866,35 +871,35 @@ class TimetableSeeder extends Seeder
                 $laneItem['lead_staff_id'] = null;
             }
 
-            $lane = Lane::updateOrCreate(
+            $master = Lane::where('name', $laneItem['name'])->firstOrFail();
+
+            $timetableLane = TimetableLane::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay2->id,
-                    'name' => $laneItem['name'],
+                    'lane_id' => $master->id,
                 ],
                 [
-                    'color' => $laneItem['color'],
-                    'icon' => $laneItem['icon'],
-                    'display_order' => $laneItem['display_order'],
                     'lead_staff_id' => $laneItem['lead_staff_id'],
-                    'description' => $laneItem['description'],
+                    'display_order' => $laneItem['display_order'],
+                    'notes' => null,
                 ]
             );
 
-            $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
+            $timetableLane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
 
-            $lanesDay2[$laneItem['name']] = $lane;
+            $lanesDay2[$laneItem['name']] = $timetableLane;
         }
 
         $tasksDay2 = [
         ];
 
         foreach ($tasksDay2 as $taskData) {
-            $lane = $lanesDay2[$taskData['lane_name']];
+            $timetableLane = $lanesDay2[$taskData['lane_name']];
 
             $task = TimetableTask::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay2->id,
-                    'lane_id' => $lane->id,
+                    'timetable_lane_id' => $timetableLane->id,
                     'title' => $taskData['title'],
                     'start_time' => $taskData['start_time'],
                 ],
@@ -983,23 +988,23 @@ class TimetableSeeder extends Seeder
                 $laneItem['lead_staff_id'] = null;
             }
 
-            $lane = Lane::updateOrCreate(
+            $master = Lane::where('name', $laneItem['name'])->firstOrFail();
+
+            $timetableLane = TimetableLane::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay3->id,
-                    'name' => $laneItem['name'],
+                    'lane_id' => $master->id,
                 ],
                 [
-                    'color' => $laneItem['color'],
-                    'icon' => $laneItem['icon'],
-                    'display_order' => $laneItem['display_order'],
                     'lead_staff_id' => $laneItem['lead_staff_id'],
-                    'description' => $laneItem['description'],
+                    'display_order' => $laneItem['display_order'],
+                    'notes' => null,
                 ]
             );
 
-            $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
+            $timetableLane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
 
-            $lanesDay3[$laneItem['name']] = $lane;
+            $lanesDay3[$laneItem['name']] = $timetableLane;
         }
 
         $tasksDay3 = [
@@ -1184,12 +1189,12 @@ class TimetableSeeder extends Seeder
         ];
 
         foreach ($tasksDay3 as $taskData) {
-            $lane = $lanesDay3[$taskData['lane_name']];
+            $timetableLane = $lanesDay3[$taskData['lane_name']];
 
             $task = TimetableTask::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay3->id,
-                    'lane_id' => $lane->id,
+                    'timetable_lane_id' => $timetableLane->id,
                     'title' => $taskData['title'],
                     'start_time' => $taskData['start_time'],
                 ],
@@ -1411,23 +1416,23 @@ class TimetableSeeder extends Seeder
                 $laneItem['lead_staff_id'] = null;
             }
 
-            $lane = Lane::updateOrCreate(
+            $master = Lane::where('name', $laneItem['name'])->firstOrFail();
+
+            $timetableLane = TimetableLane::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay4->id,
-                    'name' => $laneItem['name'],
+                    'lane_id' => $master->id,
                 ],
                 [
-                    'color' => $laneItem['color'],
-                    'icon' => $laneItem['icon'],
-                    'display_order' => $laneItem['display_order'],
                     'lead_staff_id' => $laneItem['lead_staff_id'],
-                    'description' => $laneItem['description'],
+                    'display_order' => $laneItem['display_order'],
+                    'notes' => null,
                 ]
             );
 
-            $lane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
+            $timetableLane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
 
-            $lanesDay4[$laneItem['name']] = $lane;
+            $lanesDay4[$laneItem['name']] = $timetableLane;
         }
 
         $tasksDay4 = [
@@ -2454,12 +2459,12 @@ class TimetableSeeder extends Seeder
         ];
 
         foreach ($tasksDay4 as $taskData) {
-            $lane = $lanesDay4[$taskData['lane_name']];
+            $timetableLane = $lanesDay4[$taskData['lane_name']];
 
             $task = TimetableTask::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay4->id,
-                    'lane_id' => $lane->id,
+                    'timetable_lane_id' => $timetableLane->id,
                     'title' => $taskData['title'],
                     'start_time' => $taskData['start_time'],
                 ],
@@ -2486,9 +2491,9 @@ class TimetableSeeder extends Seeder
                         );
                     }
                 }
-            } elseif ($lane->lead_staff_id && Staff::where('id', $lane->lead_staff_id)->exists()) {
+            } elseif ($timetableLane->lead_staff_id && Staff::where('id', $timetableLane->lead_staff_id)->exists()) {
                 $task->assignments()->firstOrCreate(
-                    ['staff_id' => $lane->lead_staff_id],
+                    ['staff_id' => $timetableLane->lead_staff_id],
                     [
                         'role_description' => '班長',
                         'attendance_status' => 'assigned',
@@ -2508,7 +2513,7 @@ class TimetableSeeder extends Seeder
             LaneRequest::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay1->id,
-                    'lane_id' => $day1ColorConeLane->id,
+                    'timetable_lane_id' => $day1ColorConeLane->id,
                     'request_type' => 'staffing',
                     'equipment_name' => null,
                 ],
@@ -2524,7 +2529,7 @@ class TimetableSeeder extends Seeder
             LaneRequest::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay1->id,
-                    'lane_id' => $day1ColorConeLane->id,
+                    'timetable_lane_id' => $day1ColorConeLane->id,
                     'request_type' => 'equipment',
                     'equipment_name' => 'トランシーバー',
                 ],
@@ -2542,7 +2547,7 @@ class TimetableSeeder extends Seeder
             LaneRequest::updateOrCreate(
                 [
                     'timetable_id' => $timetableDay1->id,
-                    'lane_id' => $day1HygieneLane->id,
+                    'timetable_lane_id' => $day1HygieneLane->id,
                     'request_type' => 'equipment',
                     'equipment_name' => 'ゴミ袋（特大）',
                 ],

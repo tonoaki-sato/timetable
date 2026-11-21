@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Services;
 
-use App\Models\Lane;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Services\NextTasksService;
 use Carbon\Carbon;
@@ -48,14 +48,14 @@ class NextTasksServiceTest extends TestCase
             'status' => 'active',
         ]);
 
-        $lane = Lane::factory()->create([
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
         ]);
 
         // 1. 現在進行中・開始時刻過去のタスク -> 除外
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '現在時間帯タスク',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
@@ -65,7 +65,7 @@ class NextTasksServiceTest extends TestCase
         // 2. 開始時刻が未来だが進行中のタスク -> 除外（NOW側で表示）
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '先行着手タスク',
             'start_time' => '11:00:00',
             'end_time' => '12:00:00',
@@ -75,7 +75,7 @@ class NextTasksServiceTest extends TestCase
         // 3. 未来時間帯だが完了済のタスク -> 除外
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '完了済タスク',
             'start_time' => '11:00:00',
             'end_time' => '12:00:00',
@@ -85,7 +85,7 @@ class NextTasksServiceTest extends TestCase
         // 4. 11:00開始・通常タスク -> 抽出（2番目）
         $task11Normal = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '11時通常タスク',
             'start_time' => '11:00:00',
             'end_time' => '12:00:00',
@@ -96,7 +96,7 @@ class NextTasksServiceTest extends TestCase
         // 5. 11:00開始・最優先タスク -> 抽出（1番目）
         $task11Critical = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '11時最優先タスク',
             'start_time' => '11:00:00',
             'end_time' => '12:00:00',
@@ -107,7 +107,7 @@ class NextTasksServiceTest extends TestCase
         // 6. 12:00開始・最優先タスク -> 抽出（3番目）
         $task12Critical = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '12時最優先タスク',
             'start_time' => '12:00:00',
             'end_time' => '13:00:00',
@@ -136,14 +136,14 @@ class NextTasksServiceTest extends TestCase
             'status' => 'active',
         ]);
 
-        $lane = Lane::factory()->create([
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
         ]);
 
         for ($i = 1; $i <= 8; $i++) {
             TimetableTask::factory()->create([
                 'timetable_id' => $timetable->id,
-                'lane_id' => $lane->id,
+                'timetable_lane_id' => $lane->id,
                 'title' => "タスク{$i}",
                 'start_time' => '12:00:00',
                 'end_time' => '13:00:00',

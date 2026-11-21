@@ -6,6 +6,7 @@ use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Services\NextTasksService;
 use App\View\Components\Dashboard\NextTasksCard;
@@ -48,13 +49,13 @@ class NextTasksCardTest extends TestCase
             'target_date' => '2026-10-11',
             'status' => 'active',
         ]);
-        $lane = Lane::factory()->create([
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
         ]);
 
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '終了済の朝礼タスク',
             'start_time' => '07:00:00',
             'end_time' => '07:30:00',
@@ -77,16 +78,19 @@ class NextTasksCardTest extends TestCase
         ]);
 
         $leader = Staff::factory()->create(['name' => '有エ 喜一郎']);
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => '衛生',
             'icon' => '🚻',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
             'lead_staff_id' => $leader->id,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '北川製粉所横ゴミステーション巡回回収',
             'location' => '北川製粉所横',
             'start_time' => '11:00:00',
@@ -105,7 +109,7 @@ class NextTasksCardTest extends TestCase
 
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '午後開始の巡回タスク',
             'location' => '宿場通り中央',
             'start_time' => '12:00:00',

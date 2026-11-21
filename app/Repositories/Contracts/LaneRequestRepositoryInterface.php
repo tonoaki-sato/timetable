@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Collection;
 interface LaneRequestRepositoryInterface
 {
     /**
-     * 指定レーン・タスク群に紐づく未完了の現場要請を取得
+     * 指定日別担当班・タスク群に紐づく未完了の現場要請を取得
      *
-     * @param  array<int, int>  $laneIds
+     * @param  array<int, int>  $timetableLaneIds
      * @param  array<int, int>  $taskIds
      * @return Collection<int, LaneRequest>
      */
-    public function getPendingForLanesOrTasks(array $laneIds, array $taskIds, int $limit = 6): Collection;
+    public function getPendingForLanesOrTasks(array $timetableLaneIds, array $taskIds, int $limit = 6): Collection;
 
     /**
      * 新規要請を作成

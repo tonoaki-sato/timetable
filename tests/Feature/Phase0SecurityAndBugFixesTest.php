@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Enums\BoothCategory;
 use App\Enums\BoothType;
 use App\Models\EquipmentLogisticsPattern;
-use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\LayoutArea;
 use App\Models\LayoutMap;
@@ -16,6 +15,7 @@ use App\Models\SiteBaseMap;
 use App\Models\SiteMapPlacement;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -184,11 +184,11 @@ class Phase0SecurityAndBugFixesTest extends TestCase
             'width' => 13.86,
             'height' => 13.86,
         ]);
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id]);
+        $lane = TimetableLane::factory()->create(['timetable_id' => $timetable->id]);
         $staff = Staff::factory()->create();
         $laneRequest = LaneRequest::create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'requested_by_staff_id' => $staff->id,
             'request_type' => 'staffing',
             'requested_count' => 1,

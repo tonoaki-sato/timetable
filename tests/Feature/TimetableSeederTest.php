@@ -3,10 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Lane;
+use App\Models\LaneRequest;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
+use Database\Seeders\LaneSeeder;
 use Database\Seeders\StaffSeeder;
 use Database\Seeders\TimetableSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,7 +36,14 @@ class TimetableSeederTest extends TestCase
             Staff::factory()->create(['name' => $name]);
         }
 
+        $this->seed(LaneSeeder::class);
         $this->seed(TimetableSeeder::class);
+
+        // 0. 担当班マスター・日別編成・現場要請の件数が正しくシードされていること
+        $this->assertSame(17, Lane::count());
+        $this->assertSame(37, TimetableLane::count());
+        $this->assertSame(3, LaneRequest::count());
+        $this->assertSame(0, TimetableTask::whereNull('timetable_lane_id')->count());
 
         // 1. スタッフが20名以上登録されていること
         $this->assertGreaterThanOrEqual(20, Staff::count());
@@ -54,18 +64,23 @@ class TimetableSeederTest extends TestCase
         $this->assertSame('completed', $timetableDay1->status);
         $this->assertSame(24, $timetableDay1->tasks()->count());
 
+        $eiseiMaster = Lane::where('name', '衛生')->firstOrFail();
+        $coneMaster = Lane::where('name', 'カラーコーン')->firstOrFail();
+        $patrolMaster = Lane::where('name', '巡回')->firstOrFail();
+        $sweepMaster = Lane::where('name', '道路清掃')->firstOrFail();
+
         // レーン表示順のカスタム設定（衛生=20, カラーコーン=40等）が反映されていること
-        $this->assertSame(20, Lane::where('timetable_id', $timetableDay1->id)->where('name', '衛生')->value('display_order'));
-        $this->assertSame(40, Lane::where('timetable_id', $timetableDay1->id)->where('name', 'カラーコーン')->value('display_order'));
+        $this->assertSame(20, TimetableLane::where('timetable_id', $timetableDay1->id)->where('lane_id', $eiseiMaster->id)->value('display_order'));
+        $this->assertSame(40, TimetableLane::where('timetable_id', $timetableDay1->id)->where('lane_id', $coneMaster->id)->value('display_order'));
 
         // 主担当スタッフの設定（衛生=27: 有エ 喜一郎, カラーコーン=35: Jouko Karvonen, 道路清掃=null 等）が反映されていること
-        $this->assertSame(27, Lane::where('timetable_id', $timetableDay1->id)->where('name', '衛生')->value('lead_staff_id'));
-        $this->assertSame(35, Lane::where('timetable_id', $timetableDay1->id)->where('name', 'カラーコーン')->value('lead_staff_id'));
-        $this->assertSame(1, Lane::where('timetable_id', $timetableDay1->id)->where('name', '巡回')->value('lead_staff_id'));
-        $this->assertNull(Lane::where('timetable_id', $timetableDay1->id)->where('name', '道路清掃')->value('lead_staff_id'));
+        $this->assertSame(27, TimetableLane::where('timetable_id', $timetableDay1->id)->where('lane_id', $eiseiMaster->id)->value('lead_staff_id'));
+        $this->assertSame(35, TimetableLane::where('timetable_id', $timetableDay1->id)->where('lane_id', $coneMaster->id)->value('lead_staff_id'));
+        $this->assertSame(1, TimetableLane::where('timetable_id', $timetableDay1->id)->where('lane_id', $patrolMaster->id)->value('lead_staff_id'));
+        $this->assertNull(TimetableLane::where('timetable_id', $timetableDay1->id)->where('lane_id', $sweepMaster->id)->value('lead_staff_id'));
 
         // 主担当が決まっているレーンのタスクには、その主担当がデフォルトでアサインされていること
-        $eiseiLane = Lane::where('timetable_id', $timetableDay1->id)->where('name', '衛生')->firstOrFail();
+        $eiseiLane = TimetableLane::where('timetable_id', $timetableDay1->id)->where('lane_id', $eiseiMaster->id)->firstOrFail();
         foreach ($eiseiLane->tasks as $eiseiTask) {
             $this->assertDatabaseHas('task_staff_assignments', [
                 'timetable_task_id' => $eiseiTask->id,
@@ -85,33 +100,33 @@ class TimetableSeederTest extends TestCase
         $timetableDay4 = Timetable::where('target_date', '2027-10-10')
             ->where('name', '第35回保土ケ谷宿場まつり（1日目）')
             ->firstOrFail();
-        $snsLane = Lane::where('timetable_id', $timetableDay4->id)->where('name', 'S&S')->firstOrFail();
+        $snsMaster = Lane::where('name', 'S&S')->firstOrFail();
+        $kigyoMaster = Lane::where('name', '企業ブース')->firstOrFail();
+
+        $snsLane = TimetableLane::where('timetable_id', $timetableDay4->id)->where('lane_id', $snsMaster->id)->firstOrFail();
         $this->assertSame(38, $snsLane->lead_staff_id);
         $this->assertSame(170, $snsLane->display_order);
         $this->assertDatabaseHas('timetable_tasks', [
             'timetable_id' => $timetableDay4->id,
-            'lane_id' => $snsLane->id,
+            'timetable_lane_id' => $snsLane->id,
             'title' => '管理・イベント運営',
         ]);
 
-        $kigyoLane = Lane::where('timetable_id', $timetableDay4->id)->where('name', '企業ブース')->firstOrFail();
+        $kigyoLane = TimetableLane::where('timetable_id', $timetableDay4->id)->where('lane_id', $kigyoMaster->id)->firstOrFail();
         $this->assertSame(24, $kigyoLane->lead_staff_id);
         $this->assertSame(180, $kigyoLane->display_order);
         $this->assertDatabaseHas('timetable_tasks', [
             'timetable_id' => $timetableDay4->id,
-            'lane_id' => $kigyoLane->id,
+            'timetable_lane_id' => $kigyoLane->id,
             'title' => '搬入対応',
         ]);
 
         // レーンおよびステータスが定義に合致していること
-        $validLanes = array_values(array_unique(array_merge(
-            Lane::pluck('name')->toArray(),
-            ['幹事会']
-        )));
+        $validLanes = Lane::pluck('name')->toArray();
         $validStatuses = array_keys(TimetableTask::STATUSES);
 
-        foreach (TimetableTask::all() as $task) {
-            $this->assertContains($task->lane, $validLanes, "Invalid lane: {$task->lane}");
+        foreach (TimetableTask::with('timetableLane.lane')->get() as $task) {
+            $this->assertContains($task->lane_name_label, $validLanes, "Invalid lane: {$task->lane_name_label}");
             $this->assertContains($task->status, $validStatuses, "Invalid status: {$task->status}");
             $this->assertNotNull($task->start_time);
             $this->assertNotNull($task->end_time);
@@ -124,7 +139,14 @@ class TimetableSeederTest extends TestCase
     public function test_timetable_seeder_is_idempotent(): void
     {
         $this->seed(StaffSeeder::class);
+        $this->seed(LaneSeeder::class);
         $this->seed(TimetableSeeder::class);
+
+        // 0. 担当班マスター・日別編成・現場要請の件数が正しくシードされていること
+        $this->assertSame(17, Lane::count());
+        $this->assertSame(37, TimetableLane::count());
+        $this->assertSame(3, LaneRequest::count());
+        $this->assertSame(0, TimetableTask::whereNull('timetable_lane_id')->count());
 
         $initialTimetableCount = Timetable::count();
         $initialTaskCount = TimetableTask::count();
@@ -132,7 +154,14 @@ class TimetableSeederTest extends TestCase
 
         // 2回目の実行
         $this->seed(StaffSeeder::class);
+        $this->seed(LaneSeeder::class);
         $this->seed(TimetableSeeder::class);
+
+        // 0. 担当班マスター・日別編成・現場要請の件数が正しくシードされていること
+        $this->assertSame(17, Lane::count());
+        $this->assertSame(37, TimetableLane::count());
+        $this->assertSame(3, LaneRequest::count());
+        $this->assertSame(0, TimetableTask::whereNull('timetable_lane_id')->count());
 
         $this->assertSame($initialTimetableCount, Timetable::count());
         $this->assertSame($initialTaskCount, TimetableTask::count());

@@ -168,8 +168,8 @@
 
                                             <!-- 担当班編成 (Step 2) -->
                                             @if($nav->hasTimetables())
-                                            <a href="{{ route('lanes.index') }}"
-                                                class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.lanes.*') || request()->routeIs('lanes.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                            <a href="{{ route('timetable-lanes.index') }}"
+                                                class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.lanes.*') || request()->routeIs('timetable-lanes.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                                 <span class="text-base shrink-0">🏷️</span>
                                                 <div class="min-w-0 flex-1">
                                                     <div class="text-xs font-bold whitespace-nowrap truncate">担当班編成</div>
@@ -352,6 +352,14 @@
                                                     <div class="min-w-0 flex-1">
                                                         <div class="text-xs font-bold whitespace-nowrap truncate">スタッフ名簿</div>
                                                         <p class="text-[10px] text-slate-400 truncate mt-0.5">ボランティア・幹事・個別QRコード</p>
+                                                    </div>
+                                                </a>
+                                                <a href="{{ route('lanes.index') }}"
+                                                    class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('lanes.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                    <span class="text-base shrink-0">🏷️</span>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="text-xs font-bold whitespace-nowrap truncate">担当班マスター</div>
+                                                        <p class="text-[10px] text-slate-400 truncate mt-0.5">班名・テーマカラー・標準役割の一元管理</p>
                                                     </div>
                                                 </a>
                                             </div>
@@ -714,7 +722,7 @@
                                                 <div class="flex items-start justify-between gap-2">
                                                     <div class="min-w-0">
                                                         <div class="font-bold text-slate-100 truncate">
-                                                            [{{ $req->lane?->name ?? '班' }}] {{ $req->type_label }}
+                                                            [{{ $req->timetableLane?->name ?? '班' }}] {{ $req->type_label }}
                                                         </div>
                                                         <div class="text-[11px] text-slate-300 mt-0.5">
                                                             @if($req->request_type === 'equipment')
@@ -744,7 +752,7 @@
                                                         @endif
                                                     </div>
 
-                                                    @can('update', $req->lane ?? App\Models\Lane::class)
+                                                    @can('update', $req->timetableLane ?? App\Models\TimetableLane::class)
                                                     <div class="flex items-center space-x-1 shrink-0">
                                                         @if($req->status === 'pending')
                                                         <form action="{{ route('lane-requests.update-status', $req) }}" method="POST" class="inline">
@@ -922,7 +930,7 @@
                             </a>
                             <!-- 担当班編成 -->
                             @if($nav->hasTimetables())
-                            <a href="{{ route('lanes.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                            <a href="{{ route('timetable-lanes.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🏷️</span>
                                 <span class="font-bold truncate">担当班編成</span>
                             </a>
@@ -1005,6 +1013,10 @@
                             <a href="{{ route('staff.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">👷</span>
                                 <span class="font-bold truncate">スタッフ名簿</span>
+                            </a>
+                            <a href="{{ route('lanes.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                                <span class="text-base shrink-0">🏷️</span>
+                                <span class="font-bold truncate">担当班マスター</span>
                             </a>
                             <a href="{{ route('vendors.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                                 <span class="text-base shrink-0">🎪</span>

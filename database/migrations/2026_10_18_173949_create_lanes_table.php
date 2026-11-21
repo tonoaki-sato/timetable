@@ -13,30 +13,44 @@ return new class extends Migration
     {
         Schema::create('lanes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
-            $table->string('name', 100);
+            $table->string('name', 100)->unique();
             $table->string('color', 30)->default('slate');
             $table->string('icon', 50)->nullable();
+            $table->text('description')->nullable();
+            $table->unsignedInteger('display_order')->default(0);
+            $table->boolean('is_active')->default(true);
+
+            // 2038年問題対策として DATETIME 型を採用
+            $table->dateTime('created_at')->nullable();
+            $table->dateTime('updated_at')->nullable();
+
+            $table->index('display_order');
+        });
+
+        Schema::create('timetable_lanes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
+            $table->foreignId('lane_id')->constrained('lanes')->restrictOnDelete();
             $table->foreignId('lead_staff_id')->nullable()->constrained('staff')->nullOnDelete();
             $table->unsignedInteger('display_order')->default(0);
-            $table->text('description')->nullable();
+            $table->text('notes')->nullable();
 
             // 2038年問題対策として DATETIME 型を採用
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
 
             $table->index(['timetable_id', 'display_order']);
-            $table->unique(['timetable_id', 'name']);
+            $table->unique(['timetable_id', 'lane_id']);
         });
 
-        Schema::create('lane_fixed_staff', function (Blueprint $table) {
+        Schema::create('timetable_lane_fixed_staff', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lane_id')->constrained('lanes')->cascadeOnDelete();
+            $table->foreignId('timetable_lane_id')->constrained('timetable_lanes')->cascadeOnDelete();
             $table->foreignId('staff_id')->constrained('staff')->cascadeOnDelete();
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
 
-            $table->unique(['lane_id', 'staff_id']);
+            $table->unique(['timetable_lane_id', 'staff_id']);
         });
     }
 
@@ -45,7 +59,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lane_fixed_staff');
+        Schema::dropIfExists('timetable_lane_fixed_staff');
+        Schema::dropIfExists('timetable_lanes');
         Schema::dropIfExists('lanes');
     }
 };

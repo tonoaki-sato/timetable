@@ -6,6 +6,7 @@ use App\Actions\Timetable\DownloadTimetableMatrixPdfAction;
 use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Services\PdfService;
@@ -55,15 +56,16 @@ class TimetableMatrixPdfDownloadTest extends TestCase
             'end_time' => '19:30:00',
         ]);
 
-        $lane = Lane::factory()->create([
+        $master = Lane::factory()->create(['name' => '衛生']);
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '衛生',
+            'lane_id' => $master->id,
             'display_order' => 10,
         ]);
 
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => 'ゴミ箱配置',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
@@ -91,21 +93,24 @@ class TimetableMatrixPdfDownloadTest extends TestCase
             'target_date' => '2026-10-11',
         ]);
 
-        $laneA = Lane::factory()->create([
+        $masterA = Lane::factory()->create(['name' => '衛生']);
+        $laneA = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '衛生',
+            'lane_id' => $masterA->id,
             'display_order' => 10,
         ]);
 
-        $laneB = Lane::factory()->create([
+        $masterB = Lane::factory()->create(['name' => 'カラーコーン']);
+        $laneB = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => 'カラーコーン',
+            'lane_id' => $masterB->id,
             'display_order' => 20,
         ]);
 
-        $laneC = Lane::factory()->create([
+        $masterC = Lane::factory()->create(['name' => '除外班テスト']);
+        $laneC = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '除外班テスト',
+            'lane_id' => $masterC->id,
             'display_order' => 30,
         ]);
 
@@ -179,9 +184,10 @@ class TimetableMatrixPdfDownloadTest extends TestCase
         ]);
 
         $leadStaff = Staff::factory()->create(['name' => '有江 喜一郎']);
-        $lane = Lane::factory()->create([
+        $master = Lane::factory()->create(['name' => '衛生']);
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '衛生',
+            'lane_id' => $master->id,
             'lead_staff_id' => $leadStaff->id,
             'display_order' => 10,
         ]);
@@ -189,7 +195,7 @@ class TimetableMatrixPdfDownloadTest extends TestCase
         // 7:30〜9:00 のタスク (3スロット分: 07:30開始, 08:00継続, 08:30継続)
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '事前準備',
             'start_time' => '07:30:00',
             'end_time' => '09:00:00',
@@ -229,17 +235,20 @@ class TimetableMatrixPdfDownloadTest extends TestCase
         ]);
 
         $leadStaff = Staff::factory()->create(['name' => 'Jouko Karvonen']);
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $master = Lane::factory()->create([
             'name' => 'カラーコーン',
             'icon' => '▲',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $master->id,
             'lead_staff_id' => $leadStaff->id,
             'display_order' => 10,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '全体ミーティング',
             'location' => '本陣',
             'start_time' => '07:00:00',
@@ -457,9 +466,10 @@ class TimetableMatrixPdfDownloadTest extends TestCase
         $lanes = [];
         $names = ['カラーコーン', '給水設備', '衛生', '巡回', 'キッズ村'];
         foreach ($names as $idx => $name) {
-            $lanes[] = Lane::factory()->create([
+            $master = Lane::factory()->create(['name' => $name]);
+            $lanes[] = TimetableLane::factory()->create([
                 'timetable_id' => $timetable->id,
-                'name' => $name,
+                'lane_id' => $master->id,
                 'display_order' => ($idx + 1) * 10,
             ]);
         }
@@ -467,7 +477,7 @@ class TimetableMatrixPdfDownloadTest extends TestCase
         // 11:00〜17:00（複数ページをまたぐ長時間タスク）
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lanes[1]->id, // 給水設備
+            'timetable_lane_id' => $lanes[1]->id, // 給水設備
             'title' => '定期巡回',
             'start_time' => '11:00:00',
             'end_time' => '17:00:00',
@@ -552,16 +562,17 @@ class TimetableMatrixPdfDownloadTest extends TestCase
             'end_time' => '11:00:00',
         ]);
 
-        $lane = Lane::factory()->create([
+        $master = Lane::factory()->create(['name' => 'カラーコーン']);
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => 'カラーコーン',
+            'lane_id' => $master->id,
             'display_order' => 10,
         ]);
 
         // 一部重複する並行タスク（09:00〜10:00 と 09:30〜10:30）
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '並行作業Alpha',
             'start_time' => '09:00:00',
             'end_time' => '10:00:00',
@@ -569,7 +580,7 @@ class TimetableMatrixPdfDownloadTest extends TestCase
         ]);
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '並行作業Beta',
             'start_time' => '09:30:00',
             'end_time' => '10:30:00',

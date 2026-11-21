@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lane;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -58,14 +59,17 @@ class TimetableShowViewTest extends TestCase
             ],
         ]);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => '警備班',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterLane->id,
         ]);
 
         TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '交差点誘導',
             'start_time' => '08:30:00',
             'end_time' => '12:00:00',

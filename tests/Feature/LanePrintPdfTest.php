@@ -6,6 +6,7 @@ use App\Actions\Lane\DownloadLanesPdfAction;
 use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Services\PdfService;
@@ -58,12 +59,15 @@ class LanePrintPdfTest extends TestCase
             'affiliation' => '青年会',
         ]);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => 'カラーコーン',
             'color' => 'amber',
-            'lead_staff_id' => $leadStaff->id,
             'description' => '路上規制バーおよびコーンの搬入・設置・撤去を担当',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
+            'lead_staff_id' => $leadStaff->id,
             'display_order' => 10,
         ]);
         $lane->fixedStaff()->attach([$leadStaff->id, $fixedStaff->id]);
@@ -104,28 +108,34 @@ class LanePrintPdfTest extends TestCase
             'affiliation' => '青年会',
         ]);
 
-        $lane1 = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $master1 = Lane::factory()->create([
             'name' => '本陣',
             'color' => 'indigo',
-            'lead_staff_id' => $leadStaff->id,
             'description' => "本部運営および総合案内\n緊急連絡・アナウンス対応\n来賓応接を含む全体統括",
+        ]);
+        $lane1 = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $master1->id,
+            'lead_staff_id' => $leadStaff->id,
             'display_order' => 10,
         ]);
         $lane1->fixedStaff()->attach([$leadStaff->id, $fixedStaff->id]);
 
-        $lane2 = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $master2 = Lane::factory()->create([
             'name' => '衛生',
             'color' => 'emerald',
-            'lead_staff_id' => null,
             'description' => '清掃',
+        ]);
+        $lane2 = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $master2->id,
+            'lead_staff_id' => null,
             'display_order' => 20,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane1->id,
+            'timetable_lane_id' => $lane1->id,
             'title' => '朝礼準備',
         ]);
         $task->assignments()->create([
@@ -302,16 +312,19 @@ class LanePrintPdfTest extends TestCase
         $leadStaff = Staff::factory()->create(['name' => '伊藤 班長']);
         $fixedStaff = Staff::factory()->create(['name' => '渡辺 固定']);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $master = Lane::factory()->create([
             'name' => '巡回',
-            'lead_staff_id' => $leadStaff->id,
             'description' => '会場警備・動線監視',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $master->id,
+            'lead_staff_id' => $leadStaff->id,
         ]);
         $lane->fixedStaff()->attach([$leadStaff->id, $fixedStaff->id]);
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '会場見回り',
         ]);
 

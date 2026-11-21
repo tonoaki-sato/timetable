@@ -46,12 +46,12 @@ class StoreCommonTimetableTaskRequest extends FormRequest
         return [
             '_form' => ['nullable', 'string', 'max:50'],
             'timetable_id' => ['required', 'integer', 'exists:timetables,id'],
-            'lane_ids' => ['required', 'array', 'min:1'],
-            'lane_ids.*' => [
+            'timetable_lane_ids' => ['required', 'array', 'min:1'],
+            'timetable_lane_ids.*' => [
                 'required',
                 'integer',
                 'distinct',
-                Rule::exists('lanes', 'id')->where('timetable_id', $timetableId),
+                Rule::exists('timetable_lanes', 'id')->where('timetable_id', $timetableId),
             ],
             'title' => ['required', 'string', 'max:255'],
             'start_time' => ['required', 'date_format:H:i'],
@@ -75,8 +75,8 @@ class StoreCommonTimetableTaskRequest extends FormRequest
     {
         return [
             'timetable_id' => '対象タイムテーブル',
-            'lane_ids' => '対象担当班',
-            'lane_ids.*' => '対象担当班',
+            'timetable_lane_ids' => '対象担当班',
+            'timetable_lane_ids.*' => '対象担当班',
             'title' => '作業タスク名',
             'start_time' => '開始時刻',
             'end_time' => '終了時刻',
@@ -98,9 +98,9 @@ class StoreCommonTimetableTaskRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'lane_ids.required' => '登録対象の担当班を1つ以上選択してください。',
-            'lane_ids.min' => '登録対象の担当班を1つ以上選択してください。',
-            'lane_ids.*.exists' => '選択された担当班の中に、この運行日に属さない班が含まれています。',
+            'timetable_lane_ids.required' => '登録対象の担当班を1つ以上選択してください。',
+            'timetable_lane_ids.min' => '登録対象の担当班を1つ以上選択してください。',
+            'timetable_lane_ids.*.exists' => '選択された担当班の中に、この運行日に属さない班が含まれています。',
         ];
     }
 
@@ -111,12 +111,12 @@ class StoreCommonTimetableTaskRequest extends FormRequest
     {
         $validated = $this->validated();
 
-        /** @var list<int> $laneIds */
-        $laneIds = array_values(array_map('intval', $validated['lane_ids']));
+        /** @var list<int> $timetableLaneIds */
+        $timetableLaneIds = array_values(array_map('intval', $validated['timetable_lane_ids']));
 
         return new CreateCommonTimetableTaskDTO(
             timetableId: (int) $validated['timetable_id'],
-            laneIds: $laneIds,
+            timetableLaneIds: $timetableLaneIds,
             title: (string) $validated['title'],
             startTime: (string) $validated['start_time'],
             endTime: (string) $validated['end_time'],

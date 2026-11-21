@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Lane;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\User;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use Carbon\Carbon;
@@ -137,7 +137,7 @@ class TimetableSelectorDefaultTest extends TestCase
             'status' => 'draft',
         ]);
 
-        Lane::factory()->create(['timetable_id' => $d2->id]);
+        TimetableLane::factory()->create(['timetable_id' => $d2->id]);
 
         // 現在日時を本祭1日目（2026-10-11 11:00:00）に固定
         Carbon::setTestNow('2026-10-11 11:00:00');
@@ -151,8 +151,8 @@ class TimetableSelectorDefaultTest extends TestCase
         $logisticsTimelineResponse = $this->get(route('logistics-timeline.index'));
         $logisticsTimelineResponse->assertRedirect(route('timetables.logistics-timeline', $d2));
 
-        // 3. /lanes
-        $lanesResponse = $this->get(route('lanes.index'));
+        // 3. /timetable-lanes
+        $lanesResponse = $this->get(route('timetable-lanes.index'));
         $lanesResponse->assertRedirect(route('timetables.lanes.index', $d2));
 
         // 4. /timetable-tasks

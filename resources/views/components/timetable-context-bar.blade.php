@@ -37,8 +37,8 @@
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'lanes' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>🏷️</span>
             <span>担当班</span>
-            @if(($timetable->lanes_count ?? 0) > 0)
-                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->lanes_count }})</span>
+            @if(($timetable->timetable_lanes_count ?? 0) > 0)
+                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->timetable_lanes_count }})</span>
             @endif
         </a>
         <a href="{{ route('timetables.tasks.index', $timetable) }}"

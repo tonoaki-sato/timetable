@@ -97,7 +97,7 @@ class TaskStaffAssignment extends Model
         if (! $task) {
             return false;
         }
-        $laneLeadStaff = $task->laneRelation?->leadStaff;
+        $laneLeadStaff = $task->timetableLane?->leadStaff;
 
         return ! empty($task->content)
             || ! empty($this->notes)

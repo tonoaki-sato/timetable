@@ -105,7 +105,7 @@
 
             <!-- 各班のチップ（ON/OFF トグル） -->
             <div class="flex flex-wrap items-center gap-1.5" id="lane-filter-chips">
-                @foreach($lanes as $lane)
+                @foreach($timetableLanes as $lane)
                 <button type="button"
                     id="chip-lane-{{ $lane->id }}"
                     data-lane-id="{{ $lane->id }}"
@@ -125,7 +125,7 @@
         <!-- 横スクロール補助ナビ -->
         <div class="flex items-center space-x-2 shrink-0">
             <span class="text-xs text-slate-500 font-mono" id="lane-count-indicator">
-                全 {{ $lanes->count() }} 班表示中
+                全 {{ $timetableLanes->count() }} 班表示中
             </span>
             <div class="inline-flex rounded-lg border border-slate-300 bg-white p-0.5">
                 <button type="button" data-scroll-grid="-250"
@@ -192,7 +192,7 @@
                     @endif
 
                     <!-- 5. 各担当班列ヘッダー -->
-                    @foreach($lanes as $lane)
+                    @foreach($timetableLanes as $lane)
                     <th scope="col"
                         data-lane-id="{{ $lane->id }}"
                         class="lane-col-{{ $lane->id }} border-r border-b-2 border-slate-800 bg-slate-100 p-2 font-bold min-w-[190px] w-[210px] print:min-w-[140px] print:w-auto print:border-black">
@@ -219,9 +219,9 @@
 
                     <!-- 6. ➕ クイックレーン追加ボタン列 -->
                     <th scope="col" class="print:hidden border-b-2 border-slate-800 bg-slate-50 p-2 text-center w-[60px] min-w-[60px]">
-                        @can('create', App\Models\Lane::class)
+                        @can('create', App\Models\TimetableLane::class)
                         <button type="button" data-action="open-lane-modal"
-                            title="新しい担当班を追加"
+                            title="編成する担当班を追加"
                             class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded text-xs font-bold transition cursor-pointer">
                             ➕
                         </button>
@@ -264,7 +264,7 @@
                     @endif
 
                     <!-- 5. 各担当班のセル -->
-                    @foreach($lanes as $lane)
+                    @foreach($timetableLanes as $lane)
                     @foreach([$grid[$sIdx][$lane->id] ?? ['type' => 'empty', 'rowspan' => 1]] as $cell)
                     @if($cell['type'] === 'task')
                     @php
@@ -417,38 +417,29 @@
                 @csrf
                 <input type="hidden" name="redirect_to" value="matrix">
 
-                <!-- レーン名 -->
-                <div>
-                    <label for="modal_lane_name" class="block text-xs font-bold text-slate-700 mb-1">
-                        担当班名（レーン名） <span class="text-red-600">*</span>
-                    </label>
-                    <input type="text" id="modal_lane_name" name="name" required
-                        placeholder="例: 会場放送班、美化清掃班、救護班"
-                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                @if($availableMasterLanes->isEmpty())
+                <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-2">
+                    <p class="font-bold">追加可能な有効担当班マスターがありません。</p>
+                    <p>すべての有効な担当班がこの運行日にすでに追加されているか、担当班マスターが未登録です。</p>
+                    <div>
+                        <a href="{{ route('lanes.index') }}" class="text-indigo-700 font-bold underline hover:text-indigo-900">
+                            🏷️ 担当班マスター管理へ →
+                        </a>
+                    </div>
                 </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <!-- テーマカラー -->
-                    <div>
-                        <label for="modal_lane_color" class="block text-xs font-bold text-slate-700 mb-1">
-                            カラー <span class="text-red-600">*</span>
-                        </label>
-                        <select id="modal_lane_color" name="color" required
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            @foreach($colorOptions as $val => $lbl)
-                            <option value="{{ $val }}" {{ $val === 'indigo' ? 'selected' : '' }}>{{ $lbl }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- アイコン -->
-                    <div>
-                        <label for="modal_lane_icon" class="block text-xs font-bold text-slate-700 mb-1">
-                            アイコン
-                        </label>
-                        <input type="text" id="modal_lane_icon" name="icon" value="📋"
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
+                @else
+                <!-- 担当班マスター選択 -->
+                <div>
+                    <label for="modal_lane_id" class="block text-xs font-bold text-slate-700 mb-1">
+                        追加する担当班（マスターから選択） <span class="text-red-600">*</span>
+                    </label>
+                    <select id="modal_lane_id" name="lane_id" required
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">-- 担当班を選択してください --</option>
+                        @foreach($availableMasterLanes as $master)
+                        <option value="{{ $master->id }}">{{ $master->icon_label }} {{ $master->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <!-- 主担当スタッフ（現場リーダー） -->
@@ -465,13 +456,24 @@
                     </select>
                 </div>
 
+                <!-- 当日運用メモ -->
+                <div>
+                    <label for="modal_lane_notes" class="block text-xs font-bold text-slate-700 mb-1">
+                        当日運用メモ（任意）
+                    </label>
+                    <textarea id="modal_lane_notes" name="notes" rows="2"
+                        placeholder="この運行日特有の連絡事項・注意点など"
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                @endif
+
                 <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
                     <button type="button" data-action="close-lane-modal"
                         class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
                         キャンセル
                     </button>
-                    <button type="submit"
-                        class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                    <button type="submit" {{ $availableMasterLanes->isEmpty() ? 'disabled' : '' }}
+                        class="px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition {{ $availableMasterLanes->isEmpty() ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer' }}">
                         担当班を追加して反映
                     </button>
                 </div>

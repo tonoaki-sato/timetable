@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Lane\DownloadLanesPdfAction;
-use App\Models\Lane;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use Illuminate\Http\Response;
 
 /**
@@ -21,7 +21,7 @@ class LanePrintController extends Controller
      */
     public function print(Timetable $timetable): Response
     {
-        $this->authorize('viewAny', Lane::class);
+        $this->authorize('viewAny', TimetableLane::class);
         $this->authorize('view', $timetable);
 
         return $this->downloadLanesPdfAction->execute($timetable);

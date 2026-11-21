@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Lane;
-use App\Models\Timetable;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,13 +18,19 @@ class LaneFactory extends Factory
     public function definition(): array
     {
         return [
-            'timetable_id' => Timetable::factory(),
-            'name' => fake()->unique()->word().'班',
+            'name' => fake()->unique()->word() . '班',
             'color' => fake()->randomElement(array_keys(Lane::COLOR_OPTIONS)),
             'icon' => fake()->randomElement(['🔺', '🚰', '🚻', '🚨', '🎈', '🏮', '🧺', '🏛️', '🧹', '🪧']),
-            'lead_staff_id' => null, // デフォルトは後付け可能な未設定
             'description' => fake()->sentence(),
             'display_order' => fake()->numberBetween(10, 100),
+            'is_active' => true,
         ];
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn(array $attributes): array => [
+            'is_active' => false,
+        ]);
     }
 }

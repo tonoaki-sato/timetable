@@ -6,6 +6,7 @@ use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Services\ConflictDetectionService;
@@ -20,7 +21,7 @@ class ConflictDetectionTest extends TestCase
 
     private Timetable $timetable;
 
-    private Lane $lane;
+    private TimetableLane $lane;
 
     private Staff $staff;
 
@@ -38,9 +39,12 @@ class ConflictDetectionTest extends TestCase
             'name' => 'まつり本番 1日目',
         ]);
 
-        $this->lane = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => '運行管理班',
+        ]);
+        $this->lane = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterLane->id,
         ]);
 
         $this->staff = Staff::factory()->create([
@@ -59,7 +63,7 @@ class ConflictDetectionTest extends TestCase
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '09:00:00',
             'end_time' => '11:00:00',
         ]);
@@ -88,7 +92,7 @@ class ConflictDetectionTest extends TestCase
         // 既存タスクA (09:00 - 11:00) にスタッフを配置
         $existingTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '本部テント設営',
             'start_time' => '09:00:00',
             'end_time' => '11:00:00',
@@ -102,7 +106,7 @@ class ConflictDetectionTest extends TestCase
         // 新規タスクB (10:00 - 12:00) に同じスタッフをアサイン試行
         $newTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '給水所巡回',
             'start_time' => '10:00:00',
             'end_time' => '12:00:00',
@@ -149,7 +153,7 @@ class ConflictDetectionTest extends TestCase
         // 既存タスク (09:00 - 11:00)
         $existingTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '09:00:00',
             'end_time' => '11:00:00',
         ]);
@@ -161,7 +165,7 @@ class ConflictDetectionTest extends TestCase
         // 重複する別タスク (10:00 - 12:00)
         $newTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '10:00:00',
             'end_time' => '12:00:00',
         ]);
@@ -191,7 +195,7 @@ class ConflictDetectionTest extends TestCase
         // タスクA (09:00 - 10:00)
         $taskA = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '09:00:00',
             'end_time' => '10:00:00',
         ]);
@@ -203,7 +207,7 @@ class ConflictDetectionTest extends TestCase
         // タスクB (10:00 - 11:00): 終了時刻と開始時刻が同一で重複なし
         $taskB = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
         ]);
@@ -231,12 +235,12 @@ class ConflictDetectionTest extends TestCase
             'target_date' => now()->addDay()->format('Y-m-d'),
             'name' => 'まつり本番 2日目',
         ]);
-        $otherLane = Lane::factory()->create(['timetable_id' => $otherTimetable->id]);
+        $otherLane = TimetableLane::factory()->create(['timetable_id' => $otherTimetable->id]);
 
         // 2日目のタスク (09:00 - 11:00) にアサイン
         $day2Task = TimetableTask::factory()->create([
             'timetable_id' => $otherTimetable->id,
-            'lane_id' => $otherLane->id,
+            'timetable_lane_id' => $otherLane->id,
             'start_time' => '09:00:00',
             'end_time' => '11:00:00',
         ]);
@@ -248,7 +252,7 @@ class ConflictDetectionTest extends TestCase
         // 1日目の同時刻タスク (09:00 - 11:00) にアサイン
         $day1Task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '09:00:00',
             'end_time' => '11:00:00',
         ]);
@@ -271,7 +275,7 @@ class ConflictDetectionTest extends TestCase
         // 既存タスク (09:00 - 11:00) だが欠席
         $taskA = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '09:00:00',
             'end_time' => '11:00:00',
         ]);
@@ -284,7 +288,7 @@ class ConflictDetectionTest extends TestCase
         // 新規タスク (10:00 - 12:00)
         $taskB = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '10:00:00',
             'end_time' => '12:00:00',
         ]);
@@ -307,7 +311,7 @@ class ConflictDetectionTest extends TestCase
         // 既存タスク (09:00 - 11:00)
         $taskA = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '神輿先導',
             'start_time' => '09:00:00',
             'end_time' => '11:00:00',
@@ -320,7 +324,7 @@ class ConflictDetectionTest extends TestCase
         // 詳細閲覧対象の重複タスク (10:00 - 12:00)
         $taskB = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '交通整理B',
             'start_time' => '10:00:00',
             'end_time' => '12:00:00',

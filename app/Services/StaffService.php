@@ -6,12 +6,12 @@ use App\DTOs\Staff\MyShiftLaneFilterOptionDTO;
 use App\DTOs\Staff\MyShiftTimetableOptionDTO;
 use App\DTOs\Staff\MyShiftViewDataDTO;
 use App\DTOs\Staff\StaffShowViewDataDTO;
-use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\Staff;
 use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Repositories\Contracts\LaneRequestRepositoryInterface;
 use App\Repositories\Contracts\StaffCheckInRepositoryInterface;
@@ -241,8 +241,8 @@ class StaffService
     public function getMyShiftViewData(Staff $staff, ?string $timetableFilter = null): MyShiftViewDataDTO
     {
         // マイシフト画面では運行完了（completed）の運行計画を非表示とする
-        $allLedLanes = $this->staffRepository->loadShiftRelationsAndGetLedLanes($staff)
-            ->filter(fn (Lane $lane): bool => $lane->timetable !== null && ! $lane->timetable->isCompleted())
+        $allLedLanes = $this->staffRepository->loadShiftRelationsAndGetLedTimetableLanes($staff)
+            ->filter(fn (TimetableLane $lane): bool => $lane->timetable !== null && ! $lane->timetable->isCompleted())
             ->values();
 
         $allAssignments = $staff->assignments
@@ -305,7 +305,7 @@ class StaffService
             : 0;
 
         $pendingLeaderRequestCount = (int) $ledLanes->sum(
-            fn (Lane $lane): int => $lane->laneRequests->where('status', 'pending')->count()
+            fn (TimetableLane $lane): int => $lane->laneRequests->where('status', 'pending')->count()
         );
 
         return new MyShiftViewDataDTO(
@@ -336,7 +336,7 @@ class StaffService
      * スタッフに関係する運行日（個人アサイン・班長担当）を重複排除して日付昇順に整理
      *
      * @param  SupportCollection<int, TaskStaffAssignment>  $assignments
-     * @param  SupportCollection<int, Lane>  $ledLanes
+     * @param  SupportCollection<int, TimetableLane>  $ledLanes
      * @return SupportCollection<int, Timetable>
      */
     protected function collectSortedTimetablesForShift(SupportCollection $assignments, SupportCollection $ledLanes): SupportCollection
@@ -411,7 +411,7 @@ class StaffService
      *
      * @param  SupportCollection<int, Timetable>  $timetables
      * @param  SupportCollection<int, TaskStaffAssignment>  $allAssignments
-     * @param  SupportCollection<int, Lane>  $allLedLanes
+     * @param  SupportCollection<int, TimetableLane>  $allLedLanes
      * @return SupportCollection<int, MyShiftTimetableOptionDTO>
      */
     protected function buildTimetableOptions(
@@ -428,7 +428,7 @@ class StaffService
             ->map->count();
 
         $ledLaneCounts = $allLedLanes
-            ->groupBy(fn (Lane $lane): int => (int) $lane->timetable_id)
+            ->groupBy(fn (TimetableLane $lane): int => (int) $lane->timetable_id)
             ->map->count();
 
         return $timetables->map(function (Timetable $timetable) use (
@@ -487,8 +487,8 @@ class StaffService
     }
 
     /**
-     * @param  SupportCollection<int, Lane>  $allLedLanes
-     * @return SupportCollection<int, Lane>
+     * @param  SupportCollection<int, TimetableLane>  $allLedLanes
+     * @return SupportCollection<int, TimetableLane>
      */
     protected function filterLedLanesByTimetable(
         SupportCollection $allLedLanes,
@@ -500,7 +500,7 @@ class StaffService
         }
 
         return $allLedLanes
-            ->filter(fn (Lane $lane): bool => (int) $lane->timetable_id === $activeTimetable->id)
+            ->filter(fn (TimetableLane $lane): bool => (int) $lane->timetable_id === $activeTimetable->id)
             ->values();
     }
 
@@ -515,7 +515,7 @@ class StaffService
         $laneMeta = [];
 
         foreach ($assignments as $assignment) {
-            $lane = $assignment->task?->laneRelation;
+            $lane = $assignment->task?->timetableLane;
             if (! $lane) {
                 continue;
             }
@@ -598,14 +598,14 @@ class StaffService
      *
      * @param  array<string, mixed>  $validated
      */
-    public function createLaneRequestFromLeader(Lane $lane, Staff $staff, array $validated): LaneRequest
+    public function createLaneRequestFromLeader(TimetableLane $timetableLane, Staff $staff, array $validated): LaneRequest
     {
-        $lane->loadMissing('timetable');
-        $this->ensureTimetableOperableOnMyShift($lane->timetable, '管理者への要請・申請');
+        $timetableLane->loadMissing('timetable');
+        $this->ensureTimetableOperableOnMyShift($timetableLane->timetable, '管理者への要請・申請');
 
         return $this->laneRequestRepository->create([
-            'timetable_id' => $lane->timetable_id,
-            'lane_id' => $lane->id,
+            'timetable_id' => $timetableLane->timetable_id,
+            'timetable_lane_id' => $timetableLane->id,
             'timetable_task_id' => $validated['timetable_task_id'] ?? null,
             'requested_by_staff_id' => $staff->id,
             'request_type' => $validated['request_type'],
@@ -716,9 +716,9 @@ class StaffService
      */
     public function isLeaderOfTask(Staff $staff, TimetableTask $task): bool
     {
-        $task->loadMissing('laneRelation');
+        $task->loadMissing('timetableLane');
 
-        return $task->laneRelation !== null
-            && (int) $task->laneRelation->lead_staff_id === (int) $staff->id;
+        return $task->timetableLane !== null
+            && (int) $task->timetableLane->lead_staff_id === (int) $staff->id;
     }
 }

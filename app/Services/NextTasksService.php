@@ -21,7 +21,8 @@ class NextTasksService
         $currentTime = $now->format('H:i:s');
 
         $timetable = Timetable::with([
-            'tasks.laneRelation.leadStaff',
+            'tasks.timetableLane.lane',
+            'tasks.timetableLane.leadStaff',
             'tasks.assignments',
         ])
             ->whereDate('target_date', $todayStr)

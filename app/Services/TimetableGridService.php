@@ -6,10 +6,12 @@ use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Repositories\Contracts\StaffCheckInRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
+use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use Carbon\Carbon;
@@ -19,6 +21,7 @@ class TimetableGridService
 {
     public function __construct(
         protected TimetableRepositoryInterface $timetableRepository,
+        protected TimetableLaneRepositoryInterface $timetableLaneRepository,
         protected LaneRepositoryInterface $laneRepository,
         protected TimetableTaskRepositoryInterface $taskRepository,
         protected StaffRepositoryInterface $staffRepository,
@@ -44,7 +47,8 @@ class TimetableGridService
         }
 
         $tasksByLane = [];
-        $lanes = collect();
+        $timetableLanes = collect();
+        $availableMasterLanes = collect();
         $totalRequired = 0;
         $totalAssigned = 0;
         $satisfiedTasksCount = 0;
@@ -52,7 +56,8 @@ class TimetableGridService
         $shortageTasks = collect();
 
         if ($selectedTimetable !== null) {
-            $lanes = $this->laneRepository->getOrderedWithLeadForTimetable($selectedTimetable);
+            $timetableLanes = $this->timetableLaneRepository->getOrderedWithLeadForTimetable($selectedTimetable);
+            $availableMasterLanes = $this->laneRepository->getAvailableForTimetable($selectedTimetable);
             $tasks = $this->taskRepository->getWithAssignmentsAndLaneByTimetableId($selectedTimetable->id);
 
             $tasksCount = $tasks->count();
@@ -61,15 +66,15 @@ class TimetableGridService
             $totalRequired = $tasks->sum('required_people_count');
             $totalAssigned = $tasks->sum(fn (TimetableTask $t): int => $t->assigned_count);
 
-            foreach ($lanes as $lane) {
-                $tasksByLane[$lane->id] = $tasks->filter(function (TimetableTask $t) use ($lane): bool {
-                    return $t->lane_id === $lane->id;
+            foreach ($timetableLanes as $timetableLane) {
+                $tasksByLane[$timetableLane->id] = $tasks->filter(function (TimetableTask $t) use ($timetableLane): bool {
+                    return $t->timetable_lane_id === $timetableLane->id;
                 })->values();
             }
         }
 
         $timeSlots = $this->generateTimeSlots($selectedTimetable);
-        $grid = $this->buildMatrixGrid($timeSlots, $lanes, $tasksByLane);
+        $grid = $this->buildMatrixGrid($timeSlots, $timetableLanes, $tasksByLane);
         $nowTime = Carbon::now('Asia/Tokyo')->format('H:i');
         $activeStaff = $this->staffRepository->getActiveOrderedByAffiliation();
 
@@ -78,7 +83,8 @@ class TimetableGridService
             'selectedTimetable' => $selectedTimetable,
             'hasRoad' => $selectedTimetable !== null && $selectedTimetable->hasRoadPeriods(),
             'hasFestival' => $selectedTimetable !== null && $selectedTimetable->hasFestivalPeriods(),
-            'lanes' => $lanes,
+            'timetableLanes' => $timetableLanes,
+            'availableMasterLanes' => $availableMasterLanes,
             'tasksByLane' => $tasksByLane,
             'timeSlots' => $timeSlots,
             'grid' => $grid,
@@ -136,7 +142,7 @@ class TimetableGridService
             return [
                 'id' => $t->id,
                 'title' => $t->title,
-                'lane' => $t->lane ?: ($t->laneRelation?->name ?? '担当班未設定'),
+                'lane' => $t->lane_name_label,
                 'start_time' => substr($t->start_time, 0, 5),
                 'end_time' => substr($t->end_time, 0, 5),
                 'shortage_count' => $t->shortage_count,
@@ -144,7 +150,7 @@ class TimetableGridService
             ];
         })->values();
 
-        $leadLanes = $this->laneRepository->getLeadLanesForTimetable($timetable);
+        $leadLanes = $this->timetableLaneRepository->getLeadTimetableLanesForTimetable($timetable);
         $leadStaffIds = $leadLanes->pluck('lead_staff_id')->map(fn ($id): int => (int) $id)->unique()->values()->all();
         $laneNamesByLeadStaff = $leadLanes->groupBy('lead_staff_id')
             ->map(fn ($lanes): string => $lanes->pluck('name')->join('・'))
@@ -310,7 +316,7 @@ class TimetableGridService
      * スロット × レーンのセル情報（タスク・並行タスククラスタ、空枠、rowspan縦結合）を算出
      *
      * @param  array<int, array<string, mixed>>  $timeSlots
-     * @param  Collection<int, Lane>  $lanes
+     * @param  Collection<int, TimetableLane>  $lanes
      * @param  array<int, Collection<int, TimetableTask>>  $tasksByLane
      * @return array<int, array<int, array{
      *     type: string,
@@ -399,7 +405,7 @@ class TimetableGridService
      * 全行・全列に必ずセルを出力し、継続タスク・並行タスククラスタは task_continue として表現
      *
      * @param  array<int, array<string, mixed>>  $timeSlots
-     * @param  Collection<int, Lane>  $lanes
+     * @param  Collection<int, TimetableLane>  $lanes
      * @param  array<int, Collection<int, TimetableTask>>  $tasksByLane
      * @return array<int, array<int, array{
      *     type: string,
@@ -547,7 +553,7 @@ class TimetableGridService
 
                     $coveredUntil = $sIdx + $span - 1;
 
-                    $laneRel = $task->laneRelation;
+                    $laneRel = $task->timetableLane;
                     $badgeBg = match ($laneRel?->color ?? 'indigo') {
                         'amber' => 'bg-amber-100 border-amber-300 text-amber-900',
                         'sky' => 'bg-sky-100 border-sky-300 text-sky-900',

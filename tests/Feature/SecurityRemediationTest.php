@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -102,15 +102,15 @@ class SecurityRemediationTest extends TestCase
         $this->actingAs($operator);
 
         $timetable = Timetable::factory()->create();
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id]);
+        $lane = TimetableLane::factory()->create(['timetable_id' => $timetable->id]);
 
         $taskA = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
         ]);
         $taskB = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
         ]);
 
         $staff = Staff::factory()->create();

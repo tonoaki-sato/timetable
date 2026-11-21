@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Contracts;
 
-use App\Models\Lane;
 use App\Models\TaskStaffAssignment;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -76,17 +76,17 @@ interface TimetableTaskRepositoryInterface
     /**
      * 指定レーンに紐づくタスク件数を取得
      */
-    public function countByLane(Lane $lane): int;
+    public function countByTimetableLane(TimetableLane $timetableLane): int;
 
     /**
      * 指定レーンの全タスクを別レーンへ一括移行
      */
-    public function migrateLaneTasks(Lane $sourceLane, Lane $targetLane): int;
+    public function migrateTimetableLaneTasks(TimetableLane $sourceTimetableLane, TimetableLane $targetTimetableLane): int;
 
     /**
      * 指定レーンに紐づく全タスクを削除
      */
-    public function deleteByLane(Lane $lane): int;
+    public function deleteByTimetableLane(TimetableLane $timetableLane): int;
 
     /**
      * 新規タスク作成

@@ -40,7 +40,7 @@
             <span>運行作業タスク一覧 (班別時系列)</span>
         </h2>
 
-        @if($lanes->isNotEmpty())
+        @if($timetableLanes->isNotEmpty())
         <div class="flex items-center gap-2 shrink-0">
             @can('create', \App\Models\TimetableTask::class)
             <button type="button"
@@ -65,7 +65,7 @@
 
     <!-- 班別アコーディオン一覧 -->
     <div id="lane-task-accordions" class="space-y-3">
-        @forelse($lanes as $lane)
+        @forelse($timetableLanes as $lane)
         <details id="lane-{{ $lane->id }}" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group" {{ $lane->tasks->isNotEmpty() ? 'open' : '' }}>
             <summary class="px-3.5 sm:px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 sm:gap-3 cursor-pointer hover:bg-slate-100/70 transition select-none">
                 <div class="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
@@ -238,7 +238,7 @@
     <x-timetable-tasks.detail-modal />
     <x-timetable-tasks.create-modal :timetable="$timetable" :statuses="$statuses" />
     @can('create', \App\Models\TimetableTask::class)
-    <x-timetable-tasks.common-create-modal :timetable="$timetable" :lanes="$lanes" :statuses="$statuses" />
+    <x-timetable-tasks.common-create-modal :timetable="$timetable" :timetable-lanes="$timetableLanes" :statuses="$statuses" />
     @endcan
     <x-timetable-tasks.edit-modal :statuses="$statuses" />
 

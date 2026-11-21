@@ -6,9 +6,11 @@ use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class LaneManagementTest extends TestCase
@@ -42,15 +44,15 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 1. タイムテーブル作成時、初期状態ではレーンは自動生成されず0件であること
+     * 1. タイムテーブル作成時、初期状態では担当班編成は自動生成されず0件であること
      */
     public function test_new_timetable_has_zero_lanes_initially(): void
     {
-        $this->assertCount(0, $this->timetable->lanes()->get());
+        $this->assertCount(0, $this->timetable->timetableLanes()->get());
     }
 
     /**
-     * テスト用のサンプルレーンを一括生成するヘルパー
+     * テスト用のサンプル担当班マスター＋日別編成を一括生成するヘルパー
      */
     private function createSampleLanes(Timetable $timetable): void
     {
@@ -68,12 +70,20 @@ class LaneManagementTest extends TestCase
         ];
 
         foreach ($sampleLanes as $laneData) {
-            Lane::factory()->create([
+            $master = Lane::firstOrCreate(
+                ['name' => $laneData['name']],
+                [
+                    'icon' => $laneData['icon'],
+                    'color' => $laneData['color'],
+                    'description' => $laneData['description'],
+                    'display_order' => $laneData['display_order'],
+                    'is_active' => true,
+                ]
+            );
+
+            TimetableLane::factory()->create([
                 'timetable_id' => $timetable->id,
-                'name' => $laneData['name'],
-                'icon' => $laneData['icon'],
-                'color' => $laneData['color'],
-                'description' => $laneData['description'],
+                'lane_id' => $master->id,
                 'display_order' => $laneData['display_order'],
                 'lead_staff_id' => null,
             ]);
@@ -81,7 +91,7 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 2. レーン管理一覧画面の表示
+     * 2. 日別担当班編成一覧画面の表示とモーダルDOM・Viteスクリプト検証
      */
     public function test_admin_and_operator_can_view_lanes_index(): void
     {
@@ -91,95 +101,148 @@ class LaneManagementTest extends TestCase
             ->get(route('timetables.lanes.index', $this->timetable));
 
         $response->assertStatus(200);
-        $response->assertSee($this->timetable->name.' 担当班一覧');
-        $response->assertSee('運行情報一覧');
+        $response->assertSee($this->timetable->name.' の編成済み担当班');
+        $response->assertSee('運行日程管理');
         $response->assertSee(route('timetables.index'));
         $response->assertSee(route('timetables.show', $this->timetable));
         $response->assertSee('担当班編成');
         $response->assertSee(route('lanes.index'));
+        $response->assertSee('担当班マスター管理');
+        $response->assertSee('担当班一覧PDF');
         $response->assertDontSee('他日程からコピー');
-        $response->assertDontSee('運行マトリクスを見る');
         $response->assertDontSee('copy-lane-modal');
         $response->assertDontSee('日程選択へ戻る');
         $response->assertSee('カラーコーン');
         $response->assertSee('ステカン');
-        $response->assertSee('lanes-container');
+        $response->assertSee('timetable-lanes-sortable-body');
         $response->assertSee('⋮⋮');
         $response->assertSee('班名');
         $response->assertSee('バッジ');
         $response->assertSee('班長名');
-        $response->assertSee('役割概要');
+        $response->assertSee('固定人数・メモ');
         $response->assertSee('操作');
-        $response->assertSee('delete-migration-modal');
+        $response->assertSee('id="modal-tlane-detail"', false);
+        $response->assertSee('id="modal-tlane-add"', false);
+        $response->assertSee('id="modal-tlane-edit"', false);
+        $response->assertSee('id="delete-migration-modal"', false);
+        $response->assertSee('id="btn-open-tlane-add"', false);
         $response->assertSee(route('timetables.tasks.index', $this->timetable));
-        $response->assertSee('タスク管理へ進む (Step 3へ)');
+        $response->assertSee('作業タスク管理へ進む');
+
+        $html = $response->getContent();
+        $this->assertTrue(
+            str_contains($html, 'timetable-lanes.js') || str_contains($html, 'timetable-lanes-'),
+            'timetable-lanes script asset should be loaded'
+        );
     }
 
     /**
-     * 3. 主担当が未設定のままでも新規レーンを追加できること
+     * 3. 主担当が未設定のままでもマスターから日別編成を追加できること
      */
     public function test_can_create_new_lane_without_lead_staff(): void
     {
+        $master = Lane::factory()->create([
+            'name' => '音響・PA班',
+            'color' => 'indigo',
+            'icon' => '🎤',
+            'description' => 'ステージ音響設備の設置・マイク管理',
+        ]);
+
         $response = $this->actingAs($this->adminUser)
             ->post(route('timetables.lanes.store', $this->timetable), [
-                'name' => '音響・PA班',
-                'color' => 'indigo',
-                'icon' => '🎤',
+                'lane_id' => $master->id,
                 'lead_staff_id' => null,
-                'description' => 'ステージ音響設備の設置・マイク管理',
-                'display_order' => 110,
+                'notes' => '朝7時にステージ裏集合',
             ]);
 
         $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
-        $this->assertDatabaseHas('lanes', [
+        $this->assertDatabaseHas('timetable_lanes', [
             'timetable_id' => $this->timetable->id,
-            'name' => '音響・PA班',
+            'lane_id' => $master->id,
             'lead_staff_id' => null,
-            'color' => 'indigo',
+            'notes' => '朝7時にステージ裏集合',
         ]);
     }
 
     /**
-     * 3b. 新規レーン作成時に班長および固定スタッフを指定して同時に登録できること
+     * 3b. 新規担当班編成時に班長および固定スタッフを指定して同時に登録できること
      */
     public function test_can_create_lane_with_lead_and_fixed_staff(): void
     {
+        $master = Lane::factory()->create([
+            'name' => '警備・巡回特務班',
+            'color' => 'purple',
+            'icon' => '🚨',
+            'description' => '会場外周の警備と迷子対応',
+        ]);
         $lead = Staff::factory()->create(['name' => '班長リーダー', 'is_active' => true]);
         $fixedStaff1 = Staff::factory()->create(['name' => '固定スタッフA', 'is_active' => true]);
         $fixedStaff2 = Staff::factory()->create(['name' => '固定スタッフB', 'is_active' => true]);
 
         $response = $this->actingAs($this->adminUser)
             ->post(route('timetables.lanes.store', $this->timetable), [
-                'name' => '警備・巡回特務班',
-                'color' => 'purple',
-                'icon' => '🚨',
+                'lane_id' => $master->id,
                 'lead_staff_id' => $lead->id,
                 'fixed_staff_ids' => [$fixedStaff1->id, $fixedStaff2->id],
-                'description' => '会場外周の警備と迷子対応',
             ]);
 
         $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
 
-        $lane = Lane::where('name', '警備・巡回特務班')->firstOrFail();
-        $this->assertSame($lead->id, (int) $lane->lead_staff_id);
+        $timetableLane = TimetableLane::where('timetable_id', $this->timetable->id)
+            ->where('lane_id', $master->id)
+            ->firstOrFail();
+        $this->assertSame($lead->id, (int) $timetableLane->lead_staff_id);
 
-        $this->assertDatabaseHas('lane_fixed_staff', [
-            'lane_id' => $lane->id,
+        $this->assertDatabaseHas('timetable_lane_fixed_staff', [
+            'timetable_lane_id' => $timetableLane->id,
             'staff_id' => $fixedStaff1->id,
         ]);
-        $this->assertDatabaseHas('lane_fixed_staff', [
-            'lane_id' => $lane->id,
+        $this->assertDatabaseHas('timetable_lane_fixed_staff', [
+            'timetable_lane_id' => $timetableLane->id,
             'staff_id' => $fixedStaff2->id,
         ]);
     }
 
     /**
-     * 4. 既存レーンに主担当スタッフを後付け設定・更新できること
+     * 3c. マスターから複数担当班の一括追加ができ、同一運行日への重複登録は拒否されること
+     */
+    public function test_can_bulk_store_from_masters_and_rejects_duplicate_assignment_in_same_timetable(): void
+    {
+        $master1 = Lane::factory()->create(['name' => '救護待機班', 'display_order' => 10]);
+        $master2 = Lane::factory()->create(['name' => '広報記録班', 'display_order' => 20]);
+
+        $bulkRes = $this->actingAs($this->adminUser)
+            ->post(route('timetables.lanes.bulk-store', $this->timetable), [
+                'lane_ids' => [$master1->id, $master2->id],
+            ]);
+
+        $bulkRes->assertRedirect(route('timetables.lanes.index', $this->timetable));
+        $this->assertDatabaseHas('timetable_lanes', [
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $master1->id,
+        ]);
+        $this->assertDatabaseHas('timetable_lanes', [
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $master2->id,
+        ]);
+
+        // 同じ運行日へ同じマスターを単一追加しようとするとバリデーションエラー
+        $dupRes = $this->actingAs($this->adminUser)
+            ->postJson(route('timetables.lanes.store', $this->timetable), [
+                'lane_id' => $master1->id,
+            ]);
+        $dupRes->assertStatus(422)->assertJsonValidationErrors(['lane_id']);
+    }
+
+    /**
+     * 4. 既存の日別編成に主担当スタッフを後付け設定・更新できること
      */
     public function test_can_update_lane_and_assign_lead_staff(): void
     {
         $this->createSampleLanes($this->timetable);
-        $lane = $this->timetable->lanes()->where('name', 'カラーコーン')->firstOrFail();
+        $lane = $this->timetable->timetableLanes()
+            ->whereHas('lane', fn ($q) => $q->where('name', 'カラーコーン'))
+            ->firstOrFail();
 
         $staff = Staff::factory()->create([
             'name' => '佐藤 友秋',
@@ -189,32 +252,31 @@ class LaneManagementTest extends TestCase
 
         $response = $this->actingAs($this->operatorUser)
             ->put(route('timetables.lanes.update', [$this->timetable, $lane]), [
-                'name' => 'カラーコーン',
-                'color' => 'amber',
-                'icon' => '🔺',
                 'lead_staff_id' => $staff->id,
-                'description' => '規制機材の設置と安全確保',
-                'display_order' => 10,
+                'notes' => '8時前に本陣前でコーン積込',
             ]);
 
         $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
 
         $lane->refresh();
         $this->assertSame($staff->id, $lane->lead_staff_id);
+        $this->assertSame('8時前に本陣前でコーン積込', $lane->notes);
         $this->assertTrue($lane->hasLead());
         $this->assertSame('佐藤 友秋', $lane->leadStaff->name);
 
         // Staff 側からのリレーションも確認
-        $this->assertTrue($staff->ledLanes->contains($lane));
+        $this->assertTrue($staff->ledTimetableLanes->contains($lane));
     }
 
     /**
-     * 5. 班長をレーン更新から設定・解除でき、一覧画面に班長名が表示されること
+     * 5. 班長を更新から設定・解除でき、一覧画面に班長名が表示されること
      */
     public function test_can_update_lead_staff(): void
     {
         $this->createSampleLanes($this->timetable);
-        $lane = $this->timetable->lanes()->where('name', '衛生')->firstOrFail();
+        $lane = $this->timetable->timetableLanes()
+            ->whereHas('lane', fn ($q) => $q->where('name', '衛生'))
+            ->firstOrFail();
 
         $staff = Staff::factory()->create([
             'name' => '山田 太郎',
@@ -224,9 +286,6 @@ class LaneManagementTest extends TestCase
         // 1. 割り当て
         $response = $this->actingAs($this->operatorUser)
             ->put(route('timetables.lanes.update', [$this->timetable, $lane]), [
-                'name' => $lane->name,
-                'color' => $lane->color,
-                'display_order' => $lane->display_order,
                 'lead_staff_id' => $staff->id,
             ]);
 
@@ -235,7 +294,7 @@ class LaneManagementTest extends TestCase
         $this->assertSame($staff->id, $lane->lead_staff_id);
         $this->assertTrue($lane->fixedStaff->contains($staff));
 
-        // レーン一覧のHTMLでも班長名「👑 山田 太郎」が表示されていること
+        // 編成一覧のHTMLでも班長名「👑」「山田 太郎」が表示されていること
         $viewResponse = $this->actingAs($this->operatorUser)
             ->get(route('timetables.lanes.index', $this->timetable));
         $viewResponse->assertStatus(200);
@@ -245,9 +304,6 @@ class LaneManagementTest extends TestCase
         // 2. 解除 (null)
         $response = $this->actingAs($this->operatorUser)
             ->put(route('timetables.lanes.update', [$this->timetable, $lane]), [
-                'name' => $lane->name,
-                'color' => $lane->color,
-                'display_order' => $lane->display_order,
                 'lead_staff_id' => null,
             ]);
 
@@ -255,7 +311,7 @@ class LaneManagementTest extends TestCase
         $lane->refresh();
         $this->assertNull($lane->lead_staff_id);
 
-        // レーン一覧で未設定と表示されること
+        // 編成一覧で未設定と表示されること
         $viewResponse = $this->actingAs($this->operatorUser)
             ->get(route('timetables.lanes.index', $this->timetable));
         $viewResponse->assertStatus(200);
@@ -263,17 +319,19 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 6. タスクが紐づいているレーンは削除できずブロックされること
+     * 6. タスクが紐づいている編成は戦略未指定だと削除できずブロックされること
      */
     public function test_cannot_delete_lane_with_tasks(): void
     {
         $this->createSampleLanes($this->timetable);
-        $lane = $this->timetable->lanes()->where('name', 'カラーコーン')->firstOrFail();
+        $lane = $this->timetable->timetableLanes()
+            ->whereHas('lane', fn ($q) => $q->where('name', 'カラーコーン'))
+            ->firstOrFail();
 
         // タスクを作成
         TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '規制コーン本設置',
         ]);
 
@@ -281,31 +339,37 @@ class LaneManagementTest extends TestCase
             ->delete(route('timetables.lanes.destroy', [$this->timetable, $lane]));
 
         $response->assertSessionHas('error');
-        $this->assertDatabaseHas('lanes', ['id' => $lane->id]);
+        $this->assertDatabaseHas('timetable_lanes', ['id' => $lane->id]);
     }
 
     /**
-     * 7. タスクが0件のレーンは安全に削除できること
+     * 7. タスクが0件の編成は安全に解除でき、親マスター自体は削除されないこと
      */
     public function test_can_delete_lane_without_tasks(): void
     {
         $this->createSampleLanes($this->timetable);
-        $lane = $this->timetable->lanes()->where('name', 'ステカン')->firstOrFail();
+        $lane = $this->timetable->timetableLanes()
+            ->whereHas('lane', fn ($q) => $q->where('name', 'ステカン'))
+            ->firstOrFail();
+        $masterLaneId = $lane->lane_id;
 
         $response = $this->actingAs($this->adminUser)
             ->delete(route('timetables.lanes.destroy', [$this->timetable, $lane]));
 
         $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
-        $this->assertDatabaseMissing('lanes', ['id' => $lane->id]);
+        $this->assertDatabaseMissing('timetable_lanes', ['id' => $lane->id]);
+        $this->assertDatabaseHas('lanes', ['id' => $masterLaneId]);
     }
 
     /**
-     * 8. レーン単位でタスクを作成した際、主担当が自動アサインされること
+     * 8. 日別編成単位でタスクを作成した際、主担当が自動アサインされること
      */
     public function test_task_creation_with_lane_and_auto_assign_lead(): void
     {
         $this->createSampleLanes($this->timetable);
-        $lane = $this->timetable->lanes()->where('name', '給水設備')->firstOrFail();
+        $lane = $this->timetable->timetableLanes()
+            ->whereHas('lane', fn ($q) => $q->where('name', '給水設備'))
+            ->firstOrFail();
 
         $leadStaff = Staff::factory()->create([
             'name' => '宮永 健一',
@@ -315,7 +379,7 @@ class LaneManagementTest extends TestCase
 
         $taskData = [
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '足踏み式給水設備 設置点検',
             'location' => '番所前',
             'start_time' => '10:00',
@@ -333,8 +397,8 @@ class LaneManagementTest extends TestCase
         $response->assertRedirect(route('timetables.tasks.index', $this->timetable));
 
         $task = TimetableTask::where('title', '足踏み式給水設備 設置点検')->firstOrFail();
-        $this->assertSame($lane->id, $task->lane_id);
-        $this->assertSame('給水設備', $task->lane);
+        $this->assertSame($lane->id, $task->timetable_lane_id);
+        $this->assertSame('給水設備', $task->lane_name_label);
 
         // 主担当スタッフが班リーダーとして自動アサインされていること
         $assignment = TaskStaffAssignment::where('timetable_task_id', $task->id)
@@ -347,12 +411,14 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 8b. レーンに主担当が決まっている場合、auto_assign_lead パラメータを省略してもデフォルトでタスクにアサインされること
+     * 8b. 編成に主担当が決まっている場合、auto_assign_lead パラメータを省略してもデフォルトでタスクにアサインされること
      */
     public function test_task_creation_auto_assigns_lead_staff_by_default_when_param_omitted(): void
     {
         $this->createSampleLanes($this->timetable);
-        $lane = $this->timetable->lanes()->where('name', 'カラーコーン')->firstOrFail();
+        $lane = $this->timetable->timetableLanes()
+            ->whereHas('lane', fn ($q) => $q->where('name', 'カラーコーン'))
+            ->firstOrFail();
 
         $leadStaff = Staff::factory()->create([
             'name' => 'デフォルト主担当 太郎',
@@ -364,7 +430,7 @@ class LaneManagementTest extends TestCase
         $response = $this->actingAs($this->adminUser)
             ->post(route('timetable-tasks.store'), [
                 'timetable_id' => $this->timetable->id,
-                'lane_id' => $lane->id,
+                'timetable_lane_id' => $lane->id,
                 'title' => 'コーン設置タスク（デフォルトアサイン確認）',
                 'start_time' => '08:00',
                 'end_time' => '09:00',
@@ -385,23 +451,25 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 8c. 既存タスクがあるレーンに後から主担当を設定・変更した際、既存タスクにも主担当が自動アサイン（同期）されること
+     * 8c. 既存タスクがある編成に後から主担当を設定・変更した際、既存タスクにも主担当が自動アサイン（同期）されること
      */
     public function test_updating_lane_lead_staff_syncs_to_existing_tasks(): void
     {
         $this->createSampleLanes($this->timetable);
-        $lane = $this->timetable->lanes()->where('name', '衛生')->firstOrFail();
+        $lane = $this->timetable->timetableLanes()
+            ->whereHas('lane', fn ($q) => $q->where('name', '衛生'))
+            ->firstOrFail();
 
         // 主担当未設定の状態でタスクを2件作成
         $task1 = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '衛生タスク1',
             'status' => 'not_started',
         ]);
         $task2 = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '衛生タスク2',
             'status' => 'not_started',
         ]);
@@ -412,9 +480,6 @@ class LaneManagementTest extends TestCase
         // 1. 後付けで初代リーダーを設定 -> 既存2タスクに自動アサインされること
         $this->actingAs($this->operatorUser)
             ->put(route('timetables.lanes.update', [$this->timetable, $lane]), [
-                'name' => $lane->name,
-                'color' => $lane->color,
-                'display_order' => $lane->display_order,
                 'lead_staff_id' => $firstLead->id,
             ])
             ->assertSessionHas('success');
@@ -435,9 +500,6 @@ class LaneManagementTest extends TestCase
         // 2. 二代目リーダーに変更 -> 班長が二代目へ引き継がれること
         $this->actingAs($this->operatorUser)
             ->put(route('timetables.lanes.update', [$this->timetable, $lane]), [
-                'name' => $lane->name,
-                'color' => $lane->color,
-                'display_order' => $lane->display_order,
                 'lead_staff_id' => $secondLead->id,
             ])
             ->assertSessionHas('success');
@@ -454,13 +516,13 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 9. デフォルト10レーンが正しい名前・色・表示順で生成されること
+     * 9. 10班編成が正しい名前・順で生成されること
      */
     public function test_default_ten_lanes_are_created_properly(): void
     {
         $this->createSampleLanes($this->timetable);
 
-        $this->assertCount(10, $this->timetable->lanes);
+        $this->assertCount(10, $this->timetable->timetableLanes);
 
         $expectedNames = [
             'カラーコーン', '給水設備', '衛生', '巡回', 'キッズ村',
@@ -468,83 +530,91 @@ class LaneManagementTest extends TestCase
         ];
 
         foreach ($expectedNames as $name) {
-            $lane = $this->timetable->lanes()->where('name', $name)->first();
-            $this->assertNotNull($lane, "Lane {$name} should exist");
+            $lane = $this->timetable->timetableLanes()
+                ->whereHas('lane', fn ($q) => $q->where('name', $name))
+                ->first();
+            $this->assertNotNull($lane, "TimetableLane {$name} should exist");
         }
     }
 
     /**
-     * 10. ドラッグ＆ドロップでレーン表示順を一括更新できること
+     * 10. ドラッグ＆ドロップで日別編成の表示順を一括更新できること
      */
     public function test_can_reorder_lanes(): void
     {
         $this->createSampleLanes($this->timetable);
-        $lanes = $this->timetable->lanes()->ordered()->get();
+        $lanes = $this->timetable->timetableLanes()->ordered()->get();
 
         // 逆順の ID 配列を用意
         $reversedIds = $lanes->pluck('id')->reverse()->values()->all();
 
         $response = $this->actingAs($this->adminUser)
             ->postJson(route('timetables.lanes.reorder', $this->timetable), [
-                'lane_ids' => $reversedIds,
+                'timetable_lane_ids' => $reversedIds,
             ]);
 
         $response->assertStatus(200);
         $response->assertJson(['success' => true]);
 
         // DB 上で display_order が更新されていること
-        $reorderedLanes = $this->timetable->lanes()->ordered()->get();
+        $reorderedLanes = $this->timetable->timetableLanes()->ordered()->get();
         $this->assertSame($reversedIds, $reorderedLanes->pluck('id')->all());
         $this->assertSame(10, $reorderedLanes->first()->display_order);
         $this->assertSame(100, $reorderedLanes->last()->display_order);
     }
 
     /**
-     * 12. タスクが存在するレーンを別レーンにタスク移管して安全に削除できること
+     * 12. タスクが存在する編成を別の編成にタスク移管して安全に解除できること
      */
     public function test_can_delete_lane_with_task_migration(): void
     {
         $this->createSampleLanes($this->timetable);
-        $sourceLane = $this->timetable->lanes()->where('name', 'ステカン')->firstOrFail();
-        $targetLane = $this->timetable->lanes()->where('name', '道路清掃')->firstOrFail();
+        $sourceLane = $this->timetable->timetableLanes()
+            ->whereHas('lane', fn ($q) => $q->where('name', 'ステカン'))
+            ->firstOrFail();
+        $targetLane = $this->timetable->timetableLanes()
+            ->whereHas('lane', fn ($q) => $q->where('name', '道路清掃'))
+            ->firstOrFail();
 
         // ステカンにタスクを作成
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $sourceLane->id,
+            'timetable_lane_id' => $sourceLane->id,
             'title' => 'ステカン撤去作業',
         ]);
 
-        $this->assertSame($sourceLane->id, $task->lane_id);
+        $this->assertSame($sourceLane->id, $task->timetable_lane_id);
 
-        // 移管先を指定して削除
+        // 移管先を指定して解除
         $response = $this->actingAs($this->adminUser)
             ->delete(route('timetables.lanes.destroy', [$this->timetable, $sourceLane]), [
-                'migrate_to_lane_id' => $targetLane->id,
+                'migrate_to_timetable_lane_id' => $targetLane->id,
             ]);
 
         $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
         $response->assertSessionHas('success');
 
-        // ソースレーンは削除されていること
-        $this->assertDatabaseMissing('lanes', ['id' => $sourceLane->id]);
+        // ソース編成は解除されていること
+        $this->assertDatabaseMissing('timetable_lanes', ['id' => $sourceLane->id]);
 
-        // タスクはターゲットレーンに引き継がれていること
+        // タスクはターゲット編成に引き継がれていること
         $task->refresh();
-        $this->assertSame($targetLane->id, $task->lane_id);
+        $this->assertSame($targetLane->id, $task->timetable_lane_id);
     }
 
     /**
-     * 13. タスクが存在するレーンをタスクごと一括強制削除できること
+     * 13. タスクが存在する編成をタスクごと一括強制削除できること
      */
     public function test_can_delete_lane_with_cascade_tasks(): void
     {
         $this->createSampleLanes($this->timetable);
-        $lane = $this->timetable->lanes()->where('name', 'キッズ村')->firstOrFail();
+        $lane = $this->timetable->timetableLanes()
+            ->whereHas('lane', fn ($q) => $q->where('name', 'キッズ村'))
+            ->firstOrFail();
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => 'キッズコーナー風船配布',
         ]);
 
@@ -556,22 +626,27 @@ class LaneManagementTest extends TestCase
         $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
         $response->assertSessionHas('success');
 
-        $this->assertDatabaseMissing('lanes', ['id' => $lane->id]);
+        $this->assertDatabaseMissing('timetable_lanes', ['id' => $lane->id]);
         $this->assertDatabaseMissing('timetable_tasks', ['id' => $task->id]);
     }
 
     /**
-     * 14. /lanes（lanes.index）がアクティブな運行日へリダイレクトされること
+     * 14. /timetable-lanes（timetable-lanes.index）がアクティブな運行日へリダイレクトされ、/lanes はマスター一覧を返すこと
      */
-    public function test_lanes_route_redirects_to_active_timetable_lanes(): void
+    public function test_timetable_lanes_route_redirects_and_lanes_renders_master_list(): void
     {
-        $response = $this->actingAs($this->adminUser)->get('/lanes');
+        $this->actingAs($this->adminUser)
+            ->get('/timetable-lanes')
+            ->assertRedirect(route('timetables.lanes.index', $this->timetable));
 
-        $response->assertRedirect(route('timetables.lanes.index', $this->timetable));
+        $this->actingAs($this->adminUser)
+            ->get('/lanes')
+            ->assertOk()
+            ->assertSee('担当班マスター');
     }
 
     /**
-     * 17. 個別日程のレーン一覧画面で運行計画クイック切り替えタブが表示されること
+     * 17. 個別日程の編成一覧画面で運行計画クイック切り替えタブが表示されないこと
      */
     public function test_lane_index_does_not_display_timetable_quick_switch_tabs(): void
     {
@@ -591,7 +666,7 @@ class LaneManagementTest extends TestCase
     }
 
     /**
-     * 18. 親タイムテーブルに属さないレーンへのアクセスは404となること（スコープバインディング）
+     * 18. 親タイムテーブルに属さない日別編成へのアクセスは404となること（スコープバインディング）
      */
     public function test_lane_scoped_binding_rejects_mismatched_timetable(): void
     {
@@ -599,170 +674,70 @@ class LaneManagementTest extends TestCase
             'name' => '本祭2日目',
             'target_date' => '2027-10-18',
         ]);
-        $laneOnSecond = Lane::factory()->create([
+        $master = Lane::factory()->create(['name' => '別日レーン']);
+        $laneOnSecond = TimetableLane::factory()->create([
             'timetable_id' => $secondTimetable->id,
-            'name' => '別日レーン',
+            'lane_id' => $master->id,
         ]);
 
         $response = $this->actingAs($this->adminUser)
             ->put(route('timetables.lanes.update', [$this->timetable, $laneOnSecond]), [
-                'name' => '改ざん名称',
+                'notes' => '改ざんメモ',
             ]);
 
         $response->assertStatus(404);
     }
 
     /**
-     * 19. 新規レーン作成画面の表示（管理者・オペレーターがアクセス可能、一般・非アクティブは拒否）
+     * 19. 旧作成・詳細・編集の独立画面ルートが削除されており、一覧＋モーダル完結と非アクティブ拒否が機能すること
      */
-    public function test_admin_and_operator_can_view_lane_create_screen(): void
+    public function test_legacy_subpage_routes_are_removed_and_modal_controls_respect_permissions(): void
     {
-        $response = $this->actingAs($this->adminUser)
-            ->get(route('timetables.lanes.create', $this->timetable));
+        $this->assertFalse(Route::has('timetables.lanes.create'));
+        $this->assertFalse(Route::has('timetables.lanes.show'));
+        $this->assertFalse(Route::has('timetables.lanes.edit'));
+        $this->assertFalse(Route::has('lanes.create'));
+        $this->assertFalse(Route::has('lanes.show'));
+        $this->assertFalse(Route::has('lanes.edit'));
 
-        $response->assertStatus(200);
-        $response->assertSee('新規担当班の追加');
-        $response->assertSee('担当班名（レーン名）');
-        $response->assertSee('絵文字アイコン');
-        $response->assertSee('おすすめ絵文字パレット');
-        $response->assertSee('テーマカラー選択');
-        $response->assertDontSee('⭐ 主要班');
-        $response->assertDontSee('name="display_order"', false);
-        $response->assertSee('この担当班を新規登録');
-
-        $opResponse = $this->actingAs($this->operatorUser)
-            ->get(route('timetables.lanes.create', $this->timetable));
-        $opResponse->assertStatus(200);
-
-        // 非アクティブユーザーは拒否
-        $inactiveUser = User::factory()->create(['role' => 'admin', 'is_active' => false]);
-        $this->actingAs($inactiveUser)
-            ->get(route('timetables.lanes.create', $this->timetable))
-            ->assertStatus(403);
-    }
-
-    /**
-     * 20. レーン詳細画面の表示（班基本仕様・班長・固定スタッフ・タスク・資材サマリー）
-     */
-    public function test_user_can_view_lane_show_screen(): void
-    {
         $this->createSampleLanes($this->timetable);
-        $lane = $this->timetable->lanes()->where('name', '給水設備')->firstOrFail();
 
-        $lead = Staff::factory()->create(['name' => '給水班長 佐藤', 'is_active' => true]);
-        $fixed = Staff::factory()->create(['name' => '給水固定メンバー', 'is_active' => true]);
-        $lane->update(['lead_staff_id' => $lead->id]);
-        $lane->fixedStaff()->attach([$lead->id, $fixed->id]);
-
-        $task = TimetableTask::factory()->create([
-            'timetable_id' => $this->timetable->id,
-            'lane_id' => $lane->id,
-            'title' => '足踏み給水タンクの設置点検',
-        ]);
-
-        $response = $this->actingAs($this->adminUser)
-            ->get(route('timetables.lanes.show', [$this->timetable, $lane]));
-
-        $response->assertStatus(200);
-        $response->assertSee('給水設備');
-        $response->assertSee('担当班詳細');
-        $response->assertSee('給水班長 佐藤');
-        $response->assertSee('給水固定メンバー');
-        $response->assertSee('足踏み給水タンクの設置点検');
-        $response->assertSee(route('timetables.lanes.edit', [$this->timetable, $lane]));
-        $response->assertSee(route('timetables.lanes.index', $this->timetable));
-        $response->assertSee('一覧に戻る');
-        $response->assertSee('班名バッジ');
-        $response->assertDontSee('主な資機材');
-
-        // ヘッダーから削除されたリンクおよびバッジの検証
-        $response->assertDontSee('運行マトリクス');
-        $response->assertDontSee('表示順 / 優先度');
-        $response->assertDontSee('#'.$lane->display_order);
-        $response->assertDontSee('👁️ 有効');
-        $response->assertDontSee('🔒 非表示中');
-        $response->assertDontSee('担当班の削除');
-        $response->assertDontSee('delete-migration-modal');
-
-        // タスク一覧・追加リンクがタスク一覧カード内に存在すること
-        $response->assertSee(route('timetables.tasks.index', $this->timetable));
-    }
-
-    /**
-     * 21. レーン編集画面の表示（管理者・オペレーターがアクセス可能、初期値バインド検証）
-     */
-    public function test_admin_and_operator_can_view_lane_edit_screen(): void
-    {
-        $this->createSampleLanes($this->timetable);
-        $lane = $this->timetable->lanes()->where('name', '本陣')->firstOrFail();
-
-        $response = $this->actingAs($this->adminUser)
-            ->get(route('timetables.lanes.edit', [$this->timetable, $lane]));
-
-        $response->assertStatus(200);
-        $response->assertSee('担当班の編集: 本陣');
-        $response->assertSee('value="本陣"', false);
-        $response->assertSee('おすすめ絵文字パレット');
-        $response->assertSee('テーマカラー選択');
-        $response->assertDontSee('⭐ 主要班');
-        $response->assertDontSee('name="display_order"', false);
-        $response->assertSee('更新内容を保存');
-        $response->assertSee(route('timetables.lanes.update', [$this->timetable, $lane]));
-        $response->assertDontSee('危険な操作: 担当班の削除');
-        $response->assertDontSee('この担当班を削除');
-        $response->assertDontSee('data-action="open-delete-modal"', false);
-        $response->assertDontSee('紐づくタスク:');
-
-        $opResponse = $this->actingAs($this->operatorUser)
-            ->get(route('timetables.lanes.edit', [$this->timetable, $lane]));
-        $opResponse->assertStatus(200);
-
-        // 非アクティブユーザーは拒否
-        $inactiveUser = User::factory()->create(['role' => 'admin', 'is_active' => false]);
-        $this->actingAs($inactiveUser)
-            ->get(route('timetables.lanes.edit', [$this->timetable, $lane]))
-            ->assertStatus(403);
-    }
-
-    /**
-     * 22. レーン一覧画面で新規作成・詳細・編集へのナビゲーションリンクが表示されること
-     */
-    public function test_lane_index_displays_crud_navigation_links(): void
-    {
-        $this->createSampleLanes($this->timetable);
-        $lane = $this->timetable->lanes()->firstOrFail();
-
-        $response = $this->actingAs($this->adminUser)
+        // viewer には一覧表示と詳細閲覧ボタンが表示され、編集・解除・追加ボタンは非表示
+        $viewerUser = User::factory()->create(['role' => 'viewer', 'is_active' => true]);
+        $viewerRes = $this->actingAs($viewerUser)
             ->get(route('timetables.lanes.index', $this->timetable));
+        $viewerRes->assertStatus(200);
+        $viewerRes->assertSee('btn-view-tlane', false);
+        $viewerRes->assertDontSee('id="btn-open-tlane-add"', false);
+        $viewerRes->assertDontSee('btn-edit-tlane', false);
+        $viewerRes->assertDontSee('btn-delete-tlane', false);
 
-        $response->assertStatus(200);
-        $response->assertSee(route('timetables.lanes.create', $this->timetable));
-        $response->assertSee('新規担当班を追加');
-        $response->assertSee(route('timetables.lanes.show', [$this->timetable, $lane]));
-        $response->assertSee(route('timetables.lanes.edit', [$this->timetable, $lane]));
-        $response->assertSee('詳細');
-        $response->assertSee('編集');
+        // 非アクティブユーザーは403
+        $inactiveUser = User::factory()->create(['role' => 'admin', 'is_active' => false]);
+        $this->actingAs($inactiveUser)
+            ->get(route('timetables.lanes.index', $this->timetable))
+            ->assertStatus(403);
     }
 
     /**
-     * 23. /lanes（lanes.index）がアクティブな運行日または指定運行日のレーン一覧へリダイレクトされること
+     * 23. /timetable-lanes（timetable-lanes.index）がアクティブまたは指定運行日の編成一覧へリダイレクトされること
      */
     public function test_lanes_resource_index_redirects_appropriately(): void
     {
         // 1. timetable_id パラメータ指定時
         $this->actingAs($this->operatorUser)
-            ->get(route('lanes.index', ['timetable_id' => $this->timetable->id]))
+            ->get(route('timetable-lanes.index', ['timetable_id' => $this->timetable->id]))
             ->assertRedirect(route('timetables.lanes.index', $this->timetable));
 
         // 2. timetable_id パラメータなし（アクティブ運行日へリダイレクト）
         $this->actingAs($this->operatorUser)
-            ->get(route('lanes.index'))
+            ->get(route('timetable-lanes.index'))
             ->assertRedirect(route('timetables.lanes.index', $this->timetable));
 
         // 3. 運行日程が0件の場合は timetables.index へリダイレクト
         Timetable::query()->delete();
         $this->actingAs($this->operatorUser)
-            ->get(route('lanes.index'))
+            ->get(route('timetable-lanes.index'))
             ->assertRedirect(route('timetables.index'));
     }
 }

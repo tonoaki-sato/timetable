@@ -6,6 +6,7 @@ use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,7 +20,7 @@ class TimetablePhase2AssignmentTest extends TestCase
 
     private Timetable $timetable;
 
-    private Lane $lane;
+    private TimetableLane $lane;
 
     private TimetableTask $task;
 
@@ -37,14 +38,17 @@ class TimetablePhase2AssignmentTest extends TestCase
             'name' => 'まつり本番 1日目',
         ]);
 
-        $this->lane = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => '給水設備班',
+        ]);
+        $this->lane = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterLane->id,
         ]);
 
         $this->task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '給水タンク設置',
             'start_time' => '08:00:00',
             'end_time' => '10:00:00',

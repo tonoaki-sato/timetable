@@ -7,6 +7,7 @@ use App\Models\Staff;
 use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Services\StaffAllocationService;
@@ -21,7 +22,7 @@ class TimetablePhase3AssignmentTest extends TestCase
 
     private Timetable $timetable;
 
-    private Lane $lane;
+    private TimetableLane $lane;
 
     private TimetableTask $task;
 
@@ -41,15 +42,18 @@ class TimetablePhase3AssignmentTest extends TestCase
             'end_time' => '18:00:00',
         ]);
 
-        $this->lane = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => '神輿誘導班',
             'color' => 'indigo',
+        ]);
+        $this->lane = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterLane->id,
         ]);
 
         $this->task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '神輿先導警備',
             'start_time' => '09:00:00',
             'end_time' => '11:00:00',
@@ -176,14 +180,17 @@ class TimetablePhase3AssignmentTest extends TestCase
         ]);
 
         // 班長未設定レーンのタスクも作成し一般スタッフにアサイン
-        $laneWithoutLead = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterWithoutLead = Lane::factory()->create([
             'name' => '清掃班',
+        ]);
+        $laneWithoutLead = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterWithoutLead->id,
             'lead_staff_id' => null,
         ]);
         $taskWithoutLead = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $laneWithoutLead->id,
+            'timetable_lane_id' => $laneWithoutLead->id,
             'title' => '清掃作業',
             'start_time' => '13:00:00',
             'end_time' => '14:00:00',

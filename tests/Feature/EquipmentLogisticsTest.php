@@ -164,7 +164,7 @@ class EquipmentLogisticsTest extends TestCase
         $response->assertSee('id="equipment-count-indicator"', false);
         $response->assertSee('全 2 資材表示中');
         $response->assertSee('id="logistics-filter-empty-state"', false);
-        $response->assertDontSee('name="lane_id"', false);
+        $response->assertDontSee('name="timetable_lane_id"', false);
         $response->assertDontSee('name="type"', false);
         $response->assertDontSee('すべての担当班');
         $response->assertDontSee('すべての区分');

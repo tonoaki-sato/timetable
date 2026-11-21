@@ -10,6 +10,7 @@ use App\Models\Schedule;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Models\Vendor;
@@ -73,10 +74,11 @@ class IcsAndCsvExchangeTest extends TestCase
         // スタッフマイシフト .ics
         $staff = Staff::factory()->create(['name' => 'シフトICS担当', 'is_active' => true]);
         $timetable = Timetable::factory()->create(['target_date' => '2026-10-18', 'created_by' => $this->admin->id]);
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id, 'name' => '受付班']);
+        $masterLane = Lane::factory()->create(['name' => '受付班']);
+        $lane = TimetableLane::factory()->create(['timetable_id' => $timetable->id, 'lane_id' => $masterLane->id]);
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '受付設営作業',
             'start_time' => '08:30:00',
             'end_time' => '10:00:00',

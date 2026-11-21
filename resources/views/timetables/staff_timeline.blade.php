@@ -168,7 +168,7 @@
                                 </span>
                             </div>
                             <div class="text-[10px] flex items-center justify-between gap-1 opacity-80">
-                                <span class="truncate">{{ $cell['task']->lane }}</span>
+                                <span class="truncate">{{ $cell['task']->lane_name_label }}</span>
                                 @if(! $cell['is_self_task_leader'])
                                 <span class="font-medium truncate shrink-0" title="班長: {{ $cell['task_leader_name'] ?: '未定' }}">
                                     {{ $cell['task_leader_name'] ? '班長: ' . $cell['task_leader_name'] : '班長未定' }}

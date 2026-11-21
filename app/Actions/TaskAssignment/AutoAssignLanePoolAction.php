@@ -31,7 +31,8 @@ class AutoAssignLanePoolAction
      */
     public function execute(TimetableTask $task): array
     {
-        $laneName = $task->lane ?: ($task->laneRelation?->name ?? '');
+        $task->loadMissing(['timetableLane.lane', 'timetableLane.fixedStaff']);
+        $laneName = $task->timetableLane?->name ?? '';
         if (empty($laneName)) {
             return [
                 'success' => false,
@@ -54,9 +55,8 @@ class AutoAssignLanePoolAction
         }
 
         // 当該レーンに所属するアクティブスタッフ（固定スタッフおよび所属一致スタッフ）を取得
-        $task->loadMissing('laneRelation.fixedStaff');
-        $fixedStaffIds = $task->laneRelation
-            ? $task->laneRelation->fixedStaff->pluck('id')->map(fn ($id): int => (int) $id)->all()
+        $fixedStaffIds = $task->timetableLane
+            ? $task->timetableLane->fixedStaff->pluck('id')->map(fn ($id): int => (int) $id)->all()
             : [];
 
         $activeStaff = $this->staffRepository->getActiveStaffList();

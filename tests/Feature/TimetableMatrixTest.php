@@ -6,6 +6,7 @@ use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -50,15 +51,19 @@ class TimetableMatrixTest extends TestCase
             'status' => 'active',
         ]);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => 'カラーコーン',
+        ]);
+
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
             'display_order' => 10,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '中央通りコーン設置',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
@@ -118,14 +123,18 @@ class TimetableMatrixTest extends TestCase
             'status' => 'active',
         ]);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => 'カラーコーン',
+        ]);
+
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => 'コーン設置タスク',
             'location' => '北口ゲート',
             'start_time' => '09:00:00',
@@ -198,9 +207,12 @@ class TimetableMatrixTest extends TestCase
         ]);
 
         // 新規レーンを随時追加
-        $newLane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $newMaster = Lane::factory()->create([
             'name' => 'ドローン空撮班',
+        ]);
+        $newLane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $newMaster->id,
             'display_order' => 999,
         ]);
 
@@ -514,16 +526,20 @@ class TimetableMatrixTest extends TestCase
             'status' => 'active',
         ]);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => 'カラーコーン',
+        ]);
+
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
             'display_order' => 10,
         ]);
 
         // 09:00〜10:00 と 09:30〜10:30（時間帯の一部が重なる）および 11:00〜12:00 の2タスク（完全重複）
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '東口コーン設置',
             'start_time' => '09:00:00',
             'end_time' => '10:00:00',
@@ -531,7 +547,7 @@ class TimetableMatrixTest extends TestCase
         ]);
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '西口コーン設置',
             'start_time' => '09:30:00',
             'end_time' => '10:30:00',
@@ -540,7 +556,7 @@ class TimetableMatrixTest extends TestCase
 
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '南側バリケード確認',
             'start_time' => '11:00:00',
             'end_time' => '12:00:00',
@@ -548,7 +564,7 @@ class TimetableMatrixTest extends TestCase
         ]);
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '北側バリケード確認',
             'start_time' => '11:00:00',
             'end_time' => '12:00:00',

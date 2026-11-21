@@ -4,7 +4,7 @@ namespace App\Actions\Timetable;
 
 use App\Models\Timetable;
 use App\Models\TimetableTask;
-use App\Repositories\Contracts\LaneRepositoryInterface;
+use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use App\Services\PdfService;
 use App\Services\TimetableGridService;
@@ -16,7 +16,7 @@ class DownloadTimetableMatrixPdfAction
     public function __construct(
         protected PdfService $pdfService,
         protected TimetableGridService $gridService,
-        protected LaneRepositoryInterface $laneRepository,
+        protected TimetableLaneRepositoryInterface $timetableLaneRepository,
         protected TimetableTaskRepositoryInterface $taskRepository
     ) {}
 
@@ -61,13 +61,13 @@ class DownloadTimetableMatrixPdfAction
      */
     public function buildViewData(Timetable $timetable, ?array $laneIds = null): array
     {
-        $lanes = $this->laneRepository->getOrderedWithLeadForTimetable($timetable, $laneIds);
+        $lanes = $this->timetableLaneRepository->getOrderedWithLeadForTimetable($timetable, $laneIds);
         $tasks = $this->taskRepository->getWithAssignmentsAndLaneByTimetableId($timetable->id);
 
         $tasksByLane = [];
         foreach ($lanes as $lane) {
             $tasksByLane[$lane->id] = $tasks->filter(function (TimetableTask $t) use ($lane): bool {
-                return $t->lane_id === $lane->id;
+                return $t->timetable_lane_id === $lane->id;
             })->values();
         }
 

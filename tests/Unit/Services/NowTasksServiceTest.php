@@ -4,6 +4,7 @@ namespace Tests\Unit\Services;
 
 use App\Models\Lane;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Services\NowTasksService;
 use Carbon\Carbon;
@@ -46,15 +47,18 @@ class NowTasksServiceTest extends TestCase
             'status' => 'active',
         ]);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $master = Lane::factory()->create([
             'name' => 'カラーコーン',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $master->id,
         ]);
 
         // 1. 時間帯内の未着手タスク -> 抽出対象
         $taskInWindowNotStarted = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '時間内未着手タスク',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
@@ -64,7 +68,7 @@ class NowTasksServiceTest extends TestCase
         // 2. 時間帯外だが進行中のタスク -> 抽出対象
         $taskOutWindowInProgress = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '時間外進行中タスク',
             'start_time' => '08:00:00',
             'end_time' => '09:30:00',
@@ -74,7 +78,7 @@ class NowTasksServiceTest extends TestCase
         // 3. 時間帯内だが完了済のタスク -> 除外
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '時間内完了済タスク',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
@@ -84,7 +88,7 @@ class NowTasksServiceTest extends TestCase
         // 4. 時間帯内だが中止のタスク -> 除外
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '時間内中止タスク',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
@@ -94,7 +98,7 @@ class NowTasksServiceTest extends TestCase
         // 5. 未来時間帯の未着手タスク -> 除外
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '未来未着手タスク',
             'start_time' => '11:00:00',
             'end_time' => '12:00:00',
@@ -104,7 +108,7 @@ class NowTasksServiceTest extends TestCase
         // 6. 境界時刻（10:15終了ちょうど）の未着手タスク -> 除外
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '終了境界未着手タスク',
             'start_time' => '09:30:00',
             'end_time' => '10:15:00',
@@ -132,13 +136,13 @@ class NowTasksServiceTest extends TestCase
             'status' => 'active',
         ]);
 
-        $lane = Lane::factory()->create([
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
         ]);
 
         $normalNotStartedLate = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '通常・未着手・遅い開始',
             'start_time' => '10:10:00',
             'end_time' => '11:00:00',
@@ -148,7 +152,7 @@ class NowTasksServiceTest extends TestCase
 
         $normalNotStartedEarly = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '通常・未着手・早い開始',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
@@ -158,7 +162,7 @@ class NowTasksServiceTest extends TestCase
 
         $normalInProgress = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '通常・進行中',
             'start_time' => '10:05:00',
             'end_time' => '11:00:00',
@@ -168,7 +172,7 @@ class NowTasksServiceTest extends TestCase
 
         $criticalNotStarted = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '最優先・未着手',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
@@ -178,7 +182,7 @@ class NowTasksServiceTest extends TestCase
 
         $criticalInProgress = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '最優先・進行中',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',

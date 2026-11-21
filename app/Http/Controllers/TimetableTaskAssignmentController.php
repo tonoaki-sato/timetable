@@ -47,7 +47,7 @@ class TimetableTaskAssignmentController extends Controller
 
         if (! $result['success'] && $result['has_conflict']) {
             $conflictingTask = $result['conflicting_task'];
-            $conflictingLane = $conflictingTask?->lane ?: '担当班未設定';
+            $conflictingLane = $conflictingTask?->lane_name_label ?: '担当班未設定';
             $startTime = substr($conflictingTask?->start_time ?? '', 0, 5);
             $endTime = substr($conflictingTask?->end_time ?? '', 0, 5);
 

@@ -7,10 +7,11 @@ use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
-use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
+use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use DomainException;
@@ -22,7 +23,7 @@ class TimetableTaskService
 {
     public function __construct(
         protected TimetableTaskRepositoryInterface $taskRepository,
-        protected LaneRepositoryInterface $laneRepository,
+        protected TimetableLaneRepositoryInterface $timetableLaneRepository,
         protected StaffRepositoryInterface $staffRepository,
         protected TaskStaffAssignmentRepositoryInterface $assignmentRepository,
         protected TimetableRepositoryInterface $timetableRepository,
@@ -37,11 +38,11 @@ class TimetableTaskService
     }
 
     /**
-     * IDによる担当班の取得
+     * IDによる運行日別担当班編成の取得
      */
-    public function findLaneById(int $laneId): ?Lane
+    public function findTimetableLaneById(int $timetableLaneId): ?TimetableLane
     {
-        return $this->laneRepository->findById($laneId);
+        return $this->timetableLaneRepository->findById($timetableLaneId);
     }
 
     /**
@@ -55,8 +56,8 @@ class TimetableTaskService
 
         return [
             'timetable' => $timetable,
-            'lanes' => $timetable->lanes,
-            'tasks' => $timetable->lanes->flatMap->tasks,
+            'timetableLanes' => $timetable->timetableLanes,
+            'tasks' => $timetable->timetableLanes->flatMap->tasks,
             'statuses' => TimetableTask::STATUSES,
         ];
     }
@@ -71,7 +72,7 @@ class TimetableTaskService
         $this->timetableRepository->loadForAssignmentWorkspace($timetable);
 
         $tasks = $timetable->tasks;
-        $lanes = $timetable->lanes;
+        $timetableLanes = $timetable->timetableLanes;
 
         $totalTasks = $tasks->count();
         $satisfiedTasks = $tasks->filter(fn (TimetableTask $t): bool => $t->is_satisfied)->count();
@@ -91,7 +92,7 @@ class TimetableTaskService
 
         return [
             'timetable' => $timetable,
-            'lanes' => $lanes,
+            'timetableLanes' => $timetableLanes,
             'tasks' => $tasks,
             'totalTasks' => $totalTasks,
             'satisfiedTasks' => $satisfiedTasks,
@@ -115,41 +116,41 @@ class TimetableTaskService
         return DB::transaction(function () use ($task, $data): TimetableTask {
             $this->taskRepository->update($task, $data);
 
-            return $task->fresh(['laneRelation', 'assignments']);
+            return $task->fresh(['timetableLane.lane', 'assignments']);
         });
     }
 
     /**
-     * 選択したレーンに対する複数タスクの一括登録（班長・固定スタッフのデフォルト自動アサイン対応）
+     * 選択した日別担当班編成に対する複数タスクの一括登録（班長・固定スタッフのデフォルト自動アサイン対応）
      *
      * @param  array<int, array<string, mixed>>  $tasksData
      * @return Collection<int, TimetableTask>
      */
     public function createBulkTasks(
         int $timetableId,
-        int $laneId,
+        int $timetableLaneId,
         array $tasksData,
         bool $autoAssignLead = true
     ): Collection {
-        return DB::transaction(function () use ($timetableId, $laneId, $tasksData, $autoAssignLead): Collection {
+        return DB::transaction(function () use ($timetableId, $timetableLaneId, $tasksData, $autoAssignLead): Collection {
             $attributesList = [];
             foreach ($tasksData as $taskItem) {
                 $attributesList[] = array_merge($taskItem, [
                     'timetable_id' => $timetableId,
-                    'lane_id' => $laneId,
+                    'timetable_lane_id' => $timetableLaneId,
                 ]);
             }
 
             $createdTasks = $this->taskRepository->createMany($attributesList);
 
             if ($autoAssignLead) {
-                $lane = $this->laneRepository->findWithFixedStaff($laneId);
-                if ($lane) {
-                    $preloadedLaneTasks = $this->taskRepository->getActiveForLanes([$laneId]);
+                $timetableLane = $this->timetableLaneRepository->findWithFixedStaff($timetableLaneId);
+                if ($timetableLane) {
+                    $preloadedLaneTasks = $this->taskRepository->getActiveForLanes([$timetableLaneId]);
                     $rows = [];
                     $now = now()->format('Y-m-d H:i:s');
                     foreach ($createdTasks as $task) {
-                        array_push($rows, ...$this->collectDefaultAssignmentRowsForTask($task, $lane, $preloadedLaneTasks, $now));
+                        array_push($rows, ...$this->collectDefaultAssignmentRowsForTask($task, $timetableLane, $preloadedLaneTasks, $now));
                     }
                     $this->assignmentRepository->insertOrIgnoreMany($rows);
                 }
@@ -160,37 +161,37 @@ class TimetableTaskService
     }
 
     /**
-     * 指定された複数の担当班へ共通タスクを一括作成する
+     * 指定された複数の日別担当班編成へ共通タスクを一括作成する
      *
      * @return Collection<int, TimetableTask>
      */
     public function createCommonTasksForLanes(CreateCommonTimetableTaskDTO $dto): Collection
     {
         return DB::transaction(function () use ($dto): Collection {
-            $lanes = $this->laneRepository->getByIdsWithFixedStaff($dto->timetableId, $dto->laneIds);
-            if ($lanes->isEmpty()) {
+            $timetableLanes = $this->timetableLaneRepository->getByIdsWithFixedStaff($dto->timetableId, $dto->timetableLaneIds);
+            if ($timetableLanes->isEmpty()) {
                 return new Collection;
             }
 
             $baseAttributes = $dto->toTaskAttributes();
             $attributesList = [];
-            foreach ($lanes as $lane) {
+            foreach ($timetableLanes as $timetableLane) {
                 $attributesList[] = array_merge($baseAttributes, [
-                    'lane_id' => $lane->id,
+                    'timetable_lane_id' => $timetableLane->id,
                 ]);
             }
 
             $createdTasks = $this->taskRepository->createMany($attributesList);
 
             if ($dto->autoAssignLead) {
-                $lanesById = $lanes->keyBy('id');
-                $tasksByLane = $this->taskRepository->getActiveForLanes($lanes->pluck('id')->all())->groupBy('lane_id');
+                $lanesById = $timetableLanes->keyBy('id');
+                $tasksByLane = $this->taskRepository->getActiveForLanes($timetableLanes->pluck('id')->all())->groupBy('timetable_lane_id');
                 $rows = [];
                 $now = now()->format('Y-m-d H:i:s');
                 foreach ($createdTasks as $task) {
-                    $lane = $lanesById->get($task->lane_id);
-                    if ($lane instanceof Lane) {
-                        array_push($rows, ...$this->collectDefaultAssignmentRowsForTask($task, $lane, $tasksByLane->get($lane->id, collect()), $now));
+                    $timetableLane = $lanesById->get($task->timetable_lane_id);
+                    if ($timetableLane instanceof TimetableLane) {
+                        array_push($rows, ...$this->collectDefaultAssignmentRowsForTask($task, $timetableLane, $tasksByLane->get($timetableLane->id, collect()), $now));
                     }
                 }
                 $this->assignmentRepository->insertOrIgnoreMany($rows);
@@ -207,10 +208,10 @@ class TimetableTaskService
      */
     protected function autoAssignLaneMembersToTask(
         TimetableTask $task,
-        Lane $lane,
+        TimetableLane $timetableLane,
         ?SupportCollection $preloadedLaneTasks = null
     ): void {
-        $rows = $this->collectDefaultAssignmentRowsForTask($task, $lane, $preloadedLaneTasks, now()->format('Y-m-d H:i:s'));
+        $rows = $this->collectDefaultAssignmentRowsForTask($task, $timetableLane, $preloadedLaneTasks, now()->format('Y-m-d H:i:s'));
         $this->assignmentRepository->insertOrIgnoreMany($rows);
     }
 
@@ -222,16 +223,16 @@ class TimetableTaskService
      */
     protected function collectDefaultAssignmentRowsForTask(
         TimetableTask $task,
-        Lane $lane,
+        TimetableLane $timetableLane,
         ?SupportCollection $preloadedLaneTasks,
         string $now
     ): array {
         $rows = [];
 
-        if ($lane->lead_staff_id) {
+        if ($timetableLane->lead_staff_id) {
             $rows[] = [
                 'timetable_task_id' => $task->id,
-                'staff_id' => $lane->lead_staff_id,
+                'staff_id' => $timetableLane->lead_staff_id,
                 'role_description' => '班長',
                 'attendance_status' => 'assigned',
                 'created_at' => $now,
@@ -239,16 +240,16 @@ class TimetableTaskService
             ];
         }
 
-        if ($lane->fixedStaff->isEmpty()) {
+        if ($timetableLane->fixedStaff->isEmpty()) {
             return $rows;
         }
 
-        if ($this->hasOverlappingActiveTaskInLane($task, $lane->id, $preloadedLaneTasks)) {
+        if ($this->hasOverlappingActiveTaskInLane($task, $timetableLane->id, $preloadedLaneTasks)) {
             return $rows;
         }
 
-        foreach ($lane->fixedStaff as $fixedMember) {
-            if ($lane->lead_staff_id && (int) $fixedMember->id === (int) $lane->lead_staff_id) {
+        foreach ($timetableLane->fixedStaff as $fixedMember) {
+            if ($timetableLane->lead_staff_id && (int) $fixedMember->id === (int) $timetableLane->lead_staff_id) {
                 continue;
             }
 
@@ -272,7 +273,7 @@ class TimetableTaskService
      */
     protected function hasOverlappingActiveTaskInLane(
         TimetableTask $task,
-        int $laneId,
+        int $timetableLaneId,
         ?SupportCollection $preloadedLaneTasks = null
     ): bool {
         if ($task->status === 'cancelled') {
@@ -287,7 +288,7 @@ class TimetableTaskService
 
         $existingTasks = $preloadedLaneTasks !== null
             ? $preloadedLaneTasks->filter(fn (TimetableTask $existing): bool => $existing->id !== $task->id)
-            : $this->taskRepository->getActiveForLaneExcludingIds($laneId, [$task->id]);
+            : $this->taskRepository->getActiveForLaneExcludingIds($timetableLaneId, [$task->id]);
         foreach ($existingTasks as $existing) {
             $exStart = substr((string) $existing->start_time, 0, 5);
             $exEnd = substr((string) $existing->end_time, 0, 5);
@@ -301,17 +302,17 @@ class TimetableTaskService
     }
 
     /**
-     * レーンの班長（主担当）が設定・変更された際、そのレーンの既存タスクへ班長を自動アサイン（同期）する
+     * 班の班長（主担当）が設定・変更された際、その班の既存タスクへ班長を自動アサイン（同期）する
      */
-    public function syncLaneLeadToTasks(Lane $lane, ?int $oldLeadStaffId = null): int
+    public function syncTimetableLaneLeadToTasks(TimetableLane $timetableLane, ?int $oldLeadStaffId = null): int
     {
-        $newLeadStaffId = $lane->lead_staff_id ? (int) $lane->lead_staff_id : null;
+        $newLeadStaffId = $timetableLane->lead_staff_id ? (int) $timetableLane->lead_staff_id : null;
         if ($newLeadStaffId === null) {
             return 0;
         }
 
-        return DB::transaction(function () use ($lane, $oldLeadStaffId, $newLeadStaffId): int {
-            $tasks = $this->taskRepository->getActiveForLaneWithAssignments($lane->id);
+        return DB::transaction(function () use ($timetableLane, $oldLeadStaffId, $newLeadStaffId): int {
+            $tasks = $this->taskRepository->getActiveForLaneWithAssignments($timetableLane->id);
 
             $syncedCount = 0;
             $deleteOldAssignmentIds = [];
@@ -372,26 +373,26 @@ class TimetableTaskService
     }
 
     /**
-     * レーンの固定スタッフ一覧を同期し、そのレーンの全有効タスクへ固定スタッフとして基本アサインする
+     * 班の固定スタッフ一覧を同期し、その班の全有効タスクへ固定スタッフとして基本アサインする
      *
      * @param  array<int, int|string>  $fixedStaffIds
      */
-    public function syncLaneFixedStaffToTasks(Lane $lane, array $fixedStaffIds): int
+    public function syncTimetableLaneFixedStaffToTasks(TimetableLane $timetableLane, array $fixedStaffIds): int
     {
         $cleanIds = array_values(array_unique(array_map('intval', array_filter($fixedStaffIds))));
 
-        return DB::transaction(function () use ($lane, $cleanIds): int {
-            $previousFixedIds = $this->laneRepository->getFixedStaffIds($lane);
+        return DB::transaction(function () use ($timetableLane, $cleanIds): int {
+            $previousFixedIds = $this->timetableLaneRepository->getFixedStaffIds($timetableLane);
 
-            $this->laneRepository->syncFixedStaff($lane, $cleanIds);
+            $this->timetableLaneRepository->syncFixedStaff($timetableLane, $cleanIds);
 
-            $leadStaffId = $lane->lead_staff_id ? (int) $lane->lead_staff_id : null;
+            $leadStaffId = $timetableLane->lead_staff_id ? (int) $timetableLane->lead_staff_id : null;
             $removedIds = array_values(array_filter(
                 array_diff($previousFixedIds, $cleanIds),
                 fn (int $id): bool => $leadStaffId === null || $id !== $leadStaffId
             ));
 
-            $tasks = $this->taskRepository->getActiveForLaneWithAssignments($lane->id);
+            $tasks = $this->taskRepository->getActiveForLaneWithAssignments($timetableLane->id);
 
             // 固定スタッフから外れたメンバーの未着手タスク自動アサインを解除
             if ($removedIds !== []) {
@@ -475,8 +476,8 @@ class TimetableTaskService
      */
     public function removeStaff(TimetableTask $task, int $staffId): bool
     {
-        $task->loadMissing('laneRelation');
-        if ($task->laneRelation && (int) $task->laneRelation->lead_staff_id === $staffId) {
+        $task->loadMissing('timetableLane');
+        if ($task->timetableLane && (int) $task->timetableLane->lead_staff_id === $staffId) {
             throw new DomainException('班長はタスクの配置から解除できません。');
         }
 
@@ -594,19 +595,19 @@ class TimetableTaskService
     }
 
     /**
-     * 複数の担当班に対する既存タスクとの時間帯重複を一括チェック
+     * 複数の運行日別担当班編成に対する既存タスクとの時間帯重複を一括チェック
      *
-     * @param  array<int, int>  $laneIds
+     * @param  array<int, int>  $timetableLaneIds
      * @return array<int, string> 重複エラーメッセージの配列
      */
     public function checkDatabaseOverlapsForLanes(
         int $timetableId,
-        array $laneIds,
+        array $timetableLaneIds,
         string $startTime,
         string $endTime,
         string $status = 'not_started'
     ): array {
-        if ($status === 'cancelled' || empty($laneIds)) {
+        if ($status === 'cancelled' || empty($timetableLaneIds)) {
             return [];
         }
 
@@ -616,14 +617,14 @@ class TimetableTaskService
             return [];
         }
 
-        $lanes = $this->laneRepository->getByIdsWithFixedStaff($timetableId, $laneIds);
+        $lanes = $this->timetableLaneRepository->getByIdsWithFixedStaff($timetableId, $timetableLaneIds);
         if ($lanes->isEmpty()) {
             return [];
         }
 
         $existingTasksByLane = $this->taskRepository
-            ->getActiveForLanes($laneIds)
-            ->groupBy('lane_id');
+            ->getActiveForLanes($timetableLaneIds)
+            ->groupBy('timetable_lane_id');
 
         $errors = [];
 

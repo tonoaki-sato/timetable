@@ -1,10 +1,10 @@
-@props(['timetable' => null, 'lanes' => collect(), 'statuses' => \App\Models\TimetableTask::STATUSES])
+@props(['timetable' => null, 'timetableLanes' => collect(), 'statuses' => \App\Models\TimetableTask::STATUSES])
 
 @php
     $isReopenOnError = $errors->any() && old('_form') === 'common_task';
     $selectedLaneIds = old('_form') === 'common_task'
-        ? array_map('intval', (array) old('lane_ids', []))
-        : $lanes->pluck('id')->map(fn ($id): int => (int) $id)->all();
+        ? array_map('intval', (array) old('timetable_lane_ids', []))
+        : $timetableLanes->pluck('id')->map(fn ($id): int => (int) $id)->all();
 @endphp
 
 <!-- 複数班・全班 共通タスク一括登録モーダル -->
@@ -92,7 +92,7 @@
                                     🚩 登録対象の担当班 <span class="text-red-500">*</span>
                                 </label>
                                 <span id="common-modal-selected-count" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-100 text-indigo-700">
-                                    {{ count($selectedLaneIds) }} / {{ $lanes->count() }} 班選択中
+                                    {{ count($selectedLaneIds) }} / {{ $timetableLanes->count() }} 班選択中
                                 </span>
                             </div>
 
@@ -109,11 +109,11 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
-                            @foreach($lanes as $lane)
+                            @foreach($timetableLanes as $lane)
                             <label class="flex items-center justify-between gap-2 px-2.5 py-2 bg-white hover:bg-indigo-50/40 border border-slate-200 rounded-lg cursor-pointer transition select-none">
                                 <span class="flex items-center space-x-2 min-w-0">
                                     <input type="checkbox"
-                                        name="lane_ids[]"
+                                        name="timetable_lane_ids[]"
                                         value="{{ $lane->id }}"
                                         data-lane-name="{{ $lane->name }}"
                                         {{ in_array((int) $lane->id, $selectedLaneIds, true) ? 'checked' : '' }}

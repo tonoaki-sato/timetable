@@ -8,6 +8,7 @@ use App\Models\LaneRequest;
 use App\Models\Schedule;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Models\Vendor;
@@ -44,15 +45,16 @@ class HeaderNotificationAndGlobalSearchTest extends TestCase
     {
         $staff = Staff::factory()->create(['name' => '申請班長テスト']);
         $timetable = Timetable::factory()->create(['created_by' => $this->admin->id]);
-        $lane = Lane::factory()->create([
+        $masterLane = Lane::factory()->create(['name' => '交通誘導A班']);
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '交通誘導A班',
+            'lane_id' => $masterLane->id,
             'lead_staff_id' => $staff->id,
         ]);
 
         LaneRequest::create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'requested_by_staff_id' => $staff->id,
             'request_type' => 'equipment',
             'requested_count' => 3,
@@ -63,7 +65,7 @@ class HeaderNotificationAndGlobalSearchTest extends TestCase
 
         LaneRequest::create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'requested_by_staff_id' => $staff->id,
             'request_type' => 'staffing',
             'requested_count' => 2,
@@ -73,7 +75,7 @@ class HeaderNotificationAndGlobalSearchTest extends TestCase
 
         LaneRequest::create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'requested_by_staff_id' => $staff->id,
             'request_type' => 'equipment',
             'requested_count' => 1,
@@ -108,7 +110,7 @@ class HeaderNotificationAndGlobalSearchTest extends TestCase
         $this->get(route('search.quick', ['q' => '横断ターゲット']))->assertRedirect(route('login'));
 
         $timetable = Timetable::factory()->create(['created_by' => $this->admin->id]);
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id]);
+        $lane = TimetableLane::factory()->create(['timetable_id' => $timetable->id]);
 
         Staff::factory()->create(['name' => '横断ターゲットスタッフ', 'kana' => 'オウダン']);
         Vendor::create(['name' => '横断ターゲット屋台']);
@@ -116,7 +118,7 @@ class HeaderNotificationAndGlobalSearchTest extends TestCase
         Schedule::factory()->create(['title' => '横断ターゲット協議会', 'created_by' => $this->admin->id]);
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '横断ターゲット巡回タスク',
         ]);
 

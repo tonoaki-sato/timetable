@@ -14,6 +14,7 @@ use App\Models\SiteBaseMap;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Models\Vendor;
@@ -70,11 +71,31 @@ class ContentSecurityPolicyTest extends TestCase
         ]);
 
         $timetable = Timetable::factory()->create();
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id]);
+        $masterLane = Lane::factory()->create([
+            'name' => 'CSP検証用担当班',
+            'description' => 'CSP検証用標準役割',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
+            'lead_staff_id' => $staff->id,
+            'notes' => 'CSP検証用当日メモ',
+        ]);
+        $lane->fixedStaff()->attach([$staff->id]);
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'required_people_count' => 2,
+        ]);
+        LaneRequest::create([
+            'timetable_id' => $timetable->id,
+            'timetable_lane_id' => $lane->id,
+            'timetable_task_id' => $task->id,
+            'staff_id' => $staff->id,
+            'request_type' => 'staffing',
+            'requested_count' => 1,
+            'status' => 'pending',
+            'reason' => 'CSP検証要請',
         ]);
         TaskStaffAssignment::factory()->create([
             'timetable_task_id' => $task->id,
@@ -140,10 +161,8 @@ class ContentSecurityPolicyTest extends TestCase
             route('timetables.assignments', $timetable),
             route('timetable.index', ['timetable_id' => $timetable->id]),
             route('timetables.tasks.index', $timetable),
+            route('lanes.index'),
             route('timetables.lanes.index', $timetable),
-            route('timetables.lanes.create', $timetable),
-            route('timetables.lanes.show', [$timetable, $lane]),
-            route('timetables.lanes.edit', [$timetable, $lane]),
             route('locations.index'),
             route('site-base-maps.index'),
             route('layout-areas.index'),
@@ -205,15 +224,18 @@ class ContentSecurityPolicyTest extends TestCase
             'is_active' => true,
         ]);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
-            'lead_staff_id' => $leadStaff->id,
+        $leadMaster = Lane::factory()->create([
             'name' => '設営第一班',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $leadMaster->id,
+            'lead_staff_id' => $leadStaff->id,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '本部テント設営',
             'start_time' => now()->subMinute()->format('H:i:s'),
             'end_time' => now()->addHour()->format('H:i:s'),
@@ -228,7 +250,7 @@ class ContentSecurityPolicyTest extends TestCase
 
         LaneRequest::create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'timetable_task_id' => $task->id,
             'staff_id' => $leadStaff->id,
             'request_type' => 'staffing',
@@ -272,14 +294,16 @@ class ContentSecurityPolicyTest extends TestCase
             'is_active' => true,
         ]);
 
-        $lane = Lane::factory()->create([
+        $futureMaster = Lane::factory()->create();
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $futureTimetable->id,
+            'lane_id' => $futureMaster->id,
             'lead_staff_id' => $leadStaff->id,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $futureTimetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
         ]);
 
         TaskStaffAssignment::factory()->create([

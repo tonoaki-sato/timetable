@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,7 +19,7 @@ class TimetableTaskIndexTest extends TestCase
 
     private Timetable $timetable;
 
-    private Lane $lane;
+    private TimetableLane $lane;
 
     private TimetableTask $task;
 
@@ -40,14 +41,17 @@ class TimetableTaskIndexTest extends TestCase
             'description' => 'パレード及びメインステージ周辺の運行計画',
         ]);
 
-        $this->lane = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => '警備班',
+        ]);
+        $this->lane = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterLane->id,
         ]);
 
         $this->task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '交差点誘導',
             'content' => '北側交差点での歩行者誘導および迂回案内',
             'start_time' => '08:30:00',
@@ -138,15 +142,19 @@ class TimetableTaskIndexTest extends TestCase
     {
         $this->actingAs($this->operator);
 
-        $laneA = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterA = Lane::factory()->create([
             'name' => '衛生班',
+            'display_order' => 1,
+        ]);
+        $laneA = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterA->id,
             'display_order' => 1,
         ]);
 
         $taskLater = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $laneA->id,
+            'timetable_lane_id' => $laneA->id,
             'title' => '午後ゴミ回収',
             'start_time' => '14:00:00',
             'end_time' => '15:00:00',
@@ -155,16 +163,20 @@ class TimetableTaskIndexTest extends TestCase
 
         $taskEarlier = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $laneA->id,
+            'timetable_lane_id' => $laneA->id,
             'title' => '午前トイレ点検',
             'start_time' => '09:00:00',
             'end_time' => '10:00:00',
             'is_critical' => true,
         ]);
 
-        $laneEmpty = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterEmpty = Lane::factory()->create([
             'name' => 'キッズ村班',
+            'display_order' => 99,
+        ]);
+        $laneEmpty = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterEmpty->id,
             'display_order' => 99,
         ]);
 
@@ -201,16 +213,24 @@ class TimetableTaskIndexTest extends TestCase
             'name' => '山田 太郎',
         ]);
 
-        Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterHonbu = Lane::factory()->create([
             'name' => '本部班',
+            'display_order' => 10,
+        ]);
+        TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterHonbu->id,
             'lead_staff_id' => $leadStaff->id,
             'display_order' => 10,
         ]);
 
-        Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterYudo = Lane::factory()->create([
             'name' => '誘導班',
+            'display_order' => 20,
+        ]);
+        TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterYudo->id,
             'lead_staff_id' => null,
             'display_order' => 20,
         ]);

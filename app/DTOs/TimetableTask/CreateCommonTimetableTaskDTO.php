@@ -5,11 +5,11 @@ namespace App\DTOs\TimetableTask;
 readonly class CreateCommonTimetableTaskDTO
 {
     /**
-     * @param  list<int>  $laneIds
+     * @param  list<int>  $timetableLaneIds
      */
     public function __construct(
         public int $timetableId,
-        public array $laneIds,
+        public array $timetableLaneIds,
         public string $title,
         public string $startTime,
         public string $endTime,

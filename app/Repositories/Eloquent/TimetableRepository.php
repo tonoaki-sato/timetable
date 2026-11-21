@@ -132,12 +132,12 @@ class TimetableRepository implements TimetableRepositoryInterface
     {
         return Timetable::with([
             'creator',
-            'lanes' => function ($q): void {
-                $q->orderBy('display_order', 'asc')->with(['leadStaff', 'fixedStaff']);
+            'timetableLanes' => function ($q): void {
+                $q->ordered()->with(['lane', 'leadStaff', 'fixedStaff']);
             },
             'tasks' => function ($q): void {
                 $q->orderBy('start_time', 'asc')
-                    ->with(['laneRelation', 'assignments.staff']);
+                    ->with(['timetableLane.lane', 'assignments.staff']);
             },
             'logisticsPlans.equipment',
         ])->withCount(['logisticsPlans'])->find($id);
@@ -171,13 +171,13 @@ class TimetableRepository implements TimetableRepositoryInterface
                 TaskStaffAssignment::whereIn('timetable_task_id', $taskIds)->delete();
             }
 
-            // タスクを削除（これにより lanes.id への RESTRICT 外部キー制約が解除される）
+            // タスクを削除（これにより timetable_lanes.id への RESTRICT 外部キー制約が解除される）
             $timetable->tasks()->delete();
 
-            // レーンの固定スタッフ紐付けおよびレーン本体を削除
-            foreach ($timetable->lanes as $lane) {
-                $lane->fixedStaff()->detach();
-                $lane->delete();
+            // 日別担当班編成の固定スタッフ紐付けおよび編成本体を削除
+            foreach ($timetable->timetableLanes as $timetableLane) {
+                $timetableLane->fixedStaff()->detach();
+                $timetableLane->delete();
             }
 
             // レーンリクエストを削除
@@ -197,7 +197,7 @@ class TimetableRepository implements TimetableRepositoryInterface
     #[Override]
     public function getActiveAndDraftWithWorkflowDetails(): Collection
     {
-        return Timetable::with(['lanes.fixedStaff', 'lanes.leadStaff', 'tasks.assignments'])
+        return Timetable::with(['timetableLanes.lane', 'timetableLanes.fixedStaff', 'timetableLanes.leadStaff', 'tasks.assignments'])
             ->where('status', '!=', 'completed')
             ->orderBy('target_date', 'asc')
             ->get();
@@ -206,7 +206,7 @@ class TimetableRepository implements TimetableRepositoryInterface
     #[Override]
     public function findFirstActiveOrDraftWithWorkflowDetails(): ?Timetable
     {
-        return Timetable::with(['lanes.fixedStaff', 'lanes.leadStaff', 'tasks.assignments'])
+        return Timetable::with(['timetableLanes.lane', 'timetableLanes.fixedStaff', 'timetableLanes.leadStaff', 'tasks.assignments'])
             ->where('status', '!=', 'completed')
             ->orderBy('target_date', 'asc')
             ->first();
@@ -221,7 +221,7 @@ class TimetableRepository implements TimetableRepositoryInterface
     #[Override]
     public function findWithWorkflowDetails(int $id): ?Timetable
     {
-        return Timetable::with(['lanes.fixedStaff', 'lanes.leadStaff', 'tasks.assignments'])
+        return Timetable::with(['timetableLanes.lane', 'timetableLanes.fixedStaff', 'timetableLanes.leadStaff', 'tasks.assignments'])
             ->find($id);
     }
 
@@ -229,14 +229,15 @@ class TimetableRepository implements TimetableRepositoryInterface
     public function loadForAssignmentsPrint(Timetable $timetable): Timetable
     {
         return $timetable->load([
-            'lanes' => function ($query): void {
-                $query->orderBy('display_order')->orderBy('id');
+            'timetableLanes' => function ($query): void {
+                $query->ordered();
             },
-            'lanes.leadStaff',
-            'lanes.tasks' => function ($query): void {
+            'timetableLanes.lane',
+            'timetableLanes.leadStaff',
+            'timetableLanes.tasks' => function ($query): void {
                 $query->orderBy('start_time')->orderBy('end_time');
             },
-            'lanes.tasks.assignments.staff',
+            'timetableLanes.tasks.assignments.staff',
         ]);
     }
 
@@ -244,13 +245,13 @@ class TimetableRepository implements TimetableRepositoryInterface
     public function loadForAssignmentWorkspace(Timetable $timetable): Timetable
     {
         return $timetable->load([
-            'lanes' => function ($q): void {
-                $q->orderBy('display_order')->with('leadStaff');
+            'timetableLanes' => function ($q): void {
+                $q->ordered()->with(['lane', 'leadStaff']);
             },
             'tasks' => function ($q): void {
                 $q->orderBy('start_time')
                     ->orderBy('end_time')
-                    ->with(['laneRelation', 'assignments.staff']);
+                    ->with(['timetableLane.lane', 'assignments.staff']);
             },
         ]);
     }
@@ -259,8 +260,9 @@ class TimetableRepository implements TimetableRepositoryInterface
     public function loadForTasksIndex(Timetable $timetable): Timetable
     {
         return $timetable->load([
-            'lanes' => function ($q): void {
-                $q->orderBy('display_order')->with([
+            'timetableLanes' => function ($q): void {
+                $q->ordered()->with([
+                    'lane',
                     'leadStaff',
                     'tasks' => function ($tQuery): void {
                         $tQuery->orderBy('start_time', 'asc')
@@ -275,7 +277,7 @@ class TimetableRepository implements TimetableRepositoryInterface
     public function findForClone(int $id): ?Timetable
     {
         return Timetable::withCount([
-            'lanes',
+            'timetableLanes',
             'tasks',
             'logisticsPlans',
             'layoutItems',

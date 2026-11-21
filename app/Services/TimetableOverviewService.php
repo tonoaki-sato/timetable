@@ -68,7 +68,7 @@ class TimetableOverviewService
         $criticalTasksCount = $criticalTasksCollection->count();
 
         // 3. 担当班編成集計
-        $lanes = $timetable->lanes;
+        $lanes = $timetable->timetableLanes;
         $lanesCount = $lanes->count();
         $leadConfiguredCount = $lanes->filter(fn ($l): bool => $l->lead_staff_id !== null)->count();
         $fixedStaffCount = (int) $lanes->sum(fn ($l): int => $l->relationLoaded('fixedStaff') ? $l->fixedStaff->count() : 0);

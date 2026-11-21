@@ -74,7 +74,7 @@ class SwapStaffAssignmentAction
                 'message' => $warnMsg,
                 'conflict_task' => [
                     'title' => $conflictTask->title,
-                    'lane' => $conflictTask->lane,
+                    'lane' => $conflictTask->lane_name_label,
                     'time' => $conflictTask->time_range,
                 ],
                 'old_staff' => $oldStaff,

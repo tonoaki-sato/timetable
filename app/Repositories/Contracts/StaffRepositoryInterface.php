@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Contracts;
 
-use App\Models\Lane;
 use App\Models\Staff;
+use App\Models\TimetableLane;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -121,11 +121,11 @@ interface StaffRepositoryInterface
     public function chunkAllOrderedById(int $chunkSize, callable $callback): bool;
 
     /**
-     * マイタイムテーブル画面用にアサイン関連をロードし、班長を務めるレーン一覧を取得
+     * マイタイムテーブル画面用にアサイン関連をロードし、班長を務める日別担当班編成一覧を取得
      *
-     * @return Collection<int, Lane>
+     * @return Collection<int, TimetableLane>
      */
-    public function loadShiftRelationsAndGetLedLanes(Staff $staff): Collection;
+    public function loadShiftRelationsAndGetLedTimetableLanes(Staff $staff): Collection;
 
     /**
      * 稼働可能なスタッフを最小列（id, name, kana）でフリガナ順取得

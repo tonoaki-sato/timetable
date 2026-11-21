@@ -37,6 +37,7 @@ use App\Models\Staff;
 use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Presenters\EquipmentLogisticsPlanPresenter;
@@ -68,11 +69,11 @@ class Phase2And3ArchitectureTest extends TestCase
             'timetables' => [['status', 'target_date', 'start_time']],
             'timetable_tasks' => [
                 ['timetable_id', 'start_time', 'end_time'],
-                ['lane_id', 'status', 'start_time'],
+                ['timetable_lane_id', 'status', 'start_time'],
             ],
             'lane_requests' => [
                 ['status', 'id'],
-                ['lane_id', 'status'],
+                ['timetable_lane_id', 'status'],
                 ['timetable_task_id', 'status'],
             ],
             'locations' => [
@@ -129,12 +130,12 @@ class Phase2And3ArchitectureTest extends TestCase
         $unit = OrganizationUnit::factory()->create(['name' => '実行本部']);
         $unit->staff()->attach($staff->id, ['role' => '本部員', 'display_order' => 10]);
 
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id, 'lead_staff_id' => $staff->id]);
-        $task = TimetableTask::factory()->create(['timetable_id' => $timetable->id, 'lane_id' => $lane->id]);
+        $lane = TimetableLane::factory()->create(['timetable_id' => $timetable->id, 'lead_staff_id' => $staff->id]);
+        $task = TimetableTask::factory()->create(['timetable_id' => $timetable->id, 'timetable_lane_id' => $lane->id]);
         TaskStaffAssignment::factory()->create(['timetable_task_id' => $task->id, 'staff_id' => $staff->id]);
         $laneRequest = LaneRequest::create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'timetable_task_id' => $task->id,
             'requested_by_staff_id' => $staff->id,
             'request_type' => 'staffing',
@@ -237,7 +238,8 @@ class Phase2And3ArchitectureTest extends TestCase
         app(TimetableRepositoryInterface::class)->delete($timetable);
 
         $this->assertDatabaseCount('timetables', 0);
-        $this->assertDatabaseCount('lanes', 0);
+        $this->assertDatabaseCount('timetable_lanes', 0);
+        $this->assertDatabaseCount('lanes', 1);
         $this->assertDatabaseCount('timetable_tasks', 0);
         $this->assertDatabaseCount('task_staff_assignments', 0);
         $this->assertDatabaseCount('lane_requests', 0);
@@ -342,11 +344,11 @@ class Phase2And3ArchitectureTest extends TestCase
 
         // 2. ResolveActiveTimetableRedirectAction のフォールバックと解決動作
         $redirectAction = app(ResolveActiveTimetableRedirectAction::class);
-        $this->assertSame(route('timetables.index'), $redirectAction->execute(Request::create('/lanes'), 'timetables.lanes.index')->getTargetUrl());
+        $this->assertSame(route('timetables.index'), $redirectAction->execute(Request::create('/timetable-lanes'), 'timetables.lanes.index')->getTargetUrl());
         $activeTimetable = Timetable::factory()->create(['status' => 'active']);
         $this->assertSame(
             route('timetables.lanes.index', $activeTimetable),
-            $redirectAction->execute(Request::create('/lanes'), 'timetables.lanes.index')->getTargetUrl()
+            $redirectAction->execute(Request::create('/timetable-lanes'), 'timetables.lanes.index')->getTargetUrl()
         );
 
         // 3. ApplyStandardSiteMapPresetAction & DownloadSiteMapPdfAction
@@ -392,7 +394,7 @@ class Phase2And3ArchitectureTest extends TestCase
         // 5. PrintTimetableMatrixRequest の lane_ids パースと DestroySiteMapIconRequest の認可・検証
         $matrixRequest = PrintTimetableMatrixRequest::create('/print-matrix', 'GET', ['lane_ids' => '12,0,-1,34']);
         $this->assertSame([12, 34], $matrixRequest->laneIds());
-        $lane = Lane::factory()->create(['timetable_id' => $activeTimetable->id]);
+        $lane = TimetableLane::factory()->create(['timetable_id' => $activeTimetable->id]);
         $this->get(route('timetables.print-matrix', [
             'timetable' => $activeTimetable,
             'lane_ids' => (string) $lane->id,

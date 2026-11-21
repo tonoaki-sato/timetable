@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('timetable_tasks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
-            $table->foreignId('lane_id')->constrained('lanes')->restrictOnDelete();
+            $table->foreignId('timetable_lane_id')->constrained('timetable_lanes')->restrictOnDelete();
             $table->string('title');
             $table->text('content')->nullable(); // 作業内容
             $table->string('location')->nullable();
@@ -30,13 +30,13 @@ return new class extends Migration
             $table->dateTime('updated_at')->nullable();
 
             $table->index(['timetable_id', 'start_time', 'end_time']);
-            $table->index(['lane_id', 'status', 'start_time']);
+            $table->index(['timetable_lane_id', 'status', 'start_time']);
         });
 
         Schema::create('lane_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
-            $table->foreignId('lane_id')->constrained('lanes')->cascadeOnDelete();
+            $table->foreignId('timetable_lane_id')->constrained('timetable_lanes')->cascadeOnDelete();
             $table->foreignId('timetable_task_id')->nullable()->constrained('timetable_tasks')->nullOnDelete();
             $table->foreignId('requested_by_staff_id')->nullable()->constrained('staff')->nullOnDelete();
             $table->string('request_type', 30)->comment('staffing:人員応援要請, equipment:必要機材申請');
@@ -49,9 +49,9 @@ return new class extends Migration
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
 
-            $table->index(['timetable_id', 'lane_id', 'status']);
+            $table->index(['timetable_id', 'timetable_lane_id', 'status']);
             $table->index(['status', 'id']);
-            $table->index(['lane_id', 'status']);
+            $table->index(['timetable_lane_id', 'status']);
             $table->index(['timetable_task_id', 'status']);
         });
     }

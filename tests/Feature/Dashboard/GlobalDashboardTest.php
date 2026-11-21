@@ -8,6 +8,7 @@ use App\Models\Location;
 use App\Models\Schedule;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Carbon\Carbon;
@@ -63,10 +64,11 @@ class GlobalDashboardTest extends TestCase
             ],
         ]);
 
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id, 'name' => 'カラーコーン']);
+        $masterLane = Lane::factory()->create(['name' => 'カラーコーン']);
+        $lane = TimetableLane::factory()->create(['timetable_id' => $timetable->id, 'lane_id' => $masterLane->id]);
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '通行止めコーン一斉設置作業',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',

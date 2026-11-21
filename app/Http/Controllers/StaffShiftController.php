@@ -9,9 +9,9 @@ use App\Http\Requests\ShowStaffShiftRequest;
 use App\Http\Requests\StoreLaneRequestFromShiftRequest;
 use App\Http\Requests\UpdateLaneTaskStatusRequest;
 use App\Http\Requests\UpdateStaffAssignmentStatusRequest;
-use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Services\StaffService;
 use App\Services\TimetableService;
@@ -159,16 +159,16 @@ class StaffShiftController extends Controller
     /**
      * 班長による管理者（本部）への人員不足要請・必要機材申請の送信
      */
-    public function storeLaneRequest(StoreLaneRequestFromShiftRequest $request, string $token, Lane $lane): JsonResponse|RedirectResponse
+    public function storeLaneRequest(StoreLaneRequestFromShiftRequest $request, string $token, TimetableLane $timetableLane): JsonResponse|RedirectResponse
     {
         $staff = $this->resolveActiveStaffOrAbort($token);
 
-        if ((int) $lane->lead_staff_id !== (int) $staff->id) {
+        if ((int) $timetableLane->lead_staff_id !== (int) $staff->id) {
             abort(403, '担当する班の班長のみ管理者への要請・申請を行えます。');
         }
 
         try {
-            $laneRequest = $this->staffService->createLaneRequestFromLeader($lane, $staff, $request->validated());
+            $laneRequest = $this->staffService->createLaneRequestFromLeader($timetableLane, $staff, $request->validated());
         } catch (DomainException $e) {
             return $this->domainErrorResponse($request, $e);
         }

@@ -6,6 +6,7 @@ use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Services\StaffAllocationService;
@@ -20,7 +21,7 @@ class TimetableTaskBulkAssignTest extends TestCase
 
     private Timetable $timetable;
 
-    private Lane $lane;
+    private TimetableLane $lane;
 
     private TimetableTask $task;
 
@@ -38,14 +39,17 @@ class TimetableTaskBulkAssignTest extends TestCase
             'name' => 'まつり運行テスト日',
         ]);
 
-        $this->lane = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => '巡回警備班',
+        ]);
+        $this->lane = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterLane->id,
         ]);
 
         $this->task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => 'エリア警戒巡回',
             'start_time' => '10:00:00',
             'end_time' => '12:00:00',
@@ -106,7 +110,7 @@ class TimetableTaskBulkAssignTest extends TestCase
         // 10:30〜11:30の別タスクにアサイン済み（重複）
         $otherTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '本部待機',
             'start_time' => '10:30:00',
             'end_time' => '11:30:00',
@@ -147,7 +151,7 @@ class TimetableTaskBulkAssignTest extends TestCase
 
         $otherTask = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'start_time' => '10:00:00',
             'end_time' => '12:00:00',
         ]);

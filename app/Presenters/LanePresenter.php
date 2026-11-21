@@ -17,7 +17,17 @@ class LanePresenter
      */
     public function colorClasses(): array
     {
-        return match ($this->lane->color) {
+        return self::colorClassesFor((string) $this->lane->color);
+    }
+
+    /**
+     * 指定カラーキーのCSSクラス配列を取得
+     *
+     * @return array{badge: string, border: string, bg: string, text: string}
+     */
+    public static function colorClassesFor(string $color): array
+    {
+        return match ($color) {
             'amber' => [
                 'badge' => 'bg-amber-100 text-amber-800 border-amber-300',
                 'border' => 'border-amber-300',
@@ -85,20 +95,5 @@ class LanePresenter
                 'text' => 'text-slate-800',
             ],
         };
-    }
-
-    /**
-     * PDF進行表ヘッダー用の班長表記（例: '（佐藤さん）'）
-     */
-    public function pdfLeadSuffix(): string
-    {
-        $leadName = $this->lane->lead_short_name;
-        if ($leadName === '') {
-            return '';
-        }
-
-        return (str_ends_with($leadName, 'さん') || str_ends_with($leadName, '外'))
-            ? "（{$leadName}）"
-            : "（{$leadName}さん）";
     }
 }

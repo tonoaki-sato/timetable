@@ -4,14 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateLaneRequestStatusRequest;
 use App\Models\LaneRequest;
-use App\Services\LaneService;
+use App\Services\TimetableLaneService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
 class LaneRequestController extends Controller
 {
     public function __construct(
-        protected LaneService $laneService
+        protected TimetableLaneService $timetableLaneService
     ) {}
 
     /**
@@ -23,7 +23,7 @@ class LaneRequestController extends Controller
 
         $validated = $request->validated();
 
-        $laneRequest = $this->laneService->updateLaneRequestStatus(
+        $laneRequest = $this->timetableLaneService->updateLaneRequestStatus(
             $laneRequest,
             $validated['status'],
             $request->user()?->id

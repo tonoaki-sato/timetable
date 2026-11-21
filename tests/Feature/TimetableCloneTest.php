@@ -23,6 +23,7 @@ use App\Models\Staff;
 use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Models\Vendor;
@@ -80,11 +81,14 @@ class TimetableCloneTest extends TestCase
         $assignStaff = Staff::factory()->create(['name' => '鈴木 配置', 'is_active' => true]);
         $absentStaff = Staff::factory()->create(['name' => '高橋 欠席', 'is_active' => true]);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $sourceTimetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => 'カラーコーン班',
             'icon' => '🔺',
             'color' => 'amber',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $sourceTimetable->id,
+            'lane_id' => $masterLane->id,
             'lead_staff_id' => $leadStaff->id,
             'display_order' => 10,
         ]);
@@ -92,7 +96,7 @@ class TimetableCloneTest extends TestCase
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $sourceTimetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => 'コーン設置',
             'start_time' => '08:30:00',
             'end_time' => '09:30:00',
@@ -214,7 +218,7 @@ class TimetableCloneTest extends TestCase
         ]);
         LaneRequest::create([
             'timetable_id' => $sourceTimetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'timetable_task_id' => $task->id,
             'staff_id' => $leadStaff->id,
             'request_type' => 'staffing',
@@ -238,7 +242,7 @@ class TimetableCloneTest extends TestCase
         $indexResponse = $this->actingAs($this->operator)->get(route('timetables.index'));
         $indexResponse->assertOk()
             ->assertSee('btn-clone-timetable')
-            ->assertSee('data-source-id="'.$source->id.'"', false)
+            ->assertSee('data-source-id="' . $source->id . '"', false)
             ->assertSee('modal-timetable-form')
             ->assertSee('id="modal_source_timetable_id"', false)
             ->assertSee('id="modal_copy_lanes"', false)
@@ -304,17 +308,18 @@ class TimetableCloneTest extends TestCase
         $this->assertSame('draft', $newTimetable->status);
         $this->assertNotNull(Schedule::where('timetable_id', $newTimetable->id)->first());
 
-        // 2. Lane & 固定スタッフ
-        $newLane = Lane::where('timetable_id', $newTimetable->id)->first();
+        // 2. TimetableLane & 固定スタッフ（マスター担当班は重複作成されないこと）
+        $this->assertSame(1, Lane::count());
+        $newLane = TimetableLane::where('timetable_id', $newTimetable->id)->first();
         $this->assertNotNull($newLane);
         $this->assertSame('カラーコーン班', $newLane->name);
         $this->assertSame($dataset['leadStaff']->id, $newLane->lead_staff_id);
         $this->assertTrue($newLane->fixedStaff()->where('staff_id', $dataset['fixedStaff']->id)->exists());
 
-        // 3. TimetableTask (lane_id リマップ & status=not_started) & Assignment (absent除外 & assigned初期化)
+        // 3. TimetableTask (timetable_lane_id リマップ & status=not_started) & Assignment (absent除外 & assigned初期化)
         $newTask = TimetableTask::where('timetable_id', $newTimetable->id)->first();
         $this->assertNotNull($newTask);
-        $this->assertSame($newLane->id, $newTask->lane_id);
+        $this->assertSame($newLane->id, $newTask->timetable_lane_id);
         $this->assertSame('not_started', $newTask->status);
         $this->assertSame(1, $newTask->assignments()->count());
         $newAssignment = $newTask->assignments()->first();
@@ -380,8 +385,9 @@ class TimetableCloneTest extends TestCase
 
         $newTimetable = Timetable::where('target_date', '2026-10-19')->firstOrFail();
 
-        // 担当班とタスクはコピーされるが、班長・固定スタッフ・タスクアサインはコピーされない
-        $newLane = Lane::where('timetable_id', $newTimetable->id)->first();
+        // 担当班とタスクはコピーされるが、班長・固定スタッフ・タスクアサインはコピーされない（マスターは重複作成されない）
+        $this->assertSame(1, Lane::count());
+        $newLane = TimetableLane::where('timetable_id', $newTimetable->id)->first();
         $this->assertNotNull($newLane);
         $this->assertNull($newLane->lead_staff_id);
         $this->assertSame(0, $newLane->fixedStaff()->count());

@@ -49,7 +49,7 @@ class DownloadTimetableAssignmentsPdfAction
         $totalRequired = 0;
         $totalAssigned = 0;
 
-        foreach ($timetable->lanes as $lane) {
+        foreach ($timetable->timetableLanes as $lane) {
             foreach ($lane->tasks as $task) {
                 $totalRequired += $task->required_people_count;
                 $totalAssigned += $task->assigned_count;

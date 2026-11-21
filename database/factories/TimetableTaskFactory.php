@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Lane;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -21,7 +21,7 @@ class TimetableTaskFactory extends Factory
     {
         return [
             'timetable_id' => Timetable::factory(),
-            'lane_id' => fn (array $attributes) => Lane::factory()->create([
+            'timetable_lane_id' => fn (array $attributes) => TimetableLane::factory()->create([
                 'timetable_id' => $attributes['timetable_id'],
             ])->id,
             'title' => fake()->randomElement([

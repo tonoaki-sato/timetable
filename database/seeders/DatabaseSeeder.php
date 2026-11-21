@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
         // 3. 組織・担当初期データ
         $this->call(OrganizationSeeder::class);
 
+        // 担当班マスター
+        $this->call(LaneSeeder::class);
+
         // 4. タイムテーブル＆タスク初期データ
         $this->call(TimetableSeeder::class);
 

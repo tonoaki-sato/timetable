@@ -7,6 +7,7 @@ use App\Models\Staff;
 use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,14 +53,16 @@ class StaffPrintAndCsvTest extends TestCase
             'affiliation' => '防犯部',
             'is_active' => true,
         ]);
-        Lane::factory()->create([
+        $master1 = Lane::factory()->create(['name' => '誘導警備班']);
+        $master2 = Lane::factory()->create(['name' => '巡回班']);
+        TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '誘導警備班',
+            'lane_id' => $master1->id,
             'lead_staff_id' => $leaderStaff->id,
         ]);
-        Lane::factory()->create([
+        TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '巡回班',
+            'lane_id' => $master2->id,
             'lead_staff_id' => $leaderStaff->id,
         ]);
 
@@ -129,8 +132,10 @@ class StaffPrintAndCsvTest extends TestCase
         Staff::factory()->count(18)->create(['is_active' => true]);
         $timetable = Timetable::first() ?? Timetable::factory()->create();
         $leadStaff = Staff::first();
-        Lane::factory()->create(['timetable_id' => $timetable->id, 'name' => '宿場くん/宿場ちゃん', 'lead_staff_id' => $leadStaff->id]);
-        Lane::factory()->create(['timetable_id' => $timetable->id, 'name' => 'ステカン', 'lead_staff_id' => $leadStaff->id]);
+        $mascotMaster = Lane::factory()->create(['name' => '宿場くん/宿場ちゃん']);
+        $signMaster = Lane::factory()->create(['name' => 'ステカン']);
+        TimetableLane::factory()->create(['timetable_id' => $timetable->id, 'lane_id' => $mascotMaster->id, 'lead_staff_id' => $leadStaff->id]);
+        TimetableLane::factory()->create(['timetable_id' => $timetable->id, 'lane_id' => $signMaster->id, 'lead_staff_id' => $leadStaff->id]);
 
         $response34 = $this->get(route('staff.print-cards'));
         $response34->assertStatus(200);
@@ -176,13 +181,14 @@ class StaffPrintAndCsvTest extends TestCase
         $this->actingAs($this->operator);
 
         $timetable = Timetable::factory()->create(['name' => '本祭 昼運行']);
-        $lane = Lane::factory()->create([
+        $masterLane = Lane::factory()->create(['name' => '誘導警備班']);
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '誘導警備班',
+            'lane_id' => $masterLane->id,
         ]);
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '交差点A 交通遮断',
         ]);
         $staff = Staff::factory()->create(['name' => '警備 隊長']);

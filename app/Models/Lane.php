@@ -5,20 +5,20 @@ namespace App\Models;
 use App\Presenters\LanePresenter;
 use Database\Factories\LaneFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 #[Fillable([
-    'timetable_id',
     'name',
     'color',
     'icon',
-    'lead_staff_id',
     'description',
     'display_order',
+    'is_active',
 ])]
 class Lane extends Model
 {
@@ -99,64 +99,58 @@ class Lane extends Model
     {
         return [
             'display_order' => 'integer',
+            'is_active' => 'boolean',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * 有効な担当班マスターのみ抽出するスコープ
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
     }
 
     /**
      * 表示順序でソートするスコープ
      */
-    public function scopeOrdered($query)
+    public function scopeOrdered(Builder $query): Builder
     {
-        return $query->orderBy('display_order', 'asc');
+        return $query->orderBy('display_order', 'asc')->orderBy('id', 'asc');
     }
 
     /**
-     * 親タイムテーブルとのリレーション
+     * 運行日別担当班編成一覧とのリレーション
+     *
+     * @return HasMany<TimetableLane, $this>
      */
-    public function timetable(): BelongsTo
+    public function timetableLanes(): HasMany
     {
-        return $this->belongsTo(Timetable::class);
+        return $this->hasMany(TimetableLane::class, 'lane_id');
     }
 
     /**
-     * 班長（主担当スタッフ）とのリレーション
+     * この担当班を編成している運行計画一覧との多対多リレーション
+     *
+     * @return BelongsToMany<Timetable, $this>
      */
-    public function leadStaff(): BelongsTo
+    public function timetables(): BelongsToMany
     {
-        return $this->belongsTo(Staff::class, 'lead_staff_id');
-    }
-
-    /**
-     * 固定スタッフ一覧との多対多リレーション
-     */
-    public function fixedStaff(): BelongsToMany
-    {
-        return $this->belongsToMany(Staff::class, 'lane_fixed_staff')
+        return $this->belongsToMany(Timetable::class, 'timetable_lanes')
+            ->withPivot(['id', 'lead_staff_id', 'display_order', 'notes'])
             ->withTimestamps();
     }
 
     /**
-     * 班長からの要請・機材申請一覧とのリレーション
+     * 日別編成経由で紐づく全作業タスク一覧とのリレーション
+     *
+     * @return HasManyThrough<TimetableTask, TimetableLane, $this>
      */
-    public function laneRequests(): HasMany
+    public function tasks(): HasManyThrough
     {
-        return $this->hasMany(LaneRequest::class)->orderByDesc('id');
-    }
-
-    /**
-     * 所属作業タスク一覧とのリレーション
-     */
-    public function tasks(): HasMany
-    {
-        return $this->hasMany(TimetableTask::class)->orderBy('start_time', 'asc');
-    }
-
-    /**
-     * 班長（主担当）が設定されているか
-     */
-    public function hasLead(): bool
-    {
-        return $this->lead_staff_id !== null;
+        return $this->hasManyThrough(TimetableTask::class, TimetableLane::class, 'lane_id', 'timetable_lane_id');
     }
 
     /**
@@ -186,51 +180,65 @@ class Lane extends Model
     }
 
     /**
-     * 班長の苗字（短縮名）アクセサ
-     */
-    public function getLeadShortNameAttribute(): string
-    {
-        return $this->leadStaff
-            ? (explode(' ', $this->leadStaff->name)[0] ?? $this->leadStaff->name)
-            : '';
-    }
-
-    /**
-     * PDF進行表ヘッダー用の班長表記（例: '（佐藤さん）'）
-     */
-    public function getPdfLeadSuffixAttribute(): string
-    {
-        return $this->presenter()->pdfLeadSuffix();
-    }
-
-    /**
-     * 新規タスク追加時の推奨開始時刻（最遅終了時刻または '08:00'）
-     */
-    public function getSuggestedStartTimeAttribute(): string
-    {
-        $latestTask = $this->tasks->sortByDesc('end_time')->first();
-
-        return $latestTask ? substr((string) $latestTask->end_time, 0, 5) : '08:00';
-    }
-
-    /**
-     * 固定スタッフID配列アクセサ
+     * 詳細・編集モーダル用ペイロード配列を生成
      *
-     * @return array<int, int>
+     * @return array{
+     *     id: int,
+     *     name: string,
+     *     color: string,
+     *     color_label: string,
+     *     color_classes: array{badge: string, border: string, bg: string, text: string},
+     *     icon: ?string,
+     *     icon_label: string,
+     *     description: ?string,
+     *     display_order: int,
+     *     is_active: bool,
+     *     timetable_lanes_count: int,
+     *     tasks_count: int,
+     *     timetables: list<array{id: int, name: string, target_date: ?string, target_date_label: string}>,
+     *     update_url: string,
+     *     destroy_url: string
+     * }
      */
-    public function getFixedStaffIdsAttribute(): array
+    public function toModalPayload(): array
     {
-        return $this->fixedStaff->pluck('id')->all();
-    }
+        $timetablesCollection = $this->relationLoaded('timetableLanes')
+            ? $this->timetableLanes->pluck('timetable')->filter()->unique('id')->sortBy('target_date')
+            : $this->timetables()->orderBy('target_date')->get();
 
-    /**
-     * 編集フォーム表示用の選択済み固定スタッフID配列を取得
-     *
-     * @param  array<int, int|string>|null  $oldFixedIds
-     * @return array<int, int|string>
-     */
-    public function resolveSelectedFixedIds(?array $oldFixedIds = null): array
-    {
-        return $oldFixedIds !== null ? $oldFixedIds : $this->fixed_staff_ids;
+        $timetablesPayload = $timetablesCollection
+            ->map(function (Timetable $timetable): array {
+                $targetDate = $timetable->target_date?->format('Y-m-d');
+                $targetDateLabel = $timetable->target_date
+                    ? $timetable->target_date->format('Y/m/d')."（{$timetable->weekday_label}）"
+                    : '';
+
+                return [
+                    'id' => (int) $timetable->id,
+                    'name' => (string) $timetable->name,
+                    'target_date' => $targetDate,
+                    'target_date_label' => $targetDateLabel,
+                ];
+            })
+            ->values()
+            ->all();
+
+        return [
+            'id' => (int) $this->id,
+            'name' => (string) $this->name,
+            'color' => (string) $this->color,
+            'color_label' => self::COLOR_OPTIONS[$this->color] ?? (string) $this->color,
+            'color_classes' => $this->color_classes,
+            'icon' => $this->icon,
+            'icon_label' => $this->icon_label,
+            'description' => $this->description,
+            'display_order' => (int) $this->display_order,
+            'is_active' => (bool) $this->is_active,
+            'timetable_lanes_count' => (int) ($this->timetable_lanes_count ?? $this->timetableLanes()->count()),
+            'tasks_count' => (int) ($this->tasks_count ?? $this->tasks()->count()),
+            'timetables' => $timetablesPayload,
+            'update_url' => route('lanes.update', $this),
+            'destroy_url' => route('lanes.destroy', $this),
+        ];
     }
 }

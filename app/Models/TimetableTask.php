@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'timetable_id',
-    'lane_id',
+    'timetable_lane_id',
     'title',
     'content',
     'location',
@@ -84,27 +84,13 @@ class TimetableTask extends Model
     }
 
     /**
-     * 紐づく担当班とのリレーション
+     * 紐づく日別担当班編成とのリレーション
+     *
+     * @return BelongsTo<TimetableLane, $this>
      */
-    public function lane(): BelongsTo
+    public function timetableLane(): BelongsTo
     {
-        return $this->belongsTo(Lane::class, 'lane_id');
-    }
-
-    /**
-     * 紐づく担当班とのリレーション（後方互換）
-     */
-    public function laneRelation(): BelongsTo
-    {
-        return $this->lane();
-    }
-
-    /**
-     * 後方互換用: レーン名文字列アクセサ
-     */
-    public function getLaneAttribute(): string
-    {
-        return $this->laneRelation?->name ?? '';
+        return $this->belongsTo(TimetableLane::class, 'timetable_lane_id');
     }
 
     /**
@@ -188,7 +174,7 @@ class TimetableTask extends Model
      */
     public function getLaneNameLabelAttribute(): string
     {
-        return $this->laneRelation?->name ?? '担当班未設定';
+        return $this->timetableLane?->name ?? '担当班未設定';
     }
 
     /**
@@ -196,7 +182,7 @@ class TimetableTask extends Model
      */
     public function getLaneIconLabelAttribute(): string
     {
-        return $this->laneRelation?->icon ?: '📋';
+        return $this->timetableLane?->icon ?: '📋';
     }
 
     /**
@@ -260,8 +246,8 @@ class TimetableTask extends Model
      *
      * @return array<string, mixed>
      */
-    public function toModalPayload(?Lane $lane = null): array
+    public function toModalPayload(?TimetableLane $timetableLane = null): array
     {
-        return $this->presenter()->toModalPayload($lane);
+        return $this->presenter()->toModalPayload($timetableLane);
     }
 }

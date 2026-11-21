@@ -6,8 +6,10 @@ use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
+use App\Services\StaffAllocationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -25,15 +27,20 @@ class LaneAndStaffSpecificationTest extends TestCase
         $fixedStaff2 = Staff::factory()->create(['name' => '固定 二郎']);
         $fulfillmentStaff = Staff::factory()->create(['name' => '充足 三郎']);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => 'カラーコーン',
+            'color' => 'amber',
+            'icon' => '🔺',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
             'lead_staff_id' => null,
         ]);
 
         $task1 = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => 'コーン搬入',
             'start_time' => '08:00:00',
             'end_time' => '09:00:00',
@@ -42,12 +49,8 @@ class LaneAndStaffSpecificationTest extends TestCase
 
         // 1. 班長と固定スタッフをレーンに設定すると既存タスクに自動アサインされる
         $response = $this->actingAs($admin)->put(route('timetables.lanes.update', [$timetable, $lane]), [
-            'name' => 'カラーコーン',
-            'color' => 'amber',
-            'icon' => '🔺',
             'lead_staff_id' => $leader->id,
             'fixed_staff_ids' => [$fixedStaff1->id, $fixedStaff2->id],
-            'display_order' => 10,
         ]);
 
         $response->assertRedirect(route('timetables.lanes.index', $timetable));
@@ -75,7 +78,7 @@ class LaneAndStaffSpecificationTest extends TestCase
         // 2. 新規タスク作成時にも班長と固定スタッフが自動的に基本アサインされる
         $this->actingAs($admin)->post(route('timetable-tasks.store'), [
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'auto_assign_lead' => 1,
             'tasks' => [
                 [
@@ -116,22 +119,24 @@ class LaneAndStaffSpecificationTest extends TestCase
         $fixedA1 = Staff::factory()->create(['name' => 'A固定1']);
         $fixedA2 = Staff::factory()->create(['name' => 'A固定2']);
 
-        $laneA = Lane::factory()->create([
+        $masterA = Lane::factory()->create(['name' => '衛生']);
+        $laneA = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '衛生',
+            'lane_id' => $masterA->id,
             'lead_staff_id' => $leaderA->id,
         ]);
         $laneA->fixedStaff()->sync([$fixedA1->id, $fixedA2->id]);
 
-        $laneB = Lane::factory()->create([
+        $masterB = Lane::factory()->create(['name' => '巡回']);
+        $laneB = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '巡回',
+            'lane_id' => $masterB->id,
         ]);
 
         // A班のタスクは必要人数2名に対し、班長+固定2名の計3名が基本アサインされており1名余剰（定員超過）状態
         $taskA = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $laneA->id,
+            'timetable_lane_id' => $laneA->id,
             'title' => '衛生点検',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
@@ -145,7 +150,7 @@ class LaneAndStaffSpecificationTest extends TestCase
         // 同時間帯のB班タスク（人員不足）
         $taskB = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $laneB->id,
+            'timetable_lane_id' => $laneB->id,
             'title' => '会場パトロール',
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
@@ -176,15 +181,16 @@ class LaneAndStaffSpecificationTest extends TestCase
         $timetable = Timetable::factory()->create(['created_by' => $admin->id]);
         $leader = Staff::factory()->create(['name' => '班長 佐藤', 'is_active' => true]);
 
-        $lane = Lane::factory()->create([
+        $master = Lane::factory()->create(['name' => '給水設備']);
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '給水設備',
+            'lane_id' => $master->id,
             'lead_staff_id' => $leader->id,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '給水タンク設置',
             'start_time' => '09:00:00',
             'end_time' => '10:00:00',
@@ -212,7 +218,7 @@ class LaneAndStaffSpecificationTest extends TestCase
         // 2. 班長が人員不足のため管理者へ応援要請を送信
         $staffingResponse = $this->postJson(route('staff.myshift.lane-requests.store', [
             'token' => $leader->access_token,
-            'lane' => $lane->id,
+            'timetableLane' => $lane->id,
         ]), [
             'request_type' => 'staffing',
             'timetable_task_id' => $task->id,
@@ -222,7 +228,7 @@ class LaneAndStaffSpecificationTest extends TestCase
 
         $staffingResponse->assertOk()->assertJson(['success' => true]);
         $this->assertDatabaseHas('lane_requests', [
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'timetable_task_id' => $task->id,
             'requested_by_staff_id' => $leader->id,
             'request_type' => 'staffing',
@@ -233,7 +239,7 @@ class LaneAndStaffSpecificationTest extends TestCase
         // 3. 班長が必要機材を申請
         $equipmentResponse = $this->postJson(route('staff.myshift.lane-requests.store', [
             'token' => $leader->access_token,
-            'lane' => $lane->id,
+            'timetableLane' => $lane->id,
         ]), [
             'request_type' => 'equipment',
             'requested_count' => 4,
@@ -254,6 +260,51 @@ class LaneAndStaffSpecificationTest extends TestCase
             'success' => true,
             'status' => 'approved',
         ]);
+    }
+
+    public function test_fixed_and_lead_staff_priority_is_scoped_to_task_timetable(): void
+    {
+        $day1 = Timetable::factory()->create(['name' => 'Day1']);
+        $day2 = Timetable::factory()->create(['name' => 'Day2']);
+        $masterLane = Lane::factory()->create(['name' => '交通警備班']);
+
+        $day1Lead = Staff::factory()->create(['name' => 'Day1班長', 'is_active' => true]);
+        $day1Fixed = Staff::factory()->create(['name' => 'Day1固定', 'is_active' => true]);
+        $day2Lead = Staff::factory()->create(['name' => 'Day2班長', 'is_active' => true]);
+
+        $tlDay1 = TimetableLane::factory()->create([
+            'timetable_id' => $day1->id,
+            'lane_id' => $masterLane->id,
+            'lead_staff_id' => $day1Lead->id,
+        ]);
+        $tlDay1->fixedStaff()->attach([$day1Lead->id, $day1Fixed->id]);
+
+        $tlDay2 = TimetableLane::factory()->create([
+            'timetable_id' => $day2->id,
+            'lane_id' => $masterLane->id,
+            'lead_staff_id' => $day2Lead->id,
+        ]);
+        $tlDay2->fixedStaff()->attach([$day2Lead->id]);
+
+        $day2Task = TimetableTask::factory()->create([
+            'timetable_id' => $day2->id,
+            'timetable_lane_id' => $tlDay2->id,
+            'title' => 'Day2交通誘導',
+        ]);
+
+        $allocationService = app(StaffAllocationService::class);
+        $candidates = $allocationService
+            ->getPrioritizedStaffForTask($day2Task, Staff::whereIn('id', [$day1Lead->id, $day1Fixed->id, $day2Lead->id])->get())
+            ->keyBy('id');
+
+        $this->assertTrue((bool) $candidates->get($day2Lead->id)->is_lane_lead);
+        $this->assertTrue((bool) $candidates->get($day2Lead->id)->is_same_lane);
+
+        // 別運行日(Day1)での同一マスター担当班における班長・固定所属がDay2側へ漏れないこと
+        $this->assertFalse((bool) $candidates->get($day1Lead->id)->is_lane_lead);
+        $this->assertFalse((bool) $candidates->get($day1Lead->id)->is_same_lane);
+        $this->assertFalse((bool) $candidates->get($day1Fixed->id)->is_lane_lead);
+        $this->assertFalse((bool) $candidates->get($day1Fixed->id)->is_same_lane);
     }
 
     public function test_manual_page_displays_lane_leader_and_fixed_fulfillment_staff_specification(): void

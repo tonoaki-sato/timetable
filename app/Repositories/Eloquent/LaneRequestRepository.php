@@ -11,16 +11,16 @@ use Override;
 class LaneRequestRepository implements LaneRequestRepositoryInterface
 {
     #[Override]
-    public function getPendingForLanesOrTasks(array $laneIds, array $taskIds, int $limit = 6): Collection
+    public function getPendingForLanesOrTasks(array $timetableLaneIds, array $taskIds, int $limit = 6): Collection
     {
-        if (empty($laneIds) && empty($taskIds)) {
+        if (empty($timetableLaneIds) && empty($taskIds)) {
             return new Collection;
         }
 
-        return LaneRequest::with(['lane', 'task', 'requestedByStaff'])
-            ->where(function ($query) use ($laneIds, $taskIds): void {
-                if (! empty($laneIds)) {
-                    $query->whereIn('lane_id', $laneIds);
+        return LaneRequest::with(['timetableLane.lane', 'task', 'requestedByStaff'])
+            ->where(function ($query) use ($timetableLaneIds, $taskIds): void {
+                if (! empty($timetableLaneIds)) {
+                    $query->whereIn('timetable_lane_id', $timetableLaneIds);
                 }
                 if (! empty($taskIds)) {
                     $query->orWhereIn('timetable_task_id', $taskIds);
@@ -62,7 +62,7 @@ class LaneRequestRepository implements LaneRequestRepositoryInterface
     #[Override]
     public function getRecentPendingGlobal(int $limit = 8): Collection
     {
-        return LaneRequest::with(['timetable', 'lane', 'task', 'requestedByStaff'])
+        return LaneRequest::with(['timetable', 'timetableLane.lane', 'task', 'requestedByStaff'])
             ->whereIn('status', ['pending', 'approved'])
             ->orderByDesc('id')
             ->limit($limit)

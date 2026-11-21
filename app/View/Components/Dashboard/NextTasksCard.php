@@ -79,7 +79,7 @@ class NextTasksCard extends Component
      */
     public function formatLaneDisplay(TimetableTask $task): string
     {
-        $lane = $task->laneRelation;
+        $lane = $task->timetableLane;
         if ($lane === null) {
             return '';
         }

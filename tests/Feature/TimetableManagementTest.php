@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Lane;
 use App\Models\Schedule;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -161,7 +162,7 @@ class TimetableManagementTest extends TestCase
             'status' => 'active',
             'created_by' => $this->operator->id,
         ]);
-        $this->assertCount(0, $timetable->lanes);
+        $this->assertCount(0, $timetable->timetableLanes);
     }
 
     /**
@@ -302,10 +303,14 @@ class TimetableManagementTest extends TestCase
         $this->actingAs($this->operator);
 
         $timetable = Timetable::factory()->create(['name' => 'タスク付き運行']);
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id]);
+        $masterLane = Lane::factory()->create();
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
+        ]);
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '削除テスト用タスク',
         ]);
 
@@ -314,7 +319,8 @@ class TimetableManagementTest extends TestCase
 
         $this->assertDatabaseMissing('timetables', ['id' => $timetable->id]);
         $this->assertDatabaseMissing('timetable_tasks', ['id' => $task->id]);
-        $this->assertDatabaseMissing('lanes', ['timetable_id' => $timetable->id]);
+        $this->assertDatabaseMissing('timetable_lanes', ['timetable_id' => $timetable->id]);
+        $this->assertDatabaseHas('lanes', ['id' => $masterLane->id]);
     }
 
     /**

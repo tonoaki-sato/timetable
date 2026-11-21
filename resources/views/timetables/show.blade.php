@@ -152,7 +152,7 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-0.5">
-                    @forelse($timetable->lanes as $lane)
+                    @forelse($timetable->timetableLanes as $lane)
                     <div class="p-2 rounded-lg border border-slate-100 bg-slate-50/70 space-y-0.5">
                         <div class="flex items-center justify-between">
                             <span class="inline-flex items-center text-xs font-bold text-slate-800 truncate">
@@ -376,7 +376,7 @@
                     <div class="p-1.5 bg-red-50/60 rounded border border-red-100 flex items-center justify-between text-xs">
                         <div class="min-w-0 flex-1 pr-2">
                             <div class="font-bold text-slate-900 text-[11px] truncate">
-                                [{{ $critTask->laneRelation?->name ?? '班' }}] {{ $critTask->title }}
+                                [{{ $critTask->timetableLane?->name ?? '班' }}] {{ $critTask->title }}
                             </div>
                             <div class="text-[10px] text-slate-500 font-mono">
                                 {{ substr($critTask->start_time, 0, 5) }}〜{{ substr($critTask->end_time, 0, 5) }} / 必要: {{ $critTask->required_people_count }}名
@@ -474,7 +474,7 @@
                     <div class="p-2 bg-slate-50 rounded-lg border border-slate-200 space-y-1">
                         <div class="flex items-center justify-between gap-1">
                             <span class="font-bold text-slate-900 text-[11px] truncate">
-                                [{{ $req->lane?->name ?? '班' }}] {{ $req->type_label }}
+                                [{{ $req->timetableLane?->name ?? '班' }}] {{ $req->type_label }}
                             </span>
                             <span class="text-[9px] px-1 py-0.2 rounded font-bold shrink-0 {{ $req->status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800' }}">
                                 {{ $req->status_label }}

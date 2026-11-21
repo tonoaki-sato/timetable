@@ -204,11 +204,11 @@ class Timetable extends Model
     }
 
     /**
-     * 紐づく担当班一覧とのリレーション
+     * 紐づく運行日別担当班編成一覧とのリレーション
      */
-    public function lanes(): HasMany
+    public function timetableLanes(): HasMany
     {
-        return $this->hasMany(Lane::class)->orderBy('display_order', 'asc');
+        return $this->hasMany(TimetableLane::class)->orderBy('display_order', 'asc')->orderBy('id', 'asc');
     }
 
     /**

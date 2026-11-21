@@ -22,11 +22,13 @@ use App\Models\SiteMapPlacement;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
 use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Repositories\Contracts\LayoutAreaRepositoryInterface;
+use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use App\Services\FeatureSettingService;
@@ -51,12 +53,14 @@ class Phase1PerformanceOptimizationTest extends TestCase
     public function test_staff_allocation_and_conflict_queries_do_not_trigger_n_plus_one(): void
     {
         $timetable = Timetable::factory()->create(['status' => 'active']);
-        $targetLane = Lane::factory()->create(['timetable_id' => $timetable->id, 'name' => '対象班']);
-        $otherLane = Lane::factory()->create(['timetable_id' => $timetable->id, 'name' => '他班']);
+        $targetMaster = Lane::factory()->create(['name' => '対象班']);
+        $otherMaster = Lane::factory()->create(['name' => '他班']);
+        $targetLane = TimetableLane::factory()->create(['timetable_id' => $timetable->id, 'lane_id' => $targetMaster->id]);
+        $otherLane = TimetableLane::factory()->create(['timetable_id' => $timetable->id, 'lane_id' => $otherMaster->id]);
 
         $targetTask = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $targetLane->id,
+            'timetable_lane_id' => $targetLane->id,
             'start_time' => '10:00:00',
             'end_time' => '12:00:00',
             'required_people_count' => 2,
@@ -65,7 +69,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         // 他班の定員超過タスク（必要1名に対して複数名アサイン）
         $surplusTask = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $otherLane->id,
+            'timetable_lane_id' => $otherLane->id,
             'start_time' => '10:30:00',
             'end_time' => '11:30:00',
             'required_people_count' => 1,
@@ -81,13 +85,13 @@ class Phase1PerformanceOptimizationTest extends TestCase
             ]);
         }
 
-        // getConflictingTasksForStaff が laneRelation を事前ロードしており $task->lane 参照で N+1 が起きないこと
+        // getConflictingTasksForStaff が timetableLane.lane を事前ロードしており $task->lane_name_label 参照で N+1 が起きないこと
         $taskRepository = app(TimetableTaskRepositoryInterface::class);
         DB::flushQueryLog();
         DB::enableQueryLog();
         $conflicts = $taskRepository->getConflictingTasksForStaff($targetTask, $staffList->first()->id);
         foreach ($conflicts as $c) {
-            $this->assertSame('他班', $c->lane);
+            $this->assertSame('他班', $c->lane_name_label);
         }
         $conflictQueries = DB::getQueryLog();
         DB::disableQueryLog();
@@ -113,16 +117,17 @@ class Phase1PerformanceOptimizationTest extends TestCase
 
         $this->assertCount(2, $prioritized2);
         $this->assertCount(10, $prioritized);
-        $this->assertTrue($prioritized->every(fn (Staff $s): bool => (bool) $s->is_surplus_fixed && $s->surplus_type === 'over_capacity'));
-        $this->assertLessThanOrEqual(10, count($allocationQueries));
+        $this->assertTrue($prioritized->every(fn(Staff $s): bool => (bool) $s->is_surplus_fixed && $s->surplus_type === 'over_capacity'));
+        // lanesマスター正規化（timetableLane.laneの定数O(1)事前ロード+2クエリ）を含め定数クエリ数であること
+        $this->assertLessThanOrEqual(12, count($allocationQueries));
         $this->assertSame(count($queriesFor2), count($allocationQueries));
     }
 
     public function test_timetable_context_bar_uses_counts_without_lazy_loading_full_collections(): void
     {
         $timetable = Timetable::factory()->create(['status' => 'active']);
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id]);
-        TimetableTask::factory()->create(['timetable_id' => $timetable->id, 'lane_id' => $lane->id]);
+        $lane = TimetableLane::factory()->create(['timetable_id' => $timetable->id]);
+        TimetableTask::factory()->create(['timetable_id' => $timetable->id, 'timetable_lane_id' => $lane->id]);
         $locationType = LocationType::create([
             'name' => 'test_type',
             'label' => 'テスト拠点種別',
@@ -143,11 +148,11 @@ class Phase1PerformanceOptimizationTest extends TestCase
             'timetable' => $component->timetable,
             'timetablesList' => $component->timetablesList,
             'active' => $component->active,
-            'targetRouteFor' => fn (Timetable $tt): string => $component->targetRouteFor($tt),
+            'targetRouteFor' => fn(Timetable $tt): string => $component->targetRouteFor($tt),
         ])->render();
 
         $this->assertStringContainsString('(1)', $html);
-        $this->assertFalse($freshTimetable->relationLoaded('lanes'));
+        $this->assertFalse($freshTimetable->relationLoaded('timetableLanes'));
         $this->assertFalse($freshTimetable->relationLoaded('tasks'));
         $this->assertFalse($freshTimetable->relationLoaded('logisticsPlans'));
     }
@@ -182,7 +187,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         Cache::flush();
         $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
         $timetable = Timetable::factory()->create(['name' => '第1運行日', 'status' => 'active']);
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id]);
+        $lane = TimetableLane::factory()->create(['timetable_id' => $timetable->id]);
         $staff = Staff::factory()->create();
 
         // 1. ナビゲーション・機能設定のキャッシュヒット＆自動無効化確認
@@ -220,7 +225,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         // 2. ヘッダー通知ベル要請キャッシュ＆TimetableRepository::delete() での一括削除無効化
         LaneRequest::create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'requested_by_staff_id' => $staff->id,
             'request_type' => 'staffing',
             'requested_count' => 1,
@@ -262,18 +267,18 @@ class Phase1PerformanceOptimizationTest extends TestCase
         DB::disableQueryLog();
 
         $updateCount = collect($reorderQueries)
-            ->filter(fn (array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
+            ->filter(fn(array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
             ->count();
         $this->assertSame(1, $updateCount);
         $this->assertSame(10, $eq3->fresh()->display_order);
         $this->assertSame(20, $eq1->fresh()->display_order);
         $this->assertSame(30, $eq2->fresh()->display_order);
 
-        // LaneRepository::reorder も単一UPDATEで動作すること
+        // TimetableLaneRepository::reorder も単一UPDATEで動作すること
         $timetable = Timetable::factory()->create(['target_date' => '2026-10-17']);
-        $lane1 = Lane::factory()->create(['timetable_id' => $timetable->id, 'display_order' => 10]);
-        $lane2 = Lane::factory()->create(['timetable_id' => $timetable->id, 'display_order' => 20]);
-        $laneRepo = app(LaneRepositoryInterface::class);
+        $lane1 = TimetableLane::factory()->create(['timetable_id' => $timetable->id, 'display_order' => 10]);
+        $lane2 = TimetableLane::factory()->create(['timetable_id' => $timetable->id, 'display_order' => 20]);
+        $laneRepo = app(TimetableLaneRepositoryInterface::class);
 
         DB::flushQueryLog();
         DB::enableQueryLog();
@@ -281,7 +286,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         $laneQueries = DB::getQueryLog();
         DB::disableQueryLog();
         $laneUpdateCount = collect($laneQueries)
-            ->filter(fn (array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
+            ->filter(fn(array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
             ->count();
         $this->assertSame(1, $laneUpdateCount);
         $this->assertSame(10, $lane2->fresh()->display_order);
@@ -297,7 +302,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         $laQueries = DB::getQueryLog();
         DB::disableQueryLog();
         $laUpdateCount = collect($laQueries)
-            ->filter(fn (array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
+            ->filter(fn(array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
             ->count();
         $this->assertSame(1, $laUpdateCount);
         $this->assertSame(10, $la2->fresh()->display_order);
@@ -305,7 +310,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         // CloneTimetableAction のバルクインサートがJSONメタデータ含め正確に複製すること
         $user = User::factory()->create(['role' => 'admin', 'is_active' => true]);
         $staff = Staff::factory()->create();
-        $task = TimetableTask::factory()->create(['timetable_id' => $timetable->id, 'lane_id' => $lane1->id]);
+        $task = TimetableTask::factory()->create(['timetable_id' => $timetable->id, 'timetable_lane_id' => $lane1->id]);
         TaskStaffAssignment::factory()->create(['timetable_task_id' => $task->id, 'staff_id' => $staff->id]);
         $locType = LocationType::create([
             'name' => 'clone_loc',

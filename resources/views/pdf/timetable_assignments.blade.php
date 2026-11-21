@@ -209,7 +209,7 @@
     </table>
 
     <!-- 担当班別セクション -->
-    @forelse($timetable->lanes as $lane)
+    @forelse($timetable->timetableLanes as $lane)
     <div class="lane-section">
         <table class="lane-header-table">
             <tr>

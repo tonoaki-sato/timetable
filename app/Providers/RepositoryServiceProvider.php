@@ -19,6 +19,7 @@ use App\Repositories\Contracts\SiteMapRepositoryInterface;
 use App\Repositories\Contracts\StaffCheckInRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
+use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
@@ -40,6 +41,7 @@ use App\Repositories\Eloquent\SiteMapRepository;
 use App\Repositories\Eloquent\StaffCheckInRepository;
 use App\Repositories\Eloquent\StaffRepository;
 use App\Repositories\Eloquent\TaskStaffAssignmentRepository;
+use App\Repositories\Eloquent\TimetableLaneRepository;
 use App\Repositories\Eloquent\TimetableRepository;
 use App\Repositories\Eloquent\TimetableTaskRepository;
 use App\Repositories\Eloquent\UserRepository;
@@ -59,6 +61,7 @@ class RepositoryServiceProvider extends ServiceProvider
         StaffRepositoryInterface::class => StaffRepository::class,
         StaffCheckInRepositoryInterface::class => StaffCheckInRepository::class,
         TimetableRepositoryInterface::class => TimetableRepository::class,
+        TimetableLaneRepositoryInterface::class => TimetableLaneRepository::class,
         TimetableTaskRepositoryInterface::class => TimetableTaskRepository::class,
         FeatureSettingRepositoryInterface::class => FeatureSettingRepository::class,
         LaneRepositoryInterface::class => LaneRepository::class,

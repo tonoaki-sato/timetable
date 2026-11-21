@@ -44,7 +44,7 @@
             <form id="task-create-form" action="{{ route('timetable-tasks.store') }}" method="POST" class="flex-1 flex flex-col min-h-0">
                 @csrf
                 <input type="hidden" name="timetable_id" value="{{ $timetable?->id }}">
-                <input type="hidden" id="create-modal-lane-id" name="lane_id" value="">
+                <input type="hidden" id="create-modal-lane-id" name="timetable_lane_id" value="">
                 <input type="hidden" name="auto_assign_lead" value="1">
 
                 <div class="overflow-y-auto flex-1 p-5 space-y-3.5">

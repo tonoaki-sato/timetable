@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use App\Models\Lane;
-use App\Models\Timetable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -15,10 +14,41 @@ class UpdateLaneRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        /** @var Lane|null $lane */
         $lane = $this->route('lane');
 
-        return $this->user()?->can('update', $lane ?? Lane::class) ?? false;
+        return $lane instanceof Lane
+            ? ($this->user()?->can('update', $lane) ?? false)
+            : ($this->user()?->can('update', Lane::class) ?? false);
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $merge = [];
+
+        if ($this->has('name') && is_string($this->input('name'))) {
+            $merge['name'] = trim($this->input('name'));
+        }
+
+        if ($this->has('icon')) {
+            $icon = $this->input('icon');
+            $merge['icon'] = (is_string($icon) && trim($icon) === '') ? null : (is_string($icon) ? trim($icon) : $icon);
+        }
+
+        if ($this->has('description')) {
+            $description = $this->input('description');
+            $merge['description'] = (is_string($description) && trim($description) === '') ? null : $description;
+        }
+
+        if ($this->has('is_active')) {
+            $merge['is_active'] = $this->boolean('is_active');
+        }
+
+        if ($merge !== []) {
+            $this->merge($merge);
+        }
     }
 
     /**
@@ -28,29 +58,15 @@ class UpdateLaneRequest extends FormRequest
      */
     public function rules(): array
     {
-        /** @var Timetable|null $timetable */
-        $timetable = $this->route('timetable');
-        /** @var Lane|null $lane */
         $lane = $this->route('lane');
-        $timetableId = $timetable?->id ?? $lane?->timetable_id;
+        $laneId = $lane instanceof Lane ? $lane->id : $lane;
 
         return [
-            'name' => [
-                'required',
-                'string',
-                'max:100',
-                Rule::unique('lanes')->where('timetable_id', $timetableId)->ignore($lane?->id),
-            ],
-            'color' => [
-                'required',
-                'string',
-                Rule::in(array_keys(Lane::COLOR_OPTIONS)),
-            ],
+            'name' => ['required', 'string', 'max:100', Rule::unique('lanes', 'name')->ignore($laneId)],
+            'color' => ['required', 'string', Rule::in(array_keys(Lane::COLOR_OPTIONS))],
             'icon' => ['nullable', 'string', 'max:50'],
-            'lead_staff_id' => ['nullable', 'integer', 'exists:staff,id'],
-            'fixed_staff_ids' => ['nullable', 'array'],
-            'fixed_staff_ids.*' => ['integer', 'exists:staff,id'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'is_active' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -62,12 +78,11 @@ class UpdateLaneRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'name' => 'レーン名',
+            'name' => '班名',
             'color' => 'テーマカラー',
             'icon' => 'アイコン',
-            'lead_staff_id' => '班長',
-            'fixed_staff_ids' => '固定スタッフ',
-            'description' => '業務範囲・説明',
+            'description' => '標準役割概要',
+            'is_active' => '有効フラグ',
         ];
     }
 }

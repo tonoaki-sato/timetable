@@ -24,7 +24,7 @@ class TimetableContextBar extends Component
 
         if ($this->timetable !== null) {
             $countMap = [
-                'lanes' => 'lanes_count',
+                'timetableLanes' => 'timetable_lanes_count',
                 'tasks' => 'tasks_count',
                 'logisticsPlans' => 'logistics_plans_count',
             ];

@@ -45,7 +45,7 @@
                 @csrf
                 @method('PUT')
                 <input type="hidden" id="edit-modal-task-id" name="id" value="">
-                <input type="hidden" id="edit-modal-lane-id" name="lane_id" value="">
+                <input type="hidden" id="edit-modal-lane-id" name="timetable_lane_id" value="">
 
                 <div class="overflow-y-auto flex-1 p-5 space-y-3.5">
                     <!-- 1. 作業タスク名 (1行全幅) -->

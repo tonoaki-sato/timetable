@@ -116,8 +116,8 @@ class StaffRepository implements StaffRepositoryInterface
     {
         return Staff::where('is_active', true)
             ->where(function ($q): void {
-                $q->whereHas('fixedLanes')
-                    ->orWhereHas('ledLanes');
+                $q->whereHas('fixedTimetableLanes')
+                    ->orWhereHas('ledTimetableLanes');
             })
             ->distinct()
             ->count('id');
@@ -177,7 +177,7 @@ class StaffRepository implements StaffRepositoryInterface
     }
 
     #[Override]
-    public function loadShiftRelationsAndGetLedLanes(Staff $staff): Collection
+    public function loadShiftRelationsAndGetLedTimetableLanes(Staff $staff): Collection
     {
         $staff->load([
             'assignments' => function ($query): void {
@@ -186,22 +186,24 @@ class StaffRepository implements StaffRepositoryInterface
                 });
             },
             'assignments.task.timetable',
-            'assignments.task.laneRelation.leadStaff',
-            'assignments.task.laneRelation.timetable',
+            'assignments.task.timetableLane.lane',
+            'assignments.task.timetableLane.leadStaff',
+            'assignments.task.timetableLane.timetable',
             'assignments.task.assignments.staff',
             'checkIns',
         ]);
 
-        return $staff->ledLanes()
+        return $staff->ledTimetableLanes()
             ->whereHas('timetable', function ($query): void {
                 $query->where('status', '!=', 'completed');
             })
             ->ordered()
             ->with([
+                'lane',
                 'timetable',
                 'fixedStaff',
                 'tasks.assignments.staff',
-                'tasks.laneRelation',
+                'tasks.timetableLane.lane',
                 'laneRequests.task',
             ])
             ->get();

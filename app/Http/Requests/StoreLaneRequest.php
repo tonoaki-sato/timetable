@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use App\Models\Lane;
-use App\Models\Timetable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -19,33 +18,35 @@ class StoreLaneRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $name = $this->input('name');
+        $icon = $this->input('icon');
+        $description = $this->input('description');
+
+        $this->merge([
+            'name' => is_string($name) ? trim($name) : $name,
+            'icon' => (is_string($icon) && trim($icon) === '') ? null : (is_string($icon) ? trim($icon) : $icon),
+            'description' => (is_string($description) && trim($description) === '') ? null : $description,
+            'is_active' => $this->has('is_active') ? $this->boolean('is_active') : true,
+        ]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        /** @var Timetable|null $timetable */
-        $timetable = $this->route('timetable');
-        $timetableId = $timetable?->id ?? $this->input('timetable_id');
-
         return [
-            'name' => [
-                'required',
-                'string',
-                'max:100',
-                Rule::unique('lanes')->where('timetable_id', $timetableId),
-            ],
-            'color' => [
-                'required',
-                'string',
-                Rule::in(array_keys(Lane::COLOR_OPTIONS)),
-            ],
+            'name' => ['required', 'string', 'max:100', 'unique:lanes,name'],
+            'color' => ['required', 'string', Rule::in(array_keys(Lane::COLOR_OPTIONS))],
             'icon' => ['nullable', 'string', 'max:50'],
-            'lead_staff_id' => ['nullable', 'integer', 'exists:staff,id'],
-            'fixed_staff_ids' => ['nullable', 'array'],
-            'fixed_staff_ids.*' => ['integer', 'exists:staff,id'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'is_active' => ['boolean'],
         ];
     }
 
@@ -57,12 +58,11 @@ class StoreLaneRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'name' => 'レーン名',
+            'name' => '班名',
             'color' => 'テーマカラー',
             'icon' => 'アイコン',
-            'lead_staff_id' => '班長',
-            'fixed_staff_ids' => '固定スタッフ',
-            'description' => '業務範囲・説明',
+            'description' => '標準役割概要',
+            'is_active' => '有効フラグ',
         ];
     }
 }

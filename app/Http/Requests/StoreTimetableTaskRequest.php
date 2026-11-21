@@ -3,9 +3,10 @@
 namespace App\Http\Requests;
 
 use App\Models\TimetableTask;
-use App\Repositories\Contracts\LaneRepositoryInterface;
+use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreTimetableTaskRequest extends FormRequest
 {
@@ -28,15 +29,15 @@ class StoreTimetableTaskRequest extends FormRequest
                 : true,
         ];
 
-        if (! $this->filled('lane_id') && $this->filled('lane')) {
+        if (! $this->filled('timetable_lane_id') && $this->filled('lane')) {
             $timetableId = (int) $this->input('timetable_id');
             $laneName = (string) $this->input('lane');
             $cleanName = str_replace('班', '', $laneName);
-            /** @var LaneRepositoryInterface $laneRepository */
-            $laneRepository = app(LaneRepositoryInterface::class);
-            $lane = $laneRepository->findByTimetableAndNameOrCleanName($timetableId, $laneName, $cleanName);
-            if ($lane) {
-                $mergeData['lane_id'] = $lane->id;
+            /** @var TimetableLaneRepositoryInterface $timetableLaneRepository */
+            $timetableLaneRepository = app(TimetableLaneRepositoryInterface::class);
+            $timetableLane = $timetableLaneRepository->findByTimetableAndNameOrCleanName($timetableId, $laneName, $cleanName);
+            if ($timetableLane) {
+                $mergeData['timetable_lane_id'] = $timetableLane->id;
             }
         }
 
@@ -82,10 +83,15 @@ class StoreTimetableTaskRequest extends FormRequest
     public function rules(): array
     {
         $statusKeys = implode(',', array_keys(TimetableTask::STATUSES));
+        $timetableId = $this->integer('timetable_id');
 
         return [
             'timetable_id' => ['required', 'integer', 'exists:timetables,id'],
-            'lane_id' => ['required', 'integer', 'exists:lanes,id'],
+            'timetable_lane_id' => [
+                'required',
+                'integer',
+                Rule::exists('timetable_lanes', 'id')->where('timetable_id', $timetableId),
+            ],
             'lane' => ['nullable', 'string', 'max:100'],
             'auto_assign_lead' => ['nullable', 'boolean'],
             'tasks' => ['required', 'array', 'min:1', 'max:50'],
@@ -112,7 +118,7 @@ class StoreTimetableTaskRequest extends FormRequest
     {
         return [
             'timetable_id' => '対象タイムテーブル',
-            'lane_id' => '担当班',
+            'timetable_lane_id' => '担当班',
             'lane' => '担当班',
             'tasks' => '作業タスクリスト',
             'tasks.*.title' => '作業タスク名',

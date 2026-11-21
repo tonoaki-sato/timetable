@@ -6,6 +6,7 @@ use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Services\NowTasksService;
 use App\View\Components\Dashboard\NowTasksCard;
@@ -49,14 +50,17 @@ class NowTasksCardTest extends TestCase
             'target_date' => '2026-10-11',
             'status' => 'active',
         ]);
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => 'カラーコーン',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
         ]);
 
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '06時完了済の早朝準備タスク',
             'start_time' => '06:00:00',
             'end_time' => '06:15:00',
@@ -82,16 +86,19 @@ class NowTasksCardTest extends TestCase
         ]);
 
         $leader = Staff::factory()->create(['name' => '漆原 功']);
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => 'カラーコーン',
             'icon' => '🔺',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
             'lead_staff_id' => $leader->id,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '支道接続点カラーコーン本設置',
             'location' => '税務署前交差点',
             'content' => '通行止め開始後速やかにコーンを設置',

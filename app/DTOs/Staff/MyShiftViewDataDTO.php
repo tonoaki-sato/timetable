@@ -2,11 +2,11 @@
 
 namespace App\DTOs\Staff;
 
-use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\StaffCheckIn;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use Illuminate\Support\Collection;
 
 readonly class MyShiftViewDataDTO
@@ -16,7 +16,7 @@ readonly class MyShiftViewDataDTO
      * @param  Collection<int, TaskStaffAssignment>  $assignments
      * @param  Collection<string, Collection<int, TaskStaffAssignment>>  $groupedAssignments
      * @param  Collection<int, MyShiftLaneFilterOptionDTO>  $laneFilters
-     * @param  Collection<int, Lane>  $ledLanes
+     * @param  Collection<int, TimetableLane>  $ledLanes
      */
     public function __construct(
         public Staff $staff,

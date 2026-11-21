@@ -6,6 +6,7 @@ use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,9 +36,13 @@ class TimetableTaskManagementTest extends TestCase
         ]);
 
         foreach (['カラーコーン', '給水設備', '衛生', '巡回', 'キッズ村'] as $i => $name) {
-            Lane::factory()->create([
-                'timetable_id' => $this->timetable->id,
+            $master = Lane::factory()->create([
                 'name' => $name,
+                'display_order' => ($i + 1) * 10,
+            ]);
+            TimetableLane::factory()->create([
+                'timetable_id' => $this->timetable->id,
+                'lane_id' => $master->id,
                 'display_order' => ($i + 1) * 10,
             ]);
         }
@@ -79,11 +84,11 @@ class TimetableTaskManagementTest extends TestCase
 
         $response->assertRedirect(route('timetables.tasks.index', $this->timetable->id));
 
-        $lane = $this->timetable->lanes()->where('name', 'カラーコーン')->firstOrFail();
+        $lane = $this->timetable->timetableLanes()->whereHas('lane', fn ($q) => $q->where('name', 'カラーコーン'))->firstOrFail();
 
         $this->assertDatabaseHas('timetable_tasks', [
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '西口ゲート カラーコーン設置',
             'content' => '西口ゲートから交差点までコーンバーを2m間隔で配置すること。',
             'required_people_count' => 3,
@@ -120,11 +125,11 @@ class TimetableTaskManagementTest extends TestCase
     {
         $this->actingAs($this->operator);
 
-        $waterLane = $this->timetable->lanes()->where('name', '給水設備')->firstOrFail();
+        $waterLane = $this->timetable->timetableLanes()->whereHas('lane', fn ($q) => $q->where('name', '給水設備'))->firstOrFail();
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $waterLane->id,
+            'timetable_lane_id' => $waterLane->id,
             'title' => '更新前タスク',
             'start_time' => '09:00',
             'end_time' => '10:00',
@@ -133,7 +138,7 @@ class TimetableTaskManagementTest extends TestCase
         ]);
 
         $response = $this->put(route('timetable-tasks.update', $task), [
-            'lane_id' => $waterLane->id,
+            'timetable_lane_id' => $waterLane->id,
             'title' => '更新後タスク名称',
             'start_time' => '09:30',
             'end_time' => '10:30',
@@ -300,14 +305,17 @@ class TimetableTaskManagementTest extends TestCase
     {
         $this->actingAs($this->operator);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $master = Lane::factory()->create([
             'name' => '警備班',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $master->id,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '安全パトロール',
         ]);
 

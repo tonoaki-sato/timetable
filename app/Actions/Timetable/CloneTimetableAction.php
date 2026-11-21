@@ -5,12 +5,12 @@ namespace App\Actions\Timetable;
 use App\DTOs\Timetable\CloneTimetableOptionsDTO;
 use App\Enums\LayoutItemStatus;
 use App\Models\EquipmentLogisticsPlan;
-use App\Models\Lane;
 use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\SiteMapPlacement;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
@@ -135,21 +135,19 @@ class CloneTimetableAction
     {
         $laneIdMap = [];
 
-        $sourceLanes = Lane::with('fixedStaff')
+        $sourceLanes = TimetableLane::with('fixedStaff')
             ->where('timetable_id', $source->id)
             ->orderBy('display_order')
             ->orderBy('id')
             ->get();
 
         foreach ($sourceLanes as $sourceLane) {
-            $newLane = Lane::create([
+            $newLane = TimetableLane::create([
                 'timetable_id' => $newTimetable->id,
-                'name' => $sourceLane->name,
-                'color' => $sourceLane->color,
-                'icon' => $sourceLane->icon,
+                'lane_id' => $sourceLane->lane_id,
                 'lead_staff_id' => $copyLaneStaff ? $sourceLane->lead_staff_id : null,
-                'description' => $sourceLane->description,
                 'display_order' => $sourceLane->display_order,
+                'notes' => $sourceLane->notes,
             ]);
 
             if ($copyLaneStaff && $sourceLane->fixedStaff->isNotEmpty()) {
@@ -187,14 +185,14 @@ class CloneTimetableAction
         $now = now()->format('Y-m-d H:i:s');
 
         foreach ($sourceTasks as $sourceTask) {
-            $newLaneId = $sourceTask->lane_id ? ($laneIdMap[$sourceTask->lane_id] ?? null) : null;
+            $newLaneId = $sourceTask->timetable_lane_id ? ($laneIdMap[$sourceTask->timetable_lane_id] ?? null) : null;
             if (! $newLaneId) {
                 continue;
             }
 
             $newTask = TimetableTask::create([
                 'timetable_id' => $newTimetable->id,
-                'lane_id' => $newLaneId,
+                'timetable_lane_id' => $newLaneId,
                 'title' => $sourceTask->title,
                 'content' => $sourceTask->content,
                 'location' => $sourceTask->location,

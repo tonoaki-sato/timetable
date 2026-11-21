@@ -50,7 +50,7 @@ class StaffAllocationService
         }
 
         foreach ($conflictingTasks as $ovTask) {
-            $leadId = $ovTask->laneRelation?->lead_staff_id ? (int) $ovTask->laneRelation->lead_staff_id : null;
+            $leadId = $ovTask->timetableLane?->lead_staff_id ? (int) $ovTask->timetableLane->lead_staff_id : null;
             // 班長は自班タスクから自動引き抜きしない
             if ($leadId !== null && $leadId === $staffId) {
                 return new Collection;
@@ -95,17 +95,20 @@ class StaffAllocationService
             }
         }
 
-        $task->loadMissing('laneRelation.fixedStaff');
+        $task->loadMissing(['timetableLane.lane', 'timetableLane.fixedStaff']);
         if ($activeStaff instanceof \Illuminate\Database\Eloquent\Collection) {
-            $activeStaff->loadMissing(['fixedLanes', 'ledLanes']);
+            $activeStaff->load([
+                'fixedTimetableLanes' => fn ($query) => $query->where('timetable_id', $task->timetable_id),
+                'ledTimetableLanes' => fn ($query) => $query->where('timetable_id', $task->timetable_id),
+            ]);
         }
 
-        $taskLaneName = $task->lane ?: ($task->laneRelation?->name ?? '');
-        $leadStaffId = $task->laneRelation?->lead_staff_id
-            ? (int) $task->laneRelation->lead_staff_id
+        $taskLaneName = $task->timetableLane?->name ?? '';
+        $leadStaffId = $task->timetableLane?->lead_staff_id
+            ? (int) $task->timetableLane->lead_staff_id
             : null;
-        $taskLaneFixedStaffIds = $task->laneRelation
-            ? $task->laneRelation->fixedStaff->pluck('id')->map(fn ($id): int => (int) $id)->all()
+        $taskLaneFixedStaffIds = $task->timetableLane
+            ? $task->timetableLane->fixedStaff->pluck('id')->map(fn ($id): int => (int) $id)->all()
             : [];
 
         foreach ($activeStaff as $staff) {
@@ -120,7 +123,7 @@ class StaffAllocationService
                     || (mb_strpos($taskLaneName, $staff->affiliation) !== false);
             }
 
-            $isOtherLaneFixed = ! $isSameLane && ($staff->fixedLanes->isNotEmpty() || $staff->ledLanes->isNotEmpty());
+            $isOtherLaneFixed = ! $isSameLane && ($staff->fixedTimetableLanes->isNotEmpty() || $staff->ledTimetableLanes->isNotEmpty());
             $isSurplusFixed = false;
             $surplusType = null;
             $surplusSourceTask = null;

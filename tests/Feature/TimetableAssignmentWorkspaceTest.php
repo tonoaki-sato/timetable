@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,7 +19,7 @@ class TimetableAssignmentWorkspaceTest extends TestCase
 
     protected Timetable $timetable;
 
-    protected Lane $lane;
+    protected TimetableLane $lane;
 
     protected function setUp(): void
     {
@@ -32,9 +33,12 @@ class TimetableAssignmentWorkspaceTest extends TestCase
             'target_date' => '2026-10-25',
             'status' => 'active',
         ]);
-        $this->lane = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => '本部巡回班',
+        ]);
+        $this->lane = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterLane->id,
         ]);
     }
 
@@ -58,7 +62,7 @@ class TimetableAssignmentWorkspaceTest extends TestCase
         // 不足タスク
         $task1 = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '東口警戒巡回',
             'required_people_count' => 3,
         ]);
@@ -66,7 +70,7 @@ class TimetableAssignmentWorkspaceTest extends TestCase
         // 充足タスク
         $task2 = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '朝礼ミーティング',
             'required_people_count' => 1,
         ]);
@@ -104,13 +108,13 @@ class TimetableAssignmentWorkspaceTest extends TestCase
     {
         $task1 = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => 'タスク1',
             'required_people_count' => 2,
         ]);
         $task2 = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => 'タスク2',
             'required_people_count' => 2,
         ]);

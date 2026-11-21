@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Models\Lane;
 use App\Models\TaskStaffAssignment;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
@@ -15,7 +15,7 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
     #[Override]
     public function findWithAssignments(int $id): ?TimetableTask
     {
-        return TimetableTask::with(['timetable', 'laneRelation.leadStaff', 'assignments.staff'])->find($id);
+        return TimetableTask::with(['timetable', 'timetableLane.lane', 'timetableLane.leadStaff', 'assignments.staff'])->find($id);
     }
 
     #[Override]
@@ -30,7 +30,7 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
     #[Override]
     public function getForTimelineByTimetableId(int $timetableId): Collection
     {
-        return TimetableTask::with(['laneRelation.leadStaff', 'assignments.staff'])
+        return TimetableTask::with(['timetableLane.lane', 'timetableLane.leadStaff', 'assignments.staff'])
             ->where('timetable_id', $timetableId)
             ->orderBy('start_time')
             ->get();
@@ -39,7 +39,7 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
     #[Override]
     public function getWithAssignmentsAndLaneByTimetableId(int $timetableId): Collection
     {
-        return TimetableTask::with(['assignments.staff', 'laneRelation'])
+        return TimetableTask::with(['assignments.staff', 'timetableLane.lane'])
             ->where('timetable_id', $timetableId)
             ->orderBy('start_time')
             ->get();
@@ -58,7 +58,7 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
                 $query->where('start_time', '<', $task->end_time)
                     ->where('end_time', '>', $task->start_time);
             })
-            ->with(['laneRelation', 'assignments'])
+            ->with(['timetableLane.lane', 'assignments'])
             ->get();
     }
 
@@ -77,25 +77,25 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
                 $query->whereIn('staff_id', $staffIds)
                     ->where('attendance_status', '!=', 'absent');
             })
-            ->with(['laneRelation', 'assignments' => function ($query): void {
+            ->with(['timetableLane.lane', 'assignments' => function ($query): void {
                 $query->where('attendance_status', '!=', 'absent');
             }])
             ->get();
     }
 
     #[Override]
-    public function getActiveForLaneWithAssignments(int $laneId): Collection
+    public function getActiveForLaneWithAssignments(int $timetableLaneId): Collection
     {
-        return TimetableTask::where('lane_id', $laneId)
+        return TimetableTask::where('timetable_lane_id', $timetableLaneId)
             ->where('status', '!=', 'cancelled')
             ->with('assignments')
             ->get();
     }
 
     #[Override]
-    public function getActiveForLaneExcludingIds(int $laneId, array $ignoredTaskIds = []): Collection
+    public function getActiveForLaneExcludingIds(int $timetableLaneId, array $ignoredTaskIds = []): Collection
     {
-        return TimetableTask::where('lane_id', $laneId)
+        return TimetableTask::where('timetable_lane_id', $timetableLaneId)
             ->where('status', '!=', 'cancelled')
             ->when(! empty($ignoredTaskIds), function ($query) use ($ignoredTaskIds): void {
                 $query->whereNotIn('id', $ignoredTaskIds);
@@ -104,34 +104,34 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
     }
 
     #[Override]
-    public function getActiveForLanes(array $laneIds): Collection
+    public function getActiveForLanes(array $timetableLaneIds): Collection
     {
-        if (empty($laneIds)) {
+        if (empty($timetableLaneIds)) {
             return new Collection;
         }
 
-        return TimetableTask::whereIn('lane_id', $laneIds)
+        return TimetableTask::whereIn('timetable_lane_id', $timetableLaneIds)
             ->where('status', '!=', 'cancelled')
             ->orderBy('start_time')
             ->get();
     }
 
     #[Override]
-    public function countByLane(Lane $lane): int
+    public function countByTimetableLane(TimetableLane $timetableLane): int
     {
-        return $lane->tasks()->count();
+        return $timetableLane->tasks()->count();
     }
 
     #[Override]
-    public function migrateLaneTasks(Lane $sourceLane, Lane $targetLane): int
+    public function migrateTimetableLaneTasks(TimetableLane $sourceTimetableLane, TimetableLane $targetTimetableLane): int
     {
-        return $sourceLane->tasks()->update(['lane_id' => $targetLane->id]);
+        return $sourceTimetableLane->tasks()->update(['timetable_lane_id' => $targetTimetableLane->id]);
     }
 
     #[Override]
-    public function deleteByLane(Lane $lane): int
+    public function deleteByTimetableLane(TimetableLane $timetableLane): int
     {
-        return $lane->tasks()->delete();
+        return $timetableLane->tasks()->delete();
     }
 
     #[Override]
@@ -223,7 +223,7 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
     #[Override]
     public function searchQuick(string $keyword, int $limit = 5): Collection
     {
-        return TimetableTask::with(['timetable', 'laneRelation'])
+        return TimetableTask::with(['timetable', 'timetableLane.lane'])
             ->where(function ($q) use ($keyword): void {
                 $q->where('title', 'like', "%{$keyword}%")
                     ->orWhere('content', 'like', "%{$keyword}%")

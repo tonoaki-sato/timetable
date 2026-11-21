@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lane;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -153,9 +154,12 @@ class PreparationNavigatorTest extends TestCase
             'name' => '本祭1日目',
             'status' => 'active',
         ]);
-        Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => 'カラーコーン',
+        ]);
+        TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
             'lead_staff_id' => null,
         ]);
 

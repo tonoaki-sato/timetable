@@ -6,6 +6,7 @@ use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,24 +28,27 @@ class CommonTimetableTaskTest extends TestCase
         $fixedStaff1 = Staff::factory()->create();
         $leadStaff2 = Staff::factory()->create();
 
-        $lane1 = Lane::factory()->create([
+        $m1 = Lane::factory()->create(['name' => 'カラーコーン班']);
+        $lane1 = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => 'カラーコーン班',
+            'lane_id' => $m1->id,
             'lead_staff_id' => $leadStaff1->id,
             'display_order' => 10,
         ]);
         $lane1->fixedStaff()->attach($fixedStaff1->id);
 
-        $lane2 = Lane::factory()->create([
+        $m2 = Lane::factory()->create(['name' => '給水・トイレ班']);
+        $lane2 = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '給水・トイレ班',
+            'lane_id' => $m2->id,
             'lead_staff_id' => $leadStaff2->id,
             'display_order' => 20,
         ]);
 
-        $lane3 = Lane::factory()->create([
+        $m3 = Lane::factory()->create(['name' => '総務班']);
+        $lane3 = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '総務班',
+            'lane_id' => $m3->id,
             'lead_staff_id' => null,
             'display_order' => 30,
         ]);
@@ -52,7 +56,7 @@ class CommonTimetableTaskTest extends TestCase
         $response = $this->actingAs($admin)->post(route('timetable-tasks.common.store'), [
             '_form' => 'common_task',
             'timetable_id' => $timetable->id,
-            'lane_ids' => [$lane1->id, $lane2->id, $lane3->id],
+            'timetable_lane_ids' => [$lane1->id, $lane2->id, $lane3->id],
             'title' => '全体ミーティング',
             'start_time' => '08:00',
             'end_time' => '08:30',
@@ -73,7 +77,7 @@ class CommonTimetableTaskTest extends TestCase
         foreach ([$lane1, $lane2, $lane3] as $lane) {
             $this->assertDatabaseHas('timetable_tasks', [
                 'timetable_id' => $timetable->id,
-                'lane_id' => $lane->id,
+                'timetable_lane_id' => $lane->id,
                 'title' => '全体ミーティング',
                 'start_time' => '08:00',
                 'end_time' => '08:30',
@@ -86,9 +90,9 @@ class CommonTimetableTaskTest extends TestCase
             ]);
         }
 
-        $task1 = TimetableTask::where('lane_id', $lane1->id)->firstOrFail();
-        $task2 = TimetableTask::where('lane_id', $lane2->id)->firstOrFail();
-        $task3 = TimetableTask::where('lane_id', $lane3->id)->firstOrFail();
+        $task1 = TimetableTask::where('timetable_lane_id', $lane1->id)->firstOrFail();
+        $task2 = TimetableTask::where('timetable_lane_id', $lane2->id)->firstOrFail();
+        $task3 = TimetableTask::where('timetable_lane_id', $lane3->id)->firstOrFail();
 
         $this->assertDatabaseHas('task_staff_assignments', [
             'timetable_task_id' => $task1->id,
@@ -118,16 +122,16 @@ class CommonTimetableTaskTest extends TestCase
         $timetable = Timetable::factory()->create(['created_by' => $operator->id]);
         $leadStaff = Staff::factory()->create();
 
-        $lane1 = Lane::factory()->create([
+        $lane1 = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
             'lead_staff_id' => $leadStaff->id,
             'display_order' => 10,
         ]);
-        $lane2 = Lane::factory()->create([
+        $lane2 = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
             'display_order' => 20,
         ]);
-        $unselectedLane = Lane::factory()->create([
+        $unselectedLane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
             'display_order' => 30,
         ]);
@@ -135,7 +139,7 @@ class CommonTimetableTaskTest extends TestCase
         $response = $this->actingAs($operator)->post(route('timetable-tasks.common.store'), [
             '_form' => 'common_task',
             'timetable_id' => $timetable->id,
-            'lane_ids' => [$lane1->id, $lane2->id],
+            'timetable_lane_ids' => [$lane1->id, $lane2->id],
             'title' => '合同設営ブリーフィング',
             'start_time' => '09:00',
             'end_time' => '09:30',
@@ -151,16 +155,16 @@ class CommonTimetableTaskTest extends TestCase
 
         $this->assertDatabaseCount('timetable_tasks', 2);
         $this->assertDatabaseHas('timetable_tasks', [
-            'lane_id' => $lane1->id,
+            'timetable_lane_id' => $lane1->id,
             'title' => '合同設営ブリーフィング',
             'is_at_least' => true,
         ]);
         $this->assertDatabaseHas('timetable_tasks', [
-            'lane_id' => $lane2->id,
+            'timetable_lane_id' => $lane2->id,
             'title' => '合同設営ブリーフィング',
         ]);
         $this->assertDatabaseMissing('timetable_tasks', [
-            'lane_id' => $unselectedLane->id,
+            'timetable_lane_id' => $unselectedLane->id,
         ]);
         $this->assertDatabaseCount('task_staff_assignments', 0);
     }
@@ -178,17 +182,19 @@ class CommonTimetableTaskTest extends TestCase
         $lead2 = Staff::factory()->create();
         $fixed2 = Staff::factory()->create();
 
-        $lane1 = Lane::factory()->create([
+        $m1 = Lane::factory()->create(['name' => 'カラーコーン班']);
+        $lane1 = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => 'カラーコーン班',
+            'lane_id' => $m1->id,
             'lead_staff_id' => $lead1->id,
             'display_order' => 10,
         ]);
         $lane1->fixedStaff()->attach($fixed1->id);
 
-        $lane2 = Lane::factory()->create([
+        $m2 = Lane::factory()->create(['name' => '給水・トイレ班']);
+        $lane2 = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '給水・トイレ班',
+            'lane_id' => $m2->id,
             'lead_staff_id' => $lead2->id,
             'display_order' => 20,
         ]);
@@ -197,7 +203,7 @@ class CommonTimetableTaskTest extends TestCase
         // 給水・トイレ班のみ 08:15〜09:00 に既存タスクあり（08:00〜08:30と一部重複）
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane2->id,
+            'timetable_lane_id' => $lane2->id,
             'title' => '資材事前準備',
             'start_time' => '08:15:00',
             'end_time' => '09:00:00',
@@ -209,7 +215,7 @@ class CommonTimetableTaskTest extends TestCase
             ->post(route('timetable-tasks.common.store'), [
                 '_form' => 'common_task',
                 'timetable_id' => $timetable->id,
-                'lane_ids' => [$lane1->id, $lane2->id],
+                'timetable_lane_ids' => [$lane1->id, $lane2->id],
                 'title' => '全体ミーティング',
                 'start_time' => '08:00',
                 'end_time' => '08:30',
@@ -222,8 +228,8 @@ class CommonTimetableTaskTest extends TestCase
         $response->assertSessionHasNoErrors();
 
         // 両班ともに新規作成されていること
-        $commonTask1 = TimetableTask::where('lane_id', $lane1->id)->where('title', '全体ミーティング')->firstOrFail();
-        $commonTask2 = TimetableTask::where('lane_id', $lane2->id)->where('title', '全体ミーティング')->firstOrFail();
+        $commonTask1 = TimetableTask::where('timetable_lane_id', $lane1->id)->where('title', '全体ミーティング')->firstOrFail();
+        $commonTask2 = TimetableTask::where('timetable_lane_id', $lane2->id)->where('title', '全体ミーティング')->firstOrFail();
 
         // 重複なしのカラーコーン班は班長＋固定スタッフの両方が自動アサイン
         $this->assertDatabaseHas('task_staff_assignments', [
@@ -257,14 +263,15 @@ class CommonTimetableTaskTest extends TestCase
         ]);
 
         $timetable = Timetable::factory()->create(['created_by' => $admin->id]);
-        $lane = Lane::factory()->create([
+        $m = Lane::factory()->create(['name' => '警備班']);
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '警備班',
+            'lane_id' => $m->id,
         ]);
 
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '中止された作業',
             'start_time' => '08:00:00',
             'end_time' => '08:45:00',
@@ -273,7 +280,7 @@ class CommonTimetableTaskTest extends TestCase
 
         $response = $this->actingAs($admin)->post(route('timetable-tasks.common.store'), [
             'timetable_id' => $timetable->id,
-            'lane_ids' => [$lane->id],
+            'timetable_lane_ids' => [$lane->id],
             'title' => '全体朝礼',
             'start_time' => '08:00',
             'end_time' => '08:30',
@@ -284,7 +291,7 @@ class CommonTimetableTaskTest extends TestCase
         $response->assertRedirect(route('timetables.tasks.index', $timetable));
         $response->assertSessionHasNoErrors();
         $this->assertDatabaseHas('timetable_tasks', [
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '全体朝礼',
             'status' => 'not_started',
         ]);
@@ -300,15 +307,15 @@ class CommonTimetableTaskTest extends TestCase
         $timetable = Timetable::factory()->create(['created_by' => $admin->id]);
         $otherTimetable = Timetable::factory()->create(['created_by' => $admin->id]);
 
-        $ownLane = Lane::factory()->create(['timetable_id' => $timetable->id]);
-        $otherLane = Lane::factory()->create(['timetable_id' => $otherTimetable->id]);
+        $ownLane = TimetableLane::factory()->create(['timetable_id' => $timetable->id]);
+        $otherLane = TimetableLane::factory()->create(['timetable_id' => $otherTimetable->id]);
 
         $response = $this->actingAs($admin)
             ->from(route('timetables.tasks.index', $timetable))
             ->post(route('timetable-tasks.common.store'), [
                 '_form' => 'common_task',
                 'timetable_id' => $timetable->id,
-                'lane_ids' => [$ownLane->id, $otherLane->id],
+                'timetable_lane_ids' => [$ownLane->id, $otherLane->id],
                 'title' => '不正横断テスト',
                 'start_time' => '08:00',
                 'end_time' => '08:30',
@@ -316,7 +323,7 @@ class CommonTimetableTaskTest extends TestCase
             ]);
 
         $response->assertRedirect(route('timetables.tasks.index', $timetable));
-        $response->assertSessionHasErrors('lane_ids.1');
+        $response->assertSessionHasErrors('timetable_lane_ids.1');
         $this->assertDatabaseCount('timetable_tasks', 0);
     }
 
@@ -328,11 +335,11 @@ class CommonTimetableTaskTest extends TestCase
         ]);
 
         $timetable = Timetable::factory()->create();
-        $lane = Lane::factory()->create(['timetable_id' => $timetable->id]);
+        $lane = TimetableLane::factory()->create(['timetable_id' => $timetable->id]);
 
         $response = $this->actingAs($viewer)->post(route('timetable-tasks.common.store'), [
             'timetable_id' => $timetable->id,
-            'lane_ids' => [$lane->id],
+            'timetable_lane_ids' => [$lane->id],
             'title' => '全体ミーティング',
             'start_time' => '08:00',
             'end_time' => '08:30',
@@ -357,21 +364,23 @@ class CommonTimetableTaskTest extends TestCase
         $timetable = Timetable::factory()->create(['created_by' => $admin->id]);
         $staff = Staff::factory()->create();
 
-        $lane1 = Lane::factory()->create([
+        $m1 = Lane::factory()->create(['name' => 'カラーコーン班']);
+        $lane1 = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => 'カラーコーン班',
+            'lane_id' => $m1->id,
             'lead_staff_id' => $staff->id,
             'display_order' => 10,
         ]);
-        $lane2 = Lane::factory()->create([
+        $m2 = Lane::factory()->create(['name' => '給水・トイレ班']);
+        $lane2 = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '給水・トイレ班',
+            'lane_id' => $m2->id,
             'display_order' => 20,
         ]);
 
         $task = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane1->id,
+            'timetable_lane_id' => $lane1->id,
             'title' => '初期設営タスク',
             'start_time' => '09:00:00',
             'end_time' => '10:00:00',
@@ -412,14 +421,15 @@ class CommonTimetableTaskTest extends TestCase
         ]);
 
         $timetable = Timetable::factory()->create(['created_by' => $admin->id]);
-        $lane = Lane::factory()->create([
+        $m = Lane::factory()->create(['name' => '誘導班']);
+        $lane = TimetableLane::factory()->create([
             'timetable_id' => $timetable->id,
-            'name' => '誘導班',
+            'lane_id' => $m->id,
         ]);
 
         TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '事前点検',
             'start_time' => '08:00:00',
             'end_time' => '09:00:00',
@@ -432,7 +442,7 @@ class CommonTimetableTaskTest extends TestCase
             ->post(route('timetable-tasks.common.store'), [
                 '_form' => 'common_task',
                 'timetable_id' => $timetable->id,
-                'lane_ids' => [$lane->id],
+                'timetable_lane_ids' => [$lane->id],
                 'title' => '入力保持テストミーティング',
                 'start_time' => '09:30',
                 'end_time' => '08:30',

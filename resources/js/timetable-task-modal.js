@@ -124,7 +124,7 @@ function initTimetableTaskModals() {
         const allTasks = getAllTasks();
         const matches = [];
         for (const task of allTasks) {
-            if (String(task.lane_id) !== String(laneId)) continue;
+            if (String(task.timetable_lane_id) !== String(laneId)) continue;
             if (excludeTaskId && String(task.id) === String(excludeTaskId)) continue;
             if (task.status === 'cancelled') continue;
 
@@ -298,7 +298,7 @@ function initTimetableTaskModals() {
             editForm.action = task.update_url || `/timetable-tasks/${task.id}`;
         }
         if (editTaskIdInput) editTaskIdInput.value = task.id;
-        if (editLaneIdInput) editLaneIdInput.value = task.lane_id;
+        if (editLaneIdInput) editLaneIdInput.value = task.timetable_lane_id;
         if (editLaneBadge) {
             editLaneBadge.textContent = `${task.lane_icon || '📋'} ${task.lane_name || '担当班'}`;
         }

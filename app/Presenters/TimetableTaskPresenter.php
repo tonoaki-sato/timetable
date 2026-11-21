@@ -2,7 +2,7 @@
 
 namespace App\Presenters;
 
-use App\Models\Lane;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 
 class TimetableTaskPresenter
@@ -36,7 +36,7 @@ class TimetableTaskPresenter
      */
     public function laneBadgeClass(): string
     {
-        return $this->task->laneRelation?->color_classes['badge'] ?? 'bg-slate-100 text-slate-800 border-slate-200';
+        return $this->task->timetableLane?->color_classes['badge'] ?? 'bg-slate-100 text-slate-800 border-slate-200';
     }
 
     /**
@@ -44,14 +44,14 @@ class TimetableTaskPresenter
      *
      * @return array<string, mixed>
      */
-    public function toModalPayload(?Lane $lane = null): array
+    public function toModalPayload(?TimetableLane $timetableLane = null): array
     {
-        $targetLane = $lane ?? $this->task->laneRelation;
+        $targetLane = $timetableLane ?? $this->task->timetableLane;
 
         return [
             'id' => $this->task->id,
             'timetable_id' => $this->task->timetable_id,
-            'lane_id' => $this->task->lane_id,
+            'timetable_lane_id' => $this->task->timetable_lane_id,
             'lane_name' => $targetLane?->name ?? '',
             'lane_icon' => $targetLane?->icon ?: '📋',
             'lead_staff_name' => $targetLane?->leadStaff?->name,

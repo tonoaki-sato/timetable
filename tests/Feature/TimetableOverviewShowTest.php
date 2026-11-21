@@ -9,6 +9,7 @@ use App\Models\LaneRequest;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Carbon\Carbon;
@@ -61,16 +62,19 @@ class TimetableOverviewShowTest extends TestCase
         $leader = Staff::factory()->create(['name' => '本部長 太郎']);
         $member = Staff::factory()->create(['name' => '一般スタッフ 花子']);
 
-        $lane = Lane::factory()->create([
-            'timetable_id' => $timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => 'カラーコーン班',
+        ]);
+        $lane = TimetableLane::factory()->create([
+            'timetable_id' => $timetable->id,
+            'lane_id' => $masterLane->id,
             'lead_staff_id' => $leader->id,
         ]);
 
         // クリティカル・最優先タスク
         $criticalTask = TimetableTask::factory()->create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '通行止め直後の最優先コーン設置',
             'start_time' => '10:00:00',
             'end_time' => '10:30:00',
@@ -98,7 +102,7 @@ class TimetableOverviewShowTest extends TestCase
         // 現場要請（当該計画のレーンに紐づく）
         LaneRequest::create([
             'timetable_id' => $timetable->id,
-            'lane_id' => $lane->id,
+            'timetable_lane_id' => $lane->id,
             'requested_by_staff_id' => $leader->id,
             'request_type' => 'staffing',
             'requested_count' => 2,

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\Timetable;
+use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,7 +21,7 @@ class TimetableTaskModalOperationsTest extends TestCase
 
     private Timetable $timetable;
 
-    private Lane $lane;
+    private TimetableLane $lane;
 
     protected function setUp(): void
     {
@@ -44,9 +45,14 @@ class TimetableTaskModalOperationsTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->lane = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $masterLane = Lane::factory()->create([
             'name' => '警備・誘導班',
+            'display_order' => 1,
+        ]);
+
+        $this->lane = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $masterLane->id,
             'display_order' => 1,
         ]);
     }
@@ -58,7 +64,7 @@ class TimetableTaskModalOperationsTest extends TestCase
     {
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '交差点誘導',
             'start_time' => '08:30:00',
             'end_time' => '10:00:00',
@@ -121,7 +127,7 @@ class TimetableTaskModalOperationsTest extends TestCase
     {
         $payload = [
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'tasks' => [
                 [
                     'title' => '正面ゲート案内',
@@ -146,7 +152,7 @@ class TimetableTaskModalOperationsTest extends TestCase
 
         $this->assertDatabaseHas('timetable_tasks', [
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '正面ゲート案内',
             'required_people_count' => 3,
             'is_critical' => true,
@@ -171,7 +177,7 @@ class TimetableTaskModalOperationsTest extends TestCase
         // 既存タスク: 09:00 〜 11:00
         TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '既存誘導タスク',
             'start_time' => '09:00:00',
             'end_time' => '11:00:00',
@@ -180,7 +186,7 @@ class TimetableTaskModalOperationsTest extends TestCase
         // 10:00 〜 12:00（一部重複）と 10:30 〜 11:30（完全包含重複）を登録
         $payload = [
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'tasks' => [
                 [
                     'title' => '新規並行タスクA',
@@ -234,7 +240,7 @@ class TimetableTaskModalOperationsTest extends TestCase
         // 時間帯が重複しない単独タスク（13:00 〜 14:00）作成時は班長＋固定スタッフの両方が自動アサインされること
         $standalonePayload = [
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'tasks' => [
                 [
                     'title' => '午後単独タスク',
@@ -271,7 +277,7 @@ class TimetableTaskModalOperationsTest extends TestCase
     {
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '旧タスク名',
             'start_time' => '08:30:00',
             'end_time' => '10:00:00',
@@ -280,7 +286,7 @@ class TimetableTaskModalOperationsTest extends TestCase
         ]);
 
         $payload = [
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '新タスク名（更新後）',
             'start_time' => '09:00',
             'end_time' => '10:30',
@@ -317,7 +323,7 @@ class TimetableTaskModalOperationsTest extends TestCase
     {
         TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '既存他タスク',
             'start_time' => '10:00:00',
             'end_time' => '12:00:00',
@@ -325,7 +331,7 @@ class TimetableTaskModalOperationsTest extends TestCase
 
         $taskToUpdate = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '更新対象タスク',
             'start_time' => '13:00:00',
             'end_time' => '15:00:00',
@@ -333,7 +339,7 @@ class TimetableTaskModalOperationsTest extends TestCase
 
         // 11:30 〜 13:30（既存他タスクと一部重複）
         $payload = [
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '更新対象タスク（並行時刻）',
             'start_time' => '11:30',
             'end_time' => '13:30',
@@ -360,7 +366,7 @@ class TimetableTaskModalOperationsTest extends TestCase
     {
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => 'タイトルのみ変更',
             'start_time' => '09:00:00',
             'end_time' => '11:00:00',
@@ -369,7 +375,7 @@ class TimetableTaskModalOperationsTest extends TestCase
         ]);
 
         $payload = [
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '変更後タイトル',
             'start_time' => '09:00',
             'end_time' => '11:00',
@@ -392,15 +398,19 @@ class TimetableTaskModalOperationsTest extends TestCase
      */
     public function test_tasks_in_different_lanes_can_have_overlapping_times(): void
     {
-        $otherLane = Lane::factory()->create([
-            'timetable_id' => $this->timetable->id,
+        $otherMasterLane = Lane::factory()->create([
             'name' => '衛生・救護班',
+            'display_order' => 2,
+        ]);
+        $otherLane = TimetableLane::factory()->create([
+            'timetable_id' => $this->timetable->id,
+            'lane_id' => $otherMasterLane->id,
             'display_order' => 2,
         ]);
 
         TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '警備タスク',
             'start_time' => '10:00:00',
             'end_time' => '12:00:00',
@@ -409,7 +419,7 @@ class TimetableTaskModalOperationsTest extends TestCase
         // 別レーンで同一時刻 10:00 〜 12:00
         $payload = [
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $otherLane->id,
+            'timetable_lane_id' => $otherLane->id,
             'tasks' => [
                 [
                     'title' => '救護待機タスク',
@@ -428,7 +438,7 @@ class TimetableTaskModalOperationsTest extends TestCase
         $response->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('timetable_tasks', [
-            'lane_id' => $otherLane->id,
+            'timetable_lane_id' => $otherLane->id,
             'title' => '救護待機タスク',
         ]);
     }
@@ -440,7 +450,7 @@ class TimetableTaskModalOperationsTest extends TestCase
     {
         $task = TimetableTask::factory()->create([
             'timetable_id' => $this->timetable->id,
-            'lane_id' => $this->lane->id,
+            'timetable_lane_id' => $this->lane->id,
             'title' => '閲覧専用タスク',
         ]);
 
@@ -458,7 +468,7 @@ class TimetableTaskModalOperationsTest extends TestCase
         // 更新リクエストは 403 Forbidden
         $this->actingAs($this->viewer)
             ->put(route('timetable-tasks.update', $task), [
-                'lane_id' => $this->lane->id,
+                'timetable_lane_id' => $this->lane->id,
                 'title' => '改変試行',
                 'start_time' => '09:00',
                 'end_time' => '10:00',

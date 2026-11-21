@@ -28,13 +28,13 @@ class TimetableTaskAssignModalResource extends JsonResource
     public function toArray(Request $request): array
     {
         $task = $this->resource;
-        $leadId = $task->laneRelation?->lead_staff_id;
+        $leadId = $task->timetableLane?->lead_staff_id;
 
         return [
             'task' => [
                 'id' => $task->id,
                 'title' => $task->title,
-                'lane' => $task->lane,
+                'lane' => $task->timetableLane?->name ?? '',
                 'start_time' => substr($task->start_time, 0, 5),
                 'end_time' => substr($task->end_time, 0, 5),
                 'location' => $task->location,

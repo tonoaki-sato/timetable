@@ -99,7 +99,7 @@ class NavigationMenuStructureTest extends TestCase
         $response->assertSee('運行日程管理');
 
         // 担当班編成
-        $response->assertSee(route('lanes.index'));
+        $response->assertSee(route('timetable-lanes.index'));
         $response->assertSee('担当班編成');
 
         // タスク台帳
@@ -148,9 +148,12 @@ class NavigationMenuStructureTest extends TestCase
         $response->assertSee(route('location-types.index'));
         $response->assertSee(route('equipment-patterns.index'));
 
-        // マスター管理内に担当班が重複登録されていないこと（デスクトップ・モバイル各1箇所のみ）
+        // 担当班マスターが存在し、担当班編成(日別)とは別箇所に重複なく配置されていること（各デスクトップ・モバイル各1箇所＝2箇所ずつ）
+        $response->assertSee(route('lanes.index'));
+        $response->assertSee('担当班マスター');
         $html = $response->getContent();
         $this->assertSame(2, substr_count($html, route('lanes.index')));
+        $this->assertSame(2, substr_count($html, route('timetable-lanes.index')));
     }
 
     /**
@@ -219,10 +222,10 @@ class NavigationMenuStructureTest extends TestCase
             'end_time' => '21:00:00',
         ]);
 
-        // timetable-tasks.index, lanes.index, assignments.index, logistics.index はアクティブな運行日へリダイレクトされる仕様
+        // timetable-tasks.index, timetable-lanes.index, assignments.index, logistics.index はアクティブな運行日へリダイレクトされる仕様
         $this->get(route('timetable-tasks.index'))
             ->assertRedirect(route('timetables.tasks.index', $this->timetable));
-        $this->get(route('lanes.index'))
+        $this->get(route('timetable-lanes.index'))
             ->assertRedirect(route('timetables.lanes.index', $this->timetable));
         $this->get(route('assignments.index'))
             ->assertRedirect(route('timetables.assignments', $this->timetable));
@@ -237,6 +240,7 @@ class NavigationMenuStructureTest extends TestCase
             route('timetables.logistics.index', $this->timetable),
             route('preparation-navigator.index'),
             route('timetables.index'),
+            route('lanes.index'),
             route('timetables.lanes.index', $this->timetable),
             route('timetables.assignments', $this->timetable),
             route('calendar.index'),
@@ -272,8 +276,9 @@ class NavigationMenuStructureTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // 各リンクの href 属性が出力されていないこと
-        $response->assertDontSee(route('lanes.index'));
+        // 各リンクの href 属性が出力されていないこと（担当班マスター /lanes は常時利用可能）
+        $response->assertSee(route('lanes.index'));
+        $response->assertDontSee(route('timetable-lanes.index'));
         $response->assertDontSee(route('timetable-tasks.index'));
         $response->assertDontSee(route('assignments.index'));
         $response->assertDontSee(route('logistics.index'));
@@ -291,7 +296,8 @@ class NavigationMenuStructureTest extends TestCase
         $response->assertSee('運行日程の登録が必要です');
 
         // 直接代表URLにアクセスした場合は timetables.index へフォールバックリダイレクトされること
-        $this->get(route('lanes.index'))->assertRedirect(route('timetables.index'));
+        $this->get(route('timetable-lanes.index'))->assertRedirect(route('timetables.index'));
+        $this->get(route('lanes.index'))->assertStatus(200);
         $this->get(route('timetable-tasks.index'))->assertRedirect(route('timetables.index'));
         $this->get(route('assignments.index'))->assertRedirect(route('timetables.index'));
         $this->get(route('logistics.index'))->assertRedirect(route('timetables.index'));

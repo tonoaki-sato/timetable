@@ -292,8 +292,8 @@
                                     @foreach($dateAssignments as $assignment)
                                         @php
                                             $task = $assignment->task;
-                                            $laneRelation = $task?->laneRelation;
-                                            $laneLead = $laneRelation?->leadStaff;
+                                            $timetableLane = $task?->timetableLane;
+                                            $laneLead = $timetableLane?->leadStaff;
                                             $isCurrent = $assignment->isCurrent($currentTask);
                                             $isNext = $assignment->isNext($nextTask);
                                             $isCompleted = $assignment->is_completed;
@@ -304,7 +304,7 @@
                                         @endphp
                                         <div data-task-card
                                              data-assignment-id="{{ $assignment->id }}"
-                                             data-lane-id="{{ $task?->lane_id ?? 'none' }}"
+                                             data-lane-id="{{ $task?->timetable_lane_id ?? 'none' }}"
                                              data-completed="{{ $isCompleted ? '1' : '0' }}"
                                              class="myshift-task-card rounded-xl border transition overflow-hidden {{ $isCurrent ? 'bg-gradient-to-r from-indigo-950/95 via-slate-900 to-indigo-950/85 border-2 border-indigo-400 shadow-lg shadow-indigo-950/60 ring-1 ring-indigo-400/40' : ($isNext ? 'bg-slate-900/95 border-sky-500/60 shadow-sm' : ($isCompleted ? 'bg-slate-900/50 border-slate-800/70 opacity-85' : 'bg-slate-900 border-slate-800/90 hover:border-slate-700')) }}">
                                             <div class="p-3.5 space-y-2">
@@ -360,12 +360,12 @@
 
                                                 <!-- 下段: 担当班・班長・場所・役割チップ -->
                                                 <div class="flex items-center flex-wrap gap-1.5 text-[11px]">
-                                                    @if($laneRelation || $task?->lane)
+                                                    @if($timetableLane)
                                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold bg-slate-800 text-indigo-300 border border-slate-700">
-                                                            @if($laneRelation?->icon)
-                                                                <span>{{ $laneRelation->icon }}</span>
+                                                            @if($timetableLane?->icon)
+                                                                <span>{{ $timetableLane->icon }}</span>
                                                             @endif
-                                                            <span>{{ $laneRelation?->name ?: $task->lane }}</span>
+                                                            <span>{{ $timetableLane->name }}</span>
                                                         </span>
                                                     @endif
                                                     @if($laneLead)
@@ -608,7 +608,7 @@
                                         </div>
 
                                         <!-- 人員応援要請フォーム -->
-                                        <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'lane' => $ledLane->id], false) }}"
+                                        <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'timetableLane' => $ledLane->id], false) }}"
                                               method="POST"
                                               data-async-lane-request
                                               data-leader-req-panel="staffing"
@@ -638,7 +638,7 @@
                                         </form>
 
                                         <!-- 必要機材の申請フォーム -->
-                                        <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'lane' => $ledLane->id], false) }}"
+                                        <form action="{{ route('staff.myshift.lane-requests.store', ['token' => $staff->access_token, 'timetableLane' => $ledLane->id], false) }}"
                                               method="POST"
                                               data-async-lane-request
                                               data-leader-req-panel="equipment"

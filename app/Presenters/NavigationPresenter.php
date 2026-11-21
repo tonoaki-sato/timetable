@@ -42,7 +42,7 @@ class NavigationPresenter
             && ! request()->routeIs('timetables.logistics.print')
         )
             || request()->routeIs('timetable-tasks.*')
-            || request()->routeIs('lanes.*')
+            || request()->routeIs('timetable-lanes.*')
             || request()->routeIs('calendar.*')
             || request()->routeIs('schedules.*')
             || (request()->routeIs('logistics.*'))
@@ -68,7 +68,8 @@ class NavigationPresenter
             || request()->routeIs('equipment-patterns.*')
             || request()->routeIs('vendors.*')
             || request()->routeIs('site-base-maps.*')
-            || request()->routeIs('layout-areas.*');
+            || request()->routeIs('layout-areas.*')
+            || request()->routeIs('lanes.*');
     }
 
     /**

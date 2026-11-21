@@ -54,7 +54,7 @@ class TimetableTaskController extends Controller
 
         $validated = $request->validated();
         $timetableId = (int) $validated['timetable_id'];
-        $laneId = (int) $validated['lane_id'];
+        $timetableLaneId = (int) $validated['timetable_lane_id'];
         $tasksData = $validated['tasks'];
         $autoAssignLead = $request->has('auto_assign_lead')
             ? $request->boolean('auto_assign_lead')
@@ -62,7 +62,7 @@ class TimetableTaskController extends Controller
 
         $createdTasks = $this->taskService->createBulkTasks(
             $timetableId,
-            $laneId,
+            $timetableLaneId,
             $tasksData,
             $autoAssignLead
         );
@@ -72,8 +72,8 @@ class TimetableTaskController extends Controller
             $firstTask = $createdTasks->first();
             $message = "作業タスク「{$firstTask->title}」を登録しました。";
         } else {
-            $lane = $this->taskService->findLaneById($laneId);
-            $laneName = $lane?->name ?? '選択した担当班';
+            $timetableLane = $this->taskService->findTimetableLaneById($timetableLaneId);
+            $laneName = $timetableLane?->name ?? '選択した担当班';
             $message = "「{$laneName}」に {$count} 件の作業タスクを登録しました。";
         }
 

@@ -46,7 +46,7 @@
         </div>
 
         <!-- 担当班別リスト -->
-        @forelse($timetable->lanes as $lane)
+        @forelse($timetable->timetableLanes as $lane)
         <div class="lane-section">
             <div class="lane-header">
                 <span>🏷️ {{ $lane->name }}</span>

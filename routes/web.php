@@ -35,6 +35,7 @@ use App\Http\Controllers\StaffShiftController;
 use App\Http\Controllers\StaffTimelineController;
 use App\Http\Controllers\TimetableAssignmentWorkspaceController;
 use App\Http\Controllers\TimetableController;
+use App\Http\Controllers\TimetableLaneController;
 use App\Http\Controllers\TimetableMatrixController;
 use App\Http\Controllers\TimetablePrintController;
 use App\Http\Controllers\TimetableTaskAssignmentController;
@@ -59,7 +60,7 @@ Route::middleware('throttle:60,1')->group(function () {
     Route::post('/my/shift/{token}/checkin', [StaffShiftController::class, 'checkIn'])->name('staff.myshift.checkin');
     Route::post('/my/shift/{token}/assignments/{assignment}/status', [StaffShiftController::class, 'updateAssignmentStatus'])->name('staff.myshift.assignment-status');
     Route::post('/my/shift/{token}/tasks/{task}/status', [StaffShiftController::class, 'updateLaneTaskStatus'])->name('staff.myshift.lane-task-status');
-    Route::post('/my/shift/{token}/lanes/{lane}/requests', [StaffShiftController::class, 'storeLaneRequest'])->name('staff.myshift.lane-requests.store');
+    Route::post('/my/shift/{token}/timetable-lanes/{timetableLane}/requests', [StaffShiftController::class, 'storeLaneRequest'])->name('staff.myshift.lane-requests.store');
 });
 
 // 5. 認証ルート (未ログイン時のみアクセス可)
@@ -119,18 +120,20 @@ Route::middleware('auth')->group(function () {
     Route::get('timetables/{timetable}/tasks', [TimetableTaskController::class, 'indexByTimetable'])->name('timetables.tasks.index');
     Route::resource('timetables', TimetableController::class)->except(['create', 'edit']);
 
-    // 担当班管理
-    Route::get('/lanes', [LaneController::class, 'redirect'])->name('lanes.index');
+    // 担当班マスター管理 (Lane Master)
+    Route::post('lanes/reorder', [LaneController::class, 'reorder'])->name('lanes.reorder');
+    Route::resource('lanes', LaneController::class)->except(['create', 'show', 'edit']);
+
+    // 運行日別担当班編成管理 (Timetable Lanes)
+    Route::get('/timetable-lanes', [TimetableLaneController::class, 'redirect'])->name('timetable-lanes.index');
     Route::scopeBindings()->group(function () {
-        Route::get('timetables/{timetable}/lanes', [LaneController::class, 'index'])->name('timetables.lanes.index');
-        Route::get('timetables/{timetable}/lanes/create', [LaneController::class, 'create'])->name('timetables.lanes.create');
+        Route::get('timetables/{timetable}/lanes', [TimetableLaneController::class, 'index'])->name('timetables.lanes.index');
         Route::get('timetables/{timetable}/lanes/print', [LanePrintController::class, 'print'])->name('timetables.lanes.print');
-        Route::post('timetables/{timetable}/lanes', [LaneController::class, 'store'])->name('timetables.lanes.store');
-        Route::get('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'show'])->name('timetables.lanes.show');
-        Route::get('timetables/{timetable}/lanes/{lane}/edit', [LaneController::class, 'edit'])->name('timetables.lanes.edit');
-        Route::put('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'update'])->name('timetables.lanes.update');
-        Route::delete('timetables/{timetable}/lanes/{lane}', [LaneController::class, 'destroy'])->name('timetables.lanes.destroy');
-        Route::post('timetables/{timetable}/lanes/reorder', [LaneController::class, 'reorder'])->name('timetables.lanes.reorder');
+        Route::post('timetables/{timetable}/lanes', [TimetableLaneController::class, 'store'])->name('timetables.lanes.store');
+        Route::post('timetables/{timetable}/lanes/bulk-store', [TimetableLaneController::class, 'bulkStore'])->name('timetables.lanes.bulk-store');
+        Route::post('timetables/{timetable}/lanes/reorder', [TimetableLaneController::class, 'reorder'])->name('timetables.lanes.reorder');
+        Route::put('timetables/{timetable}/lanes/{timetableLane}', [TimetableLaneController::class, 'update'])->name('timetables.lanes.update');
+        Route::delete('timetables/{timetable}/lanes/{timetableLane}', [TimetableLaneController::class, 'destroy'])->name('timetables.lanes.destroy');
     });
     Route::patch('lane-requests/{laneRequest}/status', [LaneRequestController::class, 'updateStatus'])->name('lane-requests.update-status');
 

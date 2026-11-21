@@ -191,7 +191,7 @@ class GlobalSearchService
                         : null;
                     $subtitle = implode('・', array_filter([
                         $task->timetable?->name,
-                        $task->laneRelation?->name,
+                        $task->timetableLane?->name,
                         $timeRange,
                     ]));
                     $url = $task->timetable_id

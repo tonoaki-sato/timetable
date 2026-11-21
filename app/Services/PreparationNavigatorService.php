@@ -84,7 +84,7 @@ class PreparationNavigatorService
      */
     public function calculateWorkflowStateForTimetable(Timetable $timetable): array
     {
-        $lanes = $timetable->lanes;
+        $lanes = $timetable->timetableLanes;
         $tasks = $timetable->tasks;
 
         $lanesCount = $lanes->count();

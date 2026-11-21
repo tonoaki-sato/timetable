@@ -117,11 +117,13 @@ class Staff extends Model
     }
 
     /**
-     * 班長（主担当）を務めるレーン一覧とのリレーション
+     * 班長（主担当）を務める日別担当班編成一覧とのリレーション
+     *
+     * @return HasMany<TimetableLane, $this>
      */
-    public function ledLanes(): HasMany
+    public function ledTimetableLanes(): HasMany
     {
-        return $this->hasMany(Lane::class, 'lead_staff_id');
+        return $this->hasMany(TimetableLane::class, 'lead_staff_id');
     }
 
     /**
@@ -129,23 +131,25 @@ class Staff extends Model
      */
     public function getIsLeaderAttribute(): bool
     {
-        if (isset($this->attributes['led_lanes_exists'])) {
-            return (bool) $this->attributes['led_lanes_exists'];
+        if (isset($this->attributes['led_timetable_lanes_exists'])) {
+            return (bool) $this->attributes['led_timetable_lanes_exists'];
         }
 
-        if ($this->relationLoaded('ledLanes')) {
-            return $this->ledLanes->isNotEmpty();
+        if ($this->relationLoaded('ledTimetableLanes')) {
+            return $this->ledTimetableLanes->isNotEmpty();
         }
 
-        return $this->ledLanes()->exists();
+        return $this->ledTimetableLanes()->exists();
     }
 
     /**
-     * 固定スタッフとして所属するレーン一覧との多対多リレーション
+     * 固定スタッフとして所属する日別担当班編成一覧との多対多リレーション
+     *
+     * @return BelongsToMany<TimetableLane, $this>
      */
-    public function fixedLanes(): BelongsToMany
+    public function fixedTimetableLanes(): BelongsToMany
     {
-        return $this->belongsToMany(Lane::class, 'lane_fixed_staff')
+        return $this->belongsToMany(TimetableLane::class, 'timetable_lane_fixed_staff')
             ->withTimestamps();
     }
 

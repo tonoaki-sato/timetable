@@ -102,7 +102,7 @@
                     <select id="task-lane-filter"
                         class="px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500">
                         <option value="">🏷️ すべての担当班</option>
-                        @foreach($lanes as $lane)
+                        @foreach($timetableLanes as $lane)
                         <option value="{{ $lane->id }}">{{ $lane->icon }} {{ $lane->name }}</option>
                         @endforeach
                     </select>
@@ -120,7 +120,7 @@
                 @forelse($tasks as $task)
                 <div data-task-card
                     data-task-id="{{ $task->id }}"
-                    data-lane-id="{{ $task->lane_id }}"
+                    data-lane-id="{{ $task->timetable_lane_id }}"
                     data-is-satisfied="{{ $task->is_satisfied ? '1' : '0' }}"
                     data-shortage-count="{{ $task->shortage_count }}"
                     data-search-text="{{ $task->assignment_search_text }}"

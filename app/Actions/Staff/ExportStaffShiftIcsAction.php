@@ -27,7 +27,7 @@ class ExportStaffShiftIcsAction
             ->map(function (TaskStaffAssignment $assignment) use ($staff): array {
                 $task = $assignment->task;
                 $timetable = $task->timetable;
-                $laneName = $task->laneRelation?->name;
+                $laneName = $task->timetableLane?->name;
 
                 $summary = $laneName
                     ? "[{$laneName}] {$task->title}"

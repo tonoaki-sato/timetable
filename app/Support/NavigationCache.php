@@ -125,9 +125,14 @@ class NavigationCache
         $cached = Cache::get(self::KEY_PENDING_LANE_REQUESTS);
 
         if (is_array($cached) && isset($cached['count'], $cached['recent']) && is_array($cached['recent'])) {
+            /** @var Collection<int, LaneRequest> $recent */
+            $recent = LaneRequest::hydrate($cached['recent']);
+            if ($recent->isNotEmpty()) {
+                $recent->load(['timetable', 'timetableLane.lane', 'task', 'requestedByStaff']);
+            }
             $summary = [
                 'count' => (int) $cached['count'],
-                'recent' => LaneRequest::hydrate($cached['recent']),
+                'recent' => $recent,
             ];
             $this->memoizedPendingLaneRequests = $summary;
 

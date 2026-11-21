@@ -20,7 +20,8 @@ class NowTasksService
         $currentTimeLabel = $now->format('H:i');
 
         $timetable = Timetable::with([
-            'tasks.laneRelation.leadStaff',
+            'tasks.timetableLane.lane',
+            'tasks.timetableLane.leadStaff',
             'tasks.assignments',
         ])
             ->whereDate('target_date', $todayStr)
