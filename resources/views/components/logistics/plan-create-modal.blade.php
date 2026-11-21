@@ -45,7 +45,7 @@
                         <p class="font-bold text-slate-800">資材がまだ登録されていません</p>
                         <p class="text-[11px] text-slate-500">先に資材管理画面から機材・備品を登録してください。</p>
                         <div>
-                            <a href="{{ route('timetables.equipments.index', $timetable) }}"
+                            <a href="{{ route('equipments.index') }}"
                                 class="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition">
                                 <span>📦</span>
                                 <span>機材・備品一覧を開く</span>

@@ -39,16 +39,6 @@ class LocationController extends Controller
     }
 
     /**
-     * 旧タイムテーブル配下ルートからの互換リダイレクト
-     */
-    public function redirectLegacy(): RedirectResponse
-    {
-        $this->authorize('viewAny', Location::class);
-
-        return redirect()->route('locations.index');
-    }
-
-    /**
      * 拠点の新規登録処理
      */
     public function store(StoreLocationRequest $request): RedirectResponse|JsonResponse

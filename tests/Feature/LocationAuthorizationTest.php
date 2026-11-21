@@ -81,9 +81,9 @@ class LocationAuthorizationTest extends TestCase
     }
 
     /**
-     * 旧ルート（timetables/{timetable}/locations）は拠点マスターへリダイレクトされること
+     * 廃止された旧タイムテーブル配下拠点ルート（timetables/{timetable}/locations）が存在しないこと
      */
-    public function test_legacy_route_redirects_to_locations_index(): void
+    public function test_legacy_timetable_locations_route_returns_not_found(): void
     {
         $admin = User::factory()->create([
             'role' => 'admin',
@@ -92,8 +92,7 @@ class LocationAuthorizationTest extends TestCase
         $timetable = Timetable::factory()->create();
 
         $this->actingAs($admin);
-        $response = $this->get(route('timetables.locations.index', $timetable));
-        $response->assertRedirect(route('locations.index'));
+        $this->get("/timetables/{$timetable->id}/locations")->assertNotFound();
     }
 
     /**

@@ -45,7 +45,7 @@ class NavigationPresenter
             || request()->routeIs('lanes.*')
             || request()->routeIs('calendar.*')
             || request()->routeIs('schedules.*')
-            || (request()->routeIs('logistics.*') && ! request()->routeIs('logistics.print'))
+            || (request()->routeIs('logistics.*'))
             || request()->routeIs('timetables.logistics.index')
             || request()->routeIs('preparation-navigator.*');
     }
@@ -63,7 +63,6 @@ class NavigationPresenter
         )
             || (request()->routeIs('organizations.*') && ! request()->routeIs('organizations.print*'))
             || request()->routeIs('equipments.*')
-            || request()->routeIs('timetables.equipments.*')
             || request()->routeIs('locations.*')
             || request()->routeIs('location-types.*')
             || request()->routeIs('equipment-patterns.*')
@@ -78,7 +77,6 @@ class NavigationPresenter
         return request()->routeIs('staff.print*')
             || request()->routeIs('staff.export*')
             || request()->routeIs('staff.import*')
-            || request()->routeIs('logistics.print')
             || request()->routeIs('timetables.logistics.print')
             || request()->routeIs('timetables.print*')
             || request()->routeIs('organizations.print*');

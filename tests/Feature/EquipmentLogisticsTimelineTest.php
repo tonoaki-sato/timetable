@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPlan;
+use App\Models\Location;
 use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -62,12 +63,15 @@ class EquipmentLogisticsTimelineTest extends TestCase
 
     public function test_logistics_timeline_displays_header_and_date_blocks_with_plans(): void
     {
+        $banshoLocation = Location::factory()->create(['name' => '番所地下倉庫']);
+        $honjinLocation = Location::factory()->create(['name' => '本陣']);
+
         $equipment1 = Equipment::factory()->create([
             'name' => 'パイプ椅子',
             'type' => 'committee',
             'quantity' => 60,
             'unit' => '脚',
-            'storage_location' => '番所地下倉庫',
+            'storage_location_id' => $banshoLocation->id,
         ]);
 
         $equipment2 = Equipment::factory()->create([
@@ -75,7 +79,7 @@ class EquipmentLogisticsTimelineTest extends TestCase
             'type' => 'rental',
             'quantity' => 2,
             'unit' => '台',
-            'storage_location' => '本陣',
+            'storage_location_id' => $honjinLocation->id,
         ]);
 
         // 前日準備の計画

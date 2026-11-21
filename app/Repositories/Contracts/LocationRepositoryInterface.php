@@ -31,35 +31,11 @@ interface LocationRepositoryInterface
     public function getNameIdMap(): array;
 
     /**
-     * 【互換】指定タイムテーブルで名称が部分一致する最初の拠点を取得
-     */
-    public function findFirstByTimetableAndNameLike(?int $timetableId, string $keyword): ?Location;
-
-    /**
-     * 【互換】指定タイムテーブルで名称が完全一致する最初の拠点を取得
-     */
-    public function findFirstByTimetableAndExactName(?int $timetableId, string $name): ?Location;
-
-    /**
-     * 【互換】全拠点について「拠点名 => 最小拠点ID」の連想配列を取得
-     *
-     * @return array<string, int>
-     */
-    public function getNameIdMapForTimetable(?int $timetableId = null): array;
-
-    /**
      * 全拠点一覧を表示順で取得
      *
      * @return Collection<int, Location>
      */
     public function getAllOrdered(): Collection;
-
-    /**
-     * 【互換】全拠点一覧をスケジュール付きで取得
-     *
-     * @return Collection<int, Location>
-     */
-    public function getForTimetable(?Timetable $timetable = null): Collection;
 
     /**
      * 有効な拠点一覧を表示順で取得
@@ -69,11 +45,11 @@ interface LocationRepositoryInterface
     public function getActiveOrdered(): Collection;
 
     /**
-     * 【互換】指定タイムテーブルの有効な拠点一覧を表示順で取得
+     * 有効な拠点一覧を拠点タイプ付きで表示順に取得
      *
      * @return Collection<int, Location>
      */
-    public function getActiveOrderedForTimetable(?Timetable $timetable = null): Collection;
+    public function getActiveWithTypeOrdered(): Collection;
 
     /**
      * 有効な拠点一覧をタイプ・スケジュール付きで表示順に取得

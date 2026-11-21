@@ -409,9 +409,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function updateUrl(?Timetable $timetable = null): string
     {
-        return $timetable
-            ? route('timetables.logistics.plans.update', [$timetable, $this])
-            : route('logistics.plans.update', $this);
+        return route('timetables.logistics.plans.update', [$timetable ?? $this->timetable_id, $this]);
     }
 
     /**
@@ -419,9 +417,7 @@ class EquipmentLogisticsPlan extends Model
      */
     public function destroyUrl(?Timetable $timetable = null): string
     {
-        return $timetable
-            ? route('timetables.logistics.plans.destroy', [$timetable, $this])
-            : route('logistics.plans.destroy', $this);
+        return route('timetables.logistics.plans.destroy', [$timetable ?? $this->timetable_id, $this]);
     }
 
     /**

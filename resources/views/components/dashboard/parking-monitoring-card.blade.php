@@ -85,9 +85,9 @@
 
     <!-- フッターリンク -->
     <div class="pt-1 flex items-center justify-end text-[11px] font-bold">
-        <a href="{{ $timetable ? route('timetables.locations.index', $timetable) : route('timetables.index') }}"
+        <a href="{{ route('locations.index') }}"
            class="text-indigo-600 hover:text-indigo-800 flex items-center space-x-1 group">
-            <span>{{ $timetable ? 'この日の拠点管理を開く' : '運行情報一覧を開く' }}</span>
+            <span>拠点マスターを開く</span>
             <span class="transition group-hover:translate-x-0.5">→</span>
         </a>
     </div>

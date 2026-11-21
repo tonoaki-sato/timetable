@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Equipment;
 use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\Location;
@@ -92,6 +93,10 @@ class ContentSecurityPolicyTest extends TestCase
             'start_at' => now()->addDay(),
             'end_at' => now()->addDay()->addHours(3),
             'availability_status' => 'unavailable',
+        ]);
+        Equipment::factory()->committee()->create([
+            'name' => 'CSP検証用機材',
+            'storage_location_id' => $location->id,
         ]);
 
         $routesToTest = [

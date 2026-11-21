@@ -341,8 +341,8 @@
                     <span class="eq-name">{{ $eq->name }}</span>
                     <span class="eq-badge">{{ $eq->formatted_quantity }}</span>
                     <span class="eq-type-badge">{{ $eq->type_enum->shortLabel() }}</span>
-                    @if($eq->storage_location)
-                        <span class="eq-storage">保管: {{ $eq->storage_location }}</span>
+                    @if($eq->storage_location_name)
+                        <span class="eq-storage">保管: {{ $eq->storage_location_name }}</span>
                     @endif
                 </td>
                 <td class="eq-count">

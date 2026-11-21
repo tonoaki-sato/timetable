@@ -40,7 +40,6 @@ use App\Models\Timetable;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Presenters\EquipmentLogisticsPlanPresenter;
-use App\Presenters\EquipmentViewPresenter;
 use App\Presenters\LanePresenter;
 use App\Presenters\TimetablePresenter;
 use App\Presenters\TimetableTaskPresenter;
@@ -97,15 +96,15 @@ class Phase2And3ArchitectureTest extends TestCase
 
             foreach ($indexes as $index) {
                 $cols = DB::select("PRAGMA index_info('{$index->name}')");
-                usort($cols, static fn(object $a, object $b): int => $a->seqno <=> $b->seqno);
-                $actualColumnSets[] = array_map(static fn(object $col): string => (string) $col->name, $cols);
+                usort($cols, static fn (object $a, object $b): int => $a->seqno <=> $b->seqno);
+                $actualColumnSets[] = array_map(static fn (object $col): string => (string) $col->name, $cols);
             }
 
             foreach ($columnSets as $expectedColumns) {
                 $this->assertContains(
                     $expectedColumns,
                     $actualColumnSets,
-                    "テーブル {$table} に複合インデックス (" . implode(', ', $expectedColumns) . ') が不足しています。'
+                    "テーブル {$table} に複合インデックス (".implode(', ', $expectedColumns).') が不足しています。'
                 );
             }
         }
@@ -281,11 +280,6 @@ class Phase2And3ArchitectureTest extends TestCase
         $t2 = Timetable::factory()->make(['target_date' => '2026-10-18', 'status' => 'draft']);
         $this->assertSame('2026年10月17日(土) 〜 10月18日(日) 開催', TimetablePresenter::formatEventDateRange(new EloquentCollection([$t1, $t2])));
         $this->assertStringContainsString('emerald', (new TimetablePresenter($t1))->statusBadgeClass());
-
-        $equipment = Equipment::factory()->create(['name' => 'テント']);
-        $meta = (new EquipmentViewPresenter)->buildViewMeta(null, false, $equipment);
-        $this->assertSame('機材・備品一覧', $meta['indexTitle']);
-        $this->assertStringContainsString('テント', $meta['editTitle']);
 
         $plan = EquipmentLogisticsPlan::factory()->make([
             'day_phase' => 'pre_day',

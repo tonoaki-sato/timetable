@@ -130,7 +130,7 @@
                             @endphp
                             <tr class="equipment-row hover:bg-slate-50/80 transition"
                                 data-equipment-name="{{ $equipment->name }}"
-                                data-equipment-storage="{{ $equipment->storage_location ?? '' }}"
+                                data-equipment-storage="{{ $equipment->storage_location_name ?? '' }}"
                                 data-equipment-type="{{ $equipment->type_enum->value }}"
                                 data-has-planned="{{ ($meta['has_planned'] ?? false) ? '1' : '0' }}"
                                 data-has-in-progress="{{ ($meta['has_in_progress'] ?? false) ? '1' : '0' }}"
@@ -144,7 +144,7 @@
                                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border shrink-0 {{ $typeBadgeClass }}">
                                                     {{ $typeShortLabel }}
                                                 </span>
-                                                <a href="{{ route('timetables.equipments.show', [$timetable, $equipment]) }}"
+                                                <a href="{{ route('equipments.index', ['keyword' => $equipment->name]) }}"
                                                    class="font-bold text-slate-900 hover:text-indigo-600 transition truncate"
                                                    title="{{ $equipment->name }}">
                                                     {{ $equipment->name }}
@@ -156,8 +156,8 @@
                                         </div>
 
                                         <div class="flex items-center justify-between text-[10px] text-slate-500">
-                                            <span class="truncate" title="保管場所: {{ $equipment->storage_location ?: '未指定' }}">
-                                                📍 {{ $equipment->storage_location ?: '保管場所未指定' }}
+                                            <span class="truncate" title="保管場所: {{ $equipment->storage_location_name ?: '未指定' }}">
+                                                📍 {{ $equipment->storage_location_name ?: '保管場所未指定' }}
                                             </span>
                                             @if(($meta['unspecified_time_count'] ?? 0) > 0)
                                                 <span class="text-amber-700 font-bold shrink-0 ml-1" title="時間未定の計画あり">

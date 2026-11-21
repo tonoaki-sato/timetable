@@ -23,7 +23,7 @@ class EquipmentValidationRules
             'quantity' => ['required', 'integer', 'min:1'],
             'is_approximate_quantity' => ['boolean'],
             'unit' => ['required', 'string', 'max:20'],
-            'storage_location' => ['nullable', 'string', 'max:255'],
+            'storage_location_id' => ['nullable', 'integer', 'exists:locations,id'],
             'description' => ['nullable', 'string', 'max:2000'],
             'display_order' => ['nullable', 'integer', 'min:0'],
         ];
@@ -43,7 +43,7 @@ class EquipmentValidationRules
             'quantity' => '基準数量',
             'is_approximate_quantity' => '概数フラグ',
             'unit' => '単位',
-            'storage_location' => '定常保管場所',
+            'storage_location_id' => '定常保管場所',
             'description' => '備考',
         ];
     }

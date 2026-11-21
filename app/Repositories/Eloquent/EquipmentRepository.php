@@ -15,36 +15,37 @@ use Override;
 class EquipmentRepository implements EquipmentRepositoryInterface
 {
     #[Override]
-    public function getPaginated(EquipmentFilterDTO $filter, ?Timetable $timetable = null, int $perPage = 20): LengthAwarePaginator
+    public function getPaginated(EquipmentFilterDTO $filter, int $perPage = 20): LengthAwarePaginator
     {
         $query = Equipment::query()
-            ->with([
-                'plans' => function ($q) use ($timetable): void {
-                    if ($timetable) {
-                        $q->where('timetable_id', $timetable->id);
-                    }
-                },
-            ])
-            ->when($filter->type, fn ($q) => $q->where('type', $filter->type))
-            ->when($filter->checkoutRule, fn ($q) => $q->where('checkout_rule', $filter->checkoutRule))
+            ->with(['storageLocation.type'])
+            ->when($filter->type, fn ($q) => $q->where('equipments.type', $filter->type))
+            ->when($filter->checkoutRule, fn ($q) => $q->where('equipments.checkout_rule', $filter->checkoutRule))
             ->when($filter->keyword, fn ($q) => $q->where(function ($sub) use ($filter): void {
-                $sub->where('name', 'like', "%{$filter->keyword}%")
-                    ->orWhere('storage_location', 'like', "%{$filter->keyword}%")
-                    ->orWhere('description', 'like', "%{$filter->keyword}%");
+                $sub->where('equipments.name', 'like', "%{$filter->keyword}%")
+                    ->orWhere('equipments.description', 'like', "%{$filter->keyword}%")
+                    ->orWhereHas('storageLocation', fn ($locQ) => $locQ->where('name', 'like', "%{$filter->keyword}%"));
             }));
 
         $resolvedSort = TableQueryOptions::resolveSort(
             $filter->sort,
             $filter->direction,
-            ['display_order', 'name', 'type', 'checkout_rule', 'quantity', 'storage_location'],
+            ['display_order', 'name', 'type', 'checkout_rule', 'quantity', 'storage_location_id'],
             'display_order',
             'asc',
         );
 
         if ($resolvedSort['sort'] === 'display_order' && $resolvedSort['direction'] === 'asc') {
             $query->ordered();
+        } elseif ($resolvedSort['sort'] === 'storage_location_id') {
+            $query->leftJoin('locations as storage_loc', 'equipments.storage_location_id', '=', 'storage_loc.id')
+                ->select('equipments.*')
+                ->orderByRaw('CASE WHEN storage_loc.name IS NULL THEN 1 ELSE 0 END ASC')
+                ->orderBy('storage_loc.name', $resolvedSort['direction'])
+                ->orderBy('equipments.id', 'asc');
         } else {
-            $query->orderBy($resolvedSort['sort'], $resolvedSort['direction'])->orderBy('id', 'asc');
+            $query->orderBy('equipments.'.$resolvedSort['sort'], $resolvedSort['direction'])
+                ->orderBy('equipments.id', 'asc');
         }
 
         $effectivePerPage = $filter->perPage !== 20
@@ -77,12 +78,6 @@ class EquipmentRepository implements EquipmentRepositoryInterface
     }
 
     #[Override]
-    public function findWithDetails(int $id, ?Timetable $timetable = null): ?Equipment
-    {
-        return Equipment::find($id);
-    }
-
-    #[Override]
     public function loadPlansForTimetable(Equipment $equipment, Timetable $timetable): Equipment
     {
         return $equipment->load([
@@ -99,17 +94,18 @@ class EquipmentRepository implements EquipmentRepositoryInterface
     #[Override]
     public function getAllOrdered(): Collection
     {
-        return Equipment::ordered()->get();
+        return Equipment::with(['storageLocation'])->ordered()->get();
     }
 
     #[Override]
     public function searchQuick(string $keyword, int $limit = 5): Collection
     {
         return Equipment::query()
+            ->with(['storageLocation'])
             ->where(function ($q) use ($keyword): void {
                 $q->where('name', 'like', "%{$keyword}%")
-                    ->orWhere('storage_location', 'like', "%{$keyword}%")
-                    ->orWhere('description', 'like', "%{$keyword}%");
+                    ->orWhere('description', 'like', "%{$keyword}%")
+                    ->orWhereHas('storageLocation', fn ($locQ) => $locQ->where('name', 'like', "%{$keyword}%"));
             })
             ->ordered()
             ->limit($limit)

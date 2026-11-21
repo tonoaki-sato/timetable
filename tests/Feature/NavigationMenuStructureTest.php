@@ -166,7 +166,8 @@ class NavigationMenuStructureTest extends TestCase
 
         // グローバルメニューからは区分B（当日現場用）および個別名札緊急印刷が除外されていること
         $response->assertDontSee('個別名札緊急印刷');
-        $response->assertDontSee(route('logistics.print'));
+        $response->assertDontSee('/logistics/print');
+        $response->assertDontSee(route('timetables.logistics.print', $this->timetable));
 
         // 運行詳細画面側で区分B専用カードが表示されること
         $timetableResponse = $this->actingAs($this->admin)->get(route('timetables.show', $this->timetable));
@@ -239,7 +240,7 @@ class NavigationMenuStructureTest extends TestCase
             route('locations.index'),
             route('location-types.index'),
             route('timetables.print-assignments', $this->timetable),
-            route('logistics.print'),
+            route('timetables.logistics.print', $this->timetable),
             route('staff.print-cards'),
             route('manual.index'),
             route('presentation.index'),

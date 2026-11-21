@@ -13,7 +13,7 @@ interface EquipmentRepositoryInterface
     /**
      * フィルター条件に基づいてページネーション付きで資機材一覧を取得
      */
-    public function getPaginated(EquipmentFilterDTO $filter, ?Timetable $timetable = null, int $perPage = 20): LengthAwarePaginator;
+    public function getPaginated(EquipmentFilterDTO $filter, int $perPage = 20): LengthAwarePaginator;
 
     /**
      * 所有区分ごとの統計件数を取得
@@ -26,11 +26,6 @@ interface EquipmentRepositoryInterface
      * 資機材の総登録数を取得
      */
     public function getTotalCount(): int;
-
-    /**
-     * IDで資機材を検索（リレーション付き）
-     */
-    public function findWithDetails(int $id, ?Timetable $timetable = null): ?Equipment;
 
     /**
      * 指定運行日の搬出入計画リレーションを資機材へロード

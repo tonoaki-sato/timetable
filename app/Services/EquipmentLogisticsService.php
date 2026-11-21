@@ -84,9 +84,10 @@ class EquipmentLogisticsService
 
         $stagingLocation = $dto->stagingLocationId
             ? $this->locationRepository->findById($dto->stagingLocationId)
-            : $this->locationRepository->findFirstByTimetableAndNameLike($targetTimetable->id, '税務署');
+            : $this->locationRepository->findFirstByNameLike('税務署');
 
-        $storageLocationName = $equipment->storage_location
+        $equipment->loadMissing('storageLocation');
+        $storageLocationName = $equipment->storage_location_name
             ?: ($equipment->isPersonal() ? '所有者（個人持ち込み・持ち帰り）' : '番所地下倉庫');
 
         $witnessStaffId = $dto->witnessStaffId;
@@ -95,27 +96,12 @@ class EquipmentLogisticsService
         $pattern->loadMissing(['steps.fromLocationModel', 'steps.toLocationModel']);
 
         $createdCount = 0;
-        $locationIdByName = null;
 
         foreach ($pattern->steps as $step) {
             $fromLocId = $step->from_location_id;
             $fromLocText = $step->from_location ?: ($step->fromLocationModel?->name ?? $storageLocationName);
             $toLocId = $step->to_location_id;
             $toLocText = $step->to_location ?: ($step->toLocationModel?->name ?? ($stagingLocation?->name ?? '（未定）'));
-
-            // 拠点が別運行日マスタの場合、同一名拠点を対象運行日から解決
-            if ($fromLocId && $step->fromLocationModel?->timetable_id !== $targetTimetable->id && $step->fromLocationModel?->name) {
-                $locationIdByName ??= $this->locationRepository->getNameIdMapForTimetable($targetTimetable->id);
-                if (isset($locationIdByName[$step->fromLocationModel->name])) {
-                    $fromLocId = $locationIdByName[$step->fromLocationModel->name];
-                }
-            }
-            if ($toLocId && $step->toLocationModel?->timetable_id !== $targetTimetable->id && $step->toLocationModel?->name) {
-                $locationIdByName ??= $this->locationRepository->getNameIdMapForTimetable($targetTimetable->id);
-                if (isset($locationIdByName[$step->toLocationModel->name])) {
-                    $toLocId = $locationIdByName[$step->toLocationModel->name];
-                }
-            }
 
             $stepDate = match ($step->day_phase) {
                 'other' => $dates['other'] ?? $targetDate,
@@ -338,7 +324,7 @@ class EquipmentLogisticsService
             'selectedEquipmentIds' => $selectedEquipmentIds,
             'visibleEquipmentCount' => $visibleEquipmentCount,
             'patterns' => $this->patternRepository->getAllWithSteps(),
-            'locations' => $this->locationRepository->getActiveOrderedForTimetable($timetable),
+            'locations' => $this->locationRepository->getActiveOrdered(),
             'staffs' => $this->staffRepository->getActiveStaffList(),
         ];
     }

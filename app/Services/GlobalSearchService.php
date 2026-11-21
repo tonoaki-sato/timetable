@@ -124,7 +124,7 @@ class GlobalSearchService
                 ->map(function (Equipment $equipment): array {
                     $subtitle = implode('・', array_filter([
                         $equipment->type_enum->shortLabel(),
-                        $equipment->storage_location,
+                        $equipment->storage_location_name,
                     ]));
 
                     return (new GlobalSearchResultDTO(
@@ -133,7 +133,7 @@ class GlobalSearchService
                         icon: '📦',
                         title: $equipment->name,
                         subtitle: $subtitle !== '' ? $subtitle : '機材・備品台帳',
-                        url: route('equipments.show', $equipment),
+                        url: route('equipments.index', ['keyword' => $equipment->name]),
                         badge: $equipment->formatted_quantity,
                     ))->toArray();
                 })

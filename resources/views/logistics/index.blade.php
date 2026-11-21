@@ -143,9 +143,9 @@
                         <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border {{ $equipment->type_enum->badgeClasses() }} shrink-0">
                             {{ $equipment->type_enum->shortLabel() }}
                         </span>
-                        @if($equipment->storage_location)
+                        @if($equipment->storage_location_name)
                             <span class="text-[11px] text-slate-500 font-medium hidden md:inline truncate">
-                                保管: {{ $equipment->storage_location }}
+                                保管: {{ $equipment->storage_location_name }}
                             </span>
                         @endif
                     </div>

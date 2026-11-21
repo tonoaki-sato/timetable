@@ -45,24 +45,6 @@ class LocationRepository implements LocationRepositoryInterface
     }
 
     #[Override]
-    public function findFirstByTimetableAndNameLike(?int $timetableId, string $keyword): ?Location
-    {
-        return $this->findFirstByNameLike($keyword);
-    }
-
-    #[Override]
-    public function findFirstByTimetableAndExactName(?int $timetableId, string $name): ?Location
-    {
-        return $this->findFirstByExactName($name);
-    }
-
-    #[Override]
-    public function getNameIdMapForTimetable(?int $timetableId = null): array
-    {
-        return $this->getNameIdMap();
-    }
-
-    #[Override]
     public function getAllOrdered(): Collection
     {
         return Location::with(['type', 'schedules' => function ($query): void {
@@ -73,21 +55,15 @@ class LocationRepository implements LocationRepositoryInterface
     }
 
     #[Override]
-    public function getForTimetable(?Timetable $timetable = null): Collection
-    {
-        return $this->getAllOrdered();
-    }
-
-    #[Override]
     public function getActiveOrdered(): Collection
     {
         return Location::active()->ordered()->get();
     }
 
     #[Override]
-    public function getActiveOrderedForTimetable(?Timetable $timetable = null): Collection
+    public function getActiveWithTypeOrdered(): Collection
     {
-        return $this->getActiveOrdered();
+        return Location::active()->with('type')->ordered()->get();
     }
 
     #[Override]

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Equipment;
+use App\Models\Location;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -29,7 +30,7 @@ class EquipmentFactory extends Factory
             'quantity' => fake()->numberBetween(2, 60),
             'is_approximate_quantity' => false,
             'unit' => fake()->randomElement(['個', '本', '張', '台', '組', '式']),
-            'storage_location' => $isCommittee ? fake()->randomElement(['番所地下倉庫', '番所倉庫', 'コミュニティルーム']) : null,
+            'storage_location_id' => null,
             'description' => fake()->optional()->sentence(),
             'display_order' => fake()->numberBetween(1, 100),
             'created_by' => User::factory(),
@@ -43,7 +44,7 @@ class EquipmentFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'committee',
-            'storage_location' => '番所地下倉庫',
+            'storage_location_id' => null,
         ]);
     }
 
@@ -54,7 +55,7 @@ class EquipmentFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'rental',
-            'storage_location' => null,
+            'storage_location_id' => null,
         ]);
     }
 
@@ -65,8 +66,18 @@ class EquipmentFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'personal',
-            'storage_location' => '所有者（個人持ち込み・持ち帰り）',
+            'storage_location_id' => null,
             'checkout_rule' => 'leader_only',
+        ]);
+    }
+
+    /**
+     * 定常保管場所（拠点マスター）を指定
+     */
+    public function withStorageLocation(?Location $location = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'storage_location_id' => $location !== null ? $location->id : Location::factory(),
         ]);
     }
 

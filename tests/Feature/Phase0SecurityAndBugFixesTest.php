@@ -129,7 +129,7 @@ class Phase0SecurityAndBugFixesTest extends TestCase
         ]);
     }
 
-    public function test_profile_and_legacy_vendor_redirect_routes_work_without_closures(): void
+    public function test_profile_redirect_works_and_legacy_vendor_route_returns_not_found(): void
     {
         $operator = User::factory()->create(['role' => 'operator', 'is_active' => true]);
         $timetable = Timetable::factory()->create();
@@ -139,8 +139,8 @@ class Phase0SecurityAndBugFixesTest extends TestCase
             ->assertRedirect(route('users.show', $operator));
 
         $this->actingAs($operator)
-            ->get(route('timetables.vendors.index', $timetable))
-            ->assertRedirect(route('vendors.index'));
+            ->get("/timetables/{$timetable->id}/vendors")
+            ->assertNotFound();
     }
 
     public function test_viewer_cannot_mutate_vendors_site_layouts_site_maps_or_lane_requests_while_operator_can(): void

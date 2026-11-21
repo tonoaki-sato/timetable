@@ -95,9 +95,11 @@ class EquipmentLogisticsTest extends TestCase
     {
         $this->actingAs($this->operator);
 
+        $banshoLocation = Location::factory()->create(['name' => '番所地下倉庫']);
+
         $equipment = Equipment::factory()->committee()->create([
             'name' => 'テストパイプ椅子',
-            'storage_location' => '番所地下倉庫',
+            'storage_location_id' => $banshoLocation->id,
         ]);
         $plan = $equipment->plans()->create([
             'timetable_id' => $this->timetable1->id,
@@ -452,10 +454,12 @@ class EquipmentLogisticsTest extends TestCase
     {
         $this->actingAs($this->operator);
 
+        $banshoLocation = Location::factory()->create(['name' => '番所地下倉庫']);
+
         $equipment = Equipment::factory()->committee()->create([
             'name' => '大型パイプテント',
             'quantity' => 10,
-            'storage_location' => '番所地下倉庫',
+            'storage_location_id' => $banshoLocation->id,
         ]);
 
         $response = $this->post(route('timetables.logistics.apply-template', [$this->timetable1, $equipment]), [
@@ -687,7 +691,7 @@ class EquipmentLogisticsTest extends TestCase
         $equipment = Equipment::factory()->committee()->create([
             'name' => '拠点なし検証資材',
             'quantity' => 10,
-            'storage_location' => '番所地下倉庫',
+            'storage_location_id' => null,
         ]);
 
         $response = $this->post(route('timetables.logistics.apply-template', [$this->timetable1, $equipment]), [
@@ -699,6 +703,26 @@ class EquipmentLogisticsTest extends TestCase
 
         $response->assertRedirect();
         $this->assertSame(3, $equipment->plans()->where('timetable_id', $this->timetable1->id)->count());
+    }
+
+    /**
+     * 廃止された旧互換ロジスティクスルートが存在しないこと
+     */
+    public function test_obsolete_legacy_logistics_routes_do_not_exist(): void
+    {
+        $this->actingAs($this->operator);
+
+        $equipment = Equipment::factory()->committee()->create();
+        $plan = $equipment->plans()->create([
+            'timetable_id' => $this->timetable1->id,
+            'title' => 'レガシールート検証ステップ',
+            'day_phase' => 'pre_day',
+            'action_type' => 'storage_out',
+        ]);
+
+        $this->get('/logistics/print')->assertNotFound();
+        $this->put("/logistics/plans/{$plan->id}", [])->assertNotFound();
+        $this->delete("/logistics/plans/{$plan->id}")->assertNotFound();
     }
 
     /**

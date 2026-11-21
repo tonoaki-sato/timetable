@@ -55,7 +55,7 @@
             <span>人員配置</span>
         </a>
         <a href="{{ route('timetables.logistics.index', $timetable) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['logistics', 'logistics-timeline', 'equipments'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['logistics', 'logistics-timeline'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>🚚</span>
             <span>搬出入</span>
             @if(($timetable->logistics_plans_count ?? 0) > 0)
@@ -63,7 +63,7 @@
             @endif
         </a>
         <a href="{{ route('timetables.layouts.index', $timetable) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['layouts', 'layouts-booths', 'layouts-facilities', 'vendors', 'goza-stores'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['layouts', 'layouts-booths', 'layouts-facilities'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>🗺️</span>
             <span>配置計画</span>
         </a>

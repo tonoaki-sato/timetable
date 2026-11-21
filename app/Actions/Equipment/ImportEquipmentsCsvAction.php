@@ -4,8 +4,8 @@ namespace App\Actions\Equipment;
 
 use App\Enums\EquipmentCheckoutRule;
 use App\Enums\EquipmentType;
-use App\Models\Equipment;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
+use App\Repositories\Contracts\LocationRepositoryInterface;
 use App\Services\EquipmentService;
 use App\Support\CsvSanitizer;
 use App\Support\Validation\EquipmentValidationRules;
@@ -18,6 +18,7 @@ class ImportEquipmentsCsvAction
 {
     public function __construct(
         protected EquipmentRepositoryInterface $equipmentRepository,
+        protected LocationRepositoryInterface $locationRepository,
         protected EquipmentService $equipmentService,
     ) {}
 
@@ -45,9 +46,6 @@ class ImportEquipmentsCsvAction
             || (isset($firstRow[1]) && str_contains($firstRow[1], '備品名'))
         );
 
-        $usesNineColumns = count($firstRow) >= 9
-            || ($hasHeader && strtoupper($firstRow[0] ?? '') === 'ID');
-
         $dataRows = $hasHeader ? array_slice($rows, 1) : $rows;
 
         if ($dataRows === []) {
@@ -58,6 +56,7 @@ class ImportEquipmentsCsvAction
 
         $rules = EquipmentValidationRules::rules();
         $attributes = EquipmentValidationRules::attributes();
+        $locationIdByName = $this->locationRepository->getNameIdMap();
 
         $validatedRows = [];
         $errors = [];
@@ -65,36 +64,47 @@ class ImportEquipmentsCsvAction
         foreach ($dataRows as $index => $row) {
             $lineNumber = $hasHeader ? $index + 2 : $index + 1;
 
-            if ($usesNineColumns || count($row) >= 9) {
-                $rawId = $row[0] ?? '';
-                $offset = 1;
-            } else {
-                $rawId = '';
-                $offset = 0;
+            if (count($row) < 9) {
+                $errors[] = "{$lineNumber}行目: 列数が不足しています（9列形式のCSVを指定してください）。";
+
+                continue;
             }
 
-            $normalizedType = $this->normalizeType($row[$offset + 1] ?? '');
-            $normalizedRule = $this->normalizeCheckoutRule($row[$offset + 2] ?? '');
-            $rawQuantity = $row[$offset + 3] ?? '';
-            $approx = $this->normalizeBoolean($row[$offset + 5] ?? '');
-            $storageLocation = ($row[$offset + 6] ?? '') !== '' ? $row[$offset + 6] : null;
-            if ($normalizedType === EquipmentType::Rental->value) {
-                $storageLocation = null;
+            $rawId = trim((string) ($row[0] ?? ''));
+            $normalizedType = $this->normalizeType((string) ($row[2] ?? ''));
+            $normalizedRule = $this->normalizeCheckoutRule((string) ($row[3] ?? ''));
+            $rawQuantity = $row[4] ?? '';
+            $unit = ($row[5] ?? '') !== '' ? (string) $row[5] : '個';
+            $approx = $this->normalizeBoolean((string) ($row[6] ?? ''));
+            $rawStorage = trim((string) ($row[7] ?? ''));
+            $description = ($row[8] ?? '') !== '' ? (string) $row[8] : null;
+
+            $storageError = null;
+            if ($normalizedType === EquipmentType::Rental->value || $rawStorage === '') {
+                $storageLocationId = null;
+            } elseif (array_key_exists($rawStorage, $locationIdByName)) {
+                $storageLocationId = $locationIdByName[$rawStorage];
+            } else {
+                $storageLocationId = null;
+                $storageError = "{$lineNumber}行目: 定常保管場所「{$rawStorage}」は拠点マスターに登録されていません。";
             }
 
             $payload = [
-                'name' => $row[$offset] ?? '',
+                'name' => $row[1] ?? '',
                 'type' => $normalizedType,
                 'checkout_rule' => $normalizedRule,
                 'quantity' => is_numeric($rawQuantity) ? (int) $rawQuantity : $rawQuantity,
-                'unit' => ($row[$offset + 4] ?? '') !== '' ? $row[$offset + 4] : '個',
+                'unit' => $unit,
                 'is_approximate_quantity' => $approx,
-                'storage_location' => $storageLocation,
-                'description' => ($row[$offset + 7] ?? '') !== '' ? $row[$offset + 7] : null,
+                'storage_location_id' => $storageLocationId,
+                'description' => $description,
             ];
 
             $validator = Validator::make($payload, $rules, [], $attributes);
-            if ($validator->fails()) {
+            if ($storageError !== null || $validator->fails()) {
+                if ($storageError !== null) {
+                    $errors[] = $storageError;
+                }
                 foreach ($validator->errors()->all() as $msg) {
                     $errors[] = "{$lineNumber}行目: {$msg}";
                 }
@@ -162,14 +172,15 @@ class ImportEquipmentsCsvAction
     {
         $val = trim($raw);
         foreach (EquipmentType::cases() as $case) {
-            if (in_array($val, [$case->value, $case->label(), $case->shortLabel(), Equipment::TYPES[$case->value] ?? ''], true)) {
+            if (in_array($val, [$case->value, $case->label(), $case->shortLabel()], true)) {
                 return $case->value;
             }
         }
 
         return match ($val) {
-            '実行委員会' => EquipmentType::Committee->value,
-            'イベント会社', 'レンタル' => EquipmentType::Rental->value,
+            '実行委員会', '実行委員会管理' => EquipmentType::Committee->value,
+            'イベント会社', 'イベント会社レンタル', 'レンタル' => EquipmentType::Rental->value,
+            '私物' => EquipmentType::Personal->value,
             default => $val,
         };
     }
@@ -185,7 +196,7 @@ class ImportEquipmentsCsvAction
         }
 
         foreach (EquipmentCheckoutRule::cases() as $case) {
-            if (in_array($val, [$case->value, $case->label(), $case->shortLabel(), Equipment::CHECKOUT_RULES[$case->value] ?? ''], true)) {
+            if (in_array($val, [$case->value, $case->label(), $case->shortLabel()], true)) {
                 return $case->value;
             }
         }

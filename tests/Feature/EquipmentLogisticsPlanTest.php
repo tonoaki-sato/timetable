@@ -141,7 +141,7 @@ class EquipmentLogisticsPlanTest extends TestCase
             'name' => '立て看板',
             'quantity' => 50,
             'unit' => '個',
-            'storage_location' => '番所地下倉庫',
+            'storage_location_id' => $this->locationBansho->id,
         ]);
 
         $count = $this->service->applyPattern($equipment, $pattern, [
@@ -205,7 +205,7 @@ class EquipmentLogisticsPlanTest extends TestCase
             'status' => 'planned',
         ]);
 
-        $response = $this->put(route('logistics.plans.update', $plan), [
+        $response = $this->put(route('timetables.logistics.plans.update', [$plan->timetable_id, $plan]), [
             'equipment_id' => $equipment->id,
             'title' => '更新後のステップ名',
             'day_phase' => 'day1_morning',
@@ -315,7 +315,7 @@ class EquipmentLogisticsPlanTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $response = $this->put(route('logistics.plans.update', $plan), [
+        $response = $this->put(route('timetables.logistics.plans.update', [$plan->timetable_id, $plan]), [
             'title' => '更新後タイトル',
             'day_phase' => 'day2_evening',
             'action_type' => 'return_storage',

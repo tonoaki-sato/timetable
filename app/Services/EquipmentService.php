@@ -4,14 +4,14 @@ namespace App\Services;
 
 use App\DTOs\EquipmentFilterDTO;
 use App\Models\Equipment;
-use App\Models\Timetable;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
+use App\Repositories\Contracts\LocationRepositoryInterface;
 
 class EquipmentService
 {
     public function __construct(
         protected EquipmentRepositoryInterface $equipmentRepository,
-        protected TimetableService $timetableService,
+        protected LocationRepositoryInterface $locationRepository,
     ) {}
 
     /**
@@ -19,13 +19,15 @@ class EquipmentService
      *
      * @return array<string, mixed>
      */
-    public function getIndexViewData(EquipmentFilterDTO $filter, ?Timetable $timetable = null, int $perPage = 20): array
+    public function getIndexViewData(EquipmentFilterDTO $filter, int $perPage = 20): array
     {
-        $equipments = $this->equipmentRepository->getPaginated($filter, $timetable, $perPage);
+        $equipments = $this->equipmentRepository->getPaginated($filter, $perPage);
         $counts = $this->equipmentRepository->getCountsByType();
+        $locations = $this->locationRepository->getActiveWithTypeOrdered();
 
         return [
             'equipments' => $equipments,
+            'locations' => $locations,
             'typeFilter' => $filter->type,
             'checkoutRuleFilter' => $filter->checkoutRule,
             'keyword' => $filter->keyword,
@@ -65,14 +67,6 @@ class EquipmentService
     }
 
     /**
-     * 詳細画面用に資機材を取得
-     */
-    public function findWithDetails(int $id, ?Timetable $timetable = null): ?Equipment
-    {
-        return $this->equipmentRepository->findWithDetails($id, $timetable);
-    }
-
-    /**
      * 資機材情報の更新
      *
      * @param  array<string, mixed>  $data
@@ -88,13 +82,5 @@ class EquipmentService
     public function deleteEquipment(Equipment $equipment): bool
     {
         return $this->equipmentRepository->delete($equipment);
-    }
-
-    /**
-     * 対象タイムテーブルの解決
-     */
-    public function resolveTimetable(?int $timetableId = null, ?Timetable $timetable = null): Timetable
-    {
-        return $this->timetableService->resolveFallbackTimetable($timetableId, $timetable);
     }
 }

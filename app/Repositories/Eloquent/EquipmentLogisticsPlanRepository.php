@@ -28,6 +28,7 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
         }
 
         $query = Equipment::with([
+            'storageLocation',
             'plans' => function ($q) use ($timetable): void {
                 if ($timetable) {
                     $q->where('timetable_id', $timetable->id);

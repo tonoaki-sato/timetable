@@ -7,7 +7,6 @@ use App\Actions\Timetable\ResolveActiveTimetableRedirectAction;
 use App\Models\Equipment;
 use App\Models\Timetable;
 use App\Services\EquipmentLogisticsService;
-use App\Services\TimetableService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -18,7 +17,6 @@ class EquipmentLogisticsController extends Controller
     public function __construct(
         protected EquipmentLogisticsService $logisticsService,
         protected DownloadEquipmentLogisticsPdfAction $downloadLogisticsPdfAction,
-        protected TimetableService $timetableService
     ) {}
 
     /**
@@ -56,25 +54,5 @@ class EquipmentLogisticsController extends Controller
         $this->authorize('viewAny', Equipment::class);
 
         return $this->downloadLogisticsPdfAction->execute($request, $timetable);
-    }
-
-    // ==========================================
-    // 既存互換フォールバックアクション群
-    // ==========================================
-
-    public function printLegacy(Request $request): Response
-    {
-        $timetable = $this->resolveFallbackTimetable($request);
-
-        return $this->print($timetable, $request);
-    }
-
-    protected function resolveFallbackTimetable(?Request $request = null): Timetable
-    {
-        $timetableId = ($request && $request->filled('timetable_id'))
-            ? $request->integer('timetable_id')
-            : null;
-
-        return $this->timetableService->resolveFallbackTimetable($timetableId);
     }
 }

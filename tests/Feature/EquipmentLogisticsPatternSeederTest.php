@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPattern;
+use App\Models\Location;
 use App\Models\Timetable;
 use App\Models\User;
 use App\Services\EquipmentLogisticsService;
@@ -96,11 +97,13 @@ class EquipmentLogisticsPatternSeederTest extends TestCase
     {
         $this->seed(EquipmentLogisticsPatternSeeder::class);
 
+        $banshoUnderground = Location::where('name', '番所地下倉庫')->first();
+
         $equipment = Equipment::factory()->create([
             'name' => 'カラーコーン（約60本）',
             'type' => 'committee',
             'quantity' => 60,
-            'storage_location' => '番所地下倉庫',
+            'storage_location_id' => $banshoUnderground?->id,
         ]);
 
         $pattern = EquipmentLogisticsPattern::where('name', 'カラーコーン型（交通規制連動・9ステップ）')->first();

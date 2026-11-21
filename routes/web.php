@@ -167,15 +167,7 @@ Route::middleware('auth')->group(function () {
     Route::get('equipments/export-csv', [EquipmentCsvController::class, 'export'])->name('equipments.export-csv');
     Route::post('equipments/import-csv', [EquipmentCsvController::class, 'import'])->name('equipments.import-csv');
     Route::post('equipments/reorder', [EquipmentController::class, 'reorder'])->name('equipments.reorder');
-    Route::resource('equipments', EquipmentController::class);
-    Route::post('timetables/{timetable}/equipments/reorder', [EquipmentController::class, 'reorder'])->name('timetables.equipments.reorder');
-    Route::get('timetables/{timetable}/equipments', [EquipmentController::class, 'timetableIndex'])->name('timetables.equipments.index');
-    Route::get('timetables/{timetable}/equipments/create', [EquipmentController::class, 'timetableCreate'])->name('timetables.equipments.create');
-    Route::post('timetables/{timetable}/equipments', [EquipmentController::class, 'timetableStore'])->name('timetables.equipments.store');
-    Route::get('timetables/{timetable}/equipments/{equipment}', [EquipmentController::class, 'timetableShow'])->name('timetables.equipments.show');
-    Route::get('timetables/{timetable}/equipments/{equipment}/edit', [EquipmentController::class, 'timetableEdit'])->name('timetables.equipments.edit');
-    Route::put('timetables/{timetable}/equipments/{equipment}', [EquipmentController::class, 'timetableUpdate'])->name('timetables.equipments.update');
-    Route::delete('timetables/{timetable}/equipments/{equipment}', [EquipmentController::class, 'timetableDestroy'])->name('timetables.equipments.destroy');
+    Route::resource('equipments', EquipmentController::class)->except(['create', 'show', 'edit']);
 
     // 搬出入タイムライン (Logistics Timeline)
     Route::get('/logistics-timeline', [EquipmentLogisticsTimelineController::class, 'redirect'])->name('logistics-timeline.index');
@@ -204,19 +196,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('equipment-patterns/{pattern}/steps/{step}', [EquipmentLogisticsPatternStepController::class, 'destroy'])->name('equipment-patterns.steps.destroy');
     });
 
-    // 搬出入計画既存互換フォールバック
-    Route::prefix('logistics')->name('logistics.')->group(function () {
-        Route::get('print', [EquipmentLogisticsController::class, 'printLegacy'])->name('print');
-        Route::put('plans/{plan}', [EquipmentLogisticsPlanController::class, 'updateLegacy'])->name('plans.update');
-        Route::delete('plans/{plan}', [EquipmentLogisticsPlanController::class, 'destroyLegacy'])->name('plans.destroy');
-    });
-
     // 拠点マスター管理 (Locations)
     Route::post('locations/reorder', [LocationController::class, 'reorder'])->name('locations.reorder');
     Route::resource('locations', LocationController::class)->except(['create', 'show', 'edit']);
-
-    // 旧タイムテーブル配下ルートからの互換リダイレクト
-    Route::get('timetables/{timetable}/locations', [LocationController::class, 'redirectLegacy'])->name('timetables.locations.index');
 
     Route::scopeBindings()->group(function () {
         // 現場配置計画 (Site Layout)
@@ -246,9 +228,6 @@ Route::middleware('auth')->group(function () {
     Route::get('vendors/export-csv', [VendorCsvController::class, 'export'])->name('vendors.export-csv');
     Route::post('vendors/import-csv', [VendorCsvController::class, 'import'])->name('vendors.import-csv');
     Route::resource('vendors', VendorController::class)->except(['create', 'show', 'edit']);
-
-    // 旧ルート互換
-    Route::get('timetables/{timetable}/vendors', [VendorController::class, 'redirectLegacy'])->name('timetables.vendors.index');
 
     Route::resource('location-types', LocationTypeController::class)->except(['create', 'show', 'edit']);
 });

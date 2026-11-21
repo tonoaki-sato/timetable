@@ -154,6 +154,14 @@ class Location extends Model
     }
 
     /**
+     * この拠点を定常保管場所とする機材・備品一覧
+     */
+    public function storedEquipments(): HasMany
+    {
+        return $this->hasMany(Equipment::class, 'storage_location_id')->ordered();
+    }
+
+    /**
      * 種別ラベルのアクセサ
      */
     public function getTypeLabelAttribute(): string

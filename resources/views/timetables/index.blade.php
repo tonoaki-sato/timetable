@@ -144,7 +144,7 @@
                                     <span>進行表</span>
                                 </a>
 
-                                <!-- 管理メニュー (プルダウンメニュー: 担当班・拠点・搬出入・タスク台帳・人員配置) -->
+                                <!-- 管理メニュー (プルダウンメニュー: 担当班・搬出入・タスク台帳・人員配置) -->
                                 <div class="relative inline-block text-left timetable-menu-container">
                                     <button type="button"
                                         class="timetable-menu-trigger inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition cursor-pointer select-none whitespace-nowrap shadow-2xs"
@@ -159,11 +159,6 @@
                                                 class="flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition">
                                                 <span>🏷️</span>
                                                 <span class="font-medium">担当班</span>
-                                            </a>
-                                            <a href="{{ route('timetables.locations.index', $timetable) }}"
-                                                class="flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition">
-                                                <span>📍</span>
-                                                <span class="font-medium">拠点</span>
                                             </a>
                                             <a href="{{ route('timetables.logistics.index', $timetable) }}"
                                                 class="flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition">

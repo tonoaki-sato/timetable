@@ -36,8 +36,8 @@ class UpdateEquipmentRequest extends FormRequest
             'checkout_rule' => $this->input('checkout_rule', 'free') ?: 'free',
         ];
 
-        if ($this->input('type') === 'rental') {
-            $merged['storage_location'] = null;
+        if ($this->input('type') === 'rental' || $this->input('storage_location_id') === '') {
+            $merged['storage_location_id'] = null;
         }
 
         $this->merge($merged);

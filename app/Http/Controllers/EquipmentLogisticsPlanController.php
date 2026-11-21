@@ -10,7 +10,6 @@ use App\Models\Equipment;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\Timetable;
 use App\Services\EquipmentLogisticsService;
-use App\Services\TimetableService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +18,6 @@ class EquipmentLogisticsPlanController extends Controller
 {
     public function __construct(
         protected EquipmentLogisticsService $logisticsService,
-        protected TimetableService $timetableService
     ) {}
 
     /**
@@ -105,32 +103,5 @@ class EquipmentLogisticsPlanController extends Controller
         }
 
         return back()->with('status', "パターン「{$pattern->name}」から{$count}件の計画ステップを生成しました。");
-    }
-
-    // ==========================================
-    // 既存互換フォールバックアクション群
-    // ==========================================
-
-    public function updateLegacy(UpdateEquipmentLogisticsPlanRequest $request, EquipmentLogisticsPlan $plan): RedirectResponse|JsonResponse
-    {
-        $timetable = $plan->timetable ?? $this->resolveFallbackTimetable();
-
-        return $this->update($request, $timetable, $plan);
-    }
-
-    public function destroyLegacy(Request $request, EquipmentLogisticsPlan $plan): RedirectResponse|JsonResponse
-    {
-        $timetable = $plan->timetable ?? $this->resolveFallbackTimetable();
-
-        return $this->destroy($request, $timetable, $plan);
-    }
-
-    protected function resolveFallbackTimetable(?Request $request = null): Timetable
-    {
-        $timetableId = ($request && $request->filled('timetable_id'))
-            ? $request->integer('timetable_id')
-            : null;
-
-        return $this->timetableService->resolveFallbackTimetable($timetableId);
     }
 }

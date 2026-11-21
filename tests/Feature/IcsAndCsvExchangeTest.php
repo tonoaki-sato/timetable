@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\EquipmentCheckoutRule;
 use App\Models\Equipment;
 use App\Models\Lane;
+use App\Models\Location;
 use App\Models\Schedule;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
@@ -148,12 +149,16 @@ class IcsAndCsvExchangeTest extends TestCase
      */
     public function test_equipments_csv_export_import_and_authorization(): void
     {
+        $banshoWarehouse = Location::factory()->create(['name' => '番所倉庫']);
+        $banshoUnderground = Location::factory()->create(['name' => '番所地下倉庫']);
+
         Equipment::factory()->create([
             'name' => '@式テスト機材',
             'type' => 'committee',
             'checkout_rule' => EquipmentCheckoutRule::PermissionRequired->value,
             'quantity' => 12,
             'unit' => '個',
+            'storage_location_id' => $banshoWarehouse->id,
             'created_by' => $this->admin->id,
         ]);
 
@@ -162,7 +167,9 @@ class IcsAndCsvExchangeTest extends TestCase
         $csvOutput = $exportRes->streamedContent();
         $this->assertStringStartsWith("\xEF\xBB\xBF", $csvOutput);
         $this->assertStringContainsString("'@式テスト機材", $csvOutput);
+        $this->assertStringContainsString('実行委員会管理（自前保有）', $csvOutput);
         $this->assertStringContainsString('本陣許可制', $csvOutput);
+        $this->assertStringContainsString('番所倉庫', $csvOutput);
 
         // 日本語表記・内部キー混在の正常CSVインポート（9列）
         $validCsv = "ID,備品名,区分,持ち出しルール,基準数量,単位,概数フラグ,定常保管場所,備考\n"
@@ -186,7 +193,7 @@ class IcsAndCsvExchangeTest extends TestCase
             'type' => 'rental',
             'checkout_rule' => 'leader_only',
             'quantity' => 4,
-            'storage_location' => null, // rentalは定常保管場所をnull正規化
+            'storage_location_id' => null, // rentalは定常保管場所をnull正規化
         ]);
         $this->assertDatabaseHas('equipments', [
             'name' => 'CSV登録コーン',
@@ -194,10 +201,20 @@ class IcsAndCsvExchangeTest extends TestCase
             'checkout_rule' => 'free',
             'quantity' => 30,
             'is_approximate_quantity' => true,
-            'storage_location' => '番所地下倉庫',
+            'storage_location_id' => $banshoUnderground->id,
         ]);
 
-        // エラー行を含む場合は全体ロールバック
+        // 未登録の拠点名を含むCSVはバリデーションエラーとなり全体ロールバックされること
+        $unknownLocationCsv = "ID,備品名,区分,持ち出しルール,基準数量,単位,概数フラグ,定常保管場所,備考\n"
+            .",ロールバック予定機材,committee,free,10,個,0,番所倉庫,\n"
+            .",未登録拠点機材,committee,free,5,個,0,存在しない倉庫,\n";
+        $unknownLocationRes = $this->actingAs($this->admin)->post(route('equipments.import-csv'), [
+            'csv_file' => UploadedFile::fake()->createWithContent('equipments_unknown_loc.csv', $unknownLocationCsv),
+        ]);
+        $unknownLocationRes->assertSessionHasErrors('csv_file');
+        $this->assertDatabaseMissing('equipments', ['name' => 'ロールバック予定機材']);
+
+        // 数量エラー行を含む場合は全体ロールバック
         $invalidCsv = "ID,備品名,区分,持ち出しルール,基準数量,単位,概数フラグ,定常保管場所,備考\n"
             .",ロールバック予定機材,committee,free,10,個,0,番所倉庫,\n"
             .",数量不正機材,committee,free,0,個,0,番所倉庫,\n";

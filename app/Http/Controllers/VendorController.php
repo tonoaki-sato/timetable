@@ -35,16 +35,6 @@ class VendorController extends Controller
     }
 
     /**
-     * 旧タイムテーブル配下ルートからの互換リダイレクト
-     */
-    public function redirectLegacy(): RedirectResponse
-    {
-        $this->authorize('viewAny', Vendor::class);
-
-        return redirect()->route('vendors.index');
-    }
-
-    /**
      * 出展・出店者を新規登録
      */
     public function store(StoreVendorRequest $request): RedirectResponse|JsonResponse

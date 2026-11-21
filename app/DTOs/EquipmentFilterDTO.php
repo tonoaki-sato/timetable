@@ -25,7 +25,7 @@ readonly class EquipmentFilterDTO
         $resolvedSort = TableQueryOptions::resolveSort(
             isset($data['sort']) && $data['sort'] !== '' ? (string) $data['sort'] : null,
             isset($data['direction']) && $data['direction'] !== '' ? (string) $data['direction'] : null,
-            ['display_order', 'name', 'type', 'checkout_rule', 'quantity', 'storage_location'],
+            ['display_order', 'name', 'type', 'checkout_rule', 'quantity', 'storage_location_id'],
             'display_order',
             'asc',
         );

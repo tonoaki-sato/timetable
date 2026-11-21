@@ -2,7 +2,6 @@
 
 namespace App\Actions\Equipment;
 
-use App\Models\Equipment;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
 use App\Support\CsvSanitizer;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -49,7 +48,7 @@ class ExportEquipmentsCsvAction
             ]);
 
             foreach ($equipments as $equipment) {
-                $typeLabel = Equipment::TYPES[$equipment->type] ?? $equipment->type;
+                $typeLabel = $equipment->type_enum->label();
                 $ruleLabel = $equipment->checkout_rule_enum->label();
 
                 fputcsv($handle, [
@@ -60,7 +59,7 @@ class ExportEquipmentsCsvAction
                     $equipment->quantity,
                     CsvSanitizer::sanitizeForExport($equipment->unit),
                     $equipment->is_approximate_quantity ? '1' : '0',
-                    CsvSanitizer::sanitizeForExport($equipment->storage_location),
+                    CsvSanitizer::sanitizeForExport($equipment->storage_location_name),
                     CsvSanitizer::sanitizeForExport($equipment->description),
                 ]);
             }

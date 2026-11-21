@@ -255,7 +255,7 @@
                                                 </a>
                                                 <!-- 配置計画 -->
                                                 <a href="{{ route('timetables.layouts.index', $nav->targetPrintTimetable() ?? 1) }}"
-                                                    class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.layouts.*') || request()->routeIs('timetables.goza-stores.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                                    class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.layouts.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                                     <span class="text-base shrink-0">🗺️</span>
                                                     <div class="min-w-0 flex-1">
                                                         <div class="text-xs font-bold whitespace-nowrap truncate">配置計画</div>
@@ -377,7 +377,7 @@
                                 </div>
                                 <div class="py-1 space-y-0.5">
                                     <a href="{{ route('equipments.index') }}"
-                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('equipments.*') || request()->routeIs('timetables.equipments.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                                        class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('equipments.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                                         <span class="text-base shrink-0">📦</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-xs font-bold whitespace-nowrap truncate">機材・備品一覧</div>
