@@ -53,15 +53,12 @@ class Phase0SecurityAndBugFixesTest extends TestCase
             'start_at' => '2026-10-18 09:00:00',
             'end_at' => '2026-10-18 12:00:00',
             'availability_status' => 'unavailable',
-            'title' => '午前調整中',
-            'note' => '折衝中',
         ]);
         LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => '2026-10-18 13:00:00',
             'end_at' => '2026-10-18 17:00:00',
             'availability_status' => 'available',
-            'title' => '午後確保済',
         ]);
 
         $location->load('schedules');
@@ -71,7 +68,9 @@ class Phase0SecurityAndBugFixesTest extends TestCase
         $this->assertSame('unavailable', $rows[0]['availability_status']);
         $this->assertSame('available', $rows[1]['availability_status']);
         $this->assertSame('2026-10-18T09:00', $rows[0]['start_at']);
-        $this->assertSame('午前調整中', $rows[0]['title']);
+        $this->assertSame('2026-10-18T12:00', $rows[0]['end_at']);
+        $this->assertArrayNotHasKey('title', $rows[0]);
+        $this->assertArrayNotHasKey('note', $rows[0]);
     }
 
     public function test_staff_hides_access_token_from_array_and_json_serialization(): void

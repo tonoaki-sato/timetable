@@ -296,7 +296,7 @@
         <div id="modal-location-form" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="form-modal-title" role="dialog" aria-modal="true">
             <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity modal-backdrop"></div>
             <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
-                <div class="relative flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-4rem)] w-full sm:max-w-3xl rounded-2xl bg-white text-left shadow-xl border border-slate-200 overflow-hidden my-auto">
+                <div class="relative flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-4rem)] w-full sm:max-w-2xl rounded-2xl bg-white text-left shadow-xl border border-slate-200 overflow-hidden my-auto">
                     <form id="form-location-mutation" method="POST" action="{{ route('locations.store') }}" class="flex flex-col flex-1 min-h-0 overflow-hidden">
                         @csrf
                         <input type="hidden" id="form-method" name="_method" value="POST">
@@ -403,8 +403,6 @@
                                             <tr>
                                                 <th scope="col" class="py-2 px-2.5 whitespace-nowrap">開始〜終了日時 <span class="text-red-500">*</span></th>
                                                 <th scope="col" class="py-2 px-2.5 whitespace-nowrap">利用ステータス <span class="text-red-500">*</span></th>
-                                                <th scope="col" class="py-2 px-2.5 whitespace-nowrap">枠名 / タイトル</th>
-                                                <th scope="col" class="py-2 px-2.5 whitespace-nowrap">メモ</th>
                                                 <th scope="col" class="py-2 px-2.5 whitespace-nowrap text-right">削除</th>
                                             </tr>
                                         </thead>

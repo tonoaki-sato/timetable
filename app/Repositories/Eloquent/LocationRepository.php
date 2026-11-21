@@ -176,8 +176,6 @@ class LocationRepository implements LocationRepositoryInterface
                             'start_at' => $item['start_at'],
                             'end_at' => $item['end_at'],
                             'availability_status' => $item['availability_status'],
-                            'title' => $item['title'] ?? null,
-                            'note' => $item['note'] ?? null,
                         ]);
                         $updatedIds[] = $schedule->id;
                     }
@@ -186,8 +184,6 @@ class LocationRepository implements LocationRepositoryInterface
                         'start_at' => $item['start_at'],
                         'end_at' => $item['end_at'],
                         'availability_status' => $item['availability_status'],
-                        'title' => $item['title'] ?? null,
-                        'note' => $item['note'] ?? null,
                     ]);
                     $updatedIds[] = $created->id;
                 }

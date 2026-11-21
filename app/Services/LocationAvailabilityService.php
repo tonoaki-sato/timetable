@@ -213,19 +213,19 @@ class LocationAvailabilityService
         });
 
         if ($matched) {
-            $slotTitle = $matched->title ? "「{$matched->title}」" : $matched->start_at->format('H:i').'〜'.$matched->end_at->format('H:i');
+            $slotRange = $matched->start_at->format('H:i').'〜'.$matched->end_at->format('H:i');
 
             if ($matched->isAvailable()) {
                 return new LocationStatusEvaluation(
                     status: LocationCurrentStatus::Available,
-                    detail: "{$slotTitle}で利用可能です（{$matched->end_at->format('H:i')}まで）。",
+                    detail: "{$slotRange}で利用可能です（{$matched->end_at->format('H:i')}まで）。",
                     matchedSchedule: $matched
                 );
             }
 
             return new LocationStatusEvaluation(
                 status: LocationCurrentStatus::UnavailablePending,
-                detail: "{$slotTitle}は未確保（調整中）のため利用できません。",
+                detail: "{$slotRange}は未確保（調整中）のため利用できません。",
                 matchedSchedule: $matched
             );
         }

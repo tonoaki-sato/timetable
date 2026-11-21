@@ -13,8 +13,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'start_at',
     'end_at',
     'availability_status',
-    'title',
-    'note',
 ])]
 class LocationSchedule extends Model
 {

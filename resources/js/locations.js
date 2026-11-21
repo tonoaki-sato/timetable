@@ -231,31 +231,7 @@ function initLocationModals() {
         });
         tdStatus.appendChild(selectStatus);
 
-        // 3. 枠名 / タイトルセル
-        const tdTitle = document.createElement('td');
-        tdTitle.className = 'py-2 px-2.5 align-top';
-        const inputTitle = document.createElement('input');
-        inputTitle.type = 'text';
-        inputTitle.name = `schedules[${idx}][title]`;
-        inputTitle.value = schedule.title || '';
-        inputTitle.maxLength = 255;
-        inputTitle.placeholder = '例: 午前設営枠';
-        inputTitle.className = 'w-full min-w-28 px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-500';
-        tdTitle.appendChild(inputTitle);
-
-        // 4. メモセル
-        const tdNote = document.createElement('td');
-        tdNote.className = 'py-2 px-2.5 align-top';
-        const inputNote = document.createElement('input');
-        inputNote.type = 'text';
-        inputNote.name = `schedules[${idx}][note]`;
-        inputNote.value = schedule.note || '';
-        inputNote.maxLength = 1000;
-        inputNote.placeholder = '例: 鍵の受取あり';
-        inputNote.className = 'w-full min-w-28 px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-500';
-        tdNote.appendChild(inputNote);
-
-        // 5. 削除ボタンセル
+        // 3. 削除ボタンセル
         const tdRemove = document.createElement('td');
         tdRemove.className = 'py-2 px-2.5 align-top text-right whitespace-nowrap';
         const btnRemove = document.createElement('button');
@@ -270,7 +246,7 @@ function initLocationModals() {
         });
         tdRemove.appendChild(btnRemove);
 
-        tr.append(tdDates, tdStatus, tdTitle, tdNote, tdRemove);
+        tr.append(tdDates, tdStatus, tdRemove);
         return tr;
     };
 
@@ -328,28 +304,12 @@ function initLocationModals() {
                 leftGroup.appendChild(currentBadge);
             }
 
-            if (item.title) {
-                const titleSpan = document.createElement('span');
-                titleSpan.className = isPastGroup
-                    ? 'font-bold text-slate-600 text-xs'
-                    : 'font-bold text-slate-900 text-xs';
-                titleSpan.textContent = item.title;
-                leftGroup.appendChild(titleSpan);
-            }
-
             const statusBadge = document.createElement('span');
             statusBadge.className = `inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${item.status_badge_class || 'bg-slate-100 text-slate-600 border-slate-200'}`;
             statusBadge.textContent = item.status_label || '';
 
             topRow.append(leftGroup, statusBadge);
             card.appendChild(topRow);
-
-            if (item.note) {
-                const noteEl = document.createElement('p');
-                noteEl.className = 'text-[11px] text-slate-500 leading-snug';
-                noteEl.textContent = item.note;
-                card.appendChild(noteEl);
-            }
 
             listEl.appendChild(card);
         });
@@ -366,8 +326,6 @@ function initLocationModals() {
                 start_at: defaultDate ? `${defaultDate}T09:00` : '',
                 end_at: defaultDate ? `${defaultDate}T17:00` : '',
                 availability_status: 'available',
-                title: '',
-                note: '',
                 is_past: false,
             });
             schedulesBody.appendChild(row);

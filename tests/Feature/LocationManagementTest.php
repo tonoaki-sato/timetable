@@ -56,13 +56,11 @@ class LocationManagementTest extends TestCase
             'notes' => '鍵は暗証番号4920で開錠。',
         ]);
 
-        LocationSchedule::create([
+        $schedule = LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => now()->addHour(),
             'end_at' => now()->addHours(3),
             'availability_status' => 'available',
-            'title' => '午後枠',
-            'note' => '鍵受取後に開放',
         ]);
 
         $response = $this->actingAs($this->admin)->get(route('locations.index'));
@@ -71,9 +69,11 @@ class LocationManagementTest extends TestCase
             ->assertSee('拠点マスター')
             ->assertSee('番所')
             ->assertSee('鍵は暗証番号4920で開錠。')
-            ->assertSee('午後枠')
+            ->assertSee($schedule->start_at->format('Y-m-d\TH:i'))
             ->assertSee('編集')
             ->assertSee('削除')
+            // 利用枠テーブルから枠名/タイトル・メモ列が削除されていること
+            ->assertDontSee('枠名 / タイトル')
             // KPIサマリーカードは非表示
             ->assertDontSee('登録拠点総数')
             ->assertDontSee('終日利用可能（常設）')
@@ -107,39 +107,35 @@ class LocationManagementTest extends TestCase
         ]);
 
         // 1. 過去枠（現在日時より前に終了）
-        LocationSchedule::create([
+        $pastRecent = LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => '2026-11-21 08:00:00',
             'end_at' => '2026-11-21 11:59:00',
             'availability_status' => 'available',
-            'title' => '終了済み午前枠',
         ]);
 
         // 2. さらに古い過去枠（過去枠の降順確認用）
-        LocationSchedule::create([
+        $pastOld = LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => '2026-11-20 09:00:00',
             'end_at' => '2026-11-20 17:00:00',
             'availability_status' => 'unavailable',
-            'title' => '前日調整枠',
         ]);
 
         // 3. 現在進行中枠（start_at <= now <= end_at -> 現在・今後へ分類 + is_current = true）
-        LocationSchedule::create([
+        $current = LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => '2026-11-21 11:00:00',
             'end_at' => '2026-11-21 14:00:00',
             'availability_status' => 'available',
-            'title' => '現在進行中枠',
         ]);
 
         // 4. 未来枠（start_at > now -> 現在・今後へ分類 + is_current = false）
-        LocationSchedule::create([
+        $future = LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => '2026-11-22 09:00:00',
             'end_at' => '2026-11-22 17:00:00',
             'availability_status' => 'unavailable',
-            'title' => '翌日予約枠',
         ]);
 
         $viewData = app(LocationService::class)->getIndexViewData();
@@ -149,30 +145,34 @@ class LocationManagementTest extends TestCase
 
         // サービス側分類検証
         $this->assertCount(2, $item->upcomingSchedules);
-        $this->assertSame(['現在進行中枠', '翌日予約枠'], $item->upcomingSchedules->pluck('title')->all());
+        $this->assertSame([$current->id, $future->id], $item->upcomingSchedules->pluck('id')->all());
 
         $this->assertCount(2, $item->pastSchedules);
-        $this->assertSame(['終了済み午前枠', '前日調整枠'], $item->pastSchedules->pluck('title')->all());
+        $this->assertSame([$pastRecent->id, $pastOld->id], $item->pastSchedules->pluck('id')->all());
 
-        // ペイロード検証
+        // ペイロード検証（title/note キーが存在しないことも検証）
         $detailPayload = $item->toDetailSchedulesPayload($viewData['now']);
         $this->assertCount(2, $detailPayload['upcoming']);
         $this->assertTrue($detailPayload['upcoming'][0]['is_current']);
         $this->assertFalse($detailPayload['upcoming'][1]['is_current']);
         $this->assertCount(2, $detailPayload['past']);
+        $this->assertArrayNotHasKey('title', $detailPayload['upcoming'][0]);
+        $this->assertArrayNotHasKey('note', $detailPayload['upcoming'][0]);
 
         $formPayload = $item->toFormSchedulesPayload($viewData['now']);
         $this->assertCount(4, $formPayload);
         $this->assertTrue($formPayload[0]['is_past']);
         $this->assertFalse($formPayload[2]['is_past']);
+        $this->assertArrayNotHasKey('title', $formPayload[0]);
+        $this->assertArrayNotHasKey('note', $formPayload[0]);
 
         // レスポンスHTMLにJSONデータが出力されていること
         $response = $this->actingAs($this->admin)->get(route('locations.index'));
         $response->assertOk()
             ->assertSee('data-detail-schedules', false)
             ->assertSee('data-schedules', false)
-            ->assertSee('現在進行中枠')
-            ->assertSee('終了済み午前枠');
+            ->assertSee('2026-11-21T11:00', false)
+            ->assertSee('2026-11-21T08:00', false);
     }
 
     public function test_can_create_new_location(): void
@@ -298,7 +298,6 @@ class LocationManagementTest extends TestCase
             'start_at' => Carbon::parse('2026-10-10 09:00:00'),
             'end_at' => Carbon::parse('2026-10-10 12:00:00'),
             'availability_status' => 'available',
-            'title' => '午前枠',
         ]);
 
         // 夜間枠: 18:00 - 21:00 (利用不可)
@@ -307,7 +306,6 @@ class LocationManagementTest extends TestCase
             'start_at' => Carbon::parse('2026-10-10 18:00:00'),
             'end_at' => Carbon::parse('2026-10-10 21:00:00'),
             'availability_status' => 'unavailable',
-            'title' => '夜間枠',
         ]);
 
         $availabilityService = app(LocationAvailabilityService::class);
@@ -398,15 +396,11 @@ class LocationManagementTest extends TestCase
                     'start_at' => '2026-10-11 08:00:00',
                     'end_at' => '2026-10-11 12:00:00',
                     'availability_status' => 'available',
-                    'title' => '午前準備',
-                    'note' => '鍵の受取完了',
                 ],
                 [
                     'start_at' => '2026-10-11 13:00:00',
                     'end_at' => '2026-10-11 18:00:00',
                     'availability_status' => 'unavailable',
-                    'title' => '午後撤収',
-                    'note' => '前面道路規制中',
                 ],
             ],
         ]);
@@ -436,14 +430,12 @@ class LocationManagementTest extends TestCase
             'start_at' => '2026-10-11 08:00:00',
             'end_at' => '2026-10-11 12:00:00',
             'availability_status' => 'available',
-            'title' => '旧枠1',
         ]);
         $schedule2 = LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => '2026-10-11 13:00:00',
             'end_at' => '2026-10-11 17:00:00',
             'availability_status' => 'available',
-            'title' => '旧枠2（削除対象）',
         ]);
 
         // 1. schedule1を更新、schedule2は送信せず削除、新規枠3を追加
@@ -458,14 +450,11 @@ class LocationManagementTest extends TestCase
                     'start_at' => '2026-10-11 08:30:00',
                     'end_at' => '2026-10-11 12:30:00',
                     'availability_status' => 'unavailable',
-                    'title' => '更新後枠1',
-                    'note' => '利用不可に変更',
                 ],
                 [
                     'start_at' => '2026-10-11 18:00:00',
                     'end_at' => '2026-10-11 21:00:00',
                     'availability_status' => 'available',
-                    'title' => '新規枠3',
                 ],
             ],
         ]);
@@ -477,7 +466,8 @@ class LocationManagementTest extends TestCase
         $this->assertCount(2, $location->schedules);
         $this->assertDatabaseHas('location_schedules', [
             'id' => $schedule1->id,
-            'title' => '更新後枠1',
+            'start_at' => '2026-10-11 08:30:00',
+            'end_at' => '2026-10-11 12:30:00',
             'availability_status' => 'unavailable',
         ]);
         $this->assertDatabaseMissing('location_schedules', [
@@ -485,7 +475,9 @@ class LocationManagementTest extends TestCase
         ]);
         $this->assertDatabaseHas('location_schedules', [
             'location_id' => $location->id,
-            'title' => '新規枠3',
+            'start_at' => '2026-10-11 18:00:00',
+            'end_at' => '2026-10-11 21:00:00',
+            'availability_status' => 'available',
         ]);
 
         // 2. schedules を空にして送信すると全枠が削除されること
@@ -511,7 +503,6 @@ class LocationManagementTest extends TestCase
             'start_at' => '2026-10-11 08:00:00',
             'end_at' => '2026-10-11 12:00:00',
             'availability_status' => 'available',
-            'title' => '他拠点枠',
         ]);
 
         $response = $this->actingAs($this->admin)->put(route('locations.update', $locationA), [

@@ -129,7 +129,6 @@ class TimetableCloneTest extends TestCase
             'start_at' => '2025-10-18 07:00:00',
             'end_at' => '2025-10-18 19:00:00',
             'availability_status' => 'available',
-            'title' => '倉庫鍵開放時間',
         ]);
 
         $equipment = Equipment::factory()->create(['name' => 'カラーコーン']);

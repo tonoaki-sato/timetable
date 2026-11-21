@@ -29,8 +29,6 @@ class LocationScheduleFactory extends Factory
             'start_at' => $start,
             'end_at' => $end,
             'availability_status' => 'available',
-            'title' => '午前利用枠',
-            'note' => fake()->sentence(),
         ];
     }
 }

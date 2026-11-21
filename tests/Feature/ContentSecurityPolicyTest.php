@@ -80,24 +80,18 @@ class ContentSecurityPolicyTest extends TestCase
             'start_at' => now()->subHours(3),
             'end_at' => now()->subHour(),
             'availability_status' => 'available',
-            'title' => '過去枠',
-            'note' => '終了済み枠',
         ]);
         LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => now()->subMinutes(30),
             'end_at' => now()->addHours(2),
             'availability_status' => 'available',
-            'title' => '現在枠',
-            'note' => '稼働中枠',
         ]);
         LocationSchedule::create([
             'location_id' => $location->id,
             'start_at' => now()->addDay(),
             'end_at' => now()->addDay()->addHours(3),
             'availability_status' => 'unavailable',
-            'title' => '未来枠',
-            'note' => '調整中',
         ]);
 
         $routesToTest = [

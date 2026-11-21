@@ -59,14 +59,12 @@ class EquipmentLogisticsPlanTest extends TestCase
             'start_at' => '2026-10-09 09:00:00',
             'end_at' => '2026-10-10 18:00:00',
             'availability_status' => 'available',
-            'title' => '前日搬入受取枠',
         ]);
         LocationSchedule::create([
             'location_id' => $this->locationBanshoSpace->id,
             'start_at' => '2026-10-12 18:00:00',
             'end_at' => '2026-10-14 17:00:00',
             'availability_status' => 'available',
-            'title' => '撤収後回収待ち枠',
         ]);
 
         $this->locationTaxOffice = Location::factory()->create([
@@ -78,7 +76,6 @@ class EquipmentLogisticsPlanTest extends TestCase
             'start_at' => '2026-10-10 12:00:00',
             'end_at' => '2026-10-12 21:00:00',
             'availability_status' => 'available',
-            'title' => '貸切枠',
         ]);
 
         $this->locationKitagawa = Location::factory()->create([
@@ -90,7 +87,6 @@ class EquipmentLogisticsPlanTest extends TestCase
             'start_at' => '2026-10-10 13:00:00',
             'end_at' => '2026-10-12 20:30:00',
             'availability_status' => 'available',
-            'title' => '貸切枠',
         ]);
 
         $this->staff = Staff::factory()->create(['name' => '立会担当者']);

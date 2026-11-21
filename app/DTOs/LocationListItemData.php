@@ -38,8 +38,6 @@ class LocationListItemData
      *         availability_status: string,
      *         status_label: string,
      *         status_badge_class: string,
-     *         title: string,
-     *         note: string,
      *         is_current: bool
      *     }>,
      *     past: list<array{
@@ -49,8 +47,6 @@ class LocationListItemData
      *         availability_status: string,
      *         status_label: string,
      *         status_badge_class: string,
-     *         title: string,
-     *         note: string,
      *         is_current: bool
      *     }>
      * }
@@ -77,8 +73,6 @@ class LocationListItemData
      *     start_at: string,
      *     end_at: string,
      *     availability_status: string,
-     *     title: string,
-     *     note: string,
      *     is_past: bool
      * }>
      */
@@ -90,8 +84,6 @@ class LocationListItemData
                 'start_at' => $s->start_at ? $s->start_at->format('Y-m-d\TH:i') : '',
                 'end_at' => $s->end_at ? $s->end_at->format('Y-m-d\TH:i') : '',
                 'availability_status' => $s->availability_status ?? 'available',
-                'title' => $s->title ?? '',
-                'note' => $s->note ?? '',
                 'is_past' => $s->end_at ? $s->end_at->lessThan($now) : false,
             ])
             ->values()
@@ -108,8 +100,6 @@ class LocationListItemData
      *     availability_status: string,
      *     status_label: string,
      *     status_badge_class: string,
-     *     title: string,
-     *     note: string,
      *     is_current: bool
      * }
      */
@@ -135,8 +125,6 @@ class LocationListItemData
             'availability_status' => (string) $schedule->availability_status,
             'status_label' => (string) $schedule->availability_status_label,
             'status_badge_class' => (string) $schedule->availability_status_badge_class,
-            'title' => (string) ($schedule->title ?? ''),
-            'note' => (string) ($schedule->note ?? ''),
             'is_current' => $isCurrent,
         ];
     }

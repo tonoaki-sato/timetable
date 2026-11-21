@@ -35,8 +35,6 @@ class StoreLocationRequest extends FormRequest
             'schedules.*.start_at' => ['required_with:schedules', 'date'],
             'schedules.*.end_at' => ['required_with:schedules', 'date', 'after:schedules.*.start_at'],
             'schedules.*.availability_status' => ['required_with:schedules', Rule::in(array_keys(LocationSchedule::AVAILABILITY_STATUSES))],
-            'schedules.*.title' => ['nullable', 'string', 'max:255'],
-            'schedules.*.note' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -54,8 +52,6 @@ class StoreLocationRequest extends FormRequest
             'schedules.*.start_at' => '利用開始日時',
             'schedules.*.end_at' => '利用終了日時',
             'schedules.*.availability_status' => '利用ステータス',
-            'schedules.*.title' => '枠名 / タイトル',
-            'schedules.*.note' => 'メモ / 特記事項',
         ];
     }
 
@@ -67,7 +63,7 @@ class StoreLocationRequest extends FormRequest
         $filteredSchedules = null;
         if ($this->has('schedules') && is_array($this->input('schedules'))) {
             $filteredSchedules = array_values(array_filter($this->input('schedules'), function ($row) {
-                return ! empty($row['start_at']) || ! empty($row['end_at']) || ! empty($row['title']);
+                return ! empty($row['start_at']) || ! empty($row['end_at']);
             }));
         }
 

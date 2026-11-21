@@ -44,7 +44,6 @@ class ParkingConstraintMonitoringTest extends TestCase
                 'start_at' => $startAt,
                 'end_at' => $endAt,
                 'availability_status' => 'available',
-                'title' => '貸切枠',
             ]);
         }
 

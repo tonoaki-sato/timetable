@@ -129,16 +129,18 @@ class LocationAuthorizationTest extends TestCase
                     'start_at' => now()->addHour()->toDateTimeString(),
                     'end_at' => now()->addHours(2)->toDateTimeString(),
                     'availability_status' => 'available',
-                    'title' => '初期枠',
                 ],
             ],
         ]);
         $storeRes->assertRedirect(route('locations.index'));
         $this->assertDatabaseHas('locations', ['name' => 'テスト拠点A']);
-        $this->assertDatabaseHas('location_schedules', ['title' => '初期枠']);
 
         $location = Location::where('name', 'テスト拠点A')->first();
         $this->assertNotNull($location);
+        $this->assertDatabaseHas('location_schedules', [
+            'location_id' => $location->id,
+            'availability_status' => 'available',
+        ]);
 
         // 更新（利用枠のステータス変更込み）
         $schedule = $location->schedules()->firstOrFail();
@@ -152,7 +154,6 @@ class LocationAuthorizationTest extends TestCase
                     'start_at' => now()->addHour()->toDateTimeString(),
                     'end_at' => now()->addHours(3)->toDateTimeString(),
                     'availability_status' => 'unavailable',
-                    'title' => '更新枠',
                 ],
             ],
         ])->assertRedirect(route('locations.index'));
@@ -160,7 +161,6 @@ class LocationAuthorizationTest extends TestCase
         $this->assertDatabaseHas('location_schedules', [
             'id' => $schedule->id,
             'availability_status' => 'unavailable',
-            'title' => '更新枠',
         ]);
 
         // 並び替え

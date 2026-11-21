@@ -30,7 +30,7 @@ class LocationSeeder extends Seeder
                 'type_id' => $storageType?->id,
                 'is_all_day' => false,
                 'notes' => '大型自前機材（カラーコーン、ござ市用テント、大型台車等）の常時保管場所。',
-                'display_order' => 10,
+                'display_order' => 20,
                 'schedules' => [],
             ],
             [
@@ -38,7 +38,7 @@ class LocationSeeder extends Seeder
                 'type_id' => $storageType?->id,
                 'is_all_day' => false,
                 'notes' => '地下倉庫とは別の番所倉庫。交通整理用LED誘導棒などの常時保管場所。',
-                'display_order' => 15,
+                'display_order' => 10,
                 'schedules' => [],
             ],
             [
@@ -115,8 +115,6 @@ class LocationSeeder extends Seeder
                         'start_at' => Carbon::parse($sch['start_at']),
                         'end_at' => Carbon::parse($sch['end_at']),
                         'availability_status' => $sch['availability_status'],
-                        'title' => $sch['title'],
-                        'note' => $sch['note'],
                     ]);
                 }
             }
