@@ -102,11 +102,11 @@ class LaneSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'name' => 'イベント',
+                'name' => '税務署ステージ',
                 'color' => 'orange',
                 'icon' => '🎤',
                 'display_order' => 120,
-                'description' => 'ステージ、イベントブースの準備・出演者管理、運行など',
+                'description' => '税務署ステージのイベント運行管理',
                 'is_active' => true,
             ],
             [

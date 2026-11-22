@@ -32,7 +32,7 @@ class OrganizationSeederTest extends TestCase
         ]);
         $this->assertDatabaseHas('staff', [
             'id' => 43,
-            'name' => 'ひきじ',
+            'name' => '引地 虹輝',
         ]);
         $this->assertDatabaseHas('staff', [
             'id' => 44,

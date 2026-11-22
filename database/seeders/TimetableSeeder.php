@@ -1239,7 +1239,7 @@ class TimetableSeeder extends Seeder
             ['target_date' => '2027-10-10'],
             [
                 'name' => '第35回保土ケ谷宿場まつり（1日目）',
-                'description' => 'テスト',
+                'description' => null,
                 'start_time' => '07:00:00',
                 'end_time' => '20:00:00',
                 'status' => 'draft',
@@ -1364,13 +1364,13 @@ class TimetableSeeder extends Seeder
                 'description' => '直営店の運営・管理など',
             ],
             [
-                'name' => 'イベント',
+                'name' => '税務署ステージ',
                 'color' => 'orange',
                 'icon' => '🎤',
                 'display_order' => 130,
                 'lead_staff_id' => 13,
                 'fixed_staff_ids' => [12, 13, 41, 44],
-                'description' => 'ステージ、イベントブースの準備・出演者管理、運行など',
+                'description' => '税務署ステージのイベント運行管理',
             ],
             [
                 'name' => '宿場くん/宿場ちゃん',
@@ -1378,17 +1378,8 @@ class TimetableSeeder extends Seeder
                 'icon' => '🏃‍♂️',
                 'display_order' => 140,
                 'lead_staff_id' => 15,
-                'fixed_staff_ids' => [7, 10, 15, 23, 25, 32, 42],
+                'fixed_staff_ids' => [10, 15, 23, 25, 32, 42],
                 'description' => 'マスコットキャラのマネジメント、パフォーマンス、アテンドなど',
-            ],
-            [
-                'name' => 'IT',
-                'color' => 'emerald',
-                'icon' => '💻',
-                'display_order' => 160,
-                'lead_staff_id' => 7,
-                'fixed_staff_ids' => [7, 9, 17, 33],
-                'description' => 'SNS更新、ホームページ更新、記録用写真撮影など',
             ],
             [
                 'name' => 'S&S',
@@ -1714,7 +1705,7 @@ class TimetableSeeder extends Seeder
                 ],
             ],
             [
-                'lane_name' => 'イベント',
+                'lane_name' => '税務署ステージ',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1760,11 +1751,6 @@ class TimetableSeeder extends Seeder
                 'status' => 'not_started',
                 'assignments' => [
                     [
-                        'staff_id' => 7,
-                        'role_description' => '固定スタッフ',
-                        'attendance_status' => 'assigned',
-                    ],
-                    [
                         'staff_id' => 10,
                         'role_description' => '固定スタッフ',
                         'attendance_status' => 'assigned',
@@ -1791,40 +1777,6 @@ class TimetableSeeder extends Seeder
                     ],
                     [
                         'staff_id' => 42,
-                        'role_description' => '固定スタッフ',
-                        'attendance_status' => 'assigned',
-                    ],
-                ],
-            ],
-            [
-                'lane_name' => 'IT',
-                'title' => '全体ミーティング',
-                'start_time' => '07:00:00',
-                'end_time' => '07:30:00',
-                'location' => '本陣',
-                'content' => null,
-                'required_people_count' => 0,
-                'is_at_least' => false,
-                'is_critical' => false,
-                'status' => 'not_started',
-                'assignments' => [
-                    [
-                        'staff_id' => 7,
-                        'role_description' => '班長',
-                        'attendance_status' => 'assigned',
-                    ],
-                    [
-                        'staff_id' => 9,
-                        'role_description' => '固定スタッフ',
-                        'attendance_status' => 'assigned',
-                    ],
-                    [
-                        'staff_id' => 17,
-                        'role_description' => '固定スタッフ',
-                        'attendance_status' => 'assigned',
-                    ],
-                    [
-                        'staff_id' => 33,
                         'role_description' => '固定スタッフ',
                         'attendance_status' => 'assigned',
                     ],
@@ -2522,7 +2474,9 @@ class TimetableSeeder extends Seeder
                     'requested_by_staff_id' => $day1ColorConeLane->lead_staff_id,
                     'requested_count' => 2,
                     'reason' => '東口コーン設置の補助要請（通行止め直後の集中配置）',
-                    'status' => 'pending',
+                    'status' => 'resolved',
+                    'resolved_by_user_id' => $admin->id,
+                    'resolved_at' => '2026-11-22 03:02:20',
                 ]
             );
 
@@ -2538,7 +2492,9 @@ class TimetableSeeder extends Seeder
                     'requested_by_staff_id' => $day1ColorConeLane->lead_staff_id,
                     'requested_count' => 3,
                     'reason' => '東口と西口の連絡用に追加手配希望',
-                    'status' => 'approved',
+                    'status' => 'resolved',
+                    'resolved_by_user_id' => $admin->id,
+                    'resolved_at' => '2026-11-22 03:02:08',
                 ]
             );
         }

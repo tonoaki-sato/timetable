@@ -42,7 +42,7 @@ class TimetableSeederTest extends TestCase
 
         // 0. 担当班マスター・日別編成・現場要請の件数が正しくシードされていること
         $this->assertSame(17, Lane::count());
-        $this->assertSame(37, TimetableLane::count());
+        $this->assertSame(36, TimetableLane::count());
         $this->assertSame(3, LaneRequest::count());
         $this->assertSame(0, TimetableTask::whereNull('timetable_lane_id')->count());
 
@@ -97,10 +97,30 @@ class TimetableSeederTest extends TestCase
             ->first();
         $this->assertNotNull($criticalTask);
 
+        $this->assertDatabaseHas('lanes', [
+            'name' => '税務署ステージ',
+            'description' => '税務署ステージのイベント運行管理',
+        ]);
+        $this->assertDatabaseMissing('lanes', ['name' => 'イベント']);
+
         // 第35回（Day 4）追加レーン（S&S 等）と最新タスクがシードされていること
         $timetableDay4 = Timetable::where('target_date', '2027-10-10')
             ->where('name', '第35回保土ケ谷宿場まつり（1日目）')
             ->firstOrFail();
+        $this->assertNull($timetableDay4->description);
+
+        $itMaster = Lane::where('name', 'IT')->firstOrFail();
+        $this->assertDatabaseMissing('timetable_lanes', [
+            'timetable_id' => $timetableDay4->id,
+            'lane_id' => $itMaster->id,
+        ]);
+
+        $shukubaMaster = Lane::where('name', '宿場くん/宿場ちゃん')->firstOrFail();
+        $shukubaLane = TimetableLane::where('timetable_id', $timetableDay4->id)
+            ->where('lane_id', $shukubaMaster->id)
+            ->firstOrFail();
+        $this->assertNotContains(7, $shukubaLane->fixedStaff()->pluck('staff.id')->all());
+
         $snsMaster = Lane::where('name', 'S&S')->firstOrFail();
         $kigyoMaster = Lane::where('name', '企業ブース')->firstOrFail();
 
@@ -121,6 +141,13 @@ class TimetableSeederTest extends TestCase
             'timetable_lane_id' => $kigyoLane->id,
             'title' => '搬入対応',
         ]);
+
+        // レーン間支援要請（LaneRequest）が最新状態でシードされていること
+        $this->assertSame(3, LaneRequest::where('status', 'resolved')->count());
+        $this->assertSame(
+            2,
+            LaneRequest::whereNotNull('resolved_by_user_id')->whereNotNull('resolved_at')->count()
+        );
 
         // レーンおよびステータスが定義に合致していること
         $validLanes = Lane::pluck('name')->toArray();
@@ -146,7 +173,7 @@ class TimetableSeederTest extends TestCase
 
         // 0. 担当班マスター・日別編成・現場要請の件数が正しくシードされていること
         $this->assertSame(17, Lane::count());
-        $this->assertSame(37, TimetableLane::count());
+        $this->assertSame(36, TimetableLane::count());
         $this->assertSame(3, LaneRequest::count());
         $this->assertSame(0, TimetableTask::whereNull('timetable_lane_id')->count());
 
@@ -161,7 +188,7 @@ class TimetableSeederTest extends TestCase
 
         // 0. 担当班マスター・日別編成・現場要請の件数が正しくシードされていること
         $this->assertSame(17, Lane::count());
-        $this->assertSame(37, TimetableLane::count());
+        $this->assertSame(36, TimetableLane::count());
         $this->assertSame(3, LaneRequest::count());
         $this->assertSame(0, TimetableTask::whereNull('timetable_lane_id')->count());
 

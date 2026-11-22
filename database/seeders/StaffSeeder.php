@@ -394,8 +394,8 @@ class StaffSeeder extends Seeder
             ],
             [
                 'id' => 43,
-                'name' => 'ひきじ',
-                'kana' => 'ヒキジ',
+                'name' => '引地 虹輝',
+                'kana' => 'ヒキチ コウキ',
                 'affiliation' => null,
                 'is_active' => true,
                 'access_token' => 'g80FWSZoSWnsUOG0bAUIjg3Ld51eEEAT',
