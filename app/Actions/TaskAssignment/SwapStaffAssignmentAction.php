@@ -7,13 +7,13 @@ use App\Models\TimetableTask;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
 use App\Services\ConflictDetectionService;
-use App\Services\TimetableTaskService;
+use App\Services\TimetableTaskAssignmentService;
 use Illuminate\Support\Facades\DB;
 
 class SwapStaffAssignmentAction
 {
     public function __construct(
-        protected TimetableTaskService $taskService,
+        protected TimetableTaskAssignmentService $taskAssignmentService,
         protected ConflictDetectionService $conflictService,
         protected StaffRepositoryInterface $staffRepository,
         protected TaskStaffAssignmentRepositoryInterface $assignmentRepository
@@ -88,8 +88,8 @@ class SwapStaffAssignmentAction
             : ($oldAssignment->role_description ?: '担当');
 
         DB::transaction(function () use ($task, $oldStaff, $newStaff, $role): void {
-            $this->taskService->removeStaff($task, $oldStaff->id);
-            $this->taskService->bulkAssignStaff($task, [$newStaff->id], $role);
+            $this->taskAssignmentService->removeStaff($task, $oldStaff->id);
+            $this->taskAssignmentService->bulkAssignStaff($task, [$newStaff->id], $role);
         });
 
         return [

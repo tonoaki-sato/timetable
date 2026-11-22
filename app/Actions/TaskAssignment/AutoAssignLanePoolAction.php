@@ -7,12 +7,12 @@ use App\Models\TimetableTask;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
 use App\Services\ConflictDetectionService;
-use App\Services\TimetableTaskService;
+use App\Services\TimetableTaskAssignmentService;
 
 class AutoAssignLanePoolAction
 {
     public function __construct(
-        protected TimetableTaskService $taskService,
+        protected TimetableTaskAssignmentService $taskAssignmentService,
         protected ConflictDetectionService $conflictService,
         protected StaffRepositoryInterface $staffRepository,
         protected TaskStaffAssignmentRepositoryInterface $assignmentRepository
@@ -104,7 +104,7 @@ class AutoAssignLanePoolAction
         $toAssign = $availableMembers->take($shortage);
         $assignIds = $toAssign->pluck('id')->all();
 
-        $this->taskService->bulkAssignStaff($task, $assignIds, '班担当');
+        $this->taskAssignmentService->bulkAssignStaff($task, $assignIds, '班担当');
 
         $count = count($assignIds);
         $names = $toAssign->pluck('name')->implode('、');

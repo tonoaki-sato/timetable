@@ -23,7 +23,7 @@ class TimetableLaneService
         protected TimetableTaskRepositoryInterface $taskRepository,
         protected StaffRepositoryInterface $staffRepository,
         protected LaneRequestRepositoryInterface $laneRequestRepository,
-        protected TimetableTaskService $taskService,
+        protected TimetableTaskAssignmentService $taskAssignmentService,
     ) {}
 
     /**
@@ -85,7 +85,7 @@ class TimetableLaneService
         }
 
         if (! empty($fixedStaffIds)) {
-            $this->taskService->syncTimetableLaneFixedStaffToTasks($timetableLane, $fixedStaffIds);
+            $this->taskAssignmentService->syncTimetableLaneFixedStaffToTasks($timetableLane, $fixedStaffIds);
         }
 
         return $timetableLane->fresh(['lane', 'leadStaff', 'fixedStaff'])?->loadCount('tasks') ?? $timetableLane;
@@ -152,14 +152,14 @@ class TimetableLaneService
 
         if ($timetableLane->lead_staff_id) {
             $this->timetableLaneRepository->syncFixedStaffWithoutDetaching($timetableLane, [(int) $timetableLane->lead_staff_id]);
-            $this->taskService->syncTimetableLaneLeadToTasks($timetableLane, $oldLeadStaffId);
+            $this->taskAssignmentService->syncTimetableLaneLeadToTasks($timetableLane, $oldLeadStaffId);
         }
 
         if ($hasFixedStaffInput) {
             if ($timetableLane->lead_staff_id && ! in_array((int) $timetableLane->lead_staff_id, array_map('intval', $fixedStaffIds), true)) {
                 $fixedStaffIds[] = (int) $timetableLane->lead_staff_id;
             }
-            $this->taskService->syncTimetableLaneFixedStaffToTasks($timetableLane, $fixedStaffIds);
+            $this->taskAssignmentService->syncTimetableLaneFixedStaffToTasks($timetableLane, $fixedStaffIds);
         }
 
         return $timetableLane->fresh(['lane', 'leadStaff', 'fixedStaff'])?->loadCount('tasks') ?? $timetableLane;

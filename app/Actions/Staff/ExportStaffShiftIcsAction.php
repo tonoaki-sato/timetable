@@ -5,13 +5,13 @@ namespace App\Actions\Staff;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Services\IcsGeneratorService;
-use App\Services\StaffService;
+use App\Services\StaffShiftViewService;
 use Illuminate\Http\Response;
 
 class ExportStaffShiftIcsAction
 {
     public function __construct(
-        protected StaffService $staffService,
+        protected StaffShiftViewService $shiftViewService,
         protected IcsGeneratorService $icsGenerator,
     ) {}
 
@@ -20,7 +20,7 @@ class ExportStaffShiftIcsAction
      */
     public function execute(Staff $staff, ?string $timetableFilter = null): Response
     {
-        $viewData = $this->staffService->getMyShiftViewData($staff, $timetableFilter);
+        $viewData = $this->shiftViewService->getMyShiftViewData($staff, $timetableFilter);
 
         $events = $viewData->assignments
             ->filter(fn (TaskStaffAssignment $assignment): bool => $assignment->task?->timetable?->target_date !== null)

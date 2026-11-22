@@ -5,12 +5,12 @@ namespace App\Actions\TaskAssignment;
 use App\Models\TimetableTask;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Services\ConflictDetectionService;
-use App\Services\TimetableTaskService;
+use App\Services\TimetableTaskAssignmentService;
 
 class BulkAssignStaffAction
 {
     public function __construct(
-        protected TimetableTaskService $taskService,
+        protected TimetableTaskAssignmentService $taskAssignmentService,
         protected ConflictDetectionService $conflictService,
         protected StaffRepositoryInterface $staffRepository
     ) {}
@@ -63,7 +63,7 @@ class BulkAssignStaffAction
             ];
         }
 
-        $this->taskService->bulkAssignStaff($task, $staffIds, $roleDescription);
+        $this->taskAssignmentService->bulkAssignStaff($task, $staffIds, $roleDescription);
 
         $count = count($staffIds);
         $message = ! empty($conflictsMap)

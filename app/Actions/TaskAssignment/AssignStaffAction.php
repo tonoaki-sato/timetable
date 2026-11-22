@@ -5,14 +5,14 @@ namespace App\Actions\TaskAssignment;
 use App\Models\TimetableTask;
 use App\Services\ConflictDetectionService;
 use App\Services\StaffAllocationService;
-use App\Services\TimetableTaskService;
+use App\Services\TimetableTaskAssignmentService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class AssignStaffAction
 {
     public function __construct(
-        protected TimetableTaskService $taskService,
+        protected TimetableTaskAssignmentService $taskAssignmentService,
         protected ConflictDetectionService $conflictService,
         protected StaffAllocationService $allocationService
     ) {}
@@ -54,10 +54,10 @@ class AssignStaffAction
 
         DB::transaction(function () use ($task, $staffId, $roleDescription, $transferableSurplusTasks) {
             foreach ($transferableSurplusTasks as $surplusTask) {
-                $this->taskService->removeStaff($surplusTask, $staffId);
+                $this->taskAssignmentService->removeStaff($surplusTask, $staffId);
             }
             $effectiveRole = $roleDescription ?: ($transferableSurplusTasks->isNotEmpty() ? '他班応援' : null);
-            $this->taskService->assignStaff($task, $staffId, $effectiveRole);
+            $this->taskAssignmentService->assignStaff($task, $staffId, $effectiveRole);
         });
 
         if ($transferableSurplusTasks->isNotEmpty()) {

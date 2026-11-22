@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEquipmentLogisticsPatternRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPatternRequest;
 use App\Models\EquipmentLogisticsPattern;
-use App\Services\EquipmentLogisticsService;
+use App\Services\EquipmentLogisticsPatternService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +14,7 @@ use Illuminate\View\View;
 class EquipmentLogisticsPatternController extends Controller
 {
     public function __construct(
-        protected EquipmentLogisticsService $logisticsService
+        protected EquipmentLogisticsPatternService $patternService
     ) {}
 
     /**
@@ -24,7 +24,7 @@ class EquipmentLogisticsPatternController extends Controller
     {
         $this->authorize('viewAny', EquipmentLogisticsPattern::class);
 
-        return view('equipment_patterns.index', $this->logisticsService->getPatternIndexViewData());
+        return view('equipment_patterns.index', $this->patternService->getPatternIndexViewData());
     }
 
     /**
@@ -38,7 +38,7 @@ class EquipmentLogisticsPatternController extends Controller
         $steps = $validated['steps'];
         unset($validated['steps']);
 
-        $pattern = $this->logisticsService->createPatternWithSteps(
+        $pattern = $this->patternService->createPatternWithSteps(
             $validated,
             $steps,
             $request->user()?->id
@@ -67,7 +67,7 @@ class EquipmentLogisticsPatternController extends Controller
         $steps = $validated['steps'];
         unset($validated['steps']);
 
-        $pattern = $this->logisticsService->updatePatternWithSteps($pattern, $validated, $steps);
+        $pattern = $this->patternService->updatePatternWithSteps($pattern, $validated, $steps);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -89,7 +89,7 @@ class EquipmentLogisticsPatternController extends Controller
         $this->authorize('delete', $pattern);
 
         $name = $pattern->name;
-        $this->logisticsService->deletePattern($pattern);
+        $this->patternService->deletePattern($pattern);
 
         if ($request->wantsJson()) {
             return response()->json([

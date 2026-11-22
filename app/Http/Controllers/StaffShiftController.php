@@ -14,6 +14,8 @@ use App\Models\TaskStaffAssignment;
 use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Services\StaffService;
+use App\Services\StaffShiftService;
+use App\Services\StaffShiftViewService;
 use App\Services\TimetableService;
 use DomainException;
 use Illuminate\Http\JsonResponse;
@@ -27,6 +29,8 @@ class StaffShiftController extends Controller
 {
     public function __construct(
         protected StaffService $staffService,
+        protected StaffShiftViewService $shiftViewService,
+        protected StaffShiftService $shiftService,
         protected TimetableService $timetableService,
     ) {}
 
@@ -42,7 +46,7 @@ class StaffShiftController extends Controller
         $request->session()->put('staff_id', $staff->id);
 
         $timetableFilter = $request->validated('timetable_id');
-        $viewData = $this->staffService->getMyShiftViewData($staff, is_string($timetableFilter) ? $timetableFilter : null);
+        $viewData = $this->shiftViewService->getMyShiftViewData($staff, is_string($timetableFilter) ? $timetableFilter : null);
 
         return view('staff.myshift', $viewData->toArray());
     }
@@ -75,7 +79,7 @@ class StaffShiftController extends Controller
         $timetable = $this->timetableService->findOrFail((int) $request->validated('timetable_id'));
 
         try {
-            $checkIn = $this->staffService->checkInStaff($staff, $timetable);
+            $checkIn = $this->shiftService->checkInStaff($staff, $timetable);
         } catch (DomainException $e) {
             return $this->domainErrorResponse($request, $e);
         }
@@ -108,7 +112,7 @@ class StaffShiftController extends Controller
         $status = $request->validated('status');
 
         try {
-            $this->staffService->updateStaffAssignmentStatus($staff, $assignment->id, $status);
+            $this->shiftService->updateStaffAssignmentStatus($staff, $assignment->id, $status);
         } catch (DomainException $e) {
             return $this->domainErrorResponse($request, $e);
         }
@@ -132,14 +136,14 @@ class StaffShiftController extends Controller
     {
         $staff = $this->resolveActiveStaffOrAbort($token);
 
-        if (! $this->staffService->isLeaderOfTask($staff, $task)) {
+        if (! $this->shiftService->isLeaderOfTask($staff, $task)) {
             abort(403, '担当する班の班長のみタスク全体の進捗を更新できます。');
         }
 
         $validated = $request->validated();
 
         try {
-            $this->staffService->updateLaneTaskStatus($task, $validated['status']);
+            $this->shiftService->updateLaneTaskStatus($task, $validated['status']);
         } catch (DomainException $e) {
             return $this->domainErrorResponse($request, $e);
         }
@@ -168,7 +172,7 @@ class StaffShiftController extends Controller
         }
 
         try {
-            $laneRequest = $this->staffService->createLaneRequestFromLeader($timetableLane, $staff, $request->validated());
+            $laneRequest = $this->shiftService->createLaneRequestFromLeader($timetableLane, $staff, $request->validated());
         } catch (DomainException $e) {
             return $this->domainErrorResponse($request, $e);
         }

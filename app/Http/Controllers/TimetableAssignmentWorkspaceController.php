@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Timetable\ResolveActiveTimetableRedirectAction;
 use App\Models\Timetable;
-use App\Services\TimetableTaskService;
+use App\Services\TimetableTaskAssignmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -12,7 +12,7 @@ use Illuminate\View\View;
 class TimetableAssignmentWorkspaceController extends Controller
 {
     public function __construct(
-        protected TimetableTaskService $taskService,
+        protected TimetableTaskAssignmentService $taskAssignmentService,
     ) {}
 
     /**
@@ -34,7 +34,7 @@ class TimetableAssignmentWorkspaceController extends Controller
 
         return view(
             'timetables.assignments.index',
-            $this->taskService->getAssignmentWorkspaceViewData($timetable, $requestedTaskId)
+            $this->taskAssignmentService->getAssignmentWorkspaceViewData($timetable, $requestedTaskId)
         );
     }
 }

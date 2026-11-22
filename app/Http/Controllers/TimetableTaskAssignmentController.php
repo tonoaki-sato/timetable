@@ -15,7 +15,7 @@ use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\TimetableTask;
 use App\Services\StaffAllocationService;
-use App\Services\TimetableTaskService;
+use App\Services\TimetableTaskAssignmentService;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +24,7 @@ use Illuminate\Http\Request;
 class TimetableTaskAssignmentController extends Controller
 {
     public function __construct(
-        protected TimetableTaskService $taskService,
+        protected TimetableTaskAssignmentService $taskAssignmentService,
         protected StaffAllocationService $allocationService,
         protected AssignStaffAction $assignStaffAction,
         protected BulkAssignStaffAction $bulkAssignStaffAction,
@@ -162,8 +162,8 @@ class TimetableTaskAssignmentController extends Controller
     {
         $this->authorize('view', $task);
 
-        $detailedTask = $this->taskService->getTaskDetails($task->id) ?? $task;
-        $activeStaff = $this->taskService->getActiveStaff();
+        $detailedTask = $this->taskAssignmentService->getTaskDetails($task->id) ?? $task;
+        $activeStaff = $this->taskAssignmentService->getActiveStaff();
         $prioritizedStaff = $this->allocationService->getPrioritizedStaffForTask($detailedTask, $activeStaff);
 
         return response()->json((new TimetableTaskAssignModalResource($detailedTask, $prioritizedStaff))->resolve());
@@ -225,7 +225,7 @@ class TimetableTaskAssignmentController extends Controller
         $this->authorize('update', $task);
 
         try {
-            $this->taskService->removeStaff($task, $staff->id);
+            $this->taskAssignmentService->removeStaff($task, $staff->id);
         } catch (DomainException $e) {
             if ($request->wantsJson()) {
                 return response()->json([
@@ -258,7 +258,7 @@ class TimetableTaskAssignmentController extends Controller
             abort(404, '指定されたタスクに該当するアサイン情報が見つかりません。');
         }
 
-        $this->taskService->updateAttendanceStatus($assignment->id, $request->validated('attendance_status'));
+        $this->taskAssignmentService->updateAttendanceStatus($assignment->id, $request->validated('attendance_status'));
 
         return back()->with('success', '出欠ステータスを更新しました。');
     }

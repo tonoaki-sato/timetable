@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Timetable;
-use App\Services\TimetableGridService;
+use App\Services\StaffTimelineService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class StaffTimelineController extends Controller
 {
     public function __construct(
-        protected TimetableGridService $gridService
+        protected StaffTimelineService $timelineService
     ) {}
 
     /**
@@ -20,6 +20,6 @@ class StaffTimelineController extends Controller
     {
         $this->authorize('view', $timetable);
 
-        return view('timetables.staff_timeline', $this->gridService->getStaffTimelineViewData($timetable));
+        return view('timetables.staff_timeline', $this->timelineService->getStaffTimelineViewData($timetable));
     }
 }

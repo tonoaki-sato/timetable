@@ -27,6 +27,8 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\SiteBaseMapController;
 use App\Http\Controllers\SiteLayoutController;
 use App\Http\Controllers\SiteMapController;
+use App\Http\Controllers\SiteMapIconController;
+use App\Http\Controllers\SiteMapPlacementController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffCsvController;
 use App\Http\Controllers\StaffJoinController;
@@ -217,17 +219,17 @@ Route::middleware('auth')->group(function () {
         Route::get('timetables/{timetable}/site-maps/editor', [SiteMapController::class, 'editor'])->name('timetables.site-maps.editor');
         Route::patch('timetables/{timetable}/site-maps/base-map', [SiteMapController::class, 'updateBaseMap'])->name('timetables.site-maps.base-map.update');
         Route::get('timetables/{timetable}/site-maps/pdf', [SiteMapController::class, 'exportPdf'])->name('timetables.site-maps.pdf');
-        Route::post('timetables/{timetable}/site-maps/reset-preset', [SiteMapController::class, 'resetPreset'])->name('timetables.site-maps.reset-preset');
-        Route::post('timetables/{timetable}/site-maps/clear-placements', [SiteMapController::class, 'clearPlacements'])->name('timetables.site-maps.clear-placements');
-        Route::get('timetables/{timetable}/site-maps/placements', [SiteMapController::class, 'getPlacements'])->name('timetables.site-maps.placements.index');
-        Route::post('timetables/{timetable}/site-maps/placements', [SiteMapController::class, 'storePlacement'])->name('timetables.site-maps.placements.store');
-        Route::put('timetables/{timetable}/site-maps/placements-bulk', [SiteMapController::class, 'bulkUpdatePlacements'])->name('timetables.site-maps.placements.bulk-update');
-        Route::put('timetables/{timetable}/site-maps/placements/{placement}', [SiteMapController::class, 'updatePlacement'])->name('timetables.site-maps.placements.update');
-        Route::delete('timetables/{timetable}/site-maps/placements/{placement}', [SiteMapController::class, 'destroyPlacement'])->name('timetables.site-maps.placements.destroy');
-        Route::post('timetables/{timetable}/site-maps/icons', [SiteMapController::class, 'storeIcon'])->name('timetables.site-maps.icons.store');
-        Route::match(['post', 'put'], 'timetables/{timetable}/site-maps/icons/{iconDefinition}', [SiteMapController::class, 'updateIcon'])->name('timetables.site-maps.icons.update')->withoutScopedBindings();
-        Route::delete('timetables/{timetable}/site-maps/icons/{iconDefinition}', [SiteMapController::class, 'destroyIcon'])->name('timetables.site-maps.icons.destroy')->withoutScopedBindings();
-        Route::get('timetables/{timetable}/site-maps/icons/{iconDefinition}/usage', [SiteMapController::class, 'getIconUsage'])->name('timetables.site-maps.icons.usage')->withoutScopedBindings();
+        Route::post('timetables/{timetable}/site-maps/reset-preset', [SiteMapPlacementController::class, 'resetPreset'])->name('timetables.site-maps.reset-preset');
+        Route::post('timetables/{timetable}/site-maps/clear-placements', [SiteMapPlacementController::class, 'clear'])->name('timetables.site-maps.clear-placements');
+        Route::get('timetables/{timetable}/site-maps/placements', [SiteMapPlacementController::class, 'index'])->name('timetables.site-maps.placements.index');
+        Route::post('timetables/{timetable}/site-maps/placements', [SiteMapPlacementController::class, 'store'])->name('timetables.site-maps.placements.store');
+        Route::put('timetables/{timetable}/site-maps/placements-bulk', [SiteMapPlacementController::class, 'bulkUpdate'])->name('timetables.site-maps.placements.bulk-update');
+        Route::put('timetables/{timetable}/site-maps/placements/{placement}', [SiteMapPlacementController::class, 'update'])->name('timetables.site-maps.placements.update');
+        Route::delete('timetables/{timetable}/site-maps/placements/{placement}', [SiteMapPlacementController::class, 'destroy'])->name('timetables.site-maps.placements.destroy');
+        Route::post('timetables/{timetable}/site-maps/icons', [SiteMapIconController::class, 'store'])->name('timetables.site-maps.icons.store');
+        Route::match(['post', 'put'], 'timetables/{timetable}/site-maps/icons/{iconDefinition}', [SiteMapIconController::class, 'update'])->name('timetables.site-maps.icons.update')->withoutScopedBindings();
+        Route::delete('timetables/{timetable}/site-maps/icons/{iconDefinition}', [SiteMapIconController::class, 'destroy'])->name('timetables.site-maps.icons.destroy')->withoutScopedBindings();
+        Route::get('timetables/{timetable}/site-maps/icons/{iconDefinition}/usage', [SiteMapIconController::class, 'usage'])->name('timetables.site-maps.icons.usage')->withoutScopedBindings();
     });
 
     // 出展・出店者マスター管理 (Vendors)

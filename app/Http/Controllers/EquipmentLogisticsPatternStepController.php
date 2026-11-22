@@ -7,7 +7,7 @@ use App\Http\Requests\StoreEquipmentLogisticsPatternStepRequest;
 use App\Http\Requests\UpdateEquipmentLogisticsPatternStepRequest;
 use App\Models\EquipmentLogisticsPattern;
 use App\Models\EquipmentLogisticsPatternStep;
-use App\Services\EquipmentLogisticsService;
+use App\Services\EquipmentLogisticsPatternService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 class EquipmentLogisticsPatternStepController extends Controller
 {
     public function __construct(
-        protected EquipmentLogisticsService $logisticsService
+        protected EquipmentLogisticsPatternService $patternService
     ) {}
 
     /**
@@ -23,7 +23,7 @@ class EquipmentLogisticsPatternStepController extends Controller
      */
     public function store(StoreEquipmentLogisticsPatternStepRequest $request, EquipmentLogisticsPattern $pattern): RedirectResponse|JsonResponse
     {
-        $step = $this->logisticsService->addPatternStep($pattern, $request->validated());
+        $step = $this->patternService->addPatternStep($pattern, $request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -42,7 +42,7 @@ class EquipmentLogisticsPatternStepController extends Controller
      */
     public function update(UpdateEquipmentLogisticsPatternStepRequest $request, EquipmentLogisticsPattern $pattern, EquipmentLogisticsPatternStep $step): RedirectResponse|JsonResponse
     {
-        $updatedStep = $this->logisticsService->updatePatternStep($step, $request->validated());
+        $updatedStep = $this->patternService->updatePatternStep($step, $request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -61,7 +61,7 @@ class EquipmentLogisticsPatternStepController extends Controller
      */
     public function reorder(ReorderEquipmentLogisticsPatternStepsRequest $request, EquipmentLogisticsPattern $pattern): JsonResponse
     {
-        $this->logisticsService->reorderPatternSteps($pattern, $request->validated('step_ids'));
+        $this->patternService->reorderPatternSteps($pattern, $request->validated('step_ids'));
 
         return response()->json([
             'success' => true,
@@ -77,7 +77,7 @@ class EquipmentLogisticsPatternStepController extends Controller
         $this->authorize('update', $pattern);
 
         $title = $step->title;
-        $this->logisticsService->deletePatternStep($step);
+        $this->patternService->deletePatternStep($step);
 
         if ($request->wantsJson()) {
             return response()->json([

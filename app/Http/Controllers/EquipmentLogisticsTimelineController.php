@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Timetable\ResolveActiveTimetableRedirectAction;
 use App\Models\Equipment;
 use App\Models\Timetable;
-use App\Services\EquipmentLogisticsService;
+use App\Services\EquipmentLogisticsTimelineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -13,7 +13,7 @@ use Illuminate\View\View;
 class EquipmentLogisticsTimelineController extends Controller
 {
     public function __construct(
-        protected EquipmentLogisticsService $logisticsService,
+        protected EquipmentLogisticsTimelineService $timelineService,
     ) {}
 
     /**
@@ -33,7 +33,7 @@ class EquipmentLogisticsTimelineController extends Controller
 
         return view(
             'timetables.logistics_timeline',
-            $this->logisticsService->getLogisticsTimelineViewData($timetable)
+            $this->timelineService->getLogisticsTimelineViewData($timetable)
         );
     }
 }
