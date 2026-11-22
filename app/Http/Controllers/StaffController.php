@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Staff\DownloadStaffListPdfAction;
+use App\Enums\StaffAttribute;
 use App\Http\Requests\StoreStaffRequest;
 use App\Http\Requests\UpdateStaffRequest;
 use App\Models\Staff;
@@ -31,6 +32,7 @@ class StaffController extends Controller
         $viewData = $this->staffService->getIndexViewData(
             search: $request->input('search'),
             status: $request->input('status'),
+            staffAttribute: $request->input('staff_attribute'),
             perPage: $perPage,
             sort: $request->filled('sort') ? (string) $request->query('sort') : null,
             direction: $request->filled('direction') ? (string) $request->query('direction') : null,
@@ -48,7 +50,8 @@ class StaffController extends Controller
 
         return $this->downloadStaffListPdfAction->execute(
             search: $request->input('search'),
-            status: $request->input('status')
+            status: $request->input('status'),
+            staffAttribute: $request->input('staff_attribute'),
         );
     }
 
@@ -59,7 +62,9 @@ class StaffController extends Controller
     {
         $this->authorize('create', Staff::class);
 
-        return view('staff.create');
+        return view('staff.create', [
+            'staffAttributeOptions' => StaffAttribute::options(),
+        ]);
     }
 
     /**
@@ -94,6 +99,7 @@ class StaffController extends Controller
 
         return view('staff.edit', [
             'staff' => $staff,
+            'staffAttributeOptions' => StaffAttribute::options(),
         ]);
     }
 

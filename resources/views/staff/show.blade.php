@@ -13,6 +13,10 @@
         </x-slot:breadcrumbs>
 
         <x-slot:badges>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold {{ $staff->presenter()->attributeBadgeClasses() }} shrink-0">
+                {{ $staff->presenter()->attributeLabel() }}
+            </span>
+
             @if($staff->is_active)
             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
                 ● 稼働可能
@@ -98,6 +102,15 @@
                         <span class="font-bold text-slate-800 block mt-0.5">
                             {{ $staff->kana ?: '未設定' }}
                         </span>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-400 block text-[11px]">属性</span>
+                        <div class="mt-0.5">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold {{ $staff->presenter()->attributeBadgeClasses() }}">
+                                {{ $staff->presenter()->attributeLabel() }}
+                            </span>
+                        </div>
                     </div>
 
                     <div>

@@ -26,7 +26,7 @@ class OrganizationSeeder extends Seeder
             [
                 'id' => 2,
                 'parent_id' => null,
-                'name' => '福実行委員長',
+                'name' => '副実行委員長',
                 'short_description' => null,
                 'description' => null,
                 'display_order' => 20,
@@ -176,14 +176,6 @@ class OrganizationSeeder extends Seeder
                 'display_order' => 210,
             ],
             [
-                'id' => 41,
-                'parent_id' => 15,
-                'name' => '企業ブース',
-                'short_description' => null,
-                'description' => null,
-                'display_order' => 220,
-            ],
-            [
                 'id' => 42,
                 'parent_id' => 15,
                 'name' => '100円トイレ',
@@ -270,6 +262,14 @@ class OrganizationSeeder extends Seeder
                 'short_description' => null,
                 'description' => null,
                 'display_order' => 330,
+            ],
+            [
+                'id' => 41,
+                'parent_id' => 16,
+                'name' => '企業ブース',
+                'short_description' => null,
+                'description' => null,
+                'display_order' => 220,
             ],
             [
                 'id' => 50,

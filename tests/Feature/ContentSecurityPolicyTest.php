@@ -10,6 +10,7 @@ use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Location;
 use App\Models\LocationSchedule;
+use App\Models\OrganizationUnit;
 use App\Models\SiteBaseMap;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
@@ -66,9 +67,17 @@ class ContentSecurityPolicyTest extends TestCase
             'is_active' => true,
         ]);
 
-        $staff = Staff::factory()->create([
+        $staff = Staff::factory()->executive()->create([
             'is_active' => true,
         ]);
+        $boardStaff = Staff::factory()->executiveBoard()->create(['is_active' => true]);
+        $externalStaff = Staff::factory()->external()->create(['is_active' => true]);
+
+        $orgRoot = OrganizationUnit::factory()->create(['name' => 'CSP検証用実行委員会']);
+        $orgLeaf = OrganizationUnit::factory()->create(['name' => 'CSP検証用班', 'parent_id' => $orgRoot->id]);
+        $orgRoot->staff()->attach($staff->id, ['display_order' => 10]);
+        $orgLeaf->staff()->attach($boardStaff->id, ['display_order' => 10]);
+        $orgLeaf->staff()->attach($externalStaff->id, ['display_order' => 20]);
 
         $timetable = Timetable::factory()->create();
         $masterLane = Lane::factory()->create([

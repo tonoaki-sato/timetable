@@ -101,7 +101,7 @@
 <template id="staff-options-template">
     <option value="">スタッフを選択...</option>
     @foreach($availableStaff as $staff)
-        <option value="{{ $staff->id }}">{{ $staff->name }} ({{ $staff->kana ?? '' }})</option>
+        <option value="{{ $staff->id }}">{{ $staff->name }} ({{ $staff->kana ?? '' }}) [{{ $staff->presenter()->attributeLabel() }}]</option>
     @endforeach
 </template>
 

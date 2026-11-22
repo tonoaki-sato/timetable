@@ -52,6 +52,21 @@
                         class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
+                <!-- 属性 -->
+                <div>
+                    <label for="staff_attribute" class="block text-xs font-bold text-slate-700 mb-1">
+                        属性
+                    </label>
+                    <select id="staff_attribute" name="staff_attribute"
+                        class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        @foreach($staffAttributeOptions as $value => $label)
+                            <option value="{{ $value }}" {{ old('staff_attribute', $staff->staff_attribute_enum->value) === $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <!-- 稼働状態 -->
                 <div class="pt-1">
                     <label class="flex items-center space-x-2 cursor-pointer">

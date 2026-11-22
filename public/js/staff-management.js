@@ -105,6 +105,7 @@
                 const pdfUrl = new URL(pdfButton.href, window.location.origin);
                 const searchInput = document.getElementById('search');
                 const statusSelect = document.getElementById('status');
+                const staffAttributeSelect = document.getElementById('staff_attribute');
 
                 if (searchInput) {
                     const searchValue = searchInput.value.trim();
@@ -112,6 +113,15 @@
                         pdfUrl.searchParams.set('search', searchValue);
                     } else {
                         pdfUrl.searchParams.delete('search');
+                    }
+                }
+
+                if (staffAttributeSelect) {
+                    const attrValue = staffAttributeSelect.value;
+                    if (attrValue !== '') {
+                        pdfUrl.searchParams.set('staff_attribute', attrValue);
+                    } else {
+                        pdfUrl.searchParams.delete('staff_attribute');
                     }
                 }
 

@@ -130,7 +130,7 @@ class OrganizationService
         // 残りの幅を所属スタッフと詳細で文字量に応じて配分
         $remainingWidth = 100.0 - $noWidth - $nameWidth; // 約77.0%
 
-        $maxStaff = (float) ($units->max(fn (OrganizationUnit $u): int => mb_strwidth($u->presenter()->staffNamesDisplay())) ?: 10);
+        $maxStaff = (float) ($units->max(fn (OrganizationUnit $u): int => mb_strwidth($u->presenter()->staffNamesForPdfDisplay())) ?: 10);
         $maxDesc = (float) ($units->max(fn (OrganizationUnit $u) => mb_strwidth($u->cleaned_description ?: '')) ?: 10);
 
         $weightStaff = max(20.0, $maxStaff);
@@ -178,7 +178,7 @@ class OrganizationService
      * @return array{
      *     unit: OrganizationUnit,
      *     parent_name: ?string,
-     *     staff: array<int, array{id: int, name: string, role: ?string, display_order: int}>
+     *     staff: array<int, array{id: int, name: string, staff_attribute: string, staff_attribute_label: string, display_name: string, role: ?string, display_order: int}>
      * }
      */
     public function getUnitDetails(OrganizationUnit $unit): array
@@ -188,6 +188,9 @@ class OrganizationService
         $staffList = $unit->staff->map(fn (Staff $staff) => [
             'id' => $staff->id,
             'name' => $staff->name,
+            'staff_attribute' => $staff->presenter()->attributeEnum()->value,
+            'staff_attribute_label' => $staff->presenter()->attributeLabel(),
+            'display_name' => $staff->presenter()->nameWithAttribute(),
             'role' => $staff->pivot->role ?? null,
             'display_order' => (int) ($staff->pivot->display_order ?? 0),
         ])->values()->all();

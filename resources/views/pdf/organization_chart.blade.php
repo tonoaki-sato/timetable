@@ -54,10 +54,11 @@
             color: #0f172a;
         }
         .header-meta {
-            font-size: 8pt;
+            font-size: 7.5pt;
             color: #64748b;
             text-align: right;
             vertical-align: bottom;
+            white-space: nowrap;
         }
 
         /* ツリー本体コンテナ */
@@ -266,7 +267,7 @@
         <table class="header-table">
             <tr>
                 <td class="header-title">{{ $title }}</td>
-                <td class="header-meta">出力日時: {{ $generatedAt }}</td>
+                <td class="header-meta">★：幹事 / ☆：幹事会 ｜ 出力日時: {{ $generatedAt }}</td>
             </tr>
         </table>
     </div>
@@ -305,7 +306,7 @@
                                 <div class="card card-level-1">
                                     <div class="card-title">{{ $root->name }}</div>
                                     @if($root->staff->isNotEmpty())
-                                        <div class="card-staff">{{ $root->presenter()->staffNamesDisplay() }}</div>
+                                        <div class="card-staff">{{ $root->presenter()->staffNamesForPdfDisplay() }}</div>
                                     @endif
                                 </div>
                             </td>
@@ -319,7 +320,7 @@
                                             <div class="card card-officer">
                                                 <div class="card-title">{{ $officer->name }}</div>
                                                 @if($officer->staff->isNotEmpty())
-                                                    <div class="card-staff">{{ $officer->presenter()->staffNamesDisplay() }}</div>
+                                                    <div class="card-staff">{{ $officer->presenter()->staffNamesForPdfDisplay() }}</div>
                                                 @endif
                                             </div>
                                         </div>

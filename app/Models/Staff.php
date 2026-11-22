@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StaffAttribute;
 use App\Presenters\StaffPresenter;
 use Database\Factories\StaffFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -17,6 +18,7 @@ use Illuminate\Support\Str;
     'name',
     'kana',
     'affiliation',
+    'staff_attribute',
     'is_active',
     'access_token',
     'registered_via',
@@ -65,6 +67,38 @@ class Staff extends Model
             'token_reissued_at' => 'datetime',
             'reissue_count' => 'integer',
         ];
+    }
+
+    /**
+     * スタッフ属性 Enum アクセサ
+     */
+    public function getStaffAttributeEnumAttribute(): StaffAttribute
+    {
+        return StaffAttribute::tryFrom((string) $this->staff_attribute) ?? StaffAttribute::General;
+    }
+
+    /**
+     * スタッフ属性ミューテータ（Enum または文字列を受け入れ）
+     */
+    public function setStaffAttributeAttribute(StaffAttribute|string|null $value): void
+    {
+        if ($value instanceof StaffAttribute) {
+            $this->attributes['staff_attribute'] = $value->value;
+
+            return;
+        }
+
+        $this->attributes['staff_attribute'] = ($value !== null && $value !== '')
+            ? $value
+            : StaffAttribute::General->value;
+    }
+
+    /**
+     * 幹事または幹事会メンバーかどうか
+     */
+    public function isExecutiveGroup(): bool
+    {
+        return $this->staff_attribute_enum->isExecutiveGroup();
     }
 
     /**

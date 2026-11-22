@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\StaffAttribute;
 use App\Models\Staff;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreStaffRequest extends FormRequest
 {
@@ -27,6 +29,7 @@ class StoreStaffRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'kana' => ['nullable', 'string', 'max:255'],
             'affiliation' => ['nullable', 'string', 'max:100'],
+            'staff_attribute' => ['nullable', 'string', Rule::in(StaffAttribute::values())],
             'is_active' => ['nullable', 'boolean'],
         ];
     }
@@ -42,6 +45,7 @@ class StoreStaffRequest extends FormRequest
             'name' => '氏名',
             'kana' => 'フリガナ',
             'affiliation' => '所属団体・地域会等',
+            'staff_attribute' => '属性',
             'is_active' => '稼働可能フラグ',
         ];
     }

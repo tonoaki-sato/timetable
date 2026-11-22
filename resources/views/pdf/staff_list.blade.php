@@ -54,7 +54,7 @@
         }
         .header-meta {
             text-align: right;
-            font-size: 7.5pt;
+            font-size: 7pt;
             color: #475569;
             vertical-align: bottom;
             white-space: nowrap;
@@ -162,7 +162,7 @@
             <tr>
                 <td class="header-title-main">{{ $title }}</td>
                 <td class="header-meta">
-                    出力日時: {{ $generatedAt }} ｜ 対象: {{ $totalCount }}名 ({{ $filterText }})
+                    ★：幹事 / ☆：幹事会 ｜ 出力日時: {{ $generatedAt }} ｜ 対象: {{ $totalCount }}名 ({{ $filterText }})
                 </td>
             </tr>
         </table>
@@ -192,7 +192,7 @@
                         <tr>
                             {{-- 左段 --}}
                             @if($leftStaff)
-                                <td class="col-name">{{ $leftStaff->name }}</td>
+                                <td class="col-name">{{ $leftStaff->presenter()->pdfDisplayName() }}</td>
                                 <td class="col-kana">{{ $leftStaff->kana ?: '-' }}</td>
                                 <td class="col-affiliation">{{ $leftStaff->affiliation ?: '-' }}</td>
                             @else
@@ -206,7 +206,7 @@
 
                             {{-- 右段 --}}
                             @if($rightStaff)
-                                <td class="col-name">{{ $rightStaff->name }}</td>
+                                <td class="col-name">{{ $rightStaff->presenter()->pdfDisplayName() }}</td>
                                 <td class="col-kana">{{ $rightStaff->kana ?: '-' }}</td>
                                 <td class="col-affiliation">{{ $rightStaff->affiliation ?: '-' }}</td>
                             @else

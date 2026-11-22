@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\StaffAttribute;
 use App\Models\Staff;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -22,10 +23,41 @@ class StaffFactory extends Factory
             'name' => fake()->name(),
             'kana' => 'ヤマダ タロウ',
             'affiliation' => fake()->randomElement(['中央商店街振興会', '市民ボランティア連合', '青葉大学ボランティア部', '北町青年団', '一般公募']),
+            'staff_attribute' => StaffAttribute::General->value,
             'is_active' => true,
             'access_token' => Str::random(32),
             'registered_via' => 'admin',
         ];
+    }
+
+    /**
+     * 幹事状態
+     */
+    public function executive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'staff_attribute' => StaffAttribute::Executive->value,
+        ]);
+    }
+
+    /**
+     * 幹事会状態
+     */
+    public function executiveBoard(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'staff_attribute' => StaffAttribute::ExecutiveBoard->value,
+        ]);
+    }
+
+    /**
+     * 外部状態
+     */
+    public function external(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'staff_attribute' => StaffAttribute::External->value,
+        ]);
     }
 
     /**

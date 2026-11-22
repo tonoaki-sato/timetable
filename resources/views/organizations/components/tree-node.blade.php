@@ -27,8 +27,8 @@
             {{ $unit->name }}
         </div>
         @if($unit->staff->isNotEmpty())
-            <div class="text-[11px] {{ $level === 1 ? 'text-emerald-800' : 'text-indigo-600' }} mt-0.5 truncate">
-                {{ $unit->presenter()->staffNamesDisplay() }}
+            <div class="text-[11px] {{ $level === 1 ? 'text-emerald-800' : 'text-indigo-600' }} mt-0.5 truncate" title="{{ $unit->presenter()->staffNamesWithAttributeDisplay() }}">
+                {{ $unit->presenter()->staffNamesWithAttributeDisplay() }}
             </div>
         @endif
         @if($unit->short_description)
@@ -113,7 +113,7 @@
                                 @if(!$isPrint) data-open-detail-modal="{{ $leaf->id }}" @endif>
                                 <div class="font-bold text-[11px] text-slate-800 truncate" title="{{ $leaf->name }}">{{ $leaf->name }}</div>
                                 @if($leaf->staff->isNotEmpty())
-                                    <div class="text-[10px] text-indigo-600 mt-0.5 truncate" title="{{ $leaf->presenter()->staffNamesDisplay() }}">{{ $leaf->presenter()->staffNamesDisplay() }}</div>
+                                    <div class="text-[10px] text-indigo-600 mt-0.5 truncate" title="{{ $leaf->presenter()->staffNamesWithAttributeDisplay() }}">{{ $leaf->presenter()->staffNamesWithAttributeDisplay() }}</div>
                                 @endif
                                 @if($leaf->short_description)
                                     <div class="text-[9px] text-slate-500 mt-0.5 truncate" title="{{ $leaf->short_description }}">{{ $leaf->short_description }}</div>

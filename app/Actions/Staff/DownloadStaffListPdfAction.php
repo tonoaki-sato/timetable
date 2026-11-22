@@ -19,9 +19,9 @@ class DownloadStaffListPdfAction
     /**
      * スタッフ一覧PDFダウンロードを実行
      */
-    public function execute(?string $search = null, ?string $status = null): Response
+    public function execute(?string $search = null, ?string $status = null, ?string $staffAttribute = null): Response
     {
-        $viewData = $this->buildViewData($search, $status);
+        $viewData = $this->buildViewData($search, $status, $staffAttribute);
 
         $filename = 'staff_list_'.now()->format('Ymd_His').'.pdf';
 
@@ -38,8 +38,8 @@ class DownloadStaffListPdfAction
      *
      * @return array<string, mixed>
      */
-    public function buildViewData(?string $search = null, ?string $status = null): array
+    public function buildViewData(?string $search = null, ?string $status = null, ?string $staffAttribute = null): array
     {
-        return $this->staffService->getPdfViewData($search, $status);
+        return $this->staffService->getPdfViewData($search, $status, $staffAttribute);
     }
 }

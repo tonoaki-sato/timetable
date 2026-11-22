@@ -3,6 +3,8 @@
 namespace App\Presenters;
 
 use App\Models\OrganizationUnit;
+use App\Models\Staff;
+use Illuminate\Support\Collection;
 
 class OrganizationUnitPresenter
 {
@@ -15,17 +17,47 @@ class OrganizationUnitPresenter
      */
     public function staffNamesDisplay(): string
     {
+        return $this->resolveStaffCollection()->pluck('name')->implode(', ');
+    }
+
+    /**
+     * 担当スタッフ名のテキスト属性付き表示（一般は括弧省略、幹事・幹事会・外部は括弧表示）
+     */
+    public function staffNamesWithAttributeDisplay(): string
+    {
+        return $this->resolveStaffCollection()
+            ->map(fn (Staff $staff): string => $staff->presenter()->nameWithAttribute())
+            ->implode(', ');
+    }
+
+    /**
+     * 担当スタッフ名のPDF表示用文字列（幹事: ★、幹事会: ☆、一般・外部: マークなし）
+     */
+    public function staffNamesForPdfDisplay(): string
+    {
+        return $this->resolveStaffCollection()
+            ->map(fn (Staff $staff): string => $staff->presenter()->pdfDisplayName())
+            ->implode(', ');
+    }
+
+    /**
+     * ロード済みリレーションを優先して所属スタッフコレクションを解決
+     *
+     * @return Collection<int, Staff>
+     */
+    private function resolveStaffCollection(): Collection
+    {
         if ($this->unit->relationLoaded('staff')) {
-            return $this->unit->staff->pluck('name')->implode(', ');
+            return $this->unit->staff;
         }
 
         if ($this->unit->relationLoaded('staffAssignments')) {
             return $this->unit->staffAssignments
-                ->map(fn ($assignment): ?string => $assignment->staff?->name)
+                ->map(fn ($assignment): ?Staff => $assignment->staff)
                 ->filter()
-                ->implode(', ');
+                ->values();
         }
 
-        return $this->unit->staff()->pluck('name')->implode(', ');
+        return $this->unit->staff()->get();
     }
 }

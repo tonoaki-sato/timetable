@@ -221,10 +221,20 @@ class StaffPrintAndCsvTest extends TestCase
     {
         $this->actingAs($this->operator);
 
-        Staff::factory()->create([
+        Staff::factory()->executive()->create([
             'name' => '名簿 太郎',
             'kana' => 'メイボ タロウ',
             'affiliation' => '青年部',
+        ]);
+        Staff::factory()->executiveBoard()->create([
+            'name' => '幹事会 次郎',
+            'kana' => 'カンジカイ ジロウ',
+            'affiliation' => '実行委',
+        ]);
+        Staff::factory()->external()->create([
+            'name' => '外部 花子',
+            'kana' => 'ガイブ ハナコ',
+            'affiliation' => '協力社',
         ]);
 
         $response = $this->get(route('staff.export-csv'));
@@ -237,8 +247,12 @@ class StaffPrintAndCsvTest extends TestCase
         $response->sendContent();
         $content = ob_get_clean();
 
+        $this->assertStringContainsString('属性', $content);
         $this->assertStringContainsString('名簿 太郎', $content);
         $this->assertStringContainsString('メイボ タロウ', $content);
+        $this->assertStringContainsString('幹事', $content);
+        $this->assertStringContainsString('幹事会', $content);
+        $this->assertStringContainsString('外部', $content);
         $this->assertStringContainsString('青年部', $content);
     }
 

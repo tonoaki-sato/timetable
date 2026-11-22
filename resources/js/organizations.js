@@ -160,7 +160,7 @@ function initDetailModal() {
                 data.staff.forEach(staff => {
                     const badge = document.createElement('span');
                     badge.className = 'px-2.5 py-1 bg-white text-slate-800 border border-slate-200 rounded-lg text-xs font-medium shadow-xs';
-                    badge.textContent = staff.name;
+                    badge.textContent = staff.display_name || staff.name;
                     staffContainer.appendChild(badge);
                 });
             } else {

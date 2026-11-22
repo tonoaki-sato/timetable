@@ -55,7 +55,7 @@
         }
         .header-meta {
             text-align: right;
-            font-size: 8pt;
+            font-size: 7.5pt;
             color: #475569;
             vertical-align: bottom;
             white-space: nowrap;
@@ -150,7 +150,7 @@
         <table class="header-table" cellpadding="0" cellspacing="0">
             <tr>
                 <td class="header-title-main">{{ $title }}</td>
-                <td class="header-meta">出力日時: {{ $generatedAt }}</td>
+                <td class="header-meta">★：幹事 / ☆：幹事会 ｜ 出力日時: {{ $generatedAt }}</td>
             </tr>
         </table>
     </div>
@@ -177,7 +177,7 @@
                     <td>
                         <div class="{{ $indentClass }}">{{ $unit->name }}</div>
                     </td>
-                    <td>{{ $unit->presenter()->staffNamesDisplay() ?: '-' }}</td>
+                    <td>{{ $unit->presenter()->staffNamesForPdfDisplay() ?: '-' }}</td>
                     <td>{{ $unit->cleaned_description ?: '-' }}</td>
                 </tr>
             @endforeach

@@ -2,10 +2,12 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\StaffAttribute;
 use App\Models\Staff;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Support\TableQueryOptions;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Override;
 
@@ -40,6 +42,7 @@ class StaffRepository implements StaffRepositoryInterface
         int $perPage = 15,
         ?string $sort = null,
         ?string $direction = null,
+        ?string $staffAttribute = null,
     ): LengthAwarePaginator {
         $query = Staff::query();
 
@@ -51,10 +54,12 @@ class StaffRepository implements StaffRepositoryInterface
             $query->where('is_active', $status);
         }
 
+        $this->applyAttributeFilter($query, $staffAttribute);
+
         $resolved = TableQueryOptions::resolveSort(
             $sort,
             $direction,
-            ['id', 'name', 'kana', 'affiliation', 'is_active'],
+            ['id', 'name', 'kana', 'affiliation', 'staff_attribute', 'is_active'],
             'name',
             'asc',
         );
@@ -66,7 +71,7 @@ class StaffRepository implements StaffRepositoryInterface
     }
 
     #[Override]
-    public function getFiltered(?string $search = null, ?bool $status = null): Collection
+    public function getFiltered(?string $search = null, ?bool $status = null, ?string $staffAttribute = null): Collection
     {
         $query = Staff::query();
 
@@ -78,7 +83,25 @@ class StaffRepository implements StaffRepositoryInterface
             $query->where('is_active', $status);
         }
 
+        $this->applyAttributeFilter($query, $staffAttribute);
+
         return $query->orderBy('kana', 'asc')->orderBy('name', 'asc')->get();
+    }
+
+    /**
+     * スタッフ属性の絞り込み条件をクエリへ適用
+     */
+    private function applyAttributeFilter(Builder $query, ?string $staffAttribute): void
+    {
+        if ($staffAttribute === StaffAttribute::FILTER_EXECUTIVE_GROUP) {
+            $query->whereIn('staff_attribute', StaffAttribute::executiveGroupValues());
+
+            return;
+        }
+
+        if ($staffAttribute !== null && in_array($staffAttribute, StaffAttribute::values(), true)) {
+            $query->where('staff_attribute', $staffAttribute);
+        }
     }
 
     #[Override]
@@ -215,6 +238,6 @@ class StaffRepository implements StaffRepositoryInterface
         return Staff::active()
             ->orderBy('kana')
             ->orderBy('name')
-            ->get(['id', 'name', 'kana']);
+            ->get(['id', 'name', 'kana', 'staff_attribute']);
     }
 }

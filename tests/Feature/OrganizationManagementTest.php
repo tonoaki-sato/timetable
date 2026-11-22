@@ -532,4 +532,57 @@ class OrganizationManagementTest extends TestCase
         $this->assertStringNotContainsString('card-desc', $html);
         $this->assertStringNotContainsString('leaf-desc', $html);
     }
+
+    /**
+     * スタッフ属性（幹事・幹事会・一般・外部）が組織管理画面で一般の括弧を省略したテキスト表示になり、組織図PDFでは★（幹事）/☆（幹事会）記号付き＋凡例が出力されること
+     */
+    public function test_organization_views_and_pdf_render_staff_attributes_correctly(): void
+    {
+        $root = OrganizationUnit::factory()->create(['name' => '実行委員長', 'display_order' => 10]);
+        $branch = OrganizationUnit::factory()->create(['name' => '総務部', 'parent_id' => $root->id, 'display_order' => 20]);
+        $leaf = OrganizationUnit::factory()->create(['name' => '警備係', 'parent_id' => $branch->id, 'display_order' => 30]);
+
+        $exec = Staff::factory()->executive()->create(['name' => '寺井 幹事', 'kana' => 'テライ']);
+        $board = Staff::factory()->executiveBoard()->create(['name' => '佐藤 幹事会', 'kana' => 'サトウ']);
+        $general = Staff::factory()->create(['name' => '高橋 一般', 'kana' => 'タカハシ']);
+        $external = Staff::factory()->external()->create(['name' => '鈴木 外部', 'kana' => 'スズキ']);
+
+        $root->staff()->attach($exec->id, ['display_order' => 10]);
+        $branch->staff()->attach($board->id, ['display_order' => 10]);
+        $leaf->staff()->attach($general->id, ['display_order' => 10]);
+        $leaf->staff()->attach($external->id, ['display_order' => 20]);
+
+        // 1. Web組織管理画面（組織一覧・組織図ビュー・モーダル選択肢）: 一般のみ括弧省略
+        $indexResponse = $this->actingAs($this->admin)->get(route('organizations.index'));
+        $indexResponse->assertStatus(200);
+        $indexResponse->assertSee('寺井 幹事（幹事）');
+        $indexResponse->assertSee('佐藤 幹事会（幹事会）');
+        $indexResponse->assertSee('高橋 一般');
+        $indexResponse->assertDontSee('高橋 一般（一般）');
+        $indexResponse->assertSee('鈴木 外部（外部）');
+        $indexResponse->assertSee('高橋 一般 (タカハシ) [一般]');
+
+        // 2. 詳細API JSON: staff_attribute_label / display_name が返却されること
+        $showResponse = $this->actingAs($this->admin)->getJson(route('organizations.show', $leaf));
+        $showResponse->assertStatus(200);
+        $showResponse->assertJsonPath('staff.0.staff_attribute_label', '一般');
+        $showResponse->assertJsonPath('staff.0.display_name', '高橋 一般');
+        $showResponse->assertJsonPath('staff.1.staff_attribute_label', '外部');
+        $showResponse->assertJsonPath('staff.1.display_name', '鈴木 外部（外部）');
+
+        // 3. 組織図PDF: ★（幹事）/ ☆（幹事会）記号・凡例・余白
+        $action = app(DownloadOrganizationPdfAction::class);
+        $viewData = $action->buildViewData();
+        $viewData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
+
+        $html = view('pdf.organization_chart', $viewData)->render();
+        $this->assertStringContainsString('★：幹事 / ☆：幹事会', $html);
+        $this->assertStringContainsString('★寺井 幹事', $html);
+        $this->assertStringContainsString('☆佐藤 幹事会', $html);
+        $this->assertStringContainsString('高橋 一般, 鈴木 外部', $html);
+        $this->assertStringNotContainsString('★高橋 一般', $html);
+        $this->assertStringNotContainsString('☆高橋 一般', $html);
+        $this->assertStringNotContainsString('★鈴木 外部', $html);
+        $this->assertStringNotContainsString('☆鈴木 外部', $html);
+    }
 }

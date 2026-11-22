@@ -50,7 +50,7 @@
 
     <!-- 検索・絞り込みフォーム -->
     <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs">
-        <form method="GET" action="{{ route('staff.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+        <form method="GET" action="{{ route('staff.index') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
             @if(request('sort'))
                 <input type="hidden" name="sort" value="{{ request('sort') }}">
             @endif
@@ -63,6 +63,17 @@
                 <input type="text" id="search" name="search" value="{{ request('search') }}"
                     placeholder="氏名・フリガナ・所属"
                     class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <!-- 属性 -->
+            <div>
+                <label for="staff_attribute" class="block text-[11px] font-bold text-slate-600 mb-1">属性</label>
+                <select id="staff_attribute" name="staff_attribute" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">すべての属性</option>
+                    @foreach($staffAttributeFilterOptions as $value => $label)
+                        <option value="{{ $value }}" {{ ($staffAttribute ?? request('staff_attribute')) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
             </div>
 
             <!-- ステータス -->
@@ -99,6 +110,7 @@
                         <x-ui.sortable-th column="name" label="氏名" defaultSort="name" class="px-3.5 py-2.5" />
                         <x-ui.sortable-th column="kana" label="フリガナ" defaultSort="name" class="px-3.5 py-2.5" />
                         <x-ui.sortable-th column="affiliation" label="所属団体・地域会等" defaultSort="name" class="px-3.5 py-2.5" />
+                        <x-ui.sortable-th column="staff_attribute" label="属性" defaultSort="name" class="px-3.5 py-2.5" />
                         <x-ui.sortable-th column="is_active" label="稼働状態" defaultSort="name" class="px-3.5 py-2.5" />
                         <th class="px-3.5 py-2.5 text-right whitespace-nowrap">操作</th>
                     </tr>
@@ -114,6 +126,11 @@
                         </td>
                         <td class="px-3.5 py-2.5 text-slate-500 font-mono text-[11px] whitespace-nowrap">{{ $staff->kana ?: '—' }}</td>
                         <td class="px-3.5 py-2.5 text-slate-700">{{ $staff->affiliation ?: '—' }}</td>
+                        <td class="px-3.5 py-2.5 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold {{ $staff->presenter()->attributeBadgeClasses() }}">
+                                {{ $staff->presenter()->attributeLabel() }}
+                            </span>
+                        </td>
                         <td class="px-3.5 py-2.5 whitespace-nowrap">
                             @if($staff->is_active)
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -150,7 +167,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6">
+                        <td colspan="7">
                             <x-ui.empty-state icon="👷" title="登録されているスタッフは見つかりませんでした。" />
                         </td>
                     </tr>

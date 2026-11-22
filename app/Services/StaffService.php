@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DTOs\Staff\StaffShowViewDataDTO;
+use App\Enums\StaffAttribute;
 use App\Models\Staff;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -44,12 +45,15 @@ class StaffService
      * @return array{
      *     staffMembers: LengthAwarePaginator,
      *     search: ?string,
-     *     status: ?string
+     *     status: ?string,
+     *     staffAttribute: ?string,
+     *     staffAttributeFilterOptions: array<string, string>
      * }
      */
     public function getIndexViewData(
         ?string $search,
         ?string $status,
+        ?string $staffAttribute = null,
         int $perPage = 15,
         ?string $sort = null,
         ?string $direction = null,
@@ -62,12 +66,15 @@ class StaffService
             perPage: $perPage,
             sort: $sort,
             direction: $direction,
+            staffAttribute: $staffAttribute,
         );
 
         return [
             'staffMembers' => $staffMembers,
             'search' => $search,
             'status' => $status,
+            'staffAttribute' => $staffAttribute,
+            'staffAttributeFilterOptions' => StaffAttribute::filterOptions(),
         ];
     }
 
@@ -82,11 +89,11 @@ class StaffService
      *     generatedAt: string
      * }
      */
-    public function getPdfViewData(?string $search = null, ?string $status = null): array
+    public function getPdfViewData(?string $search = null, ?string $status = null, ?string $staffAttribute = null): array
     {
         $statusBool = $this->parseStatusFilter($status);
 
-        $staffs = $this->staffRepository->getFiltered($search, $statusBool);
+        $staffs = $this->staffRepository->getFiltered($search, $statusBool, $staffAttribute);
 
         // 1ページあたり最大60名（30行×2段組）でページ分割し、各ページ内で左右列に均等バランス配置
         $maxRowsPerColumn = 30;
@@ -111,6 +118,11 @@ class StaffService
         } elseif ($status === '0') {
             $filterDescriptions[] = '状態: 停止中';
         }
+        if ($staffAttribute === StaffAttribute::FILTER_EXECUTIVE_GROUP) {
+            $filterDescriptions[] = '属性: 幹事・幹事会';
+        } elseif ($staffAttribute !== null && ($attrEnum = StaffAttribute::tryFrom($staffAttribute)) !== null) {
+            $filterDescriptions[] = "属性: {$attrEnum->label()}";
+        }
 
         return [
             'title' => 'スタッフ一覧',
@@ -129,6 +141,9 @@ class StaffService
     public function createStaff(array $data): Staff
     {
         $data['is_active'] = isset($data['is_active']) ? (bool) $data['is_active'] : true;
+        $data['staff_attribute'] = (isset($data['staff_attribute']) && $data['staff_attribute'] !== '')
+            ? $data['staff_attribute']
+            : StaffAttribute::General->value;
 
         return $this->staffRepository->create($data);
     }
@@ -141,6 +156,9 @@ class StaffService
     public function updateStaff(Staff $staff, array $data): bool
     {
         $data['is_active'] = isset($data['is_active']) ? (bool) $data['is_active'] : false;
+        if (! isset($data['staff_attribute']) || $data['staff_attribute'] === '') {
+            unset($data['staff_attribute']);
+        }
 
         return $this->staffRepository->update($staff, $data);
     }
@@ -182,6 +200,7 @@ class StaffService
         $attributes = [
             'name' => $data['name'],
             'kana' => $data['kana'],
+            'staff_attribute' => StaffAttribute::General->value,
             'registered_via' => 'self',
             'is_active' => true,
         ];

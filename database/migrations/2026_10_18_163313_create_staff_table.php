@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name')->comment('氏名');
             $table->string('kana')->nullable()->comment('フリガナ');
             $table->string('affiliation', 100)->nullable()->comment('所属団体・地域会等');
+            $table->string('staff_attribute', 30)->default('general')->comment('スタッフ属性（executive:幹事, executive_board:幹事会, general:一般, external:外部）');
             $table->boolean('is_active')->default(true)->comment('稼働可能フラグ');
 
             // 個別アクセス用カラム
@@ -34,6 +35,7 @@ return new class extends Migration
             // 検索最適化インデックス
             $table->index(['name', 'kana']);
             $table->index(['is_active', 'kana', 'name']);
+            $table->index(['staff_attribute', 'is_active']);
         });
     }
 

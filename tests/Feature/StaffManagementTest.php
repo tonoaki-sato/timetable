@@ -84,6 +84,7 @@ class StaffManagementTest extends TestCase
             'name' => '新規 太郎',
             'kana' => 'シンキ タロウ',
             'affiliation' => '一般公募',
+            'staff_attribute' => 'executive',
             'is_active' => '1',
         ]);
 
@@ -92,12 +93,13 @@ class StaffManagementTest extends TestCase
             'name' => '新規 太郎',
             'kana' => 'シンキ タロウ',
             'affiliation' => '一般公募',
+            'staff_attribute' => 'executive',
             'is_active' => true,
         ]);
     }
 
     /**
-     * 氏名が未入力の場合バリデーションエラーとなること
+     * 氏名が未入力の場合や不正な属性の場合にバリデーションエラーとなること
      */
     public function test_validation_fails_when_name_missing(): void
     {
@@ -105,6 +107,12 @@ class StaffManagementTest extends TestCase
 
         $response = $this->post(route('staff.store'), []);
         $response->assertSessionHasErrors('name');
+
+        $invalidAttrResponse = $this->post(route('staff.store'), [
+            'name' => '検証 太郎',
+            'staff_attribute' => 'invalid_attribute',
+        ]);
+        $invalidAttrResponse->assertSessionHasErrors('staff_attribute');
     }
 
     /**
@@ -120,6 +128,7 @@ class StaffManagementTest extends TestCase
             'name' => '更新後 次郎',
             'kana' => 'コウシンゴ ジロウ',
             'affiliation' => '北町青年団',
+            'staff_attribute' => 'executive_board',
             'is_active' => '1',
         ]);
 
@@ -128,7 +137,48 @@ class StaffManagementTest extends TestCase
             'id' => $staff->id,
             'name' => '更新後 次郎',
             'affiliation' => '北町青年団',
+            'staff_attribute' => 'executive_board',
         ]);
+    }
+
+    /**
+     * スタッフ一覧で属性の表示・絞り込み（幹事・幹事会グループ含む）・ソートができ、詳細画面にも属性が表示されること
+     */
+    public function test_staff_attribute_filtering_sorting_and_views(): void
+    {
+        $this->actingAs($this->operator);
+
+        $exec = Staff::factory()->executive()->create(['name' => '幹事 一郎']);
+        $board = Staff::factory()->executiveBoard()->create(['name' => '幹事会 次郎']);
+        $general = Staff::factory()->create(['name' => '一般 三郎']);
+        $external = Staff::factory()->external()->create(['name' => '外部 四郎']);
+
+        // 登録・編集フォームに属性セレクトが出力されること
+        $this->get(route('staff.create'))->assertStatus(200)->assertSee('name="staff_attribute"', false);
+        $this->get(route('staff.edit', $exec))->assertStatus(200)->assertSee('name="staff_attribute"', false);
+
+        // 幹事・幹事会グループ絞り込み
+        $groupResponse = $this->get(route('staff.index', ['staff_attribute' => 'executive_group']));
+        $groupResponse->assertStatus(200);
+        $groupResponse->assertSee('幹事 一郎');
+        $groupResponse->assertSee('幹事会 次郎');
+        $groupResponse->assertDontSee('一般 三郎');
+        $groupResponse->assertDontSee('外部 四郎');
+
+        // 単一属性絞り込み（外部）
+        $extResponse = $this->get(route('staff.index', ['staff_attribute' => 'external']));
+        $extResponse->assertStatus(200);
+        $extResponse->assertSee('外部 四郎');
+        $extResponse->assertDontSee('幹事 一郎');
+
+        // 属性ソートがエラーなく動作すること
+        $this->get(route('staff.index', ['sort' => 'staff_attribute', 'direction' => 'asc']))->assertStatus(200);
+
+        // 詳細画面に属性が表示されること
+        $this->get(route('staff.show', $exec))->assertStatus(200)->assertSee('幹事');
+        $this->get(route('staff.show', $board))->assertStatus(200)->assertSee('幹事会');
+        $this->get(route('staff.show', $general))->assertStatus(200)->assertSee('一般');
+        $this->get(route('staff.show', $external))->assertStatus(200)->assertSee('外部');
     }
 
     /**

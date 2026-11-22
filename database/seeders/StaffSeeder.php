@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\StaffAttribute;
 use App\Models\Staff;
 use Illuminate\Database\Seeder;
 
@@ -17,7 +18,7 @@ class StaffSeeder extends Seeder
                 'id' => 1,
                 'name' => '佐藤 外亮',
                 'kana' => 'サトウトノアキ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'QjI0sJATQqst69c23RjqR375xHvwAmcd',
                 'registered_via' => 'admin',
@@ -27,7 +28,7 @@ class StaffSeeder extends Seeder
                 'id' => 2,
                 'name' => '松木 新太郎',
                 'kana' => 'マツキ シンタロウ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'JcRKePcbkrq5ug0fJuIOIrKoDzXUHAcc',
                 'registered_via' => 'admin',
@@ -54,7 +55,7 @@ class StaffSeeder extends Seeder
                 'id' => 5,
                 'name' => '岡本 睦良',
                 'kana' => 'オカモト ムツヨシ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'B42gMOgcmaUeN1VN5LtG5RKiImIudqJj',
                 'registered_via' => 'admin',
@@ -72,7 +73,7 @@ class StaffSeeder extends Seeder
                 'id' => 7,
                 'name' => '舩越 彩香',
                 'kana' => 'フナコシ アヤカ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'MftlQgqfqZRcgHNpa918Gci32KTdA2C0',
                 'registered_via' => 'admin',
@@ -81,7 +82,7 @@ class StaffSeeder extends Seeder
                 'id' => 8,
                 'name' => '萩原 繁夫',
                 'kana' => 'ハギワラ シゲオ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'AelhUBjpdynWmChnc6uvK1P1cCXPaPDX',
                 'registered_via' => 'admin',
@@ -126,7 +127,7 @@ class StaffSeeder extends Seeder
                 'id' => 13,
                 'name' => '山道 在明',
                 'kana' => 'ヤマミチ アリアキ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'eNMuHLO7Cmw4KtQMVqpSku5CN9CuvRMu',
                 'registered_via' => 'admin',
@@ -144,7 +145,7 @@ class StaffSeeder extends Seeder
                 'id' => 15,
                 'name' => '斎藤 寿美江',
                 'kana' => 'サイトウ スミエ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'aBpPRvCc5CbyR3AzocJKBoGPuSB7TCEL',
                 'registered_via' => 'admin',
@@ -162,7 +163,7 @@ class StaffSeeder extends Seeder
                 'id' => 17,
                 'name' => '堀 祐典',
                 'kana' => 'ホリ ユウスケ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'I2cufT06mTemvB4YgcgX1OST4BfFKieN',
                 'registered_via' => 'admin',
@@ -207,7 +208,7 @@ class StaffSeeder extends Seeder
                 'id' => 22,
                 'name' => '漆原 功',
                 'kana' => 'ウルシバラ イサオ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'Twt0tHygSjBqhRg7shDAwkh48C3xOh5O',
                 'registered_via' => 'admin',
@@ -225,7 +226,7 @@ class StaffSeeder extends Seeder
                 'id' => 24,
                 'name' => '寺井 智之',
                 'kana' => 'テライ トモユキ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'fJGefnasZzH6xZBsrw24Qx412fF5xaFa',
                 'registered_via' => 'admin',
@@ -243,7 +244,7 @@ class StaffSeeder extends Seeder
                 'id' => 26,
                 'name' => '有江 喜一郎',
                 'kana' => 'アリエ キイチロウ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => '8Wu9JyfTyWQKYUGwr1igSU5IOBDfDh60',
                 'registered_via' => 'admin',
@@ -270,7 +271,7 @@ class StaffSeeder extends Seeder
                 'id' => 29,
                 'name' => '望月 聖子',
                 'kana' => 'モチヅキ セイコ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'ptyDKMRGqbWYAwSeN9gYeMTDWTHTkMi5',
                 'registered_via' => 'admin',
@@ -279,7 +280,7 @@ class StaffSeeder extends Seeder
                 'id' => 30,
                 'name' => '八ツ橋 良光',
                 'kana' => 'ヤツハシ ヨシミツ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'tPWEnI3f7CSDZx6C9wf8gPgd3VguWpvU',
                 'registered_via' => 'admin',
@@ -324,7 +325,7 @@ class StaffSeeder extends Seeder
                 'id' => 35,
                 'name' => '森 和成',
                 'kana' => 'モリ カズナリ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'GVtyf4lNBrexWwkmyvQoh697o5NV2AuW',
                 'registered_via' => 'admin',
@@ -367,9 +368,9 @@ class StaffSeeder extends Seeder
             ],
             [
                 'id' => 40,
-                'name' => '山本 昇一',
+                'name' => '山本 昇市',
                 'kana' => 'ヤマモト ショウイチ',
-                'affiliation' => null,
+                'affiliation' => '幹事会',
                 'is_active' => true,
                 'access_token' => 'CHPPkXYk86SWPpbHr6MOVOIHSYbjNY9h',
                 'registered_via' => 'admin',
@@ -418,6 +419,7 @@ class StaffSeeder extends Seeder
             $staff->name = $data['name'];
             $staff->kana = $data['kana'];
             $staff->affiliation = $data['affiliation'];
+            $staff->staff_attribute = $data['staff_attribute'] ?? StaffAttribute::General->value;
             $staff->is_active = $data['is_active'];
             $staff->access_token = $data['access_token'];
             $staff->registered_via = $data['registered_via'];

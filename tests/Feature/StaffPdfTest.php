@@ -103,8 +103,9 @@ class StaffPdfTest extends TestCase
 
         $html = view('pdf.staff_list', $viewData)->render();
 
-        // 1. タイトル、見出し（氏名、フリガナ、所属団体）が出力されていること
+        // 1. タイトル、凡例、見出し（氏名、フリガナ、所属団体）が出力されていること
         $this->assertStringContainsString('スタッフ一覧', $html);
+        $this->assertStringContainsString('★：幹事 / ☆：幹事会', $html);
         $this->assertStringContainsString('<th class="col-name">氏名</th>', $html);
         $this->assertStringContainsString('<th class="col-kana">フリガナ</th>', $html);
         $this->assertStringContainsString('<th class="col-affiliation">所属団体</th>', $html);
@@ -232,5 +233,40 @@ class StaffPdfTest extends TestCase
         $pageStyles = $dompdf->getCss()->get_page_styles();
         $this->assertGreaterThan(50.0, (float) $pageStyles['base']->margin_top);
         $this->assertGreaterThan(25.0, (float) $pageStyles['base']->margin_left);
+    }
+
+    /**
+     * スタッフ一覧PDFで幹事(★)・幹事会(☆)のみ記号が付与され、属性絞り込みも連動すること
+     */
+    public function test_staff_pdf_displays_executive_marks_legend_and_filters_by_staff_attribute(): void
+    {
+        Staff::factory()->executive()->create(['name' => '幹事 太郎', 'kana' => 'カンジ タロウ']);
+        Staff::factory()->executiveBoard()->create(['name' => '幹事会 花子', 'kana' => 'カンジカイ ハナコ']);
+        Staff::factory()->create(['name' => '一般 次郎', 'kana' => 'イッパン ジロウ']);
+        Staff::factory()->external()->create(['name' => '外部 三郎', 'kana' => 'ガイブ サブロウ']);
+
+        $action = app(DownloadStaffListPdfAction::class);
+
+        $allData = $action->buildViewData();
+        $allData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
+        $allHtml = view('pdf.staff_list', $allData)->render();
+
+        $this->assertStringContainsString('★：幹事 / ☆：幹事会', $allHtml);
+        $this->assertStringContainsString('★幹事 太郎', $allHtml);
+        $this->assertStringContainsString('☆幹事会 花子', $allHtml);
+        $this->assertStringContainsString('一般 次郎', $allHtml);
+        $this->assertStringContainsString('外部 三郎', $allHtml);
+        $this->assertStringNotContainsString('★一般 次郎', $allHtml);
+        $this->assertStringNotContainsString('☆一般 次郎', $allHtml);
+        $this->assertStringNotContainsString('★外部 三郎', $allHtml);
+        $this->assertStringNotContainsString('☆外部 三郎', $allHtml);
+
+        $groupData = $action->buildViewData(staffAttribute: 'executive_group');
+        $this->assertSame(2, $groupData['totalCount']);
+        $this->assertStringContainsString('属性: 幹事・幹事会', $groupData['filterText']);
+
+        $externalData = $action->buildViewData(staffAttribute: 'external');
+        $this->assertSame(1, $externalData['totalCount']);
+        $this->assertStringContainsString('属性: 外部', $externalData['filterText']);
     }
 }

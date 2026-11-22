@@ -38,18 +38,36 @@ class OrganizationSeederTest extends TestCase
             'id' => 44,
             'name' => '伊藤 さきこ',
         ]);
+        $this->assertSame(44, Staff::where('staff_attribute', 'general')->count());
 
         // 2. 組織ユニット全67件が登録されていること
         $this->assertSame(67, OrganizationUnit::count());
 
-        // ルート役員（実行委員長、福実行委員長、会計、議長、顧問、相談役）
+        // ルート役員（実行委員長、副実行委員長、会計、議長、顧問、相談役）
         $rootNames = OrganizationUnit::whereNull('parent_id')->pluck('name')->toArray();
         $this->assertContains('実行委員長', $rootNames);
-        $this->assertContains('福実行委員長', $rootNames);
+        $this->assertContains('副実行委員長', $rootNames);
         $this->assertContains('会計', $rootNames);
         $this->assertContains('議長', $rootNames);
         $this->assertContains('顧問', $rootNames);
         $this->assertContains('相談役', $rootNames);
+
+        // 更新されたスタッフ属性・所属・氏名（山本 昇市 / 幹事会メンバー15名）
+        $this->assertDatabaseHas('staff', [
+            'id' => 40,
+            'name' => '山本 昇市',
+            'affiliation' => '幹事会',
+        ]);
+        $this->assertSame(
+            [1, 2, 5, 7, 8, 13, 15, 17, 22, 24, 26, 29, 30, 35, 40],
+            Staff::where('affiliation', '幹事会')->orderBy('id')->pluck('id')->all()
+        );
+
+        // 企業ブースの親変更（イベント配下）
+        $kigyoBooth = OrganizationUnit::find(41);
+        $this->assertNotNull($kigyoBooth);
+        $this->assertSame('企業ブース', $kigyoBooth->name);
+        $this->assertSame(16, $kigyoBooth->parent_id);
 
         // 新設ユニット（イベント会社、図面）が登録されていること
         $this->assertDatabaseHas('organization_units', ['id' => 86, 'name' => 'イベント会社']);

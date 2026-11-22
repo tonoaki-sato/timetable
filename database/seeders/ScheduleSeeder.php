@@ -43,7 +43,7 @@ class ScheduleSeeder extends Seeder
                 'start_time' => '18:00',
                 'end_time' => '20:30',
                 'location' => 'コミュニティルーム',
-                'status' => 'planned',
+                'status' => 'completed',
                 'staff_id' => $terai?->id,
                 'description' => '各部門の反省・総括報告、次年度への申し送り事項まとめ、各スタッフで洗濯・乾燥した陣羽織の回収・点検。',
                 'created_by' => $admin->id,

@@ -36,6 +36,7 @@ interface StaffRepositoryInterface
         int $perPage = 15,
         ?string $sort = null,
         ?string $direction = null,
+        ?string $staffAttribute = null,
     ): LengthAwarePaginator;
 
     /**
@@ -43,7 +44,11 @@ interface StaffRepositoryInterface
      *
      * @return Collection<int, Staff>
      */
-    public function getFiltered(?string $search = null, ?bool $status = null): Collection;
+    public function getFiltered(
+        ?string $search = null,
+        ?bool $status = null,
+        ?string $staffAttribute = null,
+    ): Collection;
 
     /**
      * 稼働可能な全スタッフの取得（アサイン選択用・フリガナ順）
@@ -128,7 +133,7 @@ interface StaffRepositoryInterface
     public function loadShiftRelationsAndGetLedTimetableLanes(Staff $staff): Collection;
 
     /**
-     * 稼働可能なスタッフを最小列（id, name, kana）でフリガナ順取得
+     * 稼働可能なスタッフを最小列（id, name, kana, staff_attribute）でフリガナ順取得
      *
      * @return Collection<int, Staff>
      */

@@ -86,10 +86,10 @@
                                         {{ $unit->short_description ?: '—' }}
                                     </td>
 
-                                    <!-- 担当 (役割を除いた名前のみ) -->
+                                    <!-- 担当 (役割を除き、一般以外の属性を括弧付記) -->
                                     <td class="py-2.5 px-3 text-slate-700">
                                         @if($unit->staff->isNotEmpty())
-                                            <span class="text-xs">{{ $unit->presenter()->staffNamesDisplay() }}</span>
+                                            <span class="text-xs">{{ $unit->presenter()->staffNamesWithAttributeDisplay() }}</span>
                                         @else
                                             <span class="text-slate-400 text-[11px]">—</span>
                                         @endif

@@ -101,10 +101,14 @@ class OrganizationStaffListPdfTest extends TestCase
             'display_order' => 40,
         ]);
 
-        $staff1 = Staff::factory()->create(['name' => '寺井 智之']);
-        $staff2 = Staff::factory()->create(['name' => '萩原 繁夫']);
+        $staff1 = Staff::factory()->executive()->create(['name' => '寺井 智之']);
+        $staff2 = Staff::factory()->executiveBoard()->create(['name' => '萩原 繁夫']);
+        $staff3 = Staff::factory()->create(['name' => '高橋 一般']);
+        $staff4 = Staff::factory()->external()->create(['name' => '鈴木 外部']);
         $root->staff()->attach($staff1->id, ['role' => '委員長', 'display_order' => 10]);
-        $l4->staff()->attach($staff2->id, ['role' => '現地責任者', 'display_order' => 10]);
+        $l2->staff()->attach($staff2->id, ['role' => '役員', 'display_order' => 10]);
+        $l4->staff()->attach($staff3->id, ['role' => '一般', 'display_order' => 10]);
+        $l4->staff()->attach($staff4->id, ['role' => '協力', 'display_order' => 20]);
 
         $action = app(DownloadOrganizationStaffListPdfAction::class);
         $viewData = $action->buildViewData();
@@ -112,8 +116,9 @@ class OrganizationStaffListPdfTest extends TestCase
 
         $html = view('pdf.organization_staff_list', $viewData)->render();
 
-        // 1. タイトルとヘッダー列名が出力されていること
+        // 1. タイトル、凡例、ヘッダー列名が出力されていること
         $this->assertStringContainsString('保土ケ谷宿場まつり実行委員会 組織別所属スタッフ一覧', $html);
+        $this->assertStringContainsString('★：幹事 / ☆：幹事会', $html);
         $this->assertStringContainsString('<th class="col-name">名前</th>', $html);
         $this->assertStringContainsString('<th class="col-staff">所属スタッフ</th>', $html);
         $this->assertStringContainsString('<th class="col-description">詳細</th>', $html);
@@ -137,9 +142,14 @@ class OrganizationStaffListPdfTest extends TestCase
         $this->assertStringContainsString('indent-level-3', $html);
         $this->assertStringContainsString('長島駐車場', $html);
 
-        // 5. 所属スタッフ名が出力されていること
-        $this->assertStringContainsString('寺井 智之', $html);
-        $this->assertStringContainsString('萩原 繁夫', $html);
+        // 5. 所属スタッフ名が出力されていること（幹事:★、幹事会:☆、一般・外部:記号なし）
+        $this->assertStringContainsString('★寺井 智之', $html);
+        $this->assertStringContainsString('☆萩原 繁夫', $html);
+        $this->assertStringContainsString('高橋 一般, 鈴木 外部', $html);
+        $this->assertStringNotContainsString('★高橋 一般', $html);
+        $this->assertStringNotContainsString('☆高橋 一般', $html);
+        $this->assertStringNotContainsString('★鈴木 外部', $html);
+        $this->assertStringNotContainsString('☆鈴木 外部', $html);
 
         // 6. 詳細テキストの改行が除去されて空白で連結されていること
         $this->assertStringContainsString('実行委員会の統括 年間計画の策定', $html);

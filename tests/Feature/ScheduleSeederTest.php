@@ -46,6 +46,18 @@ class ScheduleSeederTest extends TestCase
             'status' => 'completed',
         ]);
 
+        $soukai2026 = Schedule::where('title', '総会／反省会・慰労会（打ち上げ）')
+            ->whereDate('start_date', '2026-11-21')
+            ->first();
+        $this->assertNotNull($soukai2026);
+        $this->assertSame('completed', $soukai2026->status);
+
+        $soukai2027 = Schedule::where('title', '総会／反省会・慰労会（打ち上げ）')
+            ->whereDate('start_date', '2027-11-27')
+            ->first();
+        $this->assertNotNull($soukai2027);
+        $this->assertSame('planned', $soukai2027->status);
+
         // 全レコードのカテゴリとステータスが定義定数に合致していること
         $validCategories = ScheduleCategory::values();
         $validStatuses = ScheduleStatus::values();
