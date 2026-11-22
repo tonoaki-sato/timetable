@@ -102,6 +102,11 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee('quickAssignHeaderStatus');
         $response->assertSee('quickAssignHeaderPoolBtn');
 
+        // 画面専用ViteスクリプトおよびモーダルDOM（担当班追加・クイックアサイン）が出力されていること
+        $response->assertSee('timetable-matrix', false);
+        $response->assertSee('id="laneModal"', false);
+        $response->assertSee('id="quickAssignModal"', false);
+
         // ステップガイド、人員配置状況サマリー、表示班プリセットボタンが削除されていること
         $response->assertDontSee('まつり運行準備ステップガイド');
         $response->assertDontSee('人員配置状況サマリー');

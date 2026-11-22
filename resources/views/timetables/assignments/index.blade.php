@@ -123,6 +123,7 @@
                     data-lane-id="{{ $task->timetable_lane_id }}"
                     data-is-satisfied="{{ $task->is_satisfied ? '1' : '0' }}"
                     data-shortage-count="{{ $task->shortage_count }}"
+                    data-assigned-count="{{ $task->assigned_count }}"
                     data-search-text="{{ $task->assignment_search_text }}"
                     class="task-card group relative p-3 rounded-xl border transition cursor-pointer select-none {{ $task->id === $initialTaskId ? 'border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20' : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50/70' }}">
 

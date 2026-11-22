@@ -99,6 +99,19 @@ class TimetableAssignmentWorkspaceTest extends TestCase
 
         // 未充足タスクが初期選択されていること
         $response->assertViewHas('initialTaskId', $task1->id);
+
+        // 画面専用Viteスクリプト・ワークスペースDOM・リアルタイムサマリー属性・CSP準拠の検証
+        $response->assertSee('timetable-assignments', false);
+        $response->assertSee('id="assignment-workspace"', false);
+        $response->assertSee('data-assigned-count="', false);
+        $response->assertSee('id="btn-submit-bulk-assign"', false);
+        $response->assertSee('id="assign-btn-count"', false);
+        $response->assertSee('id="summary-total-assigned"', false);
+
+        $html = (string) $response->getContent();
+        $this->assertDoesNotMatchRegularExpression('/<script(?![^>]*(?:\bsrc=|\bnonce=))[^>]*>/i', $html);
+        $this->assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $html);
+        $this->assertDoesNotMatchRegularExpression('/\sstyle=/i', $html);
     }
 
     /**
