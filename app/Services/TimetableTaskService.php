@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DTOs\TimetableTask\CreateCommonTimetableTaskDTO;
+use App\Enums\TimetableTaskStatus;
 use App\Models\Timetable;
 use App\Models\TimetableLane;
 use App\Models\TimetableTask;
@@ -50,7 +51,7 @@ class TimetableTaskService
             'timetable' => $timetable,
             'timetableLanes' => $timetable->timetableLanes,
             'tasks' => $timetable->timetableLanes->flatMap->tasks,
-            'statuses' => TimetableTask::STATUSES,
+            'statuses' => TimetableTaskStatus::options(),
         ];
     }
 
@@ -69,33 +70,27 @@ class TimetableTaskService
     }
 
     /**
-     * 選択した日別担当班編成に対する複数タスクの一括登録（班長・固定スタッフのデフォルト自動アサイン対応）
+     * 単一作業タスクの新規登録（班長・固定スタッフのデフォルト自動アサイン対応）
      *
-     * @param  array<int, array<string, mixed>>  $tasksData
-     * @return Collection<int, TimetableTask>
+     * @param  array<string, mixed>  $data
      */
-    public function createBulkTasks(
-        int $timetableId,
-        int $timetableLaneId,
-        array $tasksData,
-        bool $autoAssignLead = true
-    ): Collection {
-        return DB::transaction(function () use ($timetableId, $timetableLaneId, $tasksData, $autoAssignLead): Collection {
-            $attributesList = [];
-            foreach ($tasksData as $taskItem) {
-                $attributesList[] = array_merge($taskItem, [
-                    'timetable_id' => $timetableId,
-                    'timetable_lane_id' => $timetableLaneId,
-                ]);
-            }
+    public function createTask(array $data): TimetableTask
+    {
+        return DB::transaction(function () use ($data): TimetableTask {
+            $autoAssignLead = (bool) ($data['auto_assign_lead'] ?? true);
+            $attributes = $data;
+            unset($attributes['auto_assign_lead']);
 
-            $createdTasks = $this->taskRepository->createMany($attributesList);
+            $task = $this->taskRepository->create($attributes);
 
             if ($autoAssignLead) {
-                $this->taskAssignmentService->autoAssignDefaultMembersForLaneTasks($createdTasks, $timetableLaneId);
+                $this->taskAssignmentService->autoAssignDefaultMembersForLaneTasks(
+                    new Collection([$task]),
+                    (int) $task->timetable_lane_id
+                );
             }
 
-            return $createdTasks;
+            return $task;
         });
     }
 

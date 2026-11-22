@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Presenters\VendorPresenter;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Vendor extends Model
 {
     use HasFactory;
+
+    protected ?VendorPresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): VendorPresenter
+    {
+        return $this->presenterInstance ??= new VendorPresenter($this);
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -37,34 +48,6 @@ class Vendor extends Model
     public function items(): HasMany
     {
         return $this->hasMany(LayoutItem::class)->where('item_type', 'booth')->orderBy('code', 'asc');
-    }
-
-    /**
-     * 詳細モーダル表示用のブース情報配列
-     *
-     * @return array<int, array<string, string>>
-     */
-    public function getBoothsDetailListAttribute(): array
-    {
-        return $this->items->map(function (LayoutItem $b) {
-            $categoryLabel = $b->boothCategory()?->label() ?? '';
-            $categoryBadge = $b->boothCategory()?->badgeClasses() ?? 'bg-slate-100 text-slate-700 border-slate-300';
-            $typeLabel = $b->boothType()?->label() ?? '';
-
-            return [
-                'id' => $b->id,
-                'code' => $b->code,
-                'name' => $b->displayName,
-                'area' => $b->area?->name ?? '通り',
-                'category_label' => $categoryLabel,
-                'category_badge' => $categoryBadge,
-                'type_label' => $typeLabel,
-                'status_label' => $b->status?->label() ?? '確定',
-                'status_icon' => $b->status?->icon() ?? '🟢',
-                'status_badge' => $b->status?->badgeClasses() ?? 'bg-emerald-50 text-emerald-700 border-emerald-300',
-                'notes' => $b->notes ?? '',
-            ];
-        })->values()->all();
     }
 
     /**

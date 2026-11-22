@@ -65,7 +65,7 @@
                 <tbody id="lanes-sortable-body" class="divide-y divide-slate-100 bg-white">
                     @forelse($lanes as $lane)
                         @php
-                            $payload = $lane->toModalPayload();
+                            $payload = $lane->presenter()->toModalPayload();
                             $payloadJson = json_encode($payload, JSON_UNESCAPED_UNICODE);
                             $inUse = $lane->timetable_lanes_count > 0;
                         @endphp
@@ -101,8 +101,8 @@
 
                             <!-- 3. バッジ -->
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold border {{ $lane->color_classes['badge'] }}">
-                                    <span class="mr-1 shrink-0">{{ $lane->icon_label }}</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold border {{ $lane->presenter()->colorClasses()['badge'] }}">
+                                    <span class="mr-1 shrink-0">{{ $lane->presenter()->iconLabel() }}</span>
                                     <span>{{ $lane->name }}</span>
                                 </span>
                             </td>

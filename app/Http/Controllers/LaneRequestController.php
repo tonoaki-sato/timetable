@@ -29,14 +29,16 @@ class LaneRequestController extends Controller
             $request->user()?->id
         );
 
+        $presenter = $laneRequest->presenter();
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'status' => $laneRequest->status,
-                'status_label' => $laneRequest->status_label,
+                'status_label' => $presenter->statusLabel(),
             ]);
         }
 
-        return back()->with('success', "班長からの「{$laneRequest->type_label}」を「{$laneRequest->status_label}」に更新しました。");
+        return back()->with('success', "班長からの「{$presenter->typeLabel()}」を「{$presenter->statusLabel()}」に更新しました。");
     }
 }

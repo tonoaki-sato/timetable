@@ -144,7 +144,7 @@
                             </label>
                             <select id="modal_status" name="status" required
                                 class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500">
-                                @foreach($statuses ?? \App\Models\Timetable::STATUSES as $key => $label)
+                                @foreach($statuses ?? \App\Enums\TimetableStatus::options() as $key => $label)
                                 <option value="{{ $key }}">{{ $label }}</option>
                                 @endforeach
                             </select>

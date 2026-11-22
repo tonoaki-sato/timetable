@@ -117,7 +117,7 @@
                                     {{ $timetable->target_date?->format('Y/m/d') }}
                                 </span>
                                 <span class="text-[11px] font-bold {{ $timetable->is_weekend ? 'text-red-600' : 'text-slate-500' }}">
-                                    ({{ $timetable->weekday_label }})
+                                    ({{ $timetable->presenter()->weekdayLabel() }})
                                 </span>
                             </div>
                         </td>
@@ -129,8 +129,8 @@
 
                         <!-- 状態 -->
                         <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] border whitespace-nowrap {{ $timetable->status_badge_class }} {{ $timetable->is_active ? 'animate-pulse' : '' }}">
-                                {{ $timetable->status_label }}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] border whitespace-nowrap {{ $timetable->presenter()->statusBadgeClass() }} {{ $timetable->is_active ? 'animate-pulse' : '' }}">
+                                {{ $timetable->presenter()->statusLabel() }}
                             </span>
                         </td>
 

@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\DTOs\ScheduleFilterDTO;
+use App\Enums\ScheduleCategory;
+use App\Enums\ScheduleStatus;
 use App\Models\Schedule;
 use App\Models\Staff;
 use App\Models\User;
@@ -30,7 +32,7 @@ class ScheduleService
         }
 
         $raw = is_array($input) ? $input : explode(',', (string) $input);
-        $validKeys = array_merge(['timetable'], array_keys(Schedule::CATEGORIES));
+        $validKeys = array_merge(['timetable'], ScheduleCategory::values());
 
         $filtered = array_values(array_unique(array_filter(
             array_map('trim', $raw),
@@ -86,19 +88,19 @@ class ScheduleService
                 'icon' => '🏮',
             ],
         ];
-        foreach (Schedule::CATEGORIES as $key => $label) {
-            $displayCategories[$key] = [
-                'label' => $label,
-                'icon' => Schedule::categoryFilterIcon($key),
+        foreach (ScheduleCategory::cases() as $categoryEnum) {
+            $displayCategories[$categoryEnum->value] = [
+                'label' => $categoryEnum->label(),
+                'icon' => $categoryEnum->icon(),
             ];
         }
 
         return [
             'schedules' => $schedules,
             'statusSummary' => $statusSummary,
-            'categories' => Schedule::CATEGORIES,
+            'categories' => ScheduleCategory::options(),
             'displayCategories' => $displayCategories,
-            'statuses' => Schedule::STATUSES,
+            'statuses' => ScheduleStatus::options(),
             'staffs' => $staffs,
             'selectedCategories' => $selectedCategories,
             'currentCategory' => $category,
@@ -239,8 +241,8 @@ class ScheduleService
             foreach ($selectedCategories as $catKey) {
                 if ($catKey === 'timetable') {
                     $catLabels[] = '運行スケジュール';
-                } elseif (isset(Schedule::CATEGORIES[$catKey])) {
-                    $catLabels[] = Schedule::CATEGORIES[$catKey];
+                } elseif (($categoryEnum = ScheduleCategory::tryFrom($catKey)) !== null) {
+                    $catLabels[] = $categoryEnum->label();
                 }
             }
             if ($catLabels !== []) {
@@ -248,8 +250,8 @@ class ScheduleService
             }
         }
 
-        if ($status && isset(Schedule::STATUSES[$status])) {
-            $subtitleParts[] = '状態: '.Schedule::STATUSES[$status];
+        if ($status && ($statusEnum = ScheduleStatus::tryFrom($status)) !== null) {
+            $subtitleParts[] = '状態: '.$statusEnum->label();
         }
 
         if ($search) {

@@ -61,7 +61,7 @@ class TimetableLaneController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "担当班「{$timetableLane->name}」を編成に追加しました。",
-                'timetable_lane' => $timetableLane->toModalPayload(),
+                'timetable_lane' => $timetableLane->presenter()->toModalPayload(),
             ]);
         }
 
@@ -114,7 +114,7 @@ class TimetableLaneController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "担当班「{$updated->name}」の編成を更新しました。",
-                'timetable_lane' => $updated->toModalPayload(),
+                'timetable_lane' => $updated->presenter()->toModalPayload(),
             ]);
         }
 

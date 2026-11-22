@@ -128,19 +128,15 @@ class TimetableTaskModalOperationsTest extends TestCase
         $payload = [
             'timetable_id' => $this->timetable->id,
             'timetable_lane_id' => $this->lane->id,
-            'tasks' => [
-                [
-                    'title' => '正面ゲート案内',
-                    'start_time' => '09:00',
-                    'end_time' => '11:00',
-                    'required_people_count' => 3,
-                    'is_critical' => '1',
-                    'is_at_least' => '1',
-                    'location' => '正面ゲート前',
-                    'status' => 'not_started',
-                    'content' => '入場整理券の確認と検温',
-                ],
-            ],
+            'title' => '正面ゲート案内',
+            'start_time' => '09:00',
+            'end_time' => '11:00',
+            'required_people_count' => 3,
+            'is_critical' => '1',
+            'is_at_least' => '1',
+            'location' => '正面ゲート前',
+            'status' => 'not_started',
+            'content' => '入場整理券の確認と検温',
             'auto_assign_lead' => '1',
         ];
 
@@ -184,33 +180,36 @@ class TimetableTaskModalOperationsTest extends TestCase
         ]);
 
         // 10:00 〜 12:00（一部重複）と 10:30 〜 11:30（完全包含重複）を登録
-        $payload = [
+        $payloadA = [
             'timetable_id' => $this->timetable->id,
             'timetable_lane_id' => $this->lane->id,
-            'tasks' => [
-                [
-                    'title' => '新規並行タスクA',
-                    'start_time' => '10:00',
-                    'end_time' => '12:00',
-                    'required_people_count' => 2,
-                    'status' => 'not_started',
-                ],
-                [
-                    'title' => '新規並行タスクB',
-                    'start_time' => '10:30',
-                    'end_time' => '11:30',
-                    'required_people_count' => 1,
-                    'status' => 'not_started',
-                ],
-            ],
+            'title' => '新規並行タスクA',
+            'start_time' => '10:00',
+            'end_time' => '12:00',
+            'required_people_count' => 2,
+            'status' => 'not_started',
+            'auto_assign_lead' => '1',
+        ];
+        $payloadB = [
+            'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $this->lane->id,
+            'title' => '新規並行タスクB',
+            'start_time' => '10:30',
+            'end_time' => '11:30',
+            'required_people_count' => 1,
+            'status' => 'not_started',
             'auto_assign_lead' => '1',
         ];
 
-        $response = $this->actingAs($this->operator)
-            ->post(route('timetable-tasks.store'), $payload);
+        $responseA = $this->actingAs($this->operator)
+            ->post(route('timetable-tasks.store'), $payloadA);
+        $responseA->assertRedirect(route('timetables.tasks.index', $this->timetable->id));
+        $responseA->assertSessionHasNoErrors();
 
-        $response->assertRedirect(route('timetables.tasks.index', $this->timetable->id));
-        $response->assertSessionHasNoErrors();
+        $responseB = $this->actingAs($this->operator)
+            ->post(route('timetable-tasks.store'), $payloadB);
+        $responseB->assertRedirect(route('timetables.tasks.index', $this->timetable->id));
+        $responseB->assertSessionHasNoErrors();
 
         $taskA = TimetableTask::where('title', '新規並行タスクA')->firstOrFail();
         $taskB = TimetableTask::where('title', '新規並行タスクB')->firstOrFail();
@@ -241,15 +240,11 @@ class TimetableTaskModalOperationsTest extends TestCase
         $standalonePayload = [
             'timetable_id' => $this->timetable->id,
             'timetable_lane_id' => $this->lane->id,
-            'tasks' => [
-                [
-                    'title' => '午後単独タスク',
-                    'start_time' => '13:00',
-                    'end_time' => '14:00',
-                    'required_people_count' => 2,
-                    'status' => 'not_started',
-                ],
-            ],
+            'title' => '午後単独タスク',
+            'start_time' => '13:00',
+            'end_time' => '14:00',
+            'required_people_count' => 2,
+            'status' => 'not_started',
             'auto_assign_lead' => '1',
         ];
 
@@ -420,15 +415,11 @@ class TimetableTaskModalOperationsTest extends TestCase
         $payload = [
             'timetable_id' => $this->timetable->id,
             'timetable_lane_id' => $otherLane->id,
-            'tasks' => [
-                [
-                    'title' => '救護待機タスク',
-                    'start_time' => '10:00',
-                    'end_time' => '12:00',
-                    'required_people_count' => 2,
-                    'status' => 'not_started',
-                ],
-            ],
+            'title' => '救護待機タスク',
+            'start_time' => '10:00',
+            'end_time' => '12:00',
+            'required_people_count' => 2,
+            'status' => 'not_started',
         ];
 
         $response = $this->actingAs($this->operator)

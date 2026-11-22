@@ -67,11 +67,11 @@
                     <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
                         @if ($task->required_people_count > 0 && ! $task->is_satisfied)
                             <span class="text-xs font-bold px-2 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded">
-                                ⚠️ {{ $task->assigned_count }} / {{ $task->required_people_label }} (不足{{ $task->shortage_count }}名)
+                                ⚠️ {{ $task->assigned_count }} / {{ $task->presenter()->requiredPeopleLabel() }} (不足{{ $task->shortage_count }}名)
                             </span>
                         @elseif ($task->required_people_count > 0)
                             <span class="text-xs font-medium px-2 py-0.5 bg-slate-100 rounded text-slate-700">
-                                👥 {{ $task->assigned_count }} / {{ $task->required_people_label }}配置済
+                                👥 {{ $task->assigned_count }} / {{ $task->presenter()->requiredPeopleLabel() }}配置済
                             </span>
                         @else
                             <span class="text-xs font-medium px-2 py-0.5 bg-slate-100 rounded text-slate-700">
@@ -80,7 +80,7 @@
                         @endif
 
                         <span class="text-xs font-bold px-2.5 py-1 rounded-md {{ $statusBadgeClasses($task) }}">
-                            {{ $task->status_label }}
+                            {{ $task->presenter()->statusLabel() }}
                         </span>
                     </div>
                 </div>

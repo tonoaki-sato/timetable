@@ -19,7 +19,7 @@
         <x-slot:badges>
             @if($timetable->target_date)
                 <span class="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    {{ $timetable->target_date->format('Y/m/d') }}（{{ $timetable->weekday_label }}）
+                    {{ $timetable->target_date->format('Y/m/d') }}（{{ $timetable->presenter()->weekdayLabel() }}）
                 </span>
             @endif
         </x-slot:badges>
@@ -94,7 +94,7 @@
                 <tbody id="timetable-lanes-sortable-body" class="divide-y divide-slate-100 bg-white">
                     @forelse($timetableLanes as $tl)
                         @php
-                            $payload = $tl->toModalPayload();
+                            $payload = $tl->presenter()->toModalPayload();
                             $payloadJson = json_encode($payload, JSON_UNESCAPED_UNICODE);
                             $pendingCount = $tl->laneRequests->where('status', 'pending')->count();
                         @endphp
@@ -131,8 +131,8 @@
 
                             <!-- 3. バッジ -->
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold border {{ $tl->color_classes['badge'] }}">
-                                    <span class="mr-1 shrink-0">{{ $tl->icon_label }}</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold border {{ $tl->presenter()->colorClasses()['badge'] }}">
+                                    <span class="mr-1 shrink-0">{{ $tl->presenter()->iconLabel() }}</span>
                                     <span>{{ $tl->name }}</span>
                                 </span>
                             </td>
@@ -204,310 +204,13 @@
         </div>
     </div>
 
-    <!-- 1. 閲覧専用 詳細モーダル -->
-    <x-ui.modal id="modal-tlane-detail" title="担当班編成の詳細" icon="🏷️" max-width="xl">
-        <div class="space-y-4 text-xs">
-            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                <span id="detail-tlane-badge" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border bg-slate-100 text-slate-800 border-slate-300">
-                    <span id="detail-tlane-badge-icon" class="mr-1.5">📋</span>
-                    <span id="detail-tlane-badge-name">班名</span>
-                </span>
-                <a id="detail-tlane-tasks-link" href="{{ route('timetables.tasks.index', $timetable) }}"
-                    class="text-indigo-600 hover:underline font-bold">
-                    この班のタスク管理を見る →
-                </a>
-            </div>
+    @include('timetable_lanes.partials.detail-modal')
 
-            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                <div class="text-[11px] font-bold text-slate-500">標準役割（マスター定義）</div>
-                <div id="detail-tlane-description" class="text-slate-700 whitespace-pre-wrap leading-relaxed">-</div>
-            </div>
+    @include('timetable_lanes.partials.add-modal')
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                    <div class="text-[11px] font-bold text-slate-500">👑 当日の班長（リーダー）</div>
-                    <div id="detail-tlane-lead" class="font-bold text-slate-800">未設定</div>
-                </div>
-                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                    <div class="text-[11px] font-bold text-slate-500">📌 固定スタッフ</div>
-                    <div id="detail-tlane-fixed-staff" class="flex flex-wrap gap-1"></div>
-                </div>
-            </div>
+    @include('timetable_lanes.partials.edit-modal')
 
-            <div class="space-y-1">
-                <div class="text-[11px] font-bold text-slate-500">📝 当日運用メモ</div>
-                <div id="detail-tlane-notes" class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-700 whitespace-pre-wrap">-</div>
-            </div>
-
-            <div class="space-y-1.5">
-                <div class="text-[11px] font-bold text-slate-500">
-                    📋 登録タスク（<span id="detail-tlane-tasks-count" class="font-mono">0</span> 件）
-                </div>
-                <div id="detail-tlane-tasks-list" class="max-h-40 overflow-y-auto space-y-1"></div>
-            </div>
-
-            <div class="space-y-1.5">
-                <div class="text-[11px] font-bold text-slate-500">📣 班長からの応援・機材要請履歴</div>
-                <div id="detail-tlane-requests-list" class="max-h-36 overflow-y-auto space-y-1"></div>
-            </div>
-        </div>
-
-        <x-slot:footer>
-            <x-ui.button variant="secondary" data-close-target="#modal-tlane-detail">閉じる</x-ui.button>
-        </x-slot:footer>
-    </x-ui.modal>
-
-    <!-- 2. 担当班を追加モーダル（単一指定 / マスターから一括追加タブ） -->
-    <x-ui.modal id="modal-tlane-add" title="この運行日に担当班を追加" icon="➕" max-width="xl">
-        @if($availableMasterLanes->isEmpty())
-            <div class="space-y-4 text-xs">
-                <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 space-y-1.5">
-                    <div class="font-bold">追加可能な有効担当班マスターがありません。</div>
-                    <p class="leading-relaxed">
-                        すべての有効な担当班マスターがこの運行日にすでに追加されているか、マスターが未登録です。新しい班が必要な場合は「担当班マスター管理」から登録してください。
-                    </p>
-                </div>
-                <div class="flex items-center justify-between pt-2 border-t border-slate-100">
-                    <a href="{{ route('lanes.index') }}" class="text-indigo-600 hover:underline font-bold">
-                        ⚙️ 担当班マスター管理へ →
-                    </a>
-                    <x-ui.button variant="secondary" data-close-target="#modal-tlane-add">閉じる</x-ui.button>
-                </div>
-            </div>
-        @else
-            <div class="space-y-4 text-xs">
-                <div class="flex border-b border-slate-200 gap-2">
-                    <button type="button" data-add-tab="single"
-                        class="tlane-add-tab-btn px-3 py-2 font-bold border-b-2 border-indigo-600 text-indigo-700 cursor-pointer">
-                        1班ずつ追加（班長・固定スタッフ指定）
-                    </button>
-                    <button type="button" data-add-tab="bulk"
-                        class="tlane-add-tab-btn px-3 py-2 font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 cursor-pointer">
-                        マスターから一括追加（{{ $availableMasterLanes->count() }}班選択可）
-                    </button>
-                </div>
-
-                <!-- Tab 1: 単一追加フォーム -->
-                <form id="tlane-add-single-panel" action="{{ route('timetables.lanes.store', $timetable) }}" method="POST" class="space-y-4">
-                    @csrf
-
-                    <div>
-                        <label for="add-lane-id" class="block font-bold text-slate-700 mb-1">
-                            担当班マスターを選択 <span class="text-red-600">*</span>
-                        </label>
-                        <select id="add-lane-id" name="lane_id" required
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="">-- 担当班を選択してください --</option>
-                            @foreach($availableMasterLanes as $master)
-                                <option value="{{ $master->id }}">{{ $master->icon_label }} {{ $master->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="add-lead-staff-id" class="block font-bold text-slate-700 mb-1">
-                            👑 当日の班長（後から設定・変更可能）
-                        </label>
-                        <select id="add-lead-staff-id" name="lead_staff_id"
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="">-- 未設定 --</option>
-                            @foreach($activeStaff as $st)
-                                <option value="{{ $st->id }}">{{ $st->name }} {{ $st->affiliation ? "({$st->affiliation})" : '' }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <div class="font-bold text-slate-700 mb-1">📌 固定スタッフ（この日の班タスクに基本自動配置）</div>
-                        <div class="max-h-40 overflow-y-auto border border-slate-200 rounded-xl p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-50/50">
-                            @foreach($activeStaff as $st)
-                                <label class="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-white cursor-pointer">
-                                    <input type="checkbox" name="fixed_staff_ids[]" value="{{ $st->id }}"
-                                        class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5">
-                                    <span class="truncate text-slate-700 font-medium">
-                                        {{ $st->name }}
-                                        @if($st->affiliation)
-                                            <span class="text-[10px] text-slate-400">({{ $st->affiliation }})</span>
-                                        @endif
-                                    </span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="add-notes" class="block font-bold text-slate-700 mb-1">当日運用メモ</label>
-                        <textarea id="add-notes" name="notes" rows="2" maxlength="2000"
-                            placeholder="当日の連絡事項・集合場所・無線チャンネルなど"
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                    </div>
-
-                    <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                        <x-ui.button variant="secondary" data-close-target="#modal-tlane-add">キャンセル</x-ui.button>
-                        <x-ui.button type="submit" variant="primary">この担当班を追加</x-ui.button>
-                    </div>
-                </form>
-
-                <!-- Tab 2: マスターから一括追加フォーム -->
-                <form id="tlane-add-bulk-panel" action="{{ route('timetables.lanes.bulk-store', $timetable) }}" method="POST" class="hidden space-y-4">
-                    @csrf
-
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-700">追加する担当班マスターを選択</span>
-                        <div class="space-x-2">
-                            <button type="button" id="btn-bulk-select-all" class="text-indigo-600 hover:underline font-bold cursor-pointer">全選択</button>
-                            <button type="button" id="btn-bulk-clear-all" class="text-slate-500 hover:underline font-bold cursor-pointer">全解除</button>
-                        </div>
-                    </div>
-
-                    <div class="max-h-64 overflow-y-auto border border-slate-200 rounded-xl p-2 space-y-1.5 bg-slate-50/50">
-                        @foreach($availableMasterLanes as $master)
-                            <label class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 hover:border-indigo-300 cursor-pointer">
-                                <div class="flex items-center space-x-2 min-w-0">
-                                    <input type="checkbox" name="lane_ids[]" value="{{ $master->id }}"
-                                        class="tlane-bulk-checkbox rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4 shrink-0">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border shrink-0 {{ $master->color_classes['badge'] }}">
-                                        <span class="mr-1">{{ $master->icon_label }}</span>
-                                        <span>{{ $master->name }}</span>
-                                    </span>
-                                </div>
-                                @if($master->description)
-                                    <span class="text-[11px] text-slate-400 truncate max-w-xs ml-2">{{ $master->description }}</span>
-                                @endif
-                            </label>
-                        @endforeach
-                    </div>
-
-                    <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                        <x-ui.button variant="secondary" data-close-target="#modal-tlane-add">キャンセル</x-ui.button>
-                        <x-ui.button type="submit" variant="primary">選択した担当班を一括追加</x-ui.button>
-                    </div>
-                </form>
-            </div>
-        @endif
-    </x-ui.modal>
-
-    <!-- 3. 担当班編成の編集モーダル -->
-    <x-ui.modal id="modal-tlane-edit" title="担当班編成の編集" icon="✏️" max-width="xl">
-        <form id="tlane-edit-form" action="" method="POST" class="space-y-4 text-xs">
-            @csrf
-            @method('PUT')
-            <input type="hidden" name="sync_fixed_staff" value="1">
-
-            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <span id="edit-tlane-badge" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border bg-slate-100 text-slate-800 border-slate-300">
-                        <span id="edit-tlane-badge-icon" class="mr-1.5">📋</span>
-                        <span id="edit-tlane-badge-name">班名</span>
-                    </span>
-                    <a href="{{ route('lanes.index') }}" class="text-[11px] text-indigo-600 hover:underline font-bold">
-                        班名・表示色の変更はマスター管理へ →
-                    </a>
-                </div>
-                <div id="edit-tlane-description" class="text-[11px] text-slate-500"></div>
-            </div>
-
-            <div>
-                <label for="edit-lead-staff-id" class="block font-bold text-slate-700 mb-1">
-                    👑 当日の班長（リーダー）
-                </label>
-                <select id="edit-lead-staff-id" name="lead_staff_id"
-                    class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="">-- 未設定 --</option>
-                    @foreach($activeStaff as $st)
-                        <option value="{{ $st->id }}">{{ $st->name }} {{ $st->affiliation ? "({$st->affiliation})" : '' }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <div class="font-bold text-slate-700 mb-1">📌 固定スタッフ</div>
-                <div id="edit-fixed-staff-list" class="max-h-44 overflow-y-auto border border-slate-200 rounded-xl p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-50/50">
-                    @foreach($activeStaff as $st)
-                        <label class="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-white cursor-pointer">
-                            <input type="checkbox" name="fixed_staff_ids[]" value="{{ $st->id }}"
-                                class="edit-fixed-staff-checkbox rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5">
-                            <span class="truncate text-slate-700 font-medium">
-                                {{ $st->name }}
-                                @if($st->affiliation)
-                                    <span class="text-[10px] text-slate-400">({{ $st->affiliation }})</span>
-                                @endif
-                            </span>
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-
-            <div>
-                <label for="edit-notes" class="block font-bold text-slate-700 mb-1">当日運用メモ</label>
-                <textarea id="edit-notes" name="notes" rows="3" maxlength="2000"
-                    placeholder="当日の連絡事項・集合場所・注意点など"
-                    class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                <x-ui.button variant="secondary" data-close-target="#modal-tlane-edit">キャンセル</x-ui.button>
-                <x-ui.button type="submit" variant="primary">編成内容を保存</x-ui.button>
-            </div>
-        </form>
-    </x-ui.modal>
-
-    <!-- 4. 解除・削除モーダル（タスク移行 / 一括削除対応） -->
-    <x-ui.modal id="delete-migration-modal" title="担当班の編成解除・削除" icon="🗑️" max-width="lg">
-        <form id="tlane-delete-form" action="" method="POST" class="space-y-4 text-xs">
-            @csrf
-            @method('DELETE')
-
-            <p class="text-slate-700 leading-relaxed">
-                「{{ $timetable->name }}」の編成から「<strong id="delete-tlane-name" class="text-slate-900"></strong>」を解除します。
-            </p>
-
-            <div id="delete-no-tasks-msg" class="hidden p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600">
-                この班に登録されている作業タスクはありません。そのまま解除できます。
-            </div>
-
-            <div id="delete-with-tasks-options" class="hidden space-y-3">
-                <div class="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl font-bold">
-                    ⚠️ この班には <span id="delete-tlane-tasks-count" class="font-mono">0</span> 件の作業タスクが登録されています。タスクの扱いを選択してください。
-                </div>
-
-                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                    <label for="migrate-to-timetable-lane-id" class="block font-bold text-slate-700">
-                        方法A: 登録タスクを他の担当班へ移行して解除する
-                    </label>
-                    <select id="migrate-to-timetable-lane-id" name="migrate_to_timetable_lane_id"
-                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="">-- 移行先の担当班を選択 --</option>
-                        @foreach($timetableLanes as $otherTl)
-                            <option value="{{ $otherTl->id }}">{{ $otherTl->icon_label }} {{ $otherTl->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="p-3 bg-red-50/70 border border-red-200 rounded-xl">
-                    <label class="flex items-start space-x-2 cursor-pointer">
-                        <input type="checkbox" id="cascade-delete-tasks" name="cascade_delete_tasks" value="1"
-                            class="mt-0.5 rounded border-red-300 text-red-600 focus:ring-red-500 h-4 w-4">
-                        <span class="text-red-800">
-                            <strong>方法B: タスクもまとめて完全に削除する</strong>
-                            <span class="block text-[11px] text-red-600 mt-0.5">この班の作業タスクとスタッフ配置データもすべて削除されます。</span>
-                        </span>
-                    </label>
-                </div>
-
-                <div id="delete-modal-error" class="hidden p-2.5 bg-red-50 border border-red-200 text-red-700 rounded-xl font-bold"></div>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                <x-ui.button variant="secondary" data-close-target="#delete-migration-modal">キャンセル</x-ui.button>
-                <button type="submit"
-                    class="inline-flex items-center space-x-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-xs transition cursor-pointer">
-                    <span>🗑️</span>
-                    <span>編成から解除する</span>
-                </button>
-            </div>
-        </form>
-    </x-ui.modal>
+    @include('timetable_lanes.partials.delete-modal')
 </div>
 
 @vite(['resources/js/timetable-lanes.js'])

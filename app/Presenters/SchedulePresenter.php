@@ -13,6 +13,14 @@ class SchedulePresenter
     ) {}
 
     /**
+     * カテゴリの日本語表示を取得
+     */
+    public function categoryLabel(): string
+    {
+        return $this->schedule->category_enum?->label() ?? (string) $this->schedule->category;
+    }
+
+    /**
      * カテゴリ・種別の絵文字アイコン
      */
     public function categoryIcon(): string
@@ -25,12 +33,28 @@ class SchedulePresenter
     }
 
     /**
+     * カテゴリのバッジ表示用アイコン（連動時も純粋なカテゴリアイコン）
+     */
+    public function categoryBadgeIcon(): string
+    {
+        return ScheduleCategory::tryFrom((string) $this->schedule->category)?->icon() ?? '📌';
+    }
+
+    /**
      * カテゴリのバッジ用CSSクラスを取得
      */
     public function categoryBadgeClass(): string
     {
         return ScheduleCategory::tryFrom((string) $this->schedule->category)?->badgeClasses()
             ?? 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+
+    /**
+     * ステータスの日本語表示を取得
+     */
+    public function statusLabel(): string
+    {
+        return $this->schedule->status_enum?->label() ?? (string) $this->schedule->status;
     }
 
     /**
@@ -98,7 +122,9 @@ class SchedulePresenter
         $location = $this->schedule->location ?: '未定';
         $title = $this->schedule->title;
 
-        $header = $this->schedule->category === 'committee' ? '【会議開催のお知らせ】' : "【{$this->schedule->category_label}開催のお知らせ】";
+        $header = $this->schedule->category === 'committee'
+            ? '【会議開催のお知らせ】'
+            : "【{$this->categoryLabel()}開催のお知らせ】";
 
         $lines = [
             $header,

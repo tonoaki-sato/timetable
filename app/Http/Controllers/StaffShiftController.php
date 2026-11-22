@@ -148,16 +148,18 @@ class StaffShiftController extends Controller
             return $this->domainErrorResponse($request, $e);
         }
 
+        $statusLabel = $task->presenter()->statusLabel();
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'status' => $task->status,
-                'status_label' => $task->status_label,
+                'status_label' => $statusLabel,
             ]);
         }
 
         return redirect()->route('staff.myshift', ['token' => $token])
-            ->with('success', "班タスク「{$task->title}」の進捗を「{$task->status_label}」に更新しました。");
+            ->with('success', "班タスク「{$task->title}」の進捗を「{$statusLabel}」に更新しました。");
     }
 
     /**
@@ -177,7 +179,7 @@ class StaffShiftController extends Controller
             return $this->domainErrorResponse($request, $e);
         }
 
-        $label = $laneRequest->type_label;
+        $label = $laneRequest->presenter()->typeLabel();
 
         if ($request->wantsJson()) {
             return response()->json([

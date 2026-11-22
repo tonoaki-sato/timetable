@@ -13,6 +13,27 @@ class TimetablePresenter
     ) {}
 
     /**
+     * ステータスの日本語表示を取得
+     */
+    public function statusLabel(): string
+    {
+        return TimetableStatus::tryFrom((string) $this->timetable->status)?->label()
+            ?? (string) $this->timetable->status;
+    }
+
+    /**
+     * 対象日の曜日ラベルを取得（例: '土'）
+     */
+    public function weekdayLabel(): string
+    {
+        if (! $this->timetable->target_date) {
+            return '';
+        }
+
+        return ['日', '月', '火', '水', '木', '金', '土'][$this->timetable->target_date->dayOfWeek] ?? '';
+    }
+
+    /**
      * ステータスバッジのCSSクラスを取得
      */
     public function statusBadgeClass(): string

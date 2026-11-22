@@ -124,7 +124,7 @@
                     data-is-satisfied="{{ $task->is_satisfied ? '1' : '0' }}"
                     data-shortage-count="{{ $task->shortage_count }}"
                     data-assigned-count="{{ $task->assigned_count }}"
-                    data-search-text="{{ $task->assignment_search_text }}"
+                    data-search-text="{{ $task->presenter()->assignmentSearchText() }}"
                     class="task-card group relative p-3 rounded-xl border transition cursor-pointer select-none {{ $task->id === $initialTaskId ? 'border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20' : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50/70' }}">
 
                     <!-- 時間帯 & 班名 & 最優先バッジ -->
@@ -133,8 +133,8 @@
                             <span class="font-mono font-bold text-xs text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
                                 ⏱️ {{ substr($task->start_time, 0, 5) }}〜{{ substr($task->end_time, 0, 5) }}
                             </span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border truncate max-w-[120px] {{ $task->lane_badge_class }}" title="{{ $task->lane_name_label }}">
-                                {{ $task->lane_icon_label }} {{ $task->lane_name_label }}
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border truncate max-w-[120px] {{ $task->presenter()->laneBadgeClass() }}" title="{{ $task->presenter()->laneNameLabel() }}">
+                                {{ $task->presenter()->laneIconLabel() }} {{ $task->presenter()->laneNameLabel() }}
                             </span>
                         </div>
 
@@ -160,10 +160,10 @@
                     <!-- 進捗プログレスミニバー & 充足カウント -->
                     <div class="flex items-center space-x-2 pt-1">
                         <div class="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div data-task-progress-bar data-percent="{{ $task->fulfillment_percent }}" class="{{ $task->progress_color_class }} h-full transition-all duration-300"></div>
+                            <div data-task-progress-bar data-percent="{{ $task->fulfillment_percent }}" class="{{ $task->presenter()->progressColorClass() }} h-full transition-all duration-300"></div>
                         </div>
                         <span data-task-people-label class="text-[11px] font-mono text-slate-500 shrink-0 font-medium">
-                            👥 {{ $task->assigned_count }}/{{ $task->required_people_label }}
+                            👥 {{ $task->assigned_count }}/{{ $task->presenter()->requiredPeopleLabel() }}
                         </span>
                     </div>
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Presenters\SiteBaseMapPresenter;
 use Database\Factories\SiteBaseMapFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -54,6 +55,16 @@ class SiteBaseMap extends Model
      * @var string
      */
     protected $table = 'site_base_maps';
+
+    protected ?SiteBaseMapPresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): SiteBaseMapPresenter
+    {
+        return $this->presenterInstance ??= new SiteBaseMapPresenter($this);
+    }
 
     /**
      * @return array<string, string>
@@ -119,58 +130,6 @@ class SiteBaseMap extends Model
         return [
             'width' => 842.0,
             'height' => 1191.0,
-        ];
-    }
-
-    /**
-     * 詳細・編集モーダル用ペイロード配列を生成
-     *
-     * @return array{
-     *     id: int,
-     *     name: string,
-     *     cad_version: string,
-     *     paper_size: string,
-     *     scale_ratio: float,
-     *     width_meters: float,
-     *     height_meters: float,
-     *     svg_path: string,
-     *     svg_url: string,
-     *     pdf_path: ?string,
-     *     pdf_url: ?string,
-     *     viewbox: string,
-     *     is_default: bool,
-     *     is_active: bool,
-     *     is_preset_asset: bool,
-     *     notes: ?string,
-     *     timetables_count: int,
-     *     placements_count: int,
-     *     update_url: string,
-     *     destroy_url: string
-     * }
-     */
-    public function toModalPayload(): array
-    {
-        return [
-            'id' => $this->id,
-            'name' => (string) $this->name,
-            'cad_version' => (string) $this->cad_version,
-            'paper_size' => (string) $this->paper_size,
-            'scale_ratio' => (float) $this->scale_ratio,
-            'width_meters' => (float) $this->width_meters,
-            'height_meters' => (float) $this->height_meters,
-            'svg_path' => (string) $this->svg_path,
-            'svg_url' => asset((string) $this->svg_path),
-            'pdf_path' => $this->pdf_path ? (string) $this->pdf_path : null,
-            'pdf_url' => $this->pdf_path ? asset((string) $this->pdf_path) : null,
-            'viewbox' => (string) $this->viewbox,
-            'is_default' => (bool) $this->is_default,
-            'is_active' => (bool) $this->is_active,
-            'is_preset_asset' => $this->isPresetAsset(),
-            'notes' => $this->notes,
-            'timetables_count' => (int) ($this->timetables_count ?? $this->timetables()->count()),
-            'placements_count' => (int) ($this->placements_count ?? $this->placements()->count()),
-            'update_url' => route('site-base-maps.update', $this),
-            'destroy_url' => route('site-base-maps.destroy', $this),
         ];
     }
 }

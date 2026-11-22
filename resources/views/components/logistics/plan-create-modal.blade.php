@@ -88,7 +88,7 @@
                                     data-is-rental="{{ $eq->type_enum === \App\Enums\EquipmentType::Rental ? '1' : '0' }}"
                                     data-plans-count="{{ $eq->plans->count() }}"
                                     data-apply-template-url="{{ route('timetables.logistics.apply-template', [$timetable, $eq]) }}">
-                                    {{ $eq->type_enum->icon() }} {{ $eq->name }}（{{ $eq->formatted_quantity }} / {{ $eq->type_enum->shortLabel() }}・登録済 {{ $eq->plans->count() }}件）
+                                    {{ $eq->type_enum->icon() }} {{ $eq->name }}（{{ $eq->presenter()->formattedQuantity() }} / {{ $eq->type_enum->shortLabel() }}・登録済 {{ $eq->plans->count() }}件）
                                 </option>
                             @endforeach
                         </select>
@@ -181,7 +181,7 @@
                                         class="w-full px-3 py-2 bg-slate-50/60 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
                                         @foreach($patterns as $pattern)
                                             <option value="{{ $pattern->id }}" data-target-type="{{ $pattern->target_type }}">
-                                                {{ $pattern->name }} ({{ $pattern->steps->count() }}ステップ / {{ $pattern->target_type_label }})
+                                                {{ $pattern->name }} ({{ $pattern->steps->count() }}ステップ / {{ $pattern->presenter()->targetTypeLabel() }})
                                             </option>
                                         @endforeach
                                     </select>

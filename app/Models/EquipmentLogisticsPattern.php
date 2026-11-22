@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Presenters\EquipmentLogisticsPatternPresenter;
 use Database\Factories\EquipmentLogisticsPatternFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -34,6 +35,16 @@ class EquipmentLogisticsPattern extends Model
         'personal' => '私物（個人持ち込み）',
     ];
 
+    protected ?EquipmentLogisticsPatternPresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): EquipmentLogisticsPatternPresenter
+    {
+        return $this->presenterInstance ??= new EquipmentLogisticsPatternPresenter($this);
+    }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -44,14 +55,6 @@ class EquipmentLogisticsPattern extends Model
         return [
             'display_order' => 'integer',
         ];
-    }
-
-    /**
-     * 推奨資材区分ラベルアクセサ
-     */
-    public function getTargetTypeLabelAttribute(): string
-    {
-        return self::TARGET_TYPES[$this->target_type] ?? $this->target_type;
     }
 
     /**
@@ -86,41 +89,5 @@ class EquipmentLogisticsPattern extends Model
     public function getHasStepsAttribute(): bool
     {
         return $this->steps->isNotEmpty();
-    }
-
-    /**
-     * 詳細モーダル等用のJSONペイロード配列を取得
-     *
-     * @return array<string, mixed>
-     */
-    public function toModalPayload(): array
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'target_type' => $this->target_type,
-            'target_type_label' => $this->target_type_label,
-            'description' => $this->description ?? '',
-            'update_url' => route('equipment-patterns.update', $this),
-            'steps' => $this->steps->map(fn (EquipmentLogisticsPatternStep $step) => [
-                'id' => $step->id,
-                'display_order' => $step->display_order,
-                'day_phase' => $step->day_phase,
-                'phase_label' => $step->phase_label,
-                'action_type' => $step->action_type,
-                'action_label' => $step->action_label,
-                'title' => $step->title,
-                'operator_type' => $step->operator_type,
-                'operator_type_label' => $step->operator_type_label,
-                'from_location' => $step->from_location ?? '',
-                'from_location_id' => $step->from_location_id,
-                'from_location_display' => $step->from_location_display,
-                'to_location' => $step->to_location ?? '',
-                'to_location_id' => $step->to_location_id,
-                'to_location_display' => $step->to_location_display,
-                'witness_required' => (bool) $step->witness_required,
-                'notes' => $step->notes ?? '',
-            ])->values()->all(),
-        ];
     }
 }

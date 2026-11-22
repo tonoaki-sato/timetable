@@ -7,6 +7,7 @@ use App\Enums\BoothType;
 use App\Enums\FacilityType;
 use App\Enums\LayoutItemStatus;
 use App\Enums\LayoutItemType;
+use App\Presenters\LayoutItemPresenter;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,6 +31,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class LayoutItem extends Model
 {
     use HasFactory;
+
+    protected ?LayoutItemPresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): LayoutItemPresenter
+    {
+        return $this->presenterInstance ??= new LayoutItemPresenter($this);
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -96,22 +107,6 @@ class LayoutItem extends Model
     }
 
     /**
-     * 表示用の名称（直接の名称または出店者名）
-     */
-    public function getDisplayNameAttribute(): string
-    {
-        if (! empty($this->name)) {
-            return $this->name;
-        }
-
-        if ($this->isBooth() && $this->vendor !== null && ! empty($this->vendor->name)) {
-            return $this->vendor->name;
-        }
-
-        return $this->isBooth() ? '(未割当)' : '現場設備';
-    }
-
-    /**
      * 出店区分 Enum
      */
     public function boothCategory(): ?BoothCategory
@@ -133,49 +128,5 @@ class LayoutItem extends Model
     public function facilityType(): ?FacilityType
     {
         return $this->category ? FacilityType::tryFrom($this->category) : null;
-    }
-
-    /**
-     * ステータスバッジのCSSクラス
-     */
-    public function getStatusBadgeClassAttribute(): string
-    {
-        return $this->status->badgeClasses();
-    }
-
-    /**
-     * 区分・種別のアイコン
-     */
-    public function typeIcon(): string
-    {
-        if ($this->isBooth()) {
-            return $this->boothCategory()?->icon() ?? '🎪';
-        }
-
-        return $this->facilityType()?->icon() ?? '🚰';
-    }
-
-    /**
-     * 区分・種別の日本語ラベル
-     */
-    public function typeLabel(): string
-    {
-        if ($this->isBooth()) {
-            return $this->boothCategory()?->label() ?? '出店';
-        }
-
-        return $this->facilityType()?->label() ?? '設備';
-    }
-
-    /**
-     * 区分・種別バッジのCSSクラス
-     */
-    public function typeBadgeClasses(): string
-    {
-        if ($this->isBooth()) {
-            return $this->boothCategory()?->badgeClasses() ?? 'bg-indigo-50 text-indigo-700 border-indigo-200';
-        }
-
-        return $this->facilityType()?->badgeClasses() ?? 'bg-cyan-50 text-cyan-800 border-cyan-200';
     }
 }

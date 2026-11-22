@@ -40,7 +40,7 @@
 
             <!-- メインCTA: マイタイムテーブルを見る -->
             <div>
-                <a href="{{ $staff->my_shift_url }}"
+                <a href="{{ $staff->presenter()->myShiftUrl() }}"
                    class="w-full py-4 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-base font-bold shadow-xl shadow-indigo-600/30 transition transform active:scale-[0.98] flex items-center justify-center space-x-2">
                     <span>📅</span>
                     <span>私のタイムテーブルを見る</span>

@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Contracts;
 
+use App\DTOs\LayoutItemFilterDTO;
 use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
@@ -36,10 +37,8 @@ interface LayoutMapRepositoryInterface
 
     /**
      * 配置アイテム一覧をページネーション取得（絞り込み・検索・ソート対応）
-     *
-     * @param  array{item_type?: string|null, area_id?: int|string|null, category?: string|null, search?: string|null, sort?: string|null, direction?: string|null}  $filters
      */
-    public function paginateItems(LayoutMap $map, array $filters = [], int $perPage = 50): LengthAwarePaginator;
+    public function paginateItems(LayoutMap $map, LayoutItemFilterDTO $filter): LengthAwarePaginator;
 
     /**
      * 配置アイテムを新規登録

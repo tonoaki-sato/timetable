@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Lane;
+use App\Presenters\LanePresenter;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -63,7 +64,7 @@ class UpdateLaneRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:100', Rule::unique('lanes', 'name')->ignore($laneId)],
-            'color' => ['required', 'string', Rule::in(array_keys(Lane::COLOR_OPTIONS))],
+            'color' => ['required', 'string', Rule::in(array_keys(LanePresenter::COLOR_OPTIONS))],
             'icon' => ['nullable', 'string', 'max:50'],
             'description' => ['nullable', 'string', 'max:2000'],
             'is_active' => ['sometimes', 'boolean'],

@@ -59,7 +59,7 @@ class ExportEquipmentsCsvAction
                     $equipment->quantity,
                     CsvSanitizer::sanitizeForExport($equipment->unit),
                     $equipment->is_approximate_quantity ? '1' : '0',
-                    CsvSanitizer::sanitizeForExport($equipment->storage_location_name),
+                    CsvSanitizer::sanitizeForExport($equipment->presenter()->storageLocationName()),
                     CsvSanitizer::sanitizeForExport($equipment->description),
                 ]);
             }

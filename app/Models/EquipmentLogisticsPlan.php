@@ -51,61 +51,6 @@ class EquipmentLogisticsPlan extends Model
     }
 
     /**
-     * フェーズ定義一覧（時系列7区分）
-     *
-     * @var array<string, string>
-     */
-    public const array DAY_PHASES = [
-        'other' => 'その他（事前準備等）',
-        'pre_day' => '前日（準備日）',
-        'day1_morning' => '1日目 朝（設置）',
-        'day1_evening' => '1日目 夜（夜間保管移動）',
-        'day2_morning' => '2日目 朝（設置）',
-        'day2_evening' => '2日目 夜（倉庫格納・回収待ち移動）',
-        'post_day' => '翌日（業者回収）',
-    ];
-
-    /**
-     * アクション種別定義一覧
-     *
-     * @var array<string, string>
-     */
-    public const array ACTION_TYPES = [
-        'storage_out' => '倉庫出し・移動',
-        'vendor_receive' => '業者受取・立会',
-        'staging_move' => '中継・待機移動',
-        'setup' => '会場設置',
-        'night_storage' => '夜間保管移動',
-        'return_storage' => '倉庫返還・格納',
-        'collection_staging' => '業者回収待ち集約',
-        'vendor_setup' => 'イベント会社搬入・設営',
-        'vendor_pickup' => 'イベント会社解体・搬出回収',
-        'other' => 'その他作業',
-    ];
-
-    /**
-     * 作業主体定義一覧
-     *
-     * @var array<string, string>
-     */
-    public const array OPERATOR_TYPES = [
-        'committee' => '委員会スタッフ',
-        'event_company' => 'イベント会社',
-    ];
-
-    /**
-     * ステータス定義一覧
-     *
-     * @var array<string, string>
-     */
-    public const array STATUSES = [
-        'planned' => '計画中',
-        'in_progress' => '進行中',
-        'completed' => '完了',
-        'cancelled' => '中止',
-    ];
-
-    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -200,100 +145,6 @@ class EquipmentLogisticsPlan extends Model
     }
 
     /**
-     * フェーズラベルアクセサ
-     */
-    public function getPhaseLabelAttribute(): string
-    {
-        return $this->day_phase_enum->label();
-    }
-
-    /**
-     * アクションラベルアクセサ
-     */
-    public function getActionLabelAttribute(): string
-    {
-        return $this->action_type_enum->label();
-    }
-
-    /**
-     * ステータスラベルアクセサ
-     */
-    public function getStatusLabelAttribute(): string
-    {
-        return $this->status_enum->label();
-    }
-
-    /**
-     * 作業主体ラベルアクセサ
-     */
-    public function getOperatorLabelAttribute(): string
-    {
-        return $this->operator_type_enum->label();
-    }
-
-    /**
-     * 移動元表示名アクセサ
-     */
-    public function getResolvedFromLocationAttribute(): string
-    {
-        return $this->fromLocationModel?->name ?? $this->from_location ?: '（指定なし）';
-    }
-
-    /**
-     * 移動先表示名アクセサ
-     */
-    public function getResolvedToLocationAttribute(): string
-    {
-        return $this->toLocationModel?->name ?? $this->to_location ?: '（指定なし）';
-    }
-
-    /**
-     * 時間帯表示フォーマットアクセサ
-     */
-    public function getFormattedTimeRangeAttribute(): string
-    {
-        if (! $this->start_time && ! $this->end_time) {
-            return '';
-        }
-
-        $start = $this->start_time ? substr($this->start_time, 0, 5) : '';
-        $end = $this->end_time ? substr($this->end_time, 0, 5) : '';
-
-        if ($start && $end) {
-            return "{$start}〜{$end}";
-        }
-
-        return $start ?: $end;
-    }
-
-    /**
-     * ステップ数量・数量補足の表示フォーマットアクセサ
-     * - quantity と quantity_note の両方がある場合: "{約}{quantity}{unit}（{quantity_note}）"
-     * - quantity のみの場合: "{約}{quantity}{unit}"
-     * - quantity が null で quantity_note のみの場合: "{quantity_note}"
-     */
-    public function getFormattedQuantityAttribute(): string
-    {
-        $equipment = $this->equipment;
-        $prefix = $equipment?->is_approximate_quantity ? '約' : '';
-        $unit = $equipment?->unit ?? '個';
-
-        if ($this->quantity !== null && $this->quantity_note) {
-            return "{$prefix}{$this->quantity}{$unit}（{$this->quantity_note}）";
-        }
-
-        if ($this->quantity !== null) {
-            return "{$prefix}{$this->quantity}{$unit}";
-        }
-
-        if ($this->quantity_note) {
-            return $this->quantity_note;
-        }
-
-        return '';
-    }
-
-    /**
      * 完了済み判定
      */
     public function isCompleted(): bool
@@ -323,14 +174,6 @@ class EquipmentLogisticsPlan extends Model
     public function needsTimeWarning(): bool
     {
         return $this->isTimeUnspecified() && ! $this->isCompleted() && ! $this->isCancelled();
-    }
-
-    /**
-     * 一覧テーブル行のハイライト用CSSクラスアクセサ
-     */
-    public function getRowHighlightClassAttribute(): string
-    {
-        return $this->presenter()->rowHighlightClass();
     }
 
     /**
@@ -394,39 +237,5 @@ class EquipmentLogisticsPlan extends Model
         }
 
         return $query;
-    }
-
-    /**
-     * フェーズバッジのCSSクラスアクセサ
-     */
-    public function getPhaseBadgeClassAttribute(): string
-    {
-        return $this->presenter()->phaseBadgeClass();
-    }
-
-    /**
-     * ステップ更新アクションのURLを取得
-     */
-    public function updateUrl(?Timetable $timetable = null): string
-    {
-        return route('timetables.logistics.plans.update', [$timetable ?? $this->timetable_id, $this]);
-    }
-
-    /**
-     * ステップ削除アクションのURLを取得
-     */
-    public function destroyUrl(?Timetable $timetable = null): string
-    {
-        return route('timetables.logistics.plans.destroy', [$timetable ?? $this->timetable_id, $this]);
-    }
-
-    /**
-     * モーダル表示・編集用のJSONペイロード配列を取得
-     *
-     * @return array<string, mixed>
-     */
-    public function toModalPayload(?Timetable $timetable = null): array
-    {
-        return $this->presenter()->toModalPayload($timetable);
     }
 }

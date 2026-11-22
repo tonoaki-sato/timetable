@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Actions\Schedule\DownloadSchedulesPdfAction;
 use App\Actions\Schedule\ExportScheduleIcsAction;
 use App\DTOs\ScheduleFilterDTO;
+use App\Enums\ScheduleCategory;
+use App\Enums\ScheduleStatus;
 use App\Http\Requests\StoreScheduleRequest;
 use App\Http\Requests\UpdateScheduleRequest;
 use App\Models\Schedule;
@@ -84,8 +86,8 @@ class ScheduleController extends Controller
         $this->authorize('create', Schedule::class);
 
         return view('schedules.create', [
-            'categories' => Schedule::CATEGORIES,
-            'statuses' => Schedule::STATUSES,
+            'categories' => ScheduleCategory::options(),
+            'statuses' => ScheduleStatus::options(),
             'staffs' => $this->scheduleService->getActiveStaffList(),
             'defaultCategory' => $request->input('category', 'other'),
             'defaultDate' => $request->input('date', now()->toDateString()),
@@ -137,8 +139,8 @@ class ScheduleController extends Controller
 
         return view('schedules.edit', [
             'schedule' => $schedule,
-            'categories' => Schedule::CATEGORIES,
-            'statuses' => Schedule::STATUSES,
+            'categories' => ScheduleCategory::options(),
+            'statuses' => ScheduleStatus::options(),
             'staffs' => $this->scheduleService->getActiveStaffList(),
         ]);
     }

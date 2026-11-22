@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Lane;
+use App\Presenters\LanePresenter;
 use App\Repositories\Contracts\LaneRepositoryInterface;
 use DomainException;
 use Illuminate\Database\Eloquent\Collection;
@@ -27,9 +28,9 @@ class LaneService
     {
         return [
             'lanes' => $this->laneRepository->getAllWithCountsAndTimetables(),
-            'colorOptions' => Lane::COLOR_OPTIONS,
-            'colorPaletteMap' => Lane::COLOR_PALETTE_MAP,
-            'emojiPresets' => Lane::EMOJI_PRESETS,
+            'colorOptions' => LanePresenter::COLOR_OPTIONS,
+            'colorPaletteMap' => LanePresenter::COLOR_PALETTE_MAP,
+            'emojiPresets' => LanePresenter::EMOJI_PRESETS,
         ];
     }
 

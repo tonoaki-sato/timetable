@@ -50,18 +50,6 @@ class TimetableTask extends Model
     }
 
     /**
-     * ステータス定義一覧
-     *
-     * @var array<string, string>
-     */
-    public const array STATUSES = [
-        'not_started' => '未着手',
-        'in_progress' => '進行中',
-        'completed' => '完了',
-        'cancelled' => '中止',
-    ];
-
-    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -124,16 +112,6 @@ class TimetableTask extends Model
     }
 
     /**
-     * 必要人員の表示用ラベル（例:「3名以上」または「3名」）
-     */
-    public function getRequiredPeopleLabelAttribute(): string
-    {
-        return $this->is_at_least
-            ? "{$this->required_people_count}名以上"
-            : "{$this->required_people_count}名";
-    }
-
-    /**
      * 人員充足判定（「〇〇名以上」の場合は基準値以上で充足）
      */
     public function getIsSatisfiedAttribute(): bool
@@ -150,14 +128,6 @@ class TimetableTask extends Model
     }
 
     /**
-     * ステータスの日本語表示
-     */
-    public function getStatusLabelAttribute(): string
-    {
-        return TimetableTaskStatus::tryFrom((string) $this->status)?->label() ?? (string) $this->status;
-    }
-
-    /**
      * ステータスによるスコープ
      */
     public function scopeStatus(Builder $query, ?string $status): Builder
@@ -170,30 +140,6 @@ class TimetableTask extends Model
     }
 
     /**
-     * 担当班名の表示用ラベル（未設定時は '担当班未設定'）
-     */
-    public function getLaneNameLabelAttribute(): string
-    {
-        return $this->timetableLane?->name ?? '担当班未設定';
-    }
-
-    /**
-     * 担当班アイコンの表示用ラベル（未設定時は '📋'）
-     */
-    public function getLaneIconLabelAttribute(): string
-    {
-        return $this->timetableLane?->icon ?: '📋';
-    }
-
-    /**
-     * 担当班バッジのCSSクラス
-     */
-    public function getLaneBadgeClassAttribute(): string
-    {
-        return $this->presenter()->laneBadgeClass();
-    }
-
-    /**
      * 人員充足率（0〜100%）
      */
     public function getFulfillmentPercentAttribute(): int
@@ -201,53 +147,5 @@ class TimetableTask extends Model
         return $this->required_people_count > 0
             ? min(100, (int) round(($this->assigned_count / $this->required_people_count) * 100))
             : 100;
-    }
-
-    /**
-     * 充足プログレスバーの背景色クラス
-     */
-    public function getProgressColorClassAttribute(): string
-    {
-        return $this->presenter()->progressColorClass();
-    }
-
-    /**
-     * スタッフ配置画面のクライアント検索用テキスト（小文字）
-     */
-    public function getAssignmentSearchTextAttribute(): string
-    {
-        return mb_strtolower($this->title.' '.$this->lane_name_label.' '.($this->location ?? '').' '.($this->content ?? ''));
-    }
-
-    /**
-     * マトリクス・PDF進行表の人員規模ラベル（例: '【3名以上】'）
-     */
-    public function getMatrixPeopleLabelAttribute(): string
-    {
-        if (! $this->required_people_count) {
-            return '';
-        }
-
-        return $this->is_at_least
-            ? "【{$this->required_people_count}名以上】"
-            : "【{$this->required_people_count}名】";
-    }
-
-    /**
-     * ステータスバッジのCSSクラス
-     */
-    public function getStatusBadgeClassAttribute(): string
-    {
-        return $this->presenter()->statusBadgeClass();
-    }
-
-    /**
-     * タスク編集モーダル用のJSONペイロード配列を取得
-     *
-     * @return array<string, mixed>
-     */
-    public function toModalPayload(?TimetableLane $timetableLane = null): array
-    {
-        return $this->presenter()->toModalPayload($timetableLane);
     }
 }

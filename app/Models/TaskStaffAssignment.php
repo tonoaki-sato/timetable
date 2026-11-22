@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AttendanceStatus;
+use App\Presenters\TaskStaffAssignmentPresenter;
 use Database\Factories\TaskStaffAssignmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,18 +22,15 @@ class TaskStaffAssignment extends Model
     /** @use HasFactory<TaskStaffAssignmentFactory> */
     use HasFactory;
 
+    protected ?TaskStaffAssignmentPresenter $presenterInstance = null;
+
     /**
-     * 出欠ステータス定義一覧
-     *
-     * @var array<string, string>
+     * 表示用 Presenter インスタンスを取得
      */
-    public const array ATTENDANCE_STATUSES = [
-        'assigned' => '配置済',
-        'checked_in' => '現場着・受付済',
-        'in_progress' => '着手中',
-        'completed' => '完了',
-        'absent' => '欠席・キャンセル',
-    ];
+    public function presenter(): TaskStaffAssignmentPresenter
+    {
+        return $this->presenterInstance ??= new TaskStaffAssignmentPresenter($this);
+    }
 
     /**
      * 対象タスクとのリレーション
@@ -59,50 +57,11 @@ class TaskStaffAssignment extends Model
     }
 
     /**
-     * 出欠ステータスの日本語表示
-     */
-    public function getAttendanceStatusLabelAttribute(): string
-    {
-        return $this->attendance_status_enum?->label() ?? (string) $this->attendance_status;
-    }
-
-    /**
-     * マイシフト表示用の対象日ヘッダーラベル（例: '2026年10月11日（日）'）
-     */
-    public function getDateHeaderLabelAttribute(): string
-    {
-        $targetDate = $this->task?->timetable?->target_date;
-        if (! $targetDate) {
-            return '日付未設定';
-        }
-        $weekday = ['日', '月', '火', '水', '木', '金', '土'][$targetDate->dayOfWeek];
-
-        return $targetDate->format('Y年m月d日')."（{$weekday}）";
-    }
-
-    /**
      * アサインまたは親タスクが完了済みかどうか
      */
     public function getIsCompletedAttribute(): bool
     {
         return $this->attendance_status === 'completed' || $this->task?->status === 'completed';
-    }
-
-    /**
-     * マイシフトカードの詳細アコーディオンに表示する情報があるか判定
-     */
-    public function getHasDetailsAttribute(): bool
-    {
-        $task = $this->task;
-        if (! $task) {
-            return false;
-        }
-        $laneLeadStaff = $task->timetableLane?->leadStaff;
-
-        return ! empty($task->content)
-            || ! empty($this->notes)
-            || ($laneLeadStaff && $laneLeadStaff->id !== $this->staff_id)
-            || $task->assignments->count() > 1;
     }
 
     /**

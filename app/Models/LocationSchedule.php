@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Presenters\LocationSchedulePresenter;
 use Database\Factories\LocationScheduleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,6 +30,16 @@ class LocationSchedule extends Model
         'unavailable' => '未確保（調整中）',
     ];
 
+    protected ?LocationSchedulePresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): LocationSchedulePresenter
+    {
+        return $this->presenterInstance ??= new LocationSchedulePresenter($this);
+    }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -53,30 +64,10 @@ class LocationSchedule extends Model
     }
 
     /**
-     * 確保ステータスの日本語ラベル
-     */
-    public function getAvailabilityStatusLabelAttribute(): string
-    {
-        return self::AVAILABILITY_STATUSES[$this->availability_status] ?? $this->availability_status;
-    }
-
-    /**
      * 利用可（確保済）状態か判定
      */
     public function isAvailable(): bool
     {
         return $this->availability_status === 'available';
-    }
-
-    /**
-     * 確保ステータスのバッジCSSクラス
-     */
-    public function getAvailabilityStatusBadgeClassAttribute(): string
-    {
-        return match ($this->availability_status) {
-            'available' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
-            'unavailable' => 'bg-amber-100 text-amber-800 border-amber-300',
-            default => 'bg-slate-100 text-slate-700 border-slate-300',
-        };
     }
 }

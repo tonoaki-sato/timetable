@@ -4,8 +4,8 @@ namespace App\Actions\Lane;
 
 use App\DTOs\Lane\LaneListPrintDataDTO;
 use App\DTOs\Lane\LanePrintRowDTO;
-use App\Models\Lane;
 use App\Models\Timetable;
+use App\Presenters\LanePresenter;
 use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
 use App\Services\PdfService;
 use Dompdf\Frame;
@@ -56,7 +56,7 @@ class DownloadLanesPdfAction
         foreach ($lanes as $index => $lane) {
             $hasLead = $lane->leadStaff !== null;
 
-            $colorKey = array_key_exists((string) $lane->color, Lane::COLOR_PALETTE_MAP)
+            $colorKey = array_key_exists((string) $lane->color, LanePresenter::COLOR_PALETTE_MAP)
                 ? (string) $lane->color
                 : 'slate';
 

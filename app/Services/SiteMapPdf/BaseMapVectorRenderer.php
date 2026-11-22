@@ -26,7 +26,7 @@ class BaseMapVectorRenderer
      *
      * @param  Collection<int, SiteMapPlacement>  $placements
      */
-    public function drawLegacyPresetBaseMap(CPDF $canvas, string $font, Collection $placements): void
+    public function drawPresetJsonBaseMap(CPDF $canvas, string $font, Collection $placements): void
     {
         $parsedBaseMap = $this->loadParsedBaseMapData();
         if ($parsedBaseMap === null) {

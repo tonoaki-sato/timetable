@@ -33,28 +33,4 @@ readonly class LayoutItemFilterDTO
             perPage: TableQueryOptions::resolvePerPage($data['per_page'] ?? null, 50, [25, 50, 100]),
         );
     }
-
-    /**
-     * リポジトリ・ビュー互換の連想配列表現を取得
-     *
-     * @return array{
-     *     item_type: ?string,
-     *     area_id: ?int,
-     *     category: ?string,
-     *     search: ?string,
-     *     sort: ?string,
-     *     direction: ?string
-     * }
-     */
-    public function toFilterArray(): array
-    {
-        return [
-            'item_type' => $this->itemType,
-            'area_id' => $this->areaId,
-            'category' => $this->category,
-            'search' => $this->search,
-            'sort' => $this->sort,
-            'direction' => $this->direction,
-        ];
-    }
 }

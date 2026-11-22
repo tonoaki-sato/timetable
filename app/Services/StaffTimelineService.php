@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
+use App\Presenters\LanePresenter;
 use App\Repositories\Contracts\StaffCheckInRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
@@ -67,7 +67,7 @@ class StaffTimelineService
             return [
                 'id' => $t->id,
                 'title' => $t->title,
-                'lane' => $t->lane_name_label,
+                'lane' => $t->presenter()->laneNameLabel(),
                 'start_time' => substr($t->start_time, 0, 5),
                 'end_time' => substr($t->end_time, 0, 5),
                 'shortage_count' => $t->shortage_count,
@@ -97,7 +97,7 @@ class StaffTimelineService
             'checkedInCount' => $checkedInCount,
             'leadStaffIds' => $leadStaffIds,
             'laneNamesByLeadStaff' => $laneNamesByLeadStaff,
-            'colorOptions' => Lane::COLOR_OPTIONS,
+            'colorOptions' => LanePresenter::COLOR_OPTIONS,
         ];
     }
 
@@ -165,17 +165,7 @@ class StaffTimelineService
                     $coveredUntil = $sIdx + $span - 1;
 
                     $laneRel = $task->timetableLane;
-                    $badgeBg = match ($laneRel?->color ?? 'indigo') {
-                        'amber' => 'bg-amber-100 border-amber-300 text-amber-900',
-                        'sky' => 'bg-sky-100 border-sky-300 text-sky-900',
-                        'emerald' => 'bg-emerald-100 border-emerald-300 text-emerald-900',
-                        'purple' => 'bg-purple-100 border-purple-400/30 text-purple-900',
-                        'pink' => 'bg-pink-100 border-pink-300 text-pink-900',
-                        'red' => 'bg-rose-100 border-rose-300 text-rose-900',
-                        'orange' => 'bg-orange-100 border-orange-300 text-orange-900',
-                        'teal' => 'bg-teal-100 border-teal-300 text-teal-900',
-                        default => 'bg-indigo-100 border-indigo-300 text-indigo-900',
-                    };
+                    $badgeBg = LanePresenter::timelineBadgeClassFor((string) ($laneRel?->color ?? 'indigo'));
 
                     $isSelfTaskLeader = $laneRel && (int) $laneRel->lead_staff_id === (int) $staff->id;
                     $taskLeaderName = $laneRel?->leadStaff?->name;

@@ -9,12 +9,21 @@ use App\Models\EquipmentLogisticsPlan;
 use App\Models\Location;
 use App\Models\LocationSchedule;
 use App\Models\Timetable;
+use App\Repositories\Contracts\EquipmentLogisticsPlanRepositoryInterface;
+use App\Repositories\Contracts\LocationRepositoryInterface;
+use App\Repositories\Contracts\LocationScheduleRepositoryInterface;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class ParkingConstraintService
 {
+    public function __construct(
+        protected LocationRepositoryInterface $locationRepository,
+        protected EquipmentLogisticsPlanRepositoryInterface $logisticsPlanRepository,
+        protected LocationScheduleRepositoryInterface $locationScheduleRepository,
+    ) {}
+
     /**
      * 返却期限接近と判定する閾値（分）: 2時間
      */
@@ -27,31 +36,11 @@ class ParkingConstraintService
     {
         $now = $this->normalizeToTokyo($now ?? Carbon::now('Asia/Tokyo'));
 
-        $query = Location::active()->ordered()->with(['type', 'schedules']);
-        if ($parkingOnly) {
-            $query->whereHas('type', fn ($q) => $q->where('name', 'parking'));
-        }
-
-        $locations = $query->get();
+        $locations = $this->locationRepository->getActiveWithTypeAndSchedules($parkingOnly);
         $locationIds = $locations->pluck('id')->all();
 
-        $plansToQuery = EquipmentLogisticsPlan::with(['equipment'])
-            ->whereIn('to_location_id', $locationIds)
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc');
-
-        $plansFromQuery = EquipmentLogisticsPlan::with(['equipment'])
-            ->whereIn('from_location_id', $locationIds)
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc');
-
-        if ($timetable) {
-            $plansToQuery->where('timetable_id', $timetable->id);
-            $plansFromQuery->where('timetable_id', $timetable->id);
-        }
-
-        $allPlansTo = $plansToQuery->get()->groupBy('to_location_id');
-        $allPlansFrom = $plansFromQuery->get()->groupBy('from_location_id');
+        $allPlansTo = $this->logisticsPlanRepository->getPlansForLocations($locationIds, 'to', $timetable)->groupBy('to_location_id');
+        $allPlansFrom = $this->logisticsPlanRepository->getPlansForLocations($locationIds, 'from', $timetable)->groupBy('from_location_id');
 
         $locationStatuses = collect();
         $violationCount = 0;
@@ -94,17 +83,9 @@ class ParkingConstraintService
         $now = $this->normalizeToTokyo($now);
 
         // 当該拠点に関わる資材計画（搬入・保管先、または搬出元）を取得
-        $plansToLocation = $prefetchedPlansTo ?? EquipmentLogisticsPlan::with(['equipment'])
-            ->where('to_location_id', $location->id)
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->get();
+        $plansToLocation = $prefetchedPlansTo ?? $this->logisticsPlanRepository->getPlansForLocations([$location->id], 'to');
 
-        $plansFromLocation = $prefetchedPlansFrom ?? EquipmentLogisticsPlan::with(['equipment'])
-            ->where('from_location_id', $location->id)
-            ->orderBy('target_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->get();
+        $plansFromLocation = $prefetchedPlansFrom ?? $this->logisticsPlanRepository->getPlansForLocations([$location->id], 'from');
 
         $periodLabel = $this->formatPeriodLabel($location);
         $violations = [];
@@ -129,7 +110,7 @@ class ParkingConstraintService
 
         $schedules = $location->relationLoaded('schedules')
             ? $location->schedules
-            : $location->schedules()->orderBy('start_at', 'asc')->get();
+            : $this->locationScheduleRepository->getForLocationOrdered($location);
 
         $from = $this->normalizeToTokyo($location->available_from);
         $to = $this->normalizeToTokyo($location->available_to);
@@ -261,7 +242,7 @@ class ParkingConstraintService
 
         $schedules = $location->relationLoaded('schedules')
             ? $location->schedules
-            : $location->schedules()->get();
+            : $this->locationScheduleRepository->getForLocationOrdered($location);
 
         if ($schedules->isEmpty()) {
             return '利用枠未登録';

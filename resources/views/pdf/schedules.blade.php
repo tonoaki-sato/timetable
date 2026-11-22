@@ -138,8 +138,8 @@
         <tbody>
             @forelse($schedules as $schedule)
                 <tr>
-                    <td class="col-date">{{ $schedule->pdf_date }}</td>
-                    <td class="col-time">{{ $schedule->pdf_time }}</td>
+                    <td class="col-date">{{ $schedule->presenter()->pdfDate() }}</td>
+                    <td class="col-time">{{ $schedule->presenter()->pdfTime() }}</td>
                     <td class="col-name font-bold">{{ $schedule->title }}</td>
                     <td class="col-location">{{ $schedule->location ?: '-' }}</td>
                     <td class="col-staff">{{ $schedule->assignee?->name ?: '-' }}</td>

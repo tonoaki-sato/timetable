@@ -15,15 +15,10 @@ class VendorService
 
     /**
      * ページネーション一覧を取得
-     *
-     * @param  VendorFilterDTO|array{search?: string|null, sort?: string|null, direction?: string|null}  $filters
      */
-    public function paginateVendors(VendorFilterDTO|array $filters = [], ?int $perPage = null): LengthAwarePaginator
+    public function paginateVendors(VendorFilterDTO $filter): LengthAwarePaginator
     {
-        $filterArray = $filters instanceof VendorFilterDTO ? $filters->toFilterArray() : $filters;
-        $resolvedPerPage = $perPage ?? ($filters instanceof VendorFilterDTO ? $filters->perPage : 15);
-
-        return $this->vendorRepository->paginate($filterArray, $resolvedPerPage);
+        return $this->vendorRepository->paginate($filter);
     }
 
     /**

@@ -59,31 +59,6 @@ class Schedule extends Model
     }
 
     /**
-     * カテゴリ定義一覧（キー => 日本語ラベル）
-     *
-     * @var array<string, string>
-     */
-    public const array CATEGORIES = [
-        'committee' => '会議・打ち合わせ',
-        'permit' => '申請・協議',
-        'briefing' => '募集・説明会',
-        'operation' => '運行・設営',
-        'other' => 'その他',
-    ];
-
-    /**
-     * ステータス定義一覧（キー => 日本語ラベル）
-     *
-     * @var array<string, string>
-     */
-    public const array STATUSES = [
-        'planned' => '予定',
-        'in_progress' => '進行中',
-        'completed' => '完了',
-        'cancelled' => '中止',
-    ];
-
-    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -129,102 +104,6 @@ class Schedule extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    /**
-     * カテゴリの日本語表示
-     */
-    public function getCategoryLabelAttribute(): string
-    {
-        return $this->category_enum?->label() ?? (string) $this->category;
-    }
-
-    /**
-     * カテゴリ・種別の絵文字アイコン
-     */
-    public function getCategoryIconAttribute(): string
-    {
-        return $this->presenter()->categoryIcon();
-    }
-
-    /**
-     * 指定カテゴリキーに対する絵文字アイコンを取得
-     */
-    public static function categoryFilterIcon(string $categoryKey): string
-    {
-        return ScheduleCategory::tryFrom($categoryKey)?->icon() ?? '📌';
-    }
-
-    /**
-     * カテゴリのバッジ表示用アイコン（連動時も純粋なカテゴリアイコン）
-     */
-    public function getCategoryBadgeIconAttribute(): string
-    {
-        return self::categoryFilterIcon((string) $this->category);
-    }
-
-    /**
-     * カテゴリのバッジ表示用CSSクラス
-     */
-    public function getCategoryBadgeClassAttribute(): string
-    {
-        return $this->presenter()->categoryBadgeClass();
-    }
-
-    /**
-     * ステータスの日本語表示
-     */
-    public function getStatusLabelAttribute(): string
-    {
-        return $this->status_enum?->label() ?? (string) $this->status;
-    }
-
-    /**
-     * ステータスのバッジ表示用CSSクラス
-     */
-    public function getStatusBadgeClassAttribute(): string
-    {
-        return $this->presenter()->statusBadgeClass();
-    }
-
-    /**
-     * 時間帯のフォーマット表示（例: 18:00 〜 20:00）
-     */
-    public function getFormattedTimeRangeAttribute(): ?string
-    {
-        return $this->presenter()->formattedTimeRange();
-    }
-
-    /**
-     * 開催日時のフォーマット表示（例: 2027年1月10日(日) 18:00 〜 20:00）
-     */
-    public function getFormattedDatetimeAttribute(): string
-    {
-        return $this->presenter()->formattedDatetime();
-    }
-
-    /**
-     * PDF用の日付・期間フォーマット表示
-     */
-    public function getPdfDateAttribute(): string
-    {
-        return $this->presenter()->pdfDate();
-    }
-
-    /**
-     * PDF用の時間フォーマット表示
-     */
-    public function getPdfTimeAttribute(): string
-    {
-        return $this->presenter()->pdfTime();
-    }
-
-    /**
-     * 開催案内用の全体共有テキスト（LINE告知等）
-     */
-    public function getShareTextAttribute(): string
-    {
-        return $this->presenter()->shareText();
     }
 
     /**

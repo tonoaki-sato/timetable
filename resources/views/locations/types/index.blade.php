@@ -174,5 +174,5 @@
     </div>
 </div>
 
-@vite(['resources/js/locations.js'])
+@vite(['resources/js/location-types.js'])
 </x-layouts.app>

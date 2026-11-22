@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ScheduleCategory;
+use App\Enums\ScheduleStatus;
 use App\Models\Schedule;
 use Database\Seeders\ScheduleSeeder;
 use Database\Seeders\StaffSeeder;
@@ -45,8 +47,8 @@ class ScheduleSeederTest extends TestCase
         ]);
 
         // 全レコードのカテゴリとステータスが定義定数に合致していること
-        $validCategories = array_keys(Schedule::CATEGORIES);
-        $validStatuses = array_keys(Schedule::STATUSES);
+        $validCategories = ScheduleCategory::values();
+        $validStatuses = ScheduleStatus::values();
 
         foreach ($schedules as $schedule) {
             $this->assertContains($schedule->category, $validCategories, "Invalid category: {$schedule->category}");

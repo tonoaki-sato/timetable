@@ -47,4 +47,12 @@ interface EquipmentLogisticsPlanRepositoryInterface
      * 特定資材かつ指定タイムテーブルの計画ステップを一括クリア
      */
     public function clearForEquipment(Equipment $equipment, Timetable $timetable): int;
+
+    /**
+     * 指定拠点ID群（搬入先または搬出元）に関連する計画ステップを取得
+     *
+     * @param  array<int, int>  $locationIds
+     * @return Collection<int, EquipmentLogisticsPlan>
+     */
+    public function getPlansForLocations(array $locationIds, string $direction, ?Timetable $timetable = null): Collection;
 }

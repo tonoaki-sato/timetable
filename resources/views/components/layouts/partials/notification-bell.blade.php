@@ -30,7 +30,7 @@
                         <div class="flex items-start justify-between gap-2">
                             <div class="min-w-0">
                                 <div class="font-bold text-slate-100 truncate">
-                                    [{{ $req->timetableLane?->name ?? '班' }}] {{ $req->type_label }}
+                                    [{{ $req->timetableLane?->name ?? '班' }}] {{ $req->presenter()->typeLabel() }}
                                 </div>
                                 <div class="text-[11px] text-slate-300 mt-0.5">
                                     @if($req->request_type === 'equipment')
@@ -44,7 +44,7 @@
                                 </div>
                             </div>
                             <span class="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold {{ $req->status === 'pending' ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30' : 'bg-sky-500/20 text-sky-300 border border-sky-400/30' }}">
-                                {{ $req->status_label }}
+                                {{ $req->presenter()->statusLabel() }}
                             </span>
                         </div>
 

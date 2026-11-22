@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\EquipmentActionType;
 use App\Enums\EquipmentDayPhase;
 use App\Enums\EquipmentPlanStatus;
 use App\Enums\EquipmentType;
@@ -279,7 +278,7 @@ class EquipmentLogisticsTimelineService
                         'type' => 'plan',
                         'colspan' => $colspan,
                         'plan' => $match,
-                        'badge_bg' => $this->resolveActionBadgeClass($match),
+                        'badge_bg' => $match->presenter()->ganttBadgeClass(),
                     ];
                 } else {
                     $rowGrid[$sIdx] = ['type' => 'empty'];
@@ -290,29 +289,6 @@ class EquipmentLogisticsTimelineService
         }
 
         return $grid;
-    }
-
-    /**
-     * アクション種別・ステータスに応じたガントブロック配色クラスを取得
-     */
-    private function resolveActionBadgeClass(EquipmentLogisticsPlan $plan): string
-    {
-        if ($plan->isCancelled()) {
-            return 'bg-slate-100 border-slate-300 text-slate-500 opacity-75 line-through';
-        }
-
-        return match ($plan->action_type_enum) {
-            EquipmentActionType::StorageOut => 'bg-sky-50 border-sky-300 text-sky-900',
-            EquipmentActionType::VendorReceive => 'bg-purple-50 border-purple-300 text-purple-900',
-            EquipmentActionType::StagingMove => 'bg-indigo-50 border-indigo-300 text-indigo-900',
-            EquipmentActionType::Setup => 'bg-emerald-50 border-emerald-300 text-emerald-900',
-            EquipmentActionType::NightStorage => 'bg-amber-50 border-amber-300 text-amber-900',
-            EquipmentActionType::ReturnStorage => 'bg-teal-50 border-teal-300 text-teal-900',
-            EquipmentActionType::CollectionStaging => 'bg-orange-50 border-orange-300 text-orange-900',
-            EquipmentActionType::VendorSetup => 'bg-rose-50 border-rose-300 text-rose-900',
-            EquipmentActionType::VendorPickup => 'bg-slate-100 border-slate-300 text-slate-800',
-            EquipmentActionType::Other => 'bg-slate-50 border-slate-300 text-slate-800',
-        };
     }
 
     /**

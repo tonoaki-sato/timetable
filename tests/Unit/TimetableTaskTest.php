@@ -22,13 +22,13 @@ class TimetableTaskTest extends TestCase
             'required_people_count' => 3,
             'is_at_least' => false,
         ]);
-        $this->assertSame('3名', $fixedTask->required_people_label);
+        $this->assertSame('3名', $fixedTask->presenter()->requiredPeopleLabel());
 
         $atLeastTask = new TimetableTask([
             'required_people_count' => 3,
             'is_at_least' => true,
         ]);
-        $this->assertSame('3名以上', $atLeastTask->required_people_label);
+        $this->assertSame('3名以上', $atLeastTask->presenter()->requiredPeopleLabel());
     }
 
     /**

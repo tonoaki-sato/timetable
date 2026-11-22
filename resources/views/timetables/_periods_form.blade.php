@@ -22,7 +22,7 @@
 
         <!-- 道路時間帯リスト -->
         <div id="road-periods-container" class="space-y-2">
-            @foreach(\App\Models\Timetable::resolveRoadPeriodsForForm(old('road_periods'), $timetable ?? null) as $index => $period)
+            @foreach(\App\Presenters\TimetablePresenter::resolveRoadPeriodsForForm(old('road_periods'), $timetable ?? null) as $index => $period)
             <div class="period-row grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
                 <input type="hidden" name="road_periods[{{ $index }}][status]" value="{{ $period['status'] ?? 'closed' }}">
                 <div class="col-span-3 sm:col-span-3">
@@ -78,7 +78,7 @@
 
         <!-- まつり時間帯リスト -->
         <div id="festival-periods-container" class="space-y-2">
-            @foreach(\App\Models\Timetable::resolveFestivalPeriodsForForm(old('festival_periods'), $timetable ?? null) as $index => $period)
+            @foreach(\App\Presenters\TimetablePresenter::resolveFestivalPeriodsForForm(old('festival_periods'), $timetable ?? null) as $index => $period)
             <div class="period-row grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
                 <input type="hidden" name="festival_periods[{{ $index }}][status]" value="{{ $period['status'] ?? 'active' }}">
                 <div class="col-span-3 sm:col-span-3">

@@ -59,7 +59,7 @@
                 <tbody class="divide-y divide-slate-100 bg-white">
                     @forelse($baseMaps as $map)
                         @php
-                            $payloadJson = json_encode($map->toModalPayload(), JSON_UNESCAPED_UNICODE);
+                            $payloadJson = json_encode($map->presenter()->toModalPayload(), JSON_UNESCAPED_UNICODE);
                             $inUse = $map->timetables_count > 0 || $map->placements_count > 0;
                         @endphp
                         <tr data-base-map-id="{{ $map->id }}" class="hover:bg-slate-50/80 transition cursor-default">

@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\TimetableTaskStatus;
 use App\Models\TimetableTask;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateTimetableTaskRequest extends FormRequest
 {
@@ -39,8 +41,6 @@ class UpdateTimetableTaskRequest extends FormRequest
      */
     public function rules(): array
     {
-        $statusKeys = implode(',', array_keys(TimetableTask::STATUSES));
-
         return [
             'title' => ['required', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
@@ -49,7 +49,7 @@ class UpdateTimetableTaskRequest extends FormRequest
             'required_people_count' => ['required', 'integer', 'min:0', 'max:999'],
             'is_at_least' => ['required', 'boolean'],
             'is_critical' => ['required', 'boolean'],
-            'status' => ['required', 'string', 'in:'.$statusKeys],
+            'status' => ['required', 'string', Rule::in(TimetableTaskStatus::values())],
             'content' => ['nullable', 'string', 'max:5000'],
         ];
     }

@@ -54,14 +54,14 @@
                     <span>🏷️ 表示種別:</span>
                 </span>
                 <div class="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5 text-xs" id="item-type-filter-group">
-                    <button type="button" data-type-filter="all" class="type-filter-btn px-2.5 py-1 rounded-md font-bold transition {{ ($filters['item_type'] ?? '') === '' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
+                    <button type="button" data-type-filter="all" class="type-filter-btn px-2.5 py-1 rounded-md font-bold transition {{ ($filter->itemType ?? '') === '' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
                         すべて表示 (全{{ $items->total() }})
                     </button>
-                    <button type="button" data-type-filter="booth" class="type-filter-btn px-2.5 py-1 rounded-md font-bold transition flex items-center space-x-1 {{ ($filters['item_type'] ?? '') === 'booth' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
+                    <button type="button" data-type-filter="booth" class="type-filter-btn px-2.5 py-1 rounded-md font-bold transition flex items-center space-x-1 {{ ($filter->itemType ?? '') === 'booth' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
                         <span>🎪</span>
                         <span>出店ブース</span>
                     </button>
-                    <button type="button" data-type-filter="facility" class="type-filter-btn px-2.5 py-1 rounded-md font-bold transition flex items-center space-x-1 {{ ($filters['item_type'] ?? '') === 'facility' ? 'bg-white text-cyan-800 shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
+                    <button type="button" data-type-filter="facility" class="type-filter-btn px-2.5 py-1 rounded-md font-bold transition flex items-center space-x-1 {{ ($filter->itemType ?? '') === 'facility' ? 'bg-white text-cyan-800 shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
                         <span>🚰</span>
                         <span>現場設備</span>
                     </button>
@@ -69,7 +69,7 @@
             </div>
 
             <form method="GET" action="{{ route('timetables.layouts.booths', $timetable) }}" id="filterForm">
-                <input type="hidden" name="item_type" id="hiddenItemType" value="{{ $filters['item_type'] ?? '' }}">
+                <input type="hidden" name="item_type" id="hiddenItemType" value="{{ $filter->itemType ?? '' }}">
                 @if(request('sort'))
                 <input type="hidden" name="sort" value="{{ request('sort') }}">
                 @endif
@@ -84,7 +84,7 @@
                         <select name="area_id" id="filterAreaId" class="bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2 text-slate-800 focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500">
                             <option value="">全エリア ({{ $totalMapItemsCount }})</option>
                             @foreach($areas as $area)
-                            <option value="{{ $area->id }}" {{ ($filters['area_id'] ?? '') == $area->id ? 'selected' : '' }}>
+                            <option value="{{ $area->id }}" {{ $filter->areaId === $area->id ? 'selected' : '' }}>
                                 {{ $area->name }}{{ !$area->is_active ? '（無効）' : '' }} ({{ $areaItemCounts[$area->id] ?? 0 }})
                             </option>
                             @endforeach
@@ -98,14 +98,14 @@
                             <option value="">全区分</option>
                             <optgroup label="出展区分">
                                 @foreach($boothCategories as $cat)
-                                <option value="{{ $cat->value }}" {{ ($filters['category'] ?? '') === $cat->value ? 'selected' : '' }}>
+                                <option value="{{ $cat->value }}" {{ $filter->category === $cat->value ? 'selected' : '' }}>
                                     {{ $cat->icon() }} {{ $cat->label() }}
                                 </option>
                                 @endforeach
                             </optgroup>
                             <optgroup label="設備区分">
                                 @foreach($facilityTypes as $fac)
-                                <option value="{{ $fac->value }}" {{ ($filters['category'] ?? '') === $fac->value ? 'selected' : '' }}>
+                                <option value="{{ $fac->value }}" {{ $filter->category === $fac->value ? 'selected' : '' }}>
                                     {{ $fac->icon() }} {{ $fac->label() }}
                                 </option>
                                 @endforeach
@@ -115,7 +115,7 @@
 
                     <!-- キーワード検索 -->
                     <div class="flex-1 min-w-[200px]">
-                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="コード・出店名・設備名・場所・品目で検索..."
+                        <input type="text" name="search" value="{{ $filter->search ?? '' }}" placeholder="コード・出店名・設備名・場所・品目で検索..."
                             class="w-full bg-slate-50 border border-slate-300 rounded-lg text-xs py-1 px-2.5 text-slate-800 focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-400">
                     </div>
 
@@ -123,7 +123,7 @@
                         <button type="submit" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer">
                             絞り込み
                         </button>
-                        @if(!empty($filters['area_id']) || !empty($filters['item_type']) || !empty($filters['category']) || !empty($filters['search']))
+                        @if($filter->areaId !== null || $filter->itemType !== null || $filter->category !== null || $filter->search !== null)
                         <a href="{{ route('timetables.layouts.booths', $timetable) }}" class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition">
                             クリア
                         </a>
@@ -182,27 +182,27 @@
                                     data-type="{{ $item->item_type->value }}"
                                     data-code="{{ $item->code }}"
                                     data-area="{{ $item->area?->name ?? '通り' }}"
-                                    data-name="{{ $item->displayName }}"
+                                    data-name="{{ $item->presenter()->displayName() }}"
                                     data-status-label="{{ $item->status?->label() ?? '確定' }}"
                                     data-status-icon="{{ $item->status?->icon() ?? '🟢' }}"
-                                    data-type-icon="{{ $item->typeIcon() }}"
-                                    data-type-label="{{ $item->typeLabel() }}"
+                                    data-type-icon="{{ $item->presenter()->typeIcon() }}"
+                                    data-type-label="{{ $item->presenter()->typeLabel() }}"
                                     data-booth-type-label="{{ $item->boothType()?->label() ?? '—' }}"
                                     data-vendor-name="{{ $item->vendor?->name ?? '' }}"
                                     data-vendor-contact-person="{{ $item->vendor?->contact_person ?? '' }}"
                                     data-vendor-contact="{{ $item->vendor?->contact ?? '' }}"
-                                    data-vendor-booths="{{ $item->vendor ? json_encode($item->vendor->booths_detail_list) : '[]' }}"
+                                    data-vendor-booths="{{ $item->vendor ? json_encode($item->vendor->presenter()->boothsDetailList()) : '[]' }}"
                                     data-location="{{ $item->location_description ?? '' }}"
                                     data-notes="{{ $item->notes ?? '' }}">
                                     <span>{{ $item->status?->icon() ?? '🟢' }}</span>
-                                    <span>{{ $item->displayName }}</span>
+                                    <span>{{ $item->presenter()->displayName() }}</span>
                                 </button>
                             </td>
 
                             <!-- 区分 / 種別 -->
                             <td class="py-2.5 px-3 whitespace-nowrap">
-                                <span class="px-2 py-0.5 rounded text-[10px] {{ $item->typeBadgeClasses() }}">
-                                    {{ $item->typeIcon() }} {{ $item->typeLabel() }}
+                                <span class="px-2 py-0.5 rounded text-[10px] {{ $item->presenter()->typeBadgeClasses() }}">
+                                    {{ $item->presenter()->typeIcon() }} {{ $item->presenter()->typeLabel() }}
                                 </span>
                             </td>
 
@@ -237,7 +237,7 @@
                                     <span>編集</span>
                                 </button>
                                 <form action="{{ route('timetables.layouts.booths.destroy', [$timetable, $item]) }}" method="POST" class="inline"
-                                    data-confirm="「{{ $item->displayName }}（{{ $item->code }}）」の配置を削除しますか？">
+                                    data-confirm="「{{ $item->presenter()->displayName() }}（{{ $item->code }}）」の配置を削除しますか？">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"

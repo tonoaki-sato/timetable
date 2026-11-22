@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Presenters\LayoutAreaPresenter;
 use Database\Factories\LayoutAreaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -36,6 +37,16 @@ class LayoutArea extends Model
 {
     /** @use HasFactory<LayoutAreaFactory> */
     use HasFactory;
+
+    protected ?LayoutAreaPresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): LayoutAreaPresenter
+    {
+        return $this->presenterInstance ??= new LayoutAreaPresenter($this);
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -87,41 +98,5 @@ class LayoutArea extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('display_order', 'asc')->orderBy('id', 'asc');
-    }
-
-    /**
-     * 詳細・編集モーダル用ペイロード配列を生成
-     *
-     * @return array{
-     *     id: int,
-     *     name: string,
-     *     location_id: ?int,
-     *     location_name: ?string,
-     *     location_type_label: ?string,
-     *     notes: ?string,
-     *     display_order: int,
-     *     is_active: bool,
-     *     items_count: int,
-     *     layout_maps_count: int,
-     *     update_url: string,
-     *     destroy_url: string
-     * }
-     */
-    public function toModalPayload(): array
-    {
-        return [
-            'id' => (int) $this->id,
-            'name' => (string) $this->name,
-            'location_id' => $this->location_id !== null ? (int) $this->location_id : null,
-            'location_name' => $this->location?->name,
-            'location_type_label' => $this->location?->type?->label,
-            'notes' => $this->notes,
-            'display_order' => (int) $this->display_order,
-            'is_active' => (bool) $this->is_active,
-            'items_count' => (int) ($this->items_count ?? $this->items()->count()),
-            'layout_maps_count' => (int) ($this->layout_maps_count ?? $this->items()->distinct()->count('layout_map_id')),
-            'update_url' => route('layout-areas.update', $this),
-            'destroy_url' => route('layout-areas.destroy', $this),
-        ];
     }
 }

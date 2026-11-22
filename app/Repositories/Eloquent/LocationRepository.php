@@ -3,7 +3,6 @@
 namespace App\Repositories\Eloquent;
 
 use App\Models\Location;
-use App\Models\Timetable;
 use App\Repositories\Contracts\LocationRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -67,9 +66,13 @@ class LocationRepository implements LocationRepositoryInterface
     }
 
     #[Override]
-    public function getActiveWithTypeAndSchedules(?Timetable $timetable = null): Collection
+    public function getActiveWithTypeAndSchedules(bool $parkingOnly = false): Collection
     {
-        return Location::active()->ordered()->with(['type', 'schedules'])->get();
+        return Location::active()
+            ->ordered()
+            ->with(['type', 'schedules'])
+            ->when($parkingOnly, fn ($query) => $query->whereHas('type', fn ($tq) => $tq->where('name', 'parking')))
+            ->get();
     }
 
     #[Override]

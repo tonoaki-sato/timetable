@@ -188,7 +188,7 @@
                                     <div class="p-1.5 bg-white border border-slate-200 rounded-lg text-[11px] flex items-center justify-between gap-1.5">
                                         <span class="truncate font-medium text-slate-800 flex items-center space-x-1 min-w-0">
                                             <strong class="font-mono text-slate-600 shrink-0">{{ $pb->code }}</strong>
-                                            <span class="truncate">{{ $pb->displayName }}</span>
+                                            <span class="truncate">{{ $pb->presenter()->displayName() }}</span>
                                         </span>
                                         <div class="flex items-center space-x-1 shrink-0 text-[9px]">
                                             <span class="px-1 py-0.2 rounded {{ $pb->boothCategory()?->badgeClasses() ?? 'bg-slate-100 text-slate-700' }}">
@@ -217,12 +217,12 @@
                                     @foreach($areaFacilities as $pf)
                                     <div class="p-1.5 bg-white border border-slate-200 rounded-lg text-[11px] flex items-center justify-between gap-1.5">
                                         <span class="truncate font-medium text-slate-800 flex items-center space-x-1 min-w-0">
-                                            <span class="shrink-0">{{ $pf->typeIcon() }}</span>
+                                            <span class="shrink-0">{{ $pf->presenter()->typeIcon() }}</span>
                                             <strong class="font-mono text-slate-600 shrink-0">{{ $pf->code }}</strong>
-                                            <span class="truncate">{{ $pf->displayName }}</span>
+                                            <span class="truncate">{{ $pf->presenter()->displayName() }}</span>
                                         </span>
                                         <div class="flex items-center space-x-1 shrink-0 text-[9px]">
-                                            <span class="px-1 py-0.2 rounded {{ $pf->statusBadgeClass }}">
+                                            <span class="px-1 py-0.2 rounded {{ $pf->presenter()->statusBadgeClass() }}">
                                                 {{ $pf->status->label() }}
                                             </span>
                                             @if($pf->boothType())

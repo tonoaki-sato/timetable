@@ -3,7 +3,6 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\Location;
-use App\Models\Timetable;
 use Illuminate\Database\Eloquent\Collection;
 
 interface LocationRepositoryInterface
@@ -56,7 +55,7 @@ interface LocationRepositoryInterface
      *
      * @return Collection<int, Location>
      */
-    public function getActiveWithTypeAndSchedules(?Timetable $timetable = null): Collection;
+    public function getActiveWithTypeAndSchedules(bool $parkingOnly = false): Collection;
 
     /**
      * 重複を除いた拠点名称・ID一覧を表示順で取得（パターン編集用）

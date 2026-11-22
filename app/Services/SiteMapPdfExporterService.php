@@ -102,7 +102,7 @@ class SiteMapPdfExporterService
 
         // 1. 白地図ベースレイヤーの描画
         if ($isLegacyPreset) {
-            $this->baseMapRenderer->drawLegacyPresetBaseMap($canvas, $font, $placements);
+            $this->baseMapRenderer->drawPresetJsonBaseMap($canvas, $font, $placements);
         } else {
             $this->baseMapRenderer->drawSvgFallbackBaseMap($canvas, $siteBaseMap);
         }

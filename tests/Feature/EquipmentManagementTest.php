@@ -189,10 +189,10 @@ class EquipmentManagementTest extends TestCase
         $response->assertRedirect(route('equipments.index'));
 
         $this->assertTrue($equipment->is_approximate_quantity);
-        $this->assertSame('約 60 本', $equipment->formatted_quantity);
+        $this->assertSame('約 60 本', $equipment->presenter()->formattedQuantity());
         $this->assertSame($location->id, $equipment->storage_location_id);
-        $this->assertSame('番所倉庫', $equipment->storage_location_name);
-        $this->assertSame('番所倉庫', $equipment->resolved_storage_location_label);
+        $this->assertSame('番所倉庫', $equipment->presenter()->storageLocationName());
+        $this->assertSame('番所倉庫', $equipment->presenter()->resolvedStorageLocationLabel());
 
         $this->assertDatabaseHas('equipments', [
             'name' => 'カラーコーン（バー付き）',
@@ -221,8 +221,8 @@ class EquipmentManagementTest extends TestCase
         $this->assertNotNull($equipment);
         $response->assertRedirect(route('equipments.index'));
         $this->assertNull($equipment->storage_location_id);
-        $this->assertSame('イベント会社手配', $equipment->resolved_storage_location_label);
-        $this->assertSame('10 張', $equipment->formatted_quantity);
+        $this->assertSame('イベント会社手配', $equipment->presenter()->resolvedStorageLocationLabel());
+        $this->assertSame('10 張', $equipment->presenter()->formattedQuantity());
 
         // 私物（個人持ち込み・拠点未指定）
         $personalRes = $this->post(route('equipments.store'), [
@@ -238,7 +238,7 @@ class EquipmentManagementTest extends TestCase
         $personalRes->assertRedirect(route('equipments.index'));
         $this->assertTrue($personalEq->isPersonal());
         $this->assertNull($personalEq->storage_location_id);
-        $this->assertSame('個人保管（持ち込み）', $personalEq->resolved_storage_location_label);
+        $this->assertSame('個人保管（持ち込み）', $personalEq->presenter()->resolvedStorageLocationLabel());
     }
 
     /**
@@ -332,7 +332,7 @@ class EquipmentManagementTest extends TestCase
         $equipment->refresh();
 
         $this->assertNull($equipment->storage_location_id);
-        $this->assertSame('未指定', $equipment->resolved_storage_location_label);
+        $this->assertSame('未指定', $equipment->presenter()->resolvedStorageLocationLabel());
     }
 
     /**

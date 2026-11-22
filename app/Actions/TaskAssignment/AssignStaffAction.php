@@ -37,7 +37,7 @@ class AssignStaffAction
             : collect();
 
         if ($conflictingTask && $transferableSurplusTasks->isEmpty() && ! $isForced) {
-            $conflictingLane = $conflictingTask->lane_name_label;
+            $conflictingLane = $conflictingTask->presenter()->laneNameLabel();
             $startTime = substr($conflictingTask->start_time, 0, 5);
             $endTime = substr($conflictingTask->end_time, 0, 5);
             $warningMessage = "該当スタッフは同時刻（{$startTime}〜{$endTime}）の別タスク「{$conflictingTask->title}」（{$conflictingLane}）に既にアサインされています。";

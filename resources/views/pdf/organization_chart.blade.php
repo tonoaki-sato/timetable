@@ -305,7 +305,7 @@
                                 <div class="card card-level-1">
                                     <div class="card-title">{{ $root->name }}</div>
                                     @if($root->staff->isNotEmpty())
-                                        <div class="card-staff">{{ $root->staffNamesDisplay }}</div>
+                                        <div class="card-staff">{{ $root->presenter()->staffNamesDisplay() }}</div>
                                     @endif
                                 </div>
                             </td>
@@ -319,7 +319,7 @@
                                             <div class="card card-officer">
                                                 <div class="card-title">{{ $officer->name }}</div>
                                                 @if($officer->staff->isNotEmpty())
-                                                    <div class="card-staff">{{ $officer->staffNamesDisplay }}</div>
+                                                    <div class="card-staff">{{ $officer->presenter()->staffNamesDisplay() }}</div>
                                                 @endif
                                             </div>
                                         </div>

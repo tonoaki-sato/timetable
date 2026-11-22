@@ -54,17 +54,6 @@ class Timetable extends Model
     }
 
     /**
-     * ステータス定義一覧
-     *
-     * @var array<string, string>
-     */
-    public const array STATUSES = [
-        'draft' => '準備中',
-        'active' => '運行中',
-        'completed' => '運行完了',
-    ];
-
-    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -220,7 +209,7 @@ class Timetable extends Model
     }
 
     /**
-     * 現場配置アイテム一覧（ルートバインディング用エイリアス）
+     * 現場配置アイテム一覧（ルートバインディング用リレーション）
      */
     public function items(): HasManyThrough
     {
@@ -282,14 +271,6 @@ class Timetable extends Model
     }
 
     /**
-     * ステータスの日本語表示
-     */
-    public function getStatusLabelAttribute(): string
-    {
-        return TimetableStatus::tryFrom((string) $this->status)?->label() ?? (string) $this->status;
-    }
-
-    /**
      * ステータスによる絞り込みスコープ
      */
     public function scopeStatus(Builder $query, ?string $status): Builder
@@ -326,51 +307,11 @@ class Timetable extends Model
     }
 
     /**
-     * 対象日の曜日ラベル（例: '土'）
-     */
-    public function getWeekdayLabelAttribute(): string
-    {
-        if (! $this->target_date) {
-            return '';
-        }
-
-        return ['日', '月', '火', '水', '木', '金', '土'][$this->target_date->dayOfWeek] ?? '';
-    }
-
-    /**
      * 対象日が土日かどうか
      */
     public function getIsWeekendAttribute(): bool
     {
         return $this->target_date !== null && in_array($this->target_date->dayOfWeek, [0, 6], true);
-    }
-
-    /**
-     * ステータスバッジのCSSクラス
-     */
-    public function getStatusBadgeClassAttribute(): string
-    {
-        return $this->presenter()->statusBadgeClass();
-    }
-
-    /**
-     * フォーム表示用の歩行者天国（道路規制）時間帯配列を取得
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    public static function resolveRoadPeriodsForForm(mixed $oldPeriods = null, ?self $timetable = null): array
-    {
-        return TimetablePresenter::resolveRoadPeriodsForForm($oldPeriods, $timetable);
-    }
-
-    /**
-     * フォーム表示用のまつり開催時間帯配列を取得
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    public static function resolveFestivalPeriodsForForm(mixed $oldPeriods = null, ?self $timetable = null): array
-    {
-        return TimetablePresenter::resolveFestivalPeriodsForForm($oldPeriods, $timetable);
     }
 
     /**

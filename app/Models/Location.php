@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Presenters\LocationPresenter;
 use Carbon\Carbon;
 use Database\Factories\LocationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -25,69 +26,15 @@ class Location extends Model
     /** @use HasFactory<LocationFactory> */
     use HasFactory;
 
+    protected ?LocationPresenter $presenterInstance = null;
+
     /**
-     * デフォルト拠点定義一覧（運行計画作成時の自動生成用）
-     *
-     * @var array<int, array{name: string, type_slug: string, is_all_day: bool, notes: string, display_order: int}>
+     * 表示用 Presenter インスタンスを取得
      */
-    public const array DEFAULT_LOCATIONS = [
-        [
-            'name' => '番所地下倉庫',
-            'type_slug' => 'storage',
-            'is_all_day' => false,
-            'notes' => '大型自前機材（カラーコーン、ござ市用テント、大型台車等）の常時保管場所。',
-            'display_order' => 10,
-        ],
-        [
-            'name' => '番所倉庫',
-            'type_slug' => 'storage',
-            'is_all_day' => false,
-            'notes' => '地下倉庫とは別の番所倉庫。交通整理用LED誘導棒などの常時保管場所。',
-            'display_order' => 15,
-        ],
-        [
-            'name' => '番所前スペース',
-            'type_slug' => 'open_space',
-            'is_all_day' => false,
-            'notes' => "番所空きスペース。前日の倉庫出し・業者納品時の一時集約場所、および2日目終了後〜翌日の倉庫格納前・業者回収待ち集約場所。\n※1日目・2日目の通行止め（まつり開催）期間中はイベントブースとして使用されるため資材置き場として利用不可。",
-            'display_order' => 20,
-        ],
-        [
-            'name' => 'コミュニティルーム',
-            'type_slug' => 'community_space',
-            'is_all_day' => false,
-            'notes' => "主に消耗品および看板（ステカン）の常時保管場所。\n本祭期間中の盗難のおそれがある資材や荒天時退避資材の夜間保管先としても活用。",
-            'display_order' => 30,
-        ],
-        [
-            'name' => '税務署前駐車場',
-            'type_slug' => 'parking',
-            'is_all_day' => false,
-            'notes' => 'イベントブース。機材の前日中継集約および1日目夜の分散夜間保管場所として利用。',
-            'display_order' => 40,
-        ],
-        [
-            'name' => '長島駐車場（旧北川駐車場）',
-            'type_slug' => 'parking',
-            'is_all_day' => false,
-            'notes' => '近隣貸切駐車場。企業ブース、および1日目夜の夜間分散保管場所として利用。',
-            'display_order' => 50,
-        ],
-        [
-            'name' => 'S&S駐車場',
-            'type_slug' => 'parking',
-            'is_all_day' => false,
-            'notes' => '本陣待機場所。機材の前日中継集約および1日目夜の分散夜間保管場所として利用。',
-            'display_order' => 60,
-        ],
-        [
-            'name' => '横浜銀行駐車場',
-            'type_slug' => 'parking',
-            'is_all_day' => false,
-            'notes' => '近隣住民用の代替駐車場として利用。',
-            'display_order' => 70,
-        ],
-    ];
+    public function presenter(): LocationPresenter
+    {
+        return $this->presenterInstance ??= new LocationPresenter($this);
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -162,22 +109,6 @@ class Location extends Model
     }
 
     /**
-     * 種別ラベルのアクセサ
-     */
-    public function getTypeLabelAttribute(): string
-    {
-        return $this->type?->label ?? $this->type?->name ?? '';
-    }
-
-    /**
-     * 説明・備考アクセサ（notesのエイリアス）
-     */
-    public function getDescriptionAttribute(): ?string
-    {
-        return $this->notes;
-    }
-
-    /**
      * 利用可能開始日時のアクセサ（登録スケジュールの最早上限）
      */
     public function getAvailableFromAttribute(): ?Carbon
@@ -215,25 +146,5 @@ class Location extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('display_order', 'asc')->orderBy('id', 'asc');
-    }
-
-    /**
-     * 編集フォーム表示用の利用スケジュール配列を取得
-     *
-     * @param  array<int, array<string, mixed>>|null  $oldSchedules
-     * @return array<int, array{id: int, start_at: string, end_at: string, availability_status: string}>
-     */
-    public function schedulesForForm(?array $oldSchedules = null): array
-    {
-        if ($oldSchedules !== null) {
-            return $oldSchedules;
-        }
-
-        return $this->schedules->map(fn (LocationSchedule $s): array => [
-            'id' => (int) $s->id,
-            'start_at' => $s->start_at ? $s->start_at->format('Y-m-d\TH:i') : '',
-            'end_at' => $s->end_at ? $s->end_at->format('Y-m-d\TH:i') : '',
-            'availability_status' => $s->availability_status ?? 'available',
-        ])->all();
     }
 }

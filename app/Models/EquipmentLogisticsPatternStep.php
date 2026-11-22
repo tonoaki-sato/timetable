@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\EquipmentActionType;
 use App\Enums\EquipmentDayPhase;
 use App\Enums\EquipmentOperatorType;
+use App\Presenters\EquipmentLogisticsPatternStepPresenter;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +26,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class EquipmentLogisticsPatternStep extends Model
 {
+    protected ?EquipmentLogisticsPatternStepPresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): EquipmentLogisticsPatternStepPresenter
+    {
+        return $this->presenterInstance ??= new EquipmentLogisticsPatternStepPresenter($this);
+    }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -90,84 +101,5 @@ class EquipmentLogisticsPatternStep extends Model
     public function toLocationModel(): BelongsTo
     {
         return $this->belongsTo(Location::class, 'to_location_id');
-    }
-
-    /**
-     * フェーズラベルアクセサ
-     */
-    public function getPhaseLabelAttribute(): string
-    {
-        return $this->day_phase_enum->label();
-    }
-
-    /**
-     * アクションラベルアクセサ
-     */
-    public function getActionLabelAttribute(): string
-    {
-        return $this->action_type_enum->label();
-    }
-
-    /**
-     * 作業主体ラベルアクセサ
-     */
-    public function getOperatorTypeLabelAttribute(): string
-    {
-        return $this->operator_type_enum->label();
-    }
-
-    /**
-     * 移動元表示ラベルアクセサ
-     */
-    public function getFromLocationDisplayAttribute(): string
-    {
-        if (filled($this->from_location)) {
-            return $this->from_location;
-        }
-
-        return $this->fromLocationModel?->name ?? '（資材定常保管場所）';
-    }
-
-    /**
-     * 移動先表示ラベルアクセサ
-     */
-    public function getToLocationDisplayAttribute(): string
-    {
-        if (filled($this->to_location)) {
-            return $this->to_location;
-        }
-
-        return $this->toLocationModel?->name ?? '（現地指定）';
-    }
-
-    /**
-     * ステップ編集モーダル用のJSONペイロード配列を取得
-     *
-     * @return array<string, mixed>
-     */
-    public function toModalPayload(EquipmentLogisticsPattern $pattern): array
-    {
-        return [
-            'id' => $this->id,
-            'pattern_id' => $pattern->id,
-            'pattern_name' => $pattern->name,
-            'day_phase' => $this->day_phase,
-            'action_type' => $this->action_type,
-            'title' => $this->title,
-            'from_location' => $this->from_location ?? '',
-            'from_location_id' => $this->from_location_id,
-            'from_location_name' => $this->fromLocationModel?->name ?? '',
-            'from_location_display' => $this->from_location_display,
-            'to_location' => $this->to_location ?? '',
-            'to_location_id' => $this->to_location_id,
-            'to_location_name' => $this->toLocationModel?->name ?? '',
-            'to_location_display' => $this->to_location_display,
-            'operator_type' => $this->operator_type,
-            'witness_required' => (bool) $this->witness_required,
-            'display_order' => $this->display_order,
-            'notes' => $this->notes ?? '',
-            'update_url' => route('equipment-patterns.steps.update', [$pattern, $this]),
-            'delete_url' => route('equipment-patterns.steps.destroy', [$pattern, $this]),
-        ];
     }
 }

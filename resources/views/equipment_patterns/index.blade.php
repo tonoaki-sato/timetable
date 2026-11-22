@@ -60,7 +60,7 @@
                             <span class="mr-1.5 shrink-0 text-slate-500">🧩</span>
                             <button type="button"
                                 data-action="open-pattern-detail"
-                                data-pattern='@json($pattern->toModalPayload())'
+                                data-pattern='@json($pattern->presenter()->toModalPayload())'
                                 class="text-slate-800 hover:text-indigo-600 font-bold text-xs sm:text-sm truncate hover:underline text-left cursor-pointer"
                                 title="パターンの詳細・全ステップを表示">
                                 {{ $pattern->name }}
@@ -69,7 +69,7 @@
                     </div>
 
                     <!-- 5. アクションボタン (右寄せ) -->
-                    <div class="flex items-center space-x-1.5 shrink-0 ml-auto" data-pattern-row data-pattern='@json($pattern->toModalPayload())'>
+                    <div class="flex items-center space-x-1.5 shrink-0 ml-auto" data-pattern-row data-pattern='@json($pattern->presenter()->toModalPayload())'>
                         @can('update', $pattern)
                         <button type="button"
                             data-action="open-step-create"
@@ -145,13 +145,13 @@
                                     @elseif($step->day_phase === 'day2_morning') bg-teal-50 text-teal-700 border-teal-200
                                     @elseif($step->day_phase === 'day2_evening') bg-amber-50 text-amber-700 border-amber-200
                                     @else bg-slate-50 text-slate-700 border-slate-200 @endif">
-                                        {{ $step->phase_label }}
+                                        {{ $step->presenter()->phaseLabel() }}
                                     </span>
                                 </td>
 
                                 <!-- 種別 -->
                                 <td class="px-3.5 py-2.5 font-medium text-slate-800 whitespace-nowrap">
-                                    {{ $step->action_label }}
+                                    {{ $step->presenter()->actionLabel() }}
                                 </td>
 
                                 <!-- ステップ表示名 -->
@@ -162,17 +162,17 @@
                                 <!-- 移動元 ➔ 移動先 -->
                                 <td class="px-3.5 py-2.5 font-mono text-[11px] whitespace-nowrap">
                                     <span class="{{ filled($step->from_location) || $step->from_location_id ? 'text-slate-600 font-medium' : 'text-slate-400 italic' }}">
-                                        {{ $step->from_location_display }}
+                                        {{ $step->presenter()->fromLocationDisplay() }}
                                     </span>
                                     <span class="text-indigo-600 font-bold px-1">➔</span>
                                     <span class="{{ filled($step->to_location) || $step->to_location_id ? 'text-slate-900 font-bold' : 'text-slate-400 italic' }}">
-                                        {{ $step->to_location_display }}
+                                        {{ $step->presenter()->toLocationDisplay() }}
                                     </span>
                                 </td>
 
                                 <!-- 作業主体 -->
                                 <td class="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">
-                                    {{ $step->operator_type_label }}
+                                    {{ $step->presenter()->operatorTypeLabel() }}
                                 </td>
 
                                 <!-- 立会 -->
@@ -189,7 +189,7 @@
                                     @can('update', $pattern)
                                     <button type="button"
                                         data-action="open-step-edit"
-                                        data-step='@json($step->toModalPayload($pattern))'
+                                        data-step='@json($step->presenter()->toModalPayload($pattern))'
                                         class="inline-flex items-center space-x-1 px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded text-xs font-bold transition cursor-pointer"
                                         title="ステップを編集">
                                         <span>✏️</span>
@@ -249,7 +249,7 @@
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 mb-0.5">フェーズ <span class="text-red-500">*</span></label>
                     <select data-field="day_phase" required class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800">
-                        @foreach(\App\Models\EquipmentLogisticsPlan::DAY_PHASES as $key => $lbl)
+                        @foreach(\App\Enums\EquipmentDayPhase::options() as $key => $lbl)
                         <option value="{{ $key }}">{{ $lbl }}</option>
                         @endforeach
                     </select>
@@ -257,7 +257,7 @@
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 mb-0.5">アクション種別 <span class="text-red-500">*</span></label>
                     <select data-field="action_type" required class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800">
-                        @foreach(\App\Models\EquipmentLogisticsPlan::ACTION_TYPES as $key => $lbl)
+                        @foreach(\App\Enums\EquipmentActionType::options() as $key => $lbl)
                         <option value="{{ $key }}">{{ $lbl }}</option>
                         @endforeach
                     </select>

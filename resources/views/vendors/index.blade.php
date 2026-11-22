@@ -43,7 +43,7 @@
                     <div class="relative w-full">
                         <input type="text"
                             name="search"
-                            value="{{ $filters['search'] ?? '' }}"
+                            value="{{ $filter->search ?? '' }}"
                             placeholder="出展・出店者名、担当者、連絡先で検索..."
                             class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                         <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
@@ -51,7 +51,7 @@
                     <button type="submit" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shrink-0 cursor-pointer">
                         検索
                     </button>
-                    @if(!empty($filters['search']))
+                    @if(!empty($filter->search))
                         <a href="{{ route('vendors.index') }}" class="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition shrink-0">
                             クリア
                         </a>

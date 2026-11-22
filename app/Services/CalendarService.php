@@ -2,7 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Schedule;
+use App\Enums\ScheduleCategory;
+use App\Enums\ScheduleStatus;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
@@ -79,7 +80,7 @@ class CalendarService
                         'start_date' => $dateStr,
                         'end_date' => null,
                         'status' => $timetable->status,
-                        'status_label' => $timetable->status_label,
+                        'status_label' => $timetable->presenter()->statusLabel(),
                         'description' => $timetable->description,
                         'share_text' => null,
                         'show_url' => route('timetables.show', $timetable),
@@ -117,7 +118,7 @@ class CalendarService
                         'category_label' => $meta['label'],
                         'icon' => $meta['icon'],
                         'badge_class' => $meta['class'],
-                        'time' => $schedule->formatted_time_range,
+                        'time' => $schedule->presenter()->formattedTimeRange(),
                         'start_time' => $schedule->start_time ? substr($schedule->start_time, 0, 5) : null,
                         'end_time' => $schedule->end_time ? substr($schedule->end_time, 0, 5) : null,
                         'location' => $schedule->location,
@@ -130,9 +131,9 @@ class CalendarService
                         'start_date' => $startStr,
                         'end_date' => $endStr,
                         'status' => $schedule->status,
-                        'status_label' => $schedule->status_label,
+                        'status_label' => $schedule->presenter()->statusLabel(),
                         'description' => $schedule->description,
-                        'share_text' => $schedule->share_text,
+                        'share_text' => $schedule->presenter()->shareText(),
                         'show_url' => route('schedules.show', $schedule),
                         'edit_url' => route('schedules.edit', $schedule),
                     ];
@@ -193,8 +194,8 @@ class CalendarService
             'nextMonth' => $nextCarbon->month,
             'categoryOptions' => $categoryOptions,
             'availableYears' => range($year - 2, $year + 2),
-            'categories' => Schedule::CATEGORIES,
-            'statuses' => Schedule::STATUSES,
+            'categories' => ScheduleCategory::options(),
+            'statuses' => ScheduleStatus::options(),
             'staffs' => $this->staffRepository->getActiveStaffList(),
         ];
     }

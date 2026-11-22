@@ -156,4 +156,19 @@ interface SiteMapRepositoryInterface
      * 指定のシンボル種別を使用している配置を一括削除
      */
     public function deletePlacementsByShapeType(string $shapeType): int;
+
+    /**
+     * デフォルト白地図が既に存在するか判定
+     */
+    public function hasDefaultBaseMap(): bool;
+
+    /**
+     * 指定ID以外の有効な代替白地図を1件取得
+     */
+    public function findFallbackActiveBaseMap(int $excludeId): ?SiteBaseMap;
+
+    /**
+     * 指定された相対ファイルパスが白地図マスターで使用中か判定
+     */
+    public function isAssetPathUsed(string $relativePath): bool;
 }

@@ -177,7 +177,7 @@
                     <td>
                         <div class="{{ $indentClass }}">{{ $unit->name }}</div>
                     </td>
-                    <td>{{ $unit->staffNamesDisplay ?: '-' }}</td>
+                    <td>{{ $unit->presenter()->staffNamesDisplay() ?: '-' }}</td>
                     <td>{{ $unit->cleaned_description ?: '-' }}</td>
                 </tr>
             @endforeach

@@ -46,39 +46,16 @@ class TimetableTaskController extends Controller
     }
 
     /**
-     * 作業タスク新規登録処理（モーダル・一括登録双方対応）
+     * 作業タスク新規登録処理
      */
     public function store(StoreTimetableTaskRequest $request): RedirectResponse
     {
         $this->authorize('create', TimetableTask::class);
 
-        $validated = $request->validated();
-        $timetableId = (int) $validated['timetable_id'];
-        $timetableLaneId = (int) $validated['timetable_lane_id'];
-        $tasksData = $validated['tasks'];
-        $autoAssignLead = $request->has('auto_assign_lead')
-            ? $request->boolean('auto_assign_lead')
-            : true;
+        $task = $this->taskService->createTask($request->validated());
 
-        $createdTasks = $this->taskService->createBulkTasks(
-            $timetableId,
-            $timetableLaneId,
-            $tasksData,
-            $autoAssignLead
-        );
-
-        $count = $createdTasks->count();
-        if ($count === 1) {
-            $firstTask = $createdTasks->first();
-            $message = "作業タスク「{$firstTask->title}」を登録しました。";
-        } else {
-            $timetableLane = $this->taskService->findTimetableLaneById($timetableLaneId);
-            $laneName = $timetableLane?->name ?? '選択した担当班';
-            $message = "「{$laneName}」に {$count} 件の作業タスクを登録しました。";
-        }
-
-        return redirect()->route('timetables.tasks.index', $timetableId)
-            ->with('success', $message);
+        return redirect()->route('timetables.tasks.index', $task->timetable_id)
+            ->with('success', "作業タスク「{$task->title}」を登録しました。");
     }
 
     /**

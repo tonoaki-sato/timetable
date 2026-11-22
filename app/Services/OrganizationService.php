@@ -130,7 +130,7 @@ class OrganizationService
         // 残りの幅を所属スタッフと詳細で文字量に応じて配分
         $remainingWidth = 100.0 - $noWidth - $nameWidth; // 約77.0%
 
-        $maxStaff = (float) ($units->max(fn (OrganizationUnit $u) => mb_strwidth($u->staffNamesDisplay ?: '')) ?: 10);
+        $maxStaff = (float) ($units->max(fn (OrganizationUnit $u): int => mb_strwidth($u->presenter()->staffNamesDisplay())) ?: 10);
         $maxDesc = (float) ($units->max(fn (OrganizationUnit $u) => mb_strwidth($u->cleaned_description ?: '')) ?: 10);
 
         $weightStaff = max(20.0, $maxStaff);

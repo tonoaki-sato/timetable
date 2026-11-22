@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\TaskStaffAssignment;
+use App\Enums\AttendanceStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,7 +25,7 @@ class UpdateStaffAssignmentStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', 'string', Rule::in(array_keys(TaskStaffAssignment::ATTENDANCE_STATUSES))],
+            'status' => ['required', 'string', Rule::in(AttendanceStatus::values())],
         ];
     }
 }

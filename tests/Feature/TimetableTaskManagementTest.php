@@ -68,11 +68,13 @@ class TimetableTaskManagementTest extends TestCase
     {
         $this->actingAs($this->operator);
 
+        $lane = $this->timetable->timetableLanes()->whereHas('lane', fn ($q) => $q->where('name', 'カラーコーン'))->firstOrFail();
+
         $response = $this->post(route('timetable-tasks.store'), [
             'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '西口ゲート カラーコーン設置',
             'content' => '西口ゲートから交差点までコーンバーを2m間隔で配置すること。',
-            'lane' => 'カラーコーン班',
             'location' => '西口交差点',
             'start_time' => '07:30',
             'end_time' => '09:00',
@@ -83,8 +85,6 @@ class TimetableTaskManagementTest extends TestCase
         ]);
 
         $response->assertRedirect(route('timetables.tasks.index', $this->timetable->id));
-
-        $lane = $this->timetable->timetableLanes()->whereHas('lane', fn ($q) => $q->where('name', 'カラーコーン'))->firstOrFail();
 
         $this->assertDatabaseHas('timetable_tasks', [
             'timetable_id' => $this->timetable->id,
@@ -105,10 +105,12 @@ class TimetableTaskManagementTest extends TestCase
     {
         $this->actingAs($this->operator);
 
+        $lane = $this->timetable->timetableLanes()->whereHas('lane', fn ($q) => $q->where('name', 'カラーコーン'))->firstOrFail();
+
         $response = $this->post(route('timetable-tasks.store'), [
             'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $lane->id,
             'title' => '不正時刻タスク',
-            'lane' => 'カラーコーン班',
             'start_time' => '10:00',
             'end_time' => '09:00',
             'required_people_count' => 2,
@@ -276,7 +278,7 @@ class TimetableTaskManagementTest extends TestCase
         // 0名配置: 不足2名
         $this->assertFalse($task->is_satisfied);
         $this->assertSame(2, $task->shortage_count);
-        $this->assertSame('2名以上', $task->required_people_label);
+        $this->assertSame('2名以上', $task->presenter()->requiredPeopleLabel());
 
         // 1名配置: 不足1名
         TaskStaffAssignment::factory()->create(['timetable_task_id' => $task->id, 'staff_id' => $staff1->id]);

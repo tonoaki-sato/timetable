@@ -8,6 +8,7 @@ use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use App\Services\PdfService;
 use App\Services\TimetableGridService;
+use App\Support\TimeSlotHelper;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 
@@ -71,7 +72,7 @@ class DownloadTimetableMatrixPdfAction
             })->values();
         }
 
-        $timeSlots = $this->gridService->generateTimeSlots($timetable);
+        $timeSlots = TimeSlotHelper::generateForTimetable($timetable);
         $grid = $this->gridService->buildPdfMatrixGrid($timeSlots, $lanes, $tasksByLane);
 
         $dateLabel = '1日目';

@@ -81,7 +81,7 @@ class EquipmentLogisticsService
             : $this->locationRepository->findFirstByNameLike('税務署');
 
         $equipment->loadMissing('storageLocation');
-        $storageLocationName = $equipment->storage_location_name
+        $storageLocationName = $equipment->presenter()->storageLocationName()
             ?: ($equipment->isPersonal() ? '所有者（個人持ち込み・持ち帰り）' : '番所地下倉庫');
 
         $witnessStaffId = $dto->witnessStaffId;

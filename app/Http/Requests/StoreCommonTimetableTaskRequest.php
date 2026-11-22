@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\DTOs\TimetableTask\CreateCommonTimetableTaskDTO;
+use App\Enums\TimetableTaskStatus;
 use App\Models\TimetableTask;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -40,7 +41,6 @@ class StoreCommonTimetableTaskRequest extends FormRequest
      */
     public function rules(): array
     {
-        $statusKeys = implode(',', array_keys(TimetableTask::STATUSES));
         $timetableId = $this->integer('timetable_id');
 
         return [
@@ -59,7 +59,7 @@ class StoreCommonTimetableTaskRequest extends FormRequest
             'required_people_count' => ['required', 'integer', 'min:0', 'max:999'],
             'is_at_least' => ['required', 'boolean'],
             'is_critical' => ['required', 'boolean'],
-            'status' => ['required', 'string', 'in:'.$statusKeys],
+            'status' => ['required', 'string', Rule::in(TimetableTaskStatus::values())],
             'location' => ['nullable', 'string', 'max:255'],
             'content' => ['nullable', 'string', 'max:5000'],
             'auto_assign_lead' => ['required', 'boolean'],

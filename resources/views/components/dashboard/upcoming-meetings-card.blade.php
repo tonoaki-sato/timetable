@@ -47,10 +47,10 @@
 
                     <!-- メタ情報（時間・場所） -->
                     <div class="flex items-center gap-x-2 text-[11px] text-slate-500 mt-1 flex-wrap">
-                        @if($meeting->formatted_time_range)
+                        @if($meeting->presenter()->formattedTimeRange())
                         <span class="inline-flex items-center space-x-0.5 font-mono">
                             <span>🕒</span>
-                            <span>{{ $meeting->formatted_time_range }}</span>
+                            <span>{{ $meeting->presenter()->formattedTimeRange() }}</span>
                         </span>
                         @endif
                         @if($meeting->location)

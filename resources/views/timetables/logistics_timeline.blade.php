@@ -130,7 +130,7 @@
                             @endphp
                             <tr class="equipment-row hover:bg-slate-50/80 transition"
                                 data-equipment-name="{{ $equipment->name }}"
-                                data-equipment-storage="{{ $equipment->storage_location_name ?? '' }}"
+                                data-equipment-storage="{{ $equipment->presenter()->storageLocationName() ?? '' }}"
                                 data-equipment-type="{{ $equipment->type_enum->value }}"
                                 data-has-planned="{{ ($meta['has_planned'] ?? false) ? '1' : '0' }}"
                                 data-has-in-progress="{{ ($meta['has_in_progress'] ?? false) ? '1' : '0' }}"
@@ -151,13 +151,13 @@
                                                 </a>
                                             </div>
                                             <span class="font-mono text-slate-600 text-[11px] font-medium shrink-0">
-                                                {{ $equipment->formatted_quantity }}
+                                                {{ $equipment->presenter()->formattedQuantity() }}
                                             </span>
                                         </div>
 
                                         <div class="flex items-center justify-between text-[10px] text-slate-500">
-                                            <span class="truncate" title="保管場所: {{ $equipment->storage_location_name ?: '未指定' }}">
-                                                📍 {{ $equipment->storage_location_name ?: '保管場所未指定' }}
+                                            <span class="truncate" title="保管場所: {{ $equipment->presenter()->storageLocationName() ?: '未指定' }}">
+                                                📍 {{ $equipment->presenter()->storageLocationName() ?: '保管場所未指定' }}
                                             </span>
                                             @if(($meta['unspecified_time_count'] ?? 0) > 0)
                                                 <span class="text-amber-700 font-bold shrink-0 ml-1" title="時間未定の計画あり">
@@ -181,18 +181,18 @@
                                         <td colspan="{{ $cell['colspan'] }}" class="p-1 border-r border-slate-300 align-middle">
                                             <a href="{{ route('timetables.logistics.index', $timetable) }}"
                                                class="block p-1.5 rounded-lg border {{ $cell['badge_bg'] }} text-xs shadow-2xs hover:shadow-md transition space-y-0.5"
-                                               title="{{ $plan->title }} ({{ $plan->formatted_time_range }}) : {{ $plan->resolved_from_location }} → {{ $plan->resolved_to_location }}">
+                                               title="{{ $plan->title }} ({{ $plan->presenter()->formattedTimeRange() }}) : {{ $plan->presenter()->resolvedFromLocation() }} → {{ $plan->presenter()->resolvedToLocation() }}">
                                                 <div class="font-bold truncate leading-tight flex items-center justify-between gap-1">
                                                     <span class="truncate">
                                                         {{ $plan->action_type_enum->icon() }} {{ $plan->title }}
                                                     </span>
                                                     <span class="text-[9px] font-mono shrink-0 opacity-80">
-                                                        {{ $plan->formatted_time_range }}
+                                                        {{ $plan->presenter()->formattedTimeRange() }}
                                                     </span>
                                                 </div>
                                                 <div class="text-[10px] flex items-center justify-between gap-1 opacity-85">
                                                     <span class="truncate">
-                                                        {{ $plan->resolved_from_location }} → {{ $plan->resolved_to_location }}
+                                                        {{ $plan->presenter()->resolvedFromLocation() }} → {{ $plan->presenter()->resolvedToLocation() }}
                                                     </span>
                                                     <span class="shrink-0 font-bold">
                                                         @if($plan->isCompleted())
@@ -242,7 +242,7 @@
                                 <span class="font-bold">{{ $uPlan->equipment?->name }}</span>
                                 <span class="text-slate-400">|</span>
                                 <span>{{ $uPlan->action_type_enum->icon() }} {{ $uPlan->title }}</span>
-                                <span class="text-[10px] text-slate-500">({{ $uPlan->resolved_from_location }} → {{ $uPlan->resolved_to_location }})</span>
+                                <span class="text-[10px] text-slate-500">({{ $uPlan->presenter()->resolvedFromLocation() }} → {{ $uPlan->presenter()->resolvedToLocation() }})</span>
                             </a>
                         @endforeach
                     </div>
@@ -268,7 +268,7 @@
                        class="p-2 bg-white border border-amber-200 rounded-lg hover:border-indigo-400 transition space-y-0.5">
                         <div class="font-bold text-slate-900 truncate">{{ $uDatePlan->equipment?->name }} : {{ $uDatePlan->title }}</div>
                         <div class="text-[11px] text-slate-600 truncate">
-                            {{ $uDatePlan->resolved_from_location }} → {{ $uDatePlan->resolved_to_location }}
+                            {{ $uDatePlan->presenter()->resolvedFromLocation() }} → {{ $uDatePlan->presenter()->resolvedToLocation() }}
                         </div>
                     </a>
                 @endforeach

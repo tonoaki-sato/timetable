@@ -65,7 +65,7 @@
                     class="divide-y divide-slate-100 bg-white">
                     @forelse($layoutAreas as $area)
                         @php
-                            $payloadJson = json_encode($area->toModalPayload(), JSON_UNESCAPED_UNICODE);
+                            $payloadJson = json_encode($area->presenter()->toModalPayload(), JSON_UNESCAPED_UNICODE);
                             $inUse = (int) ($area->items_count ?? 0) > 0;
                             $canUpdate = auth()->user()?->can('update', $area) ?? false;
                         @endphp

@@ -1,4 +1,4 @@
-@props(['timetable' => null, 'timetableLanes' => collect(), 'statuses' => \App\Models\TimetableTask::STATUSES])
+@props(['timetable' => null, 'timetableLanes' => collect(), 'statuses' => \App\Enums\TimetableTaskStatus::options()])
 
 @php
     $isReopenOnError = $errors->any() && old('_form') === 'common_task';
@@ -118,8 +118,8 @@
                                         data-lane-name="{{ $lane->name }}"
                                         {{ in_array((int) $lane->id, $selectedLaneIds, true) ? 'checked' : '' }}
                                         class="common-lane-checkbox rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4 shrink-0">
-                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold border truncate {{ $lane->color_classes['badge'] }}">
-                                        <span class="mr-1 shrink-0">{{ $lane->icon_label }}</span>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold border truncate {{ $lane->presenter()->colorClasses()['badge'] }}">
+                                        <span class="mr-1 shrink-0">{{ $lane->presenter()->iconLabel() }}</span>
                                         <span class="truncate">{{ $lane->name }}</span>
                                     </span>
                                 </span>

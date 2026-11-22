@@ -189,5 +189,3 @@ export function confirmDialog(message, options = {}) {
         okBtn?.focus();
     });
 }
-
-window.AppUI = { showToast, confirmDialog };

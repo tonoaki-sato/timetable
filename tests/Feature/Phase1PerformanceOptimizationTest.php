@@ -26,7 +26,6 @@ use App\Models\TimetableLane;
 use App\Models\TimetableTask;
 use App\Models\User;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
-use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Repositories\Contracts\LayoutAreaRepositoryInterface;
 use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
 use App\Repositories\Contracts\TimetableRepositoryInterface;
@@ -85,13 +84,13 @@ class Phase1PerformanceOptimizationTest extends TestCase
             ]);
         }
 
-        // getConflictingTasksForStaff が timetableLane.lane を事前ロードしており $task->lane_name_label 参照で N+1 が起きないこと
+        // getConflictingTasksForStaff が timetableLane.lane を事前ロードしており presenter()->laneNameLabel() 参照で N+1 が起きないこと
         $taskRepository = app(TimetableTaskRepositoryInterface::class);
         DB::flushQueryLog();
         DB::enableQueryLog();
         $conflicts = $taskRepository->getConflictingTasksForStaff($targetTask, $staffList->first()->id);
         foreach ($conflicts as $c) {
-            $this->assertSame('他班', $c->lane_name_label);
+            $this->assertSame('他班', $c->presenter()->laneNameLabel());
         }
         $conflictQueries = DB::getQueryLog();
         DB::disableQueryLog();
@@ -117,7 +116,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
 
         $this->assertCount(2, $prioritized2);
         $this->assertCount(10, $prioritized);
-        $this->assertTrue($prioritized->every(fn(Staff $s): bool => (bool) $s->is_surplus_fixed && $s->surplus_type === 'over_capacity'));
+        $this->assertTrue($prioritized->every(fn (Staff $s): bool => (bool) $s->is_surplus_fixed && $s->surplus_type === 'over_capacity'));
         // lanesマスター正規化（timetableLane.laneの定数O(1)事前ロード+2クエリ）を含め定数クエリ数であること
         $this->assertLessThanOrEqual(12, count($allocationQueries));
         $this->assertSame(count($queriesFor2), count($allocationQueries));
@@ -148,7 +147,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
             'timetable' => $component->timetable,
             'timetablesList' => $component->timetablesList,
             'active' => $component->active,
-            'targetRouteFor' => fn(Timetable $tt): string => $component->targetRouteFor($tt),
+            'targetRouteFor' => fn (Timetable $tt): string => $component->targetRouteFor($tt),
         ])->render();
 
         $this->assertStringContainsString('(1)', $html);
@@ -267,7 +266,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         DB::disableQueryLog();
 
         $updateCount = collect($reorderQueries)
-            ->filter(fn(array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
+            ->filter(fn (array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
             ->count();
         $this->assertSame(1, $updateCount);
         $this->assertSame(10, $eq3->fresh()->display_order);
@@ -286,7 +285,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         $laneQueries = DB::getQueryLog();
         DB::disableQueryLog();
         $laneUpdateCount = collect($laneQueries)
-            ->filter(fn(array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
+            ->filter(fn (array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
             ->count();
         $this->assertSame(1, $laneUpdateCount);
         $this->assertSame(10, $lane2->fresh()->display_order);
@@ -302,7 +301,7 @@ class Phase1PerformanceOptimizationTest extends TestCase
         $laQueries = DB::getQueryLog();
         DB::disableQueryLog();
         $laUpdateCount = collect($laQueries)
-            ->filter(fn(array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
+            ->filter(fn (array $q): bool => str_starts_with(strtoupper(trim($q['query'])), 'UPDATE'))
             ->count();
         $this->assertSame(1, $laUpdateCount);
         $this->assertSame(10, $la2->fresh()->display_order);

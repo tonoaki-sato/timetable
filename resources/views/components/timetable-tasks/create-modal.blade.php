@@ -1,4 +1,4 @@
-@props(['timetable' => null, 'statuses' => \App\Models\TimetableTask::STATUSES])
+@props(['timetable' => null, 'statuses' => \App\Enums\TimetableTaskStatus::options()])
 
 <!-- タスク追加モーダル (再利用可能独立コンポーネント) -->
 <div id="task-create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="task-create-modal-title">

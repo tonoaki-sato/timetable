@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Lane;
+use App\Presenters\LanePresenter;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,8 +19,8 @@ class LaneFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->unique()->word() . '班',
-            'color' => fake()->randomElement(array_keys(Lane::COLOR_OPTIONS)),
+            'name' => fake()->unique()->word().'班',
+            'color' => fake()->randomElement(array_keys(LanePresenter::COLOR_OPTIONS)),
             'icon' => fake()->randomElement(['🔺', '🚰', '🚻', '🚨', '🎈', '🏮', '🧺', '🏛️', '🧹', '🪧']),
             'description' => fake()->sentence(),
             'display_order' => fake()->numberBetween(10, 100),
@@ -29,7 +30,7 @@ class LaneFactory extends Factory
 
     public function inactive(): static
     {
-        return $this->state(fn(array $attributes): array => [
+        return $this->state(fn (array $attributes): array => [
             'is_active' => false,
         ]);
     }

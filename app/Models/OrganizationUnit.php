@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Presenters\OrganizationUnitPresenter;
 use Database\Factories\OrganizationUnitFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -80,29 +81,18 @@ class OrganizationUnit extends Model
     }
 
     /**
+     * プレゼンターインスタンスを取得
+     */
+    public function presenter(): OrganizationUnitPresenter
+    {
+        return new OrganizationUnitPresenter($this);
+    }
+
+    /**
      * 表示順でソートするスコープ
      */
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('display_order')->orderBy('id');
-    }
-
-    /**
-     * 担当スタッフ名のカンマ区切り文字列（一覧表示用）
-     */
-    public function getStaffNamesDisplayAttribute(): string
-    {
-        if ($this->relationLoaded('staff')) {
-            return $this->staff->pluck('name')->implode(', ');
-        }
-
-        if ($this->relationLoaded('staffAssignments')) {
-            return $this->staffAssignments
-                ->map(fn ($assignment) => $assignment->staff?->name)
-                ->filter()
-                ->implode(', ');
-        }
-
-        return $this->staff()->pluck('name')->implode(', ');
     }
 }

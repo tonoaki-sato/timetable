@@ -81,8 +81,9 @@ class ExportScheduleIcsAction
     protected function mapScheduleToEvent(Schedule $schedule): array
     {
         $descriptionParts = [];
-        if ($schedule->category_label) {
-            $descriptionParts[] = "区分: {$schedule->category_label}";
+        $categoryLabel = $schedule->presenter()->categoryLabel();
+        if ($categoryLabel !== '') {
+            $descriptionParts[] = "区分: {$categoryLabel}";
         }
         if ($schedule->assignee) {
             $descriptionParts[] = "担当: {$schedule->assignee->name}";

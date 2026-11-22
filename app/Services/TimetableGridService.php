@@ -2,10 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\Lane;
-use App\Models\Timetable;
 use App\Models\TimetableLane;
 use App\Models\TimetableTask;
+use App\Presenters\LanePresenter;
 use App\Repositories\Contracts\LaneRepositoryInterface;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
@@ -70,7 +69,7 @@ class TimetableGridService
             }
         }
 
-        $timeSlots = $this->generateTimeSlots($selectedTimetable);
+        $timeSlots = TimeSlotHelper::generateForTimetable($selectedTimetable);
         $grid = $this->buildMatrixGrid($timeSlots, $timetableLanes, $tasksByLane);
         $nowTime = Carbon::now('Asia/Tokyo')->format('H:i');
         $activeStaff = $this->staffRepository->getActiveOrderedByAffiliation();
@@ -92,23 +91,8 @@ class TimetableGridService
             'totalRequired' => $totalRequired,
             'totalAssigned' => $totalAssigned,
             'activeStaff' => $activeStaff,
-            'colorOptions' => Lane::COLOR_OPTIONS,
+            'colorOptions' => LanePresenter::COLOR_OPTIONS,
         ];
-    }
-
-    /**
-     * 運行タイムテーブルの開始・終了時刻から30分刻みの時間スロット配列を生成
-     *
-     * @return array<int, array{
-     *     time: string,
-     *     label: string,
-     *     road: array{status: string, label: string},
-     *     festival: array{status: string, label: string}
-     * }>
-     */
-    public function generateTimeSlots(?Timetable $timetable): array
-    {
-        return TimeSlotHelper::generateForTimetable($timetable);
     }
 
     /**

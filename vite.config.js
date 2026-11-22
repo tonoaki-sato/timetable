@@ -20,6 +20,7 @@ export default defineConfig({
                 'resources/js/timetable-task-modal.js',
                 'resources/js/presentation.js',
                 'resources/js/locations.js',
+                'resources/js/location-types.js',
                 'resources/js/equipments.js',
                 'resources/js/equipment-patterns.js',
                 'resources/js/logistics.js',

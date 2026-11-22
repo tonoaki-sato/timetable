@@ -339,10 +339,10 @@
             <tr>
                 <td>
                     <span class="eq-name">{{ $eq->name }}</span>
-                    <span class="eq-badge">{{ $eq->formatted_quantity }}</span>
+                    <span class="eq-badge">{{ $eq->presenter()->formattedQuantity() }}</span>
                     <span class="eq-type-badge">{{ $eq->type_enum->shortLabel() }}</span>
-                    @if($eq->storage_location_name)
-                        <span class="eq-storage">保管: {{ $eq->storage_location_name }}</span>
+                    @if($eq->presenter()->storageLocationName())
+                        <span class="eq-storage">保管: {{ $eq->presenter()->storageLocationName() }}</span>
                     @endif
                 </td>
                 <td class="eq-count">
@@ -378,19 +378,19 @@
                     </td>
                     <td class="col-title">
                         <div class="step-title">{{ $plan->title }}</div>
-                        @if($plan->formatted_quantity !== '')
-                            <div class="step-sub">数量: {{ $plan->formatted_quantity }}</div>
+                        @if($plan->presenter()->formattedQuantity() !== '')
+                            <div class="step-sub">数量: {{ $plan->presenter()->formattedQuantity() }}</div>
                         @endif
                         @if($plan->notes)
                             <div class="step-sub">{{ $plan->notes }}</div>
                         @endif
                     </td>
                     <td class="col-date">{{ $plan->target_date?->format('Y-m-d') ?: '-' }}</td>
-                    <td class="col-time">{{ $plan->formatted_time_range ?: '-' }}</td>
+                    <td class="col-time">{{ $plan->presenter()->formattedTimeRange() ?: '-' }}</td>
                     <td class="col-route">
-                        <span class="route-from">{{ $plan->resolved_from_location }}</span>
+                        <span class="route-from">{{ $plan->presenter()->resolvedFromLocation() }}</span>
                         <span class="route-arrow">-&gt;</span>
-                        <span class="route-to">{{ $plan->resolved_to_location }}</span>
+                        <span class="route-to">{{ $plan->presenter()->resolvedToLocation() }}</span>
                     </td>
                 </tr>
                 @empty

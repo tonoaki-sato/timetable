@@ -65,7 +65,8 @@ class SwapStaffAssignmentAction
         $conflictsMap = $this->conflictService->checkConflictsForStaffIds($task, [$newStaff->id]);
         if (isset($conflictsMap[$newStaff->id]) && ! $isForced) {
             $conflictTask = $conflictsMap[$newStaff->id];
-            $warnMsg = "交代候補「{$newStaff->name}」は、同一時間帯（{$conflictTask->time_range}）のタスク「{$conflictTask->title}」に既に配置されています。";
+            $conflictTimeRange = $conflictTask->presenter()->timeRange();
+            $warnMsg = "交代候補「{$newStaff->name}」は、同一時間帯（{$conflictTimeRange}）のタスク「{$conflictTask->title}」に既に配置されています。";
 
             return [
                 'success' => false,
@@ -74,8 +75,8 @@ class SwapStaffAssignmentAction
                 'message' => $warnMsg,
                 'conflict_task' => [
                     'title' => $conflictTask->title,
-                    'lane' => $conflictTask->lane_name_label,
-                    'time' => $conflictTask->time_range,
+                    'lane' => $conflictTask->presenter()->laneNameLabel(),
+                    'time' => $conflictTimeRange,
                 ],
                 'old_staff' => $oldStaff,
                 'new_staff' => $newStaff,

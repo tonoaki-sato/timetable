@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\TimetableStatus;
 use App\Models\Timetable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreTimetableRequest extends FormRequest
 {
@@ -64,7 +66,7 @@ class StoreTimetableRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:5000'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
-            'status' => ['required', 'string', 'in:'.implode(',', array_keys(Timetable::STATUSES))],
+            'status' => ['required', 'string', Rule::in(TimetableStatus::values())],
             'site_base_map_id' => ['nullable', 'integer', 'exists:site_base_maps,id'],
             'road_periods' => ['nullable', 'array'],
             'road_periods.*.start_time' => ['required_with:road_periods', 'date_format:H:i'],

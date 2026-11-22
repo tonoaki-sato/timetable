@@ -80,15 +80,11 @@ class LaneAndStaffSpecificationTest extends TestCase
             'timetable_id' => $timetable->id,
             'timetable_lane_id' => $lane->id,
             'auto_assign_lead' => 1,
-            'tasks' => [
-                [
-                    'title' => 'コーン撤去',
-                    'start_time' => '17:00',
-                    'end_time' => '18:00',
-                    'required_people_count' => 3,
-                    'status' => 'not_started',
-                ],
-            ],
+            'title' => 'コーン撤去',
+            'start_time' => '17:00',
+            'end_time' => '18:00',
+            'required_people_count' => 3,
+            'status' => 'not_started',
         ]);
 
         $task2 = TimetableTask::where('title', 'コーン撤去')->firstOrFail();

@@ -5,7 +5,7 @@
     <x-page-header
         :title="$schedule->title"
         icon="📅"
-        :description="$schedule->formatted_datetime . ($schedule->location ? ' ｜ 場所: ' . $schedule->location : '')">
+        :description="$schedule->presenter()->formattedDatetime() . ($schedule->location ? ' ｜ 場所: ' . $schedule->location : '')">
         <x-slot:breadcrumbs>
             <a href="{{ route('schedules.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>📅</span>
@@ -16,13 +16,13 @@
         </x-slot:breadcrumbs>
 
         <x-slot:badges>
-            <span class="px-2.5 py-0.5 rounded text-xs font-bold border flex items-center space-x-1 {{ $schedule->category_badge_class }}">
-                <span>{{ $schedule->category_badge_icon }}</span>
-                <span>{{ $schedule->category_label }}</span>
+            <span class="px-2.5 py-0.5 rounded text-xs font-bold border flex items-center space-x-1 {{ $schedule->presenter()->categoryBadgeClass() }}">
+                <span>{{ $schedule->presenter()->categoryBadgeIcon() }}</span>
+                <span>{{ $schedule->presenter()->categoryLabel() }}</span>
             </span>
 
-            <span class="px-2.5 py-0.5 rounded text-xs font-bold border {{ $schedule->status_badge_class }}">
-                {{ $schedule->status_label }}
+            <span class="px-2.5 py-0.5 rounded text-xs font-bold border {{ $schedule->presenter()->statusBadgeClass() }}">
+                {{ $schedule->presenter()->statusLabel() }}
             </span>
 
             @if($schedule->is_today)
@@ -109,7 +109,7 @@
                         <div class="bg-slate-50 px-2.5 py-2 rounded-lg border border-slate-100">
                             <span class="text-[11px] font-bold text-slate-500 block mb-0.5">📅 開催日時・期間</span>
                             <div class="text-xs sm:text-sm font-bold text-slate-900 font-mono">
-                                {{ $schedule->formatted_datetime }}
+                                {{ $schedule->presenter()->formattedDatetime() }}
                             </div>
                         </div>
 
@@ -190,7 +190,7 @@
                 </div>
 
                 <div class="p-3.5 sm:p-4">
-                    <div class="bg-slate-950/90 px-3 py-2.5 rounded-lg border border-slate-800/80 font-mono text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed select-all" id="lineTextBox">{{ $schedule->share_text }}</div>
+                    <div class="bg-slate-950/90 px-3 py-2.5 rounded-lg border border-slate-800/80 font-mono text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed select-all" id="lineTextBox">{{ $schedule->presenter()->shareText() }}</div>
                     <p class="text-[11px] text-slate-400 mt-2 flex items-center space-x-1">
                         <span>💡</span>
                         <span>文面をクリックで全選択、または右上のボタンでコピーできます</span>

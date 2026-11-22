@@ -51,7 +51,7 @@ class LaneController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "担当班マスター「{$lane->name}」を登録しました。",
-                'lane' => $lane->toModalPayload(),
+                'lane' => $lane->presenter()->toModalPayload(),
             ]);
         }
 
@@ -72,7 +72,7 @@ class LaneController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "担当班マスター「{$updated->name}」を更新しました。",
-                'lane' => $updated->toModalPayload(),
+                'lane' => $updated->presenter()->toModalPayload(),
             ]);
         }
 

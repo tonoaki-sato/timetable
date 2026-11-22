@@ -60,7 +60,7 @@ class SiteLayoutController extends Controller
             'map' => $map,
             'items' => $items,
             'vendors' => $vendors,
-            'filters' => $filter->toFilterArray(),
+            'filter' => $filter,
             'areas' => $areas,
             'totalMapItemsCount' => $areaCounts['total_items'],
             'areaItemCounts' => $areaCounts['area_totals'],
@@ -102,7 +102,7 @@ class SiteLayoutController extends Controller
         $this->authorize('delete', LayoutMap::class);
 
         $code = $item->code;
-        $name = $item->displayName;
+        $name = $item->presenter()->displayName();
         $this->siteLayoutService->deleteItem($item);
 
         return redirect()->back()->with('success', '配置「'.$name.'（'.$code.'）」を削除しました。');

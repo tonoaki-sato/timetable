@@ -192,7 +192,7 @@ class StaffManagementTest extends TestCase
         $showResponse->assertSee('data:image/png;base64,');
         $showResponse->assertSee(route('staff.print-card', $staff));
         $showResponse->assertSee('名札PDFをダウンロード');
-        $showResponse->assertSee($staff->my_shift_url);
+        $showResponse->assertSee($staff->presenter()->myShiftUrl());
 
         // 削除対象セクション・所属情報・スタッフ区分・編集/削除リンクが表示されないこと
         $showResponse->assertDontSee('スタッフ区分');

@@ -250,4 +250,29 @@ class SiteMapRepository implements SiteMapRepositoryInterface
     {
         return SiteMapPlacement::where('shape_type', $shapeType)->delete();
     }
+
+    #[Override]
+    public function hasDefaultBaseMap(): bool
+    {
+        return SiteBaseMap::where('is_default', true)->exists();
+    }
+
+    #[Override]
+    public function findFallbackActiveBaseMap(int $excludeId): ?SiteBaseMap
+    {
+        return SiteBaseMap::query()
+            ->where('id', '!=', $excludeId)
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->first();
+    }
+
+    #[Override]
+    public function isAssetPathUsed(string $relativePath): bool
+    {
+        return SiteBaseMap::query()
+            ->where('svg_path', $relativePath)
+            ->orWhere('pdf_path', $relativePath)
+            ->exists();
+    }
 }

@@ -109,7 +109,7 @@
                     class="divide-y divide-slate-100 bg-white">
                     @forelse($equipments as $item)
                         @php
-                            $modalPayloadJson = json_encode($item->toModalPayload(), JSON_UNESCAPED_UNICODE);
+                            $modalPayloadJson = json_encode($item->presenter()->toModalPayload(), JSON_UNESCAPED_UNICODE);
                         @endphp
                         <tr data-equipment-id="{{ $item->id }}" draggable="true"
                             class="hover:bg-slate-50/80 transition cursor-default">
@@ -145,7 +145,7 @@
 
                             <!-- 数量・単位 -->
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="font-bold font-mono text-slate-900 text-sm">{{ $item->formatted_quantity }}</span>
+                                <span class="font-bold font-mono text-slate-900 text-sm">{{ $item->presenter()->formattedQuantity() }}</span>
                             </td>
 
                             <!-- 保管場所 / 調達区分 -->

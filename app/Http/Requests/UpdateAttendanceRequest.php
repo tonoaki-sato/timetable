@@ -2,10 +2,11 @@
 
 namespace App\Http\Requests;
 
-use App\Models\TaskStaffAssignment;
+use App\Enums\AttendanceStatus;
 use App\Models\TimetableTask;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAttendanceRequest extends FormRequest
 {
@@ -29,7 +30,7 @@ class UpdateAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'attendance_status' => ['required', 'string', 'in:'.implode(',', array_keys(TaskStaffAssignment::ATTENDANCE_STATUSES))],
+            'attendance_status' => ['required', 'string', Rule::in(AttendanceStatus::values())],
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\TimetableTaskStatus;
 use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\Staff;
@@ -123,10 +124,11 @@ class TimetableSeederTest extends TestCase
 
         // レーンおよびステータスが定義に合致していること
         $validLanes = Lane::pluck('name')->toArray();
-        $validStatuses = array_keys(TimetableTask::STATUSES);
+        $validStatuses = TimetableTaskStatus::values();
 
         foreach (TimetableTask::with('timetableLane.lane')->get() as $task) {
-            $this->assertContains($task->lane_name_label, $validLanes, "Invalid lane: {$task->lane_name_label}");
+            $laneNameLabel = $task->presenter()->laneNameLabel();
+            $this->assertContains($laneNameLabel, $validLanes, "Invalid lane: {$laneNameLabel}");
             $this->assertContains($task->status, $validStatuses, "Invalid status: {$task->status}");
             $this->assertNotNull($task->start_time);
             $this->assertNotNull($task->end_time);

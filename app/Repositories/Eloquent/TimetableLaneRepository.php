@@ -47,17 +47,6 @@ class TimetableLaneRepository implements TimetableLaneRepositoryInterface
     }
 
     #[Override]
-    public function findByTimetableAndNameOrCleanName(int $timetableId, string $laneName, string $cleanName): ?TimetableLane
-    {
-        return TimetableLane::with('lane')
-            ->where('timetable_id', $timetableId)
-            ->whereHas('lane', function ($q) use ($laneName, $cleanName): void {
-                $q->where('name', $laneName)->orWhere('name', $cleanName);
-            })
-            ->first();
-    }
-
-    #[Override]
     public function findForTimetableById(Timetable $timetable, int $timetableLaneId): ?TimetableLane
     {
         /** @var TimetableLane|null $timetableLane */

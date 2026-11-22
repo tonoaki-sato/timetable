@@ -38,7 +38,7 @@ class BulkAssignStaffAction
             $conflictStaffList = [];
             foreach ($conflictsMap as $staffId => $conflictingTask) {
                 $staff = $staffById->get((int) $staffId);
-                $conflictingLane = $conflictingTask->lane_name_label;
+                $conflictingLane = $conflictingTask->presenter()->laneNameLabel();
                 $startTime = substr($conflictingTask->start_time, 0, 5);
                 $endTime = substr($conflictingTask->end_time, 0, 5);
                 $conflictStaffList[] = [

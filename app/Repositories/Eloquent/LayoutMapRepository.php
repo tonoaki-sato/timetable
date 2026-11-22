@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\DTOs\LayoutItemFilterDTO;
 use App\Models\LayoutItem;
 use App\Models\LayoutMap;
 use App\Models\Timetable;
@@ -112,27 +113,27 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
      * 配置アイテム一覧をページネーション取得
      */
     #[Override]
-    public function paginateItems(LayoutMap $map, array $filters = [], int $perPage = 50): LengthAwarePaginator
+    public function paginateItems(LayoutMap $map, LayoutItemFilterDTO $filter): LengthAwarePaginator
     {
         $query = LayoutItem::with(['area', 'vendor'])
             ->leftJoin('layout_areas', 'layout_areas.id', '=', 'layout_items.layout_area_id')
             ->where('layout_items.layout_map_id', $map->id)
             ->select('layout_items.*');
 
-        if (! empty($filters['item_type'])) {
-            $query->where('layout_items.item_type', $filters['item_type']);
+        if ($filter->itemType !== null && $filter->itemType !== '') {
+            $query->where('layout_items.item_type', $filter->itemType);
         }
 
-        if (! empty($filters['area_id'])) {
-            $query->where('layout_items.layout_area_id', $filters['area_id']);
+        if ($filter->areaId !== null) {
+            $query->where('layout_items.layout_area_id', $filter->areaId);
         }
 
-        if (! empty($filters['category'])) {
-            $query->where('layout_items.category', $filters['category']);
+        if ($filter->category !== null && $filter->category !== '') {
+            $query->where('layout_items.category', $filter->category);
         }
 
-        if (! empty($filters['search'])) {
-            $search = '%'.trim((string) $filters['search']).'%';
+        if ($filter->search !== null && $filter->search !== '') {
+            $search = '%'.trim($filter->search).'%';
             $query->where(function (Builder $q) use ($search): void {
                 $q->where('layout_items.code', 'like', $search)
                     ->orWhere('layout_items.name', 'like', $search)
@@ -146,8 +147,8 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
         }
 
         $resolved = TableQueryOptions::resolveSort(
-            isset($filters['sort']) ? (string) $filters['sort'] : null,
-            isset($filters['direction']) ? (string) $filters['direction'] : null,
+            $filter->sort,
+            $filter->direction,
             ['display_order', 'code', 'layout_area_id', 'name', 'category', 'booth_type'],
             'display_order',
             'asc',
@@ -168,7 +169,7 @@ class LayoutMapRepository implements LayoutMapRepositoryInterface
                 ->orderBy('layout_items.code', 'asc');
         }
 
-        return $query->paginate($perPage)->withQueryString();
+        return $query->paginate($filter->perPage)->withQueryString();
     }
 
     /**

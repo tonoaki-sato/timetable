@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\DTOs\LocationListItemData;
+use App\DTOs\LocationStatusEvaluation;
 use App\Enums\BoothCategory;
 use App\Enums\BoothType;
+use App\Enums\LocationCurrentStatus;
+use App\Enums\LocationDailyAvailabilityStatus;
 use App\Models\EquipmentLogisticsPattern;
 use App\Models\LaneRequest;
 use App\Models\LayoutArea;
@@ -18,6 +22,7 @@ use App\Models\Timetable;
 use App\Models\TimetableLane;
 use App\Models\User;
 use App\Models\Vendor;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
@@ -43,9 +48,9 @@ class Phase0SecurityAndBugFixesTest extends TestCase
         $this->assertSame('テストスタッフ', $loadedGrandChild->staff->first()->name);
     }
 
-    public function test_location_schedules_for_form_preserves_unavailable_status(): void
+    public function test_location_list_item_data_for_form_preserves_unavailable_status(): void
     {
-        $timetable = Timetable::factory()->create();
+        Timetable::factory()->create();
         $location = Location::factory()->create();
 
         LocationSchedule::create([
@@ -62,7 +67,13 @@ class Phase0SecurityAndBugFixesTest extends TestCase
         ]);
 
         $location->load('schedules');
-        $rows = $location->schedulesForForm();
+        $item = new LocationListItemData(
+            location: $location,
+            currentEvaluation: new LocationStatusEvaluation(LocationCurrentStatus::UnavailablePending, '調整中'),
+            dailyStatus: LocationDailyAvailabilityStatus::PartiallyUnavailable,
+            todaySchedules: $location->schedules,
+        );
+        $rows = $item->toFormSchedulesPayload(Carbon::parse('2026-10-18 10:00:00'));
 
         $this->assertCount(2, $rows);
         $this->assertSame('unavailable', $rows[0]['availability_status']);
@@ -85,7 +96,7 @@ class Phase0SecurityAndBugFixesTest extends TestCase
         $this->assertArrayNotHasKey('access_token', $array);
         $this->assertStringNotContainsString('secret_token_should_never_leak_12', $json);
         $this->assertSame('secret_token_should_never_leak_12', $staff->access_token);
-        $this->assertStringContainsString('secret_token_should_never_leak_12', $staff->my_shift_url);
+        $this->assertStringContainsString('secret_token_should_never_leak_12', $staff->presenter()->myShiftUrl());
     }
 
     public function test_equipment_pattern_step_routes_enforce_scoped_bindings(): void

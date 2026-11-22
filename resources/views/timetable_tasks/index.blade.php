@@ -74,8 +74,8 @@
 
                     <!-- 2. 班名バッジ (固定幅・長い班名はtruncate) -->
                     <div class="w-36 sm:w-44 md:w-48 shrink-0">
-                        <span class="inline-flex items-center max-w-full px-2 py-0.5 rounded text-xs font-bold border {{ $lane->color_classes['badge'] }}" title="{{ $lane->name }}">
-                            <span class="mr-1 shrink-0">{{ $lane->icon_label }}</span>
+                        <span class="inline-flex items-center max-w-full px-2 py-0.5 rounded text-xs font-bold border {{ $lane->presenter()->colorClasses()['badge'] }}" title="{{ $lane->name }}">
+                            <span class="mr-1 shrink-0">{{ $lane->presenter()->iconLabel() }}</span>
                             <span class="truncate">{{ $lane->name }}</span>
                         </span>
                     </div>
@@ -106,8 +106,8 @@
                         data-action="open-task-create"
                         data-lane-id="{{ $lane->id }}"
                         data-lane-name="{{ $lane->name }}"
-                        data-lane-icon="{{ $lane->icon_label }}"
-                        data-suggested-start="{{ $lane->suggested_start_time }}"
+                        data-lane-icon="{{ $lane->presenter()->iconLabel() }}"
+                        data-suggested-start="{{ $lane->presenter()->suggestedStartTime() }}"
                         class="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-indigo-50 text-indigo-700 hover:text-indigo-800 border border-indigo-200 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
                         title="{{ $lane->name }}にタスクを追加">
                         <span>➕</span>
@@ -137,7 +137,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach($lane->tasks as $task)
-                        <tr class="hover:bg-slate-50/70 transition" data-task-row data-task-id="{{ $task->id }}" data-task='@json($task->toModalPayload($lane))'>
+                        <tr class="hover:bg-slate-50/70 transition" data-task-row data-task-id="{{ $task->id }}" data-task='@json($task->presenter()->toModalPayload($lane))'>
                             <!-- 最優先 -->
                             <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
                                 @if($task->is_critical)
@@ -180,7 +180,7 @@
                             <!-- 必要人員 -->
                             <td class="px-3.5 py-2.5 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                    👤 {{ $task->required_people_label }}
+                                    👤 {{ $task->presenter()->requiredPeopleLabel() }}
                                 </span>
                             </td>
 

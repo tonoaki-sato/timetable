@@ -27,18 +27,4 @@ readonly class VendorFilterDTO
             perPage: TableQueryOptions::resolvePerPage($data['per_page'] ?? null, 15, [15, 30, 50, 100]),
         );
     }
-
-    /**
-     * リポジトリ・ビュー互換の連想配列表現を取得
-     *
-     * @return array{search: ?string, sort: ?string, direction: ?string}
-     */
-    public function toFilterArray(): array
-    {
-        return [
-            'search' => $this->search,
-            'sort' => $this->sort,
-            'direction' => $this->direction,
-        ];
-    }
 }

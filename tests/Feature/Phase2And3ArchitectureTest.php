@@ -281,9 +281,9 @@ class Phase2And3ArchitectureTest extends TestCase
         // Memoized Schedule::presenter() と各 Presenter の検証
         $schedule = new Schedule(['category' => 'committee', 'status' => 'planned']);
         $this->assertSame($schedule->presenter(), $schedule->presenter());
-        $this->assertSame('🤝', $schedule->category_icon);
-        $this->assertStringContainsString('indigo', $schedule->category_badge_class);
-        $this->assertStringContainsString('blue', $schedule->status_badge_class);
+        $this->assertSame('🤝', $schedule->presenter()->categoryIcon());
+        $this->assertStringContainsString('indigo', $schedule->presenter()->categoryBadgeClass());
+        $this->assertStringContainsString('blue', $schedule->presenter()->statusBadgeClass());
 
         $t1 = Timetable::factory()->make(['target_date' => '2026-10-17', 'status' => 'active']);
         $t2 = Timetable::factory()->make(['target_date' => '2026-10-18', 'status' => 'draft']);
@@ -310,8 +310,9 @@ class Phase2And3ArchitectureTest extends TestCase
         // Filter DTO の検証
         $vendorFilter = VendorFilterDTO::fromArray(['search' => '屋台', 'sort' => 'name', 'per_page' => '30']);
         $this->assertSame('屋台', $vendorFilter->search);
+        $this->assertSame('name', $vendorFilter->sort);
+        $this->assertNull($vendorFilter->direction);
         $this->assertSame(30, $vendorFilter->perPage);
-        $this->assertSame(['search' => '屋台', 'sort' => 'name', 'direction' => null], $vendorFilter->toFilterArray());
 
         $layoutFilter = LayoutItemFilterDTO::fromArray(['item_type' => 'booth', 'area_id' => '5', 'per_page' => '25']);
         $this->assertSame('booth', $layoutFilter->itemType);

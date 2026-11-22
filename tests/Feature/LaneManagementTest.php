@@ -398,7 +398,7 @@ class LaneManagementTest extends TestCase
 
         $task = TimetableTask::where('title', '足踏み式給水設備 設置点検')->firstOrFail();
         $this->assertSame($lane->id, $task->timetable_lane_id);
-        $this->assertSame('給水設備', $task->lane_name_label);
+        $this->assertSame('給水設備', $task->presenter()->laneNameLabel());
 
         // 主担当スタッフが班リーダーとして自動アサインされていること
         $assignment = TaskStaffAssignment::where('timetable_task_id', $task->id)

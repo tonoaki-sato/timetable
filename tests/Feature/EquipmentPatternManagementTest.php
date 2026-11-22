@@ -529,8 +529,8 @@ class EquipmentPatternManagementTest extends TestCase
         ]);
 
         $step = $pattern->steps()->where('title', '自宅から直接搬入')->firstOrFail();
-        $this->assertSame('自宅', $step->from_location_display);
-        $this->assertSame('会場南側ブース', $step->to_location_display);
+        $this->assertSame('自宅', $step->presenter()->fromLocationDisplay());
+        $this->assertSame('会場南側ブース', $step->presenter()->toLocationDisplay());
     }
 
     /**
@@ -572,7 +572,7 @@ class EquipmentPatternManagementTest extends TestCase
         $step->refresh();
         $this->assertSame('新移動元（〇〇倉庫）', $step->from_location);
         $this->assertSame('新移動先（番所前北側）', $step->to_location);
-        $this->assertSame('新移動元（〇〇倉庫）', $step->from_location_display);
-        $this->assertSame('新移動先（番所前北側）', $step->to_location_display);
+        $this->assertSame('新移動元（〇〇倉庫）', $step->presenter()->fromLocationDisplay());
+        $this->assertSame('新移動先（番所前北側）', $step->presenter()->toLocationDisplay());
     }
 }

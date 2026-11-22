@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\TimetableStatus;
 use App\Models\Timetable;
 use App\Models\User;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
@@ -76,7 +77,7 @@ class TimetableService
         return [
             'timetables' => $timetables,
             'status' => $status,
-            'statuses' => Timetable::STATUSES,
+            'statuses' => TimetableStatus::options(),
         ];
     }
 

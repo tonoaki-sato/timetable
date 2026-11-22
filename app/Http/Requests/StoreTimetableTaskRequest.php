@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\TimetableTaskStatus;
 use App\Models\TimetableTask;
-use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -19,60 +19,18 @@ class StoreTimetableTaskRequest extends FormRequest
     }
 
     /**
-     * 入力値の前処理（チェックボックスのboolean化・単一/複数タスク形式の正規化）
+     * 入力値の前処理（チェックボックスのboolean化・初期値補完）
      */
     protected function prepareForValidation(): void
     {
-        $mergeData = [
+        $this->merge([
+            'is_at_least' => $this->boolean('is_at_least'),
+            'is_critical' => $this->boolean('is_critical'),
+            'status' => $this->input('status') ?: 'not_started',
             'auto_assign_lead' => $this->has('auto_assign_lead')
                 ? $this->boolean('auto_assign_lead')
                 : true,
-        ];
-
-        if (! $this->filled('timetable_lane_id') && $this->filled('lane')) {
-            $timetableId = (int) $this->input('timetable_id');
-            $laneName = (string) $this->input('lane');
-            $cleanName = str_replace('班', '', $laneName);
-            /** @var TimetableLaneRepositoryInterface $timetableLaneRepository */
-            $timetableLaneRepository = app(TimetableLaneRepositoryInterface::class);
-            $timetableLane = $timetableLaneRepository->findByTimetableAndNameOrCleanName($timetableId, $laneName, $cleanName);
-            if ($timetableLane) {
-                $mergeData['timetable_lane_id'] = $timetableLane->id;
-            }
-        }
-
-        // 複数タスク配列形式が送信された場合の各要素の真偽値・初期値整形
-        if (is_array($this->input('tasks'))) {
-            $normalizedTasks = [];
-            foreach ($this->input('tasks') as $index => $taskItem) {
-                if (! is_array($taskItem)) {
-                    continue;
-                }
-                $normalizedTasks[$index] = array_merge($taskItem, [
-                    'is_at_least' => filter_var($taskItem['is_at_least'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'is_critical' => filter_var($taskItem['is_critical'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'status' => $taskItem['status'] ?? 'not_started',
-                ]);
-            }
-            $mergeData['tasks'] = array_values($normalizedTasks);
-        } elseif ($this->hasAny(['title', 'start_time', 'end_time'])) {
-            // 後方互換: 従来の単一タスクフラット形式が送信された場合は tasks[0] に正規化
-            $mergeData['tasks'] = [
-                [
-                    'title' => $this->input('title'),
-                    'content' => $this->input('content'),
-                    'location' => $this->input('location'),
-                    'start_time' => $this->input('start_time'),
-                    'end_time' => $this->input('end_time'),
-                    'required_people_count' => $this->input('required_people_count', 0),
-                    'is_at_least' => $this->boolean('is_at_least'),
-                    'is_critical' => $this->boolean('is_critical'),
-                    'status' => $this->input('status', 'not_started'),
-                ],
-            ];
-        }
-
-        $this->merge($mergeData);
+        ]);
     }
 
     /**
@@ -82,7 +40,6 @@ class StoreTimetableTaskRequest extends FormRequest
      */
     public function rules(): array
     {
-        $statusKeys = implode(',', array_keys(TimetableTask::STATUSES));
         $timetableId = $this->integer('timetable_id');
 
         return [
@@ -92,20 +49,16 @@ class StoreTimetableTaskRequest extends FormRequest
                 'integer',
                 Rule::exists('timetable_lanes', 'id')->where('timetable_id', $timetableId),
             ],
-            'lane' => ['nullable', 'string', 'max:100'],
-            'auto_assign_lead' => ['nullable', 'boolean'],
-            'tasks' => ['required', 'array', 'min:1', 'max:50'],
-            'tasks.*.title' => ['required', 'string', 'max:255'],
-            'tasks.*.content' => ['nullable', 'string', 'max:5000'],
-            'tasks.*.location' => ['nullable', 'string', 'max:255'],
-            'tasks.*.start_time' => ['required', 'date_format:H:i'],
-            'tasks.*.end_time' => ['required', 'date_format:H:i', 'after:tasks.*.start_time'],
-            'start_time' => ['nullable', 'date_format:H:i'],
-            'end_time' => ['nullable', 'date_format:H:i', 'after:start_time'],
-            'tasks.*.required_people_count' => ['required', 'integer', 'min:0', 'max:999'],
-            'tasks.*.is_at_least' => ['required', 'boolean'],
-            'tasks.*.is_critical' => ['required', 'boolean'],
-            'tasks.*.status' => ['required', 'string', 'in:'.$statusKeys],
+            'auto_assign_lead' => ['required', 'boolean'],
+            'title' => ['required', 'string', 'max:255'],
+            'content' => ['nullable', 'string', 'max:5000'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
+            'required_people_count' => ['required', 'integer', 'min:0', 'max:999'],
+            'is_at_least' => ['required', 'boolean'],
+            'is_critical' => ['required', 'boolean'],
+            'status' => ['required', 'string', Rule::in(TimetableTaskStatus::values())],
         ];
     }
 
@@ -119,17 +72,15 @@ class StoreTimetableTaskRequest extends FormRequest
         return [
             'timetable_id' => '対象タイムテーブル',
             'timetable_lane_id' => '担当班',
-            'lane' => '担当班',
-            'tasks' => '作業タスクリスト',
-            'tasks.*.title' => '作業タスク名',
-            'tasks.*.content' => '作業内容・手順指示',
-            'tasks.*.location' => '実施場所',
-            'tasks.*.start_time' => '開始時刻',
-            'tasks.*.end_time' => '終了時刻',
-            'tasks.*.required_people_count' => '必要人員数',
-            'tasks.*.is_at_least' => '〇〇名以上フラグ',
-            'tasks.*.is_critical' => '最優先フラグ',
-            'tasks.*.status' => '進行ステータス',
+            'title' => '作業タスク名',
+            'content' => '作業内容・手順指示',
+            'location' => '実施場所',
+            'start_time' => '開始時刻',
+            'end_time' => '終了時刻',
+            'required_people_count' => '必要人員数',
+            'is_at_least' => '〇〇名以上フラグ',
+            'is_critical' => '最優先フラグ',
+            'status' => '進行ステータス',
         ];
     }
 }

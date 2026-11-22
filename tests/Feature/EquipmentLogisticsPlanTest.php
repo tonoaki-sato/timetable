@@ -185,7 +185,7 @@ class EquipmentLogisticsPlanTest extends TestCase
             'quantity_note' => '通行止め用分',
         ]);
 
-        $this->assertSame('通行止め用分', $plan->formatted_quantity);
+        $this->assertSame('通行止め用分', $plan->presenter()->formattedQuantity());
     }
 
     /**

@@ -76,7 +76,7 @@ class StaffShiftViewService
 
         $resolvedTasks = $this->resolveNowAndNextTasks($assignments);
         $groupedAssignments = $assignments->groupBy(
-            fn (TaskStaffAssignment $a): string => $a->date_header_label
+            fn (TaskStaffAssignment $a): string => $a->presenter()->dateHeaderLabel()
         );
         $laneFilters = $this->buildLaneFilters($assignments);
 
@@ -278,7 +278,7 @@ class StaffShiftViewService
                 default => ['past', '過去'],
             };
 
-            $weekday = $timetable->weekday_label;
+            $weekday = $timetable->presenter()->weekdayLabel();
             $dateLabel = $timetable->target_date
                 ? $timetable->target_date->format('Y年n月j日').($weekday !== '' ? "（{$weekday}）" : '')
                 : '日付未設定';

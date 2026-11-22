@@ -138,14 +138,14 @@
 
                         <!-- 数量・区分・保管場所 -->
                         <span class="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold border {{ $equipment->type_enum->badgeClasses() }} shrink-0">
-                            {{ $equipment->formatted_quantity }}
+                            {{ $equipment->presenter()->formattedQuantity() }}
                         </span>
                         <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border {{ $equipment->type_enum->badgeClasses() }} shrink-0">
                             {{ $equipment->type_enum->shortLabel() }}
                         </span>
-                        @if($equipment->storage_location_name)
+                        @if($equipment->presenter()->storageLocationName())
                             <span class="text-[11px] text-slate-500 font-medium hidden md:inline truncate">
-                                保管: {{ $equipment->storage_location_name }}
+                                保管: {{ $equipment->presenter()->storageLocationName() }}
                             </span>
                         @endif
                     </div>
@@ -201,8 +201,8 @@
                                     @endphp
                                     <tr data-plan-row
                                         data-plan-id="{{ $plan->id }}"
-                                        data-plan='@json($plan->toModalPayload($timetable))'
-                                        class="transition {{ $plan->row_highlight_class }}">
+                                        data-plan='@json($plan->presenter()->toModalPayload($timetable))'
+                                        class="transition {{ $plan->presenter()->rowHighlightClass() }}">
                                         <!-- 順序 -->
                                         <td class="px-3.5 py-2.5 text-center font-mono font-bold whitespace-nowrap {{ $needsTimeWarning ? 'border-l-4 border-l-amber-400 text-amber-700' : 'text-slate-400' }}">
                                             #{{ $loop->iteration }}
@@ -211,8 +211,8 @@
                                         <!-- フェーズ + 立会バッジ -->
                                         <td class="px-3.5 py-2.5 whitespace-nowrap">
                                             <div class="inline-flex items-center space-x-1">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border {{ $plan->phase_badge_class }}">
-                                                    {{ $plan->phase_label }}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border {{ $plan->presenter()->phaseBadgeClass() }}">
+                                                    {{ $plan->presenter()->phaseLabel() }}
                                                 </span>
                                                 @if($plan->witness_required)
                                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-bold text-[10px] border border-red-200" title="スタッフ立会必須">
@@ -246,18 +246,18 @@
                                         </td>
 
                                         <!-- 時間 -->
-                                        <td class="px-3.5 py-2.5 font-mono text-xs whitespace-nowrap {{ $plan->formatted_time_range ? 'text-slate-700' : 'text-slate-400' }}">
-                                            {{ $plan->formatted_time_range ?: '—' }}
+                                        <td class="px-3.5 py-2.5 font-mono text-xs whitespace-nowrap {{ $plan->presenter()->formattedTimeRange() ? 'text-slate-700' : 'text-slate-400' }}">
+                                            {{ $plan->presenter()->formattedTimeRange() ?: '—' }}
                                         </td>
 
                                         <!-- 移動元 ➔ 移動先 -->
                                         <td class="px-3.5 py-2.5 font-mono text-[11px] whitespace-nowrap">
                                             <span class="{{ filled($plan->from_location) || $plan->from_location_id ? 'text-slate-600 font-medium' : 'text-slate-400 italic' }}">
-                                                {{ $plan->resolved_from_location ?: '定常保管場所' }}
+                                                {{ $plan->presenter()->resolvedFromLocation() ?: '定常保管場所' }}
                                             </span>
                                             <span class="text-indigo-600 font-bold px-1">➔</span>
                                             <span class="{{ filled($plan->to_location) || $plan->to_location_id ? 'text-slate-900 font-bold' : 'text-slate-400 italic' }}">
-                                                {{ $plan->resolved_to_location ?: '現地会場' }}
+                                                {{ $plan->presenter()->resolvedToLocation() ?: '現地会場' }}
                                             </span>
                                         </td>
 
@@ -274,7 +274,7 @@
                                             @endcan
 
                                             @can('delete', $plan)
-                                                <form action="{{ $plan->destroyUrl($timetable) }}" method="POST" class="inline"
+                                                <form action="{{ $plan->presenter()->destroyUrl($timetable) }}" method="POST" class="inline"
                                                     data-confirm="ステップ「{{ $plan->title }}」を削除しますか？">
                                                     @csrf
                                                     @method('DELETE')

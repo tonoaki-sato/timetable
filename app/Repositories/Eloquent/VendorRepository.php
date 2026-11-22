@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\DTOs\VendorFilterDTO;
 use App\Models\Vendor;
 use App\Repositories\Contracts\VendorRepositoryInterface;
 use App\Support\TableQueryOptions;
@@ -38,12 +39,12 @@ class VendorRepository implements VendorRepositoryInterface
     /**
      * 出展・出店者一覧をページネーション取得
      */
-    public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    public function paginate(VendorFilterDTO $filter): LengthAwarePaginator
     {
         $query = Vendor::with(['items.area']);
 
-        if (! empty($filters['search'])) {
-            $search = '%'.trim($filters['search']).'%';
+        if ($filter->search !== null && $filter->search !== '') {
+            $search = '%'.trim($filter->search).'%';
             $query->where(function (Builder $q) use ($search) {
                 $q->where('name', 'like', $search)
                     ->orWhere('contact_person', 'like', $search)
@@ -57,8 +58,8 @@ class VendorRepository implements VendorRepositoryInterface
         }
 
         $resolved = TableQueryOptions::resolveSort(
-            isset($filters['sort']) ? (string) $filters['sort'] : null,
-            isset($filters['direction']) ? (string) $filters['direction'] : null,
+            $filter->sort,
+            $filter->direction,
             ['id', 'name', 'contact_person', 'contact'],
             'id',
             'asc',
@@ -66,7 +67,7 @@ class VendorRepository implements VendorRepositoryInterface
 
         return $query->orderBy($resolved['sort'], $resolved['direction'])
             ->orderBy('id', 'asc')
-            ->paginate($perPage)
+            ->paginate($filter->perPage)
             ->withQueryString();
     }
 

@@ -138,15 +138,10 @@ class SiteLayoutService
 
     /**
      * 配置アイテム一覧をページネーション取得
-     *
-     * @param  LayoutItemFilterDTO|array{item_type?: string|null, area_id?: int|string|null, category?: string|null, search?: string|null, sort?: string|null, direction?: string|null}  $filters
      */
-    public function paginateItems(LayoutMap $map, LayoutItemFilterDTO|array $filters = [], ?int $perPage = null): LengthAwarePaginator
+    public function paginateItems(LayoutMap $map, LayoutItemFilterDTO $filter): LengthAwarePaginator
     {
-        $filterArray = $filters instanceof LayoutItemFilterDTO ? $filters->toFilterArray() : $filters;
-        $resolvedPerPage = $perPage ?? ($filters instanceof LayoutItemFilterDTO ? $filters->perPage : 50);
-
-        return $this->layoutMapRepository->paginateItems($map, $filterArray, $resolvedPerPage);
+        return $this->layoutMapRepository->paginateItems($map, $filter);
     }
 
     /**

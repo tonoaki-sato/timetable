@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ScheduleCategory;
 use App\Models\Schedule;
 use App\Models\Staff;
 use App\Models\User;
@@ -34,7 +35,7 @@ class ScheduleFactory extends Factory
                 '第1回 幹事会',
                 '第2回 幹事会',
             ]),
-            'category' => fake()->randomElement(array_keys(Schedule::CATEGORIES)),
+            'category' => fake()->randomElement(ScheduleCategory::values()),
             'start_date' => $startDate->format('Y-m-d'),
             'end_date' => null,
             'start_time' => null,

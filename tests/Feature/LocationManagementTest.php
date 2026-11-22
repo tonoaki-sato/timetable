@@ -354,7 +354,10 @@ class LocationManagementTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('location-types.index'))
             ->assertOk()
-            ->assertSee('登録されている拠点タイプがありません');
+            ->assertSee('登録されている拠点タイプがありません')
+            ->assertSee('location-types')
+            ->assertSee('id="type-modal"', false)
+            ->assertSee('data-action="open-type-modal"', false);
     }
 
     /**

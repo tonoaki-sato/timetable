@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Contracts;
 
+use App\DTOs\VendorFilterDTO;
 use App\Models\Vendor;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -29,10 +30,8 @@ interface VendorRepositoryInterface
 
     /**
      * 出展・出店者一覧をページネーション取得（検索・ソート対応）
-     *
-     * @param  array{search?: string|null, sort?: string|null, direction?: string|null}  $filters
      */
-    public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator;
+    public function paginate(VendorFilterDTO $filter): LengthAwarePaginator;
 
     /**
      * グローバル検索用のクイック検索

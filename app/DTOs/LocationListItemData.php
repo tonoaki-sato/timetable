@@ -123,8 +123,8 @@ class LocationListItemData
             'start_at_display' => $startDisplay,
             'end_at_display' => $endDisplay,
             'availability_status' => (string) $schedule->availability_status,
-            'status_label' => (string) $schedule->availability_status_label,
-            'status_badge_class' => (string) $schedule->availability_status_badge_class,
+            'status_label' => $schedule->presenter()->availabilityStatusLabel(),
+            'status_badge_class' => $schedule->presenter()->availabilityStatusBadgeClass(),
             'is_current' => $isCurrent,
         ];
     }

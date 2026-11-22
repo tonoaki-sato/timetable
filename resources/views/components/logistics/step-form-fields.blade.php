@@ -86,7 +86,7 @@
             class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
             <option value="">（拠点マスタから選択 または自由入力）</option>
             @foreach($locations as $loc)
-                <option value="{{ $loc->id }}" data-name="{{ $loc->name }}">{{ $loc->name }} ({{ $loc->type_label }})</option>
+                <option value="{{ $loc->id }}" data-name="{{ $loc->name }}">{{ $loc->name }} ({{ $loc->presenter()->typeLabel() }})</option>
             @endforeach
         </select>
         <input type="text" id="{{ $prefix }}_from_location" name="from_location" placeholder="または場所名を自由入力 (例: 自宅, 番所前)"
@@ -102,7 +102,7 @@
             class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
             <option value="">（拠点マスタから選択 または自由入力）</option>
             @foreach($locations as $loc)
-                <option value="{{ $loc->id }}" data-name="{{ $loc->name }}">{{ $loc->name }} ({{ $loc->type_label }})</option>
+                <option value="{{ $loc->id }}" data-name="{{ $loc->name }}">{{ $loc->name }} ({{ $loc->presenter()->typeLabel() }})</option>
             @endforeach
         </select>
         <input type="text" id="{{ $prefix }}_to_location" name="to_location" placeholder="または場所名を自由入力 (例: 現地指定, 会場南側)"

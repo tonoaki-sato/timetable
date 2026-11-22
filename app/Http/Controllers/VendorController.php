@@ -30,7 +30,7 @@ class VendorController extends Controller
 
         return view('vendors.index', [
             'vendors' => $vendors,
-            'filters' => $filter->toFilterArray(),
+            'filter' => $filter,
         ]);
     }
 

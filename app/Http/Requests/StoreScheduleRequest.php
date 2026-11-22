@@ -2,9 +2,12 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ScheduleCategory;
+use App\Enums\ScheduleStatus;
 use App\Models\Schedule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreScheduleRequest extends FormRequest
 {
@@ -25,13 +28,13 @@ class StoreScheduleRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'string', 'in:'.implode(',', array_keys(Schedule::CATEGORIES))],
+            'category' => ['required', 'string', Rule::in(ScheduleCategory::values())],
             'start_date' => ['required', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'start_time' => ['nullable', 'date_format:H:i'],
             'end_time' => ['nullable', 'date_format:H:i'],
             'location' => ['nullable', 'string', 'max:255'],
-            'status' => ['required', 'string', 'in:'.implode(',', array_keys(Schedule::STATUSES))],
+            'status' => ['required', 'string', Rule::in(ScheduleStatus::values())],
             'description' => ['nullable', 'string'],
             'staff_id' => ['nullable', 'integer', 'exists:staff,id'],
         ];

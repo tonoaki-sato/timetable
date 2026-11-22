@@ -88,4 +88,21 @@ class EquipmentLogisticsPlanRepository implements EquipmentLogisticsPlanReposito
 
         return $count;
     }
+
+    #[Override]
+    public function getPlansForLocations(array $locationIds, string $direction, ?Timetable $timetable = null): Collection
+    {
+        if ($locationIds === []) {
+            return new Collection;
+        }
+
+        $column = $direction === 'from' ? 'from_location_id' : 'to_location_id';
+
+        return EquipmentLogisticsPlan::with(['equipment'])
+            ->whereIn($column, $locationIds)
+            ->when($timetable !== null, fn ($q) => $q->where('timetable_id', $timetable->id))
+            ->orderBy('target_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->get();
+    }
 }

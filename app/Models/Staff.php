@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Presenters\StaffPresenter;
 use Database\Factories\StaffFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -28,6 +29,16 @@ class Staff extends Model
 {
     /** @use HasFactory<StaffFactory> */
     use HasFactory;
+
+    protected ?StaffPresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): StaffPresenter
+    {
+        return $this->presenterInstance ??= new StaffPresenter($this);
+    }
 
     /**
      * モデルの起動処理
@@ -62,14 +73,6 @@ class Staff extends Model
     public function getIsReissuedAttribute(): bool
     {
         return $this->reissue_count > 0;
-    }
-
-    /**
-     * 専用マイシフトURLの取得
-     */
-    public function getMyShiftUrlAttribute(): string
-    {
-        return route('staff.myshift', ['token' => $this->access_token]);
     }
 
     /**

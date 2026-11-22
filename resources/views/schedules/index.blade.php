@@ -177,8 +177,8 @@
                                 @if($schedule->end_date && $schedule->end_date->ne($schedule->start_date))
                                 <span class="text-slate-400 font-normal">〜 {{ $schedule->end_date->format('Y/m/d') }}</span>
                                 @endif
-                                @if($schedule->formatted_time_range)
-                                <span class="text-indigo-600 font-medium text-[11px] ml-1">⏰ {{ $schedule->formatted_time_range }}</span>
+                                @if($schedule->presenter()->formattedTimeRange())
+                                <span class="text-indigo-600 font-medium text-[11px] ml-1">⏰ {{ $schedule->presenter()->formattedTimeRange() }}</span>
                                 @endif
                                 @if($schedule->is_today)
                                 <span class="ml-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">本日</span>
@@ -189,7 +189,7 @@
                         <!-- タイトル・議題 (タイトルの前に個々のアイコンを表示) -->
                         <td class="px-4 py-2.5">
                             <div class="flex items-center space-x-1.5 min-w-[200px]">
-                                <span class="text-sm shrink-0" title="{{ $schedule->is_linked_to_timetable ? '運行スケジュール' : $schedule->category_label }}">{{ $schedule->category_icon }}</span>
+                                <span class="text-sm shrink-0" title="{{ $schedule->is_linked_to_timetable ? '運行スケジュール' : $schedule->presenter()->categoryLabel() }}">{{ $schedule->presenter()->categoryIcon() }}</span>
                                 <a href="{{ route('schedules.show', $schedule) }}" class="font-bold text-slate-800 hover:text-indigo-600 hover:underline transition truncate">
                                     {{ $schedule->title }}
                                 </a>
@@ -215,8 +215,8 @@
 
                         <!-- 状態 -->
                         <td class="px-4 py-2.5 whitespace-nowrap text-center">
-                            <span class="px-2 py-0.5 rounded text-[11px] font-bold border {{ $schedule->status_badge_class }}">
-                                {{ $schedule->status_label }}
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold border {{ $schedule->presenter()->statusBadgeClass() }}">
+                                {{ $schedule->presenter()->statusLabel() }}
                             </span>
                         </td>
 

@@ -32,11 +32,6 @@ interface TimetableLaneRepositoryInterface
     public function findByTimetableAndLaneId(int $timetableId, int $laneId): ?TimetableLane;
 
     /**
-     * タイムテーブルIDと班名（または「班」を除いた名称）から運行日別担当班編成を取得
-     */
-    public function findByTimetableAndNameOrCleanName(int $timetableId, string $laneName, string $cleanName): ?TimetableLane;
-
-    /**
      * 指定タイムテーブルに属する特定IDの運行日別担当班編成を取得
      */
     public function findForTimetableById(Timetable $timetable, int $timetableLaneId): ?TimetableLane;

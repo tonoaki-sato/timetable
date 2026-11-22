@@ -24,8 +24,6 @@ class SchedulePresenterTest extends TestCase
 
         $this->assertSame('-', $presenter->pdfDate());
         $this->assertSame('-', $presenter->pdfTime());
-        $this->assertSame('-', $schedule->pdf_date);
-        $this->assertSame('-', $schedule->pdf_time);
     }
 
     /**
@@ -44,8 +42,6 @@ class SchedulePresenterTest extends TestCase
 
         $this->assertSame('2027/01/10(日)', $presenter->pdfDate());
         $this->assertSame('18:00 〜 20:00', $presenter->pdfTime());
-        $this->assertSame('2027/01/10(日)', $schedule->pdf_date);
-        $this->assertSame('18:00 〜 20:00', $schedule->pdf_time);
     }
 
     /**
@@ -64,8 +60,6 @@ class SchedulePresenterTest extends TestCase
 
         $this->assertSame('2027/05/15(土) 〜 2027/07/31(土)', $presenter->pdfDate());
         $this->assertSame('-', $presenter->pdfTime());
-        $this->assertSame('2027/05/15(土) 〜 2027/07/31(土)', $schedule->pdf_date);
-        $this->assertSame('-', $schedule->pdf_time);
     }
 
     /**
@@ -82,6 +76,5 @@ class SchedulePresenterTest extends TestCase
         $presenter = new SchedulePresenter($schedule);
 
         $this->assertSame('09:00 〜', $presenter->pdfTime());
-        $this->assertSame('09:00 〜', $schedule->pdf_time);
     }
 }

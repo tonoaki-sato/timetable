@@ -24,7 +24,7 @@
                             <span class="text-sm shrink-0">{{ $locStatus->status->icon() }}</span>
                             <span class="font-bold text-slate-900 truncate">{{ $locStatus->location->name }}</span>
                             <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-200/70 text-slate-600 shrink-0 font-medium">
-                                {{ $locStatus->location->type_label }}
+                                {{ $locStatus->location->presenter()->typeLabel() }}
                             </span>
                         </div>
                         <div class="text-[10px] text-slate-500 font-mono mt-0.5">

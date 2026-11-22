@@ -29,7 +29,7 @@ class StaffService
      */
     public function getShowViewData(Staff $staff): StaffShowViewDataDTO
     {
-        $shiftUrl = $staff->my_shift_url;
+        $shiftUrl = $staff->presenter()->myShiftUrl();
 
         return new StaffShowViewDataDTO(
             staff: $staff,

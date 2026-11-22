@@ -124,7 +124,7 @@ class GlobalSearchService
                 ->map(function (Equipment $equipment): array {
                     $subtitle = implode('・', array_filter([
                         $equipment->type_enum->shortLabel(),
-                        $equipment->storage_location_name,
+                        $equipment->presenter()->storageLocationName(),
                     ]));
 
                     return (new GlobalSearchResultDTO(
@@ -134,7 +134,7 @@ class GlobalSearchService
                         title: $equipment->name,
                         subtitle: $subtitle !== '' ? $subtitle : '機材・備品台帳',
                         url: route('equipments.index', ['keyword' => $equipment->name]),
-                        badge: $equipment->formatted_quantity,
+                        badge: $equipment->presenter()->formattedQuantity(),
                     ))->toArray();
                 })
                 ->values()
@@ -166,7 +166,7 @@ class GlobalSearchService
                         title: $schedule->title,
                         subtitle: $subtitle !== '' ? $subtitle : '年間スケジュール',
                         url: route('schedules.show', $schedule),
-                        badge: Schedule::STATUSES[$schedule->status] ?? $schedule->status,
+                        badge: $schedule->presenter()->statusLabel(),
                     ))->toArray();
                 })
                 ->values()
@@ -205,7 +205,7 @@ class GlobalSearchService
                         title: $task->title,
                         subtitle: $subtitle !== '' ? $subtitle : '作業タスク',
                         url: $url,
-                        badge: TimetableTask::STATUSES[$task->status] ?? null,
+                        badge: $task->status ? $task->presenter()->statusLabel() : null,
                     ))->toArray();
                 })
                 ->values()

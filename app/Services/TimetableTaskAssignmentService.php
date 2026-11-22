@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Lane;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableLane;
 use App\Models\TimetableTask;
+use App\Presenters\LanePresenter;
 use App\Repositories\Contracts\StaffRepositoryInterface;
 use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
 use App\Repositories\Contracts\TimetableLaneRepositoryInterface;
@@ -76,7 +76,7 @@ class TimetableTaskAssignmentService
             'activeStaff' => $activeStaff,
             'affiliations' => $affiliations,
             'initialTaskId' => $initialTaskId,
-            'colorOptions' => Lane::COLOR_OPTIONS,
+            'colorOptions' => LanePresenter::COLOR_OPTIONS,
         ];
     }
 

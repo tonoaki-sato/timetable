@@ -39,7 +39,7 @@ class TimetableTaskAssignModalResource extends JsonResource
                 'end_time' => substr($task->end_time, 0, 5),
                 'location' => $task->location,
                 'required_people_count' => $task->required_people_count,
-                'required_people_label' => $task->required_people_label,
+                'required_people_label' => $task->presenter()->requiredPeopleLabel(),
                 'assigned_count' => $task->assigned_count,
                 'is_satisfied' => $task->is_satisfied,
                 'shortage_count' => $task->shortage_count,
@@ -53,7 +53,7 @@ class TimetableTaskAssignModalResource extends JsonResource
                     'affiliation' => $a->staff?->affiliation ?? '',
                     'role_description' => $a->role_description ?: '一般担当',
                     'attendance_status' => $a->attendance_status,
-                    'attendance_status_label' => $a->attendance_status_label,
+                    'attendance_status_label' => $a->presenter()->attendanceStatusLabel(),
                     'is_lane_lead' => $leadId !== null && (int) $a->staff_id === (int) $leadId,
                 ];
             })->values(),

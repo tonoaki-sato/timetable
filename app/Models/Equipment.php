@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\EquipmentCheckoutRule;
 use App\Enums\EquipmentType;
+use App\Presenters\EquipmentPresenter;
 use Database\Factories\EquipmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -35,6 +36,16 @@ class Equipment extends Model
      * @var string
      */
     protected $table = 'equipments';
+
+    protected ?EquipmentPresenter $presenterInstance = null;
+
+    /**
+     * 表示用 Presenter インスタンスを取得
+     */
+    public function presenter(): EquipmentPresenter
+    {
+        return $this->presenterInstance ??= new EquipmentPresenter($this);
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -84,32 +95,6 @@ class Equipment extends Model
     }
 
     /**
-     * 区分ラベルアクセサ
-     */
-    public function getTypeLabelAttribute(): string
-    {
-        return $this->type_enum->label();
-    }
-
-    /**
-     * 持出ルールラベルアクセサ
-     */
-    public function getCheckoutRuleLabelAttribute(): string
-    {
-        return $this->checkout_rule_enum->label();
-    }
-
-    /**
-     * フォーマット済み数量表示アクセサ（例: "約 60 本" または "5 台"）
-     */
-    public function getFormattedQuantityAttribute(): string
-    {
-        $prefix = $this->is_approximate_quantity ? '約 ' : '';
-
-        return $prefix.number_format((int) $this->quantity).' '.$this->unit;
-    }
-
-    /**
      * イベント会社レンタル機材か判定
      */
     public function isRental(): bool
@@ -139,67 +124,6 @@ class Equipment extends Model
     public function storageLocation(): BelongsTo
     {
         return $this->belongsTo(Location::class, 'storage_location_id');
-    }
-
-    /**
-     * 定常保管場所の拠点名アクセサ
-     */
-    public function getStorageLocationNameAttribute(): ?string
-    {
-        return $this->storageLocation?->name;
-    }
-
-    /**
-     * 画面表示用の解決済み保管・調達ラベル
-     */
-    public function getResolvedStorageLocationLabelAttribute(): string
-    {
-        if ($this->isRental()) {
-            return 'イベント会社手配';
-        }
-
-        if ($this->storageLocation !== null) {
-            return $this->storageLocation->name;
-        }
-
-        if ($this->isPersonal()) {
-            return '個人保管（持ち込み）';
-        }
-
-        return '未指定';
-    }
-
-    /**
-     * モーダル表示・編集用のJSONペイロード配列を取得
-     *
-     * @return array<string, mixed>
-     */
-    public function toModalPayload(): array
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'type' => $this->type,
-            'type_label' => $this->type_enum->label(),
-            'type_short_label' => $this->type_enum->shortLabel(),
-            'type_icon' => $this->type_enum->icon(),
-            'type_badge_classes' => $this->type_enum->badgeClasses(),
-            'checkout_rule' => $this->checkout_rule,
-            'checkout_rule_label' => $this->checkout_rule_enum->label(),
-            'checkout_rule_short_label' => $this->checkout_rule_enum->shortLabel(),
-            'checkout_rule_icon' => $this->checkout_rule_enum->icon() ?? '',
-            'checkout_rule_badge_classes' => $this->checkout_rule_enum->badgeClasses(),
-            'quantity' => (int) $this->quantity,
-            'is_approximate_quantity' => (bool) $this->is_approximate_quantity,
-            'unit' => $this->unit,
-            'formatted_quantity' => $this->formatted_quantity,
-            'storage_location_id' => $this->storage_location_id,
-            'storage_location_name' => $this->storage_location_name ?? '',
-            'storage_location_is_active' => $this->storageLocation ? (bool) $this->storageLocation->is_active : true,
-            'resolved_storage_location_label' => $this->resolved_storage_location_label,
-            'description' => $this->description ?? '',
-            'update_url' => route('equipments.update', $this),
-        ];
     }
 
     /**
