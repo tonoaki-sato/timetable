@@ -20,6 +20,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
 - Check for existing components to reuse before writing a new one.
+- **後方互換シムの禁止とクリーンな刷新方針**: 仕様変更・リファクタリング・機能削除を行う際は、後方互換のためだけのエイリアス・ラッパー・互換ルート・互換アクセサ・旧リクエスト形式の吸収コード・グローバル変数公開（`window.*` 等）を残さず、呼び出し元・ルート・ビュー・テストを含めて一から刷新し、不要になったファイル・メソッド・DOM 要素も完全に削除してコードベースをクリーンに保つこと。
 
 ## Verification Scripts
 
@@ -115,7 +116,8 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 ### Database Migrations
 
 - テーブルスキーマを変更する際は、新規の差分マイグレーション（addColumn, dropColumn 等）を作成せず、既存のマイグレーションファイル（テーブル作成マイグレーション等）を直接修正して対応する。
-- **マイグレーション・シーダー実行前の差分検証と同期**: `php artisan migrate:fresh --seed` などのデータベース再構築コマンドを実行する際は、直前に現時点のデータベース登録内容（UI経由で作成・変更・削除されたデータや最新のマスター状態）とシーダー（`database/seeders/*`）の内容を比較・検証すること。差分や更新の必要性がある場合は、あらかじめシーダーファイルを最新の状態に更新した上でマイグレーションを実行し、最新データの消失を防止する。
+- **マイグレーション・シーダー実行前の差分検証と同期**: `php artisan migrate:fresh --seed` などのデータベース再構築コマンドを実行する際は、直前に現時点のデータベース登録内容（UI経由で作成・変更・削除されたデータや最新のマスター状態）とシーダー（`database/seeders/*`）の内容を比較・検証すること。差分や更新の必要性がある場合は、あらかじめシーダーファイルを最新の状態に更新した上でマイグレーションを実行し、最新データの消失を防止する。具体的な比較・同期手順は `sync-seeders-from-db` スキルに従うこと。
+- **DB 設計・マスター化計画時の可視化**: テーブル構造の変更やマスター化などの設計計画を作成する際は、関連テーブルの ER 図（Mermaid `erDiagram`）および対象テーブルのカラム用途一覧を計画内に明記すること。
 
 ### Model Creation
 
@@ -174,29 +176,9 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
      - JavaScript は必ず `resources/js/{feature}.js` に外部ファイルとして作成し、`vite.config.js` の `input` に登録した上で、Blade 側からは `@vite(['resources/js/{feature}.js'])` 経由で読み込むこと（Laravel Vite プラグインが自動的に CSP ノンス属性を付与するため安全に実行される）。
      - 動的な初期値やURL、件数などは HTML 側の `data-*` 属性（`dataset`）に保持させ、JavaScript 側では `element.dataset.*` 経由で取得すること（Blade 式を JS 内に展開しない）。
      - **Vite スクリプトの読み込み方式（スロット内末尾への直接配置）**: 本アプリケーションの親レイアウト（`resources/views/components/layouts/app.blade.php` 等）は各画面のビューをメインスロット `{{ $slot }}` として展開する設計となっており、親レイアウト側に `@stack('scripts')` の受け皿は設けていない。個別の Blade テンプレートで `@push('scripts')` を使用するとスクリプトタグが出力されず破棄されるため、画面専用のスクリプトは他の全画面と同様に、`<x-layouts.app>` のスロット内末尾に直接 `@vite(['resources/js/{feature}.js'])` と記述して読み込ませること。
-   - **一覧画面のレイアウト・パーツデザイン標準規約**:
-     一覧画面を新規作成または改修する際は、**共通 UI コンポーネント（`resources/views/components/ui/*`）および取引先管理（`resources/views/vendors/index.blade.php`）・屋台配置一覧（`resources/views/site_layouts/booths.blade.php`）**の構成とパーツデザインを基本標準として統一すること。
-     - **ページヘッダー**: 画面のタイトル行は「タイトル（アイコン付き見出し）」「説明文」「リンク・アクションボタン」が横並びの一行に収まるレイアウトとする。タイトルと説明文を左側にインライン配置し、説明文は一行に収まる簡潔な短文とし、右側にアクションボタングループ（新規作成ボタン、画面遷移ボタン等）を右寄せ配置して画面上部の縦領域を圧迫しないようにする。
-     - **ヘッダーアクションボタンの配色規約**: 画面タイトル行（`<x-slot:actions>`）に配置する操作ボタン（新規追加、画面遷移、一覧表示等）は、通常時（非ホバー時）は未選択・セカンダリカラー（白背景・微細グレー枠線・ダークテキスト: `bg-white border border-slate-300 text-slate-700`）とし、カーソルホバー（マウス搭乗）時にプライマリカラー（インディゴ背景・インディゴ枠線・白文字: `hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition`）へと滑らかに切り替えること。
-     - **内部識別コード（ゾーンコード等）の露出防止**: 配置計画や一覧・サマリーカードなどの表示において、データベース管理上の内部識別コード（例: `ZONE_A`, `AREA_KITAGAWA`, `KIDS_VILLAGE` などのゾーンコード）は画面上に露出させず、ユーザーにとって直感的で分かりやすい正式な名称（例: `メイン通りA列（東側歩道）`, `北川駐車場内`, `キッズ村`）と件数情報のみをシンプルに表示すること。
-     - **KPI / サマリーカード**: グリッド配置（2〜4列）、白背景（`bg-white`）、微細ボーダー（`border border-slate-200 rounded-xl p-4 shadow-xs`）、アイコンバッジ、カウントバッジ。
-     - **表示切替フィルターバー**: `bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs`、インライン全選択・全解除ボタングループ、`✔`/`✕` チップトグル、件数インジケータ。
-     - **データテーブル**: `bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden`、ヘッダー背景 `bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600`、行hover効果（`hover:bg-slate-50/50`）、識別コードバッジ（Monoフォント）、状態・種別バッジ。各行の「名前」は通常時は黒色（`font-bold text-slate-800`）、ホバー時に下線・インディゴ色（`hover:text-indigo-600 hover:underline transition cursor-pointer`）となるクリック可能なリンク/ボタンとし、クリック時に閲覧専用の詳細モーダルを表示する。
-     - **行アクションボタン**: 操作ボタンは他のページ同様に「アイコン＋テキスト」で表示する。編集ボタン（`inline-flex items-center space-x-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition cursor-pointer`、`<span>✏️</span><span>編集</span>`、クリックで編集モーダルを開く）、削除ボタン（`inline-flex items-center space-x-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition cursor-pointer`、`<span>🗑️</span><span>削除</span>`、確認ダイアログ付き）。
-     - **詳細モーダル（閲覧専用）**: 各行の名前クリック時に開き、基本情報・関連レコード・特記事項の確認に専念させる。モーダル内には編集・削除リンクやボタンを配置せず、明確な「閉じる」ボタンのみを設けて誤操作を防止する。
-     - **入力フォームモーダル（新規追加・編集）**: 画面遷移（別ページ遷移）を行わず、ページ上部アクションからの「新規登録」および行アクションからの「編集」ともにモーダルフォームを表示し、一覧画面内で追加・更新操作を完結させる。Backdrop（`bg-slate-900/40 backdrop-blur-xs`）、白カード（`rounded-2xl shadow-xl max-w-lg`）、キャンセル/保存ボタンの配色統一。
-   - **グローバルナビゲーション・ドロップダウンメニューの表示規約**:
-     - 項目数が多いドロップダウンメニュー（6項目以上等）は、1列の縦長配置を避け、業務・役割の論理的グループに基づいた2カラム（メガメニュー形式、例: `w-[620px] lg:w-[650px]`）に整理して縦幅を約300px以内に抑制し、ノートPC等の画面下端での見切れを防止すること。
-     - 全てのドロップダウンメニュー（`.dropdown-menu`）には、小型ウィンドウや上下狭小画面での見切れ安全対策として、必ず `max-h-[calc(100vh-4.5rem)] overflow-y-auto` を付与し、常に全項目へスクロールしてアクセス可能にすること。
-   - **PDFテンプレート (DomPDF) のCSS・テーブル規約**:
-     - 全称セレクタ `*` をリセットスタイル等で使用しないこと（DomPDF内部で `@page` にマッチしてページ余白が `0` にリセットされ、`position: fixed` の固定ヘッダーを用紙外へ押し出すため）。リセットは `table, th, td, h1, h2, h3, div, span, strong, b, p` など具体的なタグ名を列挙して指定する。
-     - テーブル列幅に `<colgroup>` / `<col>` を使用しないこと（DomPDF未サポートのため無視され均等幅にフォールバックする）。列幅は `<style>` ブロック内で `th`（または `td`）のクラスセレクタ（例: `.table th.col-name { width: ...; }`）に対して指定する。
-   - **SVGベクター図面・キャンバスUIの描画品質・ズーム最適化規約**:
-     - **GPUビットマップ拡大ボケの防止（ネイティブ再ラスタライズの強制）**: SVG図面やベクターキャンバスを拡大縮小するUIでは、ビューポートラッパーに `will-change: transform` や CSS `transform: scale()` を使用してはならない（ブラウザが初期サイズのテクスチャをキャッシュし、拡大時にビットマップ引き伸ばしによるボケ・にじみが発生するため）。拡大表示時は `<svg viewBox="...">` 自体の `width` / `height` 属性およびスタイルに拡大後の実ピクセル寸法（`baseWidth * scale` 等）を直接指定し、常にブラウザのネイティブ解像度でベクター再ラスタライズを実行させること。
-     - **デバイスピクセル（DPR）整合**: パン座標 `(x, y)` や拡大サイズは `window.devicePixelRatio` を考慮して物理ピクセル単位（`Math.round(val * dpr) / dpr`）で整数スナップさせ、水平・垂直線のサブピクセル分散（アンチエイリアスボケ）を防止すること。
-     - **ベクター精度とテキストヒンティング無効化**: `<svg>` ルートおよび図形・文字要素には `shape-rendering="geometricPrecision"` および `text-rendering="geometricPrecision"` を付与し、極小文字や極細線のグリッド吸着歪みを防止すること。
-     - **CADテキストの白ハロー（視認性保護）**: 図面上の文字（ブース番号・建物名等）が背後のハッチング線や図形境界と干渉してにじまないよう、テキスト要素には `paint-order: stroke fill; stroke: #ffffff; stroke-width: ...; stroke-linejoin: round;` による白フチ（ハロー）処理を適用すること。
-     - **DOMインプレース更新（イベント整合性の保護）**: SVG図面上の要素（ノード）を再描画・更新する際は、親 `<g>` 要素そのものを破棄（`remove()` / `innerHTML = ''`）せず、`<g>` 要素を保持したまま内部の子要素のみを再構築するか属性を更新し、バインド済みのイベントリスナー（ドラッグ、ダブルクリック等）を破壊しないこと。
+   - **JS モジュール構造・イベント管理**: 共通ユーティリティは `window.*` グローバルへ公開せず ES Modules（`import`/`export`）で明示的に依存を繋ぐこと。共通スクリプト（`app.js` 等）と画面専用 JS で同一 DOM 要素へイベントリスナーを二重登録しないこと。中〜大型の画面 JS は `resources/js/{feature}/` 配下のサブモジュールへ機能分割し、エントリファイルは初期化と結合に専念させること。
+   - **一覧画面・ナビゲーション UI 規約**: 一覧画面・モーダル・グローバルナビゲーションの新規作成・改修時は `ui-list-and-nav-standards` スキルを必ずアクティベートして遵守すること。
+   - **PDF (DomPDF) / SVG 図面キャンバス規約**: PDF テンプレートおよび SVG 図面エディタの新規作成・改修時は `pdf-and-svg-rendering` スキルを必ずアクティベートして遵守すること。
 
 2. **HTTP / Delivery Layer (Controller / FormRequest)**:
    - **Thin Controller の徹底**: コントローラーはリクエストの受付、バリデーション済みデータの受け渡し、Service/Actionの呼び出し、レスポンス返却のみを行い、業務ロジックを直接記述しない。
@@ -208,7 +190,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 4. **Domain & Application Service Layer (`app/Services/`, `app/DTOs/`, `app/Enums/`, `app/Policies/`)**:
    - 業務ルール、横断的計算、競合検知、制約検証は Service に実装する。
    - 複数レイヤー間のデータ受け渡しは連想配列ではなく DTO（`app/DTOs/`）を定義して型安全に行う。
-   - 状態・種別判定は Enum（`app/Enums/`）を使用する。
+   - 状態・種別判定および選択肢・許可値リスト（`values()` 等）は Enum（`app/Enums/`）へ一元化し、Model や FormRequest に文字列配列を重複定義しない。
    - リソースごとの認可判定は Policy（`app/Policies/`）に委譲する。
 
 5. **Repository Layer (`app/Repositories/`)**:
@@ -217,6 +199,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 6. **Model & Persistence Layer (`app/Models/`)**:
    - Eloquent Model はリレーション定義、スコープ、属性キャストに専念する。
+   - Model 内に UI 表現（Tailwind CSS クラス、`route()` / `asset()` ヘルパー、モーダル用ペイロード整形 `toModalPayload()`、画面向けラベル・バッジ生成等）を記述せず、`app/Presenters/`（`$model->presenter()`）へ分離すること。
 
 7. **View Components (`app/View/Components/`, `resources/views/components/`)**:
    - **クラスベース (`app/View/Components/`)**: ダッシュボードの各カードなど、DI（Service注入）や表示判定ロジック（ViewModel的役割）が必要なUIパーツに使用する。
