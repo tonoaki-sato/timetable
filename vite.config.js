@@ -9,6 +9,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
+                'resources/js/dashboard.js',
                 'resources/js/timetable-matrix.js',
                 'resources/js/calendar.js',
                 'resources/js/schedules.js',

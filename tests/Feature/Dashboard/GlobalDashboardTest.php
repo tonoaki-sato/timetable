@@ -184,4 +184,26 @@ class GlobalDashboardTest extends TestCase
         // プログレスバー内部に style="width: が存在しないこと (厳格CSP)
         $this->assertStringNotContainsString('style="width:', $content);
     }
+
+    /**
+     * ダッシュボード画面に専用Viteスクリプトとリアルタイム時計DOMが含まれ、厳格CSPに準拠していること
+     */
+    public function test_dashboard_renders_vite_script_realtime_clock_and_strict_csp(): void
+    {
+        $response = $this->actingAs($this->admin)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('id="realtime-clock"', false);
+
+        $content = $response->getContent();
+
+        $this->assertTrue(
+            str_contains($content, 'dashboard.js') || str_contains($content, 'dashboard-'),
+            'dashboard.js script asset should be rendered on the page.'
+        );
+
+        $this->assertDoesNotMatchRegularExpression('/onclick\s*=/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/onload\s*=/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/<script(?![^>]*src=)[^>]*>/i', $content);
+    }
 }
