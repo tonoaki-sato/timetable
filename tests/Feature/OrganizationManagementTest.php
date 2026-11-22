@@ -9,11 +9,12 @@ use App\Models\User;
 use App\Services\PdfService;
 use Dompdf\Adapter\CPDF;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AssertsPdfStarGlyphs;
 use Tests\TestCase;
 
 class OrganizationManagementTest extends TestCase
 {
-    use RefreshDatabase;
+    use AssertsPdfStarGlyphs, RefreshDatabase;
 
     private User $admin;
 
@@ -539,8 +540,10 @@ class OrganizationManagementTest extends TestCase
     public function test_organization_views_and_pdf_render_staff_attributes_correctly(): void
     {
         $root = OrganizationUnit::factory()->create(['name' => '実行委員長', 'display_order' => 10]);
+        $officer = OrganizationUnit::factory()->create(['name' => '副実行委員長', 'parent_id' => $root->id, 'display_order' => 15]);
         $branch = OrganizationUnit::factory()->create(['name' => '総務部', 'parent_id' => $root->id, 'display_order' => 20]);
         $leaf = OrganizationUnit::factory()->create(['name' => '警備係', 'parent_id' => $branch->id, 'display_order' => 30]);
+        $execLeaf = OrganizationUnit::factory()->create(['name' => '救護係', 'parent_id' => $branch->id, 'display_order' => 40]);
 
         $exec = Staff::factory()->executive()->create(['name' => '寺井 幹事', 'kana' => 'テライ']);
         $board = Staff::factory()->executiveBoard()->create(['name' => '佐藤 幹事会', 'kana' => 'サトウ']);
@@ -548,9 +551,12 @@ class OrganizationManagementTest extends TestCase
         $external = Staff::factory()->external()->create(['name' => '鈴木 外部', 'kana' => 'スズキ']);
 
         $root->staff()->attach($exec->id, ['display_order' => 10]);
+        $officer->staff()->attach($exec->id, ['display_order' => 10]);
         $branch->staff()->attach($board->id, ['display_order' => 10]);
         $leaf->staff()->attach($general->id, ['display_order' => 10]);
         $leaf->staff()->attach($external->id, ['display_order' => 20]);
+        $execLeaf->staff()->attach($exec->id, ['display_order' => 10]);
+        $execLeaf->staff()->attach($board->id, ['display_order' => 20]);
 
         // 1. Web組織管理画面（組織一覧・組織図ビュー・モーダル選択肢）: 一般のみ括弧省略
         $indexResponse = $this->actingAs($this->admin)->get(route('organizations.index'));
@@ -570,19 +576,30 @@ class OrganizationManagementTest extends TestCase
         $showResponse->assertJsonPath('staff.1.staff_attribute_label', '外部');
         $showResponse->assertJsonPath('staff.1.display_name', '鈴木 外部（外部）');
 
-        // 3. 組織図PDF: ★（幹事）/ ☆（幹事会）記号・凡例・余白
+        // 3. 組織図PDF: ★（幹事）/ ☆（幹事会）記号・凡例・重なりなし描画・余白
         $action = app(DownloadOrganizationPdfAction::class);
         $viewData = $action->buildViewData();
         $viewData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
 
         $html = view('pdf.organization_chart', $viewData)->render();
-        $this->assertStringContainsString('★：幹事 / ☆：幹事会', $html);
-        $this->assertStringContainsString('★寺井 幹事', $html);
-        $this->assertStringContainsString('☆佐藤 幹事会', $html);
+        $this->assertStringContainsString('<span class="pdf-symbol">★</span>：幹事 / <span class="pdf-symbol">☆</span>：幹事会', $html);
+        $this->assertStringContainsString('<span class="pdf-symbol pdf-symbol-prefix">★</span>寺井 幹事', $html);
+        $this->assertStringContainsString('<span class="pdf-symbol pdf-symbol-prefix">☆</span>佐藤 幹事会', $html);
         $this->assertStringContainsString('高橋 一般, 鈴木 外部', $html);
+        $this->assertStringNotContainsString('★</span>高橋 一般', $html);
+        $this->assertStringNotContainsString('☆</span>高橋 一般', $html);
         $this->assertStringNotContainsString('★高橋 一般', $html);
         $this->assertStringNotContainsString('☆高橋 一般', $html);
+        $this->assertStringNotContainsString('★</span>鈴木 外部', $html);
+        $this->assertStringNotContainsString('☆</span>鈴木 外部', $html);
         $this->assertStringNotContainsString('★鈴木 外部', $html);
         $this->assertStringNotContainsString('☆鈴木 外部', $html);
+
+        $dompdf = app(PdfService::class)->renderDompdf('pdf.organization_chart', $viewData, 'portrait');
+        $this->assertPdfStarGlyphsRenderedWithoutOverlap($dompdf, 4, 3);
+
+        $pageStyles = $dompdf->getCss()->get_page_styles();
+        $this->assertGreaterThan(50.0, (float) $pageStyles['base']->margin_top);
+        $this->assertGreaterThan(30.0, (float) $pageStyles['base']->margin_left);
     }
 }

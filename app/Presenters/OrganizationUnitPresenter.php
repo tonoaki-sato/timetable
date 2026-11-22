@@ -41,6 +41,22 @@ class OrganizationUnitPresenter
     }
 
     /**
+     * 担当スタッフのPDF表示用アイテム一覧（記号・氏名の組）
+     *
+     * @return array<int, array{mark: string, name: string}>
+     */
+    public function pdfStaffItems(): array
+    {
+        return $this->resolveStaffCollection()
+            ->map(fn (Staff $staff): array => [
+                'mark' => $staff->presenter()->pdfMark(),
+                'name' => $staff->name,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
      * ロード済みリレーションを優先して所属スタッフコレクションを解決
      *
      * @return Collection<int, Staff>

@@ -15,7 +15,7 @@
     <div class="card card-level-{{ min($level, 3) }}">
         <div class="card-title">{{ $unit->name }}</div>
         @if($unit->staff->isNotEmpty())
-            <div class="card-staff">{{ $unit->presenter()->staffNamesForPdfDisplay() }}</div>
+            <div class="card-staff"><x-pdf.organization-staff-names :unit="$unit" /></div>
         @endif
     </div>
 @else
@@ -25,7 +25,7 @@
                 <div class="card card-level-{{ min($level, 3) }}">
                     <div class="card-title">{{ $unit->name }}</div>
                     @if($unit->staff->isNotEmpty())
-                        <div class="card-staff">{{ $unit->presenter()->staffNamesForPdfDisplay() }}</div>
+                        <div class="card-staff"><x-pdf.organization-staff-names :unit="$unit" /></div>
                     @endif
                 </div>
             </td>
@@ -84,7 +84,7 @@
                                         <div class="leaf-card">
                                             <div class="leaf-title">{{ $leaf->name }}</div>
                                             @if($leaf->staff->isNotEmpty())
-                                                <div class="leaf-staff">{{ $leaf->presenter()->staffNamesForPdfDisplay() }}</div>
+                                                <div class="leaf-staff"><x-pdf.organization-staff-names :unit="$leaf" /></div>
                                             @endif
                                         </div>
                                     @endforeach

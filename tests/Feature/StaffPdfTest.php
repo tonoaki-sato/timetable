@@ -8,11 +8,12 @@ use App\Models\User;
 use App\Services\PdfService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AssertsPdfStarGlyphs;
 use Tests\TestCase;
 
 class StaffPdfTest extends TestCase
 {
-    use RefreshDatabase;
+    use AssertsPdfStarGlyphs, RefreshDatabase;
 
     private User $admin;
 
@@ -105,7 +106,7 @@ class StaffPdfTest extends TestCase
 
         // 1. タイトル、凡例、見出し（氏名、フリガナ、所属団体）が出力されていること
         $this->assertStringContainsString('スタッフ一覧', $html);
-        $this->assertStringContainsString('★：幹事 / ☆：幹事会', $html);
+        $this->assertStringContainsString('<span class="pdf-symbol">★</span>：幹事 / <span class="pdf-symbol">☆</span>：幹事会', $html);
         $this->assertStringContainsString('<th class="col-name">氏名</th>', $html);
         $this->assertStringContainsString('<th class="col-kana">フリガナ</th>', $html);
         $this->assertStringContainsString('<th class="col-affiliation">所属団体</th>', $html);
@@ -251,15 +252,26 @@ class StaffPdfTest extends TestCase
         $allData['japaneseFontPath'] = app(PdfService::class)->getJapaneseFontPath();
         $allHtml = view('pdf.staff_list', $allData)->render();
 
-        $this->assertStringContainsString('★：幹事 / ☆：幹事会', $allHtml);
-        $this->assertStringContainsString('★幹事 太郎', $allHtml);
-        $this->assertStringContainsString('☆幹事会 花子', $allHtml);
+        $this->assertStringContainsString('<span class="pdf-symbol">★</span>：幹事 / <span class="pdf-symbol">☆</span>：幹事会', $allHtml);
+        $this->assertStringContainsString('<span class="pdf-symbol pdf-symbol-prefix">★</span>幹事 太郎', $allHtml);
+        $this->assertStringContainsString('<span class="pdf-symbol pdf-symbol-prefix">☆</span>幹事会 花子', $allHtml);
         $this->assertStringContainsString('一般 次郎', $allHtml);
         $this->assertStringContainsString('外部 三郎', $allHtml);
+        $this->assertStringNotContainsString('★</span>一般 次郎', $allHtml);
+        $this->assertStringNotContainsString('☆</span>一般 次郎', $allHtml);
         $this->assertStringNotContainsString('★一般 次郎', $allHtml);
         $this->assertStringNotContainsString('☆一般 次郎', $allHtml);
+        $this->assertStringNotContainsString('★</span>外部 三郎', $allHtml);
+        $this->assertStringNotContainsString('☆</span>外部 三郎', $allHtml);
         $this->assertStringNotContainsString('★外部 三郎', $allHtml);
         $this->assertStringNotContainsString('☆外部 三郎', $allHtml);
+
+        $dompdf = app(PdfService::class)->renderDompdf('pdf.staff_list', $allData, 'portrait');
+        $this->assertPdfStarGlyphsRenderedWithoutOverlap($dompdf, 2, 2);
+
+        $pageStyles = $dompdf->getCss()->get_page_styles();
+        $this->assertGreaterThan(50.0, (float) $pageStyles['base']->margin_top);
+        $this->assertGreaterThan(25.0, (float) $pageStyles['base']->margin_left);
 
         $groupData = $action->buildViewData(staffAttribute: 'executive_group');
         $this->assertSame(2, $groupData['totalCount']);

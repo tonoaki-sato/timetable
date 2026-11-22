@@ -33,6 +33,13 @@
             line-height: 1.25;
             background-color: #ffffff;
         }
+        /* 幹事(★)・幹事会(☆)記号は DroidSansFallbackFull に未収録のため DejaVu Sans で描画 */
+        span.pdf-symbol {
+            font-family: 'DejaVu Sans', sans-serif !important;
+        }
+        span.pdf-symbol-prefix {
+            margin-right: 0.5pt;
+        }
 
         /* 全ページ共通固定ヘッダー (上部余白内に配置) */
         .page-header {
@@ -267,7 +274,7 @@
         <table class="header-table">
             <tr>
                 <td class="header-title">{{ $title }}</td>
-                <td class="header-meta">★：幹事 / ☆：幹事会 ｜ 出力日時: {{ $generatedAt }}</td>
+                <td class="header-meta"><x-pdf.executive-legend /> ｜ 出力日時: {{ $generatedAt }}</td>
             </tr>
         </table>
     </div>
@@ -306,7 +313,7 @@
                                 <div class="card card-level-1">
                                     <div class="card-title">{{ $root->name }}</div>
                                     @if($root->staff->isNotEmpty())
-                                        <div class="card-staff">{{ $root->presenter()->staffNamesForPdfDisplay() }}</div>
+                                        <div class="card-staff"><x-pdf.organization-staff-names :unit="$root" /></div>
                                     @endif
                                 </div>
                             </td>
@@ -320,7 +327,7 @@
                                             <div class="card card-officer">
                                                 <div class="card-title">{{ $officer->name }}</div>
                                                 @if($officer->staff->isNotEmpty())
-                                                    <div class="card-staff">{{ $officer->presenter()->staffNamesForPdfDisplay() }}</div>
+                                                    <div class="card-staff"><x-pdf.organization-staff-names :unit="$officer" /></div>
                                                 @endif
                                             </div>
                                         </div>

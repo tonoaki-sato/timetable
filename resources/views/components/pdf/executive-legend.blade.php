@@ -1,0 +1,1 @@
+<span class="pdf-symbol">★</span>：幹事 / <span class="pdf-symbol">☆</span>：幹事会

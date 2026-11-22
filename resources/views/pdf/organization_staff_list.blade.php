@@ -33,6 +33,13 @@
             line-height: 1.3;
             background-color: #ffffff;
         }
+        /* 幹事(★)・幹事会(☆)記号は DroidSansFallbackFull に未収録のため DejaVu Sans で描画 */
+        span.pdf-symbol {
+            font-family: 'DejaVu Sans', sans-serif !important;
+        }
+        span.pdf-symbol-prefix {
+            margin-right: 0.5pt;
+        }
 
         /* 全ページ共通固定ヘッダー (上部18mm余白内に配置) */
         .page-header {
@@ -150,7 +157,7 @@
         <table class="header-table" cellpadding="0" cellspacing="0">
             <tr>
                 <td class="header-title-main">{{ $title }}</td>
-                <td class="header-meta">★：幹事 / ☆：幹事会 ｜ 出力日時: {{ $generatedAt }}</td>
+                <td class="header-meta"><x-pdf.executive-legend /> ｜ 出力日時: {{ $generatedAt }}</td>
             </tr>
         </table>
     </div>
@@ -177,7 +184,7 @@
                     <td>
                         <div class="{{ $indentClass }}">{{ $unit->name }}</div>
                     </td>
-                    <td>{{ $unit->presenter()->staffNamesForPdfDisplay() ?: '-' }}</td>
+                    <td><x-pdf.organization-staff-names :unit="$unit" empty-text="-" /></td>
                     <td>{{ $unit->cleaned_description ?: '-' }}</td>
                 </tr>
             @endforeach

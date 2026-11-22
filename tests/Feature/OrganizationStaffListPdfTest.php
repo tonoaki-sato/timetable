@@ -7,13 +7,13 @@ use App\Models\OrganizationUnit;
 use App\Models\Staff;
 use App\Models\User;
 use App\Services\PdfService;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AssertsPdfStarGlyphs;
 use Tests\TestCase;
 
 class OrganizationStaffListPdfTest extends TestCase
 {
-    use RefreshDatabase;
+    use AssertsPdfStarGlyphs, RefreshDatabase;
 
     private User $admin;
 
@@ -118,7 +118,7 @@ class OrganizationStaffListPdfTest extends TestCase
 
         // 1. タイトル、凡例、ヘッダー列名が出力されていること
         $this->assertStringContainsString('保土ケ谷宿場まつり実行委員会 組織別所属スタッフ一覧', $html);
-        $this->assertStringContainsString('★：幹事 / ☆：幹事会', $html);
+        $this->assertStringContainsString('<span class="pdf-symbol">★</span>：幹事 / <span class="pdf-symbol">☆</span>：幹事会', $html);
         $this->assertStringContainsString('<th class="col-name">名前</th>', $html);
         $this->assertStringContainsString('<th class="col-staff">所属スタッフ</th>', $html);
         $this->assertStringContainsString('<th class="col-description">詳細</th>', $html);
@@ -143,11 +143,15 @@ class OrganizationStaffListPdfTest extends TestCase
         $this->assertStringContainsString('長島駐車場', $html);
 
         // 5. 所属スタッフ名が出力されていること（幹事:★、幹事会:☆、一般・外部:記号なし）
-        $this->assertStringContainsString('★寺井 智之', $html);
-        $this->assertStringContainsString('☆萩原 繁夫', $html);
+        $this->assertStringContainsString('<span class="pdf-symbol pdf-symbol-prefix">★</span>寺井 智之', $html);
+        $this->assertStringContainsString('<span class="pdf-symbol pdf-symbol-prefix">☆</span>萩原 繁夫', $html);
         $this->assertStringContainsString('高橋 一般, 鈴木 外部', $html);
+        $this->assertStringNotContainsString('★</span>高橋 一般', $html);
+        $this->assertStringNotContainsString('☆</span>高橋 一般', $html);
         $this->assertStringNotContainsString('★高橋 一般', $html);
         $this->assertStringNotContainsString('☆高橋 一般', $html);
+        $this->assertStringNotContainsString('★</span>鈴木 外部', $html);
+        $this->assertStringNotContainsString('☆</span>鈴木 外部', $html);
         $this->assertStringNotContainsString('★鈴木 外部', $html);
         $this->assertStringNotContainsString('☆鈴木 外部', $html);
 
@@ -176,10 +180,10 @@ class OrganizationStaffListPdfTest extends TestCase
         $this->assertStringContainsString('width: '.$viewData['columnWidths']['staff'].';', $html);
         $this->assertStringContainsString('width: '.$viewData['columnWidths']['description'].';', $html);
 
-        // 10. DomPDFレンダリング後に@pageの余白（18mm/12mm）が0にリセットされず維持されていること
-        $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
+        // 10. DomPDFレンダリング後に@pageの余白（18mm/12mm）が維持され、星印がDejaVuSansで重なりなく描画されること
+        $dompdf = app(PdfService::class)->renderDompdf('pdf.organization_staff_list', $viewData, 'portrait');
+        $this->assertPdfStarGlyphsRenderedWithoutOverlap($dompdf, 2, 2);
+
         $pageStyles = $dompdf->getCss()->get_page_styles();
         $this->assertGreaterThan(50.0, (float) $pageStyles['base']->margin_top);
         $this->assertGreaterThan(30.0, (float) $pageStyles['base']->margin_left);

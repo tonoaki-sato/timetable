@@ -61,10 +61,22 @@ class ModelPresentersTest extends TestCase
         $this->assertSame('佐藤 太郎, 鈴木 花子, 高橋 次郎, 田中 三郎', $loadedUnit->presenter()->staffNamesDisplay());
         $this->assertSame('佐藤 太郎（幹事）, 鈴木 花子（幹事会）, 高橋 次郎, 田中 三郎（外部）', $loadedUnit->presenter()->staffNamesWithAttributeDisplay());
         $this->assertSame('★佐藤 太郎, ☆鈴木 花子, 高橋 次郎, 田中 三郎', $loadedUnit->presenter()->staffNamesForPdfDisplay());
+        $this->assertSame([
+            ['mark' => '★', 'name' => '佐藤 太郎'],
+            ['mark' => '☆', 'name' => '鈴木 花子'],
+            ['mark' => '', 'name' => '高橋 次郎'],
+            ['mark' => '', 'name' => '田中 三郎'],
+        ], $loadedUnit->presenter()->pdfStaffItems());
 
         $assignmentLoadedUnit = OrganizationUnit::with('staffAssignments.staff')->findOrFail($unit->id);
         $this->assertSame('佐藤 太郎, 鈴木 花子, 高橋 次郎, 田中 三郎', $assignmentLoadedUnit->presenter()->staffNamesDisplay());
         $this->assertSame('★佐藤 太郎, ☆鈴木 花子, 高橋 次郎, 田中 三郎', $assignmentLoadedUnit->presenter()->staffNamesForPdfDisplay());
+        $this->assertSame([
+            ['mark' => '★', 'name' => '佐藤 太郎'],
+            ['mark' => '☆', 'name' => '鈴木 花子'],
+            ['mark' => '', 'name' => '高橋 次郎'],
+            ['mark' => '', 'name' => '田中 三郎'],
+        ], $assignmentLoadedUnit->presenter()->pdfStaffItems());
 
         $this->assertSame('幹事', $staffA->presenter()->attributeLabel());
         $this->assertTrue($staffA->isExecutiveGroup());

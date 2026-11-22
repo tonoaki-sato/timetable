@@ -33,6 +33,13 @@
             line-height: 1.3;
             background-color: #ffffff;
         }
+        /* 幹事(★)・幹事会(☆)記号は DroidSansFallbackFull に未収録のため DejaVu Sans で描画 */
+        span.pdf-symbol {
+            font-family: 'DejaVu Sans', sans-serif !important;
+        }
+        span.pdf-symbol-prefix {
+            margin-right: 0.5pt;
+        }
 
         /* 全ページ共通固定ヘッダー (上部20mm余白内に配置) */
         .page-header {
@@ -162,7 +169,7 @@
             <tr>
                 <td class="header-title-main">{{ $title }}</td>
                 <td class="header-meta">
-                    ★：幹事 / ☆：幹事会 ｜ 出力日時: {{ $generatedAt }} ｜ 対象: {{ $totalCount }}名 ({{ $filterText }})
+                    <x-pdf.executive-legend /> ｜ 出力日時: {{ $generatedAt }} ｜ 対象: {{ $totalCount }}名 ({{ $filterText }})
                 </td>
             </tr>
         </table>
@@ -192,7 +199,7 @@
                         <tr>
                             {{-- 左段 --}}
                             @if($leftStaff)
-                                <td class="col-name">{{ $leftStaff->presenter()->pdfDisplayName() }}</td>
+                                <td class="col-name"><x-pdf.staff-name :staff="$leftStaff" /></td>
                                 <td class="col-kana">{{ $leftStaff->kana ?: '-' }}</td>
                                 <td class="col-affiliation">{{ $leftStaff->affiliation ?: '-' }}</td>
                             @else
@@ -206,7 +213,7 @@
 
                             {{-- 右段 --}}
                             @if($rightStaff)
-                                <td class="col-name">{{ $rightStaff->presenter()->pdfDisplayName() }}</td>
+                                <td class="col-name"><x-pdf.staff-name :staff="$rightStaff" /></td>
                                 <td class="col-kana">{{ $rightStaff->kana ?: '-' }}</td>
                                 <td class="col-affiliation">{{ $rightStaff->affiliation ?: '-' }}</td>
                             @else
