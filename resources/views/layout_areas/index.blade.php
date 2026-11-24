@@ -5,7 +5,7 @@
     <x-page-header
         title="会場エリアマスター"
         icon="📐"
-        description="配置計画・配置一覧で全運行日共通に使用する会場エリア定義を一元管理します。">
+        description="配置計画・配置一覧で使用する会場エリア定義を管理します。">
         <x-slot:breadcrumbs>
             <span class="text-slate-500">🗂️ マスター管理</span>
             <span class="text-slate-300">/</span>

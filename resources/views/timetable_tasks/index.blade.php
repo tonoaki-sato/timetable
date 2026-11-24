@@ -5,7 +5,7 @@
     <x-page-header
         :title="$timetable->name . ' タスク計画'"
         icon="📋"
-        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）のタスク計画およびスタッフ配置管理です。'">
+        :description="'「' . $timetable->name . '」のタスク計画とスタッフ配置を管理します。'">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>

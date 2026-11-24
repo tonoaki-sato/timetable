@@ -5,7 +5,7 @@
     <x-page-header
         title="機材・備品一覧"
         icon="📦"
-        description="まつり運行全般で使用する自前保有備品、外部レンタル機材、個人持ち込み私物の台帳です。ドラッグ＆ドロップで表示順を変更できます。">
+        description="運行で使用する保有備品・レンタル・私物の台帳を管理します。">
         <x-slot:breadcrumbs>
             <span class="text-slate-500">🗂️ マスター管理</span>
             <span class="text-slate-300">/</span>

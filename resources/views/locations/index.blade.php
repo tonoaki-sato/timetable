@@ -5,7 +5,7 @@
         <x-page-header
             title="拠点マスター"
             icon="📍"
-            description="番所倉庫・一時集約スペース・貸切駐車場等の拠点マスター台帳を一元管理します。">
+            description="倉庫・集約スペース・駐車場等の拠点マスターを管理します。">
             <x-slot:breadcrumbs>
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>

@@ -7,7 +7,7 @@
     <x-page-header
         title="担当班編成"
         icon="🏷️"
-        :description="'「' . $timetable->name . '」における当日の担当班体制・班長・固定スタッフを管理します。'">
+        :description="'「' . $timetable->name . '」の担当班体制・班長・固定スタッフを管理します。'">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition shrink-0">📅 運行日程管理</a>
             <span class="text-slate-300">/</span>

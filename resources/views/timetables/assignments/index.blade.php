@@ -5,7 +5,7 @@
     <x-page-header
         :title="$timetable->name . ' 人員配置'"
         icon="👥"
-        description="作業タスクを選択し、最適なスタッフを効率的かつ安全にアサイン（人員配置）します。">
+        description="作業タスクごとに最適なスタッフを配置・管理します。">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>

@@ -5,7 +5,7 @@
         <x-page-header
             title="システム操作マニュアル"
             icon="📖"
-            description="全機能一覧・シナリオ別操作手順・本部統括・会場白地図・資材物流・現場マイシフトの公式操作ガイド"
+            description="全機能一覧・シナリオ別手順・各機能の公式操作ガイド"
             class="pb-4 border-b border-slate-200">
             <x-slot:breadcrumbs>
                 <span class="text-slate-500">⚙️ システム・ガイド</span>

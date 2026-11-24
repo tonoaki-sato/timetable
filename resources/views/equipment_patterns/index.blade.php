@@ -5,7 +5,7 @@
         <x-page-header
             title="搬出入パターン一覧"
             icon="🧩"
-            description="全運行日で共通利用可能な、機材・備品の搬出入・中継・夜間保管・撤収ステップの標準テンプレート台帳です。">
+            description="資材・備品の搬出入・保管・撤収の標準テンプレートを管理します。">
             <x-slot:breadcrumbs>
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>

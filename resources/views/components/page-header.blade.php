@@ -16,20 +16,20 @@
     @endif
 
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200">
-        <div class="flex flex-wrap items-center gap-2 min-w-0">
-            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900 flex items-center space-x-2 break-words">
+        <div class="flex flex-wrap lg:flex-nowrap items-center gap-2 min-w-0 flex-1">
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900 flex items-center space-x-2 break-words lg:shrink-0 lg:whitespace-nowrap">
                 @if($icon)
                     <span class="text-xl shrink-0">{{ $icon }}</span>
                 @endif
                 <span>{{ $title }}</span>
             </h1>
             @if(isset($badges))
-                <div class="flex flex-wrap items-center gap-1.5">
+                <div class="flex flex-wrap items-center gap-1.5 lg:shrink-0">
                     {{ $badges }}
                 </div>
             @endif
             @if($description)
-                <span class="hidden lg:inline-block text-xs text-slate-500 ml-2 truncate max-w-md" title="{{ $description }}">
+                <span class="hidden lg:block text-xs text-slate-500 ml-1 truncate min-w-0 flex-1" title="{{ $description }}">
                     {{ $description }}
                 </span>
             @endif
@@ -43,7 +43,7 @@
     </div>
 
     @if($description)
-        <p class="lg:hidden text-[11px] text-slate-500 leading-snug pt-0.5">{{ $description }}</p>
+        <p class="lg:hidden text-[11px] text-slate-500 leading-snug pt-0.5 truncate" title="{{ $description }}">{{ $description }}</p>
     @endif
 
     {{ $slot ?? '' }}

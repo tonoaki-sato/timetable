@@ -5,7 +5,7 @@
     <x-page-header
         title="総合カレンダー"
         icon="📅"
-        description="行政締切、準備タスク、定例会議、まつり本番運行日のすべてをカレンダー上で俯瞰・調整できます。">
+        description="締切・準備タスク・会議・本番運行日をカレンダーで俯瞰します。">
         <x-slot:breadcrumbs>
             <span class="text-slate-700 font-bold truncate">📅 総合カレンダー</span>
         </x-slot:breadcrumbs>

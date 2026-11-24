@@ -5,7 +5,7 @@
     <x-page-header
         :title="$staff->name"
         icon="👷"
-        description="スタッフ台帳の基本情報、マイタイムテーブル確認URL・QRコードおよび名札PDF発行を管理します。">
+        description="スタッフの基本情報・マイシフトQR・名札PDFを管理します。">
         <x-slot:breadcrumbs>
             <a href="{{ route('staff.index') }}" class="hover:text-indigo-600 transition shrink-0">スタッフ管理</a>
             <span class="text-slate-300">/</span>

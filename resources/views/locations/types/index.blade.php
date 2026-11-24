@@ -5,7 +5,7 @@
     <x-page-header
         title="拠点タイプマスタ管理"
         icon="🏷️"
-        description="「コミュニティスペース」「駐車場」など、拠点の種別を追加・編集・整理できます。">
+        description="倉庫・駐車場などの拠点種別を追加・編集・整理します。">
         <x-slot:breadcrumbs>
             <span class="text-slate-500">🗂️ マスター管理</span>
             <span class="text-slate-300">/</span>

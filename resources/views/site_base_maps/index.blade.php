@@ -5,7 +5,7 @@
     <x-page-header
         title="白地図マスター"
         icon="🗺️"
-        description="商店街平面図などのCAD白地図データ・縮尺・図面SVGファイルを全運行日で共有するマスターとして一元管理します。">
+        description="全運行日で共有するCAD白地図・SVG図面を一元管理します。">
         <x-slot:breadcrumbs>
             <span class="text-slate-500">🗂️ マスター管理</span>
             <span class="text-slate-300">/</span>

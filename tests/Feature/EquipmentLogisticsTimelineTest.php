@@ -182,7 +182,7 @@ class EquipmentLogisticsTimelineTest extends TestCase
 
         // 指定されたタイトル・説明文が表示され、削除指示されたボタンやバッジがないこと
         $response->assertSee('本祭1日目 搬出入タイムライン');
-        $response->assertSee('資材・機材の搬出入計画をガントチャートで俯瞰し、当日の進行状況を把握します。');
+        $response->assertSee('資材・機材の搬出入計画をガントチャートで俯瞰します。');
         $response->assertDontSee('Step 4 搬出入管理');
         $response->assertDontSee('搬出入指示書PDF');
 

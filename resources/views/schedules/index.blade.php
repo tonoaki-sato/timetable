@@ -5,7 +5,7 @@
     <x-page-header
         title="スケジュール管理"
         icon="📅"
-        description="会議・打ち合わせ・行政協議・出店募集・会場設営などのスケジュールを一元管理します。">
+        description="会議・行政協議・会場設営等のスケジュールを管理します。">
         <x-slot:breadcrumbs>
             <span class="text-slate-700 font-bold truncate">📋 スケジュール管理</span>
         </x-slot:breadcrumbs>

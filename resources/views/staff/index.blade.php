@@ -5,7 +5,7 @@
     <x-page-header
         title="現場スタッフ・ボランティア管理"
         icon="👷"
-        description="まつり運行を支える現場スタッフ・ボランティアの台帳管理および担当タスクの確認を行います。">
+        description="現場スタッフ・ボランティアの台帳と担当タスクを管理します。">
         <x-slot:breadcrumbs>
             <span class="text-slate-800 font-bold shrink-0">スタッフ管理</span>
         </x-slot:breadcrumbs>

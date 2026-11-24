@@ -6,7 +6,7 @@
         <x-page-header
             title="新規スタッフ登録"
             icon="➕"
-            description="現場運行を補助するボランティア・スタッフを登録します。当日の紹介・飛び入り参加者もこちらから即時登録し、名札印刷・手渡しへ連携できます。">
+            description="現場運行を支えるボランティア・スタッフを新規登録します。">
             <x-slot:breadcrumbs>
                 <a href="{{ route('staff.index') }}" class="hover:underline shrink-0">スタッフ管理</a>
                 <span class="shrink-0 text-slate-300">/</span>

@@ -5,7 +5,7 @@
     <x-page-header
         :title="$timetable->name . ' 搬出入計画一覧'"
         icon="🚚"
-        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）における資材の搬出入・中継・夜間保管計画の進捗台帳です。'">
+        :description="'「' . $timetable->name . '」の資材搬出入・保管計画の進捗台帳です。'">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>

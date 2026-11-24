@@ -5,7 +5,7 @@
     <x-page-header
         title="運行情報一覧"
         icon="⏱️"
-        description="まつり開催日ごとの基本枠（運行日・開始終了時刻）および各日の作業タスク・人員動態を管理します。">
+        description="開催日ごとの運行枠（日時）とタスク計画・人員動態を管理します。">
         <x-slot:breadcrumbs>
             <span class="text-slate-700 font-bold truncate">⏱️ 運行情報一覧</span>
         </x-slot:breadcrumbs>

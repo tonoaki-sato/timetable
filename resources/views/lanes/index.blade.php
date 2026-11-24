@@ -9,7 +9,7 @@
     <x-page-header
         title="担当班マスター"
         icon="🏷️"
-        description="全運行日で共通利用する担当班の定義（班名・テーマカラー・アイコン・標準役割）を一元管理します。">
+        description="全運行日で共通利用する担当班の定義を一元管理します。">
         <x-slot:breadcrumbs>
             <span class="text-slate-500">🗂️ マスター管理</span>
             <span class="text-slate-300">/</span>

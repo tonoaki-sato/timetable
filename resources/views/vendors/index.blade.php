@@ -5,7 +5,7 @@
         <x-page-header
             title="出展・出店者マスター"
             icon="🎪"
-            description="ござ市出店者、特設企画、企業協賛ブース等の出展・出店者マスター台帳を管理します。">
+            description="ござ市・特設企画・協賛ブース等の出展者を管理します。">
             <x-slot:breadcrumbs>
                 <span class="text-slate-500">🗂️ マスター管理</span>
                 <span class="text-slate-300">/</span>

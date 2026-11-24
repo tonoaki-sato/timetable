@@ -5,7 +5,7 @@
     <x-page-header
         :title="$timetable->name . ' 搬出入タイムライン'"
         icon="🚚"
-        description="資材・機材の搬出入計画をガントチャートで俯瞰し、当日の進行状況を把握します。">
+        description="資材・機材の搬出入計画をガントチャートで俯瞰します。">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>

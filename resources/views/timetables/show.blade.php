@@ -5,7 +5,7 @@
     <x-page-header
         :title="$timetable->name"
         icon="⏱️"
-        :description="$timetable->description ?: '「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）の運行基本情報・規制時間帯および担当班サマリーです。'">
+        :description="$timetable->description ?: '「' . $timetable->name . '」の基本情報・規制時間・担当班サマリーです。'">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
