@@ -150,10 +150,26 @@ class Phase1PerformanceOptimizationTest extends TestCase
             'targetRouteFor' => fn (Timetable $tt): string => $component->targetRouteFor($tt),
         ])->render();
 
-        $this->assertStringContainsString('(1)', $html);
+        $this->assertStringContainsString('対象運行日:', $html);
+        $this->assertStringContainsString('運行情報', $html);
+        $this->assertStringContainsString('班編成', $html);
+        $this->assertStringContainsString('タスク', $html);
+        $this->assertStringContainsString('人員配置', $html);
+        $this->assertStringContainsString('搬出入', $html);
+        $this->assertStringNotContainsString('(1)', $html);
+        $this->assertStringNotContainsString('担当班', $html);
+        $this->assertStringNotContainsString('タスク計画', $html);
+        $this->assertStringNotContainsString('班別タイムライン', $html);
+        $this->assertStringNotContainsString('配置計画', $html);
+        $this->assertStringNotContainsString('白地図', $html);
+        $this->assertStringNotContainsString('進行表', $html);
+        $this->assertStringNotContainsString('配置表PDF', $html);
         $this->assertFalse($freshTimetable->relationLoaded('timetableLanes'));
         $this->assertFalse($freshTimetable->relationLoaded('tasks'));
         $this->assertFalse($freshTimetable->relationLoaded('logisticsPlans'));
+        $this->assertArrayNotHasKey('timetable_lanes_count', $freshTimetable->getAttributes());
+        $this->assertArrayNotHasKey('tasks_count', $freshTimetable->getAttributes());
+        $this->assertArrayNotHasKey('logistics_plans_count', $freshTimetable->getAttributes());
     }
 
     public function test_dashboard_realtime_runs_lightweight_queries_and_matches_overview(): void

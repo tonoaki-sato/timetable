@@ -140,7 +140,7 @@ class TimetableRepository implements TimetableRepositoryInterface
                     ->with(['timetableLane.lane', 'assignments.staff']);
             },
             'logisticsPlans.equipment',
-        ])->withCount(['logisticsPlans'])->find($id);
+        ])->find($id);
     }
 
     #[Override]

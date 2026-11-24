@@ -437,7 +437,7 @@
                                             <span>🔔 ヘッダー現場要請通知ベル &amp; コンテキストバー</span>
                                             <span class="font-mono text-[10px] text-amber-700 bg-amber-50 px-1.5 rounded">リアルタイム</span>
                                         </div>
-                                        <p class="text-[11px] text-slate-600 mt-0.5">未対応の班長応援・機材要請をバッジ通知しその場で手配/完了処理。コンテキストバーで同一運行日の10機能間を1クリック移動。</p>
+                                        <p class="text-[11px] text-slate-600 mt-0.5">未対応の班長応援・機材要請をバッジ通知しその場で手配/完了処理。コンテキストバーで同一運行日の5機能間を1クリック移動。</p>
                                     </div>
                                 </div>
                             </div>
@@ -670,7 +670,7 @@
                                 <div class="p-3 bg-white rounded-xl border border-emerald-200 space-y-1">
                                     <div class="font-bold text-emerald-800">Step 2. 配置計画・ブース割当</div>
                                     <p class="text-[11px] text-slate-600 leading-relaxed">
-                                        運行日のコンテキストバー「🗺️ 配置計画」から配置一覧を開き、メイン通りA列（東側歩道）や北川駐車場内、キッズ村等へブース・設備を登録します。
+                                        準備・計画メニュー「🗺️ 配置計画」から配置一覧を開き、メイン通りA列（東側歩道）や北川駐車場内、キッズ村等へブース・設備を登録します。
                                     </p>
                                 </div>
                                 <div class="p-3 bg-white rounded-xl border border-emerald-200 space-y-1">
@@ -710,7 +710,7 @@
                                 <div class="p-3 bg-white rounded-xl border border-emerald-200 space-y-1">
                                     <div class="font-bold text-emerald-800">Step 2. 拠点と利用時間帯を設定</div>
                                     <p class="text-[11px] text-slate-600 leading-relaxed">
-                                        運行日のコンテキストバー「📍 拠点」で番所・倉庫・臨時駐車場と利用可能時間・車両通行止め規制時間を設定します。
+                                        マスター管理メニュー「📍 拠点マスター」で番所・倉庫・臨時駐車場と利用可能時間・車両通行止め規制時間を設定します。
                                     </p>
                                 </div>
                                 <div class="p-3 bg-white rounded-xl border border-emerald-200 space-y-1">
@@ -935,7 +935,7 @@
                                 <span>運行日コンテキストバー</span>
                             </h4>
                             <p class="text-[11px] text-indigo-900 leading-relaxed">
-                                運行日配下の画面上部に常に表示され、対象運行日の切り替えと「運行情報 / 担当班 / タスク計画 / 人員配置 / 拠点 / 搬出入 / 配置計画 / 白地図 / 進行表 / 配置表PDF」の10機能間を1クリックで横断できます。
+                                運行日配下の画面上部に常に表示され、対象運行日の切り替えと「運行情報 / 班編成 / タスク / 人員配置 / 搬出入」の5機能間を1クリックで横断できます。
                             </p>
                         </div>
                     </div>

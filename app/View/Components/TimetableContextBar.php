@@ -21,33 +21,6 @@ class TimetableContextBar extends Component
         public string $active = 'matrix',
     ) {
         $this->timetablesList = $timetableService->getSelectableTimetables();
-
-        if ($this->timetable !== null) {
-            $countMap = [
-                'timetableLanes' => 'timetable_lanes_count',
-                'tasks' => 'tasks_count',
-                'logisticsPlans' => 'logistics_plans_count',
-            ];
-
-            $missingCounts = [];
-            $attributes = $this->timetable->getAttributes();
-
-            foreach ($countMap as $relation => $countAttribute) {
-                if (array_key_exists($countAttribute, $attributes)) {
-                    continue;
-                }
-
-                if ($this->timetable->relationLoaded($relation)) {
-                    $this->timetable->setAttribute($countAttribute, $this->timetable->getRelation($relation)->count());
-                } else {
-                    $missingCounts[] = $relation;
-                }
-            }
-
-            if ($missingCounts !== []) {
-                $this->timetable->loadCount($missingCounts);
-            }
-        }
     }
 
     /**
@@ -63,10 +36,9 @@ class TimetableContextBar extends Component
             'timeline' => route('timetables.staff-timeline', $tt),
             'logistics' => route('timetables.logistics.index', $tt),
             'logistics-timeline' => route('timetables.logistics-timeline', $tt),
-            'layouts', 'layouts-booths', 'layouts-facilities' => route('timetables.layouts.index', $tt),
+            'layouts', 'layouts-booths' => route('timetables.layouts.index', $tt),
             'site-maps' => route('timetables.site-maps.editor', $tt),
             'show' => route('timetables.show', $tt),
-            'print' => route('timetables.print-assignments', $tt),
             default => route('timetable.index', ['timetable_id' => $tt->id]),
         };
     }

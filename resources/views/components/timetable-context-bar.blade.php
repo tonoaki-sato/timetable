@@ -36,23 +36,12 @@
         <a href="{{ route('timetables.lanes.index', $timetable) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'lanes' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>🏷️</span>
-            <span>担当班</span>
-            @if(($timetable->timetable_lanes_count ?? 0) > 0)
-                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->timetable_lanes_count }})</span>
-            @endif
+            <span>班編成</span>
         </a>
         <a href="{{ route('timetables.tasks.index', $timetable) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'tasks' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>📋</span>
-            <span>タスク計画</span>
-            @if(($timetable->tasks_count ?? 0) > 0)
-                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->tasks_count }})</span>
-            @endif
-        </a>
-        <a href="{{ route('timetables.lane-timeline', $timetable) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'lane-timeline' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
-            <span>📊</span>
-            <span>班別タイムライン</span>
+            <span>タスク</span>
         </a>
         <a href="{{ route('timetables.assignments', $timetable) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['assignments', 'timeline'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
@@ -63,31 +52,6 @@
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['logistics', 'logistics-timeline'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>🚚</span>
             <span>搬出入</span>
-            @if(($timetable->logistics_plans_count ?? 0) > 0)
-                <span class="text-[10px] opacity-75 font-mono">({{ $timetable->logistics_plans_count }})</span>
-            @endif
-        </a>
-        <a href="{{ route('timetables.layouts.index', $timetable) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['layouts', 'layouts-booths', 'layouts-facilities'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
-            <span>🗺️</span>
-            <span>配置計画</span>
-        </a>
-        <a href="{{ route('timetables.site-maps.editor', $timetable) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'site-maps' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
-            <span>🎨</span>
-            <span>白地図</span>
-        </a>
-        <a href="{{ route('timetable.index', ['timetable_id' => $timetable->id]) }}"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'matrix' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
-            <span>⏱️</span>
-            <span>進行表</span>
-        </a>
-        <a href="{{ route('timetables.print-assignments', $timetable) }}"
-            class="px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-1"
-            title="人員配置一覧表をPDFでダウンロード">
-            <span>📄</span>
-            <span>配置表PDF</span>
-            <span class="text-[10px] opacity-60">↓</span>
         </a>
     </div>
 </div>
