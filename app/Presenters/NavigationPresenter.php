@@ -46,8 +46,7 @@ class NavigationPresenter
             || request()->routeIs('calendar.*')
             || request()->routeIs('schedules.*')
             || (request()->routeIs('logistics.*'))
-            || request()->routeIs('timetables.logistics.index')
-            || request()->routeIs('preparation-navigator.*');
+            || request()->routeIs('timetables.logistics.index');
     }
 
     /**
@@ -70,19 +69,6 @@ class NavigationPresenter
             || request()->routeIs('site-base-maps.*')
             || request()->routeIs('layout-areas.*')
             || request()->routeIs('lanes.*');
-    }
-
-    /**
-     * 「帳票・印刷」ドロップダウンがアクティブか判定
-     */
-    public function isPrintActive(): bool
-    {
-        return request()->routeIs('staff.print*')
-            || request()->routeIs('staff.export*')
-            || request()->routeIs('staff.import*')
-            || request()->routeIs('timetables.logistics.print')
-            || request()->routeIs('timetables.print*')
-            || request()->routeIs('organizations.print*');
     }
 
     /**

@@ -373,7 +373,7 @@
                             </span>
                             @can('create', App\Models\TimetableTask::class)
                             <a href="{{ route('timetables.tasks.index', ['timetable' => $selectedTimetable, 'lane_id' => $lane->id]) }}"
-                                title="{{ $lane->name }}のタスク一覧"
+                                title="{{ $lane->name }}のタスク計画"
                                 class="print:hidden absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-bold text-indigo-600 bg-indigo-50/80 rounded transition">
                                 ➕
                             </a>

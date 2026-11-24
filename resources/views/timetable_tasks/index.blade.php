@@ -1,11 +1,11 @@
-<x-layouts.app :title="$timetable->name . ' - 作業タスク一覧'">
+<x-layouts.app :title="$timetable->name . ' - タスク計画'">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3.5">
 
     <!-- ナビゲーション & ヘッダー -->
     <x-page-header
-        :title="$timetable->name . ' 作業タスク一覧'"
+        :title="$timetable->name . ' タスク計画'"
         icon="📋"
-        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）の作業タスク台帳およびスタッフ配置管理です。'">
+        :description="'「' . $timetable->name . '」（' . $timetable->target_date?->format('Y年m月d日') . '）のタスク計画およびスタッフ配置管理です。'">
         <x-slot:breadcrumbs>
             <a href="{{ route('timetables.index') }}" class="hover:text-indigo-600 transition flex items-center space-x-1 shrink-0">
                 <span>⏱️</span>
@@ -17,7 +17,7 @@
                 <span>{{ $timetable->name }}</span>
             </a>
             <span class="text-slate-300">/</span>
-            <span class="text-slate-700 font-bold truncate">📋 タスク一覧</span>
+            <span class="text-slate-700 font-bold truncate">📋 タスク計画</span>
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
@@ -33,11 +33,11 @@
 
     <x-ui.validation-errors title="入力内容または時間帯にエラーがあります。" />
 
-    <!-- 作業タスク一覧セクションヘッダーバー -->
+    <!-- タスク計画セクションヘッダーバー -->
     <div class="flex items-center justify-between gap-2.5 px-1">
         <h2 class="font-bold text-sm sm:text-base text-slate-900 flex items-center space-x-2">
             <span>📋</span>
-            <span>運行作業タスク一覧 (班別時系列)</span>
+            <span>タスク計画 (班別時系列)</span>
         </h2>
 
         @if($timetableLanes->isNotEmpty())

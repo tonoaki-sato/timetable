@@ -8,7 +8,7 @@
             </span>
             <a id="detail-tlane-tasks-link" href="{{ route('timetables.tasks.index', $timetable) }}"
                 class="text-indigo-600 hover:underline font-bold">
-                この班のタスク管理を見る →
+                この班のタスク計画を見る →
             </a>
         </div>
 

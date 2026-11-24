@@ -83,16 +83,40 @@ class NavigationMenuStructureTest extends TestCase
     }
 
     /**
-     * 「準備・計画」メニューの先頭に運行準備ナビ、人員事前配置（アサインワークスペース）が含まれること
+     * グローバルメニューが「準備・計画」「当日運行」「マスター管理」「システム・ガイド」の順に並び、「帳票・印刷」が削除されていること
      */
-    public function test_planning_menu_contains_navigator_and_advance_assignment(): void
+    public function test_global_navigation_order_and_print_menu_removal(): void
     {
         $response = $this->actingAs($this->admin)->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // 運行準備ナビ
-        $response->assertSee(route('preparation-navigator.index'));
-        $response->assertSee('運行準備ナビ');
+        $response->assertSeeInOrder([
+            '準備・計画',
+            '当日運行',
+            'マスター管理',
+            'システム・ガイド',
+        ]);
+
+        // 「帳票・印刷」および「運行準備ナビ」はメニューに存在しないこと
+        $response->assertDontSee('帳票・印刷');
+        $response->assertDontSee('全体・マスター帳票');
+        $response->assertDontSee('運行準備ナビ');
+
+        // 削除された /preparation-navigator は 404 となること
+        $this->get('/preparation-navigator')->assertStatus(404);
+        $this->get('/preparation-navigator/run')->assertStatus(404);
+    }
+
+    /**
+     * 「準備・計画」メニューにタスク計画・人員事前配置（アサインワークスペース）が含まれ、運行準備ナビが削除されていること
+     */
+    public function test_planning_menu_contains_task_plan_and_advance_assignment(): void
+    {
+        $response = $this->actingAs($this->admin)->get(route('dashboard'));
+        $response->assertStatus(200);
+
+        // 運行準備ナビは削除されていること
+        $response->assertDontSee('運行準備ナビ');
 
         // 運行日程管理
         $response->assertSee(route('timetables.index'));
@@ -102,9 +126,10 @@ class NavigationMenuStructureTest extends TestCase
         $response->assertSee(route('timetable-lanes.index'));
         $response->assertSee('担当班編成');
 
-        // タスク台帳
+        // タスク計画
         $response->assertSee(route('timetable-tasks.index'));
-        $response->assertSee('作業タスク台帳');
+        $response->assertSee('タスク計画');
+        $response->assertDontSee('作業タスク台帳');
 
         // 人員事前配置
         $response->assertSee(route('assignments.index'));
@@ -157,23 +182,16 @@ class NavigationMenuStructureTest extends TestCase
     }
 
     /**
-     * 帳票・印刷メニューが区分A（全体・マスター帳票）専用に構成されていること
+     * グローバルメニューから帳票・印刷が削除され、運行詳細画面側の区分B専用カードおよび個別帳票ルートは維持されていること
      */
-    public function test_reports_menu_is_properly_sectioned(): void
+    public function test_reports_menu_removed_from_global_nav_while_detail_reports_remain(): void
     {
         $response = $this->actingAs($this->admin)->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // グローバルメニュー内: 区分A（全体・マスター帳票）
-        $response->assertSee('全体・マスター帳票 (区分A)');
-        $response->assertSee(route('organizations.print'));
-        $response->assertSee(route('staff.print-cards'));
-        $response->assertSee(route('staff.export-csv'));
-        $response->assertSee('年間スケジュール表 (PDF)');
-        $response->assertSee('スタッフ名簿一覧 (PDF)');
-        $response->assertSee('レンタル機材一覧 (PDF)');
-
-        // グローバルメニューからは区分B（当日現場用）および個別名札緊急印刷が除外されていること
+        // グローバルメニューから「帳票・印刷」が削除されていること
+        $response->assertDontSee('帳票・印刷');
+        $response->assertDontSee('全体・マスター帳票 (区分A)');
         $response->assertDontSee('個別名札緊急印刷');
         $response->assertDontSee('/logistics/print');
         $response->assertDontSee(route('timetables.logistics.print', $this->timetable));
@@ -238,7 +256,6 @@ class NavigationMenuStructureTest extends TestCase
             route('timetables.staff-timeline', $this->timetable),
             route('staff.create'),
             route('timetables.logistics.index', $this->timetable),
-            route('preparation-navigator.index'),
             route('timetables.index'),
             route('lanes.index'),
             route('timetables.lanes.index', $this->timetable),
@@ -266,7 +283,7 @@ class NavigationMenuStructureTest extends TestCase
     }
 
     /**
-     * 運行日程が0件の場合、担当班編成・作業タスク台帳・人員事前配置・搬出入計画のリンクが無効化されグレーアウトされること
+     * 運行日程が0件の場合、担当班編成・タスク計画・人員事前配置・搬出入計画のリンクが無効化されグレーアウトされること
      */
     public function test_navigation_links_disabled_and_grayed_out_when_no_timetables_exist(): void
     {
@@ -286,7 +303,7 @@ class NavigationMenuStructureTest extends TestCase
 
         // メニューの表示テキスト自体は存在すること
         $response->assertSee('担当班編成');
-        $response->assertSee('作業タスク台帳');
+        $response->assertSee('タスク計画');
         $response->assertSee('人員事前配置');
         $response->assertSee('搬出入計画');
         $response->assertSee('搬出入タイムライン');

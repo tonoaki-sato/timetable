@@ -161,7 +161,9 @@ class GlobalDashboardTest extends TestCase
         // 組織・マスタ & クイックランチャー
         $response->assertSee('組織・資機材・拠点マスタ');
         $response->assertSee('司令塔クイックランチャー');
-        $response->assertSee(route('preparation-navigator.index'));
+        $response->assertDontSee('運行準備ナビ');
+        $response->assertSee(route('timetables.index'));
+        $response->assertSee('運行日程管理');
         $response->assertSee(route('schedules.index'));
         $response->assertSee(route('staff.index'));
         $response->assertSee(route('equipments.index'));

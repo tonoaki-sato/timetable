@@ -50,15 +50,15 @@ class StaffPdfTest extends TestCase
     }
 
     /**
-     * グローバルメニュー（ナビゲーション）にスタッフ名簿一覧PDFへのリンクが含まれていること
+     * グローバルメニューから帳票・印刷が削除され、スタッフ名簿一覧PDFリンクが含まれないこと
      */
-    public function test_global_navigation_includes_staff_pdf_link(): void
+    public function test_global_navigation_does_not_include_staff_pdf_link(): void
     {
         $response = $this->actingAs($this->admin)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee(route('staff.pdf'), false);
-        $response->assertSee('スタッフ名簿一覧 (PDF)');
+        $response->assertDontSee(route('staff.pdf'), false);
+        $response->assertDontSee('スタッフ名簿一覧 (PDF)');
     }
 
     /**

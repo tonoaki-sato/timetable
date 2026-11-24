@@ -44,7 +44,7 @@
         <a href="{{ route('timetables.tasks.index', $timetable) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'tasks' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>📋</span>
-            <span>タスク台帳</span>
+            <span>タスク計画</span>
             @if(($timetable->tasks_count ?? 0) > 0)
                 <span class="text-[10px] opacity-75 font-mono">({{ $timetable->tasks_count }})</span>
             @endif

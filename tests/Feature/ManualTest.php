@@ -38,7 +38,7 @@ class ManualTest extends TestCase
         $response->assertSee('第2章 本部ダッシュボードの見方と進捗管理');
         $response->assertSee('第3章 まつり年間工程・総合カレンダー & 会議・LINE告知');
         $response->assertSee('第4章 運行タイムテーブルマトリクス表示');
-        $response->assertSee('第5章 運行準備ナビゲーター & 台帳・担当班編成・人員アサイン');
+        $response->assertSee('第5章 運行日程・担当班編成・タスク計画・人員アサイン');
         $response->assertSee('第6章 スタッフ管理・名簿・シフト編成・カード印刷');
         $response->assertSee('第7章 資材・機材物流管理 & 拠点・会場管理');
         $response->assertSee('第8章 現場動態管理・マイシフト運行・リアルタイム監視');
@@ -54,7 +54,8 @@ class ManualTest extends TestCase
         $response->assertSee('ワンクリックLINE告知テキスト生成');
 
         // 第4章・第5章の追加要素
-        $response->assertSee('まつり運行準備ナビゲーター（4ステップ準備ウィザード）');
+        $response->assertDontSee('運行準備ナビ');
+        $response->assertSee('タスク計画');
         $response->assertSee('同一時間帯の重複アサイン自動検知（コンフリクト警告ダイアログ）');
         $response->assertSee('スタッフタイムライン（ガントチャート）による過密防止・過不足調整');
         $response->assertSee('人員配置表（A4横・班別タスク一覧）の印刷出力');

@@ -1,4 +1,4 @@
-<!-- 2. 📋 準備・計画 ▾ -->
+<!-- 1. 📋 準備・計画 ▾ -->
 <div class="relative nav-dropdown shrink-0">
     <button type="button"
         class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $nav->isPlanActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">
@@ -7,19 +7,6 @@
         <span class="text-[9px] opacity-75">▼</span>
     </button>
     <div class="dropdown-menu hidden absolute left-0 mt-1.5 w-[620px] lg:w-[650px] max-h-[calc(100vh-4.5rem)] overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-2 z-50">
-        <!-- 運行準備ナビ (上部全幅) -->
-        <a href="{{ route('preparation-navigator.index') }}"
-            class="flex items-center space-x-2.5 p-2 rounded-xl transition mb-2 {{ request()->routeIs('preparation-navigator.*') ? 'bg-indigo-600 text-white shadow-xs' : 'bg-indigo-950/70 border border-indigo-700/50 text-slate-200 hover:bg-indigo-900/80 hover:text-white' }}">
-            <span class="text-lg shrink-0">🚀</span>
-            <div class="min-w-0 flex-1">
-                <div class="text-xs font-bold flex items-center justify-between gap-1">
-                    <span class="whitespace-nowrap truncate">運行準備ナビ</span>
-                    <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-200 shrink-0">Step 1〜4 手順ガイド →</span>
-                </div>
-                <p class="text-[10px] text-indigo-200/80 truncate mt-0.5">日程・班・タスク・人員配置を順番に進めるステップナビゲーター</p>
-            </div>
-        </a>
-
         <!-- 2カラムレイアウト -->
         <div class="grid grid-cols-2 gap-2">
             <!-- 左カラム: 📋 運行・人員編成 (Step 1〜4) -->
@@ -59,13 +46,13 @@
                     </div>
                     @endif
 
-                    <!-- 作業タスク台帳 (Step 3) -->
+                    <!-- タスク計画 (Step 3) -->
                     @if($nav->hasTimetables())
                     <a href="{{ route('timetable-tasks.index') }}"
                         class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetable-tasks.*') || request()->routeIs('timetables.tasks.index') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
                         <span class="text-base shrink-0">📝</span>
                         <div class="min-w-0 flex-1">
-                            <div class="text-xs font-bold whitespace-nowrap truncate">作業タスク台帳</div>
+                            <div class="text-xs font-bold whitespace-nowrap truncate">タスク計画</div>
                             <p class="text-[10px] text-slate-400 truncate mt-0.5">全タスク登録・必要人数設定</p>
                         </div>
                     </a>
@@ -73,7 +60,7 @@
                     <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
                         <span class="text-base shrink-0 grayscale opacity-60">📝</span>
                         <div class="min-w-0 flex-1">
-                            <div class="text-xs font-bold whitespace-nowrap truncate">作業タスク台帳</div>
+                            <div class="text-xs font-bold whitespace-nowrap truncate">タスク計画</div>
                             <p class="text-[10px] text-slate-500 truncate mt-0.5">全タスク登録・必要人数設定</p>
                         </div>
                     </div>

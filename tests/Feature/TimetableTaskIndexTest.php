@@ -96,7 +96,7 @@ class TimetableTaskIndexTest extends TestCase
         $response->assertDontSee('人員充足:');
 
         // 班別アコーディオン構造と班名が表示されていること
-        $response->assertSee('運行作業タスク一覧 (班別時系列)');
+        $response->assertSee('タスク計画 (班別時系列)');
         $response->assertSee('すべて折りたたむ');
         $response->assertSee('警備班');
         $response->assertSee('1 件');

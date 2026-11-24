@@ -1,4 +1,4 @@
-<!-- 1. ⏱️ 当日運行 ▾ -->
+<!-- 2. ⏱️ 当日運行 ▾ -->
 <div class="relative nav-dropdown shrink-0">
     <button type="button"
         class="dropdown-trigger px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap cursor-pointer shrink-0 {{ $nav->isDayActive() ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-800' }}">

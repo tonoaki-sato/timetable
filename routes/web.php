@@ -21,7 +21,6 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\LocationTypeController;
 use App\Http\Controllers\ManualController;
 use App\Http\Controllers\OrganizationController;
-use App\Http\Controllers\PreparationNavigatorController;
 use App\Http\Controllers\PresentationController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\SiteBaseMapController;
@@ -159,10 +158,6 @@ Route::middleware('auth')->group(function () {
 
     // システム操作マニュアル
     Route::get('/manual', [ManualController::class, 'index'])->name('manual.index');
-
-    // まつり運行準備ナビゲーター
-    Route::get('/preparation-navigator', [PreparationNavigatorController::class, 'index'])->name('preparation-navigator.index');
-    Route::get('/preparation-navigator/run', [PreparationNavigatorController::class, 'run'])->name('preparation-navigator.run');
 
     // 幹事会向けプレゼンテーションスライド
     Route::get('/presentation', [PresentationController::class, 'index'])->name('presentation.index');

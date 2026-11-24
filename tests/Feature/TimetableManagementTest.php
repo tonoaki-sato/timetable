@@ -83,12 +83,13 @@ class TimetableManagementTest extends TestCase
         $response->assertSee(route('timetables.staff-timeline', $timetableA));
         $response->assertSee('編集');
         $response->assertSee('担当班');
-        $response->assertSee('タスク台帳');
+        $response->assertSee('タスク計画');
         $response->assertSee('人員配置');
         $response->assertSee('進行表');
         $response->assertSee('削除');
         $response->assertDontSee('班一覧');
         $response->assertDontSee('タスク一覧');
+        $response->assertDontSee('タスク台帳');
         $response->assertDontSee('人員一覧');
         $response->assertDontSee('タスク・人員台帳');
         $response->assertSee('運行時間枠');

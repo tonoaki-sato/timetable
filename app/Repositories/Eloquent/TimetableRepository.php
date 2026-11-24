@@ -195,37 +195,6 @@ class TimetableRepository implements TimetableRepositoryInterface
     }
 
     #[Override]
-    public function getActiveAndDraftWithWorkflowDetails(): Collection
-    {
-        return Timetable::with(['timetableLanes.lane', 'timetableLanes.fixedStaff', 'timetableLanes.leadStaff', 'tasks.assignments'])
-            ->where('status', '!=', 'completed')
-            ->orderBy('target_date', 'asc')
-            ->get();
-    }
-
-    #[Override]
-    public function findFirstActiveOrDraftWithWorkflowDetails(): ?Timetable
-    {
-        return Timetable::with(['timetableLanes.lane', 'timetableLanes.fixedStaff', 'timetableLanes.leadStaff', 'tasks.assignments'])
-            ->where('status', '!=', 'completed')
-            ->orderBy('target_date', 'asc')
-            ->first();
-    }
-
-    #[Override]
-    public function getTotalCount(): int
-    {
-        return Timetable::count();
-    }
-
-    #[Override]
-    public function findWithWorkflowDetails(int $id): ?Timetable
-    {
-        return Timetable::with(['timetableLanes.lane', 'timetableLanes.fixedStaff', 'timetableLanes.leadStaff', 'tasks.assignments'])
-            ->find($id);
-    }
-
-    #[Override]
     public function loadForAssignmentsPrint(Timetable $timetable): Timetable
     {
         return $timetable->load([

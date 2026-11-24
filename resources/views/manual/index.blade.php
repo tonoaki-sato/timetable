@@ -51,7 +51,7 @@
                 🧭 シナリオ別操作手順 (全8選)
             </a>
             <a href="#sec-tasks" class="px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-slate-700 font-bold hover:border-indigo-400 hover:text-indigo-700 transition">
-                🚀 運行準備ナビ・班・アサイン
+                📋 日程・担当班・タスク計画・アサイン
             </a>
             <a href="#sec-staff" class="px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-slate-700 font-bold hover:border-indigo-400 hover:text-indigo-700 transition">
                 🏛️ 組織・スタッフ・QR名札
@@ -121,7 +121,7 @@
                     </a>
                     <a href="#sec-tasks" class="manual-nav-link flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/70 font-medium transition">
                         <span class="text-slate-400 font-mono text-[10px] shrink-0">第5章</span>
-                        <span class="truncate">運行準備ナビ &amp; 編成アサイン</span>
+                        <span class="truncate">日程・担当班・タスク計画・アサイン</span>
                     </a>
                     <a href="#sec-staff" class="manual-nav-link flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/70 font-medium transition">
                         <span class="text-slate-400 font-mono text-[10px] shrink-0">第6章</span>
@@ -159,77 +159,20 @@
                             <span>•</span>
                             <span>All Modules &amp; Navigation Map</span>
                         </div>
-                        <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">🌟 全機能一覧・画面カタログ（5大メニュー＆共通・モバイル機能）</h2>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">🌟 全機能一覧・画面カタログ（4大メニュー＆共通・モバイル機能）</h2>
                         <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
-                            上部ナビゲーションバーの5大カテゴリ（「当日運行」「準備・計画」「マスター管理」「帳票・印刷」「システム・ガイド」）およびヘッダー共通機能・現場モバイル機能の全機能を網羅しています。各機能名をクリックすると直接画面へ移動できます。
+                            上部ナビゲーションバーの4大カテゴリ（「準備・計画」「当日運行」「マスター管理」「システム・ガイド」）およびヘッダー共通機能・現場モバイル機能の全機能を網羅しています。各機能名をクリックすると直接画面へ移動できます。
                         </p>
                     </div>
 
-                    <!-- 1. 当日運行 & 2. システム・ガイド & 共通機能 -->
+                    <!-- 1. 準備・計画 & 2. 当日運行 & 3. マスター管理 & 4. システム・ガイド & 共通機能 -->
                     <div class="space-y-5">
-                        <!-- カテゴリ1: 当日運行 -->
-                        <div class="border border-slate-200 rounded-2xl overflow-hidden">
-                            <div class="bg-slate-900 text-white px-4 py-2.5 flex items-center justify-between text-xs font-bold">
-                                <span class="flex items-center space-x-2">
-                                    <span>⏱️</span>
-                                    <span>1. 当日運行（Operations）— 運行当日の監視・リアルタイム調整</span>
-                                </span>
-                                <span class="text-[10px] font-mono text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded">当日・リアルタイム</span>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left text-xs border-collapse">
-                                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                                        <tr>
-                                            <th class="py-2 px-3.5 w-48">機能・画面名</th>
-                                            <th class="py-2 px-3.5 w-40">URL / 経路</th>
-                                            <th class="py-2 px-3.5 w-32">対象ロール</th>
-                                            <th class="py-2 px-3.5">主な機能・できること</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100">
-                                        <tr class="hover:bg-slate-50/70">
-                                            <td class="py-2.5 px-3.5 font-bold">
-                                                <a href="{{ route('dashboard') }}" class="text-indigo-600 hover:underline">📊 本部ダッシュボード</a>
-                                            </td>
-                                            <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/dashboard</td>
-                                            <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">管理者 / 本部</span></td>
-                                            <td class="py-2.5 px-3.5 text-slate-600">年間フェーズ・カウントダウン、4大KPI、直近会議・許認可、運行日程ゲートウェイ、組織・資機材サマリーを一望する司令塔ポータル。</td>
-                                        </tr>
-                                        <tr class="hover:bg-slate-50/70">
-                                            <td class="py-2.5 px-3.5 font-bold">
-                                                <a href="{{ route('timetable.index') }}" class="text-indigo-600 hover:underline">⏱️ 当日進行表マトリクス</a>
-                                            </td>
-                                            <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/timetable</td>
-                                            <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">管理者 / 本部</span></td>
-                                            <td class="py-2.5 px-3.5 text-slate-600">縦軸＝時刻（15分単位）×横軸＝担当班で全タスクと人員充足、道路規制・まつり開催時間帯バー、現在時刻Nowバーを表示。</td>
-                                        </tr>
-                                        <tr class="hover:bg-slate-50/70">
-                                            <td class="py-2.5 px-3.5 font-bold">
-                                                <a href="{{ route('timetables.index') }}" class="text-indigo-600 hover:underline">👥 スタッフタイムライン</a>
-                                            </td>
-                                            <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/timetables/{id}/staff-timeline</td>
-                                            <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">管理者 / 本部</span></td>
-                                            <td class="py-2.5 px-3.5 text-slate-600">スタッフ軸のガントチャートで稼働時間・過密疲労・空き要員を特定し、緊急応援投入やシフト交代を調整。</td>
-                                        </tr>
-                                        <tr class="hover:bg-slate-50/70">
-                                            <td class="py-2.5 px-3.5 font-bold">
-                                                <a href="{{ route('logistics-timeline.index') }}" class="text-indigo-600 hover:underline">🚚 搬出入タイムライン</a>
-                                            </td>
-                                            <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/logistics-timeline</td>
-                                            <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">管理者 / 本部</span></td>
-                                            <td class="py-2.5 px-3.5 text-slate-600">資材・機材の搬入・中継・夜間保管・撤収ステップを日付別ガントチャートで一覧表示。所有区分・進捗・キーワードで絞り込み可能。</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- カテゴリ2: 準備・計画 -->
+                        <!-- カテゴリ1: 準備・計画 -->
                         <div class="border border-slate-200 rounded-2xl overflow-hidden">
                             <div class="bg-indigo-950 text-white px-4 py-2.5 flex items-center justify-between text-xs font-bold">
                                 <span class="flex items-center space-x-2">
                                     <span>📋</span>
-                                    <span>2. 準備・計画（Planning）— 運行編成・会場レイアウト・物流・年間日程</span>
+                                    <span>1. 準備・計画（Planning）— 運行編成・会場レイアウト・物流・年間日程</span>
                                 </span>
                                 <span class="text-[10px] font-mono text-indigo-200 bg-indigo-500/20 px-2 py-0.5 rounded">事前準備</span>
                             </div>
@@ -244,14 +187,6 @@
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
-                                        <tr class="hover:bg-slate-50/70">
-                                            <td class="py-2.5 px-3.5 font-bold">
-                                                <a href="{{ route('preparation-navigator.index') }}" class="text-indigo-600 hover:underline">🚀 運行準備ナビ</a>
-                                            </td>
-                                            <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/preparation-navigator</td>
-                                            <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">管理者 / 本部</span></td>
-                                            <td class="py-2.5 px-3.5 text-slate-600">Step 1（運行日程）→ Step 2（担当班）→ Step 3（タスク）→ Step 4（人員配置）を迷わず順に進める4ステップ導入ウィザード。</td>
-                                        </tr>
                                         <tr class="hover:bg-slate-50/70">
                                             <td class="py-2.5 px-3.5 font-bold">
                                                 <a href="{{ route('timetables.index') }}" class="text-indigo-600 hover:underline">📅 運行日程管理</a>
@@ -270,7 +205,7 @@
                                         </tr>
                                         <tr class="hover:bg-slate-50/70">
                                             <td class="py-2.5 px-3.5 font-bold">
-                                                <a href="{{ route('timetable-tasks.index') }}" class="text-indigo-600 hover:underline">📝 作業タスク台帳</a>
+                                                <a href="{{ route('timetable-tasks.index') }}" class="text-indigo-600 hover:underline">📝 タスク計画</a>
                                             </td>
                                             <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/timetable-tasks</td>
                                             <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">管理者 / 本部</span></td>
@@ -331,6 +266,63 @@
                                             <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/schedules</td>
                                             <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">管理者 / 本部</span></td>
                                             <td class="py-2.5 px-3.5 text-slate-600">年間行事・総会・幹事会・行政申請を時系列管理。LINE告知文のワンクリックコピー、iCal（.ics）出力、決定事項メモ記録に対応。</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- カテゴリ2: 当日運行 -->
+                        <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                            <div class="bg-slate-900 text-white px-4 py-2.5 flex items-center justify-between text-xs font-bold">
+                                <span class="flex items-center space-x-2">
+                                    <span>⏱️</span>
+                                    <span>2. 当日運行（Operations）— 運行当日の監視・リアルタイム調整</span>
+                                </span>
+                                <span class="text-[10px] font-mono text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded">当日・リアルタイム</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs border-collapse">
+                                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                                        <tr>
+                                            <th class="py-2 px-3.5 w-48">機能・画面名</th>
+                                            <th class="py-2 px-3.5 w-40">URL / 経路</th>
+                                            <th class="py-2 px-3.5 w-32">対象ロール</th>
+                                            <th class="py-2 px-3.5">主な機能・できること</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        <tr class="hover:bg-slate-50/70">
+                                            <td class="py-2.5 px-3.5 font-bold">
+                                                <a href="{{ route('dashboard') }}" class="text-indigo-600 hover:underline">📊 本部ダッシュボード</a>
+                                            </td>
+                                            <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/dashboard</td>
+                                            <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">管理者 / 本部</span></td>
+                                            <td class="py-2.5 px-3.5 text-slate-600">年間フェーズ・カウントダウン、4大KPI、直近会議・許認可、運行日程ゲートウェイ、組織・資機材サマリーを一望する司令塔ポータル。</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50/70">
+                                            <td class="py-2.5 px-3.5 font-bold">
+                                                <a href="{{ route('timetable.index') }}" class="text-indigo-600 hover:underline">⏱️ 当日進行表マトリクス</a>
+                                            </td>
+                                            <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/timetable</td>
+                                            <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">管理者 / 本部</span></td>
+                                            <td class="py-2.5 px-3.5 text-slate-600">縦軸＝時刻（15分単位）×横軸＝担当班で全タスクと人員充足、道路規制・まつり開催時間帯バー、現在時刻Nowバーを表示。</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50/70">
+                                            <td class="py-2.5 px-3.5 font-bold">
+                                                <a href="{{ route('timetables.index') }}" class="text-indigo-600 hover:underline">👥 スタッフタイムライン</a>
+                                            </td>
+                                            <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/timetables/{id}/staff-timeline</td>
+                                            <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">管理者 / 本部</span></td>
+                                            <td class="py-2.5 px-3.5 text-slate-600">スタッフ軸のガントチャートで稼働時間・過密疲労・空き要員を特定し、緊急応援投入やシフト交代を調整。</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50/70">
+                                            <td class="py-2.5 px-3.5 font-bold">
+                                                <a href="{{ route('logistics-timeline.index') }}" class="text-indigo-600 hover:underline">🚚 搬出入タイムライン</a>
+                                            </td>
+                                            <td class="py-2.5 px-3.5 font-mono text-[11px] text-slate-500">/logistics-timeline</td>
+                                            <td class="py-2.5 px-3.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">管理者 / 本部</span></td>
+                                            <td class="py-2.5 px-3.5 text-slate-600">資材・機材の搬入・中継・夜間保管・撤収ステップを日付別ガントチャートで一覧表示。所有区分・進捗・キーワードで絞り込み可能。</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -621,7 +613,7 @@
                             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
                                 <div class="flex items-center space-x-2">
                                     <span class="px-2 py-0.5 rounded-lg bg-indigo-600 text-white font-mono font-bold text-[11px]">Scenario 03</span>
-                                    <h3 class="text-sm sm:text-base font-black text-slate-900">運行準備ナビ（4ステップ）でタイムテーブル・班・人員配置を完成</h3>
+                                    <h3 class="text-sm sm:text-base font-black text-slate-900">運行日程・担当班・タスク計画・人員配置を完成させる</h3>
                                 </div>
                                 <div class="flex items-center gap-1.5 text-[10px] font-bold">
                                     <span class="px-2 py-0.5 rounded bg-purple-100 text-purple-800">管理者 / 本部</span>
@@ -632,7 +624,7 @@
                                 <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
                                     <div class="font-bold text-indigo-700">Step 1. 運行日程＆規制時間作成</div>
                                     <p class="text-[11px] text-slate-600 leading-relaxed">
-                                        <a href="{{ route('preparation-navigator.index') }}" class="text-indigo-600 font-bold hover:underline">運行準備ナビ</a>から<a href="{{ route('timetables.index') }}" class="text-indigo-600 font-bold hover:underline">運行日程管理</a>を開き、日付・開始終了時刻・道路規制時間・まつり開催時間を設定します。
+                                        <a href="{{ route('timetables.index') }}" class="text-indigo-600 font-bold hover:underline">運行日程管理</a>を開き、日付・開始終了時刻・道路規制時間・まつり開催時間を設定します。
                                     </p>
                                 </div>
                                 <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
@@ -644,7 +636,7 @@
                                 <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
                                     <div class="font-bold text-indigo-700">Step 3. 個別・共通タスク登録</div>
                                     <p class="text-[11px] text-slate-600 leading-relaxed">
-                                        <a href="{{ route('timetable-tasks.index') }}" class="text-indigo-600 font-bold hover:underline">作業タスク台帳</a>で班ごとのタスクと、朝礼や撤収など複数班へ一括登録できる「共通タスク」を作成します。
+                                        <a href="{{ route('timetable-tasks.index') }}" class="text-indigo-600 font-bold hover:underline">タスク計画</a>で班ごとのタスクと、朝礼や撤収など複数班へ一括登録できる「共通タスク」を作成します。
                                     </p>
                                 </div>
                                 <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
@@ -832,7 +824,7 @@
                                 <div class="p-3 bg-white rounded-xl border border-red-200 space-y-1">
                                     <div class="font-bold text-red-900">A. 雨天順延・時間変更</div>
                                     <p class="text-[11px] text-slate-600 leading-relaxed">
-                                        <a href="{{ route('timetables.index') }}" class="text-indigo-600 font-bold hover:underline">運行日程管理</a>で開始時刻を変更、またはタスク台帳で時間枠を修正。全スタッフのマイシフトに即時反映されます。
+                                        <a href="{{ route('timetables.index') }}" class="text-indigo-600 font-bold hover:underline">運行日程管理</a>で開始時刻を変更、またはタスク計画で時間枠を修正。全スタッフのマイシフトに即時反映されます。
                                     </p>
                                 </div>
                                 <div class="p-3 bg-white rounded-xl border border-red-200 space-y-1">
@@ -943,7 +935,7 @@
                                 <span>運行日コンテキストバー</span>
                             </h4>
                             <p class="text-[11px] text-indigo-900 leading-relaxed">
-                                運行日配下の画面上部に常に表示され、対象運行日の切り替えと「運行情報 / 担当班 / タスク台帳 / 人員配置 / 拠点 / 搬出入 / 配置計画 / 白地図 / 進行表 / 配置表PDF」の10機能間を1クリックで横断できます。
+                                運行日配下の画面上部に常に表示され、対象運行日の切り替えと「運行情報 / 担当班 / タスク計画 / 人員配置 / 拠点 / 搬出入 / 配置計画 / 白地図 / 進行表 / 配置表PDF」の10機能間を1クリックで横断できます。
                             </p>
                         </div>
                     </div>
@@ -1276,76 +1268,20 @@
                 </section>
 
                 <!-- ========================================== -->
-                <!-- 第5章: 運行準備ナビゲーター & 台帳・班編成・アサイン -->
+                <!-- 第5章: 運行日程・担当班編成・タスク計画・人員アサイン -->
                 <!-- ========================================== -->
                 <section id="sec-tasks" class="manual-section bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs">
                     <div class="flex items-center space-x-2 text-indigo-600 font-bold text-xs uppercase tracking-wider mb-1">
                         <span>Chapter 05</span>
                         <span>•</span>
-                        <span>Preparation Navigator &amp; Task Assignments</span>
+                        <span>Timetable Planning &amp; Task Assignments</span>
                     </div>
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">第5章 運行準備ナビゲーター &amp; 台帳・担当班編成・人員アサイン</h2>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">第5章 運行日程・担当班編成・タスク計画・人員アサイン</h2>
                     <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
-                        まつり本番に先立ち、迷わず準備を進められる4ステップの「準備ナビゲーター」、日程枠台帳、担当班編成、作業タスク・共通タスク登録、および重複検知付き人員アサインを行う手順です。
+                        まつり本番に先立ち、日程枠台帳、担当班編成、タスク計画（個別・共通タスク登録）、および重複検知付き人員アサインを段階的に進める手順です。
                     </p>
 
-                    <!-- 新機能: まつり運行準備ナビゲーター -->
-                    <div class="mt-6 p-5 bg-gradient-to-br from-indigo-50 to-slate-50 border-2 border-indigo-200 rounded-2xl space-y-4">
-                        <div class="flex items-center justify-between border-b border-indigo-200/80 pb-3">
-                            <div>
-                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-indigo-600 text-white uppercase tracking-wider">Guided Wizard</span>
-                                <h3 class="text-base sm:text-lg font-black text-slate-900 mt-1 flex items-center space-x-2">
-                                    <span>🚀</span>
-                                    <span>まつり運行準備ナビゲーター（4ステップ準備ウィザード）</span>
-                                </h3>
-                            </div>
-                            <a href="{{ route('preparation-navigator.index') }}" class="text-xs font-mono text-indigo-600 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 font-bold hover:underline">/preparation-navigator ↗</a>
-                        </div>
-                        <p class="text-xs text-slate-600 leading-relaxed">
-                            初めてまつりを担当する実行委員や次年度への引き継ぎ時でも、何から手をつけて良いか迷わないよう、手順通りにステップを進めるだけで抜け漏れなく準備が完了するガイドシステムです。
-                        </p>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                            <div class="p-3.5 bg-white rounded-xl border border-indigo-100 shadow-2xs space-y-1.5">
-                                <div class="font-bold text-indigo-950 flex items-center space-x-1.5">
-                                    <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">1</span>
-                                    <span>タイムテーブル作成</span>
-                                </div>
-                                <p class="text-slate-600 text-[11px] leading-relaxed">
-                                    運行日（前日準備、本宮、片付け等）の名称、日付、開始・終了時刻、道路規制・まつり開催時間帯を設定して枠を作成します。
-                                </p>
-                            </div>
-                            <div class="p-3.5 bg-white rounded-xl border border-indigo-100 shadow-2xs space-y-1.5">
-                                <div class="font-bold text-indigo-950 flex items-center space-x-1.5">
-                                    <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">2</span>
-                                    <span>担当班編成</span>
-                                </div>
-                                <p class="text-slate-600 text-[11px] leading-relaxed">
-                                    道路警備班、衛生班、設営班などを登録し、テーマカラーの設定と班長（現場主担当）・固定スタッフを任命します。
-                                </p>
-                            </div>
-                            <div class="p-3.5 bg-white rounded-xl border border-indigo-100 shadow-2xs space-y-1.5">
-                                <div class="font-bold text-indigo-950 flex items-center space-x-1.5">
-                                    <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">3</span>
-                                    <span>作業タスク洗い出し</span>
-                                </div>
-                                <p class="text-slate-600 text-[11px] leading-relaxed">
-                                    各班の具体的な業務（バリケード設置、給水所運営等）や全班一括の「共通タスク」の時間枠、必要人数、優先度を登録します。
-                                </p>
-                            </div>
-                            <div class="p-3.5 bg-white rounded-xl border border-indigo-100 shadow-2xs space-y-1.5">
-                                <div class="font-bold text-indigo-950 flex items-center space-x-1.5">
-                                    <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">4</span>
-                                    <span>人員アサイン・配置確認</span>
-                                </div>
-                                <p class="text-slate-600 text-[11px] leading-relaxed">
-                                    人員事前配置ワークスペースでスタッフを割り当て、過不足や時間帯重複がないかをスタッフタイムラインで点検します。
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 実際の画面画像: タイムテーブル・タスク台帳 -->
+                    <!-- 実際の画面画像: タイムテーブル・タスク計画 -->
                     <div class="mt-8 border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-slate-900">
                         <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 flex items-center justify-between text-xs">
                             <span class="flex items-center space-x-2 text-slate-300 font-mono">
@@ -1452,7 +1388,7 @@
                                 <span>共通タスク一括登録（全班・複数班共通業務）</span>
                             </h4>
                             <p class="text-indigo-900 leading-relaxed">
-                                作業タスク台帳（<code class="px-1 py-0.2 bg-white rounded text-indigo-600 font-mono">/timetable-tasks</code>）の「🌐 共通タスク一括登録」ボタンから、朝礼・開会式・一斉清掃・撤収確認など<strong>複数班にまたがる共通タスクを1回の入力で全対象班へ同時生成</strong>できます。
+                                タスク計画（<code class="px-1 py-0.2 bg-white rounded text-indigo-600 font-mono">/timetable-tasks</code>）の「🌐 共通タスク一括登録」ボタンから、朝礼・開会式・一斉清掃・撤収確認など<strong>複数班にまたがる共通タスクを1回の入力で全対象班へ同時生成</strong>できます。
                             </p>
                         </div>
                     </div>

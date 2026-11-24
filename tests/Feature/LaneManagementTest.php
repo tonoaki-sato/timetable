@@ -127,7 +127,7 @@ class LaneManagementTest extends TestCase
         $response->assertSee('id="delete-migration-modal"', false);
         $response->assertSee('id="btn-open-tlane-add"', false);
         $response->assertSee(route('timetables.tasks.index', $this->timetable));
-        $response->assertSee('作業タスク管理へ進む');
+        $response->assertSee('タスク計画へ進む');
 
         $html = $response->getContent();
         $this->assertTrue(

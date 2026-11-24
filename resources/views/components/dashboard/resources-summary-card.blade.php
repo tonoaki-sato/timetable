@@ -48,10 +48,10 @@
         </h3>
 
         <div class="grid grid-cols-2 gap-1.5 text-xs">
-            <a href="{{ route('preparation-navigator.index') }}"
+            <a href="{{ route('timetables.index') }}"
                class="p-2 bg-slate-50/80 hover:bg-indigo-50 hover:border-indigo-200 rounded-lg border border-slate-200/70 transition flex items-center space-x-1.5 font-bold text-slate-800 hover:text-indigo-700">
-                <span>🧭</span>
-                <span class="truncate">運行準備ナビ</span>
+                <span>📅</span>
+                <span class="truncate">運行日程管理</span>
             </a>
 
             <a href="{{ route('schedules.index') }}"

@@ -208,7 +208,7 @@
                         <a id="detail-task-link" href="#" target="_blank"
                             class="text-indigo-300 hover:text-white text-xs font-medium flex items-center space-x-0.5 transition"
                             title="別タブでタスク詳細を開く">
-                            <span>タスク台帳</span>
+                            <span>タスク計画</span>
                             <span>↗</span>
                         </a>
                     </div>

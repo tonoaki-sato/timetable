@@ -50,7 +50,7 @@
             </h3>
             <a href="{{ route('timetables.tasks.index', $timetable) }}"
                 class="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[11px] font-bold transition flex items-center space-x-0.5 shadow-2xs">
-                <span>タスク管理へ</span>
+                <span>タスク計画へ</span>
                 <span>→</span>
             </a>
         </div>

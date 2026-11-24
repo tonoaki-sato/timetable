@@ -54,7 +54,7 @@
         <a href="{{ route('timetables.tasks.index', $timetable) }}"
             class="inline-flex items-center space-x-1 px-3 py-1 bg-white hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-300 rounded-lg font-bold transition shrink-0 whitespace-nowrap">
             <span>📝</span>
-            <span>作業タスク管理へ進む →</span>
+            <span>タスク計画へ進む →</span>
         </a>
     </div>
 

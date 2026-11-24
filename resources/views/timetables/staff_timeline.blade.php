@@ -33,11 +33,6 @@
         </x-slot:badges>
 
         <x-slot:actions>
-            <x-ui.button variant="header-action" :href="route('preparation-navigator.index')">
-                <span>🚀</span>
-                <span>準備ナビ</span>
-            </x-ui.button>
-
             <x-ui.button variant="header-action" :href="route('timetables.print-assignments', $timetable)" title="運行日の人員配置表をA4横PDFでダウンロード">
                 <span>📄</span>
                 <span>A4横 配置表PDF</span>

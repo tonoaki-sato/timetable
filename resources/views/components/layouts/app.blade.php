@@ -31,12 +31,11 @@
                         </div>
                     </a>
 
-                    <!-- 主要リンク（5大別ドロップダウン: 当日運行・準備/計画・マスター管理・帳票/印刷・システム/ガイド） -->
+                    <!-- 主要リンク（4大別ドロップダウン: 準備/計画・当日運行・マスター管理・システム/ガイド） -->
                     <nav class="hidden md:flex items-center space-x-1 pl-2.5 border-l border-slate-800 shrink-0">
-                        @include('components.layouts.partials.nav-day')
                         @include('components.layouts.partials.nav-plan')
+                        @include('components.layouts.partials.nav-day')
                         @include('components.layouts.partials.nav-master')
-                        @include('components.layouts.partials.nav-print')
                         @include('components.layouts.partials.nav-system')
                     </nav>
                 </div>

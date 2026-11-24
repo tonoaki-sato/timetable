@@ -353,7 +353,7 @@ class TimetableMatrixTest extends TestCase
     }
 
     /**
-     * マスター管理、帳票・印刷、システム管理メニューが正しく整理・表示されること
+     * マスター管理、システム管理メニューが正しく整理・表示され、帳票・印刷メニューが削除されていること
      */
     public function test_navigation_displays_resource_and_system_menu_sections(): void
     {
@@ -367,10 +367,11 @@ class TimetableMatrixTest extends TestCase
         $response = $this->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // ナビゲーションバーから独立した「本部状況」ボタン、「その他」、「アカウント情報」が削除されていること
+        // ナビゲーションバーから独立した「本部状況」ボタン、「その他」、「アカウント情報」、「帳票・印刷」が削除されていること
         $response->assertDontSee('<span>本部状況</span>', false);
         $response->assertDontSee('その他');
         $response->assertDontSee('アカウント情報');
+        $response->assertDontSee('帳票・印刷');
 
         // マスター管理グループ
         $response->assertSee('マスター管理');
@@ -382,15 +383,6 @@ class TimetableMatrixTest extends TestCase
         $response->assertSee(route('equipments.index'));
         $response->assertSee('拠点タイプ管理');
         $response->assertSee(route('location-types.index'));
-
-        // 帳票・印刷グループ (区分A: 全体・マスター帳票)
-        $response->assertSee('帳票・印刷');
-        $response->assertSee('名札一括印刷');
-        $response->assertSee(route('staff.print-cards'));
-        $response->assertSee('スタッフCSV出力');
-        $response->assertSee(route('staff.export-csv'));
-        $response->assertSee('年間スケジュール表 (PDF)');
-        $response->assertSee('スタッフ名簿一覧 (PDF)');
 
         // システム管理グループ（マニュアル・資料 ＆ システム設定）
         $response->assertSee('システム・ガイド');
