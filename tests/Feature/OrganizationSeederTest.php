@@ -23,12 +23,13 @@ class OrganizationSeederTest extends TestCase
     {
         $this->seed([StaffSeeder::class, OrganizationSeeder::class]);
 
-        // 1. スタッフ全44名（追加されたID 39〜44を含む）が登録されていること
-        $this->assertSame(44, Staff::count());
+        // 1. スタッフ全45名（追加されたID 39〜45を含む）が登録されていること
+        $this->assertSame(45, Staff::count());
         $this->assertDatabaseHas('staff', [
             'id' => 39,
             'name' => '譲原 純孝',
             'affiliation' => '新武蔵警備保障',
+            'staff_attribute' => 'external',
         ]);
         $this->assertDatabaseHas('staff', [
             'id' => 43,
@@ -38,7 +39,15 @@ class OrganizationSeederTest extends TestCase
             'id' => 44,
             'name' => '伊藤 さきこ',
         ]);
-        $this->assertSame(44, Staff::where('staff_attribute', 'general')->count());
+        $this->assertDatabaseHas('staff', [
+            'id' => 45,
+            'name' => '鈴木 せいや',
+            'affiliation' => 'ヨコハマン',
+            'staff_attribute' => 'external',
+        ]);
+        $this->assertSame(12, Staff::where('staff_attribute', 'executive')->count());
+        $this->assertSame(3, Staff::where('staff_attribute', 'executive_board')->count());
+        $this->assertSame(3, Staff::where('staff_attribute', 'external')->count());
 
         // 2. 組織ユニット全67件が登録されていること
         $this->assertSame(67, OrganizationUnit::count());
@@ -56,11 +65,11 @@ class OrganizationSeederTest extends TestCase
         $this->assertDatabaseHas('staff', [
             'id' => 40,
             'name' => '山本 昇市',
-            'affiliation' => '幹事会',
+            'staff_attribute' => 'executive_board',
         ]);
         $this->assertSame(
             [1, 2, 5, 7, 8, 13, 15, 17, 22, 24, 26, 29, 30, 35, 40],
-            Staff::where('affiliation', '幹事会')->orderBy('id')->pluck('id')->all()
+            Staff::whereIn('staff_attribute', ['executive', 'executive_board'])->orderBy('id')->pluck('id')->all()
         );
 
         // 企業ブースの親変更（イベント配下）
@@ -73,8 +82,8 @@ class OrganizationSeederTest extends TestCase
         $this->assertDatabaseHas('organization_units', ['id' => 86, 'name' => 'イベント会社']);
         $this->assertDatabaseHas('organization_units', ['id' => 87, 'name' => '図面']);
 
-        // 3. 組織所属スタッフ全83件が登録されていること
-        $this->assertSame(83, OrganizationUnitStaff::count());
+        // 3. 組織所属スタッフ全84件が登録されていること
+        $this->assertSame(84, OrganizationUnitStaff::count());
 
         // 新規スタッフ（ID 39〜44）の組織割当が正しいこと
         $yuzuharaAssignment = OrganizationUnitStaff::where('staff_id', 39)->first();
@@ -111,9 +120,9 @@ class OrganizationSeederTest extends TestCase
     {
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertSame(44, Staff::count());
+        $this->assertSame(45, Staff::count());
         $this->assertSame(67, OrganizationUnit::count());
-        $this->assertSame(83, OrganizationUnitStaff::count());
+        $this->assertSame(84, OrganizationUnitStaff::count());
     }
 
     /**
@@ -123,11 +132,11 @@ class OrganizationSeederTest extends TestCase
     {
         $this->seed([StaffSeeder::class, OrganizationSeeder::class]);
         $this->assertSame(67, OrganizationUnit::count());
-        $this->assertSame(83, OrganizationUnitStaff::count());
+        $this->assertSame(84, OrganizationUnitStaff::count());
 
         // 再実行
         $this->seed(OrganizationSeeder::class);
         $this->assertSame(67, OrganizationUnit::count());
-        $this->assertSame(83, OrganizationUnitStaff::count());
+        $this->assertSame(84, OrganizationUnitStaff::count());
     }
 }

@@ -210,17 +210,16 @@ class TimetablePhase3AssignmentTest extends TestCase
         $response->assertSee('班長未定');
 
         $content = $response->getContent();
+        $rowBlocks = preg_split('/(?=<div data-gantt-row)/', $content) ?: [];
 
         // リーダー太郎の行（data-staff-name="リーダー 太郎"）のHTMLブロック内には "班長: リーダー 太郎" が含まれないこと
-        preg_match('/<tr[^>]*data-staff-name="リーダー 太郎"[^>]*>(.*?)<\/tr>/s', $content, $leaderRowMatches);
-        $this->assertNotEmpty($leaderRowMatches);
-        $leaderRowHtml = $leaderRowMatches[1];
+        $leaderRowHtml = collect($rowBlocks)->first(fn (string $block) => str_contains($block, 'data-staff-name="リーダー 太郎"'));
+        $this->assertNotNull($leaderRowHtml);
         $this->assertStringNotContainsString('班長: リーダー 太郎', $leaderRowHtml);
 
         // 一般次郎の行（data-staff-name="一般 次郎"）のHTMLブロック内には "班長: リーダー 太郎" が含まれること
-        preg_match('/<tr[^>]*data-staff-name="一般 次郎"[^>]*>(.*?)<\/tr>/s', $content, $generalRowMatches);
-        $this->assertNotEmpty($generalRowMatches);
-        $generalRowHtml = $generalRowMatches[1];
+        $generalRowHtml = collect($rowBlocks)->first(fn (string $block) => str_contains($block, 'data-staff-name="一般 次郎"'));
+        $this->assertNotNull($generalRowHtml);
         $this->assertStringContainsString('班長: リーダー 太郎', $generalRowHtml);
     }
 
@@ -441,6 +440,105 @@ class TimetablePhase3AssignmentTest extends TestCase
             'staff_id' => $staff->id,
             'role_description' => null,
             'attendance_status' => 'assigned',
+        ]);
+    }
+
+    /**
+     * 定常タスクとスポットタスクが上下2層に表示され、重複時間帯の実拘束時間がマージ計算されること
+     */
+    public function test_staff_timeline_renders_routine_and_spot_dual_layers_with_merged_actual_hours(): void
+    {
+        $this->actingAs($this->operator);
+
+        $staff = Staff::factory()->create([
+            'name' => '二刀流 スタッフ',
+            'is_active' => true,
+        ]);
+
+        // 定常タスク: 10:00 - 17:00 (7.0h)
+        $routineTask = TimetableTask::factory()->routine()->create([
+            'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $this->lane->id,
+            'title' => '終日受付待機',
+            'start_time' => '10:00:00',
+            'end_time' => '17:00:00',
+        ]);
+
+        // 内包されるスポットタスク: 10:00 - 11:00 (1.0h)
+        $spotTask = TimetableTask::factory()->spot()->create([
+            'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $this->lane->id,
+            'title' => '開会式誘導スポット',
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
+        ]);
+
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $routineTask->id,
+            'staff_id' => $staff->id,
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $spotTask->id,
+            'staff_id' => $staff->id,
+        ]);
+
+        $response = $this->get(route('timetables.staff-timeline', $this->timetable));
+        $response->assertStatus(200);
+        $response->assertSee('staff-timeline-');
+        $response->assertSee('id="timelineQuickAssignModal"', false);
+        $response->assertSee('id="timelineQuickCreateForm"', false);
+        $response->assertSee('id="staffBarActionModal"', false);
+        $response->assertSee('data-left-zone="routine"', false);
+        $response->assertSee('data-left-zone="spot"', false);
+        $response->assertSee('終日受付待機');
+        $response->assertSee('開会式誘導スポット');
+        // 実拘束時間はマージされた 7.0h が表示されること（延べ 8.0h ではない）
+        $response->assertSee('実拘束時間: 7.0h / 延べタスク時間: 8.0h');
+    }
+
+    /**
+     * 定常タスク配置済みのスタッフに対してスポットタスク新規作成＋同時アサインが重複ブロックなしで完了すること
+     */
+    public function test_store_task_with_assign_staff_id_allows_routine_and_spot_overlap_and_returns_201(): void
+    {
+        $this->actingAs($this->operator);
+
+        $staff = Staff::factory()->create(['is_active' => true]);
+        $routineTask = TimetableTask::factory()->routine()->create([
+            'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $this->lane->id,
+            'start_time' => '09:00:00',
+            'end_time' => '17:00:00',
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $routineTask->id,
+            'staff_id' => $staff->id,
+        ]);
+
+        $response = $this->postJson(route('timetable-tasks.store'), [
+            'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $this->lane->id,
+            'title' => '午後ステージ設営',
+            'task_type' => 'spot',
+            'start_time' => '13:00',
+            'end_time' => '14:00',
+            'required_people_count' => 1,
+            'is_at_least' => 0,
+            'assign_staff_id' => $staff->id,
+        ]);
+
+        $response->assertStatus(201);
+        $response->assertJson(['success' => true]);
+
+        $createdTaskId = $response->json('task.id');
+        $this->assertDatabaseHas('timetable_tasks', [
+            'id' => $createdTaskId,
+            'task_type' => 'spot',
+            'title' => '午後ステージ設営',
+        ]);
+        $this->assertDatabaseHas('task_staff_assignments', [
+            'timetable_task_id' => $createdTaskId,
+            'staff_id' => $staff->id,
         ]);
     }
 }

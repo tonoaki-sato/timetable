@@ -85,6 +85,46 @@ class LanePresenter
     }
 
     /**
+     * 定常タスク用ガントバーのCSSクラスを取得（左太枠＋淡色ベース帯）
+     */
+    public static function timelineRoutineBarClassFor(string $color): string
+    {
+        return match ($color) {
+            'amber' => 'bg-amber-50/95 border-amber-300 border-l-4 border-l-amber-500 text-amber-950',
+            'sky' => 'bg-sky-50/95 border-sky-300 border-l-4 border-l-sky-500 text-sky-950',
+            'emerald' => 'bg-emerald-50/95 border-emerald-300 border-l-4 border-l-emerald-500 text-emerald-950',
+            'purple' => 'bg-purple-50/95 border-purple-300 border-l-4 border-l-purple-500 text-purple-950',
+            'pink' => 'bg-pink-50/95 border-pink-300 border-l-4 border-l-pink-500 text-pink-950',
+            'red' => 'bg-rose-50/95 border-rose-300 border-l-4 border-l-rose-500 text-rose-950',
+            'orange' => 'bg-orange-50/95 border-orange-300 border-l-4 border-l-orange-500 text-orange-950',
+            'teal' => 'bg-teal-50/95 border-teal-300 border-l-4 border-l-teal-500 text-teal-950',
+            'yellow' => 'bg-yellow-50/95 border-yellow-400 border-l-4 border-l-yellow-500 text-yellow-950',
+            'slate' => 'bg-slate-100/95 border-slate-300 border-l-4 border-l-slate-500 text-slate-900',
+            default => 'bg-indigo-50/95 border-indigo-300 border-l-4 border-l-indigo-500 text-indigo-950',
+        };
+    }
+
+    /**
+     * スポットタスク用ガントバーのCSSクラスを取得（ソリッドアクセント帯）
+     */
+    public static function timelineSpotBarClassFor(string $color): string
+    {
+        return match ($color) {
+            'amber' => 'bg-amber-100 border-amber-400 text-amber-950',
+            'sky' => 'bg-sky-100 border-sky-400 text-sky-950',
+            'emerald' => 'bg-emerald-100 border-emerald-400 text-emerald-950',
+            'purple' => 'bg-purple-100 border-purple-400 text-purple-950',
+            'pink' => 'bg-pink-100 border-pink-400 text-pink-950',
+            'red' => 'bg-rose-100 border-rose-400 text-rose-950',
+            'orange' => 'bg-orange-100 border-orange-400 text-orange-950',
+            'teal' => 'bg-teal-100 border-teal-400 text-teal-950',
+            'yellow' => 'bg-yellow-100 border-yellow-500 text-yellow-950',
+            'slate' => 'bg-slate-200 border-slate-400 text-slate-900',
+            default => 'bg-indigo-100 border-indigo-400 text-indigo-950',
+        };
+    }
+
+    /**
      * カラーバッジ表示用のCSSクラス配列を取得
      *
      * @return array{badge: string, border: string, bg: string, text: string}

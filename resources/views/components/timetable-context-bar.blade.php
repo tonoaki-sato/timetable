@@ -49,6 +49,11 @@
                 <span class="text-[10px] opacity-75 font-mono">({{ $timetable->tasks_count }})</span>
             @endif
         </a>
+        <a href="{{ route('timetables.lane-timeline', $timetable) }}"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ $active === 'lane-timeline' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+            <span>📊</span>
+            <span>班別タイムライン</span>
+        </a>
         <a href="{{ route('timetables.assignments', $timetable) }}"
             class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center space-x-1 {{ in_array($active, ['assignments', 'timeline'], true) ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
             <span>👥</span>

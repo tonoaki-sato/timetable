@@ -79,7 +79,7 @@ class TimetableTaskService
         return DB::transaction(function () use ($data): TimetableTask {
             $autoAssignLead = (bool) ($data['auto_assign_lead'] ?? true);
             $attributes = $data;
-            unset($attributes['auto_assign_lead']);
+            unset($attributes['auto_assign_lead'], $attributes['assign_staff_id'], $attributes['force_assign']);
 
             $task = $this->taskRepository->create($attributes);
 

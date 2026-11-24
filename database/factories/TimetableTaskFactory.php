@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\TimetableTaskType;
 use App\Models\Timetable;
 use App\Models\TimetableLane;
 use App\Models\TimetableTask;
@@ -24,6 +25,7 @@ class TimetableTaskFactory extends Factory
             'timetable_lane_id' => fn (array $attributes) => TimetableLane::factory()->create([
                 'timetable_id' => $attributes['timetable_id'],
             ])->id,
+            'task_type' => TimetableTaskType::Spot->value,
             'title' => fake()->randomElement([
                 '通行止め出入り口・支道接続点 最優先コーン設置',
                 '一般・センシティブ箇所本設置（ガスト前・金子クリーニング前）',
@@ -41,6 +43,26 @@ class TimetableTaskFactory extends Factory
             'is_critical' => false,
             'status' => 'not_started',
         ];
+    }
+
+    /**
+     * 定常タスク
+     */
+    public function routine(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'task_type' => TimetableTaskType::Routine->value,
+        ]);
+    }
+
+    /**
+     * スポットタスク
+     */
+    public function spot(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'task_type' => TimetableTaskType::Spot->value,
+        ]);
     }
 
     /**

@@ -237,7 +237,7 @@
                         {{ substr($task->start_time, 0, 5) }}〜{{ substr($task->end_time, 0, 5) }}
                     </td>
                     <td class="col-task">
-                        <div class="task-title">{{ $task->title }}</div>
+                        <div class="task-title">[{{ $task->presenter()->taskTypeShortLabel() }}] {{ $task->title }}</div>
                         @if($task->location)
                         <div class="task-location">[場所] {{ $task->location }}</div>
                         @endif

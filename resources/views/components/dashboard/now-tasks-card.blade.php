@@ -43,6 +43,9 @@
                             <span class="px-1.5 py-0.5 bg-slate-100 text-slate-700 font-mono font-bold text-[10px] rounded border border-slate-200">
                                 {{ $formatTimeRange($task) }}
                             </span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $task->presenter()->taskTypeBadgeClass() }}">
+                                {{ $task->presenter()->taskTypeIcon() }} {{ $task->presenter()->taskTypeShortLabel() }}
+                            </span>
                             @if ($task->is_critical)
                                 <span class="px-2 py-0.5 bg-red-600 text-white font-bold text-[10px] rounded">🚨 最優先設置</span>
                             @endif

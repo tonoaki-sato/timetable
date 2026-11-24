@@ -68,6 +68,7 @@ class TimetableLaneTaskCloner
             $newTask = $this->cloneRepository->createTimetableTask([
                 'timetable_id' => $newTimetable->id,
                 'timetable_lane_id' => $newLaneId,
+                'task_type' => $sourceTask->task_type_enum->value,
                 'title' => $sourceTask->title,
                 'content' => $sourceTask->content,
                 'location' => $sourceTask->location,

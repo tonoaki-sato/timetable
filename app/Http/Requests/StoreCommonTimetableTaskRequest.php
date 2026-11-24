@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\DTOs\TimetableTask\CreateCommonTimetableTaskDTO;
 use App\Enums\TimetableTaskStatus;
+use App\Enums\TimetableTaskType;
 use App\Models\TimetableTask;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,6 +26,7 @@ class StoreCommonTimetableTaskRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
+            'task_type' => $this->input('task_type') ?: TimetableTaskType::Spot->value,
             'is_at_least' => $this->boolean('is_at_least'),
             'is_critical' => $this->boolean('is_critical'),
             'auto_assign_lead' => $this->has('auto_assign_lead')
@@ -53,6 +55,7 @@ class StoreCommonTimetableTaskRequest extends FormRequest
                 'distinct',
                 Rule::exists('timetable_lanes', 'id')->where('timetable_id', $timetableId),
             ],
+            'task_type' => ['required', 'string', Rule::in(TimetableTaskType::values())],
             'title' => ['required', 'string', 'max:255'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
@@ -77,6 +80,7 @@ class StoreCommonTimetableTaskRequest extends FormRequest
             'timetable_id' => '対象タイムテーブル',
             'timetable_lane_ids' => '対象担当班',
             'timetable_lane_ids.*' => '対象担当班',
+            'task_type' => 'タスク種別',
             'title' => '作業タスク名',
             'start_time' => '開始時刻',
             'end_time' => '終了時刻',
@@ -117,6 +121,7 @@ class StoreCommonTimetableTaskRequest extends FormRequest
         return new CreateCommonTimetableTaskDTO(
             timetableId: (int) $validated['timetable_id'],
             timetableLaneIds: $timetableLaneIds,
+            taskType: (string) $validated['task_type'],
             title: (string) $validated['title'],
             startTime: (string) $validated['start_time'],
             endTime: (string) $validated['end_time'],

@@ -31,6 +31,12 @@ class StaffCandidateResource extends JsonResource
             ? $this->task->assignments->contains('staff_id', $this->id)
             : false;
 
+        $concurrentTasks = $this->concurrent_tasks ?? collect();
+        $firstConcurrent = $concurrentTasks->first();
+        $concurrentLabel = $firstConcurrent
+            ? $firstConcurrent->presenter()->taskTypeIcon().' '.$firstConcurrent->presenter()->taskTypeShortLabel().'中: '.$firstConcurrent->title.' ('.substr((string) $firstConcurrent->start_time, 0, 5).'〜'.substr((string) $firstConcurrent->end_time, 0, 5).')'
+            : '';
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -40,6 +46,9 @@ class StaffCandidateResource extends JsonResource
             'is_conflicted' => $this->conflict_task !== null,
             'conflicted_task_title' => $this->conflict_task?->title ?? '',
             'conflicted_label' => $this->conflict_task ? "重複中: {$this->conflict_task->title}" : '',
+            'has_concurrent_tasks' => $concurrentTasks->isNotEmpty(),
+            'concurrent_task_title' => $firstConcurrent?->title ?? '',
+            'concurrent_label' => $concurrentLabel,
             'is_lane_lead' => (bool) ($this->is_lane_lead ?? false),
             'is_fixed_in_lane' => (bool) ($this->is_fixed_in_lane ?? false),
             'is_surplus_fixed' => (bool) ($this->is_surplus_fixed ?? false),

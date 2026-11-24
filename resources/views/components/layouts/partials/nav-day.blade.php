@@ -51,9 +51,29 @@
             <div class="border-t border-slate-800/80 my-1"></div>
 
             <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800/80 rounded-lg flex items-center justify-between">
-                <span>👥 スタッフタイムライン・動態調整</span>
+                <span>👥 タイムライン・動態調整</span>
                 <span class="text-[9px] text-amber-300 font-mono font-bold">現場対応</span>
             </div>
+
+            <!-- 班別タイムライン (担当班別ガントチャート) -->
+            @if($nav->hasTimetables())
+            <a href="{{ route('lane-timeline.index') }}"
+                class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.lane-timeline') || request()->routeIs('lane-timeline.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                <span class="text-base shrink-0">📊</span>
+                <div class="min-w-0 flex-1">
+                    <div class="text-xs font-bold whitespace-nowrap truncate">班別タイムライン</div>
+                    <p class="text-[10px] text-slate-400 truncate mt-0.5">班別タスクガント（定常・スポット管理）</p>
+                </div>
+            </a>
+            @else
+            <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
+                <span class="text-base shrink-0 grayscale opacity-60">📊</span>
+                <div class="min-w-0 flex-1">
+                    <div class="text-xs font-bold whitespace-nowrap truncate">班別タイムライン</div>
+                    <p class="text-[10px] text-slate-500 truncate mt-0.5">班別タスクガント（定常・スポット管理）</p>
+                </div>
+            </div>
+            @endif
 
             <!-- スタッフタイムライン (稼働タイムライン) -->
             @if($nav->targetPrintTimetable())

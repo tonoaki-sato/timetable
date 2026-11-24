@@ -98,6 +98,8 @@ export function renderCandidateCardsHtml(candidates, selectedStaffIds, { variant
             }
             if (c.is_conflicted) {
                 badgeHtml += `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200" title="${escapeHtml(c.conflicted_label)}">⚠️ 重複中</span> `;
+            } else if (c.has_concurrent_tasks) {
+                badgeHtml += `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200" title="${escapeHtml(c.concurrent_label)}">🔄 定常等並行可</span> `;
             }
             if (c.is_checked_in) {
                 badgeHtml += '<span class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">📍 受付済</span> ';
@@ -170,6 +172,10 @@ export function renderCandidateCardsHtml(candidates, selectedStaffIds, { variant
         let statusBadge = '';
         if (isConflicted) {
             statusBadge = `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300 truncate max-w-[115px]" title="${escapeHtml(c.conflicted_label)}">⚠️ ${escapeHtml(c.conflicted_task_title || '重複中')}</span>`;
+        } else if (c.has_concurrent_tasks && c.is_same_lane) {
+            statusBadge = `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-teal-100 text-teal-800 border border-teal-300 truncate max-w-[115px]" title="${escapeHtml(c.concurrent_label)}">🌟 同班・並行可</span>`;
+        } else if (c.has_concurrent_tasks) {
+            statusBadge = `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-teal-50 text-teal-800 border border-teal-300 truncate max-w-[115px]" title="${escapeHtml(c.concurrent_label)}">🔄 並行可</span>`;
         } else if (c.is_same_lane) {
             statusBadge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">🌟 同班推奨</span>';
         } else if (c.is_surplus_fixed) {

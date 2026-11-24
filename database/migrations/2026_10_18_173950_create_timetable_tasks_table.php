@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('timetable_id')->constrained('timetables')->cascadeOnDelete();
             $table->foreignId('timetable_lane_id')->constrained('timetable_lanes')->restrictOnDelete();
+            $table->string('task_type', 20)->default('spot');
             $table->string('title');
             $table->text('content')->nullable(); // 作業内容
             $table->string('location')->nullable();
@@ -31,6 +32,7 @@ return new class extends Migration
 
             $table->index(['timetable_id', 'start_time', 'end_time']);
             $table->index(['timetable_lane_id', 'status', 'start_time']);
+            $table->index(['timetable_lane_id', 'task_type', 'status', 'start_time'], 'tt_tasks_lane_type_status_start_idx');
         });
 
         Schema::create('lane_requests', function (Blueprint $table) {

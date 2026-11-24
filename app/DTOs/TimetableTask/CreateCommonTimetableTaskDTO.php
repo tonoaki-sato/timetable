@@ -10,6 +10,7 @@ readonly class CreateCommonTimetableTaskDTO
     public function __construct(
         public int $timetableId,
         public array $timetableLaneIds,
+        public string $taskType,
         public string $title,
         public string $startTime,
         public string $endTime,
@@ -27,6 +28,7 @@ readonly class CreateCommonTimetableTaskDTO
      *
      * @return array{
      *     timetable_id: int,
+     *     task_type: string,
      *     title: string,
      *     start_time: string,
      *     end_time: string,
@@ -42,6 +44,7 @@ readonly class CreateCommonTimetableTaskDTO
     {
         return [
             'timetable_id' => $this->timetableId,
+            'task_type' => $this->taskType,
             'title' => $this->title,
             'start_time' => $this->startTime,
             'end_time' => $this->endTime,

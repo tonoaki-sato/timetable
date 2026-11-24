@@ -36,7 +36,7 @@ class EquipmentSeederTest extends TestCase
         $this->seed(EquipmentSeeder::class);
 
         $this->assertSame(2, Equipment::count());
-        $this->assertSame(23, EquipmentLogisticsPlan::count());
+        $this->assertSame(39, EquipmentLogisticsPlan::count());
 
         $cone = Equipment::with(['plans', 'storageLocation'])->where('name', 'カラーコーン')->first();
         $this->assertNotNull($cone);
@@ -46,7 +46,7 @@ class EquipmentSeederTest extends TestCase
         $this->assertNotNull($cone->storage_location_id);
         $this->assertSame('番所地下倉庫', $cone->storageLocation?->name);
         $this->assertSame(10, $cone->display_order);
-        $this->assertCount(9, $cone->plans);
+        $this->assertCount(18, $cone->plans);
 
         $firstConePlan = $cone->plans->firstWhere('title', '前日倉庫出し');
         $this->assertNotNull($firstConePlan);
@@ -66,11 +66,11 @@ class EquipmentSeederTest extends TestCase
         $this->assertSame(5, $equipment->quantity);
         $this->assertSame('台', $equipment->unit);
 
-        $this->assertCount(14, $equipment->plans);
+        $this->assertCount(21, $equipment->plans);
 
-        // 立会必須ステップが4件（TT1/2で2件、TT4で2件）あること
+        // 立会必須ステップが6件（TT1/2で2件、TT4で2件、TT5で2件）あること
         $witnessSteps = $equipment->plans->where('witness_required', true);
-        $this->assertCount(4, $witnessSteps);
+        $this->assertCount(6, $witnessSteps);
         $witnessWithStaff = $witnessSteps->whereNotNull('witness_staff_id');
         $this->assertCount(2, $witnessWithStaff);
         foreach ($witnessWithStaff as $step) {

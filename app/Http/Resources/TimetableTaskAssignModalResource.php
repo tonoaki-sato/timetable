@@ -33,6 +33,9 @@ class TimetableTaskAssignModalResource extends JsonResource
         return [
             'task' => [
                 'id' => $task->id,
+                'task_type' => $task->task_type_enum->value,
+                'task_type_icon' => $task->presenter()->taskTypeIcon(),
+                'task_type_short' => $task->presenter()->taskTypeShortLabel(),
                 'title' => $task->title,
                 'lane' => $task->timetableLane?->name ?? '',
                 'start_time' => substr($task->start_time, 0, 5),

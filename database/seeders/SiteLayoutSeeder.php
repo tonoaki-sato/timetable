@@ -41,6 +41,39 @@ class SiteLayoutSeeder extends Seeder
             return;
         }
 
+        // 第35回2日目（2027-10-11）は1日目（2027-10-10）の配置図面・出展者IDを共有して複製する
+        if ($timetable->target_date?->format('Y-m-d') === '2027-10-11') {
+            $sourceTimetable = Timetable::where('target_date', '2027-10-10')->first();
+            $sourceMap = $sourceTimetable ? LayoutMap::where('timetable_id', $sourceTimetable->id)->with('items')->first() : null;
+            if ($sourceMap) {
+                $clonedMap = LayoutMap::create([
+                    'timetable_id' => $timetable->id,
+                    'name' => $sourceMap->name,
+                    'version_tag' => $sourceMap->version_tag,
+                    'notes' => $sourceMap->notes,
+                    'created_by' => $timetable->created_by,
+                ]);
+                foreach ($sourceMap->items as $srcItem) {
+                    LayoutItem::create([
+                        'layout_map_id' => $clonedMap->id,
+                        'layout_area_id' => $srcItem->layout_area_id,
+                        'item_type' => $srcItem->item_type,
+                        'vendor_id' => $srcItem->vendor_id,
+                        'code' => $srcItem->code,
+                        'name' => $srcItem->name,
+                        'category' => $srcItem->category,
+                        'booth_type' => $srcItem->booth_type,
+                        'status' => $srcItem->status,
+                        'notes' => $srcItem->notes,
+                        'location_description' => $srcItem->location_description,
+                        'display_order' => $srcItem->display_order,
+                    ]);
+                }
+
+                return;
+            }
+        }
+
         // 1. 図面マスター作成
         $map = LayoutMap::create([
             'timetable_id' => $timetable->id,

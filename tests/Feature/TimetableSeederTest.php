@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\TimetableTaskStatus;
+use App\Enums\TimetableTaskType;
 use App\Models\Lane;
 use App\Models\LaneRequest;
 use App\Models\Staff;
@@ -42,9 +43,11 @@ class TimetableSeederTest extends TestCase
 
         // 0. 担当班マスター・日別編成・現場要請の件数が正しくシードされていること
         $this->assertSame(17, Lane::count());
-        $this->assertSame(36, TimetableLane::count());
+        $this->assertSame(50, TimetableLane::count());
         $this->assertSame(3, LaneRequest::count());
         $this->assertSame(0, TimetableTask::whereNull('timetable_lane_id')->count());
+        $this->assertGreaterThan(0, TimetableTask::where('task_type', TimetableTaskType::Routine->value)->count());
+        $this->assertGreaterThan(0, TimetableTask::where('task_type', TimetableTaskType::Spot->value)->count());
 
         // 1. スタッフが20名以上登録されていること
         $this->assertGreaterThanOrEqual(20, Staff::count());
@@ -131,6 +134,7 @@ class TimetableSeederTest extends TestCase
             'timetable_id' => $timetableDay4->id,
             'timetable_lane_id' => $snsLane->id,
             'title' => '管理・イベント運営',
+            'task_type' => TimetableTaskType::Routine->value,
         ]);
 
         $kigyoLane = TimetableLane::where('timetable_id', $timetableDay4->id)->where('lane_id', $kigyoMaster->id)->firstOrFail();
@@ -140,7 +144,14 @@ class TimetableSeederTest extends TestCase
             'timetable_id' => $timetableDay4->id,
             'timetable_lane_id' => $kigyoLane->id,
             'title' => '搬入対応',
+            'task_type' => TimetableTaskType::Spot->value,
         ]);
+
+        // 第35回（Day 5）がシードされていること
+        $timetableDay5 = Timetable::where('target_date', '2027-10-11')
+            ->where('name', '第35回保土ケ谷宿場まつり（2日目）')
+            ->firstOrFail();
+        $this->assertSame(54, $timetableDay5->tasks()->count());
 
         // レーン間支援要請（LaneRequest）が最新状態でシードされていること
         $this->assertSame(3, LaneRequest::where('status', 'resolved')->count());
@@ -173,9 +184,11 @@ class TimetableSeederTest extends TestCase
 
         // 0. 担当班マスター・日別編成・現場要請の件数が正しくシードされていること
         $this->assertSame(17, Lane::count());
-        $this->assertSame(36, TimetableLane::count());
+        $this->assertSame(50, TimetableLane::count());
         $this->assertSame(3, LaneRequest::count());
         $this->assertSame(0, TimetableTask::whereNull('timetable_lane_id')->count());
+        $this->assertGreaterThan(0, TimetableTask::where('task_type', TimetableTaskType::Routine->value)->count());
+        $this->assertGreaterThan(0, TimetableTask::where('task_type', TimetableTaskType::Spot->value)->count());
 
         $initialTimetableCount = Timetable::count();
         $initialTaskCount = TimetableTask::count();
@@ -188,9 +201,11 @@ class TimetableSeederTest extends TestCase
 
         // 0. 担当班マスター・日別編成・現場要請の件数が正しくシードされていること
         $this->assertSame(17, Lane::count());
-        $this->assertSame(36, TimetableLane::count());
+        $this->assertSame(50, TimetableLane::count());
         $this->assertSame(3, LaneRequest::count());
         $this->assertSame(0, TimetableTask::whereNull('timetable_lane_id')->count());
+        $this->assertGreaterThan(0, TimetableTask::where('task_type', TimetableTaskType::Routine->value)->count());
+        $this->assertGreaterThan(0, TimetableTask::where('task_type', TimetableTaskType::Spot->value)->count());
 
         $this->assertSame($initialTimetableCount, Timetable::count());
         $this->assertSame($initialTaskCount, TimetableTask::count());

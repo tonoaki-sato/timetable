@@ -58,6 +58,7 @@ class TimetableContextBar extends Component
         return match ($this->active) {
             'lanes' => route('timetables.lanes.index', $tt),
             'tasks' => route('timetables.tasks.index', $tt),
+            'lane-timeline' => route('timetables.lane-timeline', $tt),
             'assignments' => route('timetables.assignments', $tt),
             'timeline' => route('timetables.staff-timeline', $tt),
             'logistics' => route('timetables.logistics.index', $tt),

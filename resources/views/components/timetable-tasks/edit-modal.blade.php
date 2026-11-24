@@ -48,6 +48,31 @@
                 <input type="hidden" id="edit-modal-lane-id" name="timetable_lane_id" value="">
 
                 <div class="overflow-y-auto flex-1 p-5 space-y-3.5">
+                    <!-- 0. タスク種別（スポット / 定常） -->
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                            タスク種別 <span class="text-red-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-start space-x-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-amber-50/50 has-[:checked]:bg-amber-50 has-[:checked]:border-amber-400 cursor-pointer transition select-none">
+                                <input type="radio" name="task_type" value="spot" id="edit-modal-type-spot"
+                                    class="mt-0.5 text-amber-600 focus:ring-amber-500 cursor-pointer">
+                                <span class="min-w-0">
+                                    <span class="block text-xs font-bold text-slate-900">⚡ スポットタスク</span>
+                                    <span class="block text-[10px] text-slate-500">設営・会議・単発作業（定常と重複可）</span>
+                                </span>
+                            </label>
+                            <label class="flex items-start space-x-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-teal-50/50 has-[:checked]:bg-teal-50 has-[:checked]:border-teal-400 cursor-pointer transition select-none">
+                                <input type="radio" name="task_type" value="routine" id="edit-modal-type-routine"
+                                    class="mt-0.5 text-teal-600 focus:ring-teal-500 cursor-pointer">
+                                <span class="min-w-0">
+                                    <span class="block text-xs font-bold text-slate-900">🔄 定常タスク</span>
+                                    <span class="block text-[10px] text-slate-500">巡回・常駐・本陣業務など継続業務</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
                     <!-- 1. 作業タスク名 (1行全幅) -->
                     <div>
                         <label class="block text-[11px] font-bold text-slate-700 mb-1">

@@ -30,6 +30,38 @@ class TimetableTaskPresenter
     }
 
     /**
+     * タスク種別の日本語表示を取得
+     */
+    public function taskTypeLabel(): string
+    {
+        return $this->task->task_type_enum->label();
+    }
+
+    /**
+     * タスク種別の短縮ラベルを取得（定常 / スポット）
+     */
+    public function taskTypeShortLabel(): string
+    {
+        return $this->task->task_type_enum->shortLabel();
+    }
+
+    /**
+     * タスク種別のアイコンを取得
+     */
+    public function taskTypeIcon(): string
+    {
+        return $this->task->task_type_enum->icon();
+    }
+
+    /**
+     * タスク種別バッジのCSSクラスを取得
+     */
+    public function taskTypeBadgeClass(): string
+    {
+        return $this->task->task_type_enum->badgeClasses();
+    }
+
+    /**
      * 必要人員の表示用ラベル（例:「3名以上」または「3名」）を取得
      */
     public function requiredPeopleLabel(): string
@@ -119,6 +151,10 @@ class TimetableTaskPresenter
             'id' => $this->task->id,
             'timetable_id' => $this->task->timetable_id,
             'timetable_lane_id' => $this->task->timetable_lane_id,
+            'task_type' => $this->task->task_type_enum->value,
+            'task_type_label' => $this->taskTypeLabel(),
+            'task_type_short_label' => $this->taskTypeShortLabel(),
+            'task_type_icon' => $this->taskTypeIcon(),
             'lane_name' => $targetLane?->name ?? '',
             'lane_icon' => $targetLane?->icon ?: '📋',
             'lead_staff_name' => $targetLane?->leadStaff?->name,
@@ -133,6 +169,7 @@ class TimetableTaskPresenter
             'status_label' => $this->statusLabel(),
             'content' => $this->task->content ?? '',
             'update_url' => route('timetable-tasks.update', $this->task),
+            'destroy_url' => route('timetable-tasks.destroy', $this->task),
         ];
     }
 }

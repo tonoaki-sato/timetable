@@ -55,6 +55,11 @@ class NextTasksService
                     return $b->is_critical <=> $a->is_critical;
                 }
 
+                // 同時刻帯ではスポットタスクを定常タスクより上位に表示
+                if ($a->isSpot() !== $b->isSpot()) {
+                    return $b->isSpot() <=> $a->isSpot();
+                }
+
                 if ($a->end_time !== $b->end_time) {
                     return $a->end_time <=> $b->end_time;
                 }

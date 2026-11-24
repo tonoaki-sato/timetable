@@ -95,6 +95,16 @@ class ContentSecurityPolicyTest extends TestCase
             'timetable_id' => $timetable->id,
             'timetable_lane_id' => $lane->id,
             'required_people_count' => 2,
+            'task_type' => 'spot',
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
+        ]);
+        $routineTask = TimetableTask::factory()->routine()->create([
+            'timetable_id' => $timetable->id,
+            'timetable_lane_id' => $lane->id,
+            'required_people_count' => 1,
+            'start_time' => '09:00:00',
+            'end_time' => '12:00:00',
         ]);
         LaneRequest::create([
             'timetable_id' => $timetable->id,
@@ -108,6 +118,10 @@ class ContentSecurityPolicyTest extends TestCase
         ]);
         TaskStaffAssignment::factory()->create([
             'timetable_task_id' => $task->id,
+            'staff_id' => $staff->id,
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $routineTask->id,
             'staff_id' => $staff->id,
         ]);
         $location = Location::factory()->create();
@@ -179,6 +193,7 @@ class ContentSecurityPolicyTest extends TestCase
             route('timetables.layouts.booths', $timetable),
             route('timetables.logistics.index', $timetable),
             route('timetables.site-maps.editor', $timetable),
+            route('timetables.lane-timeline', $timetable),
             route('timetables.staff-timeline', $timetable),
             route('staff.index'),
             route('staff.create'),

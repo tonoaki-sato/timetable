@@ -42,7 +42,7 @@ class TimetableTaskPolicy
     /**
      * 作業タスク削除権限（admin, operator同等）
      */
-    public function delete(User $user, TimetableTask $task): bool
+    public function delete(User $user, ?TimetableTask $task = null): bool
     {
         return $user->is_active && ($user->isAdmin() || $user->isOperator());
     }

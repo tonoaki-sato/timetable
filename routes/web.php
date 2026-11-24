@@ -16,6 +16,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LanePrintController;
 use App\Http\Controllers\LaneRequestController;
+use App\Http\Controllers\LaneTimelineController;
 use App\Http\Controllers\LayoutAreaController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\LocationTypeController;
@@ -117,6 +118,8 @@ Route::middleware('auth')->group(function () {
     Route::get('timetables/{timetable}/assignments', [TimetableAssignmentWorkspaceController::class, 'index'])->name('timetables.assignments');
     Route::get('timetables/{timetable}/print-assignments', [TimetablePrintController::class, 'printAssignments'])->name('timetables.print-assignments');
     Route::get('timetables/{timetable}/print-matrix', [TimetablePrintController::class, 'printMatrix'])->name('timetables.print-matrix');
+    Route::get('/lane-timeline', [LaneTimelineController::class, 'redirect'])->name('lane-timeline.index');
+    Route::get('timetables/{timetable}/lane-timeline', [LaneTimelineController::class, 'index'])->name('timetables.lane-timeline');
     Route::get('timetables/{timetable}/staff-timeline', [StaffTimelineController::class, 'index'])->name('timetables.staff-timeline');
     Route::get('timetables/{timetable}/tasks', [TimetableTaskController::class, 'indexByTimetable'])->name('timetables.tasks.index');
     Route::resource('timetables', TimetableController::class)->except(['create', 'edit']);

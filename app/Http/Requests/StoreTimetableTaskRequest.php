@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\TimetableTaskStatus;
+use App\Enums\TimetableTaskType;
 use App\Models\TimetableTask;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -24,12 +25,14 @@ class StoreTimetableTaskRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
+            'task_type' => $this->input('task_type') ?: TimetableTaskType::Spot->value,
             'is_at_least' => $this->boolean('is_at_least'),
             'is_critical' => $this->boolean('is_critical'),
             'status' => $this->input('status') ?: 'not_started',
             'auto_assign_lead' => $this->has('auto_assign_lead')
                 ? $this->boolean('auto_assign_lead')
                 : true,
+            'force_assign' => $this->boolean('force_assign'),
         ]);
     }
 
@@ -49,7 +52,10 @@ class StoreTimetableTaskRequest extends FormRequest
                 'integer',
                 Rule::exists('timetable_lanes', 'id')->where('timetable_id', $timetableId),
             ],
+            'task_type' => ['required', 'string', Rule::in(TimetableTaskType::values())],
             'auto_assign_lead' => ['required', 'boolean'],
+            'assign_staff_id' => ['nullable', 'integer', 'exists:staff,id'],
+            'force_assign' => ['nullable', 'boolean'],
             'title' => ['required', 'string', 'max:255'],
             'content' => ['nullable', 'string', 'max:5000'],
             'location' => ['nullable', 'string', 'max:255'],
@@ -72,6 +78,8 @@ class StoreTimetableTaskRequest extends FormRequest
         return [
             'timetable_id' => '対象タイムテーブル',
             'timetable_lane_id' => '担当班',
+            'task_type' => 'タスク種別',
+            'assign_staff_id' => '初期アサインスタッフ',
             'title' => '作業タスク名',
             'content' => '作業内容・手順指示',
             'location' => '実施場所',

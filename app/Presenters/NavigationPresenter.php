@@ -23,6 +23,8 @@ class NavigationPresenter
     {
         return request()->routeIs('dashboard*')
             || request()->routeIs('timetable.index')
+            || request()->routeIs('timetables.lane-timeline')
+            || request()->routeIs('lane-timeline.*')
             || request()->routeIs('timetables.staff-timeline')
             || request()->routeIs('timetables.logistics-timeline')
             || request()->routeIs('logistics-timeline.*')
@@ -37,6 +39,7 @@ class NavigationPresenter
         return (
             request()->routeIs('timetables.*')
             && ! request()->routeIs('timetables.print*')
+            && ! request()->routeIs('timetables.lane-timeline')
             && ! request()->routeIs('timetables.staff-timeline')
             && ! request()->routeIs('timetables.logistics-timeline')
             && ! request()->routeIs('timetables.logistics.print')

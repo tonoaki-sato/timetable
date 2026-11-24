@@ -336,4 +336,98 @@ class ConflictDetectionTest extends TestCase
         $this->assertArrayHasKey($this->staff->id, $conflictsMap);
         $this->assertSame('神輿先導', $conflictsMap[$this->staff->id]->title);
     }
+
+    /**
+     * 定常タスクとスポットタスクの間では完全一致・含有・一部重複がいずれも許容されること（同種別同士は引き続き警告対象）
+     */
+    public function test_routine_and_spot_tasks_allow_overlap_without_force_while_same_type_conflicts(): void
+    {
+        $this->actingAs($this->operator);
+
+        // 既存の定常タスク (09:00 - 17:00) ※余剰振替が発動しないよう必要人数を十分に確保
+        $routineBase = TimetableTask::factory()->routine()->create([
+            'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $this->lane->id,
+            'title' => '本部定常待機',
+            'start_time' => '09:00:00',
+            'end_time' => '17:00:00',
+            'required_people_count' => 10,
+        ]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $routineBase->id,
+            'staff_id' => $this->staff->id,
+        ]);
+
+        // 1. スポットタスク (含有 10:00 - 11:00) -> force なしで成功
+        $spotContained = TimetableTask::factory()->spot()->create([
+            'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $this->lane->id,
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
+        ]);
+        $this->post(route('timetable-tasks.assign', $spotContained), [
+            'staff_id' => $this->staff->id,
+        ])->assertRedirect()->assertSessionHas('success');
+
+        // 2. スポットタスク (完全一致 09:00 - 17:00) -> 別スタッフにも同時間帯定常がある状態で force なしで成功
+        $staffExact = Staff::factory()->create(['is_active' => true]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $routineBase->id,
+            'staff_id' => $staffExact->id,
+        ]);
+        $spotExact = TimetableTask::factory()->spot()->create([
+            'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $this->lane->id,
+            'start_time' => '09:00:00',
+            'end_time' => '17:00:00',
+        ]);
+        $this->postJson(route('timetable-tasks.assign-bulk', $spotExact), [
+            'staff_ids' => [$staffExact->id],
+        ])->assertStatus(200)->assertJson(['success' => true]);
+
+        // 3. スポットタスク (一部重複 16:00 - 18:00) -> 定常 09:00-17:00 と一部重複でも force なしで成功
+        $staffPartial = Staff::factory()->create(['is_active' => true]);
+        TaskStaffAssignment::factory()->create([
+            'timetable_task_id' => $routineBase->id,
+            'staff_id' => $staffPartial->id,
+        ]);
+        $spotPartial = TimetableTask::factory()->spot()->create([
+            'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $this->lane->id,
+            'start_time' => '16:00:00',
+            'end_time' => '18:00:00',
+        ]);
+        $this->postJson(route('timetable-tasks.assign-bulk', $spotPartial), [
+            'staff_ids' => [$staffPartial->id],
+        ])->assertStatus(200)->assertJson(['success' => true]);
+
+        // 3. スポット同士 (10:00 - 11:00 と一部重複する 10:30 - 12:00) -> force なしで 409 重複エラー
+        $spotOverlapSameType = TimetableTask::factory()->spot()->create([
+            'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $this->lane->id,
+            'start_time' => '10:30:00',
+            'end_time' => '12:00:00',
+        ]);
+        $this->postJson(route('timetable-tasks.assign-bulk', $spotOverlapSameType), [
+            'staff_ids' => [$this->staff->id],
+            'force' => 0,
+        ])->assertStatus(409);
+
+        // 4. 定常同士 (16:00 - 18:00 は既存定常 09:00-17:00 と一部重複) -> force なしで conflict_warning
+        $routineOverlapSameType = TimetableTask::factory()->routine()->create([
+            'timetable_id' => $this->timetable->id,
+            'timetable_lane_id' => $this->lane->id,
+            'start_time' => '16:00:00',
+            'end_time' => '18:00:00',
+        ]);
+        $this->post(route('timetable-tasks.assign', $routineOverlapSameType), [
+            'staff_id' => $this->staff->id,
+        ])->assertRedirect()->assertSessionHas('conflict_warning');
+
+        // 5. 同種別でも force=1 なら強制配置できる
+        $this->post(route('timetable-tasks.assign', $routineOverlapSameType), [
+            'staff_id' => $this->staff->id,
+            'force' => 1,
+        ])->assertRedirect()->assertSessionHas('success');
+    }
 }

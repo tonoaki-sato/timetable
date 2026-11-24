@@ -41,6 +41,9 @@
                                 <span class="font-mono font-bold text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">
                                     {{ $formatTimeRange($task) }}
                                 </span>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $task->presenter()->taskTypeBadgeClass() }}">
+                                    {{ $task->presenter()->taskTypeIcon() }} {{ $task->presenter()->taskTypeShortLabel() }}
+                                </span>
                                 <span class="text-[10px] text-indigo-600 font-bold bg-indigo-50/90 px-2 py-0.5 rounded-full border border-indigo-200/80">
                                     {{ $formatTaskRemainingTime($task) }}
                                 </span>

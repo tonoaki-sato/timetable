@@ -25,6 +25,9 @@ class TimetableSeeder extends Seeder
 
         $admin = User::where('role', 'admin')->first() ?? User::factory()->create(['role' => 'admin']);
 
+        $routineTitles = ['巡回', '定期巡回', '巡回・見回り', 'ゴミ箱チェック', '点検', '本陣業務', '管理・イベント運営'];
+        $resolveTaskType = static fn (string $title): string => in_array($title, $routineTitles, true) ? 'routine' : 'spot';
+
         // =========================================================================
         // 1. 宿場まつり 1日目 - 2026-10-11
         // =========================================================================
@@ -702,6 +705,7 @@ class TimetableSeeder extends Seeder
                     'start_time' => $taskData['start_time'],
                 ],
                 [
+                    'task_type' => $taskData['task_type'] ?? $resolveTaskType($taskData['title']),
                     'end_time' => $taskData['end_time'],
                     'location' => $taskData['location'],
                     'content' => $taskData['content'],
@@ -904,6 +908,7 @@ class TimetableSeeder extends Seeder
                     'start_time' => $taskData['start_time'],
                 ],
                 [
+                    'task_type' => $taskData['task_type'] ?? $resolveTaskType($taskData['title']),
                     'end_time' => $taskData['end_time'],
                     'location' => $taskData['location'],
                     'content' => $taskData['content'],
@@ -1199,6 +1204,7 @@ class TimetableSeeder extends Seeder
                     'start_time' => $taskData['start_time'],
                 ],
                 [
+                    'task_type' => $taskData['task_type'] ?? $resolveTaskType($taskData['title']),
                     'end_time' => $taskData['end_time'],
                     'location' => $taskData['location'],
                     'content' => $taskData['content'],
@@ -1271,7 +1277,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 20,
                 'lead_staff_id' => 33,
                 'fixed_staff_ids' => [33],
-                'description' => '路上規制バー・コーン搬入・本設置・撤去',
+                'notes' => null,
             ],
             [
                 'name' => '給水設備',
@@ -1280,7 +1286,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 30,
                 'lead_staff_id' => 6,
                 'fixed_staff_ids' => [6, 37],
-                'description' => '給水タンク・仮設手洗い場設置',
+                'notes' => null,
             ],
             [
                 'name' => '衛生',
@@ -1289,7 +1295,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 40,
                 'lead_staff_id' => 26,
                 'fixed_staff_ids' => [26],
-                'description' => 'ごみ箱設置・回収袋交換',
+                'notes' => null,
             ],
             [
                 'name' => '巡回',
@@ -1298,7 +1304,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 50,
                 'lead_staff_id' => 43,
                 'fixed_staff_ids' => [14, 43],
-                'description' => '会場巡回・迷子、落とし物、ポイ捨て、私有地進入対応、来場者棄権行動の監視・注意喚起',
+                'notes' => null,
             ],
             [
                 'name' => 'キッズ村',
@@ -1307,7 +1313,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 60,
                 'lead_staff_id' => 5,
                 'fixed_staff_ids' => [5, 15],
-                'description' => 'キッズ村エリア全体の管理',
+                'notes' => null,
             ],
             [
                 'name' => 'ちょうちん',
@@ -1316,7 +1322,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 70,
                 'lead_staff_id' => 35,
                 'fixed_staff_ids' => [35, 39],
-                'description' => '提灯取付・回収',
+                'notes' => null,
             ],
             [
                 'name' => 'ござ市',
@@ -1325,7 +1331,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 80,
                 'lead_staff_id' => 22,
                 'fixed_staff_ids' => [22, 35],
-                'description' => '出店者受付・貸出資材（テント・ウェイトなど）管理、危険行為、違反行為（特に行政指導要綱違反）の監視と指導。',
+                'notes' => null,
             ],
             [
                 'name' => '本陣',
@@ -1334,7 +1340,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 90,
                 'lead_staff_id' => 19,
                 'fixed_staff_ids' => [19, 20],
-                'description' => '本部拠点運営・放送アナウンス・総合案内・ござ市受付（連携）',
+                'notes' => null,
             ],
             [
                 'name' => '道路清掃',
@@ -1343,16 +1349,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 100,
                 'lead_staff_id' => null,
                 'fixed_staff_ids' => [],
-                'description' => '1日目、2日目終了後の道路清掃。特に2日目は油汚れの洗浄など念入りに清掃',
-            ],
-            [
-                'name' => 'ステカン',
-                'color' => 'yellow',
-                'icon' => '🪧',
-                'display_order' => 110,
-                'lead_staff_id' => 8,
-                'fixed_staff_ids' => [8, 12, 21],
-                'description' => '捨て看板の設置・回収（内回りと外回り）',
+                'notes' => null,
             ],
             [
                 'name' => '直営店',
@@ -1361,7 +1358,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 120,
                 'lead_staff_id' => 28,
                 'fixed_staff_ids' => [4, 28],
-                'description' => '直営店の運営・管理など',
+                'notes' => null,
             ],
             [
                 'name' => '税務署ステージ',
@@ -1370,7 +1367,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 130,
                 'lead_staff_id' => 13,
                 'fixed_staff_ids' => [12, 13, 41, 44],
-                'description' => '税務署ステージのイベント運行管理',
+                'notes' => null,
             ],
             [
                 'name' => '宿場くん/宿場ちゃん',
@@ -1379,7 +1376,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 140,
                 'lead_staff_id' => 15,
                 'fixed_staff_ids' => [10, 15, 23, 25, 32, 42],
-                'description' => 'マスコットキャラのマネジメント、パフォーマンス、アテンドなど',
+                'notes' => null,
             ],
             [
                 'name' => 'S&S',
@@ -1388,7 +1385,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 170,
                 'lead_staff_id' => 38,
                 'fixed_staff_ids' => [38],
-                'description' => 'S&Sエリアの管理など',
+                'notes' => null,
             ],
             [
                 'name' => '企業ブース',
@@ -1397,7 +1394,7 @@ class TimetableSeeder extends Seeder
                 'display_order' => 180,
                 'lead_staff_id' => 24,
                 'fixed_staff_ids' => [24],
-                'description' => '企業ブース出展者の対応とエリアの管理。代替駐車場（主に横浜銀行駐車場）の監視、対象者対応など',
+                'notes' => null,
             ],
         ];
 
@@ -1417,7 +1414,7 @@ class TimetableSeeder extends Seeder
                 [
                     'lead_staff_id' => $laneItem['lead_staff_id'],
                     'display_order' => $laneItem['display_order'],
-                    'notes' => null,
+                    'notes' => $laneItem['notes'],
                 ]
             );
 
@@ -1429,6 +1426,7 @@ class TimetableSeeder extends Seeder
         $tasksDay4 = [
             [
                 'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1448,6 +1446,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '給水設備',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1482,6 +1481,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '衛生',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1501,6 +1501,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '巡回',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1525,6 +1526,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => 'S&S',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1544,6 +1546,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => 'キッズ村',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1568,6 +1571,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => 'ちょうちん',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1592,6 +1596,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => 'ござ市',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1616,6 +1621,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '本陣',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1640,19 +1646,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '道路清掃',
-                'title' => '全体ミーティング',
-                'start_time' => '07:00:00',
-                'end_time' => '07:30:00',
-                'location' => '本陣',
-                'content' => null,
-                'required_people_count' => 0,
-                'is_at_least' => false,
-                'is_critical' => false,
-                'status' => 'not_started',
-                'assignments' => [],
-            ],
-            [
-                'lane_name' => 'ステカン',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1663,25 +1657,11 @@ class TimetableSeeder extends Seeder
                 'is_critical' => false,
                 'status' => 'not_started',
                 'assignments' => [
-                    [
-                        'staff_id' => 8,
-                        'role_description' => '班長',
-                        'attendance_status' => 'assigned',
-                    ],
-                    [
-                        'staff_id' => 12,
-                        'role_description' => '固定スタッフ',
-                        'attendance_status' => 'assigned',
-                    ],
-                    [
-                        'staff_id' => 21,
-                        'role_description' => '固定スタッフ',
-                        'attendance_status' => 'assigned',
-                    ],
                 ],
             ],
             [
                 'lane_name' => '直営店',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1706,6 +1686,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '税務署ステージ',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1740,6 +1721,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '宿場くん/宿場ちゃん',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1784,6 +1766,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '企業ブース',
+                'task_type' => 'spot',
                 'title' => '全体ミーティング',
                 'start_time' => '07:00:00',
                 'end_time' => '07:30:00',
@@ -1803,6 +1786,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
                 'title' => '班ミーティング',
                 'start_time' => '07:30:00',
                 'end_time' => '08:00:00',
@@ -1822,6 +1806,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '給水設備',
+                'task_type' => 'spot',
                 'title' => '班ミーティング',
                 'start_time' => '07:30:00',
                 'end_time' => '08:00:00',
@@ -1856,6 +1841,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '衛生',
+                'task_type' => 'spot',
                 'title' => '班ミーティング',
                 'start_time' => '07:30:00',
                 'end_time' => '08:00:00',
@@ -1875,6 +1861,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '巡回',
+                'task_type' => 'spot',
                 'title' => '班ミーティング',
                 'start_time' => '07:30:00',
                 'end_time' => '08:00:00',
@@ -1899,6 +1886,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => 'S&S',
+                'task_type' => 'routine',
                 'title' => '管理・イベント運営',
                 'start_time' => '07:30:00',
                 'end_time' => '18:30:00',
@@ -1917,7 +1905,58 @@ class TimetableSeeder extends Seeder
                 ],
             ],
             [
+                'lane_name' => 'ござ市',
+                'task_type' => 'spot',
+                'title' => '班ミーティング',
+                'start_time' => '07:30:00',
+                'end_time' => '08:00:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 22,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'spot',
+                'title' => '班ミーティング',
+                'start_time' => '07:30:00',
+                'end_time' => '08:00:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 20,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
                 'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
                 'title' => '仮設置開始',
                 'start_time' => '08:00:00',
                 'end_time' => '10:00:00',
@@ -1937,6 +1976,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '給水設備',
+                'task_type' => 'spot',
                 'title' => '準備',
                 'start_time' => '08:00:00',
                 'end_time' => '10:00:00',
@@ -1971,6 +2011,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '衛生',
+                'task_type' => 'spot',
                 'title' => '事前準備',
                 'start_time' => '08:00:00',
                 'end_time' => '10:00:00',
@@ -1992,7 +2033,58 @@ class TimetableSeeder extends Seeder
                 ],
             ],
             [
+                'lane_name' => 'ござ市',
+                'task_type' => 'spot',
+                'title' => '貸出機材準備',
+                'start_time' => '08:00:00',
+                'end_time' => '09:00:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 22,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'spot',
+                'title' => '仮設営',
+                'start_time' => '08:00:00',
+                'end_time' => '09:00:00',
+                'location' => null,
+                'content' => '駐車場内にテント設置。放送設備設置など。',
+                'required_people_count' => 4,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 20,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
                 'lane_name' => '巡回',
+                'task_type' => 'spot',
                 'title' => '本陣前交通整理',
                 'start_time' => '09:00:00',
                 'end_time' => '09:30:00',
@@ -2017,6 +2109,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '企業ブース',
+                'task_type' => 'spot',
                 'title' => '搬入対応',
                 'start_time' => '09:00:00',
                 'end_time' => '10:00:00',
@@ -2035,7 +2128,58 @@ class TimetableSeeder extends Seeder
                 ],
             ],
             [
+                'lane_name' => 'ござ市',
+                'task_type' => 'spot',
+                'title' => '受付・機材貸出',
+                'start_time' => '09:00:00',
+                'end_time' => '10:00:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 22,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'routine',
+                'title' => '本陣業務',
+                'start_time' => '09:00:00',
+                'end_time' => '10:00:00',
+                'location' => null,
+                'content' => 'ござ市受付（出店料受領と出店許可証、領収書発行、貸出機材の案内など）',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 20,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
                 'lane_name' => '巡回',
+                'task_type' => 'routine',
                 'title' => '巡回',
                 'start_time' => '09:30:00',
                 'end_time' => '10:30:00',
@@ -2060,6 +2204,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
                 'title' => '本設置開始',
                 'start_time' => '10:00:00',
                 'end_time' => '11:00:00',
@@ -2079,6 +2224,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '給水設備',
+                'task_type' => 'spot',
                 'title' => '設置',
                 'start_time' => '10:00:00',
                 'end_time' => '11:00:00',
@@ -2113,6 +2259,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '衛生',
+                'task_type' => 'spot',
                 'title' => 'ゴミ箱配置',
                 'start_time' => '10:00:00',
                 'end_time' => '11:00:00',
@@ -2132,6 +2279,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '企業ブース',
+                'task_type' => 'routine',
                 'title' => '巡回・見回り',
                 'start_time' => '10:00:00',
                 'end_time' => '17:00:00',
@@ -2150,26 +2298,110 @@ class TimetableSeeder extends Seeder
                 ],
             ],
             [
-                'lane_name' => '企業ブース',
-                'title' => 'ステージ挨拶',
-                'start_time' => '10:30:00',
+                'lane_name' => 'ちょうちん',
+                'task_type' => 'spot',
+                'title' => '掲揚',
+                'start_time' => '10:00:00',
                 'end_time' => '11:00:00',
-                'location' => '税務署ステージ',
-                'content' => null,
-                'required_people_count' => 1,
-                'is_at_least' => false,
+                'location' => null,
+                'content' => 'ちょうちんの紐を結ぶ人
+梯子を抑える人
+通行人に注意喚起する人',
+                'required_people_count' => 3,
+                'is_at_least' => true,
                 'is_critical' => false,
                 'status' => 'not_started',
                 'assignments' => [
                     [
-                        'staff_id' => 24,
+                        'staff_id' => 35,
                         'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 39,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'ござ市',
+                'task_type' => 'routine',
+                'title' => '巡回',
+                'start_time' => '10:00:00',
+                'end_time' => '17:00:00',
+                'location' => null,
+                'content' => '出店違反の見回りなど',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 22,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'spot',
+                'title' => '本設営',
+                'start_time' => '10:00:00',
+                'end_time' => '10:30:00',
+                'location' => null,
+                'content' => 'テントを通りに移動',
+                'required_people_count' => 4,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 20,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'routine',
+                'title' => '本陣業務',
+                'start_time' => '10:30:00',
+                'end_time' => '17:00:00',
+                'location' => null,
+                'content' => '来場者対応、案内放送など',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 20,
+                        'role_description' => '固定スタッフ',
                         'attendance_status' => 'assigned',
                     ],
                 ],
             ],
             [
                 'lane_name' => '給水設備',
+                'task_type' => 'routine',
                 'title' => '定期巡回',
                 'start_time' => '11:00:00',
                 'end_time' => '17:00:00',
@@ -2204,6 +2436,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '衛生',
+                'task_type' => 'routine',
                 'title' => 'ゴミ箱チェック',
                 'start_time' => '11:00:00',
                 'end_time' => '17:00:00',
@@ -2224,6 +2457,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '巡回',
+                'task_type' => 'routine',
                 'title' => '巡回',
                 'start_time' => '11:00:00',
                 'end_time' => '17:00:00',
@@ -2250,6 +2484,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
                 'title' => '仮撤去開始',
                 'start_time' => '17:00:00',
                 'end_time' => '18:00:00',
@@ -2269,6 +2504,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '給水設備',
+                'task_type' => 'spot',
                 'title' => '撤去開始・完全撤去',
                 'start_time' => '17:00:00',
                 'end_time' => '18:00:00',
@@ -2304,6 +2540,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '衛生',
+                'task_type' => 'spot',
                 'title' => '撤収作業',
                 'start_time' => '17:00:00',
                 'end_time' => '18:00:00',
@@ -2324,6 +2561,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => '企業ブース',
+                'task_type' => 'spot',
                 'title' => '搬出対応',
                 'start_time' => '17:00:00',
                 'end_time' => '18:30:00',
@@ -2342,7 +2580,83 @@ class TimetableSeeder extends Seeder
                 ],
             ],
             [
+                'lane_name' => 'ちょうちん',
+                'task_type' => 'spot',
+                'title' => '降納',
+                'start_time' => '17:00:00',
+                'end_time' => '18:00:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 3,
+                'is_at_least' => true,
+                'is_critical' => true,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 39,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'ござ市',
+                'task_type' => 'spot',
+                'title' => '貸出機材回収',
+                'start_time' => '17:00:00',
+                'end_time' => '18:00:00',
+                'location' => null,
+                'content' => '椅子・テーブル・テント・ウェイトの回収と夜間保管場所への移動',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 22,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'spot',
+                'title' => 'テント移動',
+                'start_time' => '17:00:00',
+                'end_time' => '18:00:00',
+                'location' => null,
+                'content' => '駐車場内にテントを移動。業務継続',
+                'required_people_count' => 4,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 20,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
                 'lane_name' => '巡回',
+                'task_type' => 'routine',
                 'title' => '巡回',
                 'start_time' => '17:30:00',
                 'end_time' => '19:30:00',
@@ -2369,6 +2683,7 @@ class TimetableSeeder extends Seeder
             ],
             [
                 'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
                 'title' => '本撤去',
                 'start_time' => '18:00:00',
                 'end_time' => '19:00:00',
@@ -2390,7 +2705,33 @@ class TimetableSeeder extends Seeder
                 ],
             ],
             [
+                'lane_name' => '本陣',
+                'task_type' => 'spot',
+                'title' => '夜間保管準備',
+                'start_time' => '18:00:00',
+                'end_time' => '19:00:00',
+                'location' => null,
+                'content' => '2日目に使うものを盗難に注意して保管',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 20,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
                 'lane_name' => '衛生',
+                'task_type' => 'spot',
                 'title' => '業者のごみ回収',
                 'start_time' => '19:00:00',
                 'end_time' => '19:30:00',
@@ -2421,6 +2762,7 @@ class TimetableSeeder extends Seeder
                     'start_time' => $taskData['start_time'],
                 ],
                 [
+                    'task_type' => $taskData['task_type'] ?? $resolveTaskType($taskData['title']),
                     'end_time' => $taskData['end_time'],
                     'location' => $taskData['location'],
                     'content' => $taskData['content'],
@@ -2443,7 +2785,1426 @@ class TimetableSeeder extends Seeder
                         );
                     }
                 }
-            } elseif ($timetableLane->lead_staff_id && Staff::where('id', $timetableLane->lead_staff_id)->exists()) {
+            } elseif (! array_key_exists('assignments', $taskData) && $timetableLane->lead_staff_id && Staff::where('id', $timetableLane->lead_staff_id)->exists()) {
+                $task->assignments()->firstOrCreate(
+                    ['staff_id' => $timetableLane->lead_staff_id],
+                    [
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ]
+                );
+            }
+        }
+
+        // =========================================================================
+        // 5. 第35回保土ケ谷宿場まつり（2日目） - 2027-10-11
+        // =========================================================================
+        $timetableDay5 = Timetable::updateOrCreate(
+            ['target_date' => '2027-10-11'],
+            [
+                'name' => '第35回保土ケ谷宿場まつり（2日目）',
+                'description' => null,
+                'start_time' => '08:00:00',
+                'end_time' => '20:00:00',
+                'status' => 'draft',
+                'road_periods' => [
+                    [
+                        'label' => '通行止め',
+                        'status' => 'closed',
+                        'end_time' => '18:00',
+                        'start_time' => '10:00',
+                    ],
+                ],
+                'festival_periods' => [
+                    [
+                        'label' => '開催中',
+                        'status' => 'active',
+                        'end_time' => '17:00',
+                        'start_time' => '11:00',
+                    ],
+                ],
+                'created_by' => $admin->id,
+            ]
+        );
+
+        $lanesDay5Data = [
+            [
+                'name' => 'カラーコーン',
+                'color' => 'amber',
+                'icon' => '🔺',
+                'display_order' => 20,
+                'lead_staff_id' => 33,
+                'fixed_staff_ids' => [33],
+                'notes' => null,
+            ],
+            [
+                'name' => '給水設備',
+                'color' => 'sky',
+                'icon' => '🚰',
+                'display_order' => 30,
+                'lead_staff_id' => 6,
+                'fixed_staff_ids' => [6, 37],
+                'notes' => null,
+            ],
+            [
+                'name' => '衛生',
+                'color' => 'emerald',
+                'icon' => '🚻',
+                'display_order' => 40,
+                'lead_staff_id' => 26,
+                'fixed_staff_ids' => [26],
+                'notes' => null,
+            ],
+            [
+                'name' => '巡回',
+                'color' => 'purple',
+                'icon' => '🚨',
+                'display_order' => 50,
+                'lead_staff_id' => 43,
+                'fixed_staff_ids' => [14, 43],
+                'notes' => null,
+            ],
+            [
+                'name' => 'キッズ村',
+                'color' => 'pink',
+                'icon' => '🎈',
+                'display_order' => 60,
+                'lead_staff_id' => 5,
+                'fixed_staff_ids' => [5, 15],
+                'notes' => null,
+            ],
+            [
+                'name' => 'ちょうちん',
+                'color' => 'red',
+                'icon' => '🏮',
+                'display_order' => 70,
+                'lead_staff_id' => 35,
+                'fixed_staff_ids' => [35, 39],
+                'notes' => null,
+            ],
+            [
+                'name' => 'ござ市',
+                'color' => 'orange',
+                'icon' => '🧺',
+                'display_order' => 80,
+                'lead_staff_id' => 22,
+                'fixed_staff_ids' => [22, 35],
+                'notes' => null,
+            ],
+            [
+                'name' => '本陣',
+                'color' => 'indigo',
+                'icon' => '🏛️',
+                'display_order' => 90,
+                'lead_staff_id' => 19,
+                'fixed_staff_ids' => [19, 20],
+                'notes' => null,
+            ],
+            [
+                'name' => '道路清掃',
+                'color' => 'teal',
+                'icon' => '🧹',
+                'display_order' => 100,
+                'lead_staff_id' => null,
+                'fixed_staff_ids' => [],
+                'notes' => null,
+            ],
+            [
+                'name' => '直営店',
+                'color' => 'indigo',
+                'icon' => '🛒',
+                'display_order' => 120,
+                'lead_staff_id' => 28,
+                'fixed_staff_ids' => [4, 28],
+                'notes' => null,
+            ],
+            [
+                'name' => '税務署ステージ',
+                'color' => 'orange',
+                'icon' => '🎤',
+                'display_order' => 130,
+                'lead_staff_id' => 13,
+                'fixed_staff_ids' => [12, 13, 41, 44],
+                'notes' => null,
+            ],
+            [
+                'name' => '宿場くん/宿場ちゃん',
+                'color' => 'red',
+                'icon' => '🏃‍♂️',
+                'display_order' => 140,
+                'lead_staff_id' => 15,
+                'fixed_staff_ids' => [10, 15, 23, 25, 32, 42],
+                'notes' => null,
+            ],
+            [
+                'name' => 'S&S',
+                'color' => 'orange',
+                'icon' => '🏛️',
+                'display_order' => 170,
+                'lead_staff_id' => 38,
+                'fixed_staff_ids' => [38],
+                'notes' => null,
+            ],
+            [
+                'name' => '企業ブース',
+                'color' => 'pink',
+                'icon' => '🏢',
+                'display_order' => 180,
+                'lead_staff_id' => 24,
+                'fixed_staff_ids' => [24],
+                'notes' => null,
+            ],
+            [
+                'name' => 'ステカン',
+                'color' => 'yellow',
+                'icon' => '🪧',
+                'display_order' => 190,
+                'lead_staff_id' => 8,
+                'fixed_staff_ids' => [8, 12, 21],
+                'notes' => null,
+            ],
+        ];
+
+        $lanesDay5 = [];
+        foreach ($lanesDay5Data as $laneItem) {
+            if (isset($laneItem['lead_staff_id']) && ! Staff::where('id', $laneItem['lead_staff_id'])->exists()) {
+                $laneItem['lead_staff_id'] = null;
+            }
+
+            $master = Lane::where('name', $laneItem['name'])->firstOrFail();
+
+            $timetableLane = TimetableLane::updateOrCreate(
+                [
+                    'timetable_id' => $timetableDay5->id,
+                    'lane_id' => $master->id,
+                ],
+                [
+                    'lead_staff_id' => $laneItem['lead_staff_id'],
+                    'display_order' => $laneItem['display_order'],
+                    'notes' => $laneItem['notes'],
+                ]
+            );
+
+            $timetableLane->fixedStaff()->sync($laneItem['fixed_staff_ids']);
+
+            $lanesDay5[$laneItem['name']] = $timetableLane;
+        }
+
+        $tasksDay5 = [
+            [
+                'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => '給水設備',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => '衛生',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => '巡回',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => 'S&S',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => 'キッズ村',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => 'ちょうちん',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => 'ござ市',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => '道路清掃',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => '直営店',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => '税務署ステージ',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => '宿場くん/宿場ちゃん',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => '企業ブース',
+                'task_type' => 'spot',
+                'title' => '全体ミーティング',
+                'start_time' => '07:00:00',
+                'end_time' => '07:30:00',
+                'location' => '本陣',
+                'content' => null,
+                'required_people_count' => 0,
+                'is_at_least' => false,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
+                'title' => '班ミーティング',
+                'start_time' => '07:30:00',
+                'end_time' => '08:00:00',
+                'location' => null,
+                'content' => '出欠確認、申し合わせ',
+                'required_people_count' => 1,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 33,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '給水設備',
+                'task_type' => 'spot',
+                'title' => '班ミーティング',
+                'start_time' => '07:30:00',
+                'end_time' => '08:00:00',
+                'location' => null,
+                'content' => '出欠確認、申し合わせ',
+                'required_people_count' => 1,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 6,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '衛生',
+                'task_type' => 'spot',
+                'title' => '班ミーティング',
+                'start_time' => '07:30:00',
+                'end_time' => '08:00:00',
+                'location' => null,
+                'content' => '出欠確認、申し合わせ',
+                'required_people_count' => 1,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 26,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '巡回',
+                'task_type' => 'spot',
+                'title' => '班ミーティング',
+                'start_time' => '07:30:00',
+                'end_time' => '08:00:00',
+                'location' => null,
+                'content' => '出欠確認、申し合わせ',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 14,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 43,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'S&S',
+                'task_type' => 'routine',
+                'title' => '管理・イベント運営',
+                'start_time' => '07:30:00',
+                'end_time' => '18:30:00',
+                'location' => null,
+                'content' => 'S&S建物内外の管理、主催イベントの運営を一任',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 38,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'ござ市',
+                'task_type' => 'spot',
+                'title' => '班ミーティング',
+                'start_time' => '07:30:00',
+                'end_time' => '08:00:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 22,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'spot',
+                'title' => '班ミーティング',
+                'start_time' => '07:30:00',
+                'end_time' => '08:00:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 20,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
+                'title' => '仮設置開始',
+                'start_time' => '08:00:00',
+                'end_time' => '10:00:00',
+                'location' => null,
+                'content' => '税務署前駐車場から各設置ポイントの通行の妨げにならない場所に設置',
+                'required_people_count' => 3,
+                'is_at_least' => true,
+                'is_critical' => true,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 33,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '給水設備',
+                'task_type' => 'spot',
+                'title' => '準備',
+                'start_time' => '08:00:00',
+                'end_time' => '10:00:00',
+                'location' => '税務署前駐車場',
+                'content' => '石鹸、案内札、給排水ポリタンクの準備',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 6,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 37,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '衛生',
+                'task_type' => 'spot',
+                'title' => '事前準備',
+                'start_time' => '08:00:00',
+                'end_time' => '10:00:00',
+                'location' => null,
+                'content' => 'ゴミ箱準備
+① 名札設置
+② 袋設置
+③ ブルーシート設置',
+                'required_people_count' => 4,
+                'is_at_least' => true,
+                'is_critical' => true,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 16,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 26,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 27,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'ござ市',
+                'task_type' => 'spot',
+                'title' => '貸出機材準備',
+                'start_time' => '08:00:00',
+                'end_time' => '09:00:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 22,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'spot',
+                'title' => '仮設営',
+                'start_time' => '08:00:00',
+                'end_time' => '09:00:00',
+                'location' => null,
+                'content' => '駐車場内にテント設置。放送設備設置など。',
+                'required_people_count' => 4,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '巡回',
+                'task_type' => 'spot',
+                'title' => '本陣前交通整理',
+                'start_time' => '09:00:00',
+                'end_time' => '09:30:00',
+                'location' => '本陣',
+                'content' => 'ござ市受付開始時の本陣前安全確保',
+                'required_people_count' => 3,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 14,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 43,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '企業ブース',
+                'task_type' => 'spot',
+                'title' => '搬入対応',
+                'start_time' => '09:00:00',
+                'end_time' => '10:00:00',
+                'location' => '長島駐車場（旧北川駐車場）',
+                'content' => '企業ブース出展者の搬入対応・挨拶',
+                'required_people_count' => 1,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 24,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'ござ市',
+                'task_type' => 'spot',
+                'title' => '受付・機材貸出',
+                'start_time' => '09:00:00',
+                'end_time' => '10:00:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 20,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 22,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'routine',
+                'title' => '本陣業務',
+                'start_time' => '09:00:00',
+                'end_time' => '10:00:00',
+                'location' => null,
+                'content' => 'ござ市受付（出店料受領と出店許可証、領収書発行、貸出機材の案内など）',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 20,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '巡回',
+                'task_type' => 'routine',
+                'title' => '巡回',
+                'start_time' => '09:30:00',
+                'end_time' => '10:30:00',
+                'location' => null,
+                'content' => '通行止め前後の安全確保',
+                'required_people_count' => 3,
+                'is_at_least' => true,
+                'is_critical' => true,
+                'status' => 'not_started',
+                'assignments' => [
+                ],
+            ],
+            [
+                'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
+                'title' => '本設置開始',
+                'start_time' => '10:00:00',
+                'end_time' => '11:00:00',
+                'location' => null,
+                'content' => '重要度の高い支道出入り口から順に設置',
+                'required_people_count' => 3,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 33,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '給水設備',
+                'task_type' => 'spot',
+                'title' => '設置',
+                'start_time' => '10:00:00',
+                'end_time' => '11:00:00',
+                'location' => null,
+                'content' => '機材の設置、動作確認',
+                'required_people_count' => 4,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 6,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 37,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '衛生',
+                'task_type' => 'spot',
+                'title' => 'ゴミ箱配置',
+                'start_time' => '10:00:00',
+                'end_time' => '11:00:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 4,
+                'is_at_least' => false,
+                'is_critical' => true,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 16,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 26,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 27,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '企業ブース',
+                'task_type' => 'routine',
+                'title' => '巡回・見回り',
+                'start_time' => '10:00:00',
+                'end_time' => '17:00:00',
+                'location' => '長島駐車場（旧北川駐車場）',
+                'content' => '浜銀駐車場（1時間に1回程度）企業ブース中心に全体見回り',
+                'required_people_count' => 1,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 24,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'ちょうちん',
+                'task_type' => 'spot',
+                'title' => '掲揚',
+                'start_time' => '10:00:00',
+                'end_time' => '11:00:00',
+                'location' => null,
+                'content' => 'ちょうちんの紐を結ぶ人
+梯子を抑える人
+通行人に注意喚起する人',
+                'required_people_count' => 3,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 39,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'ござ市',
+                'task_type' => 'routine',
+                'title' => '巡回',
+                'start_time' => '10:00:00',
+                'end_time' => '17:00:00',
+                'location' => null,
+                'content' => '出店違反の見回りなど',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 22,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'spot',
+                'title' => '本設営',
+                'start_time' => '10:00:00',
+                'end_time' => '10:30:00',
+                'location' => null,
+                'content' => 'テントを通りに移動',
+                'required_people_count' => 4,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'routine',
+                'title' => '本陣業務',
+                'start_time' => '10:30:00',
+                'end_time' => '17:00:00',
+                'location' => null,
+                'content' => '来場者対応、案内放送など',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 20,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '給水設備',
+                'task_type' => 'routine',
+                'title' => '定期巡回',
+                'start_time' => '11:00:00',
+                'end_time' => '17:00:00',
+                'location' => null,
+                'content' => '給排水ポリタンクの交換など',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 6,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 37,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '衛生',
+                'task_type' => 'routine',
+                'title' => 'ゴミ箱チェック',
+                'start_time' => '11:00:00',
+                'end_time' => '17:00:00',
+                'location' => null,
+                'content' => '① ゴミ圧縮、箸串回収
+② ゴミ袋交換',
+                'required_people_count' => 3,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 16,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 26,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 27,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '巡回',
+                'task_type' => 'routine',
+                'title' => '巡回',
+                'start_time' => '11:00:00',
+                'end_time' => '17:00:00',
+                'location' => null,
+                'content' => '定期巡回
+① 私有地進入注意
+② 路上のごみ拾い',
+                'required_people_count' => 3,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 14,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 43,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
+                'title' => '仮撤去開始',
+                'start_time' => '17:00:00',
+                'end_time' => '18:00:00',
+                'location' => null,
+                'content' => '優先度の低い順に可能な所から翌日の設置位置に近い拠点に撤去。',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 33,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '給水設備',
+                'task_type' => 'spot',
+                'title' => '撤去開始・完全撤去',
+                'start_time' => '17:00:00',
+                'end_time' => '18:00:00',
+                'location' => null,
+                'content' => '稼働率の低いポイントから順次撤去。通行止め解除前には完全撤去。
+2日目の設置ポイントを考慮して最寄りの拠点に機材を移動。',
+                'required_people_count' => 4,
+                'is_at_least' => true,
+                'is_critical' => true,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 6,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 37,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '衛生',
+                'task_type' => 'spot',
+                'title' => '撤収作業',
+                'start_time' => '17:00:00',
+                'end_time' => '18:00:00',
+                'location' => null,
+                'content' => '① ゴミ箱回収（段階的に）
+② ゴミ袋収集',
+                'required_people_count' => 4,
+                'is_at_least' => true,
+                'is_critical' => true,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 16,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 26,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 27,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '企業ブース',
+                'task_type' => 'spot',
+                'title' => '搬出対応',
+                'start_time' => '17:00:00',
+                'end_time' => '18:30:00',
+                'location' => '長島駐車場（旧北川駐車場）',
+                'content' => '企業ブース出展者の搬出対応',
+                'required_people_count' => 1,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 24,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'ちょうちん',
+                'task_type' => 'spot',
+                'title' => '降納',
+                'start_time' => '17:00:00',
+                'end_time' => '18:00:00',
+                'location' => null,
+                'content' => null,
+                'required_people_count' => 3,
+                'is_at_least' => true,
+                'is_critical' => true,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'ござ市',
+                'task_type' => 'spot',
+                'title' => '貸出機材回収',
+                'start_time' => '17:00:00',
+                'end_time' => '18:00:00',
+                'location' => null,
+                'content' => '椅子・テーブル・テント・ウェイトの回収と夜間保管場所への移動',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 22,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 35,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'spot',
+                'title' => 'テント移動',
+                'start_time' => '17:00:00',
+                'end_time' => '18:00:00',
+                'location' => null,
+                'content' => '駐車場内にテントを移動。業務継続',
+                'required_people_count' => 4,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'ステカン',
+                'task_type' => 'spot',
+                'title' => '撤収',
+                'start_time' => '17:00:00',
+                'end_time' => '18:00:00',
+                'location' => null,
+                'content' => '外回り撤去（要車両）
+内回り撤去
+ステカンはコミュニティに保管、ポスターは剥がして廃棄（プラダンは残したまま）',
+                'required_people_count' => 4,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 8,
+                        'role_description' => '班長',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 12,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 21,
+                        'role_description' => '固定スタッフ',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '巡回',
+                'task_type' => 'routine',
+                'title' => '巡回',
+                'start_time' => '17:30:00',
+                'end_time' => '19:30:00',
+                'location' => null,
+                'content' => '通行止め解除前後の安全確保
+① 解除前：ござ市出店者への注意呼びかけ
+② 解除後：通行の安全注意呼びかけ',
+                'required_people_count' => 3,
+                'is_at_least' => true,
+                'is_critical' => true,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 14,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 43,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => 'カラーコーン',
+                'task_type' => 'spot',
+                'title' => '本撤去',
+                'start_time' => '18:00:00',
+                'end_time' => '19:00:00',
+                'location' => null,
+                'content' => '支道の出入り口など重要ポイントは確実に撤去。
+翌日の設置位置に近い拠点に移動。
+支道の出入り口など重要ポイントは確実に撤去。
+翌日の設置位置に近い拠点に移動。',
+                'required_people_count' => 3,
+                'is_at_least' => true,
+                'is_critical' => true,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 33,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '本陣',
+                'task_type' => 'spot',
+                'title' => '夜間保管準備',
+                'start_time' => '18:00:00',
+                'end_time' => '19:00:00',
+                'location' => null,
+                'content' => '2日目に使うものを盗難に注意して保管',
+                'required_people_count' => 2,
+                'is_at_least' => true,
+                'is_critical' => false,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 19,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+            [
+                'lane_name' => '衛生',
+                'task_type' => 'spot',
+                'title' => '業者のごみ回収',
+                'start_time' => '19:00:00',
+                'end_time' => '19:30:00',
+                'location' => null,
+                'content' => 'ブルーシート洗浄',
+                'required_people_count' => 6,
+                'is_at_least' => true,
+                'is_critical' => true,
+                'status' => 'not_started',
+                'assignments' => [
+                    [
+                        'staff_id' => 16,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 26,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                    [
+                        'staff_id' => 27,
+                        'role_description' => '一般担当',
+                        'attendance_status' => 'assigned',
+                    ],
+                ],
+            ],
+        ];
+
+        foreach ($tasksDay5 as $taskData) {
+            $timetableLane = $lanesDay5[$taskData['lane_name']];
+
+            $task = TimetableTask::updateOrCreate(
+                [
+                    'timetable_id' => $timetableDay5->id,
+                    'timetable_lane_id' => $timetableLane->id,
+                    'title' => $taskData['title'],
+                    'start_time' => $taskData['start_time'],
+                ],
+                [
+                    'task_type' => $taskData['task_type'] ?? $resolveTaskType($taskData['title']),
+                    'end_time' => $taskData['end_time'],
+                    'location' => $taskData['location'],
+                    'content' => $taskData['content'],
+                    'required_people_count' => $taskData['required_people_count'],
+                    'is_at_least' => $taskData['is_at_least'],
+                    'is_critical' => $taskData['is_critical'],
+                    'status' => $taskData['status'],
+                ]
+            );
+
+            if (! empty($taskData['assignments'])) {
+                foreach ($taskData['assignments'] as $assignData) {
+                    if (Staff::where('id', $assignData['staff_id'])->exists()) {
+                        $task->assignments()->updateOrCreate(
+                            ['staff_id' => $assignData['staff_id']],
+                            [
+                                'role_description' => $assignData['role_description'],
+                                'attendance_status' => $assignData['attendance_status'],
+                            ]
+                        );
+                    }
+                }
+            } elseif (! array_key_exists('assignments', $taskData) && $timetableLane->lead_staff_id && Staff::where('id', $timetableLane->lead_staff_id)->exists()) {
                 $task->assignments()->firstOrCreate(
                     ['staff_id' => $timetableLane->lead_staff_id],
                     [

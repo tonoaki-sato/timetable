@@ -57,13 +57,14 @@ export function createCommonCreateModalController({ closeAllModals }) {
         const start = commonStartTimeInput?.value || '';
         const end = commonEndTimeInput?.value || '';
         const status = commonStatusSelect?.value || 'not_started';
+        const taskType = commonCreateModal?.querySelector('input[name="task_type"]:checked')?.value || 'spot';
 
         const conflicts = [];
         if (status !== 'cancelled' && start && end && start < end) {
             for (const cb of checkedCheckboxes) {
                 const laneName = cb.dataset.laneName || '担当班';
-                const matches = findOverlapsWithLaneTasks(cb.value, start, end);
-                for (const task of matches) {
+                const { sameTypeMatches } = findOverlapsWithLaneTasks(cb.value, start, end, null, taskType);
+                for (const task of sameTypeMatches) {
                     conflicts.push({ laneName, task });
                 }
             }
@@ -133,7 +134,7 @@ export function createCommonCreateModalController({ closeAllModals }) {
             }
         });
         commonCreateModal?.addEventListener('change', (e) => {
-            if (e.target.matches('.common-lane-checkbox, #common-modal-status')) {
+            if (e.target.matches('.common-lane-checkbox, #common-modal-status, input[name="task_type"]')) {
                 updateCommonSelectedCount();
                 validateCommonCreateOverlap();
             }

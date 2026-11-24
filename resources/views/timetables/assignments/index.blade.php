@@ -133,6 +133,9 @@
                             <span class="font-mono font-bold text-xs text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
                                 ⏱️ {{ substr($task->start_time, 0, 5) }}〜{{ substr($task->end_time, 0, 5) }}
                             </span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $task->presenter()->taskTypeBadgeClass() }}">
+                                {{ $task->presenter()->taskTypeIcon() }} {{ $task->presenter()->taskTypeShortLabel() }}
+                            </span>
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border truncate max-w-[120px] {{ $task->presenter()->laneBadgeClass() }}" title="{{ $task->presenter()->laneNameLabel() }}">
                                 {{ $task->presenter()->laneIconLabel() }} {{ $task->presenter()->laneNameLabel() }}
                             </span>

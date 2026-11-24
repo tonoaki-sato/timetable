@@ -2,10 +2,12 @@
 
 namespace Tests\Unit;
 
+use App\Enums\TimetableTaskType;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
 use App\Models\TimetableTask;
+use App\Support\TimeSlotHelper;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -108,5 +110,45 @@ class TimetableTaskTest extends TestCase
         $atLeastTask->unsetRelation('assignments');
         $this->assertSame(3, $atLeastTask->assigned_count);
         $this->assertTrue($atLeastTask->is_satisfied);
+    }
+
+    /**
+     * タスク種別の重複許容判定が正しく動作すること
+     */
+    public function test_task_type_overlap_rules(): void
+    {
+        $this->assertTrue(TimetableTaskType::Routine->allowsOverlapWith(TimetableTaskType::Spot));
+        $this->assertTrue(TimetableTaskType::Spot->allowsOverlapWith(TimetableTaskType::Routine));
+        $this->assertFalse(TimetableTaskType::Routine->allowsOverlapWith(TimetableTaskType::Routine));
+        $this->assertFalse(TimetableTaskType::Spot->allowsOverlapWith(TimetableTaskType::Spot));
+    }
+
+    /**
+     * 区間のマージ実拘束時間計算およびトラックパッキングが正確であること
+     */
+    public function test_time_slot_helper_merges_intervals_and_packs_tracks(): void
+    {
+        // 10:00-17:00 (420分) + 10:00-11:00 (内包) + 16:30-18:00 (90分のうち60分延長) = 480分 (8.0h)
+        $merged = TimeSlotHelper::calculateMergedDurationMinutes([
+            [600, 1020],
+            [600, 660],
+            [990, 1080],
+        ]);
+        $this->assertSame(480, $merged);
+
+        // 重複区間が別トラックへ逃がされ、重ならない区間はトラック0に収まること
+        $packed = TimeSlotHelper::packIntervalsIntoTracks([
+            ['id' => 1, 'start_min' => 540, 'end_min' => 660],
+            ['id' => 2, 'start_min' => 600, 'end_min' => 720],
+            ['id' => 3, 'start_min' => 660, 'end_min' => 780],
+        ]);
+        $this->assertSame(2, $packed['tracks_count']);
+        $byId = collect($packed['items'])->keyBy('id');
+        $this->assertSame(0, $byId[1]['sub_track']);
+        $this->assertTrue($byId[1]['has_overlap']);
+        $this->assertSame(1, $byId[2]['sub_track']);
+        $this->assertTrue($byId[2]['has_overlap']);
+        $this->assertSame(0, $byId[3]['sub_track']);
+        $this->assertTrue($byId[3]['has_overlap']);
     }
 }

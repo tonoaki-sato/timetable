@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\TimetableTaskStatus;
+use App\Enums\TimetableTaskType;
 use App\Models\TimetableTask;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -27,7 +28,13 @@ class UpdateTimetableTaskRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        $task = $this->route('task');
+        $fallbackType = $task instanceof TimetableTask
+            ? $task->task_type_enum->value
+            : TimetableTaskType::Spot->value;
+
         $this->merge([
+            'task_type' => $this->input('task_type') ?: $fallbackType,
             'is_at_least' => $this->boolean('is_at_least'),
             'is_critical' => $this->boolean('is_critical'),
             'status' => $this->input('status', 'not_started'),
@@ -42,6 +49,7 @@ class UpdateTimetableTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'task_type' => ['required', 'string', Rule::in(TimetableTaskType::values())],
             'title' => ['required', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
             'start_time' => ['required', 'date_format:H:i'],
@@ -62,6 +70,7 @@ class UpdateTimetableTaskRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'task_type' => 'タスク種別',
             'title' => '作業タスク名',
             'location' => '実施場所',
             'start_time' => '開始時刻',

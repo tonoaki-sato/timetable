@@ -50,6 +50,7 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
     {
         return TimetableTask::where('timetable_id', $task->timetable_id)
             ->where('id', '!=', $task->id)
+            ->where('task_type', $task->task_type_enum->value)
             ->whereHas('assignments', function ($query) use ($staffId): void {
                 $query->where('staff_id', $staffId)
                     ->where('attendance_status', '!=', 'absent');
@@ -71,6 +72,7 @@ class TimetableTaskRepository implements TimetableTaskRepositoryInterface
 
         return TimetableTask::where('timetable_id', $task->timetable_id)
             ->where('id', '!=', $task->id)
+            ->where('task_type', $task->task_type_enum->value)
             ->where('start_time', '<', $task->end_time)
             ->where('end_time', '>', $task->start_time)
             ->whereHas('assignments', function ($query) use ($staffIds): void {

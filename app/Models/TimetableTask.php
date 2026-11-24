@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TimetableTaskStatus;
+use App\Enums\TimetableTaskType;
 use App\Presenters\TimetableTaskPresenter;
 use Database\Factories\TimetableTaskFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'timetable_id',
     'timetable_lane_id',
+    'task_type',
     'title',
     'content',
     'location',
@@ -47,6 +49,30 @@ class TimetableTask extends Model
     public function getStatusEnumAttribute(): TimetableTaskStatus
     {
         return TimetableTaskStatus::tryFrom((string) $this->status) ?? TimetableTaskStatus::NotStarted;
+    }
+
+    /**
+     * タスク種別 Enum（定常 / スポット）
+     */
+    public function getTaskTypeEnumAttribute(): TimetableTaskType
+    {
+        return TimetableTaskType::tryFrom((string) $this->task_type) ?? TimetableTaskType::Spot;
+    }
+
+    /**
+     * 定常タスクかどうか
+     */
+    public function isRoutine(): bool
+    {
+        return $this->task_type_enum === TimetableTaskType::Routine;
+    }
+
+    /**
+     * スポットタスクかどうか
+     */
+    public function isSpot(): bool
+    {
+        return $this->task_type_enum === TimetableTaskType::Spot;
     }
 
     /**

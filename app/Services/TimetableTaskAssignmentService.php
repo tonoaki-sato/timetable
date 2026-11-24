@@ -403,7 +403,12 @@ class TimetableTaskAssignmentService
         $existingTasks = $preloadedLaneTasks !== null
             ? $preloadedLaneTasks->filter(fn (TimetableTask $existing): bool => $existing->id !== $task->id)
             : $this->taskRepository->getActiveForLaneExcludingIds($timetableLaneId, [$task->id]);
+        $targetType = $task->task_type_enum;
         foreach ($existingTasks as $existing) {
+            if ($targetType->allowsOverlapWith($existing->task_type_enum)) {
+                continue;
+            }
+
             $exStart = substr((string) $existing->start_time, 0, 5);
             $exEnd = substr((string) $existing->end_time, 0, 5);
 

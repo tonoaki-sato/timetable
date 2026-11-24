@@ -36,14 +36,14 @@ interface TimetableTaskRepositoryInterface
     public function getWithAssignmentsAndLaneByTimetableId(int $timetableId): Collection;
 
     /**
-     * 指定タスクと時間帯が重複し、指定スタッフが有効アサインされている他タスク一覧を取得
+     * 指定タスクと時間帯が重複し、指定スタッフが有効アサインされている他タスク一覧を取得（同種別重複のみ）
      *
      * @return Collection<int, TimetableTask>
      */
     public function getConflictingTasksForStaff(TimetableTask $task, int $staffId): Collection;
 
     /**
-     * 指定タスクと時間帯が重複し、指定スタッフID群のいずれかが有効アサインされている他タスク一覧を取得
+     * 指定タスクと時間帯が重複し、指定スタッフID群のいずれかが有効アサインされている他タスク一覧を取得（同種別重複のみ）
      *
      * @param  array<int, int>  $staffIds
      * @return Collection<int, TimetableTask>

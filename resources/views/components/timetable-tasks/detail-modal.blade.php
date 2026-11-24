@@ -20,6 +20,9 @@
                             <span id="detail-task-lane" class="px-2 py-0.5 rounded text-[11px] font-bold border bg-indigo-50 text-indigo-700 border-indigo-200 shrink-0">
                                 担当班
                             </span>
+                            <span id="detail-task-type-badge" class="px-2 py-0.5 rounded text-[11px] font-bold border bg-amber-50 text-amber-800 border-amber-300 shrink-0">
+                                ⚡ スポット
+                            </span>
                         </div>
                     </div>
                 </div>

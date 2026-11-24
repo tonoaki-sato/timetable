@@ -17,36 +17,53 @@ export function addMinutesToTime(timeStr, minutesToAdd = 60) {
 }
 
 /**
- * 一覧上の全タスクデータを取得
+ * 一覧上またはタイムライン上の全タスクデータを取得
  * @returns {Array<Object>}
  */
 export function getAllTasks() {
-    const rows = document.querySelectorAll('[data-task-row]');
     const tasks = [];
-    rows.forEach((row) => {
-        const raw = row.getAttribute('data-task');
-        if (raw) {
-            try {
-                tasks.push(JSON.parse(raw));
-            } catch (e) {
-                // ignore JSON parse error
+    const rows = document.querySelectorAll('[data-task-row]');
+    if (rows.length > 0) {
+        rows.forEach((row) => {
+            const raw = row.getAttribute('data-task');
+            if (raw) {
+                try {
+                    tasks.push(JSON.parse(raw));
+                } catch (e) {
+                    // ignore JSON parse error
+                }
             }
+        });
+        return tasks;
+    }
+
+    const jsonContainer = document.getElementById('lane-timeline-tasks-data');
+    if (jsonContainer && jsonContainer.textContent) {
+        try {
+            const parsed = JSON.parse(jsonContainer.textContent);
+            if (Array.isArray(parsed)) {
+                return parsed;
+            }
+        } catch (e) {
+            // ignore JSON parse error
         }
-    });
+    }
     return tasks;
 }
 
 /**
- * 同一レーン内の既存タスクと時間帯重複する一覧を取得
- * @returns {Array<Object>}
+ * 同一レーン内の既存タスクと時間帯重複する一覧を取得（同種別・異種別に分類）
+ * @returns {{ sameTypeMatches: Array<Object>, differentTypeMatches: Array<Object> }}
  */
-export function findOverlapsWithLaneTasks(laneId, startTime, endTime, excludeTaskId = null) {
+export function findOverlapsWithLaneTasks(laneId, startTime, endTime, excludeTaskId = null, taskType = 'spot') {
     if (!laneId || !startTime || !endTime || startTime >= endTime) {
-        return [];
+        return { sameTypeMatches: [], differentTypeMatches: [] };
     }
 
     const allTasks = getAllTasks();
-    const matches = [];
+    const sameTypeMatches = [];
+    const differentTypeMatches = [];
+
     for (const task of allTasks) {
         if (String(task.timetable_lane_id) !== String(laneId)) continue;
         if (excludeTaskId && String(task.id) === String(excludeTaskId)) continue;
@@ -58,33 +75,60 @@ export function findOverlapsWithLaneTasks(laneId, startTime, endTime, excludeTas
 
         // 重複判定: start < other.end && end > other.start
         if (startTime < tEnd && endTime > tStart) {
-            matches.push(task);
+            const existingType = task.task_type || 'spot';
+            if (existingType === taskType) {
+                sameTypeMatches.push(task);
+            } else {
+                differentTypeMatches.push(task);
+            }
         }
     }
-    return matches;
+
+    return { sameTypeMatches, differentTypeMatches };
 }
 
 /**
- * 単一タスクモーダル用の重複警告表示を更新
+ * 単一タスクモーダル用の重複警告・並行案内表示を更新
  */
-export function updateSingleOverlapWarning(warningEl, matches, { subject, actionLabel }) {
+export function updateSingleOverlapWarning(warningEl, overlaps, { subject, actionLabel, taskType = 'spot' }) {
     if (!warningEl) {
         return false;
     }
 
-    if (matches.length > 0) {
-        const warningSpan = warningEl.querySelector('.warning-text');
+    const { sameTypeMatches = [], differentTypeMatches = [] } = Array.isArray(overlaps)
+        ? { sameTypeMatches: overlaps, differentTypeMatches: [] }
+        : (overlaps || {});
+
+    const warningSpan = warningEl.querySelector('.warning-text');
+
+    if (sameTypeMatches.length > 0) {
+        warningEl.classList.remove('bg-sky-50', 'border-sky-200', 'text-sky-800');
+        warningEl.classList.add('bg-amber-50', 'border-amber-200/90', 'text-amber-800');
         if (warningSpan) {
-            if (matches.length === 1) {
-                const conflictingTask = matches[0];
-                warningSpan.textContent = `${subject}「${conflictingTask.title}」（${conflictingTask.start_time}〜${conflictingTask.end_time}）と時間帯が重なっています（並行タスクとして${actionLabel}できます）。`;
+            if (sameTypeMatches.length === 1) {
+                const conflictingTask = sameTypeMatches[0];
+                warningSpan.textContent = `${subject}（同種）「${conflictingTask.title}」（${conflictingTask.start_time}〜${conflictingTask.end_time}）と時間帯が重なっています（並行タスクとして${actionLabel}できます）。`;
             } else {
-                const summary = matches.map(t => `「${t.title}」(${t.start_time}〜${t.end_time})`).join('・');
-                warningSpan.textContent = `${subject} ${summary} と時間帯が重なっています（並行タスクとして${actionLabel}できます）。`;
+                const summary = sameTypeMatches.map(t => `「${t.title}」(${t.start_time}〜${t.end_time})`).join('・');
+                warningSpan.textContent = `${subject}（同種）${summary} と時間帯が重なっています（並行タスクとして${actionLabel}できます）。`;
             }
         }
         warningEl.classList.remove('hidden');
         return true;
+    }
+
+    if (differentTypeMatches.length > 0) {
+        warningEl.classList.remove('bg-amber-50', 'border-amber-200/90', 'text-amber-800');
+        warningEl.classList.add('bg-sky-50', 'border-sky-200', 'text-sky-800');
+        const currentLabel = taskType === 'routine' ? '定常タスク' : 'スポットタスク';
+        const otherLabel = taskType === 'routine' ? 'スポットタスク' : '定常タスク';
+        if (warningSpan) {
+            const summary = differentTypeMatches.slice(0, 2).map(t => `「${t.title}」(${t.start_time}〜${t.end_time})`).join('・');
+            const suffix = differentTypeMatches.length > 2 ? ` ほか${differentTypeMatches.length - 2}件` : '';
+            warningSpan.textContent = `${otherLabel} ${summary}${suffix} と時間帯が重なっていますが、${currentLabel}として問題なく並行${actionLabel}できます。`;
+        }
+        warningEl.classList.remove('hidden');
+        return false;
     }
 
     warningEl.classList.add('hidden');

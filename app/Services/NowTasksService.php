@@ -69,6 +69,11 @@ class NowTasksService
                     return $bInProgress <=> $aInProgress;
                 }
 
+                // 同時優先度内ではスポットタスクを定常タスクより上位に表示
+                if ($a->isSpot() !== $b->isSpot()) {
+                    return $b->isSpot() <=> $a->isSpot();
+                }
+
                 if ($a->start_time !== $b->start_time) {
                     return $a->start_time <=> $b->start_time;
                 }

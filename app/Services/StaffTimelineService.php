@@ -2,6 +2,10 @@
 
 namespace App\Services;
 
+use App\DTOs\Timeline\GanttBarDTO;
+use App\DTOs\Timeline\StaffTimelineRowDTO;
+use App\Enums\TimetableTaskStatus;
+use App\Enums\TimetableTaskType;
 use App\Models\Staff;
 use App\Models\TaskStaffAssignment;
 use App\Models\Timetable;
@@ -35,6 +39,7 @@ class StaffTimelineService
         $staffIds = $activeStaff->pluck('id')->all();
 
         $tasks = $this->taskRepository->getForTimelineByTimetableId($timetable->id);
+        $timetableLanes = $this->timetableLaneRepository->getForTimetable($timetable);
 
         $assignmentsByStaff = [];
         foreach ($staffIds as $sId) {
@@ -43,6 +48,9 @@ class StaffTimelineService
 
         foreach ($tasks as $task) {
             foreach ($task->assignments as $assignment) {
+                if ($assignment->attendance_status === 'absent') {
+                    continue;
+                }
                 if (isset($assignmentsByStaff[$assignment->staff_id])) {
                     $assignmentsByStaff[$assignment->staff_id]->push([
                         'task' => $task,
@@ -52,10 +60,156 @@ class StaffTimelineService
             }
         }
 
-        $timeSlots = TimeSlotHelper::generateForTimetable($timetable);
-        $timelineGrid = $this->buildTimelineGrid($timeSlots, $activeStaff, $assignmentsByStaff);
-
         $checkedInStaffIds = $this->staffCheckInRepository->getStaffIdsCheckedInForTimetable($timetable->id);
+        $leadLanes = $this->timetableLaneRepository->getLeadTimetableLanesForTimetable($timetable);
+        $leadStaffIds = $leadLanes->pluck('lead_staff_id')->map(fn ($id): int => (int) $id)->unique()->values()->all();
+        $laneNamesByLeadStaff = $leadLanes->groupBy('lead_staff_id')
+            ->map(fn ($lanes): string => $lanes->pluck('name')->join('・'))
+            ->all();
+        $firstLeadLaneNameByStaff = $leadLanes->groupBy('lead_staff_id')
+            ->map(fn ($lanes): string => (string) ($lanes->first()?->name ?? ''))
+            ->all();
+
+        $fixedLaneNameByStaff = [];
+        foreach ($timetableLanes as $tl) {
+            foreach ($tl->fixedStaff as $fs) {
+                $fixedLaneNameByStaff[(int) $fs->id] ??= (string) $tl->name;
+            }
+        }
+
+        $bounds = TimeSlotHelper::resolveTimelineBoundsMinutes($timetable, $tasks);
+        $periodBands = TimeSlotHelper::extractPeriodBands($timetable, $bounds['start_min'], $bounds['end_min']);
+
+        /** @var list<StaffTimelineRowDTO> $staffRows */
+        $staffRows = [];
+        foreach ($activeStaff as $staff) {
+            $staffId = (int) $staff->id;
+            /** @var Collection<int, array{task: TimetableTask, assignment: TaskStaffAssignment}> $staffAssignments */
+            $staffAssignments = $assignmentsByStaff[$staffId] ?? collect();
+            $isCheckedIn = in_array($staffId, $checkedInStaffIds, true);
+            $isLeader = in_array($staffId, $leadStaffIds, true);
+
+            $routineItems = [];
+            $spotItems = [];
+            $allIntervals = [];
+            $grossMinutes = 0;
+            $assignmentSummary = [];
+            $laneCounts = [];
+
+            foreach ($staffAssignments as $item) {
+                $t = $item['task'];
+                $a = $item['assignment'];
+
+                $sMin = TimeSlotHelper::hhmmToMinutes(substr((string) $t->start_time, 0, 5));
+                $eMin = max($sMin + 15, TimeSlotHelper::hhmmToMinutes(substr((string) $t->end_time, 0, 5)));
+                $rawDuration = max(0, TimeSlotHelper::hhmmToMinutes(substr((string) $t->end_time, 0, 5)) - $sMin);
+
+                $grossMinutes += $rawDuration;
+                $allIntervals[] = [$sMin, TimeSlotHelper::hhmmToMinutes(substr((string) $t->end_time, 0, 5))];
+
+                $laneName = $t->presenter()->laneNameLabel();
+                $laneCounts[$laneName] = ($laneCounts[$laneName] ?? 0) + 1;
+
+                $assignmentSummary[] = [
+                    'task_id' => (int) $t->id,
+                    'task_type' => $t->task_type_enum->value,
+                    'start_min' => $sMin,
+                    'end_min' => $eMin,
+                    'title' => (string) $t->title,
+                ];
+
+                $packedInput = [
+                    'id' => (int) $t->id,
+                    'start_min' => $sMin,
+                    'end_min' => $eMin,
+                    'task' => $t,
+                    'assignment' => $a,
+                ];
+
+                if ($t->isRoutine()) {
+                    $routineItems[] = $packedInput;
+                } else {
+                    $spotItems[] = $packedInput;
+                }
+            }
+
+            $packedRoutine = TimeSlotHelper::packIntervalsIntoTracks($routineItems);
+            $packedSpot = TimeSlotHelper::packIntervalsIntoTracks($spotItems);
+
+            $hasSameTypeConflict = false;
+            $buildBars = static function (array $packedItems, bool $isRoutine) use ($staffId, &$hasSameTypeConflict): array {
+                return array_map(static function (array $packed) use ($staffId, $isRoutine, &$hasSameTypeConflict): GanttBarDTO {
+                    /** @var TimetableTask $t */
+                    $t = $packed['task'];
+                    /** @var TaskStaffAssignment $a */
+                    $a = $packed['assignment'];
+                    $laneRel = $t->timetableLane;
+                    $laneColor = (string) ($laneRel?->color ?? 'indigo');
+                    $isSelfTaskLeader = $laneRel && (int) $laneRel->lead_staff_id === $staffId;
+                    $hasOverlap = (bool) $packed['has_overlap'];
+                    if ($hasOverlap) {
+                        $hasSameTypeConflict = true;
+                    }
+
+                    $barClass = $isRoutine
+                        ? LanePresenter::timelineRoutineBarClassFor($laneColor)
+                        : LanePresenter::timelineSpotBarClassFor($laneColor);
+
+                    return GanttBarDTO::fromTask(
+                        task: $t,
+                        subTrack: (int) $packed['sub_track'],
+                        startMin: (int) $packed['start_min'],
+                        endMin: (int) $packed['end_min'],
+                        barClass: $barClass,
+                        hasSameTypeOverlap: $hasOverlap,
+                        assignmentId: (int) $a->id,
+                        isSelfTaskLeader: $isSelfTaskLeader,
+                    );
+                }, $packedItems);
+            };
+
+            $routineBars = $buildBars($packedRoutine['items'], true);
+            $spotBars = $buildBars($packedSpot['items'], false);
+
+            $actualMinutes = TimeSlotHelper::calculateMergedDurationMinutes($allIntervals);
+            $actualHoursFormatted = number_format($actualMinutes / 60, 1).'h';
+            $grossHoursFormatted = number_format($grossMinutes / 60, 1).'h';
+
+            // グルーピング用主担当班（班長 > 固定スタッフ > 最頻アサイン班 > 所属/未配属）
+            $primaryGroupLane = $firstLeadLaneNameByStaff[$staffId]
+                ?? $fixedLaneNameByStaff[$staffId]
+                ?? '';
+            if ($primaryGroupLane === '' && $laneCounts !== []) {
+                arsort($laneCounts);
+                $primaryGroupLane = (string) array_key_first($laneCounts);
+            }
+            if ($primaryGroupLane === '') {
+                $primaryGroupLane = '未配属・フリー';
+            }
+
+            $staffRows[] = new StaffTimelineRowDTO(
+                staff: $staff,
+                isLeader: $isLeader,
+                isCheckedIn: $isCheckedIn,
+                leadLaneNames: (string) ($laneNamesByLeadStaff[$staffId] ?? ''),
+                primaryGroupLane: $primaryGroupLane,
+                affiliationLabel: (string) ($staff->affiliation ?: '所属なし'),
+                assignedCount: $staffAssignments->count(),
+                routineCount: count($routineBars),
+                spotCount: count($spotBars),
+                actualMinutes: $actualMinutes,
+                grossMinutes: $grossMinutes,
+                actualHoursFormatted: $actualHoursFormatted,
+                grossHoursFormatted: $grossHoursFormatted,
+                hasSameTypeConflict: $hasSameTypeConflict,
+                routineTracksCount: $packedRoutine['tracks_count'],
+                spotTracksCount: $packedSpot['tracks_count'],
+                routineBars: $routineBars,
+                spotBars: $spotBars,
+                assignmentSummary: $assignmentSummary,
+            );
+        }
+
         $totalStaffCount = $activeStaff->count();
         $assignedStaffCount = collect($assignmentsByStaff)->filter(fn ($items): bool => $items->isNotEmpty())->count();
         $unassignedStaffCount = $totalStaffCount - $assignedStaffCount;
@@ -63,33 +217,43 @@ class StaffTimelineService
             fn (Staff $s): bool => in_array((int) $s->id, $checkedInStaffIds, true)
         )->count();
 
-        $tasksWithShortage = $tasks->filter(fn (TimetableTask $t): bool => $t->shortage_count > 0)->map(function (TimetableTask $t): array {
-            return [
-                'id' => $t->id,
-                'title' => $t->title,
-                'lane' => $t->presenter()->laneNameLabel(),
-                'start_time' => substr($t->start_time, 0, 5),
-                'end_time' => substr($t->end_time, 0, 5),
-                'shortage_count' => $t->shortage_count,
-                'assigned_staff_ids' => $t->assignments->pluck('staff_id')->all(),
-            ];
-        })->values();
+        $allTasksData = $tasks->filter(fn (TimetableTask $t): bool => $t->status !== 'cancelled')
+            ->map(function (TimetableTask $t): array {
+                return [
+                    'id' => $t->id,
+                    'timetable_lane_id' => $t->timetable_lane_id,
+                    'task_type' => $t->task_type_enum->value,
+                    'task_type_icon' => $t->presenter()->taskTypeIcon(),
+                    'task_type_short' => $t->presenter()->taskTypeShortLabel(),
+                    'title' => $t->title,
+                    'lane' => $t->presenter()->laneNameLabel(),
+                    'start_time' => substr((string) $t->start_time, 0, 5),
+                    'end_time' => substr((string) $t->end_time, 0, 5),
+                    'start_min' => TimeSlotHelper::hhmmToMinutes(substr((string) $t->start_time, 0, 5)),
+                    'end_min' => TimeSlotHelper::hhmmToMinutes(substr((string) $t->end_time, 0, 5)),
+                    'required_people_count' => $t->required_people_count,
+                    'assigned_count' => $t->assigned_count,
+                    'shortage_count' => $t->shortage_count,
+                    'is_satisfied' => $t->is_satisfied,
+                    'assigned_staff_ids' => $t->assignments->where('attendance_status', '!=', 'absent')->pluck('staff_id')->map(fn ($id): int => (int) $id)->values()->all(),
+                ];
+            })->values();
 
-        $leadLanes = $this->timetableLaneRepository->getLeadTimetableLanesForTimetable($timetable);
-        $leadStaffIds = $leadLanes->pluck('lead_staff_id')->map(fn ($id): int => (int) $id)->unique()->values()->all();
-        $laneNamesByLeadStaff = $leadLanes->groupBy('lead_staff_id')
-            ->map(fn ($lanes): string => $lanes->pluck('name')->join('・'))
-            ->all();
+        $tasksWithShortage = $allTasksData->filter(fn (array $t): bool => $t['shortage_count'] > 0)->values();
 
-        $staffMeta = $this->buildStaffRowMeta($activeStaff, $assignmentsByStaff, $leadStaffIds, $checkedInStaffIds);
+        $nowTime = Carbon::now('Asia/Tokyo')->format('H:i');
 
         return [
             'timetable' => $timetable,
+            'timetableLanes' => $timetableLanes,
             'activeStaff' => $activeStaff,
-            'timeSlots' => $timeSlots,
-            'timelineGrid' => $timelineGrid,
-            'assignmentsByStaff' => $assignmentsByStaff,
-            'staffMeta' => $staffMeta,
+            'staffRows' => $staffRows,
+            'bounds' => $bounds,
+            'roadBands' => $periodBands['road_bands'],
+            'festivalBands' => $periodBands['festival_bands'],
+            'nowTime' => $nowTime,
+            'nowMin' => TimeSlotHelper::hhmmToMinutes($nowTime),
+            'allTasksData' => $allTasksData,
             'tasksWithShortage' => $tasksWithShortage,
             'totalStaffCount' => $totalStaffCount,
             'assignedStaffCount' => $assignedStaffCount,
@@ -98,150 +262,8 @@ class StaffTimelineService
             'leadStaffIds' => $leadStaffIds,
             'laneNamesByLeadStaff' => $laneNamesByLeadStaff,
             'colorOptions' => LanePresenter::COLOR_OPTIONS,
+            'statuses' => TimetableTaskStatus::options(),
+            'taskTypes' => TimetableTaskType::options(),
         ];
-    }
-
-    /**
-     * スタッフ × 時間スロットのグリッドセル（横結合 colspan）を算出
-     *
-     * @param  array<int, array<string, mixed>>  $timeSlots
-     * @param  Collection<int, Staff>  $activeStaff
-     * @param  array<int, Collection<int, array{task: TimetableTask, assignment: TaskStaffAssignment}>>  $assignmentsByStaff
-     * @return array<int, array<int, array{type: string, colspan?: int, task?: TimetableTask, assignment?: TaskStaffAssignment, badge_bg?: string, is_self_task_leader?: bool, task_leader_name?: ?string}>>
-     */
-    public function buildTimelineGrid(array $timeSlots, Collection $activeStaff, array $assignmentsByStaff): array
-    {
-        $grid = [];
-        $totalSlots = count($timeSlots);
-
-        $slotStartMinutes = [];
-        foreach ($timeSlots as $sIdx => $slot) {
-            $slotStartMinutes[$sIdx] = TimeSlotHelper::hhmmToMinutes((string) $slot['time']);
-        }
-
-        foreach ($activeStaff as $staff) {
-            $staffGrid = [];
-            $coveredUntil = -1;
-            $staffAssignments = ($assignmentsByStaff[$staff->id] ?? collect())->map(function (array $item): array {
-                $t = $item['task'];
-
-                return [
-                    'task' => $t,
-                    'assignment' => $item['assignment'],
-                    'start_min' => TimeSlotHelper::hhmmToMinutes(substr((string) $t->start_time, 0, 5)),
-                    'end_min' => TimeSlotHelper::hhmmToMinutes(substr((string) $t->end_time, 0, 5)),
-                ];
-            });
-
-            foreach ($timeSlots as $sIdx => $slot) {
-                if ($coveredUntil >= $sIdx) {
-                    $staffGrid[$sIdx] = ['type' => 'skip'];
-
-                    continue;
-                }
-
-                $slotStartMin = $slotStartMinutes[$sIdx];
-                $slotEndMin = $slotStartMin + 30;
-
-                // このスロットの時間帯に開始または進行中のタスクを検索
-                $match = $staffAssignments->first(
-                    fn (array $item): bool => $item['start_min'] >= $slotStartMin && $item['start_min'] < $slotEndMin
-                );
-
-                if (! $match) {
-                    $match = $staffAssignments->first(
-                        fn (array $item): bool => $item['start_min'] <= $slotStartMin && $item['end_min'] > $slotStartMin
-                    );
-                }
-
-                if ($match) {
-                    $task = $match['task'];
-                    $assignment = $match['assignment'];
-                    $diffMinutes = max(30, $match['end_min'] - $slotStartMin);
-                    $span = (int) ceil($diffMinutes / 30);
-                    $span = min($span, $totalSlots - $sIdx);
-                    $span = max(1, $span);
-
-                    $coveredUntil = $sIdx + $span - 1;
-
-                    $laneRel = $task->timetableLane;
-                    $badgeBg = LanePresenter::timelineBadgeClassFor((string) ($laneRel?->color ?? 'indigo'));
-
-                    $isSelfTaskLeader = $laneRel && (int) $laneRel->lead_staff_id === (int) $staff->id;
-                    $taskLeaderName = $laneRel?->leadStaff?->name;
-
-                    $staffGrid[$sIdx] = [
-                        'type' => 'task',
-                        'colspan' => $span,
-                        'task' => $task,
-                        'assignment' => $assignment,
-                        'badge_bg' => $badgeBg,
-                        'is_self_task_leader' => $isSelfTaskLeader,
-                        'task_leader_name' => $taskLeaderName,
-                    ];
-                } else {
-                    $staffGrid[$sIdx] = [
-                        'type' => 'empty',
-                        'colspan' => 1,
-                    ];
-                }
-            }
-
-            $grid[$staff->id] = $staffGrid;
-        }
-
-        return $grid;
-    }
-
-    /**
-     * スタッフ別タイムライン左列の表示メタ情報を構築
-     *
-     * @param  Collection<int, Staff>  $activeStaff
-     * @param  array<int, Collection<int, array{task: TimetableTask, assignment: TaskStaffAssignment}>>  $assignmentsByStaff
-     * @param  array<int, int>  $leadStaffIds
-     * @param  array<int, int>|null  $checkedInStaffIds
-     * @return array<int, array{
-     *     assigned_count: int,
-     *     is_checked_in: bool,
-     *     is_leader: bool,
-     *     total_hours_formatted: string
-     * }>
-     */
-    public function buildStaffRowMeta(
-        Collection $activeStaff,
-        array $assignmentsByStaff,
-        array $leadStaffIds,
-        ?array $checkedInStaffIds = null,
-    ): array {
-        $meta = [];
-
-        foreach ($activeStaff as $staff) {
-            $staffAssignments = $assignmentsByStaff[$staff->id] ?? collect();
-            $assignedCount = $staffAssignments->count();
-            $isCheckedIn = $checkedInStaffIds !== null
-                ? in_array((int) $staff->id, $checkedInStaffIds, true)
-                : (bool) $staff->is_checked_in;
-            $isLeader = in_array($staff->id, $leadStaffIds, true);
-
-            $totalMinutes = 0;
-            foreach ($staffAssignments as $item) {
-                $t = $item['task'];
-                if ($t->start_time && $t->end_time) {
-                    $sC = Carbon::parse($t->start_time);
-                    $eC = Carbon::parse($t->end_time);
-                    $totalMinutes += max(0, $sC->diffInMinutes($eC));
-                }
-            }
-            $totalHoursFormatted = round($totalMinutes / 60, 1).'h';
-
-            $meta[$staff->id] = [
-                'assigned_count' => $assignedCount,
-                'is_checked_in' => $isCheckedIn,
-                'is_leader' => $isLeader,
-                'total_hours_formatted' => $totalHoursFormatted,
-            ];
-        }
-
-        return $meta;
     }
 }

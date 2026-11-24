@@ -6,9 +6,9 @@
         <div class="task-time-badge">{{ substr($task->start_time, 0, 5) }}〜{{ substr($task->end_time, 0, 5) }}</div>
     @endif
 
-    <!-- タイトル ＋ 人員規模 -->
+    <!-- タイトル ＋ 種別 ＋ 人員規模 -->
     <div class="task-header">
-        <span class="task-title">{{ $task->title }}</span>@if($matrixPeopleLabel)<span class="task-people">{{ $matrixPeopleLabel }}</span>@endif
+        <span class="task-title">[{{ $task->presenter()->taskTypeShortLabel() }}] {{ $task->title }}</span>@if($matrixPeopleLabel)<span class="task-people">{{ $matrixPeopleLabel }}</span>@endif
     </div>
 
     <!-- 作業内容（箇条書き等） -->

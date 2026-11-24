@@ -148,6 +148,17 @@
                         <span class="text-base shrink-0">⏱️</span>
                         <span class="font-bold truncate">当日進行表</span>
                     </a>
+                    @if($nav->hasTimetables())
+                    <a href="{{ route('lane-timeline.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-white min-w-0">
+                        <span class="text-base shrink-0">📊</span>
+                        <span class="font-bold truncate">班別タイムライン</span>
+                    </a>
+                    @else
+                    <div class="p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
+                        <span class="text-base shrink-0 grayscale opacity-60">📊</span>
+                        <span class="font-bold truncate">班別タイムライン</span>
+                    </div>
+                    @endif
                     @if($nav->targetPrintTimetable())
                     <a href="{{ route('timetables.staff-timeline', $nav->targetPrintTimetable()) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-white min-w-0">
                         <span class="text-base shrink-0">👥</span>
@@ -155,12 +166,12 @@
                     </a>
                     @endif
                     @if($nav->hasTimetables())
-                    <a href="{{ route('logistics-timeline.index') }}" class="col-span-2 p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                    <a href="{{ route('logistics-timeline.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
                         <span class="text-base shrink-0">🚚</span>
                         <span class="font-bold truncate">搬出入タイムライン</span>
                     </a>
                     @else
-                    <div class="col-span-2 p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
+                    <div class="p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
                         <span class="text-base shrink-0 grayscale opacity-60">🚚</span>
                         <span class="font-bold truncate">搬出入タイムライン</span>
                     </div>

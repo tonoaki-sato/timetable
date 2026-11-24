@@ -25,6 +25,12 @@
 
         @if($selectedTimetable)
         <x-slot:actions>
+            <!-- 班別タイムラインボタン -->
+            <x-ui.button variant="header-action" :href="route('timetables.lane-timeline', $selectedTimetable)">
+                <span>📊</span>
+                <span>班別タイムライン</span>
+            </x-ui.button>
+
             <!-- スタッフタイムラインボタン -->
             <x-ui.button variant="header-action" :href="route('timetables.staff-timeline', $selectedTimetable)">
                 <span>👥</span>
@@ -284,8 +290,9 @@
                                 </div>
                                 @endif
 
-                                <!-- 作業タイトル ＋ 人員規模 -->
+                                <!-- 作業タイトル ＋ 種別 ＋ 人員規模 -->
                                 <div class="font-bold text-xs text-slate-900 leading-snug">
+                                    <span class="inline-block px-1 py-0.2 rounded text-[9px] font-bold border mr-0.5 {{ $task->presenter()->taskTypeBadgeClass() }}">{{ $task->presenter()->taskTypeIcon() }}{{ $task->presenter()->taskTypeShortLabel() }}</span>
                                     <a href="{{ route('timetables.tasks.index', $selectedTimetable) }}"
                                         class="hover:text-indigo-600 transition hover:underline">
                                         {{ $task->title }}

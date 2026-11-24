@@ -939,9 +939,16 @@ class OrganizationSeeder extends Seeder
                 'display_order' => 10,
             ],
             [
-                'id' => 71,
-                'organization_unit_id' => 8,
+                'id' => 70,
+                'organization_unit_id' => 83,
                 'staff_id' => 23,
+                'role' => null,
+                'display_order' => 10,
+            ],
+            [
+                'id' => 71,
+                'organization_unit_id' => 83,
+                'staff_id' => 32,
                 'role' => null,
                 'display_order' => 20,
             ],
@@ -1062,7 +1069,7 @@ class OrganizationSeeder extends Seeder
                 'organization_unit_id' => 83,
                 'staff_id' => 42,
                 'role' => null,
-                'display_order' => 10,
+                'display_order' => 30,
             ],
             [
                 'id' => 98,

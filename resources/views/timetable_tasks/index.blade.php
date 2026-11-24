@@ -21,6 +21,11 @@
         </x-slot:breadcrumbs>
 
         <x-slot:actions>
+            <x-ui.button variant="header-action" :href="route('timetables.lane-timeline', $timetable)" title="担当班別の班別タイムライン（ガントチャート）を表示">
+                <span>📊</span>
+                <span>班別タイムライン</span>
+            </x-ui.button>
+
             <x-ui.button variant="header-action" :href="route('timetables.print-assignments', $timetable)" title="運行日別人員配置一覧表をPDFでダウンロード">
                 <span>📄</span>
                 <span>人員配置表印刷</span>
@@ -128,6 +133,7 @@
                     <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold select-none text-xs">
                         <tr>
                             <th class="px-3.5 py-2.5 text-center whitespace-nowrap w-16">最優先</th>
+                            <th class="px-3.5 py-2.5 whitespace-nowrap w-24">種別</th>
                             <th class="px-3.5 py-2.5 whitespace-nowrap w-28">時間帯</th>
                             <th class="px-3.5 py-2.5 min-w-[160px]">作業名</th>
                             <th class="px-3.5 py-2.5 max-w-[200px]">作業内容</th>
@@ -147,6 +153,14 @@
                                 @else
                                 <span class="text-slate-300 text-xs">-</span>
                                 @endif
+                            </td>
+
+                            <!-- 種別 -->
+                            <td class="px-3.5 py-2.5 whitespace-nowrap">
+                                <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $task->presenter()->taskTypeBadgeClass() }}">
+                                    <span>{{ $task->presenter()->taskTypeIcon() }}</span>
+                                    <span>{{ $task->presenter()->taskTypeShortLabel() }}</span>
+                                </span>
                             </td>
 
                             <!-- 時間帯 -->

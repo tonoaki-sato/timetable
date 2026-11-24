@@ -154,6 +154,11 @@
                                         <span class="font-mono text-xs font-bold shrink-0 {{ $isCurrent ? 'text-indigo-200' : ($isNext ? 'text-sky-300' : 'text-slate-300') }}">
                                             {{ substr($task?->start_time ?? '', 0, 5) }}〜{{ $task?->end_time ? substr($task->end_time, 0, 5) : '' }}
                                         </span>
+                                        @if($task)
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $task->isRoutine() ? 'bg-teal-500/20 text-teal-200 border-teal-500/40' : 'bg-amber-500/20 text-amber-200 border-amber-500/40' }}">
+                                                {{ $task->presenter()->taskTypeIcon() }} {{ $task->presenter()->taskTypeShortLabel() }}
+                                            </span>
+                                        @endif
                                         @if($task?->is_critical)
                                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-300 border border-red-500/40">
                                                 重要

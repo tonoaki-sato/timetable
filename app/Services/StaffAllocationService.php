@@ -6,7 +6,7 @@ use App\Models\Staff;
 use App\Models\TimetableTask;
 use App\Repositories\Contracts\StaffCheckInRepositoryInterface;
 use App\Repositories\Contracts\TaskStaffAssignmentRepositoryInterface;
-use Carbon\Carbon;
+use App\Support\TimeSlotHelper;
 use Illuminate\Support\Collection;
 
 class StaffAllocationService
@@ -81,18 +81,40 @@ class StaffAllocationService
         $conflictsByStaffId = $this->conflictService->getConflictingTasksGroupedByStaffIds($task, $staffIds);
         $checkedInStaffIds = $this->staffCheckInRepository->getStaffIdsCheckedInForTimetable((int) $task->timetable_id);
 
-        // 当日累計稼働時間の算出（同一運行日）
+        // 当日実拘束時間（区間マージ済み）および別種別同時刻稼働タスクの算出（同一運行日・追加クエリなし）
         $dayAssignments = $this->assignmentRepository->getActiveByTimetableAndStaffIds((int) $task->timetable_id, $staffIds);
+        $targetStartMin = $task->start_time ? TimeSlotHelper::hhmmToMinutes(substr((string) $task->start_time, 0, 5)) : null;
+        $targetEndMin = $task->end_time ? TimeSlotHelper::hhmmToMinutes(substr((string) $task->end_time, 0, 5)) : null;
+        $hasTargetWindow = $targetStartMin !== null && $targetEndMin !== null && $targetEndMin > $targetStartMin;
 
-        $staffDayMinutes = [];
+        $staffIntervals = [];
+        $concurrentAllowedByStaffId = [];
         foreach ($dayAssignments as $assignment) {
             $t = $assignment->task;
             if ($t && $t->start_time && $t->end_time) {
-                $start = Carbon::parse($t->start_time);
-                $end = Carbon::parse($t->end_time);
-                $diff = max(0, $start->diffInMinutes($end));
-                $staffDayMinutes[$assignment->staff_id] = ($staffDayMinutes[$assignment->staff_id] ?? 0) + $diff;
+                $sMin = TimeSlotHelper::hhmmToMinutes(substr((string) $t->start_time, 0, 5));
+                $eMin = TimeSlotHelper::hhmmToMinutes(substr((string) $t->end_time, 0, 5));
+                if ($eMin > $sMin) {
+                    $staffIntervals[$assignment->staff_id][] = [$sMin, $eMin];
+
+                    if (
+                        $hasTargetWindow
+                        && (int) $t->id !== (int) $task->id
+                        && $t->status !== 'cancelled'
+                        && $t->task_type_enum !== $task->task_type_enum
+                        && $sMin < $targetEndMin
+                        && $eMin > $targetStartMin
+                    ) {
+                        $concurrentAllowedByStaffId[(int) $assignment->staff_id] ??= new Collection;
+                        $concurrentAllowedByStaffId[(int) $assignment->staff_id]->push($t);
+                    }
+                }
             }
+        }
+
+        $staffDayMinutes = [];
+        foreach ($staffIntervals as $sId => $intervals) {
+            $staffDayMinutes[$sId] = TimeSlotHelper::calculateMergedDurationMinutes($intervals);
         }
 
         $task->loadMissing(['timetableLane.lane', 'timetableLane.fixedStaff']);
@@ -114,6 +136,7 @@ class StaffAllocationService
         foreach ($activeStaff as $staff) {
             $staffConflicts = $conflictsByStaffId[$staff->id] ?? new Collection;
             $conflict = $staffConflicts->first();
+            $concurrentTasks = $concurrentAllowedByStaffId[$staff->id] ?? new Collection;
             $isLaneLead = $leadStaffId !== null && (int) $staff->id === $leadStaffId;
             $isFixedInTaskLane = in_array((int) $staff->id, $taskLaneFixedStaffIds, true);
             $isSameLane = $isLaneLead || $isFixedInTaskLane;
@@ -153,6 +176,8 @@ class StaffAllocationService
             }
 
             $staff->conflict_task = $isSurplusFixed ? null : $conflict;
+            $staff->concurrent_tasks = $concurrentTasks;
+            $staff->has_concurrent_tasks = $concurrentTasks->isNotEmpty();
             $staff->surplus_source_task = $surplusSourceTask;
             $staff->is_surplus_fixed = $isSurplusFixed;
             $staff->surplus_type = $surplusType;
@@ -183,6 +208,11 @@ class StaffAllocationService
             // 4. 充足スタッフ（空き）を他班の余剰固定スタッフより優先
             if ($a->is_surplus_fixed !== $b->is_surplus_fixed) {
                 return $a->is_surplus_fixed <=> $b->is_surplus_fixed;
+            }
+
+            // 4.5. 完全空きを異種タスク並行中（定常中など）より優先
+            if (($a->has_concurrent_tasks ?? false) !== ($b->has_concurrent_tasks ?? false)) {
+                return ($a->has_concurrent_tasks ?? false) <=> ($b->has_concurrent_tasks ?? false);
             }
 
             // 5. 現場チェックイン（到着受付）済みを優先

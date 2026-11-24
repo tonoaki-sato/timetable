@@ -17,6 +17,7 @@ export function createSingleModalsController({ closeAllModals }) {
     const detailStatusBadge = document.getElementById('detail-task-status-badge');
     const detailCriticalBadge = document.getElementById('detail-task-critical-badge');
     const detailLane = document.getElementById('detail-task-lane');
+    const detailTypeBadge = document.getElementById('detail-task-type-badge');
     const detailTime = document.getElementById('detail-task-time');
     const detailLocation = document.getElementById('detail-task-location');
     const detailPeople = document.getElementById('detail-task-people');
@@ -24,6 +25,8 @@ export function createSingleModalsController({ closeAllModals }) {
 
     const createLaneBadge = document.getElementById('create-modal-lane-badge');
     const createLaneIdInput = document.getElementById('create-modal-lane-id');
+    const createTypeSpotRadio = document.getElementById('create-modal-type-spot');
+    const createTypeRoutineRadio = document.getElementById('create-modal-type-routine');
     const createTitleInput = document.getElementById('create-modal-title');
     const createStartTimeInput = document.getElementById('create-modal-start-time');
     const createEndTimeInput = document.getElementById('create-modal-end-time');
@@ -39,6 +42,8 @@ export function createSingleModalsController({ closeAllModals }) {
     const editLaneBadge = document.getElementById('edit-modal-lane-badge');
     const editTaskIdInput = document.getElementById('edit-modal-task-id');
     const editLaneIdInput = document.getElementById('edit-modal-lane-id');
+    const editTypeSpotRadio = document.getElementById('edit-modal-type-spot');
+    const editTypeRoutineRadio = document.getElementById('edit-modal-type-routine');
     const editTitleInput = document.getElementById('edit-modal-title');
     const editStartTimeInput = document.getElementById('edit-modal-start-time');
     const editEndTimeInput = document.getElementById('edit-modal-end-time');
@@ -68,6 +73,13 @@ export function createSingleModalsController({ closeAllModals }) {
 
         if (detailTitle) detailTitle.textContent = task.title;
         if (detailLane) detailLane.textContent = `${task.lane_icon || '📋'} ${task.lane_name || '担当班'}`;
+        if (detailTypeBadge) {
+            const isRoutine = task.task_type === 'routine';
+            detailTypeBadge.textContent = isRoutine ? '🔄 定常タスク' : '⚡ スポットタスク';
+            detailTypeBadge.className = isRoutine
+                ? 'px-2 py-0.5 rounded text-[11px] font-bold border bg-teal-50 text-teal-800 border-teal-300 shrink-0'
+                : 'px-2 py-0.5 rounded text-[11px] font-bold border bg-amber-50 text-amber-800 border-amber-300 shrink-0';
+        }
         if (detailTime) detailTime.textContent = `${task.start_time} 〜 ${task.end_time}`;
         if (detailLocation) detailLocation.textContent = task.location || '（未指定）';
         if (detailPeople) {
@@ -111,6 +123,10 @@ export function createSingleModalsController({ closeAllModals }) {
         detailModal.classList.remove('hidden');
     }
 
+    function getCreateTaskType() {
+        return createTypeRoutineRadio?.checked ? 'routine' : 'spot';
+    }
+
     function validateCreateOverlap() {
         if (!createOverlapWarning || !createLaneIdInput || !createStartTimeInput || !createEndTimeInput) {
             return false;
@@ -120,18 +136,20 @@ export function createSingleModalsController({ closeAllModals }) {
         const start = createStartTimeInput.value;
         const end = createEndTimeInput.value;
         const status = createStatusSelect?.value || 'not_started';
+        const taskType = getCreateTaskType();
 
-        const matches = status === 'cancelled'
-            ? []
-            : findOverlapsWithLaneTasks(laneId, start, end);
+        const overlaps = status === 'cancelled'
+            ? { sameTypeMatches: [], differentTypeMatches: [] }
+            : findOverlapsWithLaneTasks(laneId, start, end, null, taskType);
 
-        return updateSingleOverlapWarning(createOverlapWarning, matches, {
+        return updateSingleOverlapWarning(createOverlapWarning, overlaps, {
             subject: '既存タスク',
             actionLabel: '登録',
+            taskType,
         });
     }
 
-    function openCreateModal(laneId, laneName, laneIcon, suggestedStart) {
+    function openCreateModal(laneId, laneName, laneIcon, suggestedStart, suggestedEnd = null, suggestedTaskType = 'spot') {
         if (!createModal) return;
 
         closeAllModals();
@@ -140,11 +158,16 @@ export function createSingleModalsController({ closeAllModals }) {
             createLaneBadge.textContent = `${laneIcon || '📋'} ${laneName || '担当班'}`;
         }
         if (createLaneIdInput) createLaneIdInput.value = laneId || '';
+        if (createTypeRoutineRadio && createTypeSpotRadio) {
+            const isRoutine = suggestedTaskType === 'routine';
+            createTypeRoutineRadio.checked = isRoutine;
+            createTypeSpotRadio.checked = !isRoutine;
+        }
         if (createTitleInput) createTitleInput.value = '';
         if (createLocationInput) createLocationInput.value = '';
 
         const sStart = suggestedStart || '08:00';
-        const sEnd = addMinutesToTime(sStart, sStart === '08:00' ? 90 : 60);
+        const sEnd = suggestedEnd || addMinutesToTime(sStart, sStart === '08:00' ? 90 : 60);
         if (createStartTimeInput) createStartTimeInput.value = sStart;
         if (createEndTimeInput) createEndTimeInput.value = sEnd;
 
@@ -159,6 +182,10 @@ export function createSingleModalsController({ closeAllModals }) {
         createTitleInput?.focus();
     }
 
+    function getEditTaskType() {
+        return editTypeRoutineRadio?.checked ? 'routine' : 'spot';
+    }
+
     function validateEditOverlap() {
         if (!editOverlapWarning || !editLaneIdInput || !editStartTimeInput || !editEndTimeInput) {
             return false;
@@ -168,14 +195,16 @@ export function createSingleModalsController({ closeAllModals }) {
         const start = editStartTimeInput.value;
         const end = editEndTimeInput.value;
         const status = editStatusSelect?.value || 'not_started';
+        const taskType = getEditTaskType();
 
-        const matches = status === 'cancelled'
-            ? []
-            : findOverlapsWithLaneTasks(laneId, start, end, currentEditingTaskId);
+        const overlaps = status === 'cancelled'
+            ? { sameTypeMatches: [], differentTypeMatches: [] }
+            : findOverlapsWithLaneTasks(laneId, start, end, currentEditingTaskId, taskType);
 
-        return updateSingleOverlapWarning(editOverlapWarning, matches, {
+        return updateSingleOverlapWarning(editOverlapWarning, overlaps, {
             subject: '同一班のタスク',
             actionLabel: '保存',
+            taskType,
         });
     }
 
@@ -194,6 +223,11 @@ export function createSingleModalsController({ closeAllModals }) {
         if (editLaneIdInput) editLaneIdInput.value = task.timetable_lane_id;
         if (editLaneBadge) {
             editLaneBadge.textContent = `${task.lane_icon || '📋'} ${task.lane_name || '担当班'}`;
+        }
+        if (editTypeRoutineRadio && editTypeSpotRadio) {
+            const isRoutine = task.task_type === 'routine';
+            editTypeRoutineRadio.checked = isRoutine;
+            editTypeSpotRadio.checked = !isRoutine;
         }
 
         if (editTitleInput) editTitleInput.value = task.title || '';
@@ -218,7 +252,7 @@ export function createSingleModalsController({ closeAllModals }) {
             }
         });
         createModal?.addEventListener('change', (e) => {
-            if (e.target.matches('#create-modal-status')) {
+            if (e.target.matches('#create-modal-status, input[name="task_type"]')) {
                 validateCreateOverlap();
             }
         });
@@ -229,7 +263,7 @@ export function createSingleModalsController({ closeAllModals }) {
             }
         });
         editModal?.addEventListener('change', (e) => {
-            if (e.target.matches('#edit-modal-status')) {
+            if (e.target.matches('#edit-modal-status, input[name="task_type"]')) {
                 validateEditOverlap();
             }
         });
