@@ -26,8 +26,12 @@ class BaseMapVectorRenderer
      *
      * @param  Collection<int, SiteMapPlacement>  $placements
      */
-    public function drawPresetJsonBaseMap(CPDF $canvas, string $font, Collection $placements): void
-    {
+    public function drawPresetJsonBaseMap(
+        CPDF $canvas,
+        string $font,
+        Collection $placements,
+        bool $drawWaterLegend = true
+    ): void {
         $parsedBaseMap = $this->loadParsedBaseMapData();
         if ($parsedBaseMap === null) {
             return;
@@ -74,9 +78,11 @@ class BaseMapVectorRenderer
         }
 
         // 凡例「手洗い設備設置 Nヵ所」の動的数値描画
-        $waterCount = $placements->where('shape_type', 'water_supply')->count();
-        $canvas->filled_rectangle(82.0, 169.0, 100.0, 10.5, [1.0, 1.0, 1.0]);
-        $this->textRenderer->drawMixedText($canvas, 84.30, 170.5, "手洗い設備設置　{$waterCount}ヵ所", $font, 7.8, $labelColor);
+        if ($drawWaterLegend) {
+            $waterCount = $placements->where('shape_type', 'water_supply')->count();
+            $canvas->filled_rectangle(82.0, 169.0, 100.0, 10.5, [1.0, 1.0, 1.0]);
+            $this->textRenderer->drawMixedText($canvas, 84.30, 170.5, "手洗い設備設置　{$waterCount}ヵ所", $font, 7.8, $labelColor);
+        }
     }
 
     /**

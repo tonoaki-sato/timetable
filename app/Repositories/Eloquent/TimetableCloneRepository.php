@@ -2,6 +2,10 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Models\ConeMapBar;
+use App\Models\ConeMapBarricade;
+use App\Models\ConeMapCallout;
+use App\Models\ConeMapCone;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\LayoutItem;
 use App\Models\LayoutMap;
@@ -117,6 +121,66 @@ class TimetableCloneRepository implements TimetableCloneRepositoryInterface
     public function insertSiteMapPlacements(array $rows): void
     {
         $this->chunkInsert(SiteMapPlacement::class, $rows);
+    }
+
+    #[Override]
+    public function getConeMapCones(int $timetableId): Collection
+    {
+        return ConeMapCone::query()
+            ->where('timetable_id', $timetableId)
+            ->orderBy('id')
+            ->get();
+    }
+
+    #[Override]
+    public function createConeMapCone(array $attributes): ConeMapCone
+    {
+        return ConeMapCone::create($attributes);
+    }
+
+    #[Override]
+    public function getConeMapBars(int $timetableId): Collection
+    {
+        return ConeMapBar::query()
+            ->where('timetable_id', $timetableId)
+            ->orderBy('id')
+            ->get();
+    }
+
+    #[Override]
+    public function insertConeMapBars(array $rows): void
+    {
+        $this->chunkInsert(ConeMapBar::class, $rows);
+    }
+
+    #[Override]
+    public function getConeMapBarricades(int $timetableId): Collection
+    {
+        return ConeMapBarricade::query()
+            ->where('timetable_id', $timetableId)
+            ->orderBy('id')
+            ->get();
+    }
+
+    #[Override]
+    public function createConeMapBarricade(array $attributes): ConeMapBarricade
+    {
+        return ConeMapBarricade::create($attributes);
+    }
+
+    #[Override]
+    public function getConeMapCallouts(int $timetableId): Collection
+    {
+        return ConeMapCallout::query()
+            ->where('timetable_id', $timetableId)
+            ->orderBy('id')
+            ->get();
+    }
+
+    #[Override]
+    public function insertConeMapCallouts(array $rows): void
+    {
+        $this->chunkInsert(ConeMapCallout::class, $rows);
     }
 
     /**

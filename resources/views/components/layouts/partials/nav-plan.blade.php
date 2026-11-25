@@ -131,6 +131,15 @@
                                 <p class="text-[10px] text-slate-400 truncate mt-0.5">A3 1/400 白地図ブース配置</p>
                             </div>
                         </a>
+                        <!-- カラーコーン配置エディタ -->
+                        <a href="{{ route('timetables.cone-maps.editor', $nav->targetPrintTimetable() ?? 1) }}"
+                            class="flex items-center space-x-2 p-2 rounded-xl transition {{ request()->routeIs('timetables.cone-maps.*') ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }}">
+                            <span class="text-base shrink-0">🔺</span>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-xs font-bold whitespace-nowrap truncate">カラーコーン配置エディタ</div>
+                                <p class="text-[10px] text-slate-400 truncate mt-0.5">コーン・バー・バリケード・注意メモ</p>
+                            </div>
+                        </a>
                         @else
                         <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
                             <span class="text-base shrink-0 grayscale opacity-60">🚚</span>
@@ -144,6 +153,13 @@
                             <div class="min-w-0 flex-1">
                                 <div class="text-xs font-bold whitespace-nowrap truncate">配置計画</div>
                                 <p class="text-[10px] text-slate-500 truncate mt-0.5">ござ市コマ割り・現場設備配置</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 p-2 rounded-xl text-slate-500 opacity-50 cursor-not-allowed select-none" title="運行日程の登録が必要です">
+                            <span class="text-base shrink-0 grayscale opacity-60">🔺</span>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-xs font-bold whitespace-nowrap truncate">カラーコーン配置エディタ</div>
+                                <p class="text-[10px] text-slate-500 truncate mt-0.5">コーン・バー・バリケード・注意メモ</p>
                             </div>
                         </div>
                         @endif

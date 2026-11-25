@@ -2,6 +2,10 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Models\ConeMapBar;
+use App\Models\ConeMapBarricade;
+use App\Models\ConeMapCallout;
+use App\Models\ConeMapCone;
 use App\Models\EquipmentLogisticsPlan;
 use App\Models\LayoutItem;
 use App\Models\LayoutMap;
@@ -102,4 +106,60 @@ interface TimetableCloneRepositoryInterface
      * @param  array<int, array<string, mixed>>  $rows
      */
     public function insertSiteMapPlacements(array $rows): void;
+
+    /**
+     * 複製元のカラーコーン配置一覧を取得
+     *
+     * @return Collection<int, ConeMapCone>
+     */
+    public function getConeMapCones(int $timetableId): Collection;
+
+    /**
+     * 複製先のカラーコーン配置を作成
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function createConeMapCone(array $attributes): ConeMapCone;
+
+    /**
+     * 複製元のコーンバー配置一覧を取得
+     *
+     * @return Collection<int, ConeMapBar>
+     */
+    public function getConeMapBars(int $timetableId): Collection;
+
+    /**
+     * コーンバー配置配列をチャンク単位で一括挿入
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     */
+    public function insertConeMapBars(array $rows): void;
+
+    /**
+     * 複製元のバリケード配置一覧を取得
+     *
+     * @return Collection<int, ConeMapBarricade>
+     */
+    public function getConeMapBarricades(int $timetableId): Collection;
+
+    /**
+     * 複製先のバリケード配置を作成
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function createConeMapBarricade(array $attributes): ConeMapBarricade;
+
+    /**
+     * 複製元の吹き出し一覧を取得
+     *
+     * @return Collection<int, ConeMapCallout>
+     */
+    public function getConeMapCallouts(int $timetableId): Collection;
+
+    /**
+     * 吹き出し配列をチャンク単位で一括挿入
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     */
+    public function insertConeMapCallouts(array $rows): void;
 }

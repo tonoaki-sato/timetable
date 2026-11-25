@@ -335,6 +335,46 @@ class Timetable extends Model
     }
 
     /**
+     * 運行情報に紐づくカラーコーン配置一覧
+     *
+     * @return HasMany<ConeMapCone, $this>
+     */
+    public function coneMapCones(): HasMany
+    {
+        return $this->hasMany(ConeMapCone::class, 'timetable_id');
+    }
+
+    /**
+     * 運行情報に紐づくコーンバー配置一覧
+     *
+     * @return HasMany<ConeMapBar, $this>
+     */
+    public function coneMapBars(): HasMany
+    {
+        return $this->hasMany(ConeMapBar::class, 'timetable_id');
+    }
+
+    /**
+     * 運行情報に紐づくバリケード配置一覧
+     *
+     * @return HasMany<ConeMapBarricade, $this>
+     */
+    public function coneMapBarricades(): HasMany
+    {
+        return $this->hasMany(ConeMapBarricade::class, 'timetable_id');
+    }
+
+    /**
+     * 運行情報に紐づく吹き出し（注意事項）一覧
+     *
+     * @return HasMany<ConeMapCallout, $this>
+     */
+    public function coneMapCallouts(): HasMany
+    {
+        return $this->hasMany(ConeMapCallout::class, 'timetable_id');
+    }
+
+    /**
      * 運行情報に紐づく配置図面マスター一覧とのリレーション
      */
     public function layoutMaps(): HasMany

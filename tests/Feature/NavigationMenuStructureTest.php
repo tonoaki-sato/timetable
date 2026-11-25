@@ -139,9 +139,11 @@ class NavigationMenuStructureTest extends TestCase
         $response->assertSee(route('logistics.index'));
         $response->assertSee('搬出入計画');
 
-        // カレンダー & スケジュール
+        // カレンダー & スケジュール & カラーコーン配置エディタ
         $response->assertSee(route('calendar.index'));
         $response->assertSee(route('schedules.index'));
+        $response->assertSee(route('timetables.cone-maps.editor', $this->timetable));
+        $response->assertSee('カラーコーン配置エディタ');
 
         // 2カラム化・論理グループ見出しおよびスクロール対応の検証
         $response->assertSee('grid grid-cols-2');
@@ -270,6 +272,7 @@ class NavigationMenuStructureTest extends TestCase
             route('layout-areas.index'),
             route('timetables.print-assignments', $this->timetable),
             route('timetables.logistics.print', $this->timetable),
+            route('timetables.cone-maps.editor', $this->timetable),
             route('staff.print-cards'),
             route('manual.index'),
             route('presentation.index'),

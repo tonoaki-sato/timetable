@@ -2,6 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\ConeMapBar;
+use App\Models\ConeMapBarricade;
+use App\Models\ConeMapCallout;
+use App\Models\ConeMapCone;
 use App\Models\Equipment;
 use App\Models\Lane;
 use App\Models\LaneRequest;
@@ -147,8 +151,43 @@ class ContentSecurityPolicyTest extends TestCase
             'name' => 'CSP検証用機材',
             'storage_location_id' => $location->id,
         ]);
-        SiteBaseMap::factory()->asDefault()->create([
+        $baseMap = SiteBaseMap::factory()->asDefault()->create([
             'name' => 'CSP検証用白地図',
+        ]);
+        $coneA = ConeMapCone::create([
+            'timetable_id' => $timetable->id,
+            'site_base_map_id' => $baseMap->id,
+            'pos_x' => 300.0,
+            'pos_y' => 300.0,
+        ]);
+        $coneB = ConeMapCone::create([
+            'timetable_id' => $timetable->id,
+            'site_base_map_id' => $baseMap->id,
+            'pos_x' => 314.17,
+            'pos_y' => 300.0,
+        ]);
+        ConeMapBar::create([
+            'timetable_id' => $timetable->id,
+            'site_base_map_id' => $baseMap->id,
+            'start_cone_id' => $coneA->id,
+            'end_cone_id' => $coneB->id,
+        ]);
+        ConeMapBarricade::create([
+            'timetable_id' => $timetable->id,
+            'site_base_map_id' => $baseMap->id,
+            'barricade_type' => 'type_a',
+            'pos_x' => 350.0,
+            'pos_y' => 350.0,
+        ]);
+        ConeMapCallout::create([
+            'timetable_id' => $timetable->id,
+            'site_base_map_id' => $baseMap->id,
+            'target_cone_id' => $coneA->id,
+            'anchor_x' => 300.0,
+            'anchor_y' => 300.0,
+            'box_x' => 320.0,
+            'box_y' => 270.0,
+            'body' => 'CSP検証用注意事項',
         ]);
         $layoutArea = LayoutArea::factory()->forLocation($location)->create([
             'name' => 'CSP検証用会場エリア',
@@ -193,6 +232,7 @@ class ContentSecurityPolicyTest extends TestCase
             route('timetables.layouts.booths', $timetable),
             route('timetables.logistics.index', $timetable),
             route('timetables.site-maps.editor', $timetable),
+            route('timetables.cone-maps.editor', $timetable),
             route('timetables.lane-timeline', $timetable),
             route('timetables.staff-timeline', $timetable),
             route('staff.index'),

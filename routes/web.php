@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\ConeMapController;
+use App\Http\Controllers\ConeMapPlacementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentCsvController;
@@ -228,6 +230,28 @@ Route::middleware('auth')->group(function () {
         Route::match(['post', 'put'], 'timetables/{timetable}/site-maps/icons/{iconDefinition}', [SiteMapIconController::class, 'update'])->name('timetables.site-maps.icons.update')->withoutScopedBindings();
         Route::delete('timetables/{timetable}/site-maps/icons/{iconDefinition}', [SiteMapIconController::class, 'destroy'])->name('timetables.site-maps.icons.destroy')->withoutScopedBindings();
         Route::get('timetables/{timetable}/site-maps/icons/{iconDefinition}/usage', [SiteMapIconController::class, 'usage'])->name('timetables.site-maps.icons.usage')->withoutScopedBindings();
+
+        // カラーコーン・バリケード配置エディタ (Cone Map Editor)
+        Route::get('timetables/{timetable}/cone-maps/editor', [ConeMapController::class, 'editor'])->name('timetables.cone-maps.editor');
+        Route::patch('timetables/{timetable}/cone-maps/base-map', [ConeMapController::class, 'updateBaseMap'])->name('timetables.cone-maps.base-map.update');
+        Route::get('timetables/{timetable}/cone-maps/pdf', [ConeMapController::class, 'exportPdf'])->name('timetables.cone-maps.pdf');
+        Route::get('timetables/{timetable}/cone-maps/data', [ConeMapPlacementController::class, 'index'])->name('timetables.cone-maps.data.index');
+        Route::post('timetables/{timetable}/cone-maps/clear', [ConeMapPlacementController::class, 'clear'])->name('timetables.cone-maps.clear');
+        Route::post('timetables/{timetable}/cone-maps/cones', [ConeMapPlacementController::class, 'storeCone'])->name('timetables.cone-maps.cones.store');
+        Route::put('timetables/{timetable}/cone-maps/cones-bulk', [ConeMapPlacementController::class, 'bulkUpdateCones'])->name('timetables.cone-maps.cones.bulk-update');
+        Route::put('timetables/{timetable}/cone-maps/cones/{coneMapCone}', [ConeMapPlacementController::class, 'updateCone'])->name('timetables.cone-maps.cones.update');
+        Route::delete('timetables/{timetable}/cone-maps/cones/{coneMapCone}', [ConeMapPlacementController::class, 'destroyCone'])->name('timetables.cone-maps.cones.destroy');
+        Route::post('timetables/{timetable}/cone-maps/bars', [ConeMapPlacementController::class, 'storeBar'])->name('timetables.cone-maps.bars.store');
+        Route::put('timetables/{timetable}/cone-maps/bars/{coneMapBar}', [ConeMapPlacementController::class, 'updateBar'])->name('timetables.cone-maps.bars.update');
+        Route::delete('timetables/{timetable}/cone-maps/bars/{coneMapBar}', [ConeMapPlacementController::class, 'destroyBar'])->name('timetables.cone-maps.bars.destroy');
+        Route::post('timetables/{timetable}/cone-maps/cone-lines', [ConeMapPlacementController::class, 'storeConeLine'])->name('timetables.cone-maps.cone-lines.store');
+        Route::post('timetables/{timetable}/cone-maps/barricades', [ConeMapPlacementController::class, 'storeBarricade'])->name('timetables.cone-maps.barricades.store');
+        Route::put('timetables/{timetable}/cone-maps/barricades-bulk', [ConeMapPlacementController::class, 'bulkUpdateBarricades'])->name('timetables.cone-maps.barricades.bulk-update');
+        Route::put('timetables/{timetable}/cone-maps/barricades/{coneMapBarricade}', [ConeMapPlacementController::class, 'updateBarricade'])->name('timetables.cone-maps.barricades.update');
+        Route::delete('timetables/{timetable}/cone-maps/barricades/{coneMapBarricade}', [ConeMapPlacementController::class, 'destroyBarricade'])->name('timetables.cone-maps.barricades.destroy');
+        Route::post('timetables/{timetable}/cone-maps/callouts', [ConeMapPlacementController::class, 'storeCallout'])->name('timetables.cone-maps.callouts.store');
+        Route::put('timetables/{timetable}/cone-maps/callouts/{coneMapCallout}', [ConeMapPlacementController::class, 'updateCallout'])->name('timetables.cone-maps.callouts.update');
+        Route::delete('timetables/{timetable}/cone-maps/callouts/{coneMapCallout}', [ConeMapPlacementController::class, 'destroyCallout'])->name('timetables.cone-maps.callouts.destroy');
     });
 
     // 出展・出店者マスター管理 (Vendors)

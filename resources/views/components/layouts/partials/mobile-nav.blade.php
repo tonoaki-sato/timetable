@@ -109,6 +109,10 @@
                         <span class="text-base shrink-0">🎨</span>
                         <span class="font-bold truncate">白地図エディタ</span>
                     </a>
+                    <a href="{{ route('timetables.cone-maps.editor', $nav->targetPrintTimetable() ?? 1) }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">
+                        <span class="text-base shrink-0">🔺</span>
+                        <span class="font-bold truncate">カラーコーン配置エディタ</span>
+                    </a>
                     @else
                     <div class="p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
                         <span class="text-base shrink-0 grayscale opacity-60">🚚</span>
@@ -117,6 +121,10 @@
                     <div class="p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
                         <span class="text-base shrink-0 grayscale opacity-60">🗺️</span>
                         <span class="font-bold truncate">配置計画</span>
+                    </div>
+                    <div class="p-2 bg-slate-800/40 rounded-xl flex items-center space-x-2 text-slate-500 opacity-50 cursor-not-allowed select-none min-w-0" title="運行日程の登録が必要です">
+                        <span class="text-base shrink-0 grayscale opacity-60">🔺</span>
+                        <span class="font-bold truncate">カラーコーン配置エディタ</span>
                     </div>
                     @endif
                     <a href="{{ route('calendar.index') }}" class="p-2 bg-slate-800/80 rounded-xl flex items-center space-x-2 text-slate-200 min-w-0">

@@ -30,6 +30,10 @@
                 <span>📥</span>
                 <span>PDFダウンロード (A3 1/400)</span>
             </x-ui.button>
+            <x-ui.button variant="header-action" :href="route('timetables.cone-maps.editor', $timetable)">
+                <span>🔺</span>
+                <span>カラーコーン配置</span>
+            </x-ui.button>
             <x-ui.button variant="header-action" :href="route('timetables.layouts.booths', $timetable)">
                 <span>📋</span>
                 <span>配置一覧</span>

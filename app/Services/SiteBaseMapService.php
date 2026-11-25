@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\SiteBaseMap;
+use App\Repositories\Contracts\ConeMapRepositoryInterface;
 use App\Repositories\Contracts\SiteMapRepositoryInterface;
 use App\Services\SiteBaseMap\SiteBaseMapAssetStorage;
 use DomainException;
@@ -16,6 +17,7 @@ class SiteBaseMapService
     public function __construct(
         protected SiteMapRepositoryInterface $repository,
         protected SiteBaseMapAssetStorage $assetStorage,
+        protected ConeMapRepositoryInterface $coneMapRepository,
     ) {}
 
     /**
@@ -213,7 +215,11 @@ class SiteBaseMapService
             throw new DomainException('デフォルト白地図は削除できません。先に別の白地図をデフォルトに設定してください。');
         }
 
-        if ($this->repository->countTimetablesUsingBaseMap($siteBaseMap) > 0 || $this->repository->countPlacementsUsingBaseMap($siteBaseMap) > 0) {
+        if (
+            $this->repository->countTimetablesUsingBaseMap($siteBaseMap) > 0
+            || $this->repository->countPlacementsUsingBaseMap($siteBaseMap) > 0
+            || $this->coneMapRepository->countItemsUsingBaseMap($siteBaseMap) > 0
+        ) {
             throw new DomainException('この白地図は運行日程または配置データで使用中のため削除できません。');
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\ConeMapRepositoryInterface;
 use App\Repositories\Contracts\EquipmentLogisticsPatternRepositoryInterface;
 use App\Repositories\Contracts\EquipmentLogisticsPlanRepositoryInterface;
 use App\Repositories\Contracts\EquipmentRepositoryInterface;
@@ -25,6 +26,7 @@ use App\Repositories\Contracts\TimetableRepositoryInterface;
 use App\Repositories\Contracts\TimetableTaskRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Contracts\VendorRepositoryInterface;
+use App\Repositories\Eloquent\ConeMapRepository;
 use App\Repositories\Eloquent\EquipmentLogisticsPatternRepository;
 use App\Repositories\Eloquent\EquipmentLogisticsPlanRepository;
 use App\Repositories\Eloquent\EquipmentRepository;
@@ -60,6 +62,7 @@ class RepositoryServiceProvider extends ServiceProvider
     private const array BINDINGS = [
         ScheduleRepositoryInterface::class => ScheduleRepository::class,
         SiteMapRepositoryInterface::class => SiteMapRepository::class,
+        ConeMapRepositoryInterface::class => ConeMapRepository::class,
         StaffRepositoryInterface::class => StaffRepository::class,
         StaffCheckInRepositoryInterface::class => StaffCheckInRepository::class,
         TimetableRepositoryInterface::class => TimetableRepository::class,

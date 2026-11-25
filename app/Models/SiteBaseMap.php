@@ -101,6 +101,46 @@ class SiteBaseMap extends Model
     }
 
     /**
+     * 白地図上に配置されたカラーコーン群
+     *
+     * @return HasMany<ConeMapCone, $this>
+     */
+    public function coneMapCones(): HasMany
+    {
+        return $this->hasMany(ConeMapCone::class, 'site_base_map_id');
+    }
+
+    /**
+     * 白地図上に配置されたコーンバー群
+     *
+     * @return HasMany<ConeMapBar, $this>
+     */
+    public function coneMapBars(): HasMany
+    {
+        return $this->hasMany(ConeMapBar::class, 'site_base_map_id');
+    }
+
+    /**
+     * 白地図上に配置されたバリケード群
+     *
+     * @return HasMany<ConeMapBarricade, $this>
+     */
+    public function coneMapBarricades(): HasMany
+    {
+        return $this->hasMany(ConeMapBarricade::class, 'site_base_map_id');
+    }
+
+    /**
+     * 白地図上に配置された吹き出し（注意事項）群
+     *
+     * @return HasMany<ConeMapCallout, $this>
+     */
+    public function coneMapCallouts(): HasMany
+    {
+        return $this->hasMany(ConeMapCallout::class, 'site_base_map_id');
+    }
+
+    /**
      * プリセット標準アセット（削除保護対象）かどうかを判定
      */
     public function isPresetAsset(): bool
