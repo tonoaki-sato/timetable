@@ -421,7 +421,7 @@ class OrganizationManagementTest extends TestCase
     }
 
     /**
-     * 組織図PDFテンプレートが本部役員（実行委員長・福実行委員長・会計）と部門を分離し、顧問・相談役を独立エリアに描画すること
+     * 組織図PDFテンプレートが本部役員（実行委員長・福実行委員長・会計）と部門を分離し、幹事・顧問・相談役を均等3列カードに個別改行・所属団体付きで描画すること
      */
     public function test_organization_pdf_renders_executive_officers_and_departments_and_advisors(): void
     {
@@ -430,7 +430,28 @@ class OrganizationManagementTest extends TestCase
         $kaikei = OrganizationUnit::factory()->create(['name' => '会計', 'parent_id' => $root->id, 'display_order' => 30]);
         $soumu = OrganizationUnit::factory()->create(['name' => '総務', 'parent_id' => $root->id, 'display_order' => 40]);
         $honjin = OrganizationUnit::factory()->create(['name' => '本陣', 'parent_id' => $soumu->id, 'display_order' => 50]);
-        $advisor = OrganizationUnit::factory()->create(['name' => '顧問', 'parent_id' => null, 'display_order' => 60]);
+
+        $kanji = OrganizationUnit::factory()->create(['name' => '幹事', 'parent_id' => null, 'display_order' => 60]);
+        $komon = OrganizationUnit::factory()->create(['name' => '顧問', 'parent_id' => null, 'display_order' => 70]);
+        $soudanyaku = OrganizationUnit::factory()->create(['name' => '相談役', 'parent_id' => null, 'display_order' => 80]);
+
+        $terai = Staff::factory()->executive()->create(['name' => '寺井 智之', 'affiliation' => '実行委員長']);
+        $yamamichi = Staff::factory()->executive()->create(['name' => '山道 在明', 'affiliation' => null]);
+        $mochizuki = Staff::factory()->executiveBoard()->create(['name' => '望月 聖子', 'affiliation' => null]);
+        $yamamoto = Staff::factory()->executiveBoard()->create(['name' => '山本 昇市', 'affiliation' => '前実行委員長']);
+        $hagiwara = Staff::factory()->executiveBoard()->create(['name' => '萩原 繁夫', 'affiliation' => '保土ケ谷駅西口商店街会長']);
+        $leafStaff1 = Staff::factory()->create(['name' => '佐藤 太郎', 'affiliation' => '株式会社テスト団体']);
+        $leafStaff2 = Staff::factory()->create(['name' => '高橋 花子', 'affiliation' => null]);
+
+        $root->staff()->attach($terai->id, ['display_order' => 10]);
+        $honjin->staff()->attach($leafStaff1->id, ['display_order' => 10]);
+        $honjin->staff()->attach($leafStaff2->id, ['display_order' => 20]);
+
+        $kanji->staff()->attach($terai->id, ['display_order' => 10]);
+        $kanji->staff()->attach($yamamichi->id, ['display_order' => 20]);
+        $komon->staff()->attach($mochizuki->id, ['display_order' => 10]);
+        $komon->staff()->attach($yamamoto->id, ['display_order' => 20]);
+        $soudanyaku->staff()->attach($hagiwara->id, ['display_order' => 10]);
 
         $action = app(DownloadOrganizationPdfAction::class);
         $viewData = $action->buildViewData();
@@ -448,14 +469,57 @@ class OrganizationManagementTest extends TestCase
         $this->assertStringContainsString('branch-section', $html);
         $this->assertStringContainsString('総務', $html);
 
-        // 3. 独立役員エリア（顧問・相談役）が存在すること
+        // 3. 独立役員エリア（【幹事・顧問・相談役】）が均等3列テーブルで描画され、colgroupを使用しないこと
         $this->assertStringContainsString('standalone-roots-container', $html);
-        $this->assertStringContainsString('【顧問・相談役】', $html);
+        $this->assertStringContainsString('【幹事・顧問・相談役】', $html);
+        $this->assertStringNotContainsString('【顧問・相談役】', $html);
+        $this->assertStringContainsString('standalone-roots-table', $html);
+        $this->assertStringContainsString('standalone-cols-3', $html);
+        $this->assertStringContainsString('standalone-card-gap', $html);
+        $this->assertStringContainsString('standalone-card-header', $html);
+        $this->assertStringContainsString('standalone-card-body', $html);
+        $this->assertStringContainsString('幹事', $html);
         $this->assertStringContainsString('顧問', $html);
+        $this->assertStringContainsString('相談役', $html);
+        $this->assertStringNotContainsString('<colgroup', $html);
+        $this->assertStringNotContainsString('<col ', $html);
 
-        // 4. 末端組織グループがインラインブロックのleaf-groupとして描画されていること
+        // 4. 独立カード内のスタッフ名が1名ずつ改行出力され、所属団体があるスタッフのみ括弧付きで表示されること
+        $this->assertStringContainsString(
+            '<div class="standalone-staff-item has-mark"><span class="pdf-symbol pdf-symbol-prefix">★</span><span class="standalone-staff-name">寺井 智之</span><span class="standalone-staff-affiliation">（実行委員長）</span></div>',
+            $html
+        );
+        $this->assertStringContainsString(
+            '<div class="standalone-staff-item has-mark"><span class="pdf-symbol pdf-symbol-prefix">★</span><span class="standalone-staff-name">山道 在明</span></div>',
+            $html
+        );
+        $this->assertStringContainsString(
+            '<div class="standalone-staff-item has-mark"><span class="pdf-symbol pdf-symbol-prefix">☆</span><span class="standalone-staff-name">望月 聖子</span></div>',
+            $html
+        );
+        $this->assertStringContainsString(
+            '<div class="standalone-staff-item has-mark"><span class="pdf-symbol pdf-symbol-prefix">☆</span><span class="standalone-staff-name">山本 昇市</span><span class="standalone-staff-affiliation">（前実行委員長）</span></div>',
+            $html
+        );
+        $this->assertStringContainsString(
+            '<div class="standalone-staff-item has-mark"><span class="pdf-symbol pdf-symbol-prefix">☆</span><span class="standalone-staff-name">萩原 繁夫</span><span class="standalone-staff-affiliation">（保土ケ谷駅西口商店街会長）</span></div>',
+            $html
+        );
+        $this->assertStringNotContainsString('（）', $html);
+
+        // 5. 末端組織グループは従来通りカンマ区切り・所属団体なしで描画されていること
         $this->assertStringContainsString('leaf-group', $html);
         $this->assertStringContainsString('leaf-card', $html);
+        $this->assertStringContainsString('佐藤 太郎, 高橋 花子', $html);
+        $this->assertStringNotContainsString('株式会社テスト団体', $html);
+
+        // 6. DomPDFレンダリングでページ余白が維持され、★/☆が重なりなく描画されること
+        $dompdf = app(PdfService::class)->renderDompdf('pdf.organization_chart', $viewData, 'portrait');
+        $this->assertPdfStarGlyphsRenderedWithoutOverlap($dompdf, 2, 3);
+
+        $pageStyles = $dompdf->getCss()->get_page_styles();
+        $this->assertGreaterThan(50.0, (float) $pageStyles['base']->margin_top);
+        $this->assertGreaterThan(30.0, (float) $pageStyles['base']->margin_left);
     }
 
     /**

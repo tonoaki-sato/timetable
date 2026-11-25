@@ -47,10 +47,23 @@ class ModelPresentersTest extends TestCase
     public function test_organization_unit_and_staff_presenters(): void
     {
         $unit = OrganizationUnit::factory()->create(['name' => '誘導班']);
-        $staffA = Staff::factory()->executive()->create(['name' => '佐藤 太郎', 'access_token' => 'token_alpha_12345']);
-        $staffB = Staff::factory()->executiveBoard()->create(['name' => '鈴木 花子']);
-        $staffC = Staff::factory()->create(['name' => '高橋 次郎']);
-        $staffD = Staff::factory()->external()->create(['name' => '田中 三郎']);
+        $staffA = Staff::factory()->executive()->create([
+            'name' => '佐藤 太郎',
+            'affiliation' => '実行委員長',
+            'access_token' => 'token_alpha_12345',
+        ]);
+        $staffB = Staff::factory()->executiveBoard()->create([
+            'name' => '鈴木 花子',
+            'affiliation' => '  前実行委員長  ',
+        ]);
+        $staffC = Staff::factory()->create([
+            'name' => '高橋 次郎',
+            'affiliation' => null,
+        ]);
+        $staffD = Staff::factory()->external()->create([
+            'name' => '田中 三郎',
+            'affiliation' => '',
+        ]);
 
         $unit->staff()->attach($staffA->id, ['role' => '班長', 'display_order' => 10]);
         $unit->staff()->attach($staffB->id, ['role' => '副班長', 'display_order' => 20]);
@@ -62,20 +75,20 @@ class ModelPresentersTest extends TestCase
         $this->assertSame('佐藤 太郎（幹事）, 鈴木 花子（幹事会）, 高橋 次郎, 田中 三郎（外部）', $loadedUnit->presenter()->staffNamesWithAttributeDisplay());
         $this->assertSame('★佐藤 太郎, ☆鈴木 花子, 高橋 次郎, 田中 三郎', $loadedUnit->presenter()->staffNamesForPdfDisplay());
         $this->assertSame([
-            ['mark' => '★', 'name' => '佐藤 太郎'],
-            ['mark' => '☆', 'name' => '鈴木 花子'],
-            ['mark' => '', 'name' => '高橋 次郎'],
-            ['mark' => '', 'name' => '田中 三郎'],
+            ['mark' => '★', 'name' => '佐藤 太郎', 'affiliation' => '実行委員長'],
+            ['mark' => '☆', 'name' => '鈴木 花子', 'affiliation' => '前実行委員長'],
+            ['mark' => '', 'name' => '高橋 次郎', 'affiliation' => ''],
+            ['mark' => '', 'name' => '田中 三郎', 'affiliation' => ''],
         ], $loadedUnit->presenter()->pdfStaffItems());
 
         $assignmentLoadedUnit = OrganizationUnit::with('staffAssignments.staff')->findOrFail($unit->id);
         $this->assertSame('佐藤 太郎, 鈴木 花子, 高橋 次郎, 田中 三郎', $assignmentLoadedUnit->presenter()->staffNamesDisplay());
         $this->assertSame('★佐藤 太郎, ☆鈴木 花子, 高橋 次郎, 田中 三郎', $assignmentLoadedUnit->presenter()->staffNamesForPdfDisplay());
         $this->assertSame([
-            ['mark' => '★', 'name' => '佐藤 太郎'],
-            ['mark' => '☆', 'name' => '鈴木 花子'],
-            ['mark' => '', 'name' => '高橋 次郎'],
-            ['mark' => '', 'name' => '田中 三郎'],
+            ['mark' => '★', 'name' => '佐藤 太郎', 'affiliation' => '実行委員長'],
+            ['mark' => '☆', 'name' => '鈴木 花子', 'affiliation' => '前実行委員長'],
+            ['mark' => '', 'name' => '高橋 次郎', 'affiliation' => ''],
+            ['mark' => '', 'name' => '田中 三郎', 'affiliation' => ''],
         ], $assignmentLoadedUnit->presenter()->pdfStaffItems());
 
         $this->assertSame('幹事', $staffA->presenter()->attributeLabel());

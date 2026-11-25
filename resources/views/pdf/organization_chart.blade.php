@@ -36,6 +36,7 @@
         /* 幹事(★)・幹事会(☆)記号は DroidSansFallbackFull に未収録のため DejaVu Sans で描画 */
         span.pdf-symbol {
             font-family: 'DejaVu Sans', sans-serif !important;
+            font-weight: normal;
         }
         span.pdf-symbol-prefix {
             margin-right: 0.5pt;
@@ -106,21 +107,81 @@
         }
         .standalone-roots-container {
             margin-top: 9pt;
-            padding-top: 5pt;
+            padding-top: 6pt;
             border-top: 1pt dashed #94a3b8;
             page-break-inside: avoid;
         }
         .standalone-roots-title {
-            font-size: 7.5pt;
+            font-size: 9pt;
             font-weight: bold;
-            color: #475569;
-            margin-bottom: 4pt;
+            color: #0f172a;
+            margin-bottom: 5pt;
         }
-        .standalone-card-item {
-            display: inline-block;
-            margin-right: 6pt;
-            margin-bottom: 4pt;
+        table.standalone-roots-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed;
+            margin-bottom: 6pt;
+        }
+        table.standalone-roots-table:last-child {
+            margin-bottom: 0;
+        }
+        td.standalone-card-cell {
             vertical-align: top;
+            border: 0.9pt solid #047857;
+            border-radius: 4pt;
+            background-color: #ffffff;
+            padding: 0;
+        }
+        td.standalone-card-gap {
+            width: 2%;
+            border: none;
+            padding: 0;
+        }
+        td.standalone-card-empty {
+            border: none;
+            padding: 0;
+        }
+        td.standalone-cols-1 {
+            width: 100%;
+        }
+        td.standalone-cols-2 {
+            width: 49%;
+        }
+        td.standalone-cols-3 {
+            width: 32%;
+        }
+        .standalone-card-header {
+            background-color: #d1fae5;
+            border-bottom: 0.6pt solid #a7f3d0;
+            border-top-left-radius: 3pt;
+            border-top-right-radius: 3pt;
+            padding: 4pt 7pt;
+            font-size: 9.5pt;
+            font-weight: bold;
+            color: #0f172a;
+            line-height: 1.25;
+        }
+        .standalone-card-body {
+            padding: 5.5pt 7pt 7pt 7pt;
+        }
+        .standalone-staff-item {
+            font-size: 8pt;
+            font-weight: bold;
+            color: #312e81;
+            line-height: 1.5;
+            margin-bottom: 1.5pt;
+        }
+        .standalone-staff-item:last-child {
+            margin-bottom: 0;
+        }
+        .standalone-staff-item.has-mark {
+            padding-left: 10pt;
+            text-indent: -10pt;
+        }
+        .standalone-staff-item span.pdf-symbol-prefix {
+            margin-right: 1.5pt;
         }
 
         /* テーブル構造による階層ツリー */
@@ -346,14 +407,41 @@
                 @endforeach
             @endforeach
 
-            {{-- 単独ルートノード群（顧問、相談役等） --}}
+            {{-- 単独ルートノード群（幹事・顧問・相談役等） --}}
             @if($standaloneRoots->isNotEmpty())
+                @php
+                    $standaloneItems = $standaloneRoots->values();
+                    $standaloneCols = min($standaloneItems->count(), 3);
+                    $standaloneRows = $standaloneItems->chunk($standaloneCols);
+                @endphp
                 <div class="standalone-roots-container">
-                    <div class="standalone-roots-title">【顧問・相談役】</div>
-                    @foreach($standaloneRoots as $standalone)
-                        <div class="standalone-card-item">
-                            @include('pdf.components.tree-node', ['unit' => $standalone, 'level' => 1])
-                        </div>
+                    <div class="standalone-roots-title">【幹事・顧問・相談役】</div>
+                    @foreach($standaloneRows as $row)
+                        @php
+                            $rowItems = $row->values();
+                            $emptySlots = $standaloneCols - $rowItems->count();
+                        @endphp
+                        <table class="standalone-roots-table" cellpadding="0" cellspacing="0">
+                            <tr>
+                                @foreach($rowItems as $standalone)
+                                    @if(! $loop->first)
+                                        <td class="standalone-card-gap"></td>
+                                    @endif
+                                    <td class="standalone-card-cell standalone-cols-{{ $standaloneCols }}">
+                                        <div class="standalone-card-header">{{ $standalone->name }}</div>
+                                        <div class="standalone-card-body">
+                                            @if($standalone->staff->isNotEmpty())
+                                                <x-pdf.organization-staff-names :unit="$standalone" :multiline="true" :show-affiliation="true" />
+                                            @endif
+                                        </div>
+                                    </td>
+                                @endforeach
+                                @for($i = 0; $i < $emptySlots; $i++)
+                                    <td class="standalone-card-gap"></td>
+                                    <td class="standalone-card-empty standalone-cols-{{ $standaloneCols }}"></td>
+                                @endfor
+                            </tr>
+                        </table>
                     @endforeach
                 </div>
             @endif
