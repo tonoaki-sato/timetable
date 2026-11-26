@@ -196,4 +196,91 @@ class SiteBaseMapViewerTest extends TestCase
             $this->assertSame(0, $jsonResidualCount, '白地図JSON内に旧ブース矩形枠線（1m×1.8m）が残存してはならない');
         }
     }
+
+    /**
+     * 白地図（SVGおよびJSON）内にPDF取り込み時の消し忘れ斜線ハッチングが残存せず、かつSVG/JSONが一致していることを検証
+     */
+    public function test_base_map_svg_and_json_have_no_residual_diagonal_hatch_lines(): void
+    {
+        $svgPath = public_path('maps/shopping_street_base_map_260813.svg');
+        $jsonPath = storage_path('app/site_map_base_20260927.json');
+
+        $this->assertFileExists($svgPath);
+        $this->assertFileExists($jsonPath);
+
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $loaded = $dom->load($svgPath, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+        $this->assertTrue($loaded, '白地図SVGをXMLとしてパースできること');
+
+        $svgDs = [];
+        $svgHatchCount = 0;
+        foreach ($dom->getElementsByTagName('path') as $pathEl) {
+            $d = (string) $pathEl->getAttribute('d');
+            $sw = (float) $pathEl->getAttribute('stroke-width');
+            $svgDs[] = $d;
+
+            if ($this->isResidualDiagonalHatchPath($d, $sw)) {
+                $svgHatchCount++;
+            }
+        }
+
+        $this->assertSame(0, $svgHatchCount, '白地図SVG内に消し忘れの斜線ハッチングが残存してはならない');
+
+        $jsonData = json_decode((string) file_get_contents($jsonPath), true);
+        $this->assertIsArray($jsonData);
+        $this->assertArrayHasKey('paths', $jsonData);
+
+        $jsonDs = [];
+        $jsonHatchCount = 0;
+        foreach ($jsonData['paths'] as $pathItem) {
+            $d = (string) ($pathItem['d'] ?? '');
+            $w = (float) ($pathItem['w'] ?? 0);
+            $jsonDs[] = $d;
+
+            if ($this->isResidualDiagonalHatchPath($d, $w)) {
+                $jsonHatchCount++;
+            }
+        }
+
+        $this->assertSame(0, $jsonHatchCount, '白地図JSON内に消し忘れの斜線ハッチングが残存してはならない');
+        $this->assertCount(1525, $svgDs);
+        $this->assertCount(1525, $jsonDs);
+        $this->assertSame($svgDs, $jsonDs, '白地図SVGとJSONのパス配列が1対1で一致していること');
+
+        // 誤削除されてはならない正当な斜線構造線が保持されていることを検証
+        $preservedLines = [
+            'M 69.30 954.42 L 77.70 962.82',
+            'M 95.40 897.12 L 60.84 881.22',
+        ];
+        foreach ($preservedLines as $lineD) {
+            $this->assertContains($lineD, $svgDs, "正当な構造線 {$lineD} がSVGに保持されていること");
+            $this->assertContains($lineD, $jsonDs, "正当な構造線 {$lineD} がJSONに保持されていること");
+        }
+    }
+
+    /**
+     * 消し忘れ斜線ハッチング（stroke-width 0.42、単一線分、長さ8pt以下、45°±3°または135°±3°）を判定
+     */
+    private function isResidualDiagonalHatchPath(string $d, float $strokeWidth): bool
+    {
+        if (abs($strokeWidth - 0.42) > 0.01) {
+            return false;
+        }
+
+        if (preg_match('/^M\s+([-\d.]+)\s+([-\d.]+)\s+L\s+([-\d.]+)\s+([-\d.]+)$/', trim($d), $matches) !== 1) {
+            return false;
+        }
+
+        $dx = (float) $matches[3] - (float) $matches[1];
+        $dy = (float) $matches[4] - (float) $matches[2];
+        $length = hypot($dx, $dy);
+
+        if ($length <= 0.01 || $length > 8.0) {
+            return false;
+        }
+
+        $angle = fmod(rad2deg(atan2($dy, $dx)) + 360.0, 180.0);
+
+        return ($angle >= 42.0 && $angle <= 48.0) || ($angle >= 132.0 && $angle <= 138.0);
+    }
 }
