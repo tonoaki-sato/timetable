@@ -46,8 +46,9 @@ class DatabaseSeeder extends Seeder
         $this->call(LayoutAreaSeeder::class);
         $this->call(SiteLayoutSeeder::class);
 
-        // 11. 白地図マスターおよびアイコン定義初期データ
+        // 11. 白地図マスター・アイコン定義・白地図配置初期データ
         $this->call(SiteBaseMapSeeder::class);
         $this->call(SiteMapIconDefinitionSeeder::class);
+        $this->call(SiteMapPlacementSeeder::class);
     }
 }
