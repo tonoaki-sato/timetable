@@ -21,7 +21,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('p9MPGrzfit4fRN2T'),
                 'role' => 'admin',
                 'is_active' => true,
-                'last_login_at' => '2026-11-26 15:50:04',
+                'last_login_at' => '2026-11-26 20:02:50',
             ]
         );
     }

@@ -50,5 +50,8 @@ class DatabaseSeeder extends Seeder
         $this->call(SiteBaseMapSeeder::class);
         $this->call(SiteMapIconDefinitionSeeder::class);
         $this->call(SiteMapPlacementSeeder::class);
+
+        // 12. カラーコーン・コーンバー・バリケード配置初期データ
+        $this->call(ConeMapSeeder::class);
     }
 }
