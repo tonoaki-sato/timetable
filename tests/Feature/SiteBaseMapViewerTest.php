@@ -243,9 +243,14 @@ class SiteBaseMapViewerTest extends TestCase
         }
 
         $this->assertSame(0, $jsonHatchCount, '白地図JSON内に消し忘れの斜線ハッチングが残存してはならない');
-        $this->assertCount(1525, $svgDs);
-        $this->assertCount(1525, $jsonDs);
+        $this->assertCount(1524, $svgDs);
+        $this->assertCount(1524, $jsonDs);
         $this->assertSame($svgDs, $jsonDs, '白地図SVGとJSONのパス配列が1対1で一致していること');
+
+        // 削除済みの長島駐車場中央右寄り不要矩形が残存していないことを検証
+        $removedNagashimaRect = 'M 205.32 899.16 L 238.50 899.16 L 238.50 886.74 L 205.32 886.74 Z M 238.50 899.16';
+        $this->assertNotContains($removedNagashimaRect, $svgDs, '長島駐車場の不要矩形がSVGに残存してはならない');
+        $this->assertNotContains($removedNagashimaRect, $jsonDs, '長島駐車場の不要矩形がJSONに残存してはならない');
 
         // 誤削除されてはならない正当な斜線構造線が保持されていることを検証
         $preservedLines = [
