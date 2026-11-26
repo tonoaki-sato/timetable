@@ -272,11 +272,23 @@ class SiteBaseMapViewerTest extends TestCase
             $jsonData['labels'] ?? []
         );
 
-        $this->assertCount(78, $svgLabels);
-        $this->assertCount(78, $jsonLabels);
+        $this->assertCount(82, $svgLabels);
+        $this->assertCount(82, $jsonLabels);
         $this->assertSame($svgLabels, $jsonLabels, '白地図SVGとJSONのラベル配列が1対1で一致していること');
         $this->assertNotContains('(手洗い建物内対応)', $svgLabels, '不要なラベルがSVGに残存してはならない');
         $this->assertNotContains('(手洗い建物内対応)', $jsonLabels, '不要なラベルがJSONに残存してはならない');
+
+        // 道路西側のHermoniaがアパートへ更新され、東側のHermoniaは1件保持されていることを検証
+        $this->assertContains('アパート', $svgLabels);
+        $this->assertSame(1, count(array_filter($svgLabels, fn (string $label): bool => $label === 'Hermonia')));
+
+        // ストークマンション直下に4行のテナント・設備ラベルが順序通り追加されていることを検証
+        $stokeIndex = array_search('ストークマンション', $svgLabels, true);
+        $this->assertIsInt($stokeIndex);
+        $this->assertSame(
+            ['スロープ', 'クリーニングネオ２１', 'キクバル', 'はらぺこらいおん'],
+            array_slice($svgLabels, $stokeIndex + 1, 4)
+        );
 
         // 誤削除されてはならない正当な斜線構造線が保持されていることを検証
         $preservedLines = [
