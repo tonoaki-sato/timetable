@@ -243,14 +243,40 @@ class SiteBaseMapViewerTest extends TestCase
         }
 
         $this->assertSame(0, $jsonHatchCount, '白地図JSON内に消し忘れの斜線ハッチングが残存してはならない');
-        $this->assertCount(1524, $svgDs);
-        $this->assertCount(1524, $jsonDs);
+        $this->assertCount(1510, $svgDs);
+        $this->assertCount(1510, $jsonDs);
         $this->assertSame($svgDs, $jsonDs, '白地図SVGとJSONのパス配列が1対1で一致していること');
 
         // 削除済みの長島駐車場中央右寄り不要矩形が残存していないことを検証
         $removedNagashimaRect = 'M 205.32 899.16 L 238.50 899.16 L 238.50 886.74 L 205.32 886.74 Z M 238.50 899.16';
         $this->assertNotContains($removedNagashimaRect, $svgDs, '長島駐車場の不要矩形がSVGに残存してはならない');
         $this->assertNotContains($removedNagashimaRect, $jsonDs, '長島駐車場の不要矩形がJSONに残存してはならない');
+
+        // 削除済みのS&S前駐車場の不要な寸法線（縦・横の鍵線）が残存していないことを検証
+        $removedSsDimensionLines = [
+            'M 195.12 700.74 L 195.12 645.42',
+            'M 98.70 708.54 L 188.58 708.54',
+        ];
+        foreach ($removedSsDimensionLines as $lineD) {
+            $this->assertNotContains($lineD, $svgDs, "不要な寸法線 {$lineD} がSVGに残存してはならない");
+            $this->assertNotContains($lineD, $jsonDs, "不要な寸法線 {$lineD} がJSONに残存してはならない");
+        }
+
+        // ラベルの整合性および削除済みテキストの非残存を検証
+        $svgLabels = [];
+        foreach ($dom->getElementsByTagName('text') as $textEl) {
+            $svgLabels[] = trim((string) $textEl->textContent);
+        }
+        $jsonLabels = array_map(
+            fn (array $lbl): string => trim((string) ($lbl['text'] ?? '')),
+            $jsonData['labels'] ?? []
+        );
+
+        $this->assertCount(78, $svgLabels);
+        $this->assertCount(78, $jsonLabels);
+        $this->assertSame($svgLabels, $jsonLabels, '白地図SVGとJSONのラベル配列が1対1で一致していること');
+        $this->assertNotContains('(手洗い建物内対応)', $svgLabels, '不要なラベルがSVGに残存してはならない');
+        $this->assertNotContains('(手洗い建物内対応)', $jsonLabels, '不要なラベルがJSONに残存してはならない');
 
         // 誤削除されてはならない正当な斜線構造線が保持されていることを検証
         $preservedLines = [
