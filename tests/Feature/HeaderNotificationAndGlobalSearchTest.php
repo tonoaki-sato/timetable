@@ -102,6 +102,30 @@ class HeaderNotificationAndGlobalSearchTest extends TestCase
     }
 
     /**
+     * グローバルヘッダーの検索トリガーが1280px未満(Edgeサイドバー表示等)でも「検索」ラベルを表示し、余白ズレしない構成になっていること
+     */
+    public function test_header_quick_search_button_displays_label_from_sm_breakpoint_with_gap_spacing(): void
+    {
+        $response = $this->actingAs($this->admin)->get(route('dashboard'));
+        $response->assertStatus(200);
+
+        $html = (string) $response->getContent();
+
+        $response->assertSee('id="btn-open-quick-search"', false);
+        $response->assertSee('inline-flex items-center gap-1.5', false);
+        $response->assertSee('<span class="hidden sm:inline whitespace-nowrap">検索</span>', false);
+        $response->assertSee('<kbd class="hidden xl:inline-block whitespace-nowrap', false);
+        $response->assertSee('Ctrl K</kbd>', false);
+        $response->assertDontSee('<span class="hidden xl:inline">検索</span>', false);
+        $response->assertDontSee('space-x-1.5 px-2.5 py-1.5', false);
+
+        // モーダルDOMおよび共通Viteアセット(app.css / app.js)が出力されていること
+        $response->assertSee('id="quickSearchModal"', false);
+        $this->assertMatchesRegularExpression('/assets\/app-[^"\']+\.css/', $html);
+        $this->assertMatchesRegularExpression('/assets\/app-[^"\']+\.js/', $html);
+    }
+
+    /**
      * グローバル横断検索APIが5エンティティを横断検索してグループ返却し、空検索時は空配列を返すこと
      */
     public function test_global_search_api_returns_grouped_matches_and_respects_auth(): void

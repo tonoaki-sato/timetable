@@ -8,10 +8,10 @@
             data-action="open-quick-search"
             aria-label="クイック検索 (Ctrl+K)"
             title="システム横断検索 (Ctrl+K / Cmd+K)"
-            class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition cursor-pointer shrink-0">
+            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition cursor-pointer whitespace-nowrap shrink-0">
             <span>🔍</span>
-            <span class="hidden xl:inline">検索</span>
-            <kbd class="hidden xl:inline-block px-1 py-0.2 bg-slate-900 border border-slate-700 rounded text-[10px] font-mono text-slate-400">Ctrl K</kbd>
+            <span class="hidden sm:inline whitespace-nowrap">検索</span>
+            <kbd class="hidden xl:inline-block whitespace-nowrap px-1 py-0.2 bg-slate-900 border border-slate-700 rounded text-[10px] font-mono text-slate-400">Ctrl K</kbd>
         </button>
 
         @include('components.layouts.partials.notification-bell')
@@ -43,7 +43,7 @@
             @csrf
             <button type="submit"
                 data-confirm="ログアウトしますか？"
-                class="px-2 py-1 bg-slate-800 hover:bg-red-600 hover:text-white text-slate-300 text-xs font-medium rounded-lg border border-slate-700 hover:border-red-600 transition flex items-center space-x-1 cursor-pointer whitespace-nowrap shrink-0">
+                class="px-2 py-1 bg-slate-800 hover:bg-red-600 hover:text-white text-slate-300 text-xs font-medium rounded-lg border border-slate-700 hover:border-red-600 transition flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0">
                 <span>🚪</span>
                 <span class="hidden lg:inline whitespace-nowrap">ログアウト</span>
             </button>
